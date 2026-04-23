@@ -12,20 +12,17 @@ from typing import Any
 from heimanconnect import (
     DeviceManagement,
     DeviceProperty,
-    HeimanAuthError,
     HeimanConnectionError,
     HeimanDevice,
     HeimanHome,
     HeimanMqttClient,
     HeimanMQTTError,
-    HeimanTokenExpiredError,
     HeimanUser,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HeimanApiClient
@@ -66,7 +63,7 @@ def _infer_entity_type(prop_value: Any) -> str | None:
         # Non-scalar values cannot be represented as sensor native values.
         return None
     # Keep other scalar-like values discoverable.
-    return "sensor"  # pragma: no cover
+    return "sensor"
 
 
 @dataclass
@@ -131,29 +128,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             HeimanData object with updated information
 
         Raises:
-            ConfigEntryAuthFailed: If authentication fails
             UpdateFailed: If data fetch fails
         """
-        # Ensure token is valid before making requests.
-        # Preserve UpdateFailed vs ConfigEntryAuthFailed distinction by
-        # only converting authentication-related token errors (HeimanAuthError,
-        # HeimanTokenExpiredError) to ConfigEntryAuthFailed; other errors
-        # (TimeoutError, HeimanConnectionError) are converted to UpdateFailed.
-        try:
-            await self.api_client.async_ensure_token_valid()
-        except ConfigEntryAuthFailed:  # pragma: no cover
-            raise
-        except UpdateFailed:  # pragma: no cover
-            raise
-        except (HeimanAuthError, HeimanTokenExpiredError) as err:  # pragma: no cover
-            _LOGGER.error("Token validation failed: %s", err)
-            raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
-        except (TimeoutError, HeimanConnectionError) as err:  # pragma: no cover
-            _LOGGER.error("Token refresh failed: %s", err)
-            raise UpdateFailed(f"Token refresh failed: {err}") from err
-        except Exception as err:  # pragma: no cover
-            _LOGGER.error("Token validation failed: %s", err)
-            raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
+        # Ensure client is initialized
+        await self.api_client._ensure_initialized()  # noqa: SLF001
 
         # Get home ID
         home_id = self.config_entry.data.get(CONF_HOME_ID)
@@ -177,17 +155,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     async def _fetch_user_and_home_info(self) -> None:
         """Fetch user and home information on first update."""
-        cloud_client = self.api_client.cloud_client
+        cloud_wrapper = self.api_client.cloud_client
 
         # Get user info (only on first update)
         if self.data.user_info is None:
             try:
-                self.data.user_info = await cloud_client.async_get_user_info()
-            except HeimanTokenExpiredError as err:  # pragma: no cover
-                raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
-            except HeimanAuthError as err:  # pragma: no cover
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-            except HeimanConnectionError as err:  # pragma: no cover
+                self.data.user_info = await cloud_wrapper.async_get_user_info()
+            except HeimanConnectionError as err:
                 raise UpdateFailed(f"Connection error: {err}") from err
             except Exception as err:
                 _LOGGER.error("Failed to fetch user info: %s", err)
@@ -196,27 +170,23 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # Get home info (only on first update)
         if self.data.home_info is None:
             try:
-                homes = await cloud_client.async_get_homes()
+                homes = await cloud_wrapper.async_get_homes()
                 if homes:
                     home_id = self.config_entry.data.get(CONF_HOME_ID)
                     self.data.home_info = next(
                         (h for h in homes if h.home_id == home_id),
                         homes[0],
                     )
-            except HeimanTokenExpiredError as err:  # pragma: no cover
-                raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
-            except HeimanAuthError as err:
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
             except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Failed to fetch home info: %s", err)
                 self.data.errors["home_info"] = str(err)
 
     async def _fetch_and_process_devices(self, home_id: str) -> None:
         """Fetch and process device data."""
-        cloud_client = self.api_client.cloud_client
+        cloud_wrapper = self.api_client.cloud_client
 
         try:
-            devices_dict = await cloud_client.async_get_devices(home_id=home_id)
+            devices_dict = await cloud_wrapper.async_get_devices(home_id=home_id)
 
             # Apply device filtering
             if self.device_management:
@@ -240,11 +210,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Update device data and merge old states
             self._merge_device_states(devices)
 
-        except HeimanTokenExpiredError as err:  # pragma: no cover
-            raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
-        except HeimanAuthError as err:  # pragma: no cover
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:  # pragma: no cover
+        except HeimanConnectionError as err:
             self.data.errors["devices"] = str(err)
             if not self.data.devices:
                 raise UpdateFailed(f"Connection error fetching devices: {err}") from err
@@ -313,7 +279,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # Create a semaphore to limit concurrent requests
         semaphore = asyncio.Semaphore(5)
 
-        cloud_client = self.api_client.cloud_client
+        cloud_wrapper = self.api_client.cloud_client
 
         async def fetch_device_detail(
             device_id: str,
@@ -323,10 +289,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 try:
                     # Accessing _async_get_device_detail is necessary as there's no
                     # public alternative for getting detailed device information
-                    device_detail = await cloud_client._async_get_device_detail(  # noqa: SLF001
+                    device_detail = await cloud_wrapper._async_get_device_detail(  # noqa: SLF001
                         device_id
                     )
-                except Exception as err:  # pragma: no cover  # noqa: BLE001
+                except Exception as err:  # noqa: BLE001
                     _LOGGER.debug(
                         "Failed to get device details for %s: %s",
                         device_id,
@@ -594,12 +560,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Get cloud client reference for child device detection
             cloud_client = None
             try:
-                # Note: Accessing _cloud_client is necessary because HeimanMqttClient
-                # requires the cloud client instance to detect child devices.
-                # This is an internal implementation detail that may be refactored
-                # in future versions of heimanconnect library.
-                if hasattr(self.api_client, "_cloud_client"):
-                    cloud_client = self.api_client._cloud_client  # noqa: SLF001
+                # Access the underlying cloud client from the wrapper
+                if hasattr(self.api_client, "_wrapper") and self.api_client._wrapper:  # noqa: SLF001
+                    cloud_client = self.api_client._wrapper.cloud_client  # noqa: SLF001
             except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Failed to get cloud_client reference: %s", err)
 

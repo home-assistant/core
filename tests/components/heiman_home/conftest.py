@@ -65,23 +65,19 @@ def mock_api_client() -> Generator[MagicMock]:
         "homeassistant.components.heiman_home.api.HeimanApiClient",
     ) as mock_client:
         client = mock_client.return_value
-        # Set up cloud_client mock
+        # Set up cloud_client (wrapper) mock
         mock_cloud = MagicMock()
         mock_cloud.async_get_user_info = AsyncMock()
         mock_cloud.async_get_homes = AsyncMock()
         mock_cloud.async_get_devices = AsyncMock(return_value={})
-        mock_cloud.async_get_device_detail = AsyncMock(return_value=None)
         mock_cloud.async_get_device_properties = AsyncMock()
         mock_cloud._async_get_device_detail = AsyncMock(return_value=None)
+        mock_cloud.async_control_device = AsyncMock()
         client.cloud_client = mock_cloud
-        # Set up async_ensure_token_valid as it's called by the coordinator
-        client.async_ensure_token_valid = AsyncMock()
-        # Keep legacy methods pointing to cloud_client
-        client.async_get_user_info = mock_cloud.async_get_user_info
-        client.async_get_homes = mock_cloud.async_get_homes
-        client.async_get_devices = mock_cloud.async_get_devices
-        client.async_get_device_detail = mock_cloud.async_get_device_detail
-        client.async_get_device_properties = mock_cloud.async_get_device_properties
+        
+        # Set up _ensure_initialized method
+        client._ensure_initialized = AsyncMock()
+        
         yield client
 
 

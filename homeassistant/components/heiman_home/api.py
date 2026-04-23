@@ -11,9 +11,8 @@ from typing import Any
 
 from heimanconnect import (
     HeimanAuthError,
-    HeimanCloudClient,
+    HeimanCloudClientWrapper,
     HeimanConnectionError,
-    HeimanHttpClient,
 )
 
 from homeassistant.core import HomeAssistant
@@ -28,10 +27,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import API_BASE_URL
 
 
-class HeimanApiError(Exception):
-    """Custom exception for Heiman API errors."""
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -39,7 +34,7 @@ class HeimanApiClient:
     """Heiman API client for Home Assistant.
 
     This is a thin wrapper that manages OAuth2 token lifecycle
-    and provides access to the underlying HeimanCloudClient.
+    and delegates to HeimanCloudClientWrapper for API operations.
     """
 
     def __init__(
@@ -58,30 +53,9 @@ class HeimanApiClient:
         self.hass = hass
         self._session = session
         self._token_data = token_data
+        self._wrapper: HeimanCloudClientWrapper | None = None
 
-        # Initialize HTTP and cloud clients
-        self._http_client: HeimanHttpClient | None = None
-        self._cloud_client: HeimanCloudClient | None = None
-
-        self._initialize_clients()
-
-    def _initialize_clients(self) -> None:
-        """Initialize HTTP and cloud clients."""
-        access_token = self._get_access_token()
-
-        if not access_token:
-            _LOGGER.warning("No access token available")
-            return
-
-        self._http_client = HeimanHttpClient(
-            api_url=API_BASE_URL, access_token=access_token
-        )
-
-        self._cloud_client = HeimanCloudClient(
-            http_client=self._http_client,
-        )
-
-    def _get_access_token(self) -> str | None:
+    async def _get_access_token(self) -> str | None:
         """Get current access token."""
         if self._session and self._session.token:
             return self._session.token.get("access_token")
@@ -89,12 +63,30 @@ class HeimanApiClient:
             return self._token_data.get("access_token")
         return None
 
-    async def async_ensure_token_valid(self) -> None:
-        """Ensure OAuth2 token is valid.
+    async def _ensure_initialized(self) -> None:
+        """Ensure the wrapper is initialized with a valid token."""
+        if self._wrapper:
+            return
 
+        access_token = await self._get_access_token()
+        if not access_token:
+            raise HeimanConnectionError("No access token available")
+
+        # Create wrapper with token refresh callback
+        self._wrapper = HeimanCloudClientWrapper(
+            api_url=API_BASE_URL,
+            initial_access_token=access_token,
+            token_refresh_callback=self._refresh_token_callback,
+        )
+
+    async def _refresh_token_callback(self) -> str:
+        """Callback to refresh the access token.
+        
+        Returns:
+            New access token string
+            
         Raises:
-            ConfigEntryAuthFailed: If token refresh fails due to auth error
-            UpdateFailed: If token refresh fails due to transient error
+            Exception: If token refresh fails
         """
         if self._session:
             try:
@@ -105,114 +97,34 @@ class HeimanApiClient:
                 raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
             except Exception as err:
                 raise UpdateFailed(f"Token refresh failed: {err}") from err
-            # Update token in HTTP client if it changed
-            current_token = self._get_access_token()
-            if self._http_client and current_token:
-                self._http_client.update_access_token(current_token)
+            
+            # Get updated token
+            new_token = self._session.token.get("access_token")
+            if new_token:
+                return new_token
+        
+        # Fallback to token_data
+        if self._token_data:
+            return self._token_data.get("access_token", "")
+        
+        raise HeimanAuthError("No token available for refresh")
 
     @property
-    def cloud_client(self) -> HeimanCloudClient:
-        """Get the underlying cloud client.
+    def cloud_client(self):
+        """Get the underlying cloud client wrapper.
 
         Returns:
-            HeimanCloudClient instance
+            HeimanCloudClientWrapper instance
 
         Raises:
             RuntimeError: If client is not initialized
         """
-        if not self._cloud_client:  # pragma: no cover
-            raise RuntimeError("Cloud client not initialized")
-        return self._cloud_client
+        if not self._wrapper:
+            raise RuntimeError("Client not initialized")
+        return self._wrapper
 
     async def close(self) -> None:
-        """Close the client."""
-        if self._http_client:
-            await self._http_client.close()
-
-    # Proxy methods to cloud_client for backward compatibility
-
-    async def async_get_user_info(self):
-        """Get user info from cloud client."""
-        if not self._cloud_client:
-            raise HeimanConnectionError("Client not initialized")
-        await self.async_ensure_token_valid()
-        try:
-            return await self._cloud_client.async_get_user_info()
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise UpdateFailed(f"Connection error: {err}") from err
-        except Exception as err:
-            raise HeimanApiError(f"Failed to get user info: {err}") from err
-
-    async def async_get_homes(self):
-        """Get homes from cloud client."""
-        if not self._cloud_client:
-            raise HeimanConnectionError("Client not initialized")
-        await self.async_ensure_token_valid()
-        try:
-            return await self._cloud_client.async_get_homes()
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise UpdateFailed(f"Connection error getting homes: {err}") from err
-        except Exception as err:
-            raise HeimanConnectionError(f"Failed to get homes: {err}") from err
-
-    async def async_get_devices(self, home_id: str):
-        """Get devices from cloud client."""
-        if not self._cloud_client:
-            raise HeimanConnectionError("Client not initialized")
-        await self.async_ensure_token_valid()
-        try:
-            return await self._cloud_client.async_get_devices(home_id=home_id)
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise UpdateFailed(f"Connection error getting devices: {err}") from err
-        except Exception as err:
-            raise HeimanConnectionError(f"Failed to get devices: {err}") from err
-
-    async def async_get_device_properties(self, device_id: str):
-        """Get device properties from cloud client."""
-        if not self._cloud_client:
-            raise HeimanConnectionError("Client not initialized")
-        await self.async_ensure_token_valid()
-        try:
-            return await self._cloud_client.async_get_device_properties(device_id)
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise UpdateFailed(
-                f"Connection error getting device properties: {err}"
-            ) from err
-        except Exception as err:
-            raise HeimanApiError(f"Failed to get device properties: {err}") from err
-
-    async def async_get_device_detail(self, device_id: str):
-        """Get device detail from cloud client."""
-        if not self._cloud_client:
-            return None
-        await self.async_ensure_token_valid()
-        try:
-            # Accessing _async_get_device_detail is necessary as there's no public alternative
-            # for getting detailed device information including deriveMetadata
-            return await self._cloud_client._async_get_device_detail(device_id)  # noqa: SLF001
-        except Exception:  # noqa: BLE001
-            return None
-
-    async def async_control_device(self, device_id: str, property_id: str, value):
-        """Control device via cloud client."""
-        if not self._cloud_client:
-            raise HeimanConnectionError("Client not initialized")
-        await self.async_ensure_token_valid()
-        try:
-            return await self._cloud_client.async_control_device(
-                device_id, property_id, value
-            )
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise UpdateFailed(f"Connection error controlling device: {err}") from err
-        except Exception as err:
-            raise HeimanConnectionError(f"Failed to control device: {err}") from err
+        """Close the client and release resources."""
+        if self._wrapper:
+            await self._wrapper.close()
+            self._wrapper = None

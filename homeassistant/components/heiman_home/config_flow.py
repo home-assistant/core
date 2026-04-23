@@ -6,7 +6,7 @@ from typing import Any
 from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -29,8 +29,6 @@ class AuthInfo:
 class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle configuration of Heiman integration."""
 
-    VERSION = 1
-    MINOR_VERSION = 1
     DOMAIN = DOMAIN
 
     def __init__(self) -> None:
@@ -107,44 +105,26 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
 
             await self.async_set_unique_id(self._auth_info.user_info.user_id)
+            self._abort_if_unique_id_configured()
 
-            if self.source != SOURCE_REAUTH:
-                self._abort_if_unique_id_configured()
+            # Build config data with single home ID
+            config_data = {
+                **self._auth_info.auth_data,
+                CONF_HOME_ID: selected_home_id,
+                CONF_USER_ID: self._auth_info.user_info.user_id,
+            }
 
-                # Build config data with single home ID
-                config_data = {
-                    **self._auth_info.auth_data,
-                    CONF_HOME_ID: selected_home_id,
-                    CONF_USER_ID: self._auth_info.user_info.user_id,
-                }
+            # Get title from user info (nick_name or email)
+            user_info = self._auth_info.user_info
+            title = (
+                getattr(user_info, "nick_name", None)
+                or getattr(user_info, "email", None)
+                or "Heiman Home"
+            )
 
-                # Get title from user info (nick_name or email)
-                user_info = self._auth_info.user_info
-                title = (
-                    getattr(user_info, "nick_name", None)
-                    or getattr(user_info, "email", None)
-                    or "Heiman Home"
-                )
-
-                return self.async_create_entry(
-                    title=title,
-                    data=config_data,
-                )
-
-            # Handle re-authentication
-            entry = self._get_reauth_entry()
-            if entry is None:
-                return self.async_abort(reason="reauth_entry_not_found")
-            if entry.data.get(CONF_USER_ID) != self._auth_info.user_info.user_id:
-                return self.async_abort(reason="reauth_user_mismatch")
-            return self.async_update_reload_and_abort(
-                entry,
-                data_updates={
-                    **self._auth_info.auth_data,
-                    CONF_HOME_ID: selected_home_id,
-                    CONF_USER_ID: self._auth_info.user_info.user_id,
-                },
-                unique_id=self._auth_info.user_info.user_id,
+            return self.async_create_entry(
+                title=title,
+                data=config_data,
             )
 
         # Show home selection form
@@ -167,7 +147,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         home_options = {}
         for home in homes:
             home_id = getattr(home, "home_id", "")
-            if not home_id:  # pragma: no cover
+            if not home_id:
                 continue
             home_name = getattr(home, "home_name", "Unknown")
             device_count = getattr(home, "device_count", 0)
@@ -175,7 +155,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             display_text = f"{home_name} [{device_count} devices]"
             home_options[home_id] = display_text
 
-        if not home_options:  # pragma: no cover
+        if not home_options:
             return vol.Schema({})
 
         return vol.Schema(
