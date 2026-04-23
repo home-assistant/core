@@ -8,7 +8,7 @@ from typing import Any, Unpack, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
@@ -155,7 +155,6 @@ class SunCondition(Condition):
         self._before_offset = self._options.get("before_offset")
         self._after_offset = self._options.get("after_offset")
 
-    @callback
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         return sun(

@@ -332,7 +332,6 @@ class ConditionChecker(abc.ABC):
         self._on_unload.clear()
 
     @abc.abstractmethod
-    @callback
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
         """Check the condition."""
 
@@ -345,7 +344,6 @@ class LegacyConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._checker = checker
 
-    @callback
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
@@ -353,7 +351,6 @@ class LegacyConditionChecker(ConditionChecker):
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
-    @callback
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 

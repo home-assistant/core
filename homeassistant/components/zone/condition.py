@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
@@ -119,7 +119,6 @@ class ZoneCondition(Condition):
         self._entity_ids = self._options.get(CONF_ENTITY_ID, [])
         self._zone_entity_ids = self._options.get(CONF_ZONE, [])
 
-    @callback
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test if condition."""
         errors = []

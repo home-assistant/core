@@ -7,7 +7,7 @@ from typing import Any, Protocol
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_OPTIONS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import (
     Condition,
@@ -96,7 +96,6 @@ class DeviceCondition(Condition):
             self._hass, self._config
         )
 
-    @callback
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         """Check the condition."""
         result = self._platform_checker(self._hass, variables)
