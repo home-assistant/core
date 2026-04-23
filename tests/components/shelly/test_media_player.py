@@ -377,6 +377,31 @@ async def test_get_image_http(
     assert isinstance(content, bytes)
 
 
+async def test_get_image_http_base64_decode_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test get image via http command base64 decode error."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    status["media"]["playback"]["media_meta"]["thumb"] = "data:image/webp;base64,0"
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    state = hass.states.get(ENTITY_ID)
+    assert "entity_picture_local" not in state.attributes
+
+    client = await hass_client_no_auth()
+
+    resp = await client.get(state.attributes["entity_picture"])
+    content = await resp.read()
+
+    assert isinstance(content, bytes)
+
+
 async def test_rpc_media_player_browse_media_root(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
