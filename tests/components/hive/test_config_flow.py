@@ -103,14 +103,14 @@ async def test_user_flow_uppercase_username_normalized_for_auth(
                 },
             }
         )
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: uppercase_username, CONF_PASSWORD: PASSWORD},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"][CONF_USERNAME] == uppercase_username
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == uppercase_username
     assert mock_auth.call_args.kwargs["username"] == uppercase_username.lower()
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
