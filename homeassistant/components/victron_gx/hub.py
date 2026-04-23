@@ -142,6 +142,15 @@ class Hub:
             device_info["via_device"] = (DOMAIN, f"{installation_id}_system_0")
         return device_info
 
+    def is_device_connected(self, device_identifiers: set[tuple[str, str]]) -> bool:
+        """Check if a device is currently known to the hub."""
+        known_devices = self._hub.devices
+        return any(
+            identifier[1].removeprefix(f"{self._hub.installation_id}_") in known_devices
+            for identifier in device_identifiers
+            if identifier[0] == DOMAIN
+        )
+
     def get_diagnostics_data(self) -> dict[str, Any]:
         """Return diagnostics data for the hub's device and entity tree."""
         return {
