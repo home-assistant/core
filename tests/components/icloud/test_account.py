@@ -165,3 +165,83 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+
+
+def _make_account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
+    """Build an IcloudAccount with mocked config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    return IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+
+async def test_keep_alive_auth_exception_reschedules(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive reschedules on transient auth error instead of dying permanently.
+
+    Before this fix, any exception from authenticate() propagated out of keep_alive()
+    without scheduling the next call, permanently killing the polling loop.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.authenticate.side_effect = Exception("Session expired")
+
+    with patch.object(account, "_schedule_next_fetch") as mock_schedule:
+        account.keep_alive()
+
+    mock_schedule.assert_called_once()
+    assert account._fetch_interval == 2
+
+
+async def test_keep_alive_success_sends_locate_before_update(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive sends an active locate push before updating devices."""
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = False
+
+    with (
+        patch.object(account, "update_devices") as mock_update,
+        patch.object(account, "_schedule_next_fetch"),
+    ):
+        account.keep_alive()
+
+    account.api.devices._refresh_client.assert_called_once_with(locate=True)
+    mock_update.assert_called_once()
+
+
+async def test_update_devices_requires_2fa_reschedules(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test update_devices reschedules the next poll even when requires_2fa is True.
+
+    Before this fix, the requires_2fa early return skipped _schedule_next_fetch(),
+    permanently killing the polling loop while waiting for re-authentication.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = True
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.update_devices()
+
+    mock_reauth.assert_called_once()
+    mock_schedule.assert_called_once()
