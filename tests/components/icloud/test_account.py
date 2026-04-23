@@ -2,9 +2,8 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
-import pytest
-
 from pyicloud.exceptions import PyiCloudAuthRequiredException
+import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
