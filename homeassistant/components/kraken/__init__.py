@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import logging
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -13,8 +10,6 @@ from .const import DISPATCH_CONFIG_UPDATED
 from .coordinator import KrakenConfigEntry, KrakenData
 
 PLATFORMS = [Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KrakenConfigEntry) -> bool:
@@ -39,19 +34,3 @@ async def async_options_updated(
 ) -> None:
     """Triggered by config entry options updates."""
     async_dispatcher_send(hass, DISPATCH_CONFIG_UPDATED, hass, config_entry)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate an old config entry."""
-    if entry.version == 1 and entry.minor_version == 1:
-        _LOGGER.debug(
-            "Migrating from version %s.%s", entry.version, entry.minor_version
-        )
-        options = dict(entry.options)
-        options.pop(CONF_SCAN_INTERVAL, None)
-        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
-        _LOGGER.debug(
-            "Migration to version %s.%s successful", entry.version, entry.minor_version
-        )
-
-    return True
