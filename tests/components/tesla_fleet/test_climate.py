@@ -1,6 +1,7 @@
 """Test the Tesla Fleet climate platform."""
 
-from unittest.mock import AsyncMock, PropertyMock, patch
+from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -201,17 +202,22 @@ async def test_climate_set_fan_mode_bioweapon_unsupported_vehicle(
 ) -> None:
     """Test bioweapon fan mode is rejected when the vehicle does not support it."""
 
-    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
+    mock_data = deepcopy(mock_vehicle_data.return_value)
+    response = mock_data.get("response", mock_data)
+    response["vin"] = "5YJ3CBE24KF152671"
+    if "climate_state" in response:
+        response["climate_state"].pop("bioweapon_mode", None)
+    mock_vehicle_data.return_value = mock_data
 
-    with (
-        patch(
-            "homeassistant.components.tesla_fleet.climate.TeslaFleetClimateEntity.fan_modes",
-            new_callable=PropertyMock,
-            return_value=None,
-        ),
-        pytest.raises((ServiceValidationError, ServiceNotSupported)),
+    # Patch _vin_model_year instead of VIN so we don't have to touch fixtures/vehicle_data.json
+    with patch(
+        "homeassistant.components.tesla_fleet.climate._vin_model_year",
+        return_value=2012,
     ):
+        await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
+
+    with pytest.raises((ServiceValidationError, ServiceNotSupported)):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
