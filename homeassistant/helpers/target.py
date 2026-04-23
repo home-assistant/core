@@ -345,14 +345,25 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         target_selection: TargetSelection,
         action: Callable[[TargetStateChangedData], Any],
         entity_filter: Callable[[set[str]], set[str]],
+        on_entities_update: Callable[[set[str], set[str]], None] | None = None,
     ) -> None:
         """Initialize the state change tracker."""
         super().__init__(hass, target_selection, entity_filter)
         self._action = action
+        self._on_entities_update = on_entities_update
         self._state_change_unsub: CALLBACK_TYPE | None = None
+        self._tracked_entities: set[str] = set()
 
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
         """Handle the tracked entities."""
+        previous_entities = self._tracked_entities
+        self._tracked_entities = tracked_entities
+
+        if self._on_entities_update is not None:
+            added = tracked_entities - previous_entities
+            removed = previous_entities - tracked_entities
+            if added or removed:
+                self._on_entities_update(added, removed)
 
         @callback
         def state_change_listener(event: Event[EventStateChangedData]) -> None:
@@ -380,6 +391,7 @@ def async_track_target_selector_state_change_event(
     target_selector_config: ConfigType,
     action: Callable[[TargetStateChangedData], Any],
     entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
+    on_entities_update: Callable[[set[str], set[str]], None] | None = None,
 ) -> CALLBACK_TYPE:
     """Track state changes for entities referenced directly or indirectly in a target selector."""
     target_selection = TargetSelection(target_selector_config)
@@ -387,5 +399,7 @@ def async_track_target_selector_state_change_event(
         raise HomeAssistantError(
             f"Target selector {target_selector_config} does not have any selectors defined"
         )
-    tracker = TargetStateChangeTracker(hass, target_selection, action, entity_filter)
+    tracker = TargetStateChangeTracker(
+        hass, target_selection, action, entity_filter, on_entities_update
+    )
     return tracker.async_setup()

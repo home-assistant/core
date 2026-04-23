@@ -94,7 +94,12 @@ from .selector import (
     NumericThresholdType,
     TargetSelector,
 )
-from .target import TargetSelection, async_extract_referenced_entity_ids
+from .target import (
+    TargetSelection,
+    TargetStateChangedData,
+    async_extract_referenced_entity_ids,
+    async_track_target_selector_state_change_event,
+)
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -443,6 +448,7 @@ class EntityConditionBase(Condition):
         if TYPE_CHECKING:
             assert config.target
             assert config.options
+        self._target_config = config.target
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
         self._duration: timedelta | None = config.options.get(CONF_FOR)
@@ -450,10 +456,96 @@ class EntityConditionBase(Condition):
             self._matcher = self._check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
             self._matcher = self._check_all_match_state
+        self._on_unload: list[Callable[[], None]] = []
+        self._valid_since: dict[str, datetime] = {}
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
+
+    @property
+    def _needs_duration_tracking(self) -> bool:
+        """Whether this condition needs active state change tracking for duration.
+
+        Conditions that are true for a single main state value can use
+        state.last_changed directly. Conditions that track attributes or
+        match multiple states need active tracking because last_changed
+        does not capture those transitions.
+        """
+        return True
+
+    def _prime_valid_since(self, entity_id: str) -> None:
+        """Prime _valid_since for an entity already in a valid state.
+
+        For state-based conditions (value_source is None), last_changed
+        accurately reflects when the state changed to the current value.
+        For attribute-based conditions, last_changed only tracks main state
+        changes, so we use last_updated which is bumped on any update
+        (state or attributes). This is conservative - the tracked attribute
+        may have held its value longer - but it's the best we can do
+        to avoid false positives.
+        """
+        if (
+            (_state := self._hass.states.get(entity_id)) is not None
+            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            and self.is_valid_state(_state)
+        ):
+            domain_spec = self._domain_specs[_state.domain]
+            if domain_spec.value_source is None:
+                self._valid_since[entity_id] = _state.last_changed
+            else:
+                self._valid_since[entity_id] = _state.last_updated
+
+    @override
+    async def async_setup(self) -> None:
+        """Set up state tracking for duration-based conditions."""
+        await super().async_setup()
+        if not self._duration or not self._needs_duration_tracking:
+            return
+
+        @callback
+        def _state_change_listener(
+            data: TargetStateChangedData,
+        ) -> None:
+            """Track when entities enter or leave a valid state."""
+            event = data.state_change_event
+            entity_id = event.data["entity_id"]
+            to_state = event.data["new_state"]
+
+            if (
+                to_state is not None
+                and to_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                and self.is_valid_state(to_state)
+            ):
+                if entity_id not in self._valid_since:
+                    # Prime from the state object — this handles both
+                    # genuine transitions and newly tracked entities
+                    self._prime_valid_since(entity_id)
+            else:
+                self._valid_since.pop(entity_id, None)
+
+        @callback
+        def _on_entities_update(added: set[str], removed: set[str]) -> None:
+            """Handle changes to the tracked entity set."""
+            for entity_id in added:
+                self._prime_valid_since(entity_id)
+            for entity_id in removed:
+                self._valid_since.pop(entity_id, None)
+
+        unsub = async_track_target_selector_state_change_event(
+            self._hass,
+            self._target_config,
+            _state_change_listener,
+            self.entity_filter,
+            _on_entities_update,
+        )
+        self._on_unload.append(unsub)
+
+    def async_unload(self) -> None:
+        """Unsubscribe from listeners."""
+        for cb in self._on_unload:
+            cb()
+        self._on_unload.clear()
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked value from a state based on the DomainSpec."""
@@ -471,9 +563,16 @@ class EntityConditionBase(Condition):
         if not self._duration:
             # Skip duration check if duration is not specified or 0
             return any(self.is_valid_state(state) for state in states)
-        duration = dt_util.utcnow() - self._duration
+        cutoff = dt_util.utcnow() - self._duration
+        if not self._needs_duration_tracking:
+            return any(
+                self.is_valid_state(state) and state.last_changed <= cutoff
+                for state in states
+            )
         return any(
-            self.is_valid_state(state) and duration > state.last_changed
+            self.is_valid_state(state)
+            and (valid_since := self._valid_since.get(state.entity_id)) is not None
+            and valid_since <= cutoff
             for state in states
         )
 
@@ -482,9 +581,16 @@ class EntityConditionBase(Condition):
         if not self._duration:
             # Skip duration check if duration is not specified or 0
             return all(self.is_valid_state(state) for state in states)
-        duration = dt_util.utcnow() - self._duration
+        cutoff = dt_util.utcnow() - self._duration
+        if not self._needs_duration_tracking:
+            return all(
+                self.is_valid_state(state) and state.last_changed <= cutoff
+                for state in states
+            )
         return all(
-            self.is_valid_state(state) and duration > state.last_changed
+            self.is_valid_state(state)
+            and (valid_since := self._valid_since.get(state.entity_id)) is not None
+            and valid_since <= cutoff
             for state in states
         )
 
@@ -510,6 +616,15 @@ class EntityStateConditionBase(EntityConditionBase):
     """State condition."""
 
     _states: set[str | bool]
+
+    @property
+    def _needs_duration_tracking(self) -> bool:
+        """Single-state conditions with no attribute tracking can use last_changed."""
+        if len(self._states) != 1:
+            return True
+        return any(
+            spec.value_source is not None for spec in self._domain_specs.values()
+        )
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
