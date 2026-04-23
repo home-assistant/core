@@ -6,13 +6,31 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_URL
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_EMAIL,
+    CONF_ENTITY_ID,
+    CONF_LOCATION,
+    CONF_SENSORS,
+    CONF_STATE,
+    CONF_URL,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
@@ -22,45 +40,78 @@ from homeassistant.helpers.selector import (
 
 from . import SpaceAPIConfigEntry
 from .const import (
+    BILLING_INTERVALS,
     CONF_ACCOUNT_BALANCE,
+    CONF_ACTIVITIES,
+    CONF_AREA_DESCRIPTION,
+    CONF_AREA_NAME,
+    CONF_AREA_SQUARE_METERS,
     CONF_BAROMETER,
     CONF_BEVERAGE_SUPPLY,
     CONF_CAM,
     CONF_CARBONDIOXIDE,
     CONF_CONTACT,
+    CONF_COUNTRY_CODE,
     CONF_DOOR_LOCKED,
+    CONF_EVENTS_WINDOW_HOURS,
     CONF_FACEBOOK,
     CONF_FEED_BLOG,
     CONF_FEED_CALENDAR,
-    CONF_FEED_FLICKER,
+    CONF_FEED_FLICKR,
     CONF_FEED_WIKI,
     CONF_FEEDS,
     CONF_GOPHER,
+    CONF_HINT,
     CONF_HUMIDITY,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
     CONF_IRC,
+    CONF_LINK_DESCRIPTION,
+    CONF_LINK_NAME,
+    CONF_LINK_URL,
+    CONF_LINKED_SPACE_ENDPOINT,
+    CONF_LINKED_SPACE_WEBSITE,
     CONF_LOGO,
     CONF_MASTODON,
     CONF_MATRIX,
+    CONF_MESSAGE,
     CONF_ML,
     CONF_MUMBLE,
     CONF_NETWORK_CONNECTIONS,
+    CONF_NETWORK_TRAFFIC,
     CONF_PEOPLE_NOW_PRESENT,
     CONF_PHONE,
+    CONF_PLAN_BILLING_INTERVAL,
+    CONF_PLAN_CURRENCY,
+    CONF_PLAN_DESCRIPTION,
+    CONF_PLAN_NAME,
+    CONF_PLAN_VALUE,
     CONF_POWER_CONSUMPTION,
     CONF_POWER_GENERATION,
     CONF_PROJECTS,
+    CONF_RADIATION,
     CONF_SIP,
     CONF_SPACE,
     CONF_SPACEFED,
     CONF_SPACENET,
     CONF_SPACESAML,
     CONF_TEMPERATURE,
+    CONF_TIMEZONE,
     CONF_TOTAL_MEMBER_COUNT,
     CONF_TWITTER,
+    CONF_WIND_DIRECTION,
+    CONF_WIND_ELEVATION,
+    CONF_WIND_GUST,
+    CONF_WIND_LOCATION,
+    CONF_WIND_NAME,
+    CONF_WIND_SPEED,
     CONF_XMPP,
     DOMAIN,
+    SUBENTRY_LINK,
+    SUBENTRY_LINKED_SPACE,
+    SUBENTRY_LOCATION_AREA,
+    SUBENTRY_MEMBERSHIP_PLAN,
+    SUBENTRY_WIND_SENSOR,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -74,7 +125,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required("entity_id"): EntitySelector(
+        vol.Required(CONF_ENTITY_ID): EntitySelector(
             EntitySelectorConfig(
                 domain=["binary_sensor", "input_boolean", "switch", "lock", "cover"]
             )
@@ -84,6 +135,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
     }
 )
+
+# Allowed feed type values per v15 spec
+_FEED_TYPES = ["rss", "atom", "ical"]
 
 
 class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,6 +151,20 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return SpaceAPIOptionsFlowHandler()
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentry types supported by SpaceAPI."""
+        return {
+            SUBENTRY_LINK: LinkSubentryFlowHandler,
+            SUBENTRY_MEMBERSHIP_PLAN: MembershipPlanSubentryFlowHandler,
+            SUBENTRY_LINKED_SPACE: LinkedSpaceSubentryFlowHandler,
+            SUBENTRY_LOCATION_AREA: LocationAreaSubentryFlowHandler,
+            SUBENTRY_WIND_SENSOR: WindSensorSubentryFlowHandler,
+        }
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -106,7 +174,8 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        self._async_abort_entries_match({})
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         return self.async_create_entry(
             title=user_input[CONF_SPACE],
@@ -114,72 +183,77 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SPACE: user_input[CONF_SPACE],
                 CONF_LOGO: user_input[CONF_LOGO],
                 CONF_URL: user_input[CONF_URL],
-                "state": {"entity_id": user_input["entity_id"]},
+                CONF_STATE: {CONF_ENTITY_ID: user_input[CONF_ENTITY_ID]},
+            },
+            options={
                 CONF_CONTACT: {CONF_EMAIL: user_input[CONF_EMAIL]},
             },
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import SpaceAPI config from YAML."""
-        self._async_abort_entries_match({})
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         # Required fields -> entry.data
         data = {
             CONF_SPACE: import_data[CONF_SPACE],
             CONF_LOGO: import_data[CONF_LOGO],
             CONF_URL: import_data[CONF_URL],
-            "state": {"entity_id": import_data["state"]["entity_id"]},
-            CONF_CONTACT: {CONF_EMAIL: import_data[CONF_CONTACT].get(CONF_EMAIL, "")},
+            CONF_STATE: {CONF_ENTITY_ID: import_data[CONF_STATE][CONF_ENTITY_ID]},
         }
 
         # Optional fields -> entry.options
         options: dict[str, Any] = {}
 
-        # Contact extras (everything except email, dropping removed v13 fields)
+        # Contact: email + extras all go to options; drop removed v13 fields
         dropped_contact_fields = {"identica", "foursquare", "issue_mail", "keymasters"}
-        contact_extras: dict[str, Any] = {}
+        contact: dict[str, Any] = {}
         for k, v in import_data.get(CONF_CONTACT, {}).items():
-            if k == CONF_EMAIL or not v or k in dropped_contact_fields:
+            if not v or k in dropped_contact_fields:
                 continue
-            # Auto-rename jabber -> xmpp
             if k == "jabber":
-                contact_extras[CONF_XMPP] = v
+                contact[CONF_XMPP] = v
             else:
-                contact_extras[k] = v
-        if contact_extras:
-            options[CONF_CONTACT] = contact_extras
+                contact[k] = v
+        if contact:
+            options[CONF_CONTACT] = contact
 
         # State icons
         state_icons: dict[str, str] = {}
-        state_config = import_data.get("state", {})
-        if "icon_open" in state_config:
-            state_icons["icon_open"] = state_config["icon_open"]
-        if "icon_closed" in state_config:
-            state_icons["icon_closed"] = state_config["icon_closed"]
+        state_config = import_data.get(CONF_STATE, {})
+        if CONF_ICON_OPEN in state_config:
+            state_icons[CONF_ICON_OPEN] = state_config[CONF_ICON_OPEN]
+        if CONF_ICON_CLOSED in state_config:
+            state_icons[CONF_ICON_CLOSED] = state_config[CONF_ICON_CLOSED]
         if state_icons:
-            options["state"] = state_icons
+            options[CONF_STATE] = state_icons
 
         # Optional sections pass through directly (dropping removed v13 sections)
-        for key in (
-            "sensors",
-            "cam",
-            "feeds",
-            "projects",
-        ):
+        for key in (CONF_SENSORS, CONF_CAM, CONF_PROJECTS):
             if key in import_data:
                 options[key] = import_data[key]
 
+        # Feeds: normalize flicker -> flickr (v15 spec key)
+        if CONF_FEEDS in import_data:
+            feeds = dict(import_data[CONF_FEEDS])
+            if "flicker" in feeds:
+                feeds[CONF_FEED_FLICKR] = feeds.pop("flicker")
+            options[CONF_FEEDS] = feeds
+
         # Spacefed: drop spacephone
-        if "spacefed" in import_data:
+        if CONF_SPACEFED in import_data:
             spacefed = {
-                k: v for k, v in import_data["spacefed"].items() if k != "spacephone"
+                k: v for k, v in import_data[CONF_SPACEFED].items() if k != "spacephone"
             }
             if spacefed:
-                options["spacefed"] = spacefed
+                options[CONF_SPACEFED] = spacefed
 
         # Location address
-        if "location" in import_data and "address" in import_data["location"]:
-            options["location"] = {"address": import_data["location"]["address"]}
+        if CONF_LOCATION in import_data and CONF_ADDRESS in import_data[CONF_LOCATION]:
+            options[CONF_LOCATION] = {
+                CONF_ADDRESS: import_data[CONF_LOCATION][CONF_ADDRESS]
+            }
 
         return self.async_create_entry(
             title=data[CONF_SPACE],
@@ -191,8 +265,8 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
+        entry = self._get_reconfigure_entry()
         if user_input is None:
-            entry = self._get_reconfigure_entry()
             return self.async_show_form(
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
@@ -201,13 +275,19 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SPACE: entry.data[CONF_SPACE],
                         CONF_LOGO: entry.data[CONF_LOGO],
                         CONF_URL: entry.data[CONF_URL],
-                        "entity_id": entry.data["state"]["entity_id"],
-                        CONF_EMAIL: entry.data[CONF_CONTACT][CONF_EMAIL],
+                        CONF_ENTITY_ID: entry.data[CONF_STATE][CONF_ENTITY_ID],
+                        CONF_EMAIL: entry.options.get(CONF_CONTACT, {}).get(
+                            CONF_EMAIL, ""
+                        ),
                     },
                 ),
             )
 
-        entry = self._get_reconfigure_entry()
+        # Email lives in options; merge it into the existing contact dict.
+        updated_contact = {
+            **entry.options.get(CONF_CONTACT, {}),
+            CONF_EMAIL: user_input[CONF_EMAIL],
+        }
         return self.async_update_reload_and_abort(
             entry,
             title=user_input[CONF_SPACE],
@@ -215,23 +295,9 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SPACE: user_input[CONF_SPACE],
                 CONF_LOGO: user_input[CONF_LOGO],
                 CONF_URL: user_input[CONF_URL],
-                "state": {
-                    "entity_id": user_input["entity_id"],
-                    **{
-                        k: v
-                        for k, v in entry.data.get("state", {}).items()
-                        if k != "entity_id"
-                    },
-                },
-                CONF_CONTACT: {
-                    CONF_EMAIL: user_input[CONF_EMAIL],
-                    **{
-                        k: v
-                        for k, v in entry.data.get(CONF_CONTACT, {}).items()
-                        if k != CONF_EMAIL
-                    },
-                },
+                CONF_STATE: {CONF_ENTITY_ID: user_input[CONF_ENTITY_ID]},
             },
+            options={**entry.options, CONF_CONTACT: updated_contact},
         )
 
 
@@ -246,12 +312,14 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             step_id="init",
             menu_options=[
                 "contact",
-                "state_icons",
+                "state_extras",
                 "sensors",
                 "spacefed",
+                "location",
                 "media",
                 "feeds",
-                "other",
+                "events",
+                "projects",
             ],
         )
 
@@ -275,7 +343,7 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                     TextSelectorConfig(type=TextSelectorType.EMAIL)
                 ),
                 vol.Optional(CONF_IRC, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.URL)
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
                 vol.Optional(CONF_ML, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.EMAIL)
@@ -314,20 +382,20 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(schema, current),
         )
 
-    async def async_step_state_icons(
+    async def async_step_state_extras(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure state icons."""
+        """Configure state icons and optional state text fields."""
         if user_input is not None:
             options = dict(self.config_entry.options)
-            state_icons = {k: v for k, v in user_input.items() if v}
-            if state_icons:
-                options["state"] = state_icons
+            state_extras = {k: v for k, v in user_input.items() if v}
+            if state_extras:
+                options[CONF_STATE] = state_extras
             else:
-                options.pop("state", None)
+                options.pop(CONF_STATE, None)
             return self.async_create_entry(data=options)
 
-        current = self.config_entry.options.get("state", {})
+        current = self.config_entry.options.get(CONF_STATE, {})
         schema = vol.Schema(
             {
                 vol.Optional(CONF_ICON_OPEN, default=""): TextSelector(
@@ -336,10 +404,13 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 vol.Optional(CONF_ICON_CLOSED, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
+                vol.Optional(CONF_MESSAGE): EntitySelector(
+                    EntitySelectorConfig(domain=["input_text", "text", "sensor"])
+                ),
             }
         )
         return self.async_show_form(
-            step_id="state_icons",
+            step_id="state_extras",
             data_schema=self.add_suggested_values_to_schema(schema, current),
         )
 
@@ -351,12 +422,12 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             options = dict(self.config_entry.options)
             sensors = {k: v for k, v in user_input.items() if v}
             if sensors:
-                options["sensors"] = sensors
+                options[CONF_SENSORS] = sensors
             else:
-                options.pop("sensors", None)
+                options.pop(CONF_SENSORS, None)
             return self.async_create_entry(data=options)
 
-        current = self.config_entry.options.get("sensors", {})
+        current = self.config_entry.options.get(CONF_SENSORS, {})
         schema = vol.Schema(
             {
                 vol.Optional(CONF_TEMPERATURE): EntitySelector(
@@ -385,6 +456,12 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                         multiple=True,
                         domain="sensor",
                         device_class="carbon_dioxide",
+                    )
+                ),
+                vol.Optional(CONF_RADIATION): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
                     )
                 ),
                 vol.Optional(CONF_POWER_CONSUMPTION): EntitySelector(
@@ -438,6 +515,12 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                         domain="sensor",
                     )
                 ),
+                vol.Optional(CONF_NETWORK_TRAFFIC): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
             }
         )
         return self.async_show_form(
@@ -470,6 +553,41 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(schema, current),
         )
 
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure location details."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            location = {k: v for k, v in user_input.items() if v}
+            if location:
+                options[CONF_LOCATION] = location
+            else:
+                options.pop(CONF_LOCATION, None)
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options.get(CONF_LOCATION, {})
+        schema = vol.Schema(
+            {
+                vol.Optional("address", default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_TIMEZONE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_COUNTRY_CODE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_HINT, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="location",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
     async def async_step_media(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -477,7 +595,6 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             options = dict(self.config_entry.options)
 
-            # Camera URLs
             cam_urls = user_input.get(CONF_CAM, [])
             if cam_urls:
                 options[CONF_CAM] = cam_urls
@@ -514,7 +631,7 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 CONF_FEED_BLOG,
                 CONF_FEED_WIKI,
                 CONF_FEED_CALENDAR,
-                CONF_FEED_FLICKER,
+                CONF_FEED_FLICKR,
             ):
                 url = user_input.get(f"{feed_name}_url", "")
                 feed_type = user_input.get(f"{feed_name}_type", "")
@@ -531,12 +648,17 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(data=options)
 
         current_feeds = self.config_entry.options.get(CONF_FEEDS, {})
+        # Normalize legacy "flicker" key to "flickr" on first edit
+        if "flicker" in current_feeds and CONF_FEED_FLICKR not in current_feeds:
+            current_feeds = dict(current_feeds)
+            current_feeds[CONF_FEED_FLICKR] = current_feeds.pop("flicker")
+
         current: dict[str, str] = {}
         for feed_name in (
             CONF_FEED_BLOG,
             CONF_FEED_WIKI,
             CONF_FEED_CALENDAR,
-            CONF_FEED_FLICKER,
+            CONF_FEED_FLICKR,
         ):
             feed_data = current_feeds.get(feed_name, {})
             current[f"{feed_name}_url"] = feed_data.get("url", "")
@@ -547,26 +669,26 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 vol.Optional("blog_url", default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Optional("blog_type", default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                vol.Optional("blog_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
                 ),
                 vol.Optional("wiki_url", default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Optional("wiki_type", default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                vol.Optional("wiki_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
                 ),
                 vol.Optional("calendar_url", default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Optional("calendar_type", default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                vol.Optional("calendar_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
                 ),
-                vol.Optional("flicker_url", default=""): TextSelector(
+                vol.Optional("flickr_url", default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Optional("flicker_type", default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                vol.Optional("flickr_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
                 ),
             }
         )
@@ -575,10 +697,54 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(schema, current),
         )
 
-    async def async_step_other(
+    async def async_step_events(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure other settings (projects)."""
+        """Configure activity entities published as SpaceAPI events."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            activities = user_input.get(CONF_ACTIVITIES, [])
+            if activities:
+                options[CONF_ACTIVITIES] = activities
+            else:
+                options.pop(CONF_ACTIVITIES, None)
+            if (hours := user_input.get(CONF_EVENTS_WINDOW_HOURS)) is not None:
+                options[CONF_EVENTS_WINDOW_HOURS] = int(hours)
+            else:
+                options.pop(CONF_EVENTS_WINDOW_HOURS, None)
+            return self.async_create_entry(data=options)
+
+        current = {
+            CONF_ACTIVITIES: self.config_entry.options.get(CONF_ACTIVITIES, []),
+            CONF_EVENTS_WINDOW_HOURS: self.config_entry.options.get(
+                CONF_EVENTS_WINDOW_HOURS
+            ),
+        }
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_ACTIVITIES): EntitySelector(
+                    EntitySelectorConfig(multiple=True)
+                ),
+                vol.Optional(CONF_EVENTS_WINDOW_HOURS): NumberSelector(
+                    NumberSelectorConfig(
+                        min=1,
+                        max=8760,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="events",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_projects(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure projects."""
         if user_input is not None:
             options = dict(self.config_entry.options)
 
@@ -602,6 +768,269 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             }
         )
         return self.async_show_form(
-            step_id="other",
+            step_id="projects",
             data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+
+class LinkSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing links."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new link subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_LINK_NAME],
+                data=user_input,
+            )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_LINK_NAME): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    ),
+                    vol.Required(CONF_LINK_URL): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                    vol.Optional(CONF_LINK_DESCRIPTION, default=""): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing link subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_LINK_NAME],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_LINK_NAME): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.TEXT)
+                        ),
+                        vol.Required(CONF_LINK_URL): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.URL)
+                        ),
+                        vol.Optional(CONF_LINK_DESCRIPTION, default=""): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.TEXT)
+                        ),
+                    }
+                ),
+                dict(subentry.data),
+            ),
+        )
+
+
+class MembershipPlanSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing membership plans."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_PLAN_NAME): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Required(CONF_PLAN_VALUE): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.NUMBER)
+            ),
+            vol.Required(CONF_PLAN_CURRENCY): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Required(CONF_PLAN_BILLING_INTERVAL): SelectSelector(
+                SelectSelectorConfig(options=BILLING_INTERVALS)
+            ),
+            vol.Optional(CONF_PLAN_DESCRIPTION, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new membership plan subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_PLAN_NAME],
+                data=user_input,
+            )
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing membership plan subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_PLAN_NAME],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class LinkedSpaceSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing linked spaces."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_LINKED_SPACE_ENDPOINT): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.URL)
+            ),
+            vol.Optional(CONF_LINKED_SPACE_WEBSITE, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.URL)
+            ),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new linked space subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_LINKED_SPACE_ENDPOINT],
+                data=user_input,
+            )
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing linked space subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_LINKED_SPACE_ENDPOINT],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class LocationAreaSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing location areas."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_AREA_NAME): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_AREA_DESCRIPTION, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_AREA_SQUARE_METERS): vol.Coerce(float),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new location area subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_AREA_NAME],
+                data=user_input,
+            )
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing location area subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_AREA_NAME],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class WindSensorSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing a wind sensor station."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_WIND_SPEED): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_GUST): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_DIRECTION): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_ELEVATION): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_NAME, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_WIND_LOCATION, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new wind sensor subentry."""
+        if user_input is not None:
+            title = user_input.get(CONF_WIND_NAME) or user_input[CONF_WIND_SPEED]
+            return self.async_create_entry(title=title, data=user_input)
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing wind sensor subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            title = user_input.get(CONF_WIND_NAME) or user_input[CONF_WIND_SPEED]
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=title,
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
         )
