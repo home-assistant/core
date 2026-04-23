@@ -1813,7 +1813,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "songpal",
     "sony_projector",
     "soundtouch",
-    "spaceapi",
     "spc",
     "speedtestdotnet",
     "spider",

@@ -23,7 +23,7 @@ rules:
     comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
@@ -86,7 +86,10 @@ rules:
     comment: This integration does not provide any automation
   docs-known-limitations:
     status: done
-    comment: Only SpaceAPI v13 is supported.
+    comment: >
+      Deferred features: wind sensor (nested structure requires custom UX),
+      events section (dynamic occurrences, not static config),
+      location.areas (complex nested objects).
   docs-supported-devices:
     status: exempt
     comment: This integration is a service and has no devices.

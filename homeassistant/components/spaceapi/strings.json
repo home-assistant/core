@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
       "reconfigure": {
@@ -38,6 +39,209 @@
           "url": "URL to the website of your hackerspace."
         },
         "description": "The SpaceAPI endpoint will be available at `/api/spaceapi`."
+      }
+    }
+  },
+  "config_subentries": {
+    "link": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Link",
+      "initiate_flow": {
+        "user": "Add link"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "description": "Description",
+            "name": "Name",
+            "url": "URL"
+          },
+          "data_description": {
+            "description": "Optional description of the link.",
+            "name": "Name of the link.",
+            "url": "URL of the link."
+          },
+          "title": "Edit link"
+        },
+        "user": {
+          "data": {
+            "description": "Description",
+            "name": "Name",
+            "url": "URL"
+          },
+          "data_description": {
+            "description": "Optional description of the link.",
+            "name": "Name of the link.",
+            "url": "URL of the link."
+          },
+          "title": "Add link"
+        }
+      }
+    },
+    "linked_space": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Linked space",
+      "initiate_flow": {
+        "user": "Add linked space"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "endpoint": "SpaceAPI endpoint URL",
+            "website": "Website URL"
+          },
+          "data_description": {
+            "endpoint": "URL of the SpaceAPI endpoint of the linked space.",
+            "website": "Optional website URL of the linked space."
+          },
+          "title": "Edit linked space"
+        },
+        "user": {
+          "data": {
+            "endpoint": "SpaceAPI endpoint URL",
+            "website": "Website URL"
+          },
+          "data_description": {
+            "endpoint": "URL of the SpaceAPI endpoint of the linked space.",
+            "website": "Optional website URL of the linked space."
+          },
+          "title": "Add linked space"
+        }
+      }
+    },
+    "location_area": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Location area",
+      "initiate_flow": {
+        "user": "Add location area"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "description": "Description",
+            "name": "Name",
+            "square_meters": "Size (m²)"
+          },
+          "data_description": {
+            "description": "Optional description of the area.",
+            "name": "Name of the area.",
+            "square_meters": "Optional size of the area in square meters."
+          },
+          "title": "Edit location area"
+        },
+        "user": {
+          "data": {
+            "description": "Description",
+            "name": "Name",
+            "square_meters": "Size (m²)"
+          },
+          "data_description": {
+            "description": "Optional description of the area.",
+            "name": "Name of the area.",
+            "square_meters": "Optional size of the area in square meters."
+          },
+          "title": "Add location area"
+        }
+      }
+    },
+    "membership_plan": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Membership plan",
+      "initiate_flow": {
+        "user": "Add membership plan"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "billing_interval": "Billing interval",
+            "currency": "Currency",
+            "description": "Description",
+            "name": "Name",
+            "value": "Price"
+          },
+          "data_description": {
+            "billing_interval": "Billing interval of the membership plan.",
+            "currency": "Currency of the price (e.g. EUR, USD).",
+            "description": "Optional description of the membership plan.",
+            "name": "Name of the membership plan.",
+            "value": "Price of the membership plan."
+          },
+          "title": "Edit membership plan"
+        },
+        "user": {
+          "data": {
+            "billing_interval": "Billing interval",
+            "currency": "Currency",
+            "description": "Description",
+            "name": "Name",
+            "value": "Price"
+          },
+          "data_description": {
+            "billing_interval": "Billing interval of the membership plan.",
+            "currency": "Currency of the price (e.g. EUR, USD).",
+            "description": "Optional description of the membership plan.",
+            "name": "Name of the membership plan.",
+            "value": "Price of the membership plan."
+          },
+          "title": "Add membership plan"
+        }
+      }
+    },
+    "wind_sensor": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Wind sensor",
+      "initiate_flow": {
+        "user": "Add wind sensor"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "direction": "Wind direction",
+            "elevation": "Elevation",
+            "gust": "Wind gust",
+            "location": "Location",
+            "name": "Name",
+            "speed": "Wind speed"
+          },
+          "data_description": {
+            "direction": "Sensor reporting wind direction in degrees.",
+            "elevation": "Sensor reporting elevation in meters.",
+            "gust": "Sensor reporting wind gust speed.",
+            "location": "Optional location description for this wind station.",
+            "name": "Optional name for this wind station.",
+            "speed": "Sensor reporting wind speed (required)."
+          },
+          "title": "Edit wind sensor"
+        },
+        "user": {
+          "data": {
+            "direction": "Wind direction",
+            "elevation": "Elevation",
+            "gust": "Wind gust",
+            "location": "Location",
+            "name": "Name",
+            "speed": "Wind speed"
+          },
+          "data_description": {
+            "direction": "Sensor reporting wind direction in degrees.",
+            "elevation": "Sensor reporting elevation in meters.",
+            "gust": "Sensor reporting wind gust speed.",
+            "location": "Optional location description for this wind station.",
+            "name": "Optional name for this wind station.",
+            "speed": "Sensor reporting wind speed (required)."
+          },
+          "title": "Add wind sensor"
+        }
       }
     }
   },
@@ -79,25 +283,35 @@
           "xmpp": "XMPP address of the space."
         }
       },
+      "events": {
+        "data": {
+          "activities": "Activity entities",
+          "events_window_hours": "Time window (hours)"
+        },
+        "data_description": {
+          "activities": "Entities that represent activities. Event type is derived from the entity object ID (e.g. `sensor.workshop` → `workshop`). The timestamp is the entity's last changed time.",
+          "events_window_hours": "How many hours back to include past events. Defaults to 24 hours when not set."
+        }
+      },
       "feeds": {
         "data": {
           "blog_type": "Blog type",
           "blog_url": "Blog URL",
           "calendar_type": "Calendar type",
           "calendar_url": "Calendar URL",
-          "flicker_type": "Flickr type",
-          "flicker_url": "Flickr URL",
+          "flickr_type": "Flickr type",
+          "flickr_url": "Flickr URL",
           "wiki_type": "Wiki type",
           "wiki_url": "Wiki URL"
         },
         "data_description": {
-          "blog_type": "Type of the blog feed (e.g. rss, atom).",
+          "blog_type": "Type of the blog feed (rss, atom, or ical).",
           "blog_url": "URL of the blog feed.",
-          "calendar_type": "Type of the calendar feed (e.g. ical).",
+          "calendar_type": "Type of the calendar feed (rss, atom, or ical).",
           "calendar_url": "URL of the calendar feed.",
-          "flicker_type": "Type of the Flickr feed.",
-          "flicker_url": "URL of the Flickr feed.",
-          "wiki_type": "Type of the wiki feed (e.g. mediawiki).",
+          "flickr_type": "Type of the Flickr feed.",
+          "flickr_url": "URL of the Flickr feed.",
+          "wiki_type": "Type of the wiki feed (rss, atom, or ical).",
           "wiki_url": "URL of the wiki feed."
         }
       },
@@ -105,12 +319,28 @@
         "description": "The SpaceAPI endpoint is available at `/api/spaceapi`.",
         "menu_options": {
           "contact": "Contact details",
+          "events": "Events",
           "feeds": "Feeds",
-          "media": "Media",
-          "other": "Other",
+          "location": "Location",
+          "media": "Webcams",
+          "projects": "Projects",
           "sensors": "Sensors",
           "spacefed": "Space federation",
-          "state_icons": "State icons"
+          "state_extras": "State & icons"
+        }
+      },
+      "location": {
+        "data": {
+          "address": "Address",
+          "country_code": "Country code",
+          "hint": "Hint",
+          "timezone": "Timezone"
+        },
+        "data_description": {
+          "address": "Physical address of the space.",
+          "country_code": "Two-letter ISO 3166-1 alpha-2 country code (e.g. AT, DE, US).",
+          "hint": "Additional directions or context for finding the space.",
+          "timezone": "Timezone of the space (e.g. Europe/Vienna)."
         }
       },
       "media": {
@@ -121,7 +351,7 @@
           "cam": "URLs of camera streams for the space."
         }
       },
-      "other": {
+      "projects": {
         "data": {
           "projects": "Project URLs"
         },
@@ -138,9 +368,11 @@
           "door_locked": "Door lock entities",
           "humidity": "Humidity sensors",
           "network_connections": "Network connection sensors",
+          "network_traffic": "Network traffic sensors",
           "people_now_present": "People now present sensors",
           "power_consumption": "Power consumption sensors",
           "power_generation": "Power generation sensors",
+          "radiation": "Radiation sensors",
           "temperature": "Temperature sensors",
           "total_member_count": "Total member count sensors"
         },
@@ -152,9 +384,11 @@
           "door_locked": "Entities that report whether a door is locked.",
           "humidity": "Entities that report humidity.",
           "network_connections": "Entities that report network connections.",
+          "network_traffic": "Entities that report network traffic.",
           "people_now_present": "Entities that report the number of people present.",
           "power_consumption": "Entities that report power consumption.",
           "power_generation": "Entities that report power generation.",
+          "radiation": "Entities that report radiation levels.",
           "temperature": "Entities that report temperature.",
           "total_member_count": "Entities that report the total member count."
         }
@@ -169,14 +403,16 @@
           "spacesaml": "Whether the space supports SpaceSAML."
         }
       },
-      "state_icons": {
+      "state_extras": {
         "data": {
           "icon_closed": "Icon URL when closed",
-          "icon_open": "Icon URL when open"
+          "icon_open": "Icon URL when open",
+          "message": "State message"
         },
         "data_description": {
           "icon_closed": "URL of the icon to display when the space is closed.",
-          "icon_open": "URL of the icon to display when the space is open."
+          "icon_open": "URL of the icon to display when the space is open.",
+          "message": "Entity whose state is used as the current state message of the space."
         }
       }
     }
