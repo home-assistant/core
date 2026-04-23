@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.heiman_home.config_flow import AuthInfo, HeimanConfigFlow
 from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_ID
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -505,8 +506,6 @@ async def test_get_home_selection_schema_all_homes_without_id() -> None:
 
 async def test_oauth_create_entry_reauth_flow(hass: HomeAssistant) -> None:
     """Test OAuth entry creation with re-authentication source."""
-    from homeassistant.config_entries import SOURCE_REAUTH
-
     flow = HeimanConfigFlow()
     flow.hass = hass
     # Set source by updating context directly
@@ -558,8 +557,6 @@ async def test_oauth_create_entry_reauth_flow(hass: HomeAssistant) -> None:
 
 async def test_oauth_create_entry_reauth_with_email_title(hass: HomeAssistant) -> None:
     """Test re-auth flow when user has email but no nick_name."""
-    from homeassistant.config_entries import SOURCE_REAUTH
-
     flow = HeimanConfigFlow()
     flow.hass = hass
     # Set source by updating context directly
