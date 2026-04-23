@@ -1,5 +1,4 @@
 """Support for INSTEON Modems (PLM and Hub)."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 import logging
@@ -7,7 +6,7 @@ import logging
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.constants import ReadWriteMode
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -34,7 +33,6 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-OPTIONS = "options"
 
 
 async def async_get_device_config(hass, config_entry):
@@ -78,12 +76,10 @@ async def close_insteon_connection(*args):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
 
-    if dev_path := entry.options.get(CONF_DEV_PATH):
-        hass.data[DOMAIN] = {}
-        hass.data[DOMAIN][CONF_DEV_PATH] = dev_path
-
     api.async_load_api(hass)
-    await api.async_register_insteon_frontend(hass)
+    await api.async_register_insteon_frontend(
+        hass, entry.options.get(CONF_DEV_PATH) or None
+    )
 
     if not devices.modem:
         try:
@@ -99,19 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0
     )
-
-    # If options existed in YAML and have not already been saved to the config entry
-    # add them now
-    if (
-        not entry.options
-        and entry.source == SOURCE_IMPORT
-        and hass.data.get(DOMAIN)
-        and hass.data[DOMAIN].get(OPTIONS)
-    ):
-        hass.config_entries.async_update_entry(
-            entry=entry,
-            options=hass.data[DOMAIN][OPTIONS],
-        )
 
     for device_override in entry.options.get(CONF_OVERRIDE, []):
         # Override the device default capabilities for a specific address
