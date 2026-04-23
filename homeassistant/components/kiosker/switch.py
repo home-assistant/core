@@ -12,6 +12,7 @@ from kiosker import (
     BadRequestError,
     ConnectionError,
     IPAuthenticationError,
+    KioskerAPI,
     TLSVerificationError,
 )
 
@@ -33,7 +34,7 @@ PARALLEL_UPDATES = 0
 class KioskerSwitchEntityDescription(SwitchEntityDescription):
     """Kiosker switch description."""
 
-    method: str
+    set_state_fn: Callable[[KioskerAPI, bool], None]
     is_on_fn: Callable[[KioskerData], bool | None]
 
 
@@ -41,7 +42,7 @@ SWITCHES: tuple[KioskerSwitchEntityDescription, ...] = (
     KioskerSwitchEntityDescription(
         key="disableScreensaver",
         translation_key="disable_screensaver",
-        method="async_set_screensaver_disabled",
+        set_state_fn=lambda api, disabled: api.screensaver_set_disabled_state(disabled),
         is_on_fn=lambda x: x.screensaver.disabled if x.screensaver else None,
     ),
 )
@@ -72,13 +73,11 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
     ) -> None:
         """Initialize the switch entity."""
         super().__init__(coordinator, description)
-        self._method = getattr(self, description.method)
         self._control_result: bool | None = None
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        # Use optimistic state if available (during API calls)
         if self._control_result is not None:
             return self._control_result
 
@@ -87,7 +86,10 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
     async def _handle_method_call(self, state: bool, action: str) -> None:
         """Handle method call with error handling and state management."""
         try:
-            await self._method(state)
+            await self.hass.async_add_executor_job(
+                self.entity_description.set_state_fn, self.coordinator.api, state
+            )
+            await self.coordinator.async_request_refresh()
         except AuthenticationError as exc:
             raise HomeAssistantError("Authentication failed") from exc
         except IPAuthenticationError as exc:
@@ -102,7 +104,6 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
             _LOGGER.exception("Unexpected error %s switch", action)
             raise HomeAssistantError(f"Unexpected error: {exc}") from exc
 
-        # Set optimistic state for immediate UI feedback
         self._control_result = state
         self.async_write_ha_state()
 
@@ -114,16 +115,8 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
         """Turn the switch off."""
         await self._handle_method_call(False, "turning off")
 
-    async def async_set_screensaver_disabled(self, disabled: bool) -> None:
-        """Set screensaver disabled state."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.screensaver_set_disabled_state, disabled
-        )
-        await self.coordinator.async_request_refresh()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
-        # Clear optimistic state when real data arrives
         self._control_result = None
         super()._handle_coordinator_update()
