@@ -96,7 +96,7 @@ class DeviceCondition(Condition):
             self._hass, self._config
         )
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Check the condition."""
         result = self._platform_checker(self._hass, variables)
         return result is not False

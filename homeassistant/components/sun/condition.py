@@ -154,7 +154,7 @@ class SunCondition(Condition):
         self._before_offset = self._options.get("before_offset")
         self._after_offset = self._options.get("after_offset")
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Check the condition."""
         return sun(
             self._hass,

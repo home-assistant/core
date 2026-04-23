@@ -115,7 +115,7 @@ class ZoneCondition(Condition):
         self._entity_ids = self._options.get(CONF_ENTITY_ID, [])
         self._zone_entity_ids = self._options.get(CONF_ZONE, [])
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Test if condition."""
         errors = []
 

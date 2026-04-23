@@ -2154,14 +2154,14 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        def _check(self, variables: TemplateVarsType) -> bool:
+        def _async_check(self, variables: TemplateVarsType) -> bool:
             """Check the condition."""
             return True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        def _check(self, variables: TemplateVarsType) -> bool:
+        def _async_check(self, variables: TemplateVarsType) -> bool:
             """Check the condition."""
             return False
 
@@ -2301,7 +2301,7 @@ async def test_get_condition_platform_registers_conditions(
         ) -> ConfigType:
             return config
 
-        def _check(self, variables: TemplateVarsType) -> bool:
+        def _async_check(self, variables: TemplateVarsType) -> bool:
             """Check the condition."""
             return True
 

@@ -308,9 +308,15 @@ class ConditionChecker(abc.ABC):
     ) -> bool | None:
         """Check the condition."""
         with trace_condition(variables):
-            result = self._check(variables)
+            result = self._async_check(variables, **kwargs)
             condition_trace_update_result(result=result)
             return result
+
+    async def async_setup(self) -> None:
+        """Set up the condition checker.
+
+        Intended to be overridden in derived classes that need to do async setup.
+        """
 
     @callback
     def async_on_unload(self, func: Callable[[], None]) -> None:
@@ -324,7 +330,7 @@ class ConditionChecker(abc.ABC):
         self._on_unload.clear()
 
     @abc.abstractmethod
-    def _check(self, variables: TemplateVarsType) -> bool | None:
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool | None:
         """Check the condition."""
 
 
@@ -336,14 +342,14 @@ class LegacyConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._checker = checker
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
 
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
-    def _check(self, variables: TemplateVarsType | None) -> None:
+    def _async_check(self, variables: TemplateVarsType | None, **kwargs: Any) -> None:
         return None
 
 
@@ -385,12 +391,6 @@ class Condition(ConditionChecker):
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         super().__init__(hass)
-
-    async def async_setup(self) -> None:
-        """Set up the condition checker.
-
-        Intended to be overridden in derived classes that need to do async setup.
-        """
 
 
 ATTR_BEHAVIOR: Final = "behavior"
@@ -484,7 +484,7 @@ class EntityConditionBase(Condition):
             for state in states
         )
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
             self._hass, self._target_selection, expand_group=False
