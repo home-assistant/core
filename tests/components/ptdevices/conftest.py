@@ -35,7 +35,7 @@ def mock_ptdevices_level() -> PTDevicesResponse:
 
 @pytest.fixture
 def mock_ptdevices_interface() -> Generator[AsyncMock]:
-    """Mock a PTDevices Interfafce."""
+    """Mock a PTDevices Interface."""
     with (
         patch(
             "homeassistant.components.ptdevices.Interface",
