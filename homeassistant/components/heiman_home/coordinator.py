@@ -318,9 +318,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Process the detail if available (use is not None to handle empty dict)
             if device_detail is not None and device_id in devices:
-                self._process_device_detail(
-                    devices[device_id], device_detail
-                )
+                self._process_device_detail(devices[device_id], device_detail)
 
     def _process_device_detail(
         self, device: HeimanDevice, device_detail: dict[str, Any]
