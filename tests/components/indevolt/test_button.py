@@ -13,7 +13,6 @@ from homeassistant.components.indevolt.const import (
     PORTABLE_MODE,
     REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
-    RealtimeAction,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -70,7 +69,7 @@ async def test_button_press_standby(
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, [RealtimeAction.STOP, 0, 0]),
+            call(REALTIME_ACTION_KEY, [0, 0, 0]),
         ]
     )
 
