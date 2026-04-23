@@ -47,13 +47,6 @@
       }
     }
   },
-  "device_automation": {
-    "trigger_type": {
-      "insteon": {
-        "your_event_type": "Friendly name of your event"
-      }
-    }
-  },
   "entity": {
     "event": {
       "additional_button_press": {
