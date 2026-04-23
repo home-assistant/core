@@ -1,6 +1,6 @@
 """Common fixtures for the PTDevices tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -8,7 +8,6 @@ from aioptdevices.interface import PTDevicesResponse
 import pytest
 
 from homeassistant.components.ptdevices.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN
 
 from tests.common import MockConfigEntry, load_fixture
@@ -18,7 +17,8 @@ from tests.common import MockConfigEntry, load_fixture
 def mock_ptdevices_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ptdevices.async_setup_entry", return_value=True
+        "homeassistant.components.ptdevices.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -44,32 +44,36 @@ def mock_ptdevices_level_no_devices() -> PTDevicesResponse:
 
 
 @pytest.fixture
-async def mock_ptdevices_get_data(
-    mock_ptdevices_level: PTDevicesResponse,
-) -> AsyncGenerator[AsyncMock]:
-    """Return a mocked ptdevices.request_status function."""
+def mock_ptdevices_interface() -> Generator[AsyncMock]:
+    """Mock a PTDevices Interfafce."""
+    with (
+        patch(
+            "homeassistant.components.ptdevices.Interface",
+            autospec=True,
+        ) as mock_interface,
+        patch(
+            "homeassistant.components.ptdevices.config_flow.Interface",
+            new=mock_interface,
+        ),
+    ):
+        interface = mock_interface.return_value
+        interface.get_data.return_value = PTDevicesResponse(
+            code=200,
+            body=json.loads(load_fixture("ptdevices_level.json", DOMAIN)),
+        )
 
-    with patch("aioptdevices.interface.Interface.get_data") as mock_request_status:
-        mock_request_status.return_value = mock_ptdevices_level
-        yield mock_request_status
+        yield interface
 
 
 @pytest.fixture
-def mock_ptdevices_config_entry(
-    request: pytest.FixtureRequest,
-    mock_ptdevices_get_data: AsyncMock,
-) -> MockConfigEntry:
+def mock_ptdevices_config_entry() -> MockConfigEntry:
     """Return a mocked ptdevice configuration entry."""
-    entry_id = getattr(request, "param", None)
-
     return MockConfigEntry(
-        entry_id=entry_id,
         version=1,
         domain=DOMAIN,
         title="Home",
         data={
             CONF_API_TOKEN: "test-api-token",
         },
-        unique_id="test-device-id",
-        source=SOURCE_USER,
+        unique_id="test-user-id",
     )
