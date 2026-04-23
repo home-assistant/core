@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import cache
-from typing import Self
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
 
+if TYPE_CHECKING:
+    from .ffmpeg_proxy import FFmpegProxyData
+
 STORAGE_VERSION = 1
+
+ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
 
 @dataclass(slots=True)
@@ -20,6 +25,7 @@ class DomainData:
     """Define a class that stores global esphome data."""
 
     _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
+    ffmpeg_proxy_data: FFmpegProxyData | None = None
 
     def get_entry_data(self, entry: ESPHomeConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry."""
@@ -37,10 +43,8 @@ class DomainData:
         )
 
     @classmethod
-    @cache
-    def get(cls, hass: HomeAssistant) -> Self:
+    def get(cls, hass: HomeAssistant) -> DomainData:
         """Get the global DomainData instance stored in hass.data."""
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
-        ret = hass.data[DOMAIN] = cls()
-        return ret
+        if (data := hass.data.get(ESPHOME_DATA)) is None:
+            data = hass.data[ESPHOME_DATA] = cls()
+        return data
