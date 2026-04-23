@@ -323,7 +323,7 @@ class IcloudAccount:
             return
 
         try:
-            self.api.devices._refresh_client(locate=True)
+            self.api.devices.refresh(locate=True)
             _LOGGER.debug("Triggered active location refresh (shouldLocate=True)")
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Could not trigger active location refresh: %s", err)

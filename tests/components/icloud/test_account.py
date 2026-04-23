@@ -220,7 +220,7 @@ async def test_keep_alive_success_sends_locate_before_update(
     ):
         account.keep_alive()
 
-    account.api.devices._refresh_client.assert_called_once_with(locate=True)
+    account.api.devices.refresh.assert_called_once_with(locate=True)
     mock_update.assert_called_once()
 
 
