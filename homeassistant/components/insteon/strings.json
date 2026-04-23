@@ -54,10 +54,10 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "off": "Off",
-              "off_fast": "Fast off",
-              "on": "On",
-              "on_fast": "Fast on"
+              "off": "Single off press",
+              "off_fast": "Quick double off press",
+              "on": "Single on press",
+              "on_fast": "Quick double on press"
             }
           }
         }
@@ -67,10 +67,10 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "off": "Off",
-              "off_fast": "Fast off",
-              "on": "On",
-              "on_fast": "Fast on"
+              "off": "Single off press",
+              "off_fast": "Quick double off press",
+              "on": "Single on press",
+              "on_fast": "Quick double on press"
             }
           }
         }
