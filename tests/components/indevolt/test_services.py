@@ -60,7 +60,7 @@ async def test_service_charge_discharge(
         DOMAIN,
         service_name,
         {
-            "device_ids": [_get_device_id(hass, mock_config_entry)],
+            "device_id": [_get_device_id(hass, mock_config_entry)],
             "power": power,
             "target_soc": target_soc,
         },
@@ -101,7 +101,7 @@ async def test_service_power_too_high(
             DOMAIN,
             service_name,
             {
-                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "device_id": [_get_device_id(hass, mock_config_entry)],
                 "power": power,
                 "target_soc": target_soc,
             },
@@ -129,7 +129,7 @@ async def test_service_target_soc_below_emergency(
             DOMAIN,
             service_name,
             {
-                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "device_id": [_get_device_id(hass, mock_config_entry)],
                 "power": 1000,
                 "target_soc": 1,
             },
@@ -155,7 +155,7 @@ async def test_service_missing_target(
             DOMAIN,
             "discharge",
             {
-                "device_ids": ["non-existent-device-id"],
+                "device_id": ["non-existent-device-id"],
                 "power": 500,
                 "target_soc": 50,
             },
@@ -196,7 +196,7 @@ async def test_multi_device_partial_validation_failure(
             DOMAIN,
             service_name,
             {
-                "device_ids": [
+                "device_id": [
                     _get_device_id(hass, mock_config_entry),
                     _get_device_id(hass, alt_mock_config_entry),
                 ],
@@ -235,7 +235,7 @@ async def test_multi_device_full_validation_failure(
             DOMAIN,
             service_name,
             {
-                "device_ids": [
+                "device_id": [
                     _get_device_id(hass, mock_config_entry),
                     _get_device_id(hass, alt_mock_config_entry),
                 ],
@@ -271,7 +271,7 @@ async def test_charge_outdoor_portable(
             DOMAIN,
             "charge",
             {
-                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "device_id": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 100,
             },
@@ -304,7 +304,7 @@ async def test_service_charge_missing_energy_mode(
             DOMAIN,
             "charge",
             {
-                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "device_id": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 80,
             },
@@ -333,7 +333,7 @@ async def test_single_device_execution_failure(
             DOMAIN,
             "charge",
             {
-                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "device_id": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 80,
             },
@@ -368,7 +368,7 @@ async def test_multi_device_execution_failure(
             DOMAIN,
             "charge",
             {
-                "device_ids": [
+                "device_id": [
                     _get_device_id(hass, mock_config_entry),
                     _get_device_id(hass, alt_mock_config_entry),
                 ],

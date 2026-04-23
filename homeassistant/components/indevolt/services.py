@@ -10,14 +10,14 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import DOMAIN, POWER_LIMITS, RealtimeAction
-from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
+from .coordinator import IndevoltCoordinator
 
 RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required("device_ids"): vol.All(
+        vol.Required("device_id"): vol.All(
             cv.ensure_list,
             [cv.string],
         ),
@@ -89,35 +89,13 @@ async def _async_get_coordinators_from_call(
     call: ServiceCall,
 ) -> list[IndevoltCoordinator]:
     """Resolve coordinator(s) targeted by a service call."""
-    coordinators: list[IndevoltCoordinator] = []
+    entry_ids = await async_extract_config_entry_ids(call)
 
-    # Ensure targets are provided by user
-    device_ids: list[str] = call.data.get("device_ids") or []
-    if not device_ids:
-        _raise_no_target_entries()
-
-    loaded_entries: dict[str, IndevoltConfigEntry] = {
-        entry.entry_id: entry
+    coordinators: list[IndevoltCoordinator] = [
+        entry.runtime_data
         for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-    }
-
-    device_registry = dr.async_get(hass)
-    for device_id in device_ids:
-        # Retrieve device from registry
-        device = device_registry.async_get(device_id)
-        if device is None:
-            continue
-
-        for entry_id in device.config_entries:
-            # Check whether entry is loaded
-            if entry_id not in loaded_entries:
-                continue
-
-            entry = loaded_entries[entry_id]
-
-            # Append to the result list (found it)
-            if entry.runtime_data not in coordinators:
-                coordinators.append(entry.runtime_data)
+        if entry.entry_id in entry_ids
+    ]
 
     if not coordinators:
         _raise_no_target_entries()
