@@ -28,9 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: No actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -53,7 +51,9 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Single device per config entry.
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
