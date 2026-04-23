@@ -68,7 +68,6 @@ rules:
     comment: |
       This integration has no user-actionable repair issues to raise.
   stale-devices: done
-
   # Platinum
   async-dependency: done
   inject-websession:
