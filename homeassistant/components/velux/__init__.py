@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 
 from pyvlx import PyVLX, PyVLXException
-from pyvlx.opening_device import OpeningDevice
+from pyvlx.opening_device import Window
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -121,9 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
 
     limitation_coordinators: dict[int, VeluxLimitationCoordinator] = {}
     for node in pyvlx.nodes:
-        if isinstance(node, OpeningDevice):
+        if isinstance(node, Window) and node.rain_sensor:
             coordinator = VeluxLimitationCoordinator(hass, entry, node)
-            await coordinator.async_refresh()
             limitation_coordinators[node.node_id] = coordinator
 
     entry.runtime_data = VeluxData(
