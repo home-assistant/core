@@ -107,10 +107,12 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
         events = device.events[group].values()
         event_names = [item.name for item in events]
 
+        # Set the event device class via the entity attr so EventEntity cache
+        # invalidation and state handling continue to work correctly.
         # if the device is only a subset of 4 button events
         # set the device class to button and add the event types to the entity description.
         if set(event_names).issubset(_BUTTON_EVENT_NAMES):
-            self.device_class = EventDeviceClass.BUTTON
+            self._attr_device_class = EventDeviceClass.BUTTON
 
             for event in events:
                 event_types.append(event.name.removesuffix("_event"))
