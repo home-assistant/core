@@ -93,10 +93,11 @@ class DataGrandLyonStopSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._subentry_id = subentry.subentry_id
+        assert subentry.unique_id is not None
 
-        self._attr_unique_id = f"{self._subentry_id}-{description.key}"
+        self._attr_unique_id = f"{subentry.unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._subentry_id)},
+            identifiers={(DOMAIN, subentry.unique_id)},
             name=subentry.title,
             manufacturer="TCL",
             model="Stop",
