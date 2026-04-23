@@ -51,6 +51,7 @@ def shutterbox_fixture():
         has_stop=True,
         has_tilt=True,
         is_slider=True,
+        is_position_inverted=True,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
@@ -71,6 +72,7 @@ def gatebox_fixture():
         state=None,
         has_stop=False,
         is_slider=False,
+        is_position_inverted=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
@@ -91,6 +93,7 @@ def gate_fixture():
         state=None,
         has_stop=True,
         is_slider=True,
+        is_position_inverted=True,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
@@ -276,14 +279,16 @@ async def test_stop(feature, hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == CoverState.OPEN
 
 
-@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update(feature, hass: HomeAssistant) -> None:
-    """Test cover updating."""
+@pytest.mark.parametrize(
+    "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
+)
+async def test_update_inverted(feature, hass: HomeAssistant) -> None:
+    """Test cover position is inverted for shutterBox and gateController."""
 
     feature_mock, entity_id = feature
 
     def initial_update():
-        feature_mock.current = 29  # inverted
+        feature_mock.current = 29  # device: 29% closed = 71% open
         feature_mock.state = 2  # manually stopped
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
