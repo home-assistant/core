@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -28,6 +29,15 @@
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
         },
         "description": "The PIN code for your stove has changed. Please enter the new PIN code to re-authenticate."
+      },
+      "reconfigure": {
+        "data": {
+          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+        },
+        "data_description": {
+          "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
+        },
+        "description": "Reconfigure your Fumis pellet stove connection."
       },
       "user": {
         "data": {

@@ -9,6 +9,7 @@ from fumis import (
     Fumis,
     FumisAuthenticationError,
     FumisConnectionError,
+    FumisInfo,
     FumisStoveOfflineError,
 )
 import voluptuous as vol
@@ -51,23 +52,10 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            fumis = Fumis(
-                mac=self._discovered_mac,
-                password=user_input[CONF_PIN],
-                session=async_get_clientsession(self.hass),
+            errors, info = await self._validate_input(
+                self._discovered_mac, user_input[CONF_PIN]
             )
-            try:
-                info = await fumis.update_info()
-            except FumisAuthenticationError:
-                errors[CONF_PIN] = "invalid_auth"
-            except FumisStoveOfflineError:
-                errors["base"] = "device_offline"
-            except FumisConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if info:
                 return self.async_create_entry(
                     title=info.controller.model_name or "Fumis",
                     data={
@@ -96,23 +84,8 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             mac = user_input[CONF_MAC].replace(":", "").replace("-", "").upper()
-            fumis = Fumis(
-                mac=mac,
-                password=user_input[CONF_PIN],
-                session=async_get_clientsession(self.hass),
-            )
-            try:
-                info = await fumis.update_info()
-            except FumisAuthenticationError:
-                errors[CONF_PIN] = "invalid_auth"
-            except FumisStoveOfflineError:
-                errors["base"] = "device_offline"
-            except FumisConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors, info = await self._validate_input(mac, user_input[CONF_PIN])
+            if info:
                 await self.async_set_unique_id(format_mac(mac), raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -141,6 +114,35 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a Fumis stove."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            errors, _ = await self._validate_input(
+                reconfigure_entry.data[CONF_MAC], user_input[CONF_PIN]
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_PIN: user_input[CONF_PIN]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PIN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -155,23 +157,10 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
-            fumis = Fumis(
-                mac=reauth_entry.data[CONF_MAC],
-                password=user_input[CONF_PIN],
-                session=async_get_clientsession(self.hass),
+            errors, _ = await self._validate_input(
+                reauth_entry.data[CONF_MAC], user_input[CONF_PIN]
             )
-            try:
-                await fumis.update_info()
-            except FumisAuthenticationError:
-                errors[CONF_PIN] = "invalid_auth"
-            except FumisStoveOfflineError:
-                errors["base"] = "device_offline"
-            except FumisConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PIN: user_input[CONF_PIN]},
@@ -188,3 +177,28 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _validate_input(
+        self, mac: str, pin: str
+    ) -> tuple[dict[str, str], FumisInfo | None]:
+        """Validate credentials, returning errors and info."""
+        errors: dict[str, str] = {}
+        fumis = Fumis(
+            mac=mac,
+            password=pin,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            info = await fumis.update_info()
+        except FumisAuthenticationError:
+            errors[CONF_PIN] = "invalid_auth"
+        except FumisStoveOfflineError:
+            errors["base"] = "device_offline"
+        except FumisConnectionError:
+            errors["base"] = "cannot_connect"
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return errors, info
+        return errors, None
