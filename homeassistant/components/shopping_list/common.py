@@ -80,12 +80,10 @@ class ShoppingData:
             items_dict[item_id] = itm
         removed = []
         for item_id in item_ids:
-            _LOGGER.debug(
-                "Removing %s",
-            )
+            _LOGGER.debug("Removing %s", item_id)
             if not (item := items_dict.pop(item_id, None)):
                 raise NoMatchingShoppingListItem(
-                    "Item '{item_id}' not found in shopping list"
+                    f"Item '{item_id}' not found in shopping list"
                 )
             removed.append(item)
         self.items = list(items_dict.values())
@@ -108,7 +106,7 @@ class ShoppingData:
         ]
 
         if len(complete_items) == 0:
-            raise NoMatchingShoppingListItem
+            raise NoMatchingShoppingListItem(f"No items with name '{name}' found")
 
         for item in complete_items:
             _LOGGER.debug("Completing %s", item)
@@ -130,7 +128,9 @@ class ShoppingData:
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
 
         if item is None:
-            raise NoMatchingShoppingListItem
+            raise NoMatchingShoppingListItem(
+                f"Item '{item_id}' not found in shopping list"
+            )
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
@@ -179,7 +179,9 @@ class ShoppingData:
         # Append items by the order of passed in array.
         for item_id in item_ids:
             if item_id not in all_items_mapping:
-                raise NoMatchingShoppingListItem
+                raise NoMatchingShoppingListItem(
+                    f"Item '{item_id}' not found in shopping list"
+                )
             new_items.append(all_items_mapping[item_id])
             # Remove the item from mapping after it's appended in the result array.
             del all_items_mapping[item_id]
