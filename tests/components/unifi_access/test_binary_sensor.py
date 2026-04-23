@@ -11,6 +11,9 @@ from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
     LocationUpdateV2,
+    V2DeviceLocationState,
+    V2DeviceUpdate,
+    V2DeviceUpdateData,
     WebsocketMessage,
 )
 
@@ -122,4 +125,79 @@ async def test_ws_reconnect_restores_binary_sensor_states(
     await hass.async_block_till_done()
 
     assert hass.states.get(FRONT_DOOR_ENTITY).state == "off"
+    assert hass.states.get(BACK_DOOR_ENTITY).state == "on"
+
+
+async def test_binary_sensor_state_updates_via_v2_device_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.v2.device.update changes binary sensor state."""
+    handlers = _get_ws_handlers(mock_client)
+
+    update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="hub-device-001",
+            location_states=[
+                V2DeviceLocationState(
+                    location_id="door-001",
+                    dps=DoorPositionStatus.OPEN,
+                )
+            ],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](update_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(FRONT_DOOR_ENTITY).state == "on"
+
+
+async def test_v2_device_update_empty_location_id_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.v2.device.update with empty location_id does not update state."""
+    handlers = _get_ws_handlers(mock_client)
+
+    update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="hub-device-001",
+            location_states=[V2DeviceLocationState(location_id="")],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](update_msg)
+    await hass.async_block_till_done()
+
+    # State should be unchanged (front door starts closed/off)
+    assert hass.states.get(FRONT_DOOR_ENTITY).state == "off"
+
+
+async def test_v2_device_update_no_explicit_state_does_not_overwrite(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test v2.device.update without explicit dps/lock does not overwrite known state.
+
+    A device association message (only location_id set, no explicit dps/lock)
+    must not reset a known-open/unlocked door back to closed/locked.
+    """
+    handlers = _get_ws_handlers(mock_client)
+
+    # back door starts open (on). Send a device update with no explicit dps/lock.
+    update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="hub-device-002",
+            location_states=[V2DeviceLocationState(location_id="door-002")],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](update_msg)
+    await hass.async_block_till_done()
+
+    # Back door must still be open/on – not silently reset to closed/off
     assert hass.states.get(BACK_DOOR_ENTITY).state == "on"
