@@ -182,11 +182,6 @@ async def _execute_realtime_action(
 
     for coordinator, result in zip(coordinators, results, strict=True):
         if isinstance(result, BaseException):
-            if isinstance(
-                result, (asyncio.CancelledError, KeyboardInterrupt, SystemExit)
-            ):
-                raise result
-
             if len(coordinators) == 1:
                 raise result
 
