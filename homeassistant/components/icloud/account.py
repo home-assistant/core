@@ -161,6 +161,7 @@ class IcloudAccount:
 
         if self.api.requires_2fa:
             self._require_reauth()
+            self._schedule_next_fetch()
             return
 
         api_devices = {}
@@ -311,7 +312,21 @@ class IcloudAccount:
         if self.api is None:
             return
 
-        self.api.authenticate()
+        try:
+            self.api.authenticate()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning(
+                "Authentication failed in keep_alive, will retry next cycle: %s", err
+            )
+            self._fetch_interval = 2
+            self._schedule_next_fetch()
+            return
+
+        try:
+            self.api.devices._refresh_client(locate=True)
+            _LOGGER.debug("Triggered active location refresh (shouldLocate=True)")
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Could not trigger active location refresh: %s", err)
         self.update_devices()
 
     def get_devices_with_name(self, name: str) -> list[Any]:
