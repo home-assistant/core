@@ -224,10 +224,11 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or not isinstance(data.get("time_series"), list)
             or not data["time_series"]
         ):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_energy_history_data",
+            _LOGGER.warning(
+                "Tessie returned no energy history time_series for coordinator %s; skipping update",
+                self.config_entry.entry_id,
             )
+            return self.data
 
         time_series = data["time_series"]
         output: dict[str, Any] = {}
