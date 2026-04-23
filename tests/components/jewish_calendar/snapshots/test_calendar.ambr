@@ -67,8 +67,9 @@
 # ---
 # name: test_entities[Jerusalem][calendar.jewish_calendar_daily_events-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -122,8 +123,9 @@
 # ---
 # name: test_entities[Jerusalem][calendar.jewish_calendar_learning_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -177,8 +179,9 @@
 # ---
 # name: test_entities[Jerusalem][calendar.jewish_calendar_yearly_events-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -232,8 +235,9 @@
 # ---
 # name: test_entities[New York][calendar.jewish_calendar_daily_events-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -287,8 +291,9 @@
 # ---
 # name: test_entities[New York][calendar.jewish_calendar_learning_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -342,8 +347,9 @@
 # ---
 # name: test_entities[New York][calendar.jewish_calendar_yearly_events-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
