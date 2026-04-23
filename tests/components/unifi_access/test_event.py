@@ -202,6 +202,7 @@ async def test_access_event(
     assert state.attributes["actor"] == actor
     assert state.attributes["authentication"] == authentication
     assert state.attributes["result"] == result
+    assert "direction" not in state.attributes
     assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
@@ -463,6 +464,7 @@ async def test_logs_add_access_granted(
     assert state.attributes["actor"] == "John Doe"
     assert state.attributes["authentication"] == "NFC"
     assert state.attributes["result"] == "ACCESS"
+    assert "direction" not in state.attributes
     assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
@@ -1189,3 +1191,75 @@ async def test_logs_add_no_device_and_no_enriched_door_id_ignored(
     state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_insights_add_direction(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test direction attribute is included in access event when present."""
+    handlers = _get_ws_handlers(mock_client)
+
+    insights_msg = InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            metadata=InsightsMetadata(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                opened_direction=[InsightsMetadataEntry(display_name="entry")],
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](insights_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["direction"] == "entry"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_direction(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test direction attribute is included in access event from logs.add when present."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                    LogTarget(
+                        type="device_config",
+                        id="door_entry_method",
+                        display_name="entry",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["direction"] == "entry"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
