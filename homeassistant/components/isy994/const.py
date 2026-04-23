@@ -431,7 +431,7 @@ UOM_FRIENDLY_NAME = {
     "127": UnitOfPressure.MMHG,
     "128": "J",
     "129": "BMI",  # Body Mass Index
-    "130": f"{UnitOfVolume.LITERS}/{UnitOfTime.HOURS}",
+    "130": UnitOfVolumeFlowRate.LITERS_PER_HOUR,
     "131": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     "132": "bpm",  # Breaths per minute
     "133": UnitOfFrequency.KILOHERTZ,
@@ -444,8 +444,8 @@ UOM_FRIENDLY_NAME = {
     "140": f"{UnitOfMass.MILLIGRAMS}/{UnitOfVolume.LITERS}",
     "141": "N",  # Netwon
     "142": f"{UnitOfVolume.GALLONS}/{UnitOfTime.SECONDS}",
-    "143": "gpm",  # Gallon per Minute
-    "144": "gph",  # Gallon per Hour
+    "143": UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+    "144": UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
 }
 
 UOM_TO_STATES = {

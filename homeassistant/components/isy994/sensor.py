@@ -73,6 +73,7 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "DISTANC": SensorDeviceClass.DISTANCE,
     "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,  # codespell:ignore eto
     "FATM": SensorDeviceClass.WEIGHT,
+    "FLOW": SensorDeviceClass.VOLUME_FLOW_RATE,
     "FREQ": SensorDeviceClass.FREQUENCY,
     "MUSCLEM": SensorDeviceClass.WEIGHT,
     "PF": SensorDeviceClass.POWER_FACTOR,
@@ -95,9 +96,69 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "WEIGHT": SensorDeviceClass.WEIGHT,
     "WINDCH": SensorDeviceClass.TEMPERATURE,
 }
-ISY_CONTROL_TO_STATE_CLASS = dict.fromkeys(
-    ISY_CONTROL_TO_DEVICE_CLASS, SensorStateClass.MEASUREMENT
+UOM_TO_DEVICE_CLASS = {
+    "1": SensorDeviceClass.CURRENT,
+    "3": SensorDeviceClass.POWER,
+    "4": SensorDeviceClass.TEMPERATURE,
+    "7": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "12": SensorDeviceClass.SOUND_PRESSURE,
+    "13": SensorDeviceClass.SOUND_PRESSURE,
+    "17": SensorDeviceClass.TEMPERATURE,
+    "23": SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+    "24": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "26": SensorDeviceClass.TEMPERATURE,
+    "28": SensorDeviceClass.WEIGHT,
+    "29": SensorDeviceClass.VOLTAGE,
+    "30": SensorDeviceClass.POWER,
+    "31": SensorDeviceClass.PRESSURE,
+    "32": SensorDeviceClass.SPEED,
+    "33": SensorDeviceClass.ENERGY,
+    "35": SensorDeviceClass.WATER,
+    "39": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "40": SensorDeviceClass.SPEED,
+    "41": SensorDeviceClass.CURRENT,
+    "43": SensorDeviceClass.VOLTAGE,
+    "46": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "48": SensorDeviceClass.SPEED,
+    "49": SensorDeviceClass.SPEED,
+    "52": SensorDeviceClass.WEIGHT,
+    "54": SensorDeviceClass.CO2,
+    "69": SensorDeviceClass.WATER,
+    "72": SensorDeviceClass.VOLTAGE,
+    "73": SensorDeviceClass.POWER,
+    "74": SensorDeviceClass.IRRADIANCE,
+    "82": SensorDeviceClass.DISTANCE,
+    "83": SensorDeviceClass.DISTANCE,
+    "90": SensorDeviceClass.FREQUENCY,
+    "105": SensorDeviceClass.DISTANCE,
+    "106": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "116": SensorDeviceClass.DISTANCE,
+    "117": SensorDeviceClass.PRESSURE,
+    "118": SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+    "119": SensorDeviceClass.ENERGY,
+    "120": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "127": SensorDeviceClass.PRESSURE,
+    "130": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "131": SensorDeviceClass.SIGNAL_STRENGTH,
+    "133": SensorDeviceClass.FREQUENCY,
+    "138": SensorDeviceClass.PRESSURE,
+    "143": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "144": SensorDeviceClass.VOLUME_FLOW_RATE,
+}
+TOTAL_INCREASING_DEVICE_CLASSES = (
+    SensorDeviceClass.ENERGY,
+    SensorDeviceClass.WATER,
+    SensorDeviceClass.GAS,
+    SensorDeviceClass.PRECIPITATION,
 )
+ISY_CONTROL_TO_STATE_CLASS = {
+    control: (
+        SensorStateClass.TOTAL_INCREASING
+        if device_class in TOTAL_INCREASING_DEVICE_CLASSES
+        else SensorStateClass.MEASUREMENT
+    )
+    for control, device_class in ISY_CONTROL_TO_DEVICE_CLASS.items()
+}
 ISY_CONTROL_TO_ENTITY_CATEGORY = {
     PROP_RAMP_RATE: EntityCategory.DIAGNOSTIC,
     PROP_ON_LEVEL: EntityCategory.DIAGNOSTIC,
@@ -207,6 +268,35 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
         assert isinstance(value, (int, float))
         return value
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Get the device class for the ISY sensor device."""
+        if (device_class := getattr(self, "_attr_device_class", None)) is not None:
+            return cast(SensorDeviceClass, device_class)
+
+        if self.target is None:
+            return None
+
+        uom = self.target.uom
+
+        # Backwards compatibility for ISYv4 Firmware:
+        if isinstance(uom, list):
+            uom = uom[0]
+
+        return UOM_TO_DEVICE_CLASS.get(uom)
+
+    @property
+    def state_class(self) -> SensorStateClass | None:
+        """Get the state class for the ISY sensor device."""
+        if (state_class := getattr(self, "_attr_state_class", None)) is not None:
+            return cast(SensorStateClass, state_class)
+
+        if self.device_class in TOTAL_INCREASING_DEVICE_CLASSES:
+            return SensorStateClass.TOTAL_INCREASING
+        if self.device_class is not None:
+            return SensorStateClass.MEASUREMENT
+        return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
