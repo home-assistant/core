@@ -72,4 +72,4 @@ rules:
     status: exempt
     comment: |
       Not relevant.
-  strict-typing: todo
+  strict-typing: done
