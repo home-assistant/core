@@ -29,6 +29,7 @@ def _spec_hub(connect_exc: BaseException | None = None) -> MagicMock:
     hub = MagicMock(spec=pynobo_nobo)
     if connect_exc is not None:
         hub.connect.side_effect = connect_exc
+    hub.connected = True
     hub.hub_serial = SERIAL
     hub.hub_info = {
         "name": "My Eco Hub",

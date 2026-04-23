@@ -133,14 +133,16 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         """Fetch new state data for this zone."""
         self._read_state()
 
+    @property
+    def available(self) -> bool:
+        """Available when the hub is connected and the zone still exists."""
+        return super().available and self._id in self._nobo.zones
+
     @callback
     def _read_state(self) -> None:
         """Read the current state from the hub. These are only local calls."""
-        if self._id not in self._nobo.zones:
-            # Zone removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        if not self.available:
             return
-        self._attr_available = True
         self._profiles = {
             profile["week_profile_id"]: profile["name"].replace("\xa0", " ")
             for profile in self._nobo.week_profiles.values()
