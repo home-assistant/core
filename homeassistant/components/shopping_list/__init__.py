@@ -41,6 +41,8 @@ PLATFORMS = [Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
+
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 SERVICE_SORT_SCHEMA = vol.Schema(
