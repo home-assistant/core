@@ -12,7 +12,7 @@ from homeassistant.components.data_grandlyon.const import (
     DOMAIN,
     SUBENTRY_TYPE_STOP,
 )
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -124,40 +124,6 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we abort if already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-        )
-        await hass.async_block_till_done()
-
-    # Second flow shows the form but aborts on submit
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
 # Stop subentry tests
 
 
@@ -186,31 +152,6 @@ async def test_stop_subentry_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "C3 - Stop 456"
     assert result["data"] == {CONF_LINE: "C3", CONF_STOP_ID: 456}
-
-
-async def test_stop_subentry_flow_with_custom_name(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test adding a stop subentry with a custom name."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_LINE: "T1", CONF_STOP_ID: 789, CONF_NAME: "My Stop"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Stop"
-    assert result["data"] == {CONF_LINE: "T1", CONF_STOP_ID: 789}
 
 
 async def test_stop_subentry_already_configured(

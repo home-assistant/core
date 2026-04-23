@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -35,7 +35,6 @@ STEP_STOP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_LINE): str,
         vol.Required(CONF_STOP_ID): vol.Coerce(int),
-        vol.Optional(CONF_NAME): str,
     }
 )
 
@@ -62,7 +61,6 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match()
             if error := await self._test_connection(user_input):
                 errors["base"] = error
             else:
@@ -121,7 +119,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                 if subentry.unique_id == unique_id:
                     return self.async_abort(reason="already_configured")
 
-            name = user_input.get(CONF_NAME) or f"{line} - Stop {stop_id}"
+            name = f"{line} - Stop {stop_id}"
             return self.async_create_entry(
                 title=name,
                 data={CONF_LINE: line, CONF_STOP_ID: stop_id},
