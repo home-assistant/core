@@ -287,6 +287,13 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 **Always** post a review comment using `add-comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
+### 7c — Overall summary line
+
+Begin the comment with a single summary line, before anything else:
+
+- If everything passed: `All requirements checks passed. ✅`
+- If there are failures or warnings: `⚠️ Some checks require attention — see the details below.`
+
 ### 7a — Summary table
 
 Render a compact table where every check column contains **only the status
@@ -353,13 +360,6 @@ Collapsed example (all checks passed):
 
 </details>
 ```
-
-### 7c — Overall summary line
-
-End the comment with a single summary line:
-
-- If everything passed: `All requirements checks passed. ✅`
-- If there are failures or warnings: `⚠️ Some checks require attention — see the details above.`
 
 ## Notes
 
