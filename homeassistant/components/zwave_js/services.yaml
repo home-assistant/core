@@ -90,11 +90,12 @@ set_lock_configuration:
       selector:
         boolean:
 
-# --- Credential management services (device-scoped, single node) ---
+# --- Credential management services (lock entity-scoped) ---
 
 set_user:
   target:
     entity:
+      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -132,6 +133,7 @@ set_user:
 clear_user:
   target:
     entity:
+      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -146,21 +148,25 @@ clear_user:
 clear_all_users:
   target:
     entity:
+      domain: lock
       integration: zwave_js
 
 get_credential_capabilities:
   target:
     entity:
+      domain: lock
       integration: zwave_js
 
 get_users:
   target:
     entity:
+      domain: lock
       integration: zwave_js
 
 set_credential:
   target:
     entity:
+      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -193,6 +199,7 @@ set_credential:
 clear_credential:
   target:
     entity:
+      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -222,6 +229,7 @@ clear_credential:
 clear_all_credentials:
   target:
     entity:
+      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -236,6 +244,7 @@ clear_all_credentials:
 get_credential_status:
   target:
     entity:
+      domain: lock
       integration: zwave_js
   fields:
     user_index:

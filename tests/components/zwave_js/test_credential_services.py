@@ -10,15 +10,16 @@ from zwave_js_server.const.command_class.access_control import (
     SetCredentialResult,
     SetUserResult,
     UserCredentialType,
+    UserCredentialUserType,
 )
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +31,7 @@ def _mock_access_control(node: Node) -> MagicMock:
 
     user_caps = MagicMock()
     user_caps.max_users = 20
-    user_caps.supported_user_types = []
+    user_caps.supported_user_types = [UserCredentialUserType.GENERAL]
     user_caps.max_user_name_length = 20
     user_caps.supported_credential_rules = []
     api.async_get_user_capabilities_cached = AsyncMock(return_value=user_caps)
@@ -68,8 +69,23 @@ def _device_id(device_registry: dr.DeviceRegistry, client, node: Node) -> str:
     return device.id
 
 
+def _lock_entity_id(
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client,
+    node: Node,
+) -> str:
+    """Resolve the HA lock entity_id for a mocked Z-Wave node."""
+    device_id = _device_id(device_registry, client, node)
+    for entry in entity_registry.entities.values():
+        if entry.device_id == device_id and entry.entity_id.startswith("lock."):
+            return entry.entity_id
+    raise AssertionError(f"No lock entity found for device {device_id}")
+
+
 async def test_set_user_auto_find(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -77,13 +93,15 @@ async def test_set_user_auto_find(
 ) -> None:
     """Test set_user with auto-find user slot returns allocated user_index."""
     api = _mock_access_control(lock_schlage_be469)
-    device_id = _device_id(device_registry, client, lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "set_user",
         {
-            ATTR_DEVICE_ID: device_id,
+            ATTR_ENTITY_ID: entity_id,
             "user_name": "Alice",
             "user_type": "general",
             "active": True,
@@ -95,11 +113,12 @@ async def test_set_user_auto_find(
     api.async_set_user.assert_called_once()
     call_args = api.async_set_user.call_args
     assert call_args[0][0] == 1  # auto-found user_id
-    assert result[device_id]["user_index"] == 1
+    assert result[entity_id]["user_index"] == 1
 
 
 async def test_set_user_explicit_index(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -107,13 +126,15 @@ async def test_set_user_explicit_index(
 ) -> None:
     """Test set_user with explicit user index echoes it back."""
     api = _mock_access_control(lock_schlage_be469)
-    device_id = _device_id(device_registry, client, lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "set_user",
         {
-            ATTR_DEVICE_ID: device_id,
+            ATTR_ENTITY_ID: entity_id,
             "user_index": 5,
             "user_name": "Bob",
         },
@@ -124,11 +145,12 @@ async def test_set_user_explicit_index(
     api.async_set_user.assert_called_once()
     call_args = api.async_set_user.call_args
     assert call_args[0][0] == 5
-    assert result[device_id]["user_index"] == 5
+    assert result[entity_id]["user_index"] == 5
 
 
 async def test_set_user_no_slots(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -150,7 +172,9 @@ async def test_set_user_no_slots(
             DOMAIN,
             "set_user",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "user_name": "Charlie",
             },
             blocking=True,
@@ -160,6 +184,7 @@ async def test_set_user_no_slots(
 
 async def test_clear_user(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -172,7 +197,9 @@ async def test_clear_user(
         DOMAIN,
         "clear_user",
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+            ATTR_ENTITY_ID: _lock_entity_id(
+                entity_registry, device_registry, client, lock_schlage_be469
+            ),
             "user_index": 3,
         },
         blocking=True,
@@ -183,6 +210,7 @@ async def test_clear_user(
 
 async def test_clear_all_users(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -195,7 +223,9 @@ async def test_clear_all_users(
         DOMAIN,
         "clear_all_users",
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+            ATTR_ENTITY_ID: _lock_entity_id(
+                entity_registry, device_registry, client, lock_schlage_be469
+            ),
         },
         blocking=True,
     )
@@ -205,6 +235,7 @@ async def test_clear_all_users(
 
 async def test_get_credential_capabilities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -212,23 +243,26 @@ async def test_get_credential_capabilities(
 ) -> None:
     """Test get_credential_capabilities returns capability data."""
     _mock_access_control(lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "get_credential_capabilities",
-        {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
-        },
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
     )
 
-    assert result["supports_user_management"] is True
-    assert result["max_users"] == 20
+    assert result[entity_id]["supports_user_management"] is True
+    assert result[entity_id]["max_users"] == 20
+    assert result[entity_id]["supported_user_types"] == ["general"]
 
 
 async def test_get_credential_capabilities_not_supported(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -243,7 +277,9 @@ async def test_get_credential_capabilities_not_supported(
             DOMAIN,
             "get_credential_capabilities",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                )
             },
             blocking=True,
             return_response=True,
@@ -252,6 +288,7 @@ async def test_get_credential_capabilities_not_supported(
 
 async def test_get_users(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -264,30 +301,32 @@ async def test_get_users(
     user.user_id = 1
     user.user_name = "Alice"
     user.active = True
-    user.user_type = MagicMock()
+    user.user_type = UserCredentialUserType.GENERAL
     user.credential_rule = None
     api.async_get_users_cached.return_value = [user]
     api.async_get_all_credentials_cached.return_value = []
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "get_users",
-        {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
-        },
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
     )
 
-    assert result["max_users"] == 20
-    assert len(result["users"]) == 1
-    assert result["users"][0]["user_index"] == 1
-    assert result["users"][0]["user_name"] == "Alice"
-    assert result["users"][0]["active"] is True
+    assert result[entity_id]["max_users"] == 20
+    assert len(result[entity_id]["users"]) == 1
+    assert result[entity_id]["users"][0]["user_index"] == 1
+    assert result[entity_id]["users"][0]["user_name"] == "Alice"
+    assert result[entity_id]["users"][0]["active"] is True
 
 
 async def test_set_credential_auto_slot(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -301,12 +340,14 @@ async def test_set_credential_auto_slot(
     cred_caps = api.async_get_credential_capabilities_cached.return_value
     cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
 
-    device_id = _device_id(device_registry, client, lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
     result = await hass.services.async_call(
         DOMAIN,
         "set_credential",
         {
-            ATTR_DEVICE_ID: device_id,
+            ATTR_ENTITY_ID: entity_id,
             "user_index": 2,
             "credential_type": "pin_code",
             "credential_data": "1234",
@@ -317,13 +358,13 @@ async def test_set_credential_auto_slot(
 
     api.async_set_user.assert_not_called()
     api.async_set_credential.assert_called_once()
-    # Response keyed by device_id for multi-target support
-    assert result[device_id]["user_index"] == 2
-    assert result[device_id]["credential_slot"] == 1
+    assert result[entity_id]["user_index"] == 2
+    assert result[entity_id]["credential_slot"] == 1
 
 
 async def test_set_credential_explicit_slot(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -331,13 +372,15 @@ async def test_set_credential_explicit_slot(
 ) -> None:
     """Test set_credential with explicit user_index and slot."""
     api = _mock_access_control(lock_schlage_be469)
-    device_id = _device_id(device_registry, client, lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "set_credential",
         {
-            ATTR_DEVICE_ID: device_id,
+            ATTR_ENTITY_ID: entity_id,
             "credential_type": "pin_code",
             "credential_data": "5678",
             "user_index": 3,
@@ -349,12 +392,13 @@ async def test_set_credential_explicit_slot(
 
     api.async_set_user.assert_not_called()
     api.async_set_credential.assert_called_once()
-    assert result[device_id]["user_index"] == 3
-    assert result[device_id]["credential_slot"] == 2
+    assert result[entity_id]["user_index"] == 3
+    assert result[entity_id]["credential_slot"] == 2
 
 
 async def test_set_credential_multi_target(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -371,13 +415,17 @@ async def test_set_credential_multi_target(
         cred_caps = api.async_get_credential_capabilities_cached.return_value
         cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
 
-    device_1 = _device_id(device_registry, client, lock_schlage_be469)
-    device_2 = _device_id(device_registry, client, lock_august_pro)
+    entity_1 = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+    entity_2 = _lock_entity_id(
+        entity_registry, device_registry, client, lock_august_pro
+    )
     result = await hass.services.async_call(
         DOMAIN,
         "set_credential",
         {
-            ATTR_DEVICE_ID: [device_1, device_2],
+            ATTR_ENTITY_ID: [entity_1, entity_2],
             "user_index": 1,
             "credential_type": "pin_code",
             "credential_data": "1234",
@@ -388,13 +436,14 @@ async def test_set_credential_multi_target(
 
     api1.async_set_credential.assert_called_once()
     api2.async_set_credential.assert_called_once()
-    assert set(result.keys()) == {device_1, device_2}
-    assert result[device_1]["user_index"] == 1
-    assert result[device_2]["user_index"] == 1
+    assert set(result.keys()) == {entity_1, entity_2}
+    assert result[entity_1]["user_index"] == 1
+    assert result[entity_2]["user_index"] == 1
 
 
 async def test_set_credential_rejection_raises(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -411,7 +460,9 @@ async def test_set_credential_rejection_raises(
             DOMAIN,
             "set_credential",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "user_index": 1,
                 "credential_type": "pin_code",
                 "credential_data": "1234",
@@ -424,6 +475,7 @@ async def test_set_credential_rejection_raises(
 
 async def test_set_user_rejection_raises(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -440,7 +492,9 @@ async def test_set_user_rejection_raises(
             DOMAIN,
             "set_user",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "user_index": 1,
                 "user_name": "Guest",
             },
@@ -451,6 +505,7 @@ async def test_set_user_rejection_raises(
 
 async def test_set_credential_requires_user_index(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -464,7 +519,9 @@ async def test_set_credential_requires_user_index(
             DOMAIN,
             "set_credential",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "credential_type": "pin_code",
                 "credential_data": "1234",
             },
@@ -475,6 +532,7 @@ async def test_set_credential_requires_user_index(
 
 async def test_set_credential_type_not_supported(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -491,7 +549,9 @@ async def test_set_credential_type_not_supported(
             DOMAIN,
             "set_credential",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "user_index": 1,
                 "credential_type": "pin_code",
                 "credential_data": "1234",
@@ -503,6 +563,7 @@ async def test_set_credential_type_not_supported(
 
 async def test_set_credential_no_available_slots(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -530,7 +591,9 @@ async def test_set_credential_no_available_slots(
             DOMAIN,
             "set_credential",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "user_index": 1,
                 "credential_type": "pin_code",
                 "credential_data": "1234",
@@ -542,6 +605,7 @@ async def test_set_credential_no_available_slots(
 
 async def test_clear_credential(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -554,7 +618,9 @@ async def test_clear_credential(
         DOMAIN,
         "clear_credential",
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+            ATTR_ENTITY_ID: _lock_entity_id(
+                entity_registry, device_registry, client, lock_schlage_be469
+            ),
             "user_index": 1,
             "credential_type": "pin_code",
             "credential_slot": 2,
@@ -567,6 +633,7 @@ async def test_clear_credential(
 
 async def test_clear_all_credentials(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -587,7 +654,9 @@ async def test_clear_all_credentials(
         DOMAIN,
         "clear_all_credentials",
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+            ATTR_ENTITY_ID: _lock_entity_id(
+                entity_registry, device_registry, client, lock_schlage_be469
+            ),
             "user_index": 1,
         },
         blocking=True,
@@ -598,6 +667,7 @@ async def test_clear_all_credentials(
 
 async def test_get_credential_status_exists(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -609,12 +679,15 @@ async def test_get_credential_status_exists(
     cred = MagicMock()
     cred.user_id = 1
     api.async_get_credential_cached.return_value = cred
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "get_credential_status",
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+            ATTR_ENTITY_ID: entity_id,
             "user_index": 1,
             "credential_type": "pin_code",
             "credential_slot": 1,
@@ -623,14 +696,15 @@ async def test_get_credential_status_exists(
         return_response=True,
     )
 
-    assert result["credential_exists"] is True
-    assert result["user_index"] == 1
-    assert result["credential_type"] == "pin_code"
-    assert result["credential_slot"] == 1
+    assert result[entity_id]["credential_exists"] is True
+    assert result[entity_id]["user_index"] == 1
+    assert result[entity_id]["credential_type"] == "pin_code"
+    assert result[entity_id]["credential_slot"] == 1
 
 
 async def test_get_credential_status_not_exists(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -639,12 +713,15 @@ async def test_get_credential_status_not_exists(
     """Test get_credential_status when credential does not exist."""
     api = _mock_access_control(lock_schlage_be469)
     api.async_get_credential_cached.return_value = None
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "get_credential_status",
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+            ATTR_ENTITY_ID: entity_id,
             "user_index": 1,
             "credential_type": "pin_code",
             "credential_slot": 5,
@@ -653,13 +730,14 @@ async def test_get_credential_status_not_exists(
         return_response=True,
     )
 
-    assert result["credential_exists"] is False
+    assert result[entity_id]["credential_exists"] is False
 
 
 @pytest.mark.parametrize("field", ["user_index", "credential_slot"])
 @pytest.mark.parametrize("value", [0, 65536, 100000])
 async def test_set_credential_id_range_validation(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -671,7 +749,9 @@ async def test_set_credential_id_range_validation(
     _mock_access_control(lock_schlage_be469)
 
     payload: dict = {
-        ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+        ATTR_ENTITY_ID: _lock_entity_id(
+            entity_registry, device_registry, client, lock_schlage_be469
+        ),
         "user_index": 1,
         "credential_type": "pin_code",
         "credential_data": "1234",
@@ -690,6 +770,7 @@ async def test_set_credential_id_range_validation(
 
 async def test_clear_user_rejects_oversize_user_index(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -703,7 +784,9 @@ async def test_clear_user_rejects_oversize_user_index(
             DOMAIN,
             "clear_user",
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, client, lock_schlage_be469),
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
                 "user_index": 70000,
             },
             blocking=True,
@@ -712,6 +795,7 @@ async def test_clear_user_rejects_oversize_user_index(
 
 async def test_mutation_supports_multi_target(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
@@ -726,9 +810,13 @@ async def test_mutation_supports_multi_target(
         DOMAIN,
         "clear_user",
         {
-            ATTR_DEVICE_ID: [
-                _device_id(device_registry, client, lock_schlage_be469),
-                _device_id(device_registry, client, lock_august_pro),
+            ATTR_ENTITY_ID: [
+                _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                _lock_entity_id(
+                    entity_registry, device_registry, client, lock_august_pro
+                ),
             ],
             "user_index": 3,
         },
@@ -739,28 +827,50 @@ async def test_mutation_supports_multi_target(
     api2.async_delete_user.assert_called_once_with(3)
 
 
-async def test_get_service_rejects_multi_target(
+async def test_get_users_supports_multi_target(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
     lock_august_pro: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """get_users rejects multi-device targeting (single-node by design)."""
-    _mock_access_control(lock_schlage_be469)
-    _mock_access_control(lock_august_pro)
+    """get_users returns a per-entity response when multiple locks are targeted."""
+    api1 = _mock_access_control(lock_schlage_be469)
+    api2 = _mock_access_control(lock_august_pro)
 
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            "get_users",
-            {
-                ATTR_DEVICE_ID: [
-                    _device_id(device_registry, client, lock_schlage_be469),
-                    _device_id(device_registry, client, lock_august_pro),
-                ],
-            },
-            blocking=True,
-            return_response=True,
-        )
+    user_1 = MagicMock()
+    user_1.user_id = 1
+    user_1.user_name = "Alice"
+    user_1.active = True
+    user_1.user_type = UserCredentialUserType.GENERAL
+    user_1.credential_rule = None
+    api1.async_get_users_cached.return_value = [user_1]
+
+    user_2 = MagicMock()
+    user_2.user_id = 2
+    user_2.user_name = "Bob"
+    user_2.active = True
+    user_2.user_type = UserCredentialUserType.DISPOSABLE
+    user_2.credential_rule = None
+    api2.async_get_users_cached.return_value = [user_2]
+
+    entity_1 = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+    entity_2 = _lock_entity_id(
+        entity_registry, device_registry, client, lock_august_pro
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_users",
+        {ATTR_ENTITY_ID: [entity_1, entity_2]},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert set(result) == {entity_1, entity_2}
+    assert result[entity_1]["users"][0]["user_name"] == "Alice"
+    assert result[entity_2]["users"][0]["user_name"] == "Bob"

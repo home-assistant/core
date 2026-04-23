@@ -1,10 +1,10 @@
 """Methods and classes related to executing Z-Wave commands."""
 
 import asyncio
-from collections.abc import Callable, Collection, Generator, Sequence
+from collections.abc import Collection, Generator, Sequence
 import logging
 import math
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -31,13 +31,7 @@ from zwave_js_server.util.node import (
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -48,7 +42,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
 
-from . import access_control_helpers, const
+from . import const
 from .access_control_helpers import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
@@ -60,7 +54,6 @@ from .helpers import (
     async_get_node_from_entity_id,
     async_get_nodes_from_area_id,
     async_get_nodes_from_targets,
-    get_device_id,
     get_value_id_from_unique_id,
 )
 
@@ -80,8 +73,128 @@ TARGET_VALIDATORS = {
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
+    _async_register_credential_services(hass)
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
+
+
+@callback
+def _async_register_credential_services(hass: HomeAssistant) -> None:
+    """Register lock-entity credential platform services."""
+    uint16_id = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_SET_USER,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Optional(const.ATTR_USER_INDEX): uint16_id,
+            vol.Optional(const.ATTR_USER_NAME): cv.string,
+            vol.Optional(const.ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
+            vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
+                CREDENTIAL_RULE_REVERSE_MAP.keys()
+            ),
+            vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+        },
+        func="async_set_user",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_CLEAR_USER,
+        entity_domain=LOCK_DOMAIN,
+        schema={vol.Required(const.ATTR_USER_INDEX): uint16_id},
+        func="async_clear_user",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_CLEAR_ALL_USERS,
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_clear_all_users",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_GET_CREDENTIAL_CAPABILITIES,
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_get_credential_capabilities",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_GET_USERS,
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_get_users",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_SET_CREDENTIAL,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_INDEX): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_DATA): cv.string,
+            vol.Optional(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_set_credential",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_CLEAR_CREDENTIAL,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_INDEX): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_clear_credential",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_CLEAR_ALL_CREDENTIALS,
+        entity_domain=LOCK_DOMAIN,
+        schema={vol.Required(const.ATTR_USER_INDEX): uint16_id},
+        func="async_clear_all_credentials",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_GET_CREDENTIAL_STATUS,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_INDEX): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                CREDENTIAL_TYPE_REVERSE_MAP.keys()
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_get_credential_status",
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 def parameter_name_does_not_need_bitmask(
@@ -554,219 +667,6 @@ class ZWaveServices:
             func="async_set_lock_configuration",
         )
 
-        # Credential management services.
-        # Mutations (no response): multi-node allowed via area/device/entity
-        # targeting, so automations can bulk-clear across locks.
-        # Response-returning services (get_*, set_credential): single-node
-        # only, to keep the response shape a flat dict rather than a
-        # per-node keyed map.
-
-        @callback
-        def has_exactly_one_node(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate that exactly one node is targeted."""
-            nodes = val.get(const.ATTR_NODES) or set()
-            if len(nodes) != 1:
-                raise vol.Invalid(
-                    f"This service requires exactly one {const.DOMAIN} "
-                    f"device target, got {len(nodes)}"
-                )
-            return val
-
-        credential_target_schema = {
-            **TARGET_VALIDATORS,
-        }
-
-        # user_index and credential_slot both fit in a uint16 (1..65535)
-        uint16_id = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_SET_USER,
-            self.async_set_user_service,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        **credential_target_schema,
-                        vol.Optional(const.ATTR_USER_INDEX): uint16_id,
-                        vol.Optional(const.ATTR_USER_NAME): cv.string,
-                        vol.Optional(const.ATTR_USER_TYPE): vol.In(
-                            USER_TYPE_REVERSE_MAP.keys()
-                        ),
-                        vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
-                            CREDENTIAL_RULE_REVERSE_MAP.keys()
-                        ),
-                        vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-            supports_response=SupportsResponse.OPTIONAL,
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_CLEAR_USER,
-            self.async_clear_user_service,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        **credential_target_schema,
-                        vol.Required(const.ATTR_USER_INDEX): uint16_id,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_CLEAR_ALL_USERS,
-            self.async_clear_all_users_service,
-            schema=vol.Schema(
-                vol.All(
-                    credential_target_schema,
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_GET_CREDENTIAL_CAPABILITIES,
-            self.async_get_credential_capabilities_service,
-            schema=vol.Schema(
-                vol.All(
-                    credential_target_schema,
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_exactly_one_node,
-                ),
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_GET_USERS,
-            self.async_get_users_service,
-            schema=vol.Schema(
-                vol.All(
-                    credential_target_schema,
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_exactly_one_node,
-                ),
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_SET_CREDENTIAL,
-            self.async_set_credential_service,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        **credential_target_schema,
-                        vol.Required(const.ATTR_USER_INDEX): uint16_id,
-                        vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
-                            const.WRITABLE_CREDENTIAL_TYPES
-                        ),
-                        vol.Required(const.ATTR_CREDENTIAL_DATA): cv.string,
-                        vol.Optional(const.ATTR_CREDENTIAL_SLOT): uint16_id,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-            supports_response=SupportsResponse.OPTIONAL,
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_CLEAR_CREDENTIAL,
-            self.async_clear_credential_service,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        **credential_target_schema,
-                        vol.Required(const.ATTR_USER_INDEX): uint16_id,
-                        vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
-                            const.WRITABLE_CREDENTIAL_TYPES
-                        ),
-                        vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_CLEAR_ALL_CREDENTIALS,
-            self.async_clear_all_credentials_service,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        **credential_target_schema,
-                        vol.Required(const.ATTR_USER_INDEX): uint16_id,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_GET_CREDENTIAL_STATUS,
-            self.async_get_credential_status_service,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        **credential_target_schema,
-                        vol.Required(const.ATTR_USER_INDEX): uint16_id,
-                        vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
-                            CREDENTIAL_TYPE_REVERSE_MAP.keys()
-                        ),
-                        vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_exactly_one_node,
-                ),
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
@@ -1120,250 +1020,3 @@ class ZWaveServices:
         if notification_event is not None:
             param["notificationEvent"] = notification_event
         await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
-
-    # --- Credential management service handlers ---
-
-    @staticmethod
-    def _single_node(service: ServiceCall) -> ZwaveNode:
-        """Return the single targeted node (validator guarantees exactly one)."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        return next(iter(nodes))
-
-    def _wrap_credential_error(
-        self, err: Exception, translation_key: str, **extra: str
-    ) -> HomeAssistantError:
-        """Wrap non-HA errors with a credential-service translation."""
-        return HomeAssistantError(
-            translation_domain=const.DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={"error": str(err), **extra},
-        )
-
-    def _node_device_key(self, node: ZwaveNode) -> str:
-        """Return the HA device_id for a targeted node, or a fallback."""
-        device = self._dev_reg.async_get_device(
-            identifiers={get_device_id(node.client.driver, node)}
-        )
-        return device.id if device else f"node_{node.node_id}"
-
-    async def _gather_credential_mutation(
-        self,
-        service: ServiceCall,
-        coro_factory: Callable[[ZwaveNode], Any],
-        translation_key: str,
-        **extra_placeholders: str,
-    ) -> dict[str, Any]:
-        """Run a credential mutation across all targeted nodes in parallel.
-
-        Returns a dict keyed by device_id with each node's return value
-        (TypedDict coerced to dict, or None). Raises on any node error:
-        single errors preserve the translation key, multiple errors are
-        concatenated.
-        """
-        nodes_list: list[ZwaveNode] = list(service.data[const.ATTR_NODES])
-        results = await asyncio.gather(
-            *(coro_factory(node) for node in nodes_list),
-            return_exceptions=True,
-        )
-        response: dict[str, Any] = {}
-        errors: list[tuple[ZwaveNode, Exception]] = []
-        for node, result in zip(nodes_list, results, strict=True):
-            if isinstance(result, Exception):
-                errors.append((node, result))
-                continue
-            response[self._node_device_key(node)] = (
-                dict(cast(dict[str, Any], result)) if result is not None else None
-            )
-        if errors:
-            if len(errors) == 1 and isinstance(errors[0][1], HomeAssistantError):
-                raise errors[0][1]
-            if len(errors) == 1:
-                raise self._wrap_credential_error(
-                    errors[0][1], translation_key, **extra_placeholders
-                ) from errors[0][1]
-            lines = [f"{len(errors)} error(s):"] + [
-                f"{node} - {error.__class__.__name__}: {error}"
-                for node, error in errors
-            ]
-            raise HomeAssistantError("\n".join(lines))
-        return response
-
-    async def _run_credential_mutation(
-        self,
-        service: ServiceCall,
-        coro_factory: Callable[[ZwaveNode], Any],
-        translation_key: str,
-        **extra_placeholders: str,
-    ) -> None:
-        """Dispatch a no-response mutation across all targeted nodes."""
-        await self._gather_credential_mutation(
-            service, coro_factory, translation_key, **extra_placeholders
-        )
-
-    async def async_set_user_service(self, service: ServiceCall) -> ServiceResponse:
-        """Create or update an access-control user on all targeted nodes.
-
-        Response keyed by device_id so callers know the allocated user_index
-        (especially when auto-finding a free slot).
-        """
-        user_type = service.data.get(const.ATTR_USER_TYPE)
-        credential_rule = service.data.get(const.ATTR_CREDENTIAL_RULE)
-        user_index = service.data.get(const.ATTR_USER_INDEX)
-        user_name = service.data.get(const.ATTR_USER_NAME)
-        active = service.data.get(const.ATTR_USER_ACTIVE)
-        resolved_user_type = (
-            USER_TYPE_REVERSE_MAP[user_type] if user_type is not None else None
-        )
-        resolved_credential_rule = (
-            CREDENTIAL_RULE_REVERSE_MAP[credential_rule]
-            if credential_rule is not None
-            else None
-        )
-
-        def _coro(node: ZwaveNode) -> Any:
-            return access_control_helpers.async_set_user(
-                node,
-                user_index=user_index,
-                user_name=user_name,
-                user_type=resolved_user_type,
-                credential_rule=resolved_credential_rule,
-                active=active,
-            )
-
-        return await self._gather_credential_mutation(service, _coro, "set_user_failed")
-
-    async def async_clear_user_service(self, service: ServiceCall) -> None:
-        """Delete a single access-control user on all targeted nodes."""
-        user_index: int = service.data[const.ATTR_USER_INDEX]
-
-        def _coro(node: ZwaveNode) -> Any:
-            return access_control_helpers.async_clear_user(node, user_index)
-
-        await self._run_credential_mutation(
-            service, _coro, "clear_user_failed", user_index=str(user_index)
-        )
-
-    async def async_clear_all_users_service(self, service: ServiceCall) -> None:
-        """Delete all access-control users on all targeted nodes."""
-
-        def _coro(node: ZwaveNode) -> Any:
-            return access_control_helpers.async_clear_all_users(node)
-
-        await self._run_credential_mutation(service, _coro, "clear_all_users_failed")
-
-    async def async_get_credential_capabilities_service(
-        self, service: ServiceCall
-    ) -> ServiceResponse:
-        """Return credential management capabilities of a node."""
-        node = self._single_node(service)
-        try:
-            return cast(
-                ServiceResponse,
-                dict(
-                    await access_control_helpers.async_get_credential_capabilities(node)
-                ),
-            )
-        except HomeAssistantError:
-            raise
-        except Exception as err:
-            raise self._wrap_credential_error(
-                err, "get_credential_capabilities_failed"
-            ) from err
-
-    async def async_get_users_service(self, service: ServiceCall) -> ServiceResponse:
-        """Return users list for a node."""
-        node = self._single_node(service)
-        try:
-            return cast(
-                ServiceResponse,
-                dict(await access_control_helpers.async_get_users(node)),
-            )
-        except HomeAssistantError:
-            raise
-        except Exception as err:
-            raise self._wrap_credential_error(err, "get_users_failed") from err
-
-    async def async_set_credential_service(
-        self, service: ServiceCall
-    ) -> ServiceResponse:
-        """Add or update a credential for an existing user on all targeted nodes.
-
-        Response is keyed by device_id so multi-target automations can tell
-        which device got which allocated slot.
-        """
-        credential_type_str: str = service.data[const.ATTR_CREDENTIAL_TYPE]
-        credential_type = CREDENTIAL_TYPE_REVERSE_MAP[credential_type_str]
-        user_index: int = service.data[const.ATTR_USER_INDEX]
-        credential_data: str = service.data[const.ATTR_CREDENTIAL_DATA]
-        credential_slot = service.data.get(const.ATTR_CREDENTIAL_SLOT)
-
-        def _coro(node: ZwaveNode) -> Any:
-            return access_control_helpers.async_set_credential(
-                node,
-                user_index=user_index,
-                credential_type=credential_type,
-                credential_data=credential_data,
-                credential_slot=credential_slot,
-            )
-
-        return await self._gather_credential_mutation(
-            service, _coro, "set_credential_failed"
-        )
-
-    async def async_clear_credential_service(self, service: ServiceCall) -> None:
-        """Delete a single credential on all targeted nodes."""
-        user_index: int = service.data[const.ATTR_USER_INDEX]
-        credential_type_str: str = service.data[const.ATTR_CREDENTIAL_TYPE]
-        credential_slot: int = service.data[const.ATTR_CREDENTIAL_SLOT]
-        credential_type = CREDENTIAL_TYPE_REVERSE_MAP[credential_type_str]
-
-        def _coro(node: ZwaveNode) -> Any:
-            return access_control_helpers.async_clear_credential(
-                node,
-                user_index=user_index,
-                credential_type=credential_type,
-                credential_slot=credential_slot,
-            )
-
-        await self._run_credential_mutation(service, _coro, "clear_credential_failed")
-
-    async def async_clear_all_credentials_service(self, service: ServiceCall) -> None:
-        """Delete all credentials for a user on all targeted nodes."""
-        user_index: int = service.data[const.ATTR_USER_INDEX]
-
-        def _coro(node: ZwaveNode) -> Any:
-            return access_control_helpers.async_clear_all_credentials(node, user_index)
-
-        await self._run_credential_mutation(
-            service,
-            _coro,
-            "clear_all_credentials_failed",
-            user_index=str(user_index),
-        )
-
-    async def async_get_credential_status_service(
-        self, service: ServiceCall
-    ) -> ServiceResponse:
-        """Return status of a credential slot on a node."""
-        node = self._single_node(service)
-        credential_type_str: str = service.data[const.ATTR_CREDENTIAL_TYPE]
-        try:
-            return cast(
-                ServiceResponse,
-                dict(
-                    await access_control_helpers.async_get_credential_status(
-                        node,
-                        user_index=service.data[const.ATTR_USER_INDEX],
-                        credential_type=CREDENTIAL_TYPE_REVERSE_MAP[
-                            credential_type_str
-                        ],
-                        credential_slot=service.data[const.ATTR_CREDENTIAL_SLOT],
-                    )
-                ),
-            )
-        except HomeAssistantError:
-            raise
-        except Exception as err:
-            raise self._wrap_credential_error(
-                err, "get_credential_status_failed"
-            ) from err

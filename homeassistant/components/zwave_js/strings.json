@@ -749,7 +749,7 @@
       "name": "Set device configuration parameter"
     },
     "set_credential": {
-      "description": "Adds or updates a credential (PIN code or password) for an existing user on a lock. Call `set_user` first to create a user if needed.",
+      "description": "Adds or updates a credential (PIN code or password) for an existing user on a lock entity. Call `set_user` first to create a user if needed.",
       "fields": {
         "credential_data": {
           "description": "The credential data (e.g. PIN digits or password string).",
@@ -815,7 +815,7 @@
       "name": "Set lock user code"
     },
     "set_user": {
-      "description": "Creates or updates an access-control user on a lock. Returns the allocated user_index (per device when multi-target).",
+      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_index for each targeted lock entity.",
       "fields": {
         "active": {
           "description": "Whether the user is active.",
