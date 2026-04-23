@@ -1,14 +1,17 @@
 """Test select trigger."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -33,6 +36,30 @@ async def test_select_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the select triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("select.selection_changed", None, False, False),
+    ],
+)
+async def test_select_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that select triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 STATE_SEQUENCE = [
@@ -93,7 +120,6 @@ STATE_SEQUENCE = [
 @pytest.mark.parametrize(("trigger", "states"), STATE_SEQUENCE)
 async def test_select_state_trigger(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_selects: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -104,7 +130,6 @@ async def test_select_state_trigger(
     """Test that the select trigger fires when targeted select state changes."""
     await _assert_select_trigger_fires(
         hass,
-        service_calls=service_calls,
         target_entities=target_selects,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -122,7 +147,6 @@ async def test_select_state_trigger(
 @pytest.mark.parametrize(("trigger", "states"), STATE_SEQUENCE)
 async def test_input_select_state_trigger(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_input_selects: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -133,7 +157,6 @@ async def test_input_select_state_trigger(
     """Test that the select trigger fires when targeted input_select state changes."""
     await _assert_select_trigger_fires(
         hass,
-        service_calls=service_calls,
         target_entities=target_input_selects,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -145,7 +168,6 @@ async def test_input_select_state_trigger(
 
 async def _assert_select_trigger_fires(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -154,7 +176,7 @@ async def _assert_select_trigger_fires(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the select trigger fires when targeted state changes."""
-
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
 
     # Set all entities to the initial state
@@ -162,23 +184,23 @@ async def _assert_select_trigger_fires(
         set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, None, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config, calls)
 
     for state in states[1:]:
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         # Check if changing other targeted entities also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+        assert len(calls) == (entities_in_target - 1) * state["count"]
+        calls.clear()
 
 
 # --- Cross-domain test ---
@@ -187,9 +209,9 @@ async def _assert_select_trigger_fires(
 @pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_select_trigger_fires_for_both_domains(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
 ) -> None:
     """Test that the select trigger fires for both select and input_select entities."""
+    calls: list[str] = []
     entity_id_select = "select.test_select"
     entity_id_input_select = "input_select.test_input_select"
 
@@ -202,18 +224,19 @@ async def test_select_trigger_fires_for_both_domains(
         "select.selection_changed",
         None,
         {CONF_ENTITY_ID: [entity_id_select, entity_id_input_select]},
+        calls,
     )
 
     # select entity changes - should trigger
     hass.states.async_set(entity_id_select, "option_b")
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_select
-    service_calls.clear()
+    assert len(calls) == 1
+    assert calls[0] == entity_id_select
+    calls.clear()
 
     # input_select entity changes - should also trigger
     hass.states.async_set(entity_id_input_select, "option_b")
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_input_select
-    service_calls.clear()
+    assert len(calls) == 1
+    assert calls[0] == entity_id_input_select
+    calls.clear()

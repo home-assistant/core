@@ -7,7 +7,6 @@ import logging
 from ProgettiHWSW.input import Input
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -15,19 +14,19 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import setup_input
-from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
+from . import ProgettiHWSWConfigEntry, setup_input
+from .const import DEFAULT_POLLING_INTERVAL_SEC
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ProgettiHWSWConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensors from a config entry."""
-    board_api = hass.data[DOMAIN][config_entry.entry_id]
+    board_api = config_entry.runtime_data
     input_count = config_entry.data["input_count"]
 
     async def async_update_data():

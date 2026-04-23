@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN
+from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN, DoorbellEventType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
@@ -44,6 +44,7 @@ __all__ = [
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "DoorbellEventType",
     "EventDeviceClass",
     "EventEntity",
     "EventEntityDescription",
@@ -189,6 +190,21 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     async def async_internal_added_to_hass(self) -> None:
         """Call when the event entity is added to hass."""
         await super().async_internal_added_to_hass()
+
+        if (
+            self.device_class == EventDeviceClass.DOORBELL
+            and DoorbellEventType.RING not in self.event_types
+        ):
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                "Entity %s is a doorbell event entity but does not support "
+                "the '%s' event type. This will stop working in "
+                "Home Assistant 2027.4, please %s",
+                self.entity_id,
+                DoorbellEventType.RING,
+                report_issue,
+            )
+
         if (
             (state := await self.async_get_last_state())
             and state.state is not None

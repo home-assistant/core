@@ -5,14 +5,8 @@ from typing import Any
 import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import CONF_ABOVE, CONF_BELOW, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -20,6 +14,8 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -43,7 +39,7 @@ def parametrize_brightness_changed_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={},
+            trigger_options={"threshold": {"type": "any"}},
             target_states=[
                 (state, {attribute: 0}),
                 (state, {attribute: 128}),
@@ -54,7 +50,7 @@ def parametrize_brightness_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
+            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
             target_states=[
                 (state, {attribute: 128}),
                 (state, {attribute: 255}),
@@ -67,7 +63,7 @@ def parametrize_brightness_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
+            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
             target_states=[
                 (state, {attribute: 0}),
                 (state, {attribute: 128}),
@@ -93,9 +89,11 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             target_states=[
                 (state, {attribute: 128}),
@@ -110,9 +108,11 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             target_states=[
                 (state, {attribute: 0}),
@@ -126,10 +126,7 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-            },
+            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
             target_states=[
                 (state, {attribute: 128}),
                 (state, {attribute: 255}),
@@ -141,10 +138,7 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-            },
+            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
             target_states=[
                 (state, {attribute: 0}),
                 (state, {attribute: 128}),
@@ -175,6 +169,31 @@ async def test_light_triggers_gated_by_labs_flag(
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("light.turned_on", {}, True, True),
+        ("light.turned_off", {}, True, True),
+    ],
+)
+async def test_light_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that light triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
 )
@@ -195,7 +214,6 @@ async def test_light_triggers_gated_by_labs_flag(
 )
 async def test_light_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -207,7 +225,6 @@ async def test_light_state_trigger_behavior_any(
     """Test that the light state trigger fires when any light state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -236,7 +253,6 @@ async def test_light_state_trigger_behavior_any(
 )
 async def test_light_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -248,7 +264,6 @@ async def test_light_state_attribute_trigger_behavior_any(
     """Test that the light state trigger fires when any light state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -281,7 +296,6 @@ async def test_light_state_attribute_trigger_behavior_any(
 )
 async def test_light_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -293,7 +307,6 @@ async def test_light_state_trigger_behavior_first(
     """Test that the light state trigger fires when the first light changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -319,7 +332,6 @@ async def test_light_state_trigger_behavior_first(
 )
 async def test_light_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -331,7 +343,6 @@ async def test_light_state_attribute_trigger_behavior_first(
     """Test that the light state trigger fires when the first light state changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -364,7 +375,6 @@ async def test_light_state_attribute_trigger_behavior_first(
 )
 async def test_light_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -376,7 +386,6 @@ async def test_light_state_trigger_behavior_last(
     """Test that the light state trigger fires when the last light changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -402,7 +411,6 @@ async def test_light_state_trigger_behavior_last(
 )
 async def test_light_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -414,7 +422,6 @@ async def test_light_state_attribute_trigger_behavior_last(
     """Test that the light state trigger fires when the last light state changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -422,4 +429,55 @@ async def test_light_state_attribute_trigger_behavior_last(
         trigger=trigger,
         trigger_options=trigger_options,
         states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "limit_entities"),
+    [
+        (
+            "light.brightness_changed",
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.brightness_above"},
+                    "value_max": {"entity": "sensor.brightness_below"},
+                },
+            },
+            ["sensor.brightness_above", "sensor.brightness_below"],
+        ),
+        (
+            "light.brightness_crossed_threshold",
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.brightness_lower"},
+                    "value_max": {"entity": "sensor.brightness_upper"},
+                },
+            },
+            ["sensor.brightness_lower", "sensor.brightness_upper"],
+        ),
+    ],
+)
+async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
+    hass: HomeAssistant,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    limit_entities: list[str],
+) -> None:
+    """Test numerical triggers do not fire if limit entities have the wrong unit."""
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
+        hass,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="light.test_light",
+        reset_state={"state": STATE_ON, "attributes": {ATTR_BRIGHTNESS: 0}},
+        trigger_state={"state": STATE_ON, "attributes": {ATTR_BRIGHTNESS: 128}},
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="lx",
     )

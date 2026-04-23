@@ -2,10 +2,13 @@
 
 from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
+import datetime
 import io
+import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -18,12 +21,13 @@ from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -39,17 +43,16 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, trigger
 from homeassistant.helpers.automation import (
-    ANY_DEVICE_CLASS,
     DomainSpec,
-    NumericalDomainSpec,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UNIT,
-    CONF_UPPER_LIMIT,
+    ATTR_BEHAVIOR,
+    BEHAVIOR_ANY,
+    BEHAVIOR_FIRST,
+    BEHAVIOR_LAST,
     DATA_PLUGGABLE_ACTIONS,
+    TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
@@ -72,7 +75,13 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+from tests.common import (
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -677,6 +686,51 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
     assert result == config_old_style
 
 
+async def test_get_trigger_platform_registers_triggers(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_get_trigger_platform registers triggers and notifies subscribers."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
+        ) -> CALLBACK_TYPE:
+            return lambda: None
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"trig_a": MockTrigger, "trig_b": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    subscriber_events: list[set[str]] = []
+
+    async def subscriber(new_triggers: set[str]) -> None:
+        subscriber_events.append(new_triggers)
+
+    trigger.async_subscribe_platform_events(hass, subscriber)
+
+    assert "test.trig_a" not in hass.data[TRIGGERS]
+    assert "test.trig_b" not in hass.data[TRIGGERS]
+
+    # First call registers all triggers from the platform and notifies subscribers
+    await _async_get_trigger_platform(hass, "test.trig_a")
+
+    assert hass.data[TRIGGERS]["test.trig_a"] == "test"
+    assert hass.data[TRIGGERS]["test.trig_b"] == "test"
+    assert len(subscriber_events) == 1
+    assert subscriber_events[0] == {"test.trig_a", "test.trig_b"}
+
+    # Subsequent calls are idempotent — no re-registration or re-notification
+    await _async_get_trigger_platform(hass, "test.trig_a")
+    await _async_get_trigger_platform(hass, "test.trig_b")
+    assert len(subscriber_events) == 1
+
+
 @pytest.mark.parametrize(
     "sun_trigger_descriptions",
     [
@@ -918,6 +972,8 @@ async def test_async_get_all_descriptions(
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 @pytest.mark.parametrize(
     ("yaml_error", "expected_message"),
@@ -958,6 +1014,8 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     assert expected_message in caplog.text
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 async def test_async_get_all_descriptions_with_bad_description(
     hass: HomeAssistant,
@@ -991,6 +1049,8 @@ async def test_async_get_all_descriptions_with_bad_description(
         "Unable to parse triggers.yaml for the sun integration: "
         "expected a dictionary for dictionary value @ data['_']['fields']"
     ) in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 async def test_invalid_trigger_platform(
@@ -1045,6 +1105,8 @@ async def test_subscribe_triggers(
     assert await async_setup_component(hass, "sun", {})
     assert trigger_events == [{"sun"}]
     assert "Error while notifying trigger platform listener" in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 @patch("annotatedyaml.loader.load_yaml")
@@ -1182,75 +1244,99 @@ async def test_subscribe_triggers_no_triggers(
         # Test validating climate.target_temperature_changed
         # Valid: no limits at all
         (
-            {},
+            {"threshold": {"type": "any"}},
             does_not_raise(),
         ),
         # Valid: numerical limits
         (
-            {CONF_ABOVE: 10},
+            {"threshold": {"type": "above", "value": {"number": 10}}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: 90},
+            {"threshold": {"type": "below", "value": {"number": 90}}},
             does_not_raise(),
         ),
         (
-            {CONF_ABOVE: 10, CONF_BELOW: 90},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
+            },
             does_not_raise(),
         ),
         # Valid: entity references
         (
-            {CONF_ABOVE: "sensor.test"},
+            {"threshold": {"type": "above", "value": {"entity": "sensor.test"}}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: "sensor.test"},
+            {"threshold": {"type": "below", "value": {"entity": "sensor.test"}}},
             does_not_raise(),
         ),
         (
-            {CONF_ABOVE: "sensor.test", CONF_BELOW: "sensor.test"},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"entity": "sensor.test"},
+                }
+            },
             does_not_raise(),
         ),
         # Valid: Mix of numerical limits and entity references
         (
-            {CONF_ABOVE: "sensor.test", CONF_BELOW: 90},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"number": 90},
+                }
+            },
             does_not_raise(),
         ),
         (
-            {CONF_ABOVE: 10, CONF_BELOW: "sensor.test"},
-            does_not_raise(),
-        ),
-        # Test verbose choose selector options
-        (
-            {CONF_ABOVE: {"active_choice": "entity", "entity": "sensor.test"}},
-            does_not_raise(),
-        ),
-        (
-            {CONF_ABOVE: {"active_choice": "number", "number": 10}},
-            does_not_raise(),
-        ),
-        (
-            {CONF_BELOW: {"active_choice": "entity", "entity": "sensor.test"}},
-            does_not_raise(),
-        ),
-        (
-            {CONF_BELOW: {"active_choice": "number", "number": 90}},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity": "sensor.test"},
+                }
+            },
             does_not_raise(),
         ),
         # Test invalid configurations
         (
+            # Missing threshold type
+            {},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Invalid threshold type
+            {"threshold": {"type": "invalid_type"}},
+            pytest.raises(vol.Invalid),
+        ),
+        (
             # Must be valid entity id
-            {CONF_ABOVE: "cat", CONF_BELOW: "dog"},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "cat"},
+                    "value_max": {"entity": "dog"},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
         (
             # Above must be smaller than below
-            {CONF_ABOVE: 90, CONF_BELOW: 10},
-            pytest.raises(vol.Invalid),
-        ),
-        (
-            # Invalid choose selector option
-            {CONF_BELOW: {"active_choice": "cat", "cat": 90}},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 90},
+                    "value_max": {"number": 10},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
     ],
@@ -1265,7 +1351,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1294,7 +1380,7 @@ def _make_with_unit_changed_trigger_class() -> type[
         EntityNumericalStateChangedTriggerWithUnitBase,
     ):
         _base_unit = UnitOfTemperature.CELSIUS
-        _domain_specs = {"test": NumericalDomainSpec(value_source="test_attribute")}
+        _domain_specs = {"test": DomainSpec(value_source="test_attribute")}
         _unit_converter = TemperatureConverter
 
     return _TestChangedTrigger
@@ -1305,96 +1391,158 @@ def _make_with_unit_changed_trigger_class() -> type[
     [
         # Valid: no limits at all
         (
-            {},
+            {"threshold": {"type": "any"}},
             does_not_raise(),
         ),
         # Valid: unit provided with numerical limits
         (
-            {CONF_ABOVE: 10, CONF_UNIT: UnitOfTemperature.CELSIUS},
-            does_not_raise(),
-        ),
-        (
-            {CONF_BELOW: 90, CONF_UNIT: UnitOfTemperature.FAHRENHEIT},
+            {
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "°C"},
+                }
+            },
             does_not_raise(),
         ),
         (
             {
-                CONF_ABOVE: 10,
-                CONF_BELOW: 90,
-                CONF_UNIT: UnitOfTemperature.CELSIUS,
+                "threshold": {
+                    "type": "below",
+                    "value": {"number": 90, "unit_of_measurement": "°F"},
+                }
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10, "unit_of_measurement": "°C"},
+                    "value_max": {"number": 90, "unit_of_measurement": "°F"},
+                }
             },
             does_not_raise(),
         ),
         # Valid: no unit needed when using entity references
         (
-            {CONF_ABOVE: "sensor.test"},
+            {"threshold": {"type": "above", "value": {"entity": "sensor.test"}}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: "sensor.test"},
+            {"threshold": {"type": "below", "value": {"entity": "sensor.test"}}},
             does_not_raise(),
         ),
         (
-            {CONF_ABOVE: "sensor.test", CONF_BELOW: "sensor.test"},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"entity": "sensor.test"},
+                }
+            },
             does_not_raise(),
         ),
         # Valid: unit only needed for numerical limits, not entity references
         (
             {
-                CONF_ABOVE: "sensor.test",
-                CONF_BELOW: 90,
-                CONF_UNIT: UnitOfTemperature.CELSIUS,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"number": 90, "unit_of_measurement": "°C"},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_ABOVE: 10,
-                CONF_BELOW: "sensor.test",
-                CONF_UNIT: UnitOfTemperature.CELSIUS,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10, "unit_of_measurement": "°C"},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
+        # Invalid: missing threshold type
+        (
+            {},
+            pytest.raises(vol.Invalid),
+        ),
+        # Invalid: invalid threshold type
+        (
+            {"threshold": {"type": "invalid_type"}},
+            pytest.raises(vol.Invalid),
+        ),
         # Invalid: numerical limit without unit
         (
-            {CONF_ABOVE: 10},
+            {"threshold": {"type": "above", "value": {"number": 10}}},
             pytest.raises(vol.Invalid),
         ),
         (
-            {CONF_BELOW: 90},
+            {"threshold": {"type": "below", "value": {"number": 90}}},
             pytest.raises(vol.Invalid),
         ),
         (
-            {CONF_ABOVE: 10, CONF_BELOW: 90},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 90},
+                    "value_max": {"number": 90},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
         # Invalid: one numerical limit without unit (other is entity)
         (
-            {CONF_ABOVE: 10, CONF_BELOW: "sensor.test"},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity": "sensor.test"},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
         (
-            {CONF_ABOVE: "sensor.test", CONF_BELOW: 90},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"number": 90},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
         # Invalid: invalid unit value
         (
-            {CONF_ABOVE: 10, CONF_UNIT: "invalid_unit"},
+            {
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "invalid_unit"},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
         # Invalid: Must use valid entity id
         (
-            {CONF_ABOVE: "cat", CONF_BELOW: "dog"},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "cat"},
+                    "value_max": {"entity": "dog"},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
         # Invalid: above must be smaller than below
         (
-            {CONF_ABOVE: 90, CONF_BELOW: 10, CONF_UNIT: UnitOfTemperature.CELSIUS},
-            pytest.raises(vol.Invalid),
-        ),
-        # Invalid: invalid choose selector option
-        (
-            {CONF_BELOW: {"active_choice": "cat", "cat": 90}},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 90, "unit_of_measurement": "°C"},
+                    "value_max": {"number": 10, "unit_of_measurement": "°F"},
+                }
+            },
             pytest.raises(vol.Invalid),
         ),
     ],
@@ -1434,7 +1582,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1444,7 +1592,13 @@ async def test_numerical_state_attribute_changed_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 20})
 
     options = {
-        CONF_OPTIONS: {CONF_ABOVE: "sensor.above", CONF_BELOW: "sensor.below"},
+        CONF_OPTIONS: {
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
+        }
     }
 
     await async_setup_component(
@@ -1539,6 +1693,94 @@ async def test_numerical_state_attribute_changed_error_handling(
         assert len(service_calls) == 0
 
 
+async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that entity limits with wrong unit are rejected."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": DomainSpec(value_source="test_attribute")},
+                valid_unit="%",
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 20})
+
+    options = {
+        CONF_OPTIONS: {
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
+        }
+    }
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                }
+                | options,
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+
+    assert len(service_calls) == 0
+
+    # Test the trigger works with correct unit on limit entities
+    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("sensor.below", "90", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # Test the trigger does not fire when the above sensor has wrong unit
+    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the above sensor has no unit
+    hass.states.async_set("sensor.above", "10")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Reset the above sensor to correct unit
+    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+
+    # Test the trigger does not fire when the below sensor has wrong unit
+    hass.states.async_set("sensor.below", "90", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the below sensor has no unit
+    hass.states.async_set("sensor.below", "90")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
 async def test_numerical_state_attribute_changed_with_unit_error_handling(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -1571,9 +1813,17 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
                         CONF_PLATFORM: "test.attribute_changed",
                         CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
                         CONF_OPTIONS: {
-                            CONF_ABOVE: 20,
-                            CONF_BELOW: 30,
-                            CONF_UNIT: UnitOfTemperature.CELSIUS,
+                            "threshold": {
+                                "type": "between",
+                                "value_min": {
+                                    "number": 20,
+                                    "unit_of_measurement": "°C",
+                                },
+                                "value_max": {
+                                    "number": 30,
+                                    "unit_of_measurement": "°C",
+                                },
+                            }
                         },
                     },
                     "action": {
@@ -1586,8 +1836,11 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
                         CONF_PLATFORM: "test.attribute_changed",
                         CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
                         CONF_OPTIONS: {
-                            CONF_ABOVE: "sensor.above",
-                            CONF_BELOW: "sensor.below",
+                            "threshold": {
+                                "type": "between",
+                                "value_min": {"entity": "sensor.above"},
+                                "value_max": {"entity": "sensor.below"},
+                            }
                         },
                     },
                     "action": {
@@ -1841,82 +2094,98 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         # Valid configurations
         # Don't use the enum in tests to allow testing validation of strings when the source is JSON or YAML
         (
-            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: 10},
+            {"threshold": {"type": "above", "value": {"number": 10}}},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: "sensor.test"},
+            {"threshold": {"type": "above", "value": {"entity": "sensor.test"}}},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: "below", CONF_UPPER_LIMIT: 90},
+            {"threshold": {"type": "below", "value": {"number": 90}}},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: "below", CONF_UPPER_LIMIT: "sensor.test"},
+            {"threshold": {"type": "below", "value": {"entity": "sensor.test"}}},
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"number": 90},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "outside",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "outside",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "outside",
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"number": 90},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "outside",
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
@@ -1928,75 +2197,94 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             pytest.raises(vol.Invalid),
         ),
         (
+            # Missing threshold type
+            {"threshold": {}},
+            pytest.raises(vol.Invalid),
+        ),
+        (
             # Invalid threshold type
-            {CONF_THRESHOLD_TYPE: "cat"},
+            {"threshold": {"type": "cat"}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
-            {CONF_THRESHOLD_TYPE: "above"},
+            {"threshold": {"type": "above"}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
-            {CONF_THRESHOLD_TYPE: "above", CONF_UPPER_LIMIT: 90},
+            {"threshold": {"type": "above", "value_min": {"number": 10}}},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide lower limit for ABOVE
+            {"threshold": {"type": "above", "value_max": {"number": 90}}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
-            {CONF_THRESHOLD_TYPE: "below"},
+            {"threshold": {"type": "below"}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
-            {CONF_THRESHOLD_TYPE: "below", CONF_LOWER_LIMIT: 10},
+            {"threshold": {"type": "below", "value_min": {"number": 10}}},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper limit for BELOW
+            {"threshold": {"type": "below", "value_max": {"number": 10}}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: "between"},
+            {"threshold": {"type": "between"}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: "between", CONF_LOWER_LIMIT: 10},
+            {"threshold": {"type": "between", "value_min": {"number": 10}}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: "between", CONF_UPPER_LIMIT: 90},
+            {"threshold": {"type": "between", "value_max": {"number": 90}}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: "outside"},
+            {"threshold": {"type": "outside"}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: "outside", CONF_LOWER_LIMIT: 10},
+            {"threshold": {"type": "outside", "value_min": {"number": 10}}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: "outside", CONF_UPPER_LIMIT: 90},
+            {"threshold": {"type": "outside", "value_max": {"number": 90}}},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must be valid entity id
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_ABOVE: "cat",
-                CONF_BELOW: "dog",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "cat"},
+                    "value_max": {"entity": "dog"},
+                }
             },
             pytest.raises(vol.Invalid),
         ),
         (
-            # Above must be smaller than below
+            # Min must be smaller than max
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_ABOVE: 90,
-                CONF_BELOW: 10,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 90},
+                    "value_max": {"number": 10},
+                }
             },
             pytest.raises(vol.Invalid),
         ),
@@ -2012,7 +2300,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -2041,7 +2329,7 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     ):
         _base_unit = UnitOfTemperature.CELSIUS
-        _domain_specs = {"test": NumericalDomainSpec(value_source="test_attribute")}
+        _domain_specs = {"test": DomainSpec(value_source="test_attribute")}
         _unit_converter = TemperatureConverter
 
     return _TestCrossedThresholdTrigger
@@ -2053,79 +2341,108 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         # Valid: unit provided with numerical limits
         (
             {
-                CONF_THRESHOLD_TYPE: "above",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UNIT: UnitOfTemperature.CELSIUS,
+                "threshold": {
+                    "type": "above",
+                    "value": {
+                        "number": 10,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "below",
-                CONF_UPPER_LIMIT: 90,
-                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+                "threshold": {
+                    "type": "below",
+                    "value": {
+                        "number": 90,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                CONF_UNIT: UnitOfTemperature.CELSIUS,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 10,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                    "value_max": {
+                        "number": 90,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                }
             },
             does_not_raise(),
         ),
         # Valid: no unit needed when using entity references
         (
             {
-                CONF_THRESHOLD_TYPE: "above",
-                CONF_LOWER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "above",
+                    "value": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.test"},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             does_not_raise(),
         ),
         # Invalid: numerical limit without unit
         (
-            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: 10},
+            {"threshold": {"type": "above", "value": {"number": 10}}},
             pytest.raises(vol.Invalid),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             pytest.raises(vol.Invalid),
         ),
         # Invalid: one numerical limit without unit (other is entity)
         (
             {
-                CONF_THRESHOLD_TYPE: "between",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: "sensor.test",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity": "sensor.test"},
+                }
             },
             pytest.raises(vol.Invalid),
         ),
         # Invalid: invalid unit value
         (
             {
-                CONF_THRESHOLD_TYPE: "above",
-                CONF_LOWER_LIMIT: 10,
-                CONF_UNIT: "invalid_unit",
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "invalid_unit"},
+                }
             },
             pytest.raises(vol.Invalid),
         ),
-        # Invalid: missing threshold type (shared validation)
+        # Invalid: missing threshold type
         (
             {},
+            pytest.raises(vol.Invalid),
+        ),
+        # Invalid: missing threshold type
+        (
+            {"threshold": {}},
             pytest.raises(vol.Invalid),
         ),
     ],
@@ -2165,7 +2482,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -2176,9 +2493,11 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
 
     options = {
         CONF_OPTIONS: {
-            CONF_THRESHOLD_TYPE: "between",
-            CONF_LOWER_LIMIT: "sensor.lower",
-            CONF_UPPER_LIMIT: "sensor.upper",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.lower"},
+                "value_max": {"entity": "sensor.upper"},
+            }
         },
     }
 
@@ -2281,6 +2600,94 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         assert len(service_calls) == 0
 
 
+async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_validation(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that entity limits with wrong unit are rejected for crossed threshold."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+                {"test": DomainSpec(value_source="test_attribute")},
+                valid_unit="%",
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+
+    options = {
+        CONF_OPTIONS: {
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.lower"},
+                "value_max": {"entity": "sensor.upper"},
+            }
+        },
+    }
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.crossed_threshold",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                }
+                | options,
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+
+    assert len(service_calls) == 0
+
+    # Test the trigger works with correct unit on limit entities
+    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("sensor.upper", "90", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # Test the trigger does not fire when the lower sensor has wrong unit
+    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the lower sensor has no unit
+    hass.states.async_set("sensor.lower", "10")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Reset the lower sensor to correct unit
+    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+
+    # Test the trigger does not fire when the upper sensor has wrong unit
+    hass.states.async_set("sensor.upper", "90", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the upper sensor has no unit
+    hass.states.async_set("sensor.upper", "90")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
 async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handling(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -2305,9 +2712,13 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
 
     options = {
         CONF_OPTIONS: {
-            CONF_THRESHOLD_TYPE: "above",
-            CONF_LOWER_LIMIT: 25,
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {
+                "type": "above",
+                "value": {
+                    "number": 25,
+                    "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                },
+            }
         },
     }
 
@@ -2507,21 +2918,6 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
     assert result == entities
 
 
-async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
-    """Test NumericalDomainSpec stores converter correctly."""
-    converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
-    num_domain_spec = NumericalDomainSpec(
-        value_source="brightness", value_converter=converter
-    )
-    assert num_domain_spec.value_source == "brightness"
-    assert num_domain_spec.value_converter is converter
-    assert num_domain_spec.device_class is ANY_DEVICE_CLASS
-
-    # Plain DomainSpec has no converter
-    domain_spec = DomainSpec(value_source="brightness")
-    assert not isinstance(domain_spec, NumericalDomainSpec)
-
-
 @pytest.mark.parametrize(
     ("domain_specs", "to_states", "from_state", "to_state", "wrong_value_state"),
     [
@@ -2700,3 +3096,787 @@ async def test_make_entity_origin_state_trigger(
 
     # To-state still matches from_state — not valid
     assert not trig.is_valid_state(from_state)
+
+
+class _OffToOnTrigger(EntityTriggerBase):
+    """Test trigger that fires when state becomes 'on'."""
+
+    _domain_specs = {"test": DomainSpec()}
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Valid if transitioning from a non-'on' state."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+        return from_state.state != STATE_ON
+
+    def is_valid_state(self, state: State) -> bool:
+        """Valid if the state is 'on'."""
+        return state.state == STATE_ON
+
+
+async def _arm_off_to_on_trigger(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    behavior: str,
+    calls: list[dict[str, Any]],
+    duration: dict[str, int] | None,
+) -> CALLBACK_TYPE:
+    """Set up _OffToOnTrigger via async_initialize_triggers."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"off_to_on": _OffToOnTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    options: dict[str, Any] = {ATTR_BEHAVIOR: behavior}
+    if duration is not None:
+        options[CONF_FOR] = duration
+
+    trigger_config = {
+        CONF_PLATFORM: "test.off_to_on",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: options,
+    }
+
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"])
+
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
+    return await async_initialize_triggers(
+        hass,
+        validated_config,
+        action,
+        domain="test",
+        name="test_off_to_on",
+        log_cb=log.log,
+    )
+
+
+def _set_or_remove_state(
+    hass: HomeAssistant, entity_id: str, state: str | None
+) -> None:
+    """Set or remove state based on whether state is None."""
+    if state is None:
+        hass.states.async_remove(entity_id)
+    else:
+        hass.states.async_set(entity_id, state)
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+async def test_entity_trigger_fires_on_valid_transition(
+    hass: HomeAssistant, behavior: str
+) -> None:
+    """Test EntityTriggerBase fires immediately on a valid off→on transition without duration."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration=None
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_id
+    assert calls[0]["from_state"].state == STATE_OFF
+    assert calls[0]["to_state"].state == STATE_ON
+    assert calls[0]["for"] is None
+
+    # Transition back and trigger again
+    calls.clear()
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize(
+    "initial_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
+    ids=["unavailable", "unknown", "no_state"],
+)
+async def test_entity_trigger_from_invalid_initial_state(
+    hass: HomeAssistant, behavior: str, initial_state: str | None
+) -> None:
+    """Test that the trigger does not fire when transitioning from unavailable, unknown, or no state."""
+    entity_id = "test.entity_1"
+    _set_or_remove_state(hass, entity_id, initial_state)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration=None
+    )
+
+    # Transition to "on" from the invalid initial state
+    _set_or_remove_state(hass, entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Should NOT fire — transition from invalid state is rejected
+    assert len(calls) == 0
+
+    # Now transition back to off and then to on — should fire
+    _set_or_remove_state(hass, entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    _set_or_remove_state(hass, entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_last_requires_all(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior last: trigger fires only when ALL entities are on."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration=None
+    )
+
+    # Turn only A on — not all match, should not fire
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn B on — now all match, should fire
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_first_requires_exactly_one(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior first: trigger fires only when exactly one entity matches."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
+    )
+
+    # Turn A on — exactly one matches, should fire
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Turn B on — now two match, B's transition should NOT fire
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+    ids=["unavailable", "unknown"],
+)
+async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
+    hass: HomeAssistant, invalid_state: str
+) -> None:
+    """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
+
+    With three entities (A=off, B=unavailable, C=off), turning A on should
+    not fire because C is still off, so the available entities do not all
+    match. Turning C on then fires because all *available* entities (A and C)
+    match. Without the exclusion, B would fail the "all match" check.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    entity_c = "test.entity_c"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, invalid_state)
+    hass.states.async_set(entity_c, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls, duration=None
+    )
+
+    # Turn A on — B is unavailable and skipped, only A is on → all doesn't match
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn C on — B is unavailable and skipped, A and C are both on → all match
+    hass.states.async_set(entity_c, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_c
+
+    # B recovers to off — now not all available entities match, so
+    # turning A off→on should NOT fire
+    calls.clear()
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+    ids=["unavailable", "unknown"],
+)
+async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
+    hass: HomeAssistant, invalid_state: str
+) -> None:
+    """Test behavior first: unavailable/unknown entities are excluded from check_one_match.
+
+    With three entities (A=off, B=unavailable, C=off), turning A on should
+    fire because exactly one *available* entity matches. B is skipped.
+    Then turning C on should NOT fire because now two available entities match.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    entity_c = "test.entity_c"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, invalid_state)
+    hass.states.async_set(entity_c, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_FIRST, calls, duration=None
+    )
+
+    # Turn A on — B is unavailable and skipped, only A matches → exactly one
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
+
+    # Turn C on — now two available entities match (A and C), should NOT fire
+    hass.states.async_set(entity_c, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+async def test_entity_trigger_with_duration(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
+) -> None:
+    """Test EntityTriggerBase waits for duration before firing."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    # Turn on — should NOT fire immediately
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Advance time past duration — should fire
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_id
+    assert calls[0]["from_state"].state == STATE_OFF
+    assert calls[0]["to_state"].state == STATE_ON
+    assert calls[0]["for"] == datetime.timedelta(seconds=5)
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+async def test_entity_trigger_duration_cancelled_on_state_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
+) -> None:
+    """Test that the duration timer is cancelled if state changes back."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    # Turn on, then back off before duration expires
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_any_independent(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior any tracks per-entity durations independently."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+    )
+
+    # Turn A on
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn B on 2 seconds later
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # After 5s from A's turn-on, A should fire
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
+
+    # After 5s from B's turn-on (2 more seconds), B should fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1]["entity_id"] == entity_b
+
+    unsub()
+
+
+async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior any: turning off one entity doesn't cancel the other's timer."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn A off after 2 seconds — cancels A's timer but not B's
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # After 5s total, B should fire but A should not
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_b
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_requires_all(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last: trigger fires only when ALL entities are on for duration."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn only A on — should not start timer (not all match)
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn B on — now all match, timer starts
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last: timer is cancelled when one entity turns off."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn A off after 2 seconds
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_timer_reset(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last: timer resets when combined state goes off and back on."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on — combined state "all on", timer starts
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # After 2 seconds, B turns off — combined state breaks, timer cancelled
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # B turns back on — combined state restored, timer restarts
+    freezer.tick(datetime.timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # 4 seconds after restart (not enough) — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 1 more second (5 total from restart) — should fire
+    freezer.tick(datetime.timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_fires_when_any_on(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: trigger fires when first entity turns on for duration."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn A on — combined state goes to "at least one on", timer starts
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Advance past duration — should fire
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_not_cancelled_by_second(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: second entity turning on doesn't restart timer."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn A on
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn B on 3 seconds later — combined state was already "any on",
+    # so this should NOT restart the timer
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 2 more seconds (5 total from A) — should fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_not_cancelled_by_partial_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: one entity off doesn't cancel if another is still on."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn A off after 2 seconds — combined state still "any on" (B is on)
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past duration — should still fire (combined state never went to "none on")
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_cancelled_when_all_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: timer cancelled when ALL entities turn off."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn both off after 2 seconds — combined state goes to "none on"
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_any_retrigger_resets_timer(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior any: turning an entity off and on resets its timer."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+    )
+
+    # Turn on
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # After 3 seconds, turn off and on again — resets the timer
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # 3 more seconds (6 from start, but only 3 from retrigger) — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 2 more seconds (5 from retrigger) — should fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected_calls"),
+    [(BEHAVIOR_ANY, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_LAST, 1)],
+)
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
+    ids=["unavailable", "unknown", "removed"],
+)
+async def test_entity_trigger_duration_cancelled_on_invalid_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    expected_calls: int,
+    invalid_state: str | None,
+) -> None:
+    """Test if the duration timer is cancelled if entity becomes unavailable, unknown, or is removed.
+
+    This is expected to happen in first and any modes, but not in last mode.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    _set_or_remove_state(hass, entity_a, STATE_OFF)
+    _set_or_remove_state(hass, entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], behavior, calls, duration={"seconds": 5}
+    )
+
+    # Turn on the entities needed to start the timer
+    _set_or_remove_state(hass, entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    if behavior == BEHAVIOR_LAST:
+        _set_or_remove_state(hass, entity_b, STATE_ON)
+        await hass.async_block_till_done()
+
+    # Entity A becomes invalid during the wait
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    _set_or_remove_state(hass, entity_a, invalid_state)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == expected_calls
+
+    unsub()
