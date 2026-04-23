@@ -121,13 +121,13 @@ class DeviceListener(SharingDeviceListener):
             device.function,
             device.status_range,
         )
-        self.hass.add_job(self._async_add_device, device)
+        self.hass.add_job(self.async_add_device, device)
 
     @callback
-    def _async_add_device(self, device: CustomerDevice) -> None:
+    def async_add_device(self, device: CustomerDevice) -> None:
         """Add device to Home Assistant."""
         # Ensure the (stale) device isn't present in the device registry
-        self._async_remove_device(device.id)
+        self.async_remove_device(device.id)
 
         # Register quirk, and add device to the device registry
         device_registry = dr.async_get(self.hass)
@@ -158,10 +158,10 @@ class DeviceListener(SharingDeviceListener):
     def remove_device(self, device_id: str) -> None:
         """Handle device removal event."""
         LOGGER.debug("Remove device: %s", device_id)
-        self.hass.add_job(self._async_remove_device, device_id)
+        self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
-    def _async_remove_device(self, device_id: str) -> None:
+    def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
