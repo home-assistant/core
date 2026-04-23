@@ -287,27 +287,79 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 **Always** post a review comment using `add-comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
+### 7a — Summary table
+
+Render a compact table where every check column contains **only the status
+icon** (✅, ⚠️, or ❌). No explanatory text belongs inside the table cells —
+all detail goes in the per-package sections below.
+
+Use `—` (em dash) when a check was skipped (e.g. Release Pipeline is skipped
+when the repository is not publicly accessible).
+
 ```
 ## Requirements Check
 
-| Package | Type | Old→New | License | Repository Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
-|---------|------|---------|---------|-------------------|-----------|------------------|---------|-----------------|
-| PackageA | bump | 1.2.3→1.3.0 | ✅ MIT | ✅ | ✅ | ✅ OIDC | ✅ compare/v1.2.3...v1.3.0 | ✅ |
-| PackageB | new  | —→4.5.6 | ❌ UNKNOWN | ✅ | ❌ no attestation | ⚠️ no publish workflow | ❌ missing repo link | ✅ |
-| PackageC | bump | 2.0.0→2.1.0 | ✅ Apache-2.0 | ❌ private repo | — | — | ⚠️ link found but wrong repo | ✅ |
+| Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
+|---------|------|---------|---------|-------------|-----------|------------------|---------|-----------------|
+| PackageA | bump | 1.2.3→1.3.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PackageB | new  | —→4.5.6 | ❌ | ✅ | ❌ | ⚠️ | ❌ | ✅ |
+| PackageC | bump | 2.0.0→2.1.0 | ✅ | ❌ | — | — | ⚠️ | ✅ |
 ```
 
-If any package has failures or warnings, add a summary section explaining each
-failure and what the contributor needs to fix, including:
-- The expected source repository URL (from PyPI) when a link is missing or wrong.
-- The expected version range (old → new) when a changelog URL doesn't match the diff.
-- Whether the PyPI release lacks provenance attestation or uses an insecure publish method.
-- Whether the source repository is not publicly accessible.
+### 7b — Per-package detail sections
 
-If all packages pass every check, the comment body should simply be the table
-with all ✅ entries and a brief confirmation such as:
+After the table, add one collapsible `<details>` block per package.
 
-> All requirements checks passed. ✅
+- If **all checks passed** for that package, render the block **collapsed**
+  (no `open` attribute) so the comment stays concise.
+- If **any check failed or produced a warning**, render the block **open**
+  (`<details open>`) so the contributor sees the issues immediately.
+
+Each block must include the full detail for every check: the license found, the
+repository URL, whether a provenance attestation was found, the release
+pipeline findings, the PR link found (or missing), and whether the diff is
+consistent. For failed or warned checks, explain exactly what the contributor
+must fix, including the expected source repository URL, expected version range,
+etc.
+
+Template (repeat for each package):
+
+```
+<details open>
+<summary><strong>PackageB 📦 new —→4.5.6</strong></summary>
+
+- **License**: ❌ License is `UNKNOWN` — not in the approved list. Check PyPI metadata and `script/licenses.py`.
+- **Repository Public**: ✅ https://github.com/example/packageb is publicly accessible.
+- **CI Upload**: ❌ No provenance attestation found for any distribution file. The release may have been uploaded manually.
+- **Release Pipeline**: ⚠️ No publish workflow found in the repository; it is unclear how this package is released to PyPI.
+- **PR Link**: ❌ PR description must link to the source repository at https://github.com/example/packageb (a PyPI page link is not sufficient).
+- **Diff Consistent**: ✅
+
+</details>
+```
+
+Collapsed example (all checks passed):
+
+```
+<details>
+<summary><strong>PackageA 📦 bump 1.2.3→1.3.0</strong></summary>
+
+- **License**: ✅ MIT
+- **Repository Public**: ✅ https://github.com/example/packagea
+- **CI Upload**: ✅ Trusted Publisher attestation found (GitHub Actions).
+- **Release Pipeline**: ✅ OIDC via `pypa/gh-action-pypi-publish`; triggered on `release: published`; `environment: release` gate.
+- **PR Link**: ✅ https://github.com/example/packagea/compare/v1.2.3...v1.3.0
+- **Diff Consistent**: ✅
+
+</details>
+```
+
+### 7c — Overall summary line
+
+End the comment with a single summary line:
+
+- If everything passed: `All requirements checks passed. ✅`
+- If there are failures or warnings: `⚠️ Some checks require attention — see the details above.`
 
 ## Notes
 
