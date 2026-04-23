@@ -219,10 +219,10 @@ async def test_hub_stop_disconnect_error(
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing a device from the config entry."""
     victron_hub, mock_config_entry = init_integration
-    device_registry = dr.async_get(hass)
 
     # A device that was never discovered should be removable
     device_entry = device_registry.async_get_or_create(
