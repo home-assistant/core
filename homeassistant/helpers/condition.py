@@ -298,7 +298,10 @@ class ConditionChecker(abc.ABC):
 
     def __del__(self) -> None:
         """Clean up when the checker is deleted."""
-        self.async_unload()
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading condition checker")
 
     def async_check(
         self, *, variables: TemplateVarsType | None = None, **kwargs: Any
