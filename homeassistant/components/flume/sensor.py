@@ -83,7 +83,6 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         translation_key="last_30_days",
         suggested_display_precision=2,
         native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/mo",
-        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
