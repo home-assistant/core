@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aioslimproto import SlimServer
+from aioslimproto.server import SlimServer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
