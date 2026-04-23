@@ -8,6 +8,6 @@
   "documentation": "https://www.home-assistant.io/integrations/spaceapi",
   "integration_type": "service",
   "iot_class": "calculated",
-  "quality_scale": "bronze",
+  "quality_scale": "legacy",
   "single_config_entry": true
 }
