@@ -359,6 +359,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: (
             False if status is None else "orientation_tilt" in status
         ),
+        supported=lambda status: status.get("slots") is not None,
     ),
     "cury_rotation": RpcBinarySensorDescription(
         key="cury",
@@ -369,6 +370,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: (
             False if status is None else "orientation_plug_rotated" in status
         ),
+        supported=lambda status: status.get("slots") is not None,
     ),
 }
 
