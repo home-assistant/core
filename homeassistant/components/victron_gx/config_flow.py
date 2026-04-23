@@ -295,9 +295,11 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             data = {
                 **reconfigure_entry.data,
                 **user_input,
-                CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
             }
+            if CONF_USERNAME in user_input:
+                data[CONF_USERNAME] = user_input[CONF_USERNAME] or None
+            if CONF_PASSWORD in user_input:
+                data[CONF_PASSWORD] = user_input[CONF_PASSWORD] or None
             try:
                 installation_id = await validate_input(data)
             except AuthenticationError:
@@ -324,7 +326,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: reconfigure_entry.data[CONF_HOST],
             CONF_PORT: reconfigure_entry.data[CONF_PORT],
             CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
-            CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
             CONF_SSL: reconfigure_entry.data.get(CONF_SSL, False),
         }
         if user_input is not None:
