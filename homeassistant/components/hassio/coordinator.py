@@ -253,7 +253,15 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
 
     Async friendly.
     """
-    return hass.data.get(DATA_ADDONS_INFO)
+    addons_info: dict[str, InstalledAddonComplete | None] | None = hass.data.get(
+        DATA_ADDONS_INFO
+    )
+    if addons_info is None:
+        return None
+    return {
+        slug: info.to_dict() if info is not None else None
+        for slug, info in addons_info.items()
+    }
 
 
 @callback
