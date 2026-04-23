@@ -153,11 +153,14 @@ def _check_subscript_or_call_ip(node: nodes.NodeNG) -> str | None:
         ):
             return first_arg.value
 
-    # Recurse into child nodes to catch embedded references (e.g. f-strings)
-    for child in node.get_children():
-        ref = _check_subscript_or_call_ip(child)
-        if ref:
-            return ref
+    # Recurse into child nodes to catch embedded references (e.g. f-strings),
+    # but skip function call arguments -- a call like get_unique_id(host)
+    # transforms the value, so the result isn't IP-based.
+    if not isinstance(node, nodes.Call):
+        for child in node.get_children():
+            ref = _check_subscript_or_call_ip(child)
+            if ref:
+                return ref
 
     return None
 
