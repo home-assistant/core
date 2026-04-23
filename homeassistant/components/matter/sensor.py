@@ -23,7 +23,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -50,7 +49,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 AIR_QUALITY_MAP = {
@@ -225,11 +224,11 @@ def matter_epoch_microseconds_to_utc(x: int | None) -> datetime | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
