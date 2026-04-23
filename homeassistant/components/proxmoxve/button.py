@@ -28,14 +28,17 @@ from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 from .helpers import is_granted
 
+NO_PERM_VM_LXC_POWER = "no_permission_vm_lxc_power"
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox node button description."""
 
     press_action: Callable[[ProxmoxCoordinator, str], None]
-    permission: ProxmoxPermission = ProxmoxPermission.POWER
+    permission: ProxmoxPermission = ProxmoxPermission.SYSPOWER
     permission_raise: str = "no_permission_node_power"
+    permission_target: str = "nodes"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,7 +47,8 @@ class ProxmoxVMButtonEntityDescription(ButtonEntityDescription):
 
     press_action: Callable[[ProxmoxCoordinator, str, int], None]
     permission: ProxmoxPermission = ProxmoxPermission.POWER
-    permission_raise: str = "no_permission_vm_lxc_power"
+    permission_raise: str = NO_PERM_VM_LXC_POWER
+    permission_target: str = "vms"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +57,8 @@ class ProxmoxContainerButtonEntityDescription(ButtonEntityDescription):
 
     press_action: Callable[[ProxmoxCoordinator, str, int], None]
     permission: ProxmoxPermission = ProxmoxPermission.POWER
-    permission_raise: str = "no_permission_vm_lxc_power"
+    permission_raise: str = NO_PERM_VM_LXC_POWER
+    permission_target: str = "vms"
 
 
 NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
@@ -76,6 +81,9 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
     ProxmoxNodeButtonNodeEntityDescription(
         key="start_all",
         translation_key="start_all",
+        permission=ProxmoxPermission.POWER,
+        permission_raise=NO_PERM_VM_LXC_POWER,
+        permission_target="vms",
         press_action=lambda coordinator, node: coordinator.proxmox.nodes(
             node
         ).startall.post(),
@@ -84,6 +92,9 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
     ProxmoxNodeButtonNodeEntityDescription(
         key="stop_all",
         translation_key="stop_all",
+        permission=ProxmoxPermission.POWER,
+        permission_raise=NO_PERM_VM_LXC_POWER,
+        permission_target="vms",
         press_action=lambda coordinator, node: coordinator.proxmox.nodes(
             node
         ).stopall.post(),
@@ -92,6 +103,9 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
     ProxmoxNodeButtonNodeEntityDescription(
         key="suspend_all",
         translation_key="suspend_all",
+        permission=ProxmoxPermission.POWER,
+        permission_raise=NO_PERM_VM_LXC_POWER,
+        permission_target="vms",
         press_action=lambda coordinator, node: coordinator.proxmox.nodes(
             node
         ).suspendall.post(),
@@ -129,6 +143,14 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         translation_key="hibernate",
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node).qemu(vmid).status.hibernate.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ProxmoxVMButtonEntityDescription(
+        key="resume",
+        translation_key="resume",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.resume.post()
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -327,7 +349,7 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
         node_id = self._node_data.node["node"]
         if not is_granted(
             self.coordinator.permissions,
-            p_type="nodes",
+            p_type=self.entity_description.permission_target,
             p_id=node_id,
             permission=self.entity_description.permission,
         ):
@@ -352,7 +374,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
         vmid = self.vm_data["vmid"]
         if not is_granted(
             self.coordinator.permissions,
-            p_type="vms",
+            p_type=self.entity_description.permission_target,
             p_id=vmid,
             permission=self.entity_description.permission,
         ):
@@ -379,7 +401,7 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
         # Container power actions fall under vms
         if not is_granted(
             self.coordinator.permissions,
-            p_type="vms",
+            p_type=self.entity_description.permission_target,
             p_id=vmid,
             permission=self.entity_description.permission,
         ):

@@ -55,6 +55,7 @@ from .const import (
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
     CONF_SERVICE_TIER,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TTS_SPEED,
@@ -82,6 +83,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
+    RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
@@ -357,6 +359,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 CONF_TEMPERATURE,
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+            vol.Optional(
+                CONF_STORE_RESPONSES,
+                default=RECOMMENDED_STORE_RESPONSES,
+            ): bool,
         }
 
         if user_input is not None:
@@ -519,7 +525,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"],
+                    options=[
+                        "gpt-image-2",
+                        "gpt-image-1.5",
+                        "gpt-image-1",
+                        "gpt-image-1-mini",
+                    ],
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
@@ -641,7 +652,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "strict": False,
                     }
                 },
-                store=False,
+                store=self.options.get(
+                    CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
+                ),
             )
             location_data = location_schema(json.loads(response.output_text) or {})
 

@@ -29,11 +29,17 @@ BATTERY_PERCENTAGE_DOMAIN_SPECS = {
 }
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_low": make_entity_state_condition(BATTERY_DOMAIN_SPECS, STATE_ON),
-    "is_not_low": make_entity_state_condition(BATTERY_DOMAIN_SPECS, STATE_OFF),
-    "is_charging": make_entity_state_condition(BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON),
+    "is_low": make_entity_state_condition(
+        BATTERY_DOMAIN_SPECS, STATE_ON, support_duration=True
+    ),
+    "is_not_low": make_entity_state_condition(
+        BATTERY_DOMAIN_SPECS, STATE_OFF, support_duration=True
+    ),
+    "is_charging": make_entity_state_condition(
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON, support_duration=True
+    ),
     "is_not_charging": make_entity_state_condition(
-        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF, support_duration=True
     ),
     "is_level": make_entity_numerical_condition(
         BATTERY_PERCENTAGE_DOMAIN_SPECS, PERCENTAGE

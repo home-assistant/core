@@ -397,6 +397,60 @@
     'state': '3.0',
   })
 # ---
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_radon_concentration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_radon_concentration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Radon concentration',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Radon concentration',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'radon_concentration',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-RadonSensor-1071-0',
+    'unit_of_measurement': 'Bq/m³',
+  })
+# ---
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_radon_concentration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'lightfi-aq1-air-quality-sensor Radon concentration',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'Bq/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_radon_concentration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60.0',
+  })
+# ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -8376,6 +8430,60 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_air_purifier_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_radon_concentration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_radon_concentration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Radon concentration',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Radon concentration',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'radon_concentration',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-RadonSensor-1071-0',
+    'unit_of_measurement': 'Bq/m³',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_radon_concentration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Air Purifier Radon concentration',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'Bq/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_radon_concentration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
+import math
 from typing import Any, Self
 
 from cronsim import CronSim
@@ -52,7 +53,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
@@ -113,8 +113,11 @@ COLLECTING = "collecting"
 
 def validate_is_number(value):
     """Validate value is a number."""
-    if is_number(value):
-        return value
+    try:
+        if math.isfinite(float(value)):
+            return value
+    except ValueError, TypeError:
+        pass
     raise vol.Invalid("Value is not a number")
 
 

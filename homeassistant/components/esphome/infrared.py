@@ -35,11 +35,7 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
     @convert_api_error_ha_error
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
-        timings = [
-            interval
-            for timing in command.get_raw_timings()
-            for interval in (timing.high_us, -timing.low_us)
-        ]
+        timings = command.get_raw_timings()
         _LOGGER.debug("Sending command: %s", timings)
 
         self._client.infrared_rf_transmit_raw_timings(

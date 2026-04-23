@@ -9,7 +9,7 @@ from aioridwell import async_get_client
 from aioridwell.errors import InvalidCredentialsError, RidwellError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv, selector
@@ -19,6 +19,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import CALENDAR_TITLE_OPTIONS, CONF_CALENDAR_TITLE, DOMAIN, LOGGER
+from .coordinator import RidwellConfigEntry
 
 STEP_REAUTH_CONFIRM_DATA_SCHEMA = vol.Schema(
     {
@@ -107,7 +108,7 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RidwellConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         try:

@@ -544,8 +544,9 @@ class HomeAssistant:
     ) -> None:
         """Add a job to be executed by the event loop or by an executor.
 
-        If the job is either a coroutine or decorated with @callback, it will be
-        run by the event loop, if not it will be run by an executor.
+        If the job is a coroutine, coroutine function, or decorated with
+        @callback, it will be run by the event loop, if not it will be run
+        by an executor.
 
         target: target to call.
         args: parameters for method to call.
@@ -556,6 +557,14 @@ class HomeAssistant:
             self.loop.call_soon_threadsafe(
                 functools.partial(self.async_create_task, target, eager_start=True)
             )
+            return
+        # For @callback targets, schedule directly via call_soon_threadsafe
+        # to avoid the extra deferral through _async_add_hass_job + call_soon.
+        # Check iscoroutinefunction to gracefully handle incorrectly labeled @callback functions.
+        if is_callback_check_partial(target) and not inspect.iscoroutinefunction(
+            target
+        ):
+            self.loop.call_soon_threadsafe(target, *args)
             return
         self.loop.call_soon_threadsafe(
             functools.partial(self._async_add_hass_job, HassJob(target), *args)
@@ -598,8 +607,9 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
-        If the job is either a coroutine or decorated with @callback, it will be
-        run by the event loop, if not it will be run by an executor.
+        If the job is a coroutine, coroutine function, or decorated with
+        @callback, it will be run by the event loop, if not it will be run
+        by an executor.
 
         This method must be run in the event loop.
 

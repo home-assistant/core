@@ -77,6 +77,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
@@ -87,6 +88,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
@@ -97,6 +99,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
@@ -107,6 +110,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
@@ -117,6 +121,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
@@ -127,6 +132,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
@@ -160,6 +166,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
@@ -170,6 +177,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
@@ -180,6 +188,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
@@ -190,6 +199,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
@@ -200,6 +210,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
@@ -210,6 +221,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED

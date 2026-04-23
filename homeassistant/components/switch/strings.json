@@ -1,17 +1,19 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted switches.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted switches to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more switches are off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::switch::common::condition_behavior_description%]",
           "name": "[%key:component::switch::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::condition_for_name%]"
         }
       },
       "name": "Switch is off"
@@ -20,8 +22,10 @@
       "description": "Tests if one or more switches are on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::switch::common::condition_behavior_description%]",
           "name": "[%key:component::switch::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::condition_for_name%]"
         }
       },
       "name": "Switch is on"
@@ -104,8 +108,10 @@
       "description": "Triggers after one or more switches turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::switch::common::trigger_behavior_description%]",
           "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::trigger_for_name%]"
         }
       },
       "name": "Switch turned off"
@@ -114,8 +120,10 @@
       "description": "Triggers after one or more switches turn on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::switch::common::trigger_behavior_description%]",
           "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::trigger_for_name%]"
         }
       },
       "name": "Switch turned on"

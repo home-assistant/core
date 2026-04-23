@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from huum.const import SaunaStatus
@@ -18,11 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONFIG_DEFAULT_MAX_TEMP, CONFIG_DEFAULT_MIN_TEMP
+from .const import CONFIG_DEFAULT_MAX_TEMP, CONFIG_DEFAULT_MIN_TEMP, DOMAIN
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -113,5 +110,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         try:
             await self.coordinator.huum.turn_on(temperature)
         except (ValueError, SafetyException) as err:
-            _LOGGER.error(str(err))
-            raise HomeAssistantError(f"Unable to turn on sauna: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_turn_on",
+            ) from err

@@ -47,9 +47,10 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
-      'type': 'disabled',
+      'budget_tokens': 1024,
+      'display': 'summarized',
+      'type': 'enabled',
     }),
   })
 # ---
@@ -81,7 +82,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
@@ -155,6 +155,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -230,6 +231,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -285,7 +287,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),

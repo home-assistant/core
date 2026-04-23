@@ -19,7 +19,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
@@ -41,18 +40,11 @@ from .const import (
     ATTR_NEXT_RAIN_1_HOUR_FORECAST,
     ATTR_NEXT_RAIN_DT_REF,
     ATTRIBUTION,
-    COORDINATOR_ALERT,
-    COORDINATOR_FORECAST,
-    COORDINATOR_RAIN,
     DOMAIN,
     MANUFACTURER,
     MODEL,
 )
-from .coordinator import (
-    MeteoFranceAlertUpdateCoordinator,
-    MeteoFranceForecastUpdateCoordinator,
-    MeteoFranceRainUpdateCoordinator,
-)
+from .coordinator import MeteoFranceAlertUpdateCoordinator, MeteoFranceConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -188,20 +180,13 @@ SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeteoFranceConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteo-France sensor platform."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    coordinator_forecast: MeteoFranceForecastUpdateCoordinator = data[
-        COORDINATOR_FORECAST
-    ]
-    coordinator_rain: MeteoFranceRainUpdateCoordinator | None = data.get(
-        COORDINATOR_RAIN
-    )
-    coordinator_alert: MeteoFranceAlertUpdateCoordinator | None = data.get(
-        COORDINATOR_ALERT
-    )
+    coordinator_forecast = entry.runtime_data.forecast_coordinator
+    coordinator_rain = entry.runtime_data.rain_coordinator
+    coordinator_alert = entry.runtime_data.alert_coordinator
 
     entities: list[MeteoFranceSensor[Any]] = [
         MeteoFranceSensor(coordinator_forecast, description)

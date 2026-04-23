@@ -6,8 +6,11 @@ from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -201,6 +204,30 @@ async def test_config_entry_timeout_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_coordinator_fast_no_dhw_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test fast coordinator when device does not support DHW."""
+    mock_bsblan.hot_water_state.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Integration should still load even if DHW is not supported
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # DHW data should be None in the fast coordinator
+    assert mock_config_entry.runtime_data.fast_coordinator.data.dhw is None
+
+    # Water heater entity should not be created
+    assert hass.states.get("water_heater.bsb_lan") is None
+
+
 async def test_coordinator_slow_no_dhw_support(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -221,3 +248,50 @@ async def test_coordinator_slow_no_dhw_support(
 
     # Verify slow coordinator handled the AttributeError gracefully
     assert mock_bsblan.hot_water_config.called
+
+
+async def test_configuration_url_default_port(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test configuration_url omits port 80 (HTTP default)."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90")}
+    )
+    assert device is not None
+    assert device.configuration_url == "http://127.0.0.1"
+
+
+async def test_configuration_url_non_default_port(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test configuration_url includes port when it differs from the default."""
+    config_entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90")}
+    )
+    assert device is not None
+    assert device.configuration_url == "http://192.168.1.100:8080"

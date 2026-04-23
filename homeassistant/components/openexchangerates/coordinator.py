@@ -20,16 +20,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CLIENT_TIMEOUT, DOMAIN, LOGGER
 
+type OpenexchangeratesConfigEntry = ConfigEntry[OpenexchangeratesCoordinator]
+
 
 class OpenexchangeratesCoordinator(DataUpdateCoordinator[Latest]):
     """Represent a coordinator for Open Exchange Rates API."""
 
-    config_entry: ConfigEntry
+    config_entry: OpenexchangeratesConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OpenexchangeratesConfigEntry,
         session: ClientSession,
         api_key: str,
         base: str,

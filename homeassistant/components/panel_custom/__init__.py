@@ -10,7 +10,6 @@ from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +70,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 async def async_register_panel(
     hass: HomeAssistant,
     # The url to serve the panel
