@@ -1524,7 +1524,7 @@ async def test_power_sensor_manager_creation(
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
     assert float(state.state) == -100.0
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
 
 
 async def test_power_sensor_manager_cleanup(
