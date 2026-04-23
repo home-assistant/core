@@ -290,7 +290,6 @@ class ConditionChecker(abc.ABC):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
-        self._on_unload: list[Callable[[], None]] = []
 
     def __call__(
         self, _: HomeAssistant, variables: TemplateVarsType | None = None
@@ -314,26 +313,21 @@ class ConditionChecker(abc.ABC):
             condition_trace_update_result(result=result)
             return result
 
+    @abc.abstractmethod
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
+        """Check the condition."""
+
     async def async_setup(self) -> None:
         """Set up the condition checker.
 
         Intended to be overridden in derived classes that need to do async setup.
         """
 
-    @callback
-    def async_on_unload(self, func: Callable[[], None]) -> None:
-        """Add a function to call when the condition checker is unloaded."""
-        self._on_unload.append(func)
-
     def async_unload(self) -> None:
-        """Clean up any resources held by the checker."""
-        for cb in self._on_unload:
-            cb()
-        self._on_unload.clear()
+        """Clean up any resources held by the checker.
 
-    @abc.abstractmethod
-    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
-        """Check the condition."""
+        Intended to be overridden in derived classes that need to do cleanup.
+        """
 
 
 class LegacyConditionChecker(ConditionChecker):
