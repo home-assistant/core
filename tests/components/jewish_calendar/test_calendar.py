@@ -26,7 +26,7 @@ from homeassistant.components.jewish_calendar.const import (
     DailyCalendarEventType,
     YearlyCalendarEventType,
 )
-from homeassistant.const import Platform
+from homeassistant.const import Platform, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -409,7 +409,7 @@ async def test_event_property(hass: HomeAssistant) -> None:
     """Test the entity state reflects the next upcoming event."""
     state = hass.states.get(DAILY_EVENTS)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert "message" in state.attributes
     assert "start_time" in state.attributes
 
@@ -437,7 +437,7 @@ async def test_event_property_timed_events_only_returns_upcoming_event(
     """Test timed-only daily calendars select the current/next upcoming event."""
     state = hass.states.get(DAILY_EVENTS)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_OFF
 
     start_time = dt.datetime.fromisoformat(state.attributes["start_time"])
     assert start_time.date() == dt.date(2024, 1, 15)
