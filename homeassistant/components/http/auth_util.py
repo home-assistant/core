@@ -17,9 +17,13 @@ from homeassistant.util.network import is_local
 def async_user_not_allowed_do_auth(
     hass: HomeAssistant, user: User, request: Request | None = None
 ) -> str | None:
-    """Validate that user is not allowed to do auth things."""
+    """Validate that user is not allowed to do auth things.
+
+    Returns a translation key from the http component exceptions if the user
+    is not allowed to authenticate, or None if the user is allowed.
+    """
     if not user.is_active:
-        return "User is not active"
+        return "user_not_active"
 
     if not user.local_only:
         return None
@@ -29,17 +33,28 @@ def async_user_not_allowed_do_auth(
         request = current_request.get()
 
     if not request:
-        return "No request available to validate local access"
+        return "no_request_available"
 
     if is_cloud_connection(hass):
-        return "User is local only"
+        return "user_local_only"
 
     try:
         remote_address = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
-        return "Invalid remote IP"
+        return "invalid_remote_ip"
 
     if is_local(remote_address):
         return None
 
-    return "User cannot authenticate remotely"
+    return "user_cannot_authenticate_remotely"
+
+
+# Human-readable descriptions for OAuth2 error_description field.
+# Keys match the translation keys returned by async_user_not_allowed_do_auth.
+AUTH_ACCESS_ERROR_DESCRIPTIONS: dict[str, str] = {
+    "user_not_active": "User is not active",
+    "no_request_available": "No request available to validate local access",
+    "user_local_only": "User is local only",
+    "invalid_remote_ip": "Invalid remote IP",
+    "user_cannot_authenticate_remotely": "User cannot authenticate remotely",
+}

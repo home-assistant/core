@@ -309,7 +309,7 @@ async def test_login_local_only_user(
 
     with patch(
         "homeassistant.components.auth.login_flow.async_user_not_allowed_do_auth",
-        return_value="User is local only",
+        return_value="user_local_only",
     ) as mock_not_allowed_do_auth:
         resp = await client.post(
             f"/auth/login_flow/{step['flow_id']}",
@@ -322,7 +322,10 @@ async def test_login_local_only_user(
 
     assert resp.status == HTTPStatus.FORBIDDEN
     assert len(mock_not_allowed_do_auth.mock_calls) == 1
-    assert await resp.json() == {"message": "Login blocked: User is local only"}
+    assert await resp.json() == {
+        "message": "Login blocked: user_local_only",
+        "code": "login_blocked",
+    }
 
 
 async def test_login_exist_user_ip_changes(

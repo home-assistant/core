@@ -148,6 +148,9 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
     async_sign_path,
+)
+from homeassistant.components.http.auth_util import (
+    AUTH_ACCESS_ERROR_DESCRIPTIONS,
     async_user_not_allowed_do_auth,
 )
 from homeassistant.components.http.ban import log_invalid_auth
@@ -306,7 +309,9 @@ class TokenView(HomeAssistantView):
             return self.json(
                 {
                     "error": "access_denied",
-                    "error_description": user_access_error,
+                    "error_description": AUTH_ACCESS_ERROR_DESCRIPTIONS.get(
+                        user_access_error, user_access_error
+                    ),
                 },
                 status_code=HTTPStatus.FORBIDDEN,
             )
@@ -377,7 +382,9 @@ class TokenView(HomeAssistantView):
             return self.json(
                 {
                     "error": "access_denied",
-                    "error_description": user_access_error,
+                    "error_description": AUTH_ACCESS_ERROR_DESCRIPTIONS.get(
+                        user_access_error, user_access_error
+                    ),
                 },
                 status_code=HTTPStatus.FORBIDDEN,
             )

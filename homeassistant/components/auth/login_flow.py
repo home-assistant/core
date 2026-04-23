@@ -323,7 +323,9 @@ class LoginFlowBaseView(HomeAssistantView):
             user_access_error := async_user_not_allowed_do_auth(hass, user)
         ):
             return self.json_message(
-                f"Login blocked: {user_access_error}", HTTPStatus.FORBIDDEN
+                f"Login blocked: {user_access_error}",
+                HTTPStatus.FORBIDDEN,
+                message_code="login_blocked",
             )
 
         process_success_login(request)

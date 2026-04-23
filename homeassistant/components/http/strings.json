@@ -1,4 +1,21 @@
 {
+  "exceptions": {
+    "user_not_active": {
+      "message": "User is not active"
+    },
+    "no_request_available": {
+      "message": "No request available to validate local access"
+    },
+    "user_local_only": {
+      "message": "User is local only"
+    },
+    "invalid_remote_ip": {
+      "message": "Invalid remote IP"
+    },
+    "user_cannot_authenticate_remotely": {
+      "message": "User cannot authenticate remotely"
+    }
+  },
   "issues": {
     "server_host_deprecated_hassio": {
       "description": "The deprecated `server_host` configuration option in the HTTP integration is prone to break the communication between Home Assistant Core and Supervisor, and will be removed.\n\nIf you are using this option to bind Home Assistant to specific network interfaces, please remove it from your configuration. Home Assistant will automatically bind to all available interfaces by default.\n\nIf you have specific networking requirements, consider using firewall rules or other network configuration to control access to Home Assistant.",

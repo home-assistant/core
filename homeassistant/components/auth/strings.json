@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "login_blocked": {
+      "message": "Login blocked: {user_access_error}"
+    },
     "user_not_found": {
       "message": "User not found"
     },
