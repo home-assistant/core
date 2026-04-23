@@ -397,8 +397,8 @@ class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]
                 return True
             if _has_prices_tomorrow(home):
                 return False
-            if (today_end - now).total_seconds() < (
-                self._tomorrow_price_poll_threshold_seconds
+            if now >= today_start + timedelta(
+                seconds=self._tomorrow_price_poll_threshold_seconds
             ):
                 return True
             return False
