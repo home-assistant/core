@@ -501,3 +501,158 @@ async def test_get_home_selection_schema_all_homes_without_id() -> None:
 
     schema = flow._get_home_selection_schema()
     assert schema.schema == {}
+
+
+async def test_oauth_create_entry_reauth_flow(hass: HomeAssistant) -> None:
+    """Test OAuth entry creation with re-authentication source."""
+    from homeassistant.config_entries import SOURCE_REAUTH
+
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set source by updating context directly
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": "test-entry-id"}
+
+    mock_user = MagicMock()
+    mock_user.user_id = "test-user"
+    mock_user.nick_name = "Test User"
+
+    mock_home = MagicMock()
+    mock_home.home_id = "home-123"
+    mock_home.home_name = "My Home"
+    mock_home.device_count = 5
+
+    mock_api_client = MagicMock()
+    mock_wrapper = MagicMock()
+    mock_wrapper.async_get_user_info = AsyncMock(return_value=mock_user)
+    mock_wrapper.async_get_homes = AsyncMock([mock_home])
+    mock_api_client.cloud_client = mock_wrapper
+    mock_api_client.close = AsyncMock()
+    mock_api_client._ensure_initialized = AsyncMock()
+
+    # Mock the reauth entry
+    mock_reauth_entry = MagicMock()
+    mock_reauth_entry.data = {CONF_HOME_ID: "home-123"}
+    mock_reauth_entry.entry_id = "test-entry-id"
+
+    with (
+        patch(
+            "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
+            return_value=mock_api_client,
+        ),
+        patch.object(flow, "_get_reauth_entry", return_value=mock_reauth_entry),
+        patch.object(flow, "async_update_reload_and_abort") as mock_update,
+    ):
+        mock_update.return_value = {
+            "type": FlowResultType.ABORT,
+            "reason": "reauth_successful",
+        }
+
+        result = await flow.async_oauth_create_entry(
+            {CONF_TOKEN: {"access_token": "new_token"}}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        mock_api_client.close.assert_called_once()
+
+
+async def test_oauth_create_entry_reauth_with_email_title(hass: HomeAssistant) -> None:
+    """Test re-auth flow when user has email but no nick_name."""
+    from homeassistant.config_entries import SOURCE_REAUTH
+
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set source by updating context directly
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": "test-entry-id"}
+
+    mock_user = MagicMock()
+    mock_user.user_id = "test-user"
+    mock_user.nick_name = None  # No nick_name
+    mock_user.email = "user@example.com"
+
+    mock_home = MagicMock()
+    mock_home.home_id = "home-123"
+
+    mock_api_client = MagicMock()
+    mock_wrapper = MagicMock()
+    mock_wrapper.async_get_user_info = AsyncMock(return_value=mock_user)
+    mock_wrapper.async_get_homes = AsyncMock([mock_home])
+    mock_api_client.cloud_client = mock_wrapper
+    mock_api_client.close = AsyncMock()
+    mock_api_client._ensure_initialized = AsyncMock()
+
+    mock_reauth_entry = MagicMock()
+    mock_reauth_entry.data = {CONF_HOME_ID: "home-123"}
+
+    with (
+        patch(
+            "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
+            return_value=mock_api_client,
+        ),
+        patch.object(flow, "_get_reauth_entry", return_value=mock_reauth_entry),
+        patch.object(flow, "async_update_reload_and_abort") as mock_update,
+    ):
+        mock_update.return_value = {
+            "type": FlowResultType.ABORT,
+            "reason": "reauth_successful",
+        }
+
+        result = await flow.async_oauth_create_entry(
+            {CONF_TOKEN: {"access_token": "new_token"}}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        # Verify title would use email
+        call_args = mock_update.call_args
+        assert call_args[1]["title"] == "user@example.com"
+
+
+async def test_reauth_confirm_step_show_form(hass: HomeAssistant) -> None:
+    """Test reauth confirm step shows form."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    mock_reauth_entry = MagicMock()
+    mock_reauth_entry.title = "Heiman Home Account"
+
+    with patch.object(flow, "_get_reauth_entry", return_value=mock_reauth_entry):
+        result = await flow.async_step_reauth_confirm()
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["description_placeholders"]["name"] == "Heiman Home Account"
+
+
+async def test_reauth_confirm_step_user_confirmed(hass: HomeAssistant) -> None:
+    """Test reauth confirm step when user confirms."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    with patch.object(flow, "async_step_pick_implementation") as mock_pick:
+        mock_pick.return_value = {
+            "type": FlowResultType.EXTERNAL_STEP,
+            "step_id": "auth",
+        }
+
+        result = await flow.async_step_reauth_confirm(user_input={})
+
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        assert result["step_id"] == "auth"
+        mock_pick.assert_called_once()
+
+
+async def test_reauth_step_calls_confirm(hass: HomeAssistant) -> None:
+    """Test reauth step calls reauth_confirm."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    with patch.object(flow, "async_step_reauth_confirm") as mock_confirm:
+        mock_confirm.return_value = {
+            "type": FlowResultType.FORM,
+            "step_id": "reauth_confirm",
+        }
+
+        result = await flow.async_step_reauth({})
+
+        assert result["type"] is FlowResultType.FORM
+        mock_confirm.assert_called_once()

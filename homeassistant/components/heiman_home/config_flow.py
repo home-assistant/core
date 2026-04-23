@@ -1,12 +1,13 @@
 """Config flow to configure Heiman."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -86,7 +87,30 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self._auth_info.user_info = user_info
             self._auth_info.auth_data = data
 
-            # Enter home selection step
+            # Check if this is a re-authentication flow
+            if self.source == SOURCE_REAUTH:
+                # For re-auth, use existing home_id from the entry being re-authenticated
+                reauth_entry = self._get_reauth_entry()
+                config_data = {
+                    **data,
+                    CONF_HOME_ID: reauth_entry.data.get(CONF_HOME_ID),
+                    CONF_USER_ID: user_info.user_id,
+                }
+
+                # Get title from user info (nick_name or email)
+                title = (
+                    getattr(user_info, "nick_name", None)
+                    or getattr(user_info, "email", None)
+                    or "Heiman Home"
+                )
+
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=config_data,
+                    title=title,
+                )
+
+            # Enter home selection step for new entries
             return await self.async_step_select_home()
         finally:
             # Always close the temporary API client to prevent resource leaks
@@ -137,6 +161,28 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             description_placeholders={
                 "user_email": getattr(self._auth_info.user_info, "email", None)
                 or "User",
+            },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication confirmation."""
+        if user_input is not None:
+            # User confirmed re-authentication, start OAuth flow
+            return await self.async_step_pick_implementation()
+
+        reauth_entry = self._get_reauth_entry()
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={
+                "name": reauth_entry.title,
             },
         )
 

@@ -68,5 +68,11 @@
     "token_expired": {
       "message": "Your authentication token has expired. Please re-authenticate to continue using the integration."
     }
+  },
+  "issues": {
+    "config_entry_reauth": {
+      "description": "Your Heiman Home authentication has expired. Please re-authenticate to continue using the integration.",
+      "title": "Re-authentication Required"
+    }
   }
 }
