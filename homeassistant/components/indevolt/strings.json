@@ -325,7 +325,7 @@
     "charge": {
       "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
       "fields": {
-        "device_ids": {
+        "device_id": {
           "description": "The Indevolt device(s) to start charging.",
           "name": "Device(s)"
         },
@@ -343,9 +343,9 @@
     "discharge": {
       "description": "Real-time control: Starts discharging with configured power until the target SOC is reached.",
       "fields": {
-        "device_ids": {
+        "device_id": {
           "description": "The Indevolt device(s) to start discharging.",
-          "name": "[%key:component::indevolt::services::charge::fields::device_ids::name%]"
+          "name": "[%key:component::indevolt::services::charge::fields::device_id::name%]"
         },
         "power": {
           "description": "Maximum discharging power in watts.",
