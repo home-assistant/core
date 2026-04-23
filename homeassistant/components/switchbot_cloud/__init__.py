@@ -22,6 +22,7 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, P
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.network import NoURLAvailableError
 
 from .const import DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
@@ -407,10 +408,17 @@ async def _initialize_webhook(
                 _create_handle_webhook(coordinators_by_id),
             )
 
-        webhook_url = webhook.async_generate_url(
-            hass,
-            entry.data[CONF_WEBHOOK_ID],
-        )
+        try:
+            webhook_url = webhook.async_generate_url(
+                hass,
+                entry.data[CONF_WEBHOOK_ID],
+                allow_internal=False,
+            )
+        except NoURLAvailableError:
+            _LOGGER.warning(
+                "SwitchBot Cloud webhook not configured because no external URL is available"
+            )
+            return
         # check if webhook is configured in switchbot cloud
 
         try:

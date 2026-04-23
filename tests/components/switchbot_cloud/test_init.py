@@ -12,6 +12,7 @@ from switchbot_api import (
 )
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
+from homeassistant.components.switchbot_cloud.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
@@ -276,3 +277,34 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
 
     assert coordinator.update_interval is None
 
+
+async def test_setup_entry_skips_webhook_without_external_url(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_get_webook_configuration,
+    mock_delete_webhook,
+    mock_setup_webhook,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook registration is skipped without an external URL."""
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="vacuum-1",
+            deviceName="vacuum-name-1",
+            deviceType="K10+",
+            hubDeviceId=None,
+        ),
+    ]
+    mock_get_status.return_value = {"power": PowerState.ON.value}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    mock_get_webook_configuration.assert_not_called()
+    mock_delete_webhook.assert_not_called()
+    mock_setup_webhook.assert_not_called()
+    assert "no external URL is available" in caplog.text
