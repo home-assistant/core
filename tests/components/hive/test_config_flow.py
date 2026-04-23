@@ -114,7 +114,10 @@ async def test_user_flow_uppercase_username_normalized_for_auth(
     assert mock_auth.call_args.kwargs["username"] == uppercase_username.lower()
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == USERNAME
+    assert (
+        hass.config_entries.async_entries(DOMAIN)[0].unique_id
+        == uppercase_username.lower()
+    )
 
 
 async def test_user_flow_duplicate_username_with_different_casing_aborts(
