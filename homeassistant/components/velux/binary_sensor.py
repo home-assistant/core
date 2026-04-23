@@ -49,7 +49,7 @@ class VeluxRainSensor(
         self, coordinator: VeluxLimitationCoordinator, config_entry_id: str
     ) -> None:
         """Initialize VeluxRainSensor."""
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         node = coordinator.node
         unique_id = velux_unique_id(node, config_entry_id)
         self._attr_unique_id = f"{unique_id}_rain_sensor"
