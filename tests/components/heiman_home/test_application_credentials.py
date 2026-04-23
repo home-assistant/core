@@ -1,9 +1,10 @@
 """Tests for Heiman Home application credentials."""
 
+from json import JSONDecodeError
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aiohttp import ClientResponse, RequestInfo
+from aiohttp import ClientError, ClientResponse, RequestInfo
 from yarl import URL
 
 from homeassistant.components.heiman_home.application_credentials import (
@@ -57,9 +58,11 @@ async def test_token_request_success(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(return_value=mock_response)
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         result = await impl._token_request({"grant_type": "authorization_code"})
         
@@ -102,9 +105,11 @@ async def test_token_request_error_status(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(return_value=mock_response)
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         with pytest.raises(OAuth2TokenRequestReauthError):
             await impl._token_request({"grant_type": "refresh_token"})
@@ -145,9 +150,11 @@ async def test_token_request_server_error(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(return_value=mock_response)
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         with pytest.raises(OAuth2TokenRequestTransientError):
             await impl._token_request({"grant_type": "refresh_token"})
@@ -155,8 +162,6 @@ async def test_token_request_server_error(hass: HomeAssistant) -> None:
 
 async def test_token_request_client_error(hass: HomeAssistant) -> None:
     """Test token request with client error."""
-    from aiohttp import ClientError
-    
     credential = MagicMock()
     credential.client_id = "test-client-id"
     credential.client_secret = "test-client-secret"
@@ -172,9 +177,11 @@ async def test_token_request_client_error(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(side_effect=ClientError("Connection failed"))
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         with pytest.raises(OAuth2TokenRequestTransientError):
             await impl._token_request({"grant_type": "refresh_token"})
@@ -197,9 +204,11 @@ async def test_token_request_timeout(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(side_effect=TimeoutError("Request timed out"))
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         with pytest.raises(OAuth2TokenRequestTransientError):
             await impl._token_request({"grant_type": "refresh_token"})
@@ -385,8 +394,6 @@ async def test_raise_token_error_other_error(hass: HomeAssistant) -> None:
 
 async def test_token_request_json_decode_error(hass: HomeAssistant) -> None:
     """Test token request when JSON decode fails on error response."""
-    from json import JSONDecodeError
-    
     credential = MagicMock()
     credential.client_id = "test-client-id"
     credential.client_secret = "test-client-secret"
@@ -417,9 +424,11 @@ async def test_token_request_json_decode_error(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(return_value=mock_response)
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         # When JSON decode fails, error_code is "unknown" which raises OAuth2TokenRequestError
         with pytest.raises(OAuth2TokenRequestError):
@@ -459,9 +468,11 @@ async def test_token_request_parse_response_error(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(return_value=mock_response)
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         with pytest.raises(OAuth2TokenRequestError):
             await impl._token_request({"grant_type": "refresh_token"})
@@ -469,8 +480,6 @@ async def test_token_request_parse_response_error(hass: HomeAssistant) -> None:
 
 async def test_parse_token_response_non_json_with_logging(hass: HomeAssistant) -> None:
     """Test parsing non-JSON response triggers logging."""
-    from json import JSONDecodeError
-    
     credential = MagicMock()
     credential.client_id = "test-client-id"
     credential.client_secret = "test-client-secret"
@@ -525,9 +534,11 @@ async def test_token_request_oauth2_error_reraise(hass: HomeAssistant) -> None:
     mock_session = MagicMock()
     mock_session.post = AsyncMock(return_value=mock_response)
     
-    with patch(
-        "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
         # The OAuth2TokenRequestReauthError from _raise_token_error should be re-raised
         with pytest.raises(OAuth2TokenRequestReauthError):

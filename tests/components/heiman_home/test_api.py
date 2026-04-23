@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from aiohttp import RequestInfo
+from yarl import URL
 
 from heimanconnect import HeimanAuthError, HeimanConnectionError
 
@@ -106,11 +108,6 @@ async def test_api_client_refresh_token_callback_success(hass: HomeAssistant) ->
 
 async def test_api_client_refresh_token_transient_error(hass: HomeAssistant) -> None:
     """Test token refresh with transient error."""
-    # This test covers line 94-95 in api.py
-    from aiohttp import RequestInfo
-    from homeassistant.exceptions import OAuth2TokenRequestTransientError
-    from yarl import URL
-
     mock_session = MagicMock()
     # Create the specific OAuth2 exception that HA framework raises
     request_info = RequestInfo(
@@ -135,11 +132,6 @@ async def test_api_client_refresh_token_transient_error(hass: HomeAssistant) -> 
 
 async def test_api_client_refresh_token_reauth_error(hass: HomeAssistant) -> None:
     """Test token refresh with reauth error."""
-    # This test covers line 96-97 in api.py
-    from aiohttp import RequestInfo
-    from homeassistant.exceptions import OAuth2TokenRequestReauthError
-    from yarl import URL
-
     mock_session = MagicMock()
     # Create the specific OAuth2 exception that HA framework raises
     request_info = RequestInfo(

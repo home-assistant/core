@@ -35,7 +35,6 @@ from .const import (
     CONF_STATISTICS_LOGIC,
     CONF_TYPE_FILTER_MODE,
     CONF_TYPE_LIST,
-    DOMAIN,
     PLATFORMS,
 )
 from .coordinator import HeimanDataUpdateCoordinator
