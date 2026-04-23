@@ -12,6 +12,11 @@
           options:
             - all
             - any
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 is_idle: *condition_common
 is_listening: *condition_common

@@ -1,4 +1,5 @@
 """Support for the Netatmo climate schedule selector."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
