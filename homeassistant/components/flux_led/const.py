@@ -36,7 +36,7 @@ DEFAULT_NETWORK_SCAN_INTERVAL: Final = 120
 DEFAULT_SCAN_INTERVAL: Final = 5
 DEFAULT_EFFECT_SPEED: Final = 50
 
-FLUX_LED_DISCOVERY: HassKey[list[FluxLEDDiscovery]] = HassKey("flux_led_discovery")
+FLUX_LED_DISCOVERY: HassKey[list[FluxLEDDiscovery]] = HassKey(DOMAIN)
 
 FLUX_LED_EXCEPTIONS: Final = (
     TimeoutError,
