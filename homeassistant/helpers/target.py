@@ -158,9 +158,10 @@ def async_extract_referenced_entity_ids(
     When `primary_entities_only` is True (the default), entities with an
     `entity_category` (i.e. config or diagnostic entities) are excluded from
     indirect expansion via device, area, and floor. When False, those entities
-    are included. Direct label-to-entity expansion is unaffected by this flag,
-    but label targeting via labeled devices or areas is still filtered because
-    those paths expand through device/area selection.
+    are included. Direct label-to-entity expansion is unaffected by this flag.
+    Label targeting via labeled devices or areas follows the same filtering
+    rules as other indirect device/area expansion paths: filtered when
+    `primary_entities_only` is True, and included when it is False.
     """
     selected = SelectedEntities()
 
