@@ -82,23 +82,22 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
 
         self._attr_has_entity_name = True
 
-        self._attr_translation_key = (
-            "main" if self._insteon_device_group.group == 1 else "additional"
-        ) + "_button_press"
-
-        self._attr_translation_placeholders = {
-            "button": self._insteon_device_group.name.rpartition("_")[-1].upper()
-        }
-
-        self._attr_device_class = EventDeviceClass.BUTTON
-
         event_types: list[str] = []
 
-        # if the device is only a subset of 4 button events
-        # set the device class to button and add the event types to the entity description.
+        # if the device is only a subset of the 4 button events
+        # then this device has button press event entities
+        # set the device class to button
+        # set the button press translation keys and event types
         if set(self._event_names).issubset(_BUTTON_EVENT_NAMES):
-            for event in self._events:
-                event_types.append(event.name.removesuffix("_event"))
+            self._attr_device_class = EventDeviceClass.BUTTON
+            self._attr_translation_key = (
+                "main" if self._insteon_device_group.group == 1 else "additional"
+            ) + "_button_press"
+
+            self._attr_translation_placeholders = {
+                "button": self._insteon_device_group.name.rpartition("_")[-1].upper()
+            }
+            event_types.extend(name.removesuffix("_event") for name in self._event_names)
 
         self._attr_event_types = event_types
 
