@@ -9,9 +9,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ollama
-from homeassistant.components.ollama.const import DOMAIN
+from homeassistant.components.ollama.const import (
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -136,7 +140,7 @@ async def test_creating_new_conversation_subentry(
     mock_config_entry: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test creating a new conversation subentry includes name field."""
+    """Test creating a new conversation subentry."""
     # Start a new subentry flow
     with patch(
         "ollama.AsyncClient.list",
@@ -150,12 +154,10 @@ async def test_creating_new_conversation_subentry(
         assert new_flow["type"] is FlowResultType.FORM
         assert new_flow["step_id"] == "set_options"
 
-        # Configure the new subentry with name field
         result = await hass.config_entries.subentries.async_configure(
             new_flow["flow_id"],
             {
                 ollama.CONF_MODEL: TEST_MODEL,
-                CONF_NAME: "New Test Conversation",
                 ollama.CONF_PROMPT: "new test prompt",
                 ollama.CONF_MAX_HISTORY: 50,
                 ollama.CONF_NUM_CTX: 16384,
@@ -165,7 +167,7 @@ async def test_creating_new_conversation_subentry(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "New Test Conversation"
+    assert result["title"] == DEFAULT_CONVERSATION_NAME
     assert result["data"] == {
         ollama.CONF_MODEL: TEST_MODEL,
         ollama.CONF_PROMPT: "new test prompt",
@@ -223,7 +225,6 @@ async def test_subentry_need_download(
             new_flow["flow_id"],
             {
                 ollama.CONF_MODEL: "llama3.2:latest",  # not cached
-                CONF_NAME: "New Test Conversation",
                 ollama.CONF_PROMPT: "new test prompt",
                 ollama.CONF_MAX_HISTORY: 50,
                 ollama.CONF_NUM_CTX: 16384,
@@ -242,7 +243,7 @@ async def test_subentry_need_download(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "New Test Conversation"
+    assert result["title"] == DEFAULT_CONVERSATION_NAME
     assert result["data"] == {
         ollama.CONF_MODEL: "llama3.2:latest",
         ollama.CONF_PROMPT: "new test prompt",
@@ -285,7 +286,6 @@ async def test_subentry_download_error(
             new_flow["flow_id"],
             {
                 ollama.CONF_MODEL: "llama3.2:latest",
-                CONF_NAME: "New Test Conversation",
                 ollama.CONF_PROMPT: "new test prompt",
                 ollama.CONF_MAX_HISTORY: 50,
                 ollama.CONF_NUM_CTX: 16384,
@@ -558,7 +558,6 @@ async def test_subentry_model_check_exception(
             new_flow["flow_id"],
             {
                 ollama.CONF_MODEL: "new_model:latest",
-                CONF_NAME: "Test Conversation",
                 ollama.CONF_PROMPT: "test prompt",
                 ollama.CONF_MAX_HISTORY: 50,
                 ollama.CONF_NUM_CTX: 16384,
@@ -681,7 +680,6 @@ async def test_creating_ai_task_subentry(
         result2 = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {
-                "name": "Custom AI Task",
                 ollama.CONF_MODEL: "test_model:latest",
                 ollama.CONF_MAX_HISTORY: 5,
                 ollama.CONF_NUM_CTX: 4096,
@@ -692,7 +690,7 @@ async def test_creating_ai_task_subentry(
         await hass.async_block_till_done()
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Custom AI Task"
+    assert result2.get("title") == DEFAULT_AI_TASK_NAME
     assert result2.get("data") == {
         ollama.CONF_MODEL: "test_model:latest",
         ollama.CONF_MAX_HISTORY: 5,
@@ -708,7 +706,7 @@ async def test_creating_ai_task_subentry(
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
     assert new_subentry.subentry_type == "ai_task_data"
-    assert new_subentry.title == "Custom AI Task"
+    assert new_subentry.title == DEFAULT_AI_TASK_NAME
 
 
 async def test_ai_task_subentry_not_loaded(

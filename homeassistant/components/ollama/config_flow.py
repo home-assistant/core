@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
@@ -298,7 +298,6 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=vol.Schema(
                     ollama_config_option_schema(
                         self.hass,
-                        self._is_new,
                         self._subentry_type,
                         options,
                         models_to_list,
@@ -308,7 +307,10 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
         self._model = user_input[CONF_MODEL]
         if self._is_new:
-            self._name = user_input.pop(CONF_NAME)
+            if self._subentry_type == "ai_task_data":
+                self._name = DEFAULT_AI_TASK_NAME
+            else:
+                self._name = DEFAULT_CONVERSATION_NAME
 
         # Check if model needs to be downloaded
         try:
@@ -407,23 +409,12 @@ def filter_invalid_llm_apis(hass: HomeAssistant, selected_apis: list[str]) -> li
 
 def ollama_config_option_schema(
     hass: HomeAssistant,
-    is_new: bool,
     subentry_type: str,
     options: Mapping[str, Any],
     models_to_list: list[SelectOptionDict],
 ) -> dict:
     """Ollama options schema."""
-    if is_new:
-        if subentry_type == "ai_task_data":
-            default_name = DEFAULT_AI_TASK_NAME
-        else:
-            default_name = DEFAULT_CONVERSATION_NAME
-
-        schema: dict = {
-            vol.Required(CONF_NAME, default=default_name): str,
-        }
-    else:
-        schema = {}
+    schema: dict = {}
 
     selected_llm_apis = filter_invalid_llm_apis(
         hass, options.get(CONF_LLM_HASS_API, [])
