@@ -211,6 +211,12 @@ class LocalSource(MediaSource):
 
         if not full_path.exists():
             if location == "":
+                # Context-aware error message based on domain
+                if self.domain == "ai_task":
+                    raise BrowseError(
+                        "No AI-generated images found. "
+                        "Use the ai_task.generate_image action to create images."
+                    )
                 raise BrowseError("Media directory does not exist.")
             raise BrowseError("Path does not exist.")
 
