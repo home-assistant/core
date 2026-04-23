@@ -95,9 +95,11 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
             ) + "_button_press"
 
             self._attr_translation_placeholders = {
-                "button": self._insteon_device_group.name.rpartition("_")[-1].upper()
+                "button_label": self._insteon_device_group.name.rpartition("_")[-1].upper()
             }
-            event_types.extend(name.removesuffix("_event") for name in self._event_names)
+            event_types.extend(
+                name.removesuffix("_event") for name in self._event_names
+            )
 
         self._attr_event_types = event_types
 

@@ -47,13 +47,40 @@
       }
     }
   },
+  "device_automation": {
+    "trigger_type": {
+      "insteon": {
+        "your_event_type": "Friendly name of your event"
+      }
+    }
+  },
   "entity": {
     "event": {
       "additional_button_press": {
-        "name": "Button {button} press"
+        "name": "Button {button_label}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "off": "Off",
+              "off_fast": "Fast off",
+              "on": "On",
+              "on_fast": "Fast on"
+            }
+          }
+        }
       },
       "main_button_press": {
-        "name": "Button press"
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "off": "Off",
+              "off_fast": "Fast off",
+              "on": "On",
+              "on_fast": "Fast on"
+            }
+          }
+        }
       }
     }
   },
