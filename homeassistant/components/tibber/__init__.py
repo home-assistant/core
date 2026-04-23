@@ -134,7 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
 
     if tibber_connection.get_homes(only_active=True):
         fetch_price_coordinator = TibberFetchPriceCoordinator(hass, entry)
-        entry.async_on_unload(fetch_price_coordinator.async_shutdown)
         await fetch_price_coordinator.async_config_entry_first_refresh()
         entry.runtime_data.fetch_price_coordinator = fetch_price_coordinator
 
