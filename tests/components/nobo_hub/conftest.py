@@ -1,6 +1,7 @@
 """Common fixtures for the Nobø Ecohub tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynobo import nobo as pynobo_nobo
@@ -58,7 +59,7 @@ def connect_exc() -> BaseException | None:
 
 
 @pytest.fixture
-def config_entry_options() -> dict[str, str]:
+def config_entry_options() -> dict[str, Any]:
     """Return the options stored on the config entry."""
     return {}
 
@@ -67,7 +68,7 @@ def config_entry_options() -> dict[str, str]:
 def mock_config_entry(
     ip_address: str,
     auto_discovered: bool,
-    config_entry_options: dict[str, str],
+    config_entry_options: dict[str, Any],
 ) -> MockConfigEntry:
     """Return a mock Nobø Ecohub config entry."""
     return MockConfigEntry(
