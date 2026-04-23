@@ -38,11 +38,12 @@ from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
     get_core_info,
+    get_supervisor_info,
     hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
-    HASSIO_UPDATE_INTERVAL,
+    HASSIO_MAIN_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
 from homeassistant.components.homeassistant import (
@@ -155,38 +156,9 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
-
-
-async def test_setup_api_panel(hass: HomeAssistant) -> None:
-    """Test setup with API ping."""
-    assert await async_setup_component(hass, "frontend", {})
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, "hassio", {})
-        assert result
-
-    panels = hass.data[frontend.DATA_PANELS]
-
-    assert panels.get("hassio").to_response() == {
-        "component_name": "custom",
-        "icon": None,
-        "title": None,
-        "default_visible": True,
-        "config": {
-            "_panel_custom": {
-                "embed_iframe": True,
-                "js_url": "/api/hassio/app/entrypoint.js",
-                "name": "hassio-main",
-                "trust_external": False,
-            }
-        },
-        "url_path": "hassio",
-        "require_admin": True,
-        "show_in_sidebar": True,
-        "config_panel_domain": None,
-    }
 
 
 async def test_setup_app_panel(hass: HomeAssistant) -> None:
@@ -222,7 +194,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
     )
@@ -238,7 +210,7 @@ async def test_setup_api_push_api_data_error(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     assert "Failed to update Home Assistant options in Supervisor: boom" in caplog.text
 
 
@@ -255,7 +227,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY, watchdog=False)
     )
@@ -273,7 +245,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=ANY)
     )
@@ -350,7 +322,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
     )
@@ -367,7 +339,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     supervisor_client.supervisor.set_options.assert_called_once_with(
         SupervisorOptions(timezone="testzone")
     )
@@ -392,7 +364,7 @@ async def test_setup_core_push_config_error(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     assert "Failed to update Supervisor options: boom" in caplog.text
 
 
@@ -408,7 +380,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
 
 
 async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
@@ -732,12 +704,12 @@ async def test_service_calls_core(
     await hass.async_block_till_done()
 
     supervisor_client.homeassistant.stop.assert_called_once_with()
-    assert len(supervisor_client.mock_calls) == 20
+    assert len(supervisor_client.mock_calls) == 21
 
     await hass.services.async_call("homeassistant", "check_config")
     await hass.async_block_till_done()
 
-    assert len(supervisor_client.mock_calls) == 20
+    assert len(supervisor_client.mock_calls) == 21
 
     with patch(
         "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -747,7 +719,7 @@ async def test_service_calls_core(
         assert mock_check_config.called
 
     supervisor_client.homeassistant.restart.assert_called_once_with()
-    assert len(supervisor_client.mock_calls) == 21
+    assert len(supervisor_client.mock_calls) == 22
 
 
 @pytest.mark.parametrize(
@@ -903,13 +875,13 @@ async def test_coordinator_updates(
         await hass.async_block_till_done()
 
         # Initial refresh, no update refresh call
-        supervisor_client.refresh_updates.assert_not_called()
+        supervisor_client.reload_updates.assert_not_called()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Scheduled refresh, no update refresh call
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -924,15 +896,15 @@ async def test_coordinator_updates(
     )
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
     async_fire_time_changed(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done(wait_background_tasks=True)
-    supervisor_client.refresh_updates.assert_called_once()
+    supervisor_client.reload_updates.assert_called_once()
 
-    supervisor_client.refresh_updates.reset_mock()
-    supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
+    supervisor_client.reload_updates.reset_mock()
+    supervisor_client.reload_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -949,7 +921,7 @@ async def test_coordinator_updates(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
-    supervisor_client.refresh_updates.assert_called_once()
+    supervisor_client.reload_updates.assert_called_once()
     assert "Error on Supervisor API: Unknown" in caplog.text
 
 
@@ -967,20 +939,20 @@ async def test_coordinator_updates_stats_entities_enabled(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         # Initial refresh without stats
-        supervisor_client.refresh_updates.assert_not_called()
+        supervisor_client.reload_updates.assert_not_called()
 
-        # Refresh with stats once we know which ones are needed
+        # Stats entities trigger refresh on the stats coordinator,
+        # which does not call reload_updates
         async_fire_time_changed(
             hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
         )
         await hass.async_block_till_done()
 
-        supervisor_client.refresh_updates.assert_called_once()
+        supervisor_client.reload_updates.assert_not_called()
 
-    supervisor_client.refresh_updates.reset_mock()
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
     await hass.async_block_till_done()
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -993,7 +965,7 @@ async def test_coordinator_updates_stats_entities_enabled(
         },
         blocking=True,
     )
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
@@ -1001,8 +973,8 @@ async def test_coordinator_updates_stats_entities_enabled(
     )
     await hass.async_block_till_done()
 
-    supervisor_client.refresh_updates.reset_mock()
-    supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
+    supervisor_client.reload_updates.reset_mock()
+    supervisor_client.reload_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -1019,7 +991,7 @@ async def test_coordinator_updates_stats_entities_enabled(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
-    supervisor_client.refresh_updates.assert_called_once()
+    supervisor_client.reload_updates.assert_called_once()
     assert "Error on Supervisor API: Unknown" in caplog.text
 
 
@@ -1064,7 +1036,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 25
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1129,7 +1101,7 @@ async def test_deprecated_installation_issue_os_armv7(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1192,7 +1164,7 @@ async def test_deprecated_installation_issue_32bit_os(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1253,7 +1225,7 @@ async def test_deprecated_installation_issue_32bit_supervised(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1318,7 +1290,7 @@ async def test_deprecated_installation_issue_64bit_supervised(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1379,7 +1351,7 @@ async def test_deprecated_installation_issue_supported_board(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1531,3 +1503,22 @@ async def test_mount_reload_selector_matches_device_name(
         ]
         == device.model
     )
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_supervisor_info(hass: HomeAssistant) -> None:
+    """Test get_supervisor_info returns a dict with backwards-compat keys."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_supervisor_info(hass)
+    assert isinstance(result, dict)
+    # Deprecated backwards-compat keys folded in from store/addons data
+    assert "repositories" in result
+    assert isinstance(result["repositories"], list)
+    assert "addons" in result
+    assert isinstance(result["addons"], list)
+    assert all(isinstance(addon, dict) for addon in result["addons"])

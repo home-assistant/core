@@ -8,7 +8,6 @@ from typing import Any
 from verisure import Error as VerisureError
 
 from homeassistant.components.lock import LockEntity, LockState
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,16 +26,16 @@ from .const import (
     SERVICE_DISABLE_AUTOLOCK,
     SERVICE_ENABLE_AUTOLOCK,
 )
-from .coordinator import VerisureDataUpdateCoordinator
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VerisureConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(

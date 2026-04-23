@@ -60,7 +60,10 @@ async def mock_loaded_entry(
 
     # Initialize the component
     with (
-        patch("homeassistant.components.tuya.Manager", return_value=mock_manager),
+        patch(
+            "homeassistant.components.tuya.coordinator.Manager",
+            return_value=mock_manager,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

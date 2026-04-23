@@ -31,6 +31,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     async_add_entities(
         XiaomiAqaraLock(device, "Lock", gateway, config_entry)

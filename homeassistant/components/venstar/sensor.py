@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -23,8 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import VenstarDataUpdateCoordinator
+from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 from .entity import VenstarEntity
 
 RUNTIME_HEAT1 = "heat1"
@@ -80,11 +78,11 @@ class VenstarSensorEntityDescription(SensorEntityDescription):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VenstarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Venstar device sensors based on a config entry."""
-    coordinator: VenstarDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entities: list[Entity] = []
 
     if sensors := coordinator.client.get_sensor_list():
@@ -142,7 +140,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
     def __init__(
         self,
         coordinator: VenstarDataUpdateCoordinator,
-        config: ConfigEntry,
+        config: VenstarConfigEntry,
         entity_description: VenstarSensorEntityDescription,
         sensor_name: str,
     ) -> None:
