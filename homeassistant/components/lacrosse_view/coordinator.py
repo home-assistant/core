@@ -23,13 +23,21 @@ type LaCrosseConfigEntry = ConfigEntry[LaCrosseUpdateCoordinator]
 class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     """DataUpdateCoordinator for LaCrosse View."""
 
+    username: str
+    password: str
+    name: str
+    id: str
+    hass: HomeAssistant
+    devices: list[Sensor] | None = None
+    config_entry: LaCrosseConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         entry: LaCrosseConfigEntry,
         api: LaCrosse,
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize DataUpdateCoordinator for LaCrosse View."""
         self.api = api
         self.hass = hass
 
@@ -50,7 +58,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         )
 
     async def _async_update_data(self) -> list[Sensor]:
-        """Fetch and process data from LaCrosse View."""
+        """Get the data for LaCrosse View."""
         now = int(time())
 
         # Refresh auth token once per hour
@@ -59,29 +67,30 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             self.last_login = now
             try:
                 await self.api.login(self.username, self.password)
-            except LoginError as err:
-                raise ConfigEntryAuthFailed from err
+            except LoginError as error:
+                raise ConfigEntryAuthFailed from error
 
         # Fetch devices once
         if self.devices is None:
-            _LOGGER.debug("Fetching LaCrosse View devices")
+            _LOGGER.debug("Getting devices")
             try:
                 self.devices = await self.api.get_devices(
                     location=Location(id=self.id, name=self.name)
                 )
-            except HTTPError as err:
-                raise UpdateFailed from err
+            except HTTPError as error:
+                raise UpdateFailed from error
 
         utc_now = datetime.now(tz=UTC)
 
+        # Fetch last hour of data
         for sensor in self.devices:
             try:
                 response = await self.api.get_sensor_status(
                     sensor=sensor,
                     tz=self.hass.config.time_zone,
                 )
-            except HTTPError as err:
-                error_data = err.args[1] if len(err.args) > 1 else None
+            except HTTPError as error:
+                error_data = error.args[1] if len(error.args) > 1 else None
 
                 if (
                     isinstance(error_data, dict)
@@ -94,7 +103,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_error",
-                ) from err
+                ) from error
 
             if response.get("error") == "no_readings":
                 _LOGGER.debug("No readings for %s", sensor.name)
