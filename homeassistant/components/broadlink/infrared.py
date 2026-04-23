@@ -54,7 +54,7 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the entity."""
         super().__init__(device)
-        self._attr_unique_id = f"{device.unique_id}-infrared"
+        self._attr_unique_id = device.unique_id
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via the Broadlink device."""
