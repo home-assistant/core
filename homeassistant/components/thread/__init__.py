@@ -16,6 +16,8 @@ from .dataset_store import (
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
+type ThreadConfigEntry = ConfigEntry[None]
+
 __all__ = [
     "DOMAIN",
     "DatasetEntry",
@@ -42,12 +44,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThreadConfigEntry) -> bool:
     """Set up a config entry."""
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ThreadConfigEntry) -> bool:
     """Unload a config entry."""
     return True
