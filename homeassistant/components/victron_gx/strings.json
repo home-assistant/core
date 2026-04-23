@@ -1983,7 +1983,7 @@
       "message": "Authentication failed for {host}."
     },
     "cannot_connect": {
-      "message": "Cannot connect to the hub at {host}."
+      "message": "Cannot connect to the GX device at {host}."
     }
   }
 }
