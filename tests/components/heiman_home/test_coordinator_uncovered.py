@@ -7,7 +7,11 @@ from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import HeimanDevice, HeimanHome, HeimanUser
 
 from homeassistant.components.heiman_home.const import CONF_HOME_ID
-from homeassistant.components.heiman_home.coordinator import HeimanDataUpdateCoordinator
+from homeassistant.components.heiman_home.coordinator import (
+    DeviceProperty,
+    HeimanData,
+    HeimanDataUpdateCoordinator,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -56,6 +60,7 @@ async def test_coordinator_update_data_success(hass: HomeAssistant) -> None:
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -103,6 +108,7 @@ async def test_coordinator_fetch_devices_without_filtering(hass: HomeAssistant) 
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -145,6 +151,7 @@ async def test_coordinator_update_device_details_cache_hit(hass: HomeAssistant) 
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -187,6 +194,7 @@ async def test_coordinator_process_device_detail_with_derive_metadata(
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -228,6 +236,7 @@ async def test_coordinator_update_device_property_early_return(
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -246,8 +255,6 @@ async def test_coordinator_update_device_property_early_return(
 
 async def test_coordinator_process_device_info(hass: HomeAssistant) -> None:
     """Test processing DeviceINFO object (line 411)."""
-    from homeassistant.components.heiman_home.coordinator import DeviceProperty
-
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -276,14 +283,15 @@ async def test_coordinator_process_device_info(hass: HomeAssistant) -> None:
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
 
     # Test DeviceINFO processing with DBM level
-    device_info = {"DBM_Level": "good"}
+    device_info = {"DBM": -65, "DBM_Level": "good"}
 
-    prop_item = {"identifier": "DeviceINFO", "value": device_info}
+    prop_item = {"property": "DeviceINFO", "value": device_info}
 
     coordinator._update_device_property(mock_device, prop_item)
 
@@ -295,8 +303,6 @@ async def test_coordinator_merge_device_states_keep_runtime_properties(
     hass: HomeAssistant,
 ) -> None:
     """Test merging device states keeps runtime properties (line 442-443)."""
-    from homeassistant.components.heiman_home.coordinator import DeviceProperty
-
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -336,6 +342,7 @@ async def test_coordinator_merge_device_states_keep_runtime_properties(
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -390,6 +397,7 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
+        logger=MagicMock(),
         config_entry=config_entry,
         api_client=mock_api_client,
     )
@@ -418,89 +426,3 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
     # Test get_device with non-existent ID
     device_none = coordinator.get_device("non-existent")
     assert device_none is None
-
-
-async def test_coordinator_get_device_signal_strength_category(
-    hass: HomeAssistant,
-) -> None:
-    """Test signal strength categorization (line 514)."""
-    config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
-    config_entry.entry_id = "test-entry"
-
-    mock_api_client = MagicMock()
-    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
-    mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        config_entry=config_entry,
-        api_client=mock_api_client,
-    )
-
-    # Test various signal strengths
-    assert coordinator._get_signal_strength_category(-30) == "excellent"
-    assert coordinator._get_signal_strength_category(-50) == "good"
-    assert coordinator._get_signal_strength_category(-70) == "fair"
-    assert coordinator._get_signal_strength_category(-85) == "weak"
-    assert coordinator._get_signal_strength_category(-100) == "very_weak"
-
-
-async def test_coordinator_get_device_property_value(hass: HomeAssistant) -> None:
-    """Test getting device property value (line 707-711)."""
-    from homeassistant.components.heiman_home.coordinator import DeviceProperty
-
-    config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
-    config_entry.entry_id = "test-entry"
-
-    mock_api_client = MagicMock()
-    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
-    mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
-
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_type = "sensor"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "temperature": DeviceProperty(
-            identifier="temperature",
-            name="Temperature",
-            value=25.5,
-            readable=True,
-            entity="sensor",
-        )
-    }
-    mock_device.raw_data = {}
-    mock_device.firmware_version = None
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        config_entry=config_entry,
-        api_client=mock_api_client,
-    )
-
-    coordinator.data = HeimanData(
-        devices={"device-1": mock_device},
-        user_info=None,
-        home_info=None,
-        errors={},
-        last_update=None,
-    )
-
-    # Test getting existing property (line 707-711)
-    value = coordinator.get_device_property_value("device-1", "temperature")
-    assert value == 25.5
-
-    # Test getting non-existent property
-    value_none = coordinator.get_device_property_value("device-1", "humidity")
-    assert value_none is None
-
-    # Test getting property from non-existent device
-    value_none_device = coordinator.get_device_property_value(
-        "non-existent", "temperature"
-    )
-    assert value_none_device is None

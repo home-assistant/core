@@ -14,6 +14,7 @@ from heimanconnect import (
     HeimanCloudClientWrapper,
     HeimanConnectionError,
 )
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -103,7 +104,10 @@ class HeimanApiClient:
 
         # Fallback to token_data
         if self._token_data:
-            return self._token_data.get("access_token", "")
+            access_token = self._token_data.get("access_token")
+            if access_token:
+                return access_token
+            raise HeimanAuthError("No access token available for refresh")
 
         raise HeimanAuthError("No token available for refresh")
 

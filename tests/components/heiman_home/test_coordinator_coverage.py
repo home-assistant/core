@@ -1,9 +1,10 @@
 """Additional tests for Heiman Home coordinator to improve coverage."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import HeimanConnectionError, HeimanMQTTError
+from heimanconnect.models import DeviceProperty, HeimanDevice
 import pytest
 
 from homeassistant.components.heiman_home.const import (
@@ -216,11 +217,6 @@ async def test_coordinator_merge_preserves_old_properties(
     hass: HomeAssistant,
 ) -> None:
     """Test that merge preserves old properties when new values are None."""
-    from homeassistant.components.heiman_home.coordinator import (
-        DeviceProperty,
-        HeimanDevice,
-    )
-
     mock_api_client = MagicMock()
     mock_wrapper = MagicMock()
     mock_wrapper.async_get_user_info = AsyncMock(return_value=MagicMock())
@@ -444,8 +440,6 @@ async def test_coordinator_on_device_property_update_new_property(
     hass: HomeAssistant,
 ) -> None:
     """Test MQTT property update adds new property."""
-    from homeassistant.components.heiman_home.coordinator import HeimanDevice
-
     mock_api_client = MagicMock()
     mock_api_client._ensure_initialized = AsyncMock()
 
@@ -486,11 +480,6 @@ async def test_coordinator_on_device_property_update_existing_property(
     hass: HomeAssistant,
 ) -> None:
     """Test MQTT property update updates existing property."""
-    from homeassistant.components.heiman_home.coordinator import (
-        DeviceProperty,
-        HeimanDevice,
-    )
-
     mock_api_client = MagicMock()
     mock_api_client._ensure_initialized = AsyncMock()
 
@@ -631,8 +620,6 @@ async def test_coordinator_read_device_properties_exception(
     hass: HomeAssistant,
 ) -> None:
     """Test read device properties with exception."""
-    from homeassistant.components.heiman_home.coordinator import HeimanDevice
-
     mock_api_client = MagicMock()
     mock_api_client._ensure_initialized = AsyncMock()
 
@@ -830,8 +817,6 @@ async def test_coordinator_extract_firmware_versions(hass: HomeAssistant) -> Non
 
 async def test_coordinator_process_device_info(hass: HomeAssistant) -> None:
     """Test _process_device_info method."""
-    from heimanconnect.models import DeviceProperty
-
     mock_api_client = MagicMock()
     mock_wrapper = MagicMock()
     mock_wrapper.async_get_user_info = AsyncMock(return_value=MagicMock())
@@ -1000,8 +985,6 @@ async def test_coordinator_device_filtering(hass: HomeAssistant) -> None:
 
 async def test_coordinator_cache_expiry(hass: HomeAssistant) -> None:
     """Test device detail cache expiry."""
-    from datetime import timedelta
-
     mock_api_client = MagicMock()
     mock_wrapper = MagicMock()
     mock_wrapper.async_get_user_info = AsyncMock(return_value=MagicMock())
@@ -1054,8 +1037,6 @@ async def test_coordinator_cache_expiry(hass: HomeAssistant) -> None:
 async def test_coordinator_derive_metadata_parsing(hass: HomeAssistant) -> None:
     """Test deriveMetadata parsing and property updates."""
     import json
-
-    from heimanconnect.models import DeviceProperty
 
     mock_api_client = MagicMock()
     mock_wrapper = MagicMock()
@@ -1113,8 +1094,6 @@ async def test_coordinator_derive_metadata_parsing(hass: HomeAssistant) -> None:
 
 async def test_coordinator_rssi_property_update(hass: HomeAssistant) -> None:
     """Test RSSI property special handling."""
-    from heimanconnect.models import DeviceProperty
-
     mock_api_client = MagicMock()
     mock_wrapper = MagicMock()
     mock_wrapper.async_get_user_info = AsyncMock(return_value=MagicMock())

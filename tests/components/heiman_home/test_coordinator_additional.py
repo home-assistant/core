@@ -8,6 +8,7 @@ from heimanconnect.models import HeimanDevice
 from homeassistant.components.heiman_home.const import CONF_HOME_ID
 from homeassistant.components.heiman_home.coordinator import (
     DeviceProperty,
+    HeimanData,
     HeimanDataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -98,8 +99,6 @@ async def test_coordinator_get_device(hass: HomeAssistant) -> None:
         config_entry=config_entry,
     )
 
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={"device-1": mock_device},
         user_info=None,
@@ -154,8 +153,6 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
         config_entry=config_entry,
     )
 
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={
             "device-1": sensor_device,
@@ -197,8 +194,6 @@ async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
         api_client=mock_api_client,
         config_entry=config_entry,
     )
-
-    from homeassistant.components.heiman_home.coordinator import HeimanData
 
     coordinator.data = HeimanData(
         devices={},
@@ -244,8 +239,6 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
         api_client=mock_api_client,
         config_entry=config_entry,
     )
-
-    from homeassistant.components.heiman_home.coordinator import HeimanData
 
     # Set user_info to None to trigger the exception path
     coordinator.data = HeimanData(
@@ -304,8 +297,6 @@ async def test_coordinator_mqtt_init_cloud_client_exception(
         api_client=mock_api_client,
         config_entry=config_entry,
     )
-
-    from homeassistant.components.heiman_home.coordinator import HeimanData
 
     coordinator.data = HeimanData(
         devices={},
@@ -376,8 +367,6 @@ async def test_coordinator_read_device_properties_with_returned_properties(
         config_entry=config_entry,
     )
 
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={"device-1": mock_device},
         user_info=None,
@@ -424,8 +413,6 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
         api_client=mock_api_client,
         config_entry=config_entry,
     )
-
-    from homeassistant.components.heiman_home.coordinator import HeimanData
 
     coordinator.data = HeimanData(
         devices={},
@@ -476,8 +463,6 @@ async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) ->
         config_entry=config_entry,
     )
 
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={},
         user_info=None,
@@ -515,8 +500,6 @@ async def test_coordinator_mqtt_init_token_none_after_validation(
         api_client=mock_api_client,
         config_entry=config_entry,
     )
-
-    from homeassistant.components.heiman_home.coordinator import HeimanData
 
     coordinator.data = HeimanData(
         devices={},

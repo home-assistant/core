@@ -195,6 +195,21 @@ async def test_api_client_refresh_token_fallback_to_token_data(
     assert new_token == "fallback-token"
 
 
+async def test_api_client_refresh_token_fallback_no_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test token refresh raises error when token_data has no access_token."""
+    mock_session = MagicMock()
+    mock_session.token = {}  # No token in session
+    mock_session.async_ensure_token_valid = AsyncMock()
+
+    token_data = {"refresh_token": "some-refresh-token"}  # Missing access_token
+    client = HeimanApiClient(hass, session=mock_session, token_data=token_data)
+
+    with pytest.raises(HeimanAuthError, match="No access token available for refresh"):
+        await client._refresh_token_callback()
+
+
 async def test_api_client_cloud_client_property(hass: HomeAssistant) -> None:
     """Test cloud_client property returns wrapper."""
     token_data = {"access_token": "test-token"}

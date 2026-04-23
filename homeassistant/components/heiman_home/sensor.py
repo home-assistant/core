@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -336,7 +337,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         device_class = getattr(self, "_attr_device_class", None)
 
         # Validate value type matches device class expectations
-        # For numeric device classes, ensure value is actually numeric
+        # For numeric device classes, ensure value is actually numeric.
+        # Boolean values are already returned as None above, so only
+        # reject remaining non-numeric scalar values here.
         if device_class in (
             SensorDeviceClass.SIGNAL_STRENGTH,
             SensorDeviceClass.TEMPERATURE,
@@ -346,12 +349,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             SensorDeviceClass.POWER,
             SensorDeviceClass.ENERGY,
         ):
-            # Reject booleans explicitly because bool is a subclass of int.
-            # If value is not a real numeric type, return None to avoid
-            # validation errors.
-            if value is not None and (
-                isinstance(value, bool) or not isinstance(value, (int, float))
-            ):
+            if not isinstance(value, (int, float)):
                 _LOGGER.warning(
                     "Sensor %s has device class %s but value is non-numeric: %s (%s). "
                     "Returning None to avoid Home Assistant validation error",

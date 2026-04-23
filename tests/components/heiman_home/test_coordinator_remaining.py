@@ -9,6 +9,7 @@ from heimanconnect.models import HeimanDevice
 from homeassistant.components.heiman_home.const import CONF_HOME_ID
 from homeassistant.components.heiman_home.coordinator import (
     DeviceProperty,
+    HeimanData,
     HeimanDataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -245,8 +246,6 @@ async def test_coordinator_merge_device_states_keeps_runtime_properties(
     )
 
     # Set initial data
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={"device-1": old_device},
         user_info=None,
@@ -295,8 +294,6 @@ async def test_coordinator_read_device_properties_no_properties_returned(
     )
 
     # Set up minimal data
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={"device-1": mock_device},
         user_info=None,
@@ -353,8 +350,6 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
         config_entry=config_entry,
     )
 
-    from homeassistant.components.heiman_home.coordinator import HeimanData
-
     coordinator.data = HeimanData(
         devices={
             "device-1": online_device,
@@ -406,8 +401,6 @@ async def test_coordinator_get_device_property_value(hass: HomeAssistant) -> Non
         api_client=mock_api_client,
         config_entry=config_entry,
     )
-
-    from homeassistant.components.heiman_home.coordinator import HeimanData
 
     coordinator.data = HeimanData(
         devices={"device-1": mock_device},
