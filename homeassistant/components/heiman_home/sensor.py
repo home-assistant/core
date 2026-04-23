@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Heiman sensors based on a config entry."""
-    coordinator: HeimanDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: HeimanDataUpdateCoordinator = entry.runtime_data
 
     # Track existing entities to avoid duplicates
     existing_entities: set[str] = set()

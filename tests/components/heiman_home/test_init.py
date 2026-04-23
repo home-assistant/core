@@ -413,8 +413,8 @@ async def test_unload_with_coordinator_none(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
-    # Entry should be in hass.data even if setup failed
-    assert DOMAIN in hass.data
+    # Entry should not have runtime_data set after failed setup
+    assert not hasattr(entry, "runtime_data") or entry.runtime_data is None
 
     # Now unload - should handle coordinator being None
     unload_ok = await hass.config_entries.async_unload(entry.entry_id)
@@ -548,9 +548,9 @@ async def test_unload_with_api_client_close_exception(
 async def test_unload_cleans_hass_data_when_coordinator_none(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
-    """Test unload cleans hass.data when coordinator is None.
+    """Test unload when coordinator is None.
 
-    This tests lines 148-150 where coordinator is None and we clean up hass.data.
+    This tests the case where runtime_data is None.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -569,17 +569,12 @@ async def test_unload_cleans_hass_data_when_coordinator_none(
     )
     entry.add_to_hass(hass)
 
-    # Set hass.data[DOMAIN] with this entry_id and None coordinator
-    hass.data[DOMAIN] = {entry.entry_id: None}
-
-    # Call async_unload_entry directly
+    # Call async_unload_entry directly - coordinator is None
     unload_ok = await async_unload_entry(hass, entry)
     await hass.async_block_till_done()
 
     # Should succeed
     assert unload_ok is True
-    # hass.data[DOMAIN] should be cleaned up
-    assert DOMAIN not in hass.data
 
 
 async def test_unload_returns_false_when_platforms_unload_fails(
@@ -605,9 +600,6 @@ async def test_unload_returns_false_when_platforms_unload_fails(
         unique_id="test_user",
     )
     entry.add_to_hass(hass)
-
-    # Set hass.data[DOMAIN] with this entry_id and None coordinator
-    hass.data[DOMAIN] = {entry.entry_id: None}
 
     # Mock the return value of async_unload_platforms to be False
     with patch.object(

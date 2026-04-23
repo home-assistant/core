@@ -93,7 +93,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
             try:
                 result = await self._parse_token_response(resp)
             except OAuth2TokenRequestError:
-                raise
+                raise  # pragma: no cover - defensive re-raise, _parse_token_response doesn't raise this
             except (ValueError, ClientError, JSONDecodeError) as err:
                 _LOGGER.exception("Failed to process token response")
                 self._raise_token_error(resp, from_exception=err)

@@ -120,7 +120,7 @@ async def test_sensor_entity_creation(
         await hass.async_block_till_done()
 
     # Replace coordinator with mock
-    hass.data[DOMAIN][entry.entry_id] = mock_coordinator
+    entry.runtime_data = mock_coordinator
 
     # Call sensor setup
     await async_setup_entry(hass, entry, async_add_entities)
@@ -744,7 +744,7 @@ async def test_sensor_entity_creation_with_multiple_properties(
         await hass.async_block_till_done()
 
     # Replace coordinator with mock
-    hass.data[DOMAIN][entry.entry_id] = mock_coordinator
+    entry.runtime_data = mock_coordinator
 
     # Call sensor setup
     await async_setup_entry(hass, entry, async_add_entities)
@@ -824,7 +824,7 @@ async def test_sensor_entity_creation_no_readable_properties(
         await hass.async_block_till_done()
 
     # Replace coordinator with mock
-    hass.data[DOMAIN][entry.entry_id] = mock_coordinator
+    entry.runtime_data = mock_coordinator
 
     # Call sensor setup
     await async_setup_entry(hass, entry, async_add_entities)
@@ -1306,7 +1306,7 @@ async def test_sensor_creation_readable_without_entity_marker(
         await hass.async_block_till_done()
 
     # Replace coordinator with mock
-    hass.data[DOMAIN][entry.entry_id] = mock_coordinator
+    entry.runtime_data = mock_coordinator
 
     # Call sensor setup
     await async_setup_entry(hass, entry, async_add_entities)
@@ -1415,7 +1415,7 @@ async def test_sensor_creation_skips_non_sensor_entities(
         await hass.async_block_till_done()
 
     # Replace coordinator with mock
-    hass.data[DOMAIN][entry.entry_id] = mock_coordinator
+    entry.runtime_data = mock_coordinator
 
     # Call sensor setup
     await async_setup_entry(hass, entry, async_add_entities)

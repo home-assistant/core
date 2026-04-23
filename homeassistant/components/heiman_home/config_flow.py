@@ -54,6 +54,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
+            # Initialize the client before using cloud_client
+            await api_client._ensure_initialized()  # noqa: SLF001
+
             # Get user info
             try:
                 user_info = await api_client.cloud_client.async_get_user_info()

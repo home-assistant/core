@@ -81,10 +81,10 @@ class HeimanApiClient:
 
     async def _refresh_token_callback(self) -> str:
         """Callback to refresh the access token.
-        
+
         Returns:
             New access token string
-            
+
         Raises:
             Exception: If token refresh fails
         """
@@ -97,16 +97,16 @@ class HeimanApiClient:
                 raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
             except Exception as err:
                 raise UpdateFailed(f"Token refresh failed: {err}") from err
-            
+
             # Get updated token
             new_token = self._session.token.get("access_token")
             if new_token:
                 return new_token
-        
+
         # Fallback to token_data
         if self._token_data:
             return self._token_data.get("access_token", "")
-        
+
         raise HeimanAuthError("No token available for refresh")
 
     @property

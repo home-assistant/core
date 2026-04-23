@@ -47,21 +47,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
     """Set up Heiman from a config entry."""
-    # Initialize domain data early to allow safe cleanup even if setup fails
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = None
-
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
 
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+        raise ConfigEntryNotReady("OAuth2 implementation unavailable") from err
 
     session = OAuth2Session(hass, entry, implementation)
 
@@ -128,10 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             ),
         )
         await _async_call_cleanup_method(api_client, ("async_close", "close"))
-        hass.data[DOMAIN][entry.entry_id] = None
         raise
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -160,11 +149,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
 
     coordinator = getattr(entry, "runtime_data", None)
     if coordinator is None:
-        domain_data = hass.data.get(DOMAIN)
-        if domain_data is not None:
-            domain_data.pop(entry.entry_id, None)
-            if not domain_data:
-                hass.data.pop(DOMAIN, None)
         return True
 
     # Disconnect MQTT client
@@ -194,15 +178,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
             )
         except Exception:
             _LOGGER.exception("Error closing API client during unload")
-
-    # Remove coordinator from hass.data
-    domain_data = hass.data.get(DOMAIN)
-    if domain_data is not None:
-        domain_data.pop(entry.entry_id, None)
-
-        # If this was the last entry, clean up hass.data
-        if not domain_data:
-            hass.data.pop(DOMAIN, None)
 
     return True
 
