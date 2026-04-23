@@ -152,6 +152,7 @@ async def test_initialization(
     mock_mozart_client.get_remote_menu.assert_called_once()
     mock_mozart_client.get_listening_mode_set.assert_called_once()
     mock_mozart_client.get_active_listening_mode.assert_called_once()
+    mock_mozart_client.get_beolink_self.assert_called_once()
     assert mock_mozart_client.get_beolink_peers.call_count == 2
     assert mock_mozart_client.get_beolink_listeners.call_count == 2
 
@@ -624,7 +625,7 @@ async def test_async_update_name_and_beolink(
 
     await hass.async_block_till_done()
 
-    assert mock_mozart_client.get_beolink_self.call_count == 1
+    assert mock_mozart_client.get_beolink_self.call_count == 2
     assert mock_mozart_client.get_beolink_peers.call_count == 3
     assert mock_mozart_client.get_beolink_listeners.call_count == 3
 

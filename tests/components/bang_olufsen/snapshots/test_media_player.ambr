@@ -641,12 +641,12 @@
           'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
-          'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
+          'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'friendly_name': 'Laundry room Core',
+      'friendly_name': 'Living room Balance',
       'group_members': list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
@@ -739,12 +739,12 @@
           'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
-          'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
+          'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'friendly_name': 'Laundry room Core',
+      'friendly_name': 'Living room Balance',
       'group_members': list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
@@ -838,12 +838,12 @@
           'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
-          'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
+          'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'friendly_name': 'Laundry room Core',
+      'friendly_name': 'Living room Balance',
       'group_members': list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
@@ -936,12 +936,12 @@
           'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
-          'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
+          'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'friendly_name': 'Laundry room Core',
+      'friendly_name': 'Living room Balance',
       'group_members': list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
@@ -1079,12 +1079,12 @@
           'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
-          'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
+          'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'friendly_name': 'Laundry room Core',
+      'friendly_name': 'Living room Balance',
       'group_members': list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',

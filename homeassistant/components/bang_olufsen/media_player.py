@@ -213,8 +213,8 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
 
         await self._async_update_sound_modes()
 
-        # Update beolink attributes.
-        await self._async_update_beolink()
+        # Update beolink attributes and device name.
+        await self._async_update_name_and_beolink()
 
     async def async_update(self) -> None:
         """Update queue settings."""
