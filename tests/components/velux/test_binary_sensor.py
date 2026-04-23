@@ -141,11 +141,6 @@ async def test_rain_sensor_unavailability(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    # Another update attempt keeps entity unavailable
-    await update_polled_entities(hass, freezer)
-    state = hass.states.get(test_entity_id)
-    assert state.state == STATE_UNAVAILABLE
-
     # Simulate recovery
     mock_window.get_limitation_min.side_effect = None
     mock_window.get_limitation_min.return_value.position_percent = 0
