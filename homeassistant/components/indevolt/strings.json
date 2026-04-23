@@ -319,6 +319,9 @@
     },
     "soc_below_emergency": {
       "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
+    },
+    "soc_below_minimum": {
+      "message": "Target SOC ({target}%) is below the advised device minimum ({minimum_soc}%)"
     }
   },
   "services": {
