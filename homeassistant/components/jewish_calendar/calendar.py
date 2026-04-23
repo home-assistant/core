@@ -262,4 +262,4 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
     def _update_times(self, zmanim: Zmanim) -> list[datetime | None]:
         """Return a list of times to update the calendar."""
         # Calendar entities do not require periodic updates besides the retrieval of events.
-        return [None]
+        return []

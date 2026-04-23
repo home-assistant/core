@@ -13,7 +13,7 @@ from hdate.translator import set_language
 import pytest
 
 from homeassistant.components.calendar import (
-    DOMAIN as DOMAIN_CALENDAR,
+    DOMAIN as CALENDAR_DOMAIN,
     EVENT_END_DATETIME,
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
@@ -216,14 +216,13 @@ def get_calendar_events():
     ) -> list[dict[str, str]]:
         """Get calendar events for a date range."""
         if end_date is None:
-            if isinstance(start_date, dt.date):
+            if isinstance(start_date, dt.datetime):
+                end_date = start_date.replace(hour=23, minute=59, second=59)
+            elif isinstance(start_date, dt.date):
                 last_sec = dt.time(hour=23, minute=59, second=59)
                 end_date = dt.datetime.combine(start_date, last_sec)
-            else:
-                end_date = start_date.replace(hour=23, minute=59, second=59)
-
         response = await hass.services.async_call(
-            DOMAIN_CALENDAR,
+            CALENDAR_DOMAIN,
             SERVICE_GET_EVENTS,
             {
                 ATTR_ENTITY_ID: entity_id,

@@ -163,7 +163,6 @@
     "step": {
       "init": {
         "data": {
-          "calendar_events": "Calendar events to display",
           "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighting",
           "daily_events": "Daily events to display",
           "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah",
@@ -196,7 +195,7 @@
         "sof_zman_shema_mga": "Sof Zman Shema (Mg\"A)",
         "sof_zman_tfilla_gra": "Sof Zman Tefilla (Gr\"A)",
         "sof_zman_tfilla_mga": "Sof Zman Tefilla (Mg\"A)",
-        "tset_hakohavim": "T'set Hakochavim (nightfall)"
+        "tset_hakohavim_tsom": "T'set Hakochavim (nightfall)"
       }
     },
     "learning_schedule": {
