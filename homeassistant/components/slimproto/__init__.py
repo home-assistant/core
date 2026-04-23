@@ -2,26 +2,24 @@
 
 from __future__ import annotations
 
-from aioslimproto import SlimServer
+from aioslimproto.server import SlimServer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
-
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
+type SlimProtoConfigEntry = ConfigEntry[SlimServer]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) -> bool:
     """Set up from a config entry."""
     slimserver = SlimServer()
     await slimserver.start()
 
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    hass.data[DOMAIN] = slimserver
+    entry.runtime_data = slimserver
 
     # initialize platform(s)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -39,15 +37,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: SlimProtoConfigEntry,
+    device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) -> bool:
     """Unload a config entry."""
     unload_success = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_success:
-        await hass.data.pop(DOMAIN).stop()
+        await entry.runtime_data.stop()
     return unload_success

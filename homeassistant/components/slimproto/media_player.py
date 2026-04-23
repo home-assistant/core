@@ -19,12 +19,12 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from . import SlimProtoConfigEntry
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
 
 STATE_MAPPING = {
@@ -38,13 +38,11 @@ STATE_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SlimProtoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SlimProto MediaPlayer(s) from Config Entry."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    slimserver: SlimServer = hass.data[DOMAIN]
+    slimserver = config_entry.runtime_data
     added_ids = set()
 
     async def async_add_player(player: SlimClient) -> None:
