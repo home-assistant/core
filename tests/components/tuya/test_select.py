@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import check_selective_state_update, initialize_entry
+from . import MockDeviceListener, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -72,6 +72,7 @@ async def test_selective_state_update(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -82,7 +83,7 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_manager,
+        mock_listener,
         freezer,
         entity_id="select.kitchen_blinds_motor_mode",
         dpcode="control_back_mode",

@@ -31,74 +31,67 @@ DEVICE_MOCKS = sorted(
 )
 
 
-async def _async_update_device(
-    hass: HomeAssistant,
-    manager: Manager,
-    device: CustomerDevice,
-    updated_status_properties: list[str] | None,
-    dp_timestamps: dict[str, int] | None,
-) -> None:
-    """Trigger dispatcher_send for device update and wait for entity tasks to complete."""
-    for listener in manager.device_listeners:
-        listener.update_device(device, updated_status_properties, dp_timestamps)
-    await hass.async_block_till_done()
+class MockDeviceListener:
+    """Helper to raise manager events to device listener."""
 
+    def __init__(self, hass: HomeAssistant, manager: Manager) -> None:
+        """Initialize the helper."""
+        self.hass = hass
+        self.manager = manager
 
-async def async_send_add_device(
-    hass: HomeAssistant, manager: Manager, device: CustomerDevice
-) -> None:
-    """Mock add device from the manager."""
-    manager.device_map[device.id] = device
-    for listener in manager.device_listeners:
-        listener.add_device(device)
-    await hass.async_block_till_done()
+    async def _async_update_device(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> None:
+        """Trigger dispatcher_send for device update and wait for entity tasks to complete."""
+        for listener in self.manager.device_listeners:
+            listener.update_device(device, updated_status_properties, dp_timestamps)
+        await self.hass.async_block_till_done()
 
+    async def async_send_add_device(self, device: CustomerDevice) -> None:
+        """Mock add device from the manager."""
+        self.manager.device_map[device.id] = device
+        for listener in self.manager.device_listeners:
+            listener.add_device(device)
+        await self.hass.async_block_till_done()
 
-async def async_send_remove_device(
-    hass: HomeAssistant, manager: Manager, device: CustomerDevice
-) -> None:
-    """Mock remove device from the manager."""
-    manager.device_map.pop(device.id, None)
-    for listener in manager.device_listeners:
-        listener.remove_device(device.id)
-    await hass.async_block_till_done()
+    async def async_send_remove_device(self, device: CustomerDevice) -> None:
+        """Mock remove device from the manager."""
+        self.manager.device_map.pop(device.id, None)
+        for listener in self.manager.device_listeners:
+            listener.remove_device(device.id)
+        await self.hass.async_block_till_done()
 
+    async def async_mock_online(self, device: CustomerDevice) -> None:
+        """Mock online event from the manager."""
+        device.online = True
+        await self._async_update_device(device, None, None)
 
-async def async_mock_online(
-    hass: HomeAssistant, manager: Manager, device: CustomerDevice
-) -> None:
-    """Mock online event from the manager."""
-    device.online = True
-    await _async_update_device(hass, manager, device, None, None)
+    async def async_mock_offline(self, device: CustomerDevice) -> None:
+        """Mock offline event from the manager."""
+        device.online = False
+        await self._async_update_device(device, None, None)
 
-
-async def async_mock_offline(
-    hass: HomeAssistant, manager: Manager, device: CustomerDevice
-) -> None:
-    """Mock offline event from the manager."""
-    device.online = False
-    await _async_update_device(hass, manager, device, None, None)
-
-
-async def async_send_device_update(
-    hass: HomeAssistant,
-    manager: Manager,
-    device: CustomerDevice,
-    updated_status_properties: dict[str, Any] | None = None,
-    dp_timestamps: dict[str, int] | None = None,
-) -> None:
-    """Mock update device method."""
-    property_list: list[str] | None = None
-    if updated_status_properties is not None:
-        property_list = []
-        for key, value in updated_status_properties.items():
-            if key not in device.status:
-                raise ValueError(
-                    f"Property {key} not found in device status: {device.status}"
-                )
-            device.status[key] = value
-            property_list.append(key)
-    await _async_update_device(hass, manager, device, property_list, dp_timestamps)
+    async def async_send_device_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: dict[str, Any] | None = None,
+        dp_timestamps: dict[str, int] | None = None,
+    ) -> None:
+        """Mock update device method."""
+        property_list: list[str] | None = None
+        if updated_status_properties is not None:
+            property_list = []
+            for key, value in updated_status_properties.items():
+                if key not in device.status:
+                    raise ValueError(
+                        f"Property {key} not found in device status: {device.status}"
+                    )
+                device.status[key] = value
+                property_list.append(key)
+        await self._async_update_device(device, property_list, dp_timestamps)
 
 
 async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
@@ -224,7 +217,7 @@ async def initialize_entry(
 async def check_selective_state_update(
     hass: HomeAssistant,
     mock_device: CustomerDevice,
-    mock_manager: Manager,
+    mock_listener: MockDeviceListener,
     freezer: FrozenDateTimeFactory,
     *,
     entity_id: str,
@@ -248,13 +241,13 @@ async def check_selective_state_update(
 
     # Trigger device offline
     freezer.tick(10)
-    await async_mock_offline(hass, mock_manager, mock_device)
+    await mock_listener.async_mock_offline(mock_device)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert hass.states.get(entity_id).last_reported.isoformat() == unavailable_reported
 
     # Trigger device online
     freezer.tick(10)
-    await async_mock_online(hass, mock_manager, mock_device)
+    await mock_listener.async_mock_online(mock_device)
     assert hass.states.get(entity_id).state == initial_state
     assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
 
@@ -262,12 +255,12 @@ async def check_selective_state_update(
     # in updated properties - state should not change
     freezer.tick(10)
     mock_device.status[dpcode] = None
-    await async_send_device_update(hass, mock_manager, mock_device, {})
+    await mock_listener.async_send_device_update(mock_device, {})
     assert hass.states.get(entity_id).state == initial_state
     assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
 
     # Trigger device update with provided updates
     freezer.tick(30)
-    await async_send_device_update(hass, mock_manager, mock_device, updates)
+    await mock_listener.async_send_device_update(mock_device, updates)
     assert hass.states.get(entity_id).state == expected_state
     assert hass.states.get(entity_id).last_reported.isoformat() == last_reported
