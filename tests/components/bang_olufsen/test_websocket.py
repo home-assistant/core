@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
-    TEST_NAME,
+    TEST_FRIENDLY_NAME,
     TEST_REMOTE_SERIAL,
     TEST_REMOTE_SERIAL_PAIRED,
     TEST_SERIAL_NUMBER,
@@ -62,7 +62,7 @@ async def test_connection(
     await hass.async_block_till_done()
 
     mock_connection_callback.assert_called_once_with(True)
-    assert f"Connected to the {TEST_NAME} notification channel" in caplog.text
+    assert f"Connected to the {TEST_FRIENDLY_NAME} notification channel" in caplog.text
 
 
 async def test_connection_lost(
@@ -87,7 +87,7 @@ async def test_connection_lost(
     await hass.async_block_till_done()
 
     mock_connection_lost_callback.assert_called_once_with(False)
-    assert f"Lost connection to the {TEST_NAME}" in caplog.text
+    assert f"Lost connection to the {TEST_FRIENDLY_NAME}" in caplog.text
 
 
 async def test_on_software_update_state(

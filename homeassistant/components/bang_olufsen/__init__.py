@@ -60,11 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
 
     client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
 
-    # Check API and WebSocket connection and fetch the device friendly name
-    # before creating the device and entities to ensure consistent entity IDs.
+    # Check API and WebSocket connection
     try:
         await client.check_device_connection(True)
-        beolink_self = await client.get_beolink_self()
     except* (
         ClientConnectorError,
         ClientOSError,
@@ -81,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
-        name=beolink_self.friendly_name,
+        name=entry.title,
         model=entry.data[CONF_MODEL],
     )
 

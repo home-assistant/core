@@ -22,7 +22,7 @@
         'host': '192.168.0.1',
         'jid': '1111.1111111.11111111@products.bang-olufsen.com',
         'model': 'Beosound Balance',
-        'name': 'Beosound Balance-11111111',
+        'name': 'Living room Balance',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -36,7 +36,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Beosound Balance-11111111',
+      'title': 'Living room Balance',
       'unique_id': '11111111',
       'version': 1,
     }),
@@ -144,7 +144,7 @@
         'host': '192.168.0.4',
         'jid': '1111.1111111.44444444@products.bang-olufsen.com',
         'model': 'Beosound A5',
-        'name': 'Beosound A5-44444444',
+        'name': 'Lounge room A5',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -158,7 +158,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Beosound A5-44444444',
+      'title': 'Lounge room A5',
       'unique_id': '44444444',
       'version': 1,
     }),
