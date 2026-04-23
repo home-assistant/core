@@ -87,9 +87,6 @@
       "four_way_valve": {
         "name": "Four-way valve"
       },
-      "heat_demand": {
-        "name": "Heat demand"
-      },
       "heater_step_1": {
         "name": "Heater step 1"
       },

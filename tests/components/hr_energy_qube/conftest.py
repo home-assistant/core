@@ -103,7 +103,6 @@ def mock_qube_client() -> Generator[MagicMock]:
         state.plantdemand = False
         state.id_demand = False
         state.thermostatdemand = True
-        state.bms_demand = False
 
         # Binary sensors - Digital inputs
         state.id_summerwinter = False
