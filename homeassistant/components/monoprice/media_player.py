@@ -13,12 +13,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MonopriceConfigEntry
-from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
+from .const import CONF_SOURCES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,39 +70,6 @@ async def async_setup_entry(
 
     # only call update before add if it's the first run so we can try to detect zones
     async_add_entities(entities, config_entry.runtime_data.first_run)
-
-    platform = entity_platform.async_get_current_platform()
-
-    def _call_service(entities, service_call):
-        for entity in entities:
-            if service_call.service == SERVICE_SNAPSHOT:
-                entity.snapshot()
-            elif service_call.service == SERVICE_RESTORE:
-                entity.restore()
-
-    @service.verify_domain_control(DOMAIN)
-    async def async_service_handle(service_call: core.ServiceCall) -> None:
-        """Handle for services."""
-        entities = await platform.async_extract_from_service(service_call)
-
-        if not entities:
-            return
-
-        hass.async_add_executor_job(_call_service, entities, service_call)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SNAPSHOT,
-        async_service_handle,
-        schema=cv.make_entity_service_schema({}),
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESTORE,
-        async_service_handle,
-        schema=cv.make_entity_service_schema({}),
-    )
 
 
 class MonopriceZone(MediaPlayerEntity):
@@ -180,7 +146,6 @@ class MonopriceZone(MediaPlayerEntity):
         """Restore saved state."""
         if self._snapshot:
             self._monoprice.restore_zone(self._snapshot)
-            self.schedule_update_ha_state(True)
 
     def select_source(self, source: str) -> None:
         """Set input source."""

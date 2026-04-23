@@ -6,13 +6,20 @@ import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .hub import Hub, VictronGxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
 ]
 
 
@@ -52,10 +59,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry called for entry: %s", entry.entry_id)
-    hub: Hub | None = getattr(entry, "runtime_data", None)
+    hub = entry.runtime_data
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and hub is not None:
+    if unload_ok:
         await hub.stop()
         hub.unregister_all_new_metric_callbacks()
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: VictronGxConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a device from the config entry if the device is no longer known."""
+    hub: Hub = config_entry.runtime_data
+    return not hub.is_device_connected(device_entry.identifiers)

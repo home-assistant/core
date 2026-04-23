@@ -18,7 +18,8 @@
         "set_members",
         "power",
         "enqueue",
-        "select_source"
+        "select_source",
+        "select_sound_mode"
       ],
       "elapsed_time": null,
       "elapsed_time_last_updated": 0,
@@ -31,7 +32,7 @@
           "key": "treble",
           "name": "Treble",
           "type": "integer",
-          "translation_key": "player_options.treble",
+          "translation_key": "treble",
           "translation_params": null,
           "value": -6,
           "read_only": false,
@@ -44,7 +45,7 @@
           "key": "bass",
           "name": "Bass",
           "type": "float",
-          "translation_key": "player_options.bass",
+          "translation_key": "bass",
           "translation_params": null,
           "value": -6.0,
           "read_only": false,
@@ -57,7 +58,7 @@
           "key": "treble_ro",
           "name": "Treble RO",
           "type": "integer",
-          "translation_key": "player_options.treble",
+          "translation_key": "treble",
           "translation_params": null,
           "value": -6,
           "read_only": true,
@@ -70,7 +71,7 @@
           "key": "enhancer",
           "name": "Enhancer",
           "type": "boolean",
-          "translation_key": "player_options.enhancer",
+          "translation_key": "enhancer",
           "translation_params": null,
           "value": false,
           "read_only": false,
@@ -83,7 +84,7 @@
           "key": "enhancer_ro",
           "name": "Enhancer RO",
           "type": "boolean",
-          "translation_key": "player_options.enhancer",
+          "translation_key": "enhancer",
           "translation_params": null,
           "value": false,
           "read_only": true,
@@ -96,7 +97,7 @@
           "key": "network_name",
           "name": "Network Name",
           "type": "string",
-          "translation_key": "player_options.network_name",
+          "translation_key": "network_name",
           "translation_params": null,
           "value": "receiver",
           "read_only": false,
@@ -109,7 +110,7 @@
           "key": "network_name_ro",
           "name": "Network Name RO",
           "type": "string",
-          "translation_key": "player_options.network_name",
+          "translation_key": "network_name",
           "translation_params": null,
           "value": "receiver ro",
           "read_only": true,
@@ -122,7 +123,7 @@
           "key": "link_audio_delay",
           "name": "Link Audio Delay",
           "type": "string",
-          "translation_key": "player_options.link_audio_delay",
+          "translation_key": "link_audio_delay",
           "translation_params": null,
           "value": "lip_sync",
           "read_only": false,
@@ -134,19 +135,85 @@
               "key": "audio_sync",
               "name": "audio_sync",
               "type": "string",
-              "value": "audio_sync"
+              "value": "audio_sync",
+              "translation_key": "audio_sync_translation"
             },
             {
               "key": "balanced",
               "name": "balanced",
               "type": "string",
-              "value": "balanced"
+              "value": "balanced",
+              "translation_key": "balanced_translation"
             },
             {
               "key": "lip_sync",
               "name": "lip_sync",
               "type": "string",
-              "value": "lip_sync"
+              "value": "lip_sync",
+              "translation_key": "lip_sync_translation"
+            }
+          ]
+        },
+        {
+          "key": "link_audio_delay_ro",
+          "name": "Link Audio Delay",
+          "type": "string",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": "lip_sync",
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "audio_sync",
+              "name": "audio_sync",
+              "type": "string",
+              "value": "audio_sync",
+              "translation_key": "audio_sync_translation"
+            },
+            {
+              "key": "balanced",
+              "name": "balanced",
+              "type": "string",
+              "value": "balanced",
+              "translation_key": "balanced_translation"
+            },
+            {
+              "key": "lip_sync",
+              "name": "lip_sync",
+              "type": "string",
+              "value": "lip_sync",
+              "translation_key": "lip_sync_translation"
+            }
+          ]
+        },
+        {
+          "key": "boolean_with_options",
+          "name": "Boolean with options",
+          "type": "boolean",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": true,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "option_a",
+              "name": "Option A",
+              "type": "boolean",
+              "value": false,
+              "translation_key": "option_a"
+            },
+            {
+              "key": "option_b",
+              "name": "Option B",
+              "type": "boolean",
+              "value": true,
+              "translation_key": "option_b"
             }
           ]
         }
@@ -192,6 +259,27 @@
           "can_play_pause": false,
           "can_seek": false,
           "can_next_previous": false
+        }
+      ],
+      "active_sound_mode": "munich_id",
+      "sound_mode_list": [
+        {
+          "id": "munich_id",
+          "name": "Munich",
+          "passive": false,
+          "translation_key": "munich_translation"
+        },
+        {
+          "id": "stuttgart_id",
+          "name": "Stuttgart",
+          "passive": false,
+          "translation_key": "stuttgart_translation"
+        },
+        {
+          "id": "passive_sound_mode_id",
+          "name": "Passive",
+          "passive": true,
+          "translation_key": "passive_sound_mode_translation"
         }
       ]
     },

@@ -16,5 +16,5 @@
   "iot_class": "local_push",
   "loggers": ["bleak", "HueBLE"],
   "quality_scale": "bronze",
-  "requirements": ["HueBLE==2.1.0"]
+  "requirements": ["HueBLE==2.2.2"]
 }

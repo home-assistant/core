@@ -10,12 +10,7 @@ from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedErro
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -42,6 +37,7 @@ from .const import (
     RISCO_STATES,
     TYPE_LOCAL,
 )
+from .models import RiscoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,12 +117,12 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Init the config flow."""
-        self._reauth_entry: ConfigEntry | None = None
+        self._reauth_entry: RiscoConfigEntry | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RiscoConfigEntry,
     ) -> RiscoOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
@@ -218,7 +214,7 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
 class RiscoOptionsFlowHandler(OptionsFlow):
     """Handle a Risco options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: RiscoConfigEntry) -> None:
         """Initialize."""
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
@@ -238,6 +234,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
             self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
             schema = schema.extend(
                 {
+                    # Polling interval is user-configurable, which is no longer allowed
+                    # pylint: disable-next=hass-config-flow-polling-field
                     vol.Required(
                         CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
                     ): int,

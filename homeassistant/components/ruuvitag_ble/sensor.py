@@ -198,6 +198,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ruuvi BLE sensors."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]

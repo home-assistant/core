@@ -1,7 +1,9 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_not_playing": {
@@ -18,6 +20,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is off"
@@ -36,6 +41,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is paused"
@@ -45,6 +53,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is playing"
@@ -433,14 +444,65 @@
   },
   "title": "Media player",
   "triggers": {
-    "stopped_playing": {
-      "description": "Triggers after one or more media players stop playing media.",
+    "paused_playing": {
+      "description": "Triggers after one or more media players pause playing.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player paused playing"
+    },
+    "started_playing": {
+      "description": "Triggers after one or more media players start playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player started playing"
+    },
+    "stopped_playing": {
+      "description": "Triggers after one or more media players stop playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
         }
       },
       "name": "Media player stopped playing"
+    },
+    "turned_off": {
+      "description": "Triggers after one or more media players turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more media players turn on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player turned on"
     }
   }
 }
