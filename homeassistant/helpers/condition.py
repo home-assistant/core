@@ -293,7 +293,7 @@ class ConditionChecker(abc.ABC):
         self._unloaded = False
 
     def __call__(
-        self, _: HomeAssistant, variables: TemplateVarsType | None = None
+        self, hass: HomeAssistant, variables: TemplateVarsType | None = None
     ) -> bool | None:
         """Check the condition."""
         return self.async_check(variables=variables)
