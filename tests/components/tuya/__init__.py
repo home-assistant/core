@@ -15,7 +15,8 @@ from tuya_sharing import (
     Manager,
 )
 
-from homeassistant.components.tuya import DOMAIN, DeviceListener
+from homeassistant.components.tuya.const import DOMAIN
+from homeassistant.components.tuya.coordinator import DeviceListener
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
@@ -41,6 +42,22 @@ class MockDeviceListener(DeviceListener):
     ) -> None:
         """Trigger dispatcher_send for device update and wait for entity tasks to complete."""
         self.update_device(device, updated_status_properties, dp_timestamps)
+        await self.hass.async_block_till_done()
+
+    async def async_send_add_device(
+        self, manager: Manager, device: CustomerDevice
+    ) -> None:
+        """Mock add device from the manager."""
+        manager.device_map[device.id] = device
+        self.add_device(device)
+        await self.hass.async_block_till_done()
+
+    async def async_send_remove_device(
+        self, manager: Manager, device: CustomerDevice
+    ) -> None:
+        """Mock remove device from the manager."""
+        manager.device_map.pop(device.id, None)
+        self.remove_device(device.id)
         await self.hass.async_block_till_done()
 
     async def async_mock_online(self, device: CustomerDevice) -> None:
@@ -180,7 +197,9 @@ async def initialize_entry(
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

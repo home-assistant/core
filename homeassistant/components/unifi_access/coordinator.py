@@ -6,7 +6,9 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
+import math
 from typing import Any, cast
+import unicodedata
 
 from unifi_access_api import (
     ApiAuthError,
@@ -23,13 +25,16 @@ from unifi_access_api import (
     WsMessageHandler,
 )
 from unifi_access_api.models.websocket import (
+    DeviceUpdate,
     HwDoorbell,
     InsightsAdd,
     LocationUpdateState,
     LocationUpdateV2,
     LogAdd,
+    RemoteView,
     SettingUpdate,
     ThumbnailInfo,
+    V2DeviceUpdate,
     V2LocationState,
     V2LocationUpdate,
     WebsocketMessage,
@@ -37,14 +42,18 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import (
+    DEFAULT_LOCK_RULE_INTERVAL,
+    DOMAIN,
+    MAX_LOCK_RULE_INTERVAL,
+    MIN_LOCK_RULE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_LOCK_RULE_INTERVAL = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 
@@ -108,12 +117,38 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         self._event_listeners.append(event_callback)
         return _unsubscribe
 
-    async def async_set_lock_rule(self, door_id: str, rule_type: str) -> None:
+    def _normalize_interval(self, value: float | None) -> int:
+        """Clamp and normalize an interval value to valid integer minutes."""
+        if value is None:
+            value = float(DEFAULT_LOCK_RULE_INTERVAL)
+
+        normalized = min(
+            max(float(value), float(MIN_LOCK_RULE_INTERVAL)),
+            float(MAX_LOCK_RULE_INTERVAL),
+        )
+        normalized = math.floor(normalized + 0.5)
+        normalized = min(
+            max(normalized, float(MIN_LOCK_RULE_INTERVAL)),
+            float(MAX_LOCK_RULE_INTERVAL),
+        )
+        return int(normalized)
+
+    async def async_set_lock_rule(
+        self, door_id: str, rule_type: str, interval: float | None = None
+    ) -> None:
         """Set a temporary lock rule for a door."""
         if not rule_type:
             return
-        lock_rule_type = DoorLockRuleType(rule_type)
-        rule = DoorLockRule(type=lock_rule_type, interval=DEFAULT_LOCK_RULE_INTERVAL)
+        try:
+            lock_rule_type = DoorLockRuleType(rule_type)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_lock_rule_type",
+            ) from err
+        rule = DoorLockRule(
+            type=lock_rule_type, interval=self._normalize_interval(interval)
+        )
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:
             return
@@ -141,7 +176,10 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         handlers: dict[str, WsMessageHandler] = {
             "access.data.device.location_update_v2": self._handle_location_update,
             "access.data.v2.location.update": self._handle_v2_location_update,
+            "access.data.v2.device.update": self._handle_v2_device_update,
+            "access.data.device.update": self._handle_device_update,
             "access.hw.door_bell": self._handle_doorbell,
+            "access.remote_view": self._handle_remote_view,
             "access.logs.insights.add": self._handle_insights_add,
             "access.logs.add": self._handle_logs_add,
             "access.data.setting.update": self._handle_setting_update,
@@ -314,12 +352,13 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         updated_lock_rule = current_lock_rule
         lock_rule_updated = False
         if ws_state is not None:
-            if ws_state.dps is not None:
+            if "dps" in ws_state.model_fields_set and ws_state.dps is not None:
                 updates["door_position_status"] = ws_state.dps
-            if ws_state.lock == "locked":
-                updates["door_lock_relay_status"] = DoorLockRelayStatus.LOCK
-            elif ws_state.lock == "unlocked":
-                updates["door_lock_relay_status"] = DoorLockRelayStatus.UNLOCK
+            if "lock" in ws_state.model_fields_set:
+                if ws_state.lock == "locked":
+                    updates["door_lock_relay_status"] = DoorLockRelayStatus.LOCK
+                elif ws_state.lock == "unlocked":
+                    updates["door_lock_relay_status"] = DoorLockRelayStatus.UNLOCK
 
             if "remain_lock" in ws_state.model_fields_set:
                 lock_rule_updated = True
@@ -397,6 +436,51 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             {},
         )
 
+    async def _handle_remote_view(self, msg: WebsocketMessage) -> None:
+        """Handle remote view (video intercom doorbell press) events."""
+        remote_view = cast(RemoteView, msg)
+        device_id = remote_view.data.device_id
+        if device_id and device_id in self._device_to_door:
+            self._dispatch_door_event(
+                self._device_to_door[device_id], "doorbell", "ring", {}
+            )
+            return
+        door_name = remote_view.data.door_name
+        if self.data and door_name:
+            normalized = unicodedata.normalize("NFC", door_name.strip())
+            for door in self.data.doors.values():
+                if unicodedata.normalize("NFC", door.name.strip()) == normalized:
+                    self._dispatch_door_event(door.id, "doorbell", "ring", {})
+                    return
+        _LOGGER.debug(
+            "Received access.remote_view for unknown device %s (door '%s')",
+            device_id,
+            door_name,
+        )
+
+    async def _handle_v2_device_update(self, msg: WebsocketMessage) -> None:
+        """Handle V2 device update messages."""
+        update = cast(V2DeviceUpdate, msg)
+        device_id = update.data.id
+        if not device_id:
+            return
+        first_valid_door_id: str | None = None
+        for loc_state in update.data.location_states:
+            door_id = loc_state.location_id
+            if not door_id:
+                continue
+            if first_valid_door_id is None:
+                first_valid_door_id = door_id
+            self._process_door_update(door_id, loc_state)
+        if first_valid_door_id is not None:
+            self._device_to_door[device_id] = first_valid_door_id
+
+    async def _handle_device_update(self, msg: WebsocketMessage) -> None:
+        """Handle device update messages."""
+        update = cast(DeviceUpdate, msg)
+        if update.data.unique_id and update.data.door and update.data.door.unique_id:
+            self._device_to_door[update.data.unique_id] = update.data.door.unique_id
+
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
@@ -422,9 +506,15 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         log = cast(LogAdd, msg)
         source = log.data.source
         device_target = source.device_config
-        if device_target is None or device_target.id not in self._device_to_door:
+        if device_target is None:
             return
-        door_id = self._device_to_door[device_target.id]
+        if device_target.id in self._device_to_door:
+            door_id = self._device_to_door[device_target.id]
+        elif msg.door_id:
+            # UAH-DOOR devices: door_id is enriched by the library via MAC→door map
+            door_id = msg.door_id
+        else:
+            return
         event_type = (
             "access_granted" if source.event.result == "ACCESS" else "access_denied"
         )

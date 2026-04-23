@@ -3,6 +3,7 @@
 from insteon_frontend import get_build_id, locate_dir
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant, callback
 
@@ -93,7 +94,7 @@ def async_load_api(hass):
 async def async_register_insteon_frontend(hass: HomeAssistant):
     """Register the Insteon frontend configuration panel."""
     # Add to sidepanel if needed
-    if DOMAIN not in hass.data.get("frontend_panels", {}):
+    if not async_panel_exists(hass, DOMAIN):
         dev_path = hass.data.get(DOMAIN, {}).get(CONF_DEV_PATH)
         is_dev = dev_path is not None
         path = dev_path or locate_dir()
