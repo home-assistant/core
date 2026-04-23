@@ -582,7 +582,8 @@ async def test_unload_returns_false_when_platforms_unload_fails(
 ) -> None:
     """Test unload returns False when platforms unload fails.
 
-    This tests line 142 where unload_ok is False and we return False.
+    When platform unloading fails, the entry unload should return False
+    without attempting cleanup.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -601,11 +602,11 @@ async def test_unload_returns_false_when_platforms_unload_fails(
     )
     entry.add_to_hass(hass)
 
-    # Mock the return value of async_unload_platforms to be False
+    # Mock async_unload_platforms with an awaitable that returns False
     with patch.object(
         hass.config_entries,
         "async_unload_platforms",
-        return_value=False,
+        new=AsyncMock(return_value=False),
     ):
         unload_ok = await hass.config_entries.async_unload_platforms(entry, [])
         assert unload_ok is False
@@ -614,5 +615,4 @@ async def test_unload_returns_false_when_platforms_unload_fails(
         # Since async_unload_platforms returns False, we should return False
         # But we need to also mock the cleanup path
         unload_result = await async_unload_entry(hass, entry)
-        # This tests line 142
         assert unload_result is False

@@ -1372,7 +1372,7 @@ async def test_sensor_native_value_bool_for_numeric_device_class(
 ) -> None:
     """Test native_value returns None for boolean values with numeric device class.
 
-    This tests the bool check in lines 330-331.
+    Boolean values should be rejected for numeric device classes.
     """
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1402,7 +1402,7 @@ async def test_sensor_native_value_bool_for_numeric_device_class(
     # Manually set device class to battery to trigger the check
     sensor._attr_device_class = SensorDeviceClass.BATTERY
 
-    # native_value should return None (lines 330-331)
+    # native_value should return None
     result = sensor.native_value
 
     # Should return None for boolean value with numeric device class
@@ -1414,7 +1414,7 @@ async def test_sensor_native_value_list_for_numeric_device_class(
 ) -> None:
     """Test native_value returns None for list values with numeric device class.
 
-    This tests line 331 where list type is rejected.
+    List values should be rejected for numeric device classes.
     """
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
