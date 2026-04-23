@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     UnitOfElectricCurrent,
@@ -26,8 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DOMAIN
-from .coordinator import YouLessCoordinator
+from .const import DOMAIN
+from .coordinator import YouLessConfigEntry, YouLessCoordinator
 from .entity import YouLessEntity
 
 
@@ -303,13 +302,13 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: YouLessConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize the integration."""
-    coordinator: YouLessCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     device = entry.data[CONF_DEVICE]
-    if (device := entry.data[CONF_DEVICE]) is None:
+    if device is None:
         device = entry.entry_id
 
     async_add_entities(

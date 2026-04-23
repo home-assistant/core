@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.models import FirmwareList
+from pysmlight.models import AmbilightPayload, FirmwareList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -121,6 +123,24 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def _internal_update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    async def async_execute_command(
+        self,
+        command: Callable[..., Coroutine[Any, Any, Any]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        """Execute an API command and handle connection errors."""
+        try:
+            return await command(*args, **kwargs)
+        except SmlightAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except SmlightConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_device",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
 
 class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
     """Class to manage fetching SMLIGHT sensor data."""
@@ -131,6 +151,14 @@ class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
         prop = SettingsProp[setting.name].value
         setattr(self.data.sensors, prop, value)
 
+        self.async_set_updated_data(self.data)
+
+    def update_ambilight(self, changes: dict) -> None:
+        """Update the ambilight state from event."""
+        for key in ("ultLedColor", "ultLedColor2"):
+            if isinstance(color := changes.get(key), int):
+                changes[key] = f"#{color:06x}"
+        self.data.sensors.ambilight = AmbilightPayload(**changes)
         self.async_set_updated_data(self.data)
 
     async def _internal_update_data(self) -> SmData:

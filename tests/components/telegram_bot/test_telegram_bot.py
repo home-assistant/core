@@ -46,6 +46,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_FILE_NAME,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
@@ -82,6 +83,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
+    SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
@@ -90,6 +92,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -130,6 +133,23 @@ async def test_polling_platform_init(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+
+
+async def test_polling_platform_init_failed(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test failed initialization of the polling platform."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.get_me",
+        side_effect=NetworkError("mock network error"),
+    ) as mock_get_me:
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_get_me.assert_called_once()
+    assert mock_polling_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -1670,6 +1690,44 @@ async def test_set_message_reaction(
     )
 
 
+async def test_send_message_draft(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message draft."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message_draft",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message_draft",
+            {
+                ATTR_CHAT_ID: 123456,
+                ATTR_MESSAGE: "_Thinking..._",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_PARSER: PARSER_MD2,
+                "draft_id": "3456",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once_with(
+        chat_id=123456,
+        draft_id=3456,
+        text="_Thinking..._",
+        message_thread_id=123,
+        parse_mode=PARSER_MD2,
+        read_timeout=None,
+    )
+
+
 @pytest.mark.parametrize(
     ("service", "input"),
     [
@@ -2386,3 +2444,152 @@ async def test_download_file_when_error_when_downloading(
     assert err.value.translation_placeholders is not None
     assert "error" in err.value.translation_placeholders
     assert err.value.translation_placeholders["error"] == "failed to download file"
+
+
+@pytest.mark.parametrize(
+    "directory_path",
+    [
+        "../etc",
+        "/config/..",
+        "~/secrets",
+        "/home/~evil",
+    ],
+)
+async def test_download_file_rejects_invalid_directory_path(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    directory_path: str,
+) -> None:
+    """Test download_file rejects directory_path containing `..` or `~`."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        patch("pathlib.Path.write_bytes") as write_bytes_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: directory_path,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "invalid_directory_path"
+    assert err.value.translation_placeholders == {"directory_path": directory_path}
+    get_file_mock.assert_not_called()
+    write_bytes_mock.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        "../etc/passwd",
+        "../../etc/cron.d/pwn",
+        "~/malicious",
+        "/root/.ssh/authorized_keys",
+        "subdir/inside.txt",
+        "windows\\style.txt",
+    ],
+)
+async def test_download_file_rejects_invalid_file_name(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    file_name: str,
+) -> None:
+    """Test download_file rejects file_name containing path separators or traversal."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        patch("pathlib.Path.write_bytes") as write_bytes_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
+                ATTR_FILE_NAME: file_name,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "invalid_file_name"
+    assert err.value.translation_placeholders == {"file_name": file_name}
+    get_file_mock.assert_not_called()
+    write_bytes_mock.assert_not_called()
+
+
+async def test_send_media_group(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the send_media_group service with multiple media types."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+    ) as mock_get:
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MEDIA_GROUP,
+            {
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo.jpg",
+                        ATTR_CAPTION: "mock photo",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.VIDEO,
+                        ATTR_URL: "https://mock/video.mp4",
+                        ATTR_CAPTION: "mock video",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.AUDIO,
+                        ATTR_URL: "https://mock/audio.mp3",
+                        ATTR_CAPTION: "mock url",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.DOCUMENT,
+                        ATTR_URL: "https://mock/doc.pdf",
+                        ATTR_CAPTION: "mock document",
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 123456,
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
+                ATTR_MESSAGE_ID: [12345, 12346, 12347, 12348],
+            }
+        ]
+    }

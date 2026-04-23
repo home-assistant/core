@@ -239,14 +239,22 @@ async def test_intent_script_targets(
     area_registry.async_update(kitchen.id, floor_id=floor_1.floor_id)
     bathroom = area_registry.async_get_or_create("bathroom")
     entity_registry.async_get_or_create(
-        "light", "demo", "kitchen", suggested_object_id="kitchen"
+        "light",
+        "demo",
+        "kitchen",
+        suggested_object_id="kitchen",
+        original_name="overhead light",
     )
     entity_registry.async_update_entity("light.kitchen", area_id=kitchen.id)
     hass.states.async_set(
         "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "overhead light"}
     )
     entity_registry.async_get_or_create(
-        "light", "demo", "bathroom", suggested_object_id="bathroom"
+        "light",
+        "demo",
+        "bathroom",
+        suggested_object_id="bathroom",
+        original_name="overhead light",
     )
     entity_registry.async_update_entity("light.bathroom", area_id=bathroom.id)
     hass.states.async_set(

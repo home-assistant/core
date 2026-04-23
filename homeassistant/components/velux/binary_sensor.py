@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from pyvlx.exception import PyVLXException
-from pyvlx.opening_device import OpeningDevice, Window
+from pyvlx import OpeningDevice, Position, PyVLXException, Window
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -55,7 +54,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
     async def async_update(self) -> None:
         """Fetch the latest state from the device."""
         try:
-            limitation = await self.node.get_limitation()
+            limitation: Position = await self.node.get_limitation_min()
         except (OSError, PyVLXException) as err:
             if not self._unavailable_logged:
                 LOGGER.warning(
@@ -78,4 +77,4 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         # So far we've seen 89, 91, 93 (most cases) or 100 (Velux GPU). It probably makes sense to
         # assume that any large enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
-        self._attr_is_on = limitation.min_value >= 89
+        self._attr_is_on = limitation.position_percent >= 89

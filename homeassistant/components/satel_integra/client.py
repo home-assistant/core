@@ -2,18 +2,25 @@
 
 from collections.abc import Callable
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
+from satel_integra.exceptions import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import (
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
+    DOMAIN,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
@@ -62,44 +69,48 @@ class SatelClient:
         monitored_outputs = outputs + switchable_outputs
 
         self.controller = AsyncSatel(
-            host, port, hass.loop, zones, monitored_outputs, partitions
-        )
-
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close)
+            host,
+            port,
+            zones,
+            monitored_outputs,
+            partitions,
+            integration_key=entry.data[CONF_ENCRYPTION_KEY],
         )
 
     async def async_connect(
         self,
-        zones_update_callback: Callable[[dict[str, dict[int, int]]], None],
-        outputs_update_callback: Callable[[dict[str, dict[int, int]]], None],
+        zones_update_callback: Callable[[dict[int, int]], None],
+        outputs_update_callback: Callable[[dict[int, int]], None],
         partitions_update_callback: Callable[[], None],
     ) -> None:
         """Start controller connection."""
-        result = await self.controller.connect()
-        if not result:
-            raise ConfigEntryNotReady("Controller failed to connect")
+        try:
+            await self.controller.connect(raise_exceptions=True)
+        except SatelConnectFailedError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from ex
+        except SatelPanelBusyError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="panel_busy",
+            ) from ex
+        except SatelConnectionInitializationError as ex:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="connection_initialization_failed",
+            ) from ex
 
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self.controller.keep_alive(),
-            f"satel_integra.{self.config_entry.entry_id}.keep_alive",
-            eager_start=False,
+        self.controller.register_callbacks(
+            alarm_status_callback=partitions_update_callback,
+            zone_changed_callback=zones_update_callback,
+            output_changed_callback=outputs_update_callback,
         )
 
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self.controller.monitor_status(
-                partitions_update_callback,
-                zones_update_callback,
-                outputs_update_callback,
-            ),
-            f"satel_integra.{self.config_entry.entry_id}.monitor_status",
-            eager_start=False,
-        )
+        await self.controller.start(enable_monitoring=True)
 
-    @callback
-    def close(self, *args, **kwargs) -> None:
+    async def async_close(self) -> None:
         """Close the connection."""
 
-        self.controller.close()
+        await self.controller.close()

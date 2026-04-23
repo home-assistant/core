@@ -9,6 +9,8 @@ from datetime import timedelta
 import logging
 
 from pyportainer import (
+    DockerContainerState,
+    EndpointStatus,
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -18,6 +20,8 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    DockerVolume,
+    DockerVolumeUsageData,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
@@ -26,10 +30,10 @@ from pyportainer.models.stacks import Stack
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ContainerState, EndpointStatus
+from .const import DOMAIN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -50,6 +54,7 @@ class PortainerCoordinatorData:
     docker_info: DockerInfo
     docker_system_df: DockerSystemDF
     stacks: dict[str, PortainerStackData]
+    volumes: dict[str, PortainerVolumeData]
 
 
 @dataclass(slots=True)
@@ -68,6 +73,13 @@ class PortainerStackData:
 
     stack: Stack
     container_count: int = 0
+
+
+@dataclass(slots=True)
+class PortainerVolumeData:
+    """Volume data held by the Portainer coordinator."""
+
+    volume: DockerVolume
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -94,6 +106,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         self.known_endpoints: set[int] = set()
         self.known_containers: set[tuple[int, str]] = set()
         self.known_stacks: set[tuple[int, str]] = set()
+        self.known_volumes: set[tuple[int, str]] = set()
 
         self.new_endpoints_callbacks: list[
             Callable[[list[PortainerCoordinatorData]], None]
@@ -105,6 +118,9 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         ] = []
         self.new_stacks_callbacks: list[
             Callable[[list[tuple[PortainerCoordinatorData, PortainerStackData]]], None]
+        ] = []
+        self.new_volumes_callbacks: list[
+            Callable[[list[tuple[PortainerCoordinatorData, PortainerVolumeData]]], None]
         ] = []
 
     async def _async_setup(self) -> None:
@@ -118,13 +134,13 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerTimeoutError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
@@ -168,14 +184,35 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     docker_version,
                     docker_info,
                     docker_system_df,
-                    stacks,
+                    volumes,
                 ) = await asyncio.gather(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
-                    self.portainer.docker_system_df(endpoint.id),
-                    self.portainer.get_stacks(endpoint.id),
+                    self.portainer.docker_system_df(endpoint.id, verbose=True),
+                    self.portainer.get_volumes(endpoint.id),
                 )
+
+                stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
+                swarm_id = (
+                    docker_info.swarm.cluster.get("ID")
+                    if docker_info.swarm
+                    and docker_info.swarm.control_available
+                    and docker_info.swarm.cluster
+                    else None
+                )
+                if swarm_id:
+                    stack_requests.append(
+                        self.portainer.get_stacks(
+                            endpoint_id=endpoint.id, swarm_id=swarm_id
+                        )
+                    )
+
+                stacks = [
+                    stack
+                    for result in await asyncio.gather(*stack_requests)
+                    for stack in result
+                ]
 
                 prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
@@ -183,6 +220,19 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     stack.name: PortainerStackData(stack=stack, container_count=0)
                     for stack in stacks
                 }
+
+                volume_usage_map = {
+                    item["Name"]: item
+                    for item in (docker_system_df.volume_disk_usage.items or [])
+                }
+                volume_map: dict[str, PortainerVolumeData] = {}
+                for volume in volumes:
+                    if item := volume_usage_map.get(volume.name):
+                        volume.usage_data = DockerVolumeUsageData(
+                            size=item["UsageData"]["Size"],
+                            ref_count=item["UsageData"]["RefCount"],
+                        )
+                    volume_map[volume.name] = PortainerVolumeData(volume=volume)
 
                 # Map containers, started and stopped
                 for container in containers:
@@ -212,18 +262,19 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         else None,
                     )
 
-                # Separately fetch stats for running containers
-                running_containers = [
+                # Separately fetch stats for active containers
+                active_containers = [
                     container
                     for container in containers
-                    if container.state == ContainerState.RUNNING
+                    if container.state
+                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
                 ]
-                if running_containers:
+                if active_containers:
                     container_stats = dict(
                         zip(
                             (
                                 self._get_container_name(container.names[0])
-                                for container in running_containers
+                                for container in active_containers
                             ),
                             await asyncio.gather(
                                 *(
@@ -231,7 +282,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                                         endpoint_id=endpoint.id,
                                         container_id=container.id,
                                     )
-                                    for container in running_containers
+                                    for container in active_containers
                                 )
                             ),
                             strict=False,
@@ -264,6 +315,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 docker_version=docker_version,
                 docker_info=docker_info,
                 docker_system_df=docker_system_df,
+                volumes=volume_map,
                 stacks=stack_map,
             )
 
@@ -276,10 +328,16 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     ) -> None:
         """Add new endpoints, remove non-existing endpoints."""
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
+        self.known_endpoints &= current_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
         if new_endpoints:
             _LOGGER.debug("New endpoints found: %s", new_endpoints)
             self.known_endpoints.update(new_endpoints)
+            new_endpoint_data = [
+                mapped_endpoints[endpoint_id] for endpoint_id in new_endpoints
+            ]
+            for endpoint_callback in self.new_endpoints_callbacks:
+                endpoint_callback(new_endpoint_data)
 
         # Surprise, we also handle containers here :)
         current_containers = {
@@ -287,10 +345,44 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             for endpoint in mapped_endpoints.values()
             for container_name in endpoint.containers
         }
+        # Prune departed containers so a recreated container is detected as new
+        # and its entity is rebuilt with the fresh (ephemeral) Docker container ID.
+        self.known_containers &= current_containers
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+            new_container_data = [
+                (
+                    mapped_endpoints[endpoint_id],
+                    mapped_endpoints[endpoint_id].containers[name],
+                )
+                for endpoint_id, name in new_containers
+            ]
+            for container_callback in self.new_containers_callbacks:
+                container_callback(new_container_data)
+
+        # Volume management
+        current_volumes = {
+            (endpoint.id, volume_name)
+            for endpoint in mapped_endpoints.values()
+            for volume_name in endpoint.volumes
+        }
+
+        self.known_volumes &= current_volumes
+        new_volumes = current_volumes - self.known_volumes
+        if new_volumes:
+            _LOGGER.debug("New volumes found: %s", new_volumes)
+            self.known_volumes.update(new_volumes)
+            new_volume_data = [
+                (
+                    mapped_endpoints[endpoint_id],
+                    mapped_endpoints[endpoint_id].volumes[name],
+                )
+                for endpoint_id, name in new_volumes
+            ]
+            for volume_callback in self.new_volumes_callbacks:
+                volume_callback(new_volume_data)
 
         # Stack management
         current_stacks = {
@@ -298,10 +390,21 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             for endpoint in mapped_endpoints.values()
             for stack_name in endpoint.stacks
         }
+
+        self.known_stacks &= current_stacks
         new_stacks = current_stacks - self.known_stacks
         if new_stacks:
             _LOGGER.debug("New stacks found: %s", new_stacks)
             self.known_stacks.update(new_stacks)
+            new_stack_data = [
+                (
+                    mapped_endpoints[endpoint_id],
+                    mapped_endpoints[endpoint_id].stacks[name],
+                )
+                for endpoint_id, name in new_stacks
+            ]
+            for stack_callback in self.new_stacks_callbacks:
+                stack_callback(new_stack_data)
 
     def _get_container_name(self, container_name: str) -> str:
         """Sanitize to get a proper container name."""

@@ -12,7 +12,7 @@ import hashlib
 import io
 from itertools import chain
 import json
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PureWindowsPath
 import shutil
 import sys
 import tarfile
@@ -68,6 +68,7 @@ from .models import (
     BackupReaderWriterError,
     BaseBackup,
     Folder,
+    InvalidBackupFilename,
 )
 from .store import BackupStore
 from .util import (
@@ -144,6 +145,7 @@ class CreateBackupStage(StrEnum):
     ADDONS = "addons"
     AWAIT_ADDON_RESTARTS = "await_addon_restarts"
     DOCKER_CONFIG = "docker_config"
+    CLEANING_UP = "cleaning_up"
     FINISHING_FILE = "finishing_file"
     FOLDERS = "folders"
     HOME_ASSISTANT = "home_assistant"
@@ -1005,6 +1007,14 @@ class BackupManager:
     ) -> str:
         """Receive and store a backup file from upload."""
         contents.chunk_size = BUF_SIZE
+        suggested_filename = contents.filename or "backup.tar"
+        safe_filename = PureWindowsPath(suggested_filename).name
+        if (
+            not safe_filename
+            or safe_filename != suggested_filename
+            or safe_filename == ".."
+        ):
+            raise InvalidBackupFilename(f"Invalid filename: {suggested_filename}")
         self.async_on_backup_event(
             ReceiveBackupEvent(
                 reason=None,
@@ -1015,7 +1025,7 @@ class BackupManager:
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
             stream=contents,
-            suggested_filename=contents.filename or "backup.tar",
+            suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(
             ReceiveBackupEvent(
@@ -1290,6 +1300,13 @@ class BackupManager:
                 )
             # delete old backups more numerous than copies
             # try this regardless of agent errors above
+            self.async_on_backup_event(
+                CreateBackupEvent(
+                    reason=None,
+                    stage=CreateBackupStage.CLEANING_UP,
+                    state=CreateBackupState.IN_PROGRESS,
+                )
+            )
             await delete_backups_exceeding_configured_count(self)
 
         finally:

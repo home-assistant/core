@@ -1,9 +1,10 @@
 """The tests for the hassio update entities."""
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 import os
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 from aiohasupervisor import (
@@ -12,7 +13,9 @@ from aiohasupervisor import (
     SupervisorNotFoundError,
 )
 from aiohasupervisor.models import (
+    AddonState,
     HomeAssistantUpdateOptions,
+    InstalledAddonComplete,
     Job,
     JobsInfo,
     OSUpdate,
@@ -33,7 +36,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -41,143 +43,70 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
     jobs_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    homeassistant_stats: AsyncMock,
+    supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {
-                "supervisor": "222",
-                "homeassistant": "0.110.0",
-                "hassos": "1.2.3",
-            },
-        },
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value,
+        version="1.0.0dev221",
+        version_latest="1.0.0dev222",
+        update_available=True,
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
+    os_info.return_value = replace(
+        os_info.return_value,
+        version="1.0.0dev2221",
+        version_latest="1.0.0dev2222",
+        update_available=True,
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={
-            "result": "ok",
-            "data": {"version_latest": "1.0.0dev222", "version": "1.0.0dev221"},
-        },
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value,
+        version_latest="1.0.1dev222",
+        update_available=True,
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={
-            "result": "ok",
-            "data": {
-                "version_latest": "1.0.0dev2222",
-                "version": "1.0.0dev2221",
-                "update_available": False,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "version": "1.0.0",
-                "version_latest": "1.0.1dev222",
-                "auto_update": True,
-                "addons": [
-                    {
-                        "name": "test",
-                        "state": "started",
-                        "slug": "test",
-                        "installed": True,
-                        "update_available": True,
-                        "icon": False,
-                        "version": "2.0.0",
-                        "version_latest": "2.0.1",
-                        "repository": "core",
-                        "url": "https://github.com/home-assistant/addons/test",
-                    },
-                    {
-                        "name": "test2",
-                        "state": "stopped",
-                        "slug": "test2",
-                        "installed": True,
-                        "update_available": False,
-                        "icon": True,
-                        "version": "3.1.0",
-                        "version_latest": "3.1.0",
-                        "repository": "core",
-                        "url": "https://github.com",
-                    },
-                ],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/network/info",
-        json={
-            "result": "ok",
-            "data": {
-                "host_internet": True,
-                "supervisor_internet": True,
-            },
-        },
-    )
+
+    def mock_addon_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
+        if slug == "test":
+            addon.name = "test"
+            addon.slug = "test"
+            addon.version = "2.0.0"
+            addon.version_latest = "2.0.1"
+            addon.update_available = True
+            addon.state = AddonState.STARTED
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
+        else:
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.version = "3.1.0"
+            addon.version_latest = "3.1.0"
+            addon.update_available = False
+            addon.state = AddonState.STOPPED
+            addon.url = "https://github.com"
+            addon.auto_update = False
+
+        return addon
+
+    addon_installed.side_effect = mock_addon_info
 
 
 @pytest.mark.parametrize(
@@ -195,7 +124,6 @@ async def test_update_entities(
     entity_id,
     expected_state,
     auto_update,
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
 ) -> None:
     """Test update entities."""
@@ -1237,6 +1165,234 @@ async def test_update_supervisor(
     supervisor_client.supervisor.update.assert_called_once()
 
 
+async def test_update_supervisor_progress(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test progress reporting for a Supervisor update that was not initiated via the entity.
+
+    Covers CLI-triggered and Supervisor self-update flows: the entity must
+    show download progress from job events and stay in the installing state
+    across the Supervisor restart until the coordinator observes the new
+    installed version.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    message_id = 0
+    job_uuid = uuid4().hex
+    entity_id = "update.home_assistant_supervisor_update"
+
+    def make_job_message(progress: float, done: bool | None) -> dict[str, Any]:
+        nonlocal message_id
+        message_id += 1
+        return {
+            "id": message_id,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "uuid": job_uuid,
+                    "created": "2025-09-29T00:00:00.000000+00:00",
+                    "name": "supervisor_update",
+                    "reference": None,
+                    "progress": progress,
+                    "done": done,
+                    "stage": None,
+                    "extra": {"total": 1234567890} if progress > 0 else None,
+                    "errors": [],
+                },
+            },
+        }
+
+    await client.send_json(make_job_message(progress=0, done=None))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes.get("in_progress") is False
+    assert hass.states.get(entity_id).attributes.get("update_percentage") is None
+
+    await client.send_json(make_job_message(progress=5, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes.get("in_progress") is True
+    assert hass.states.get(entity_id).attributes.get("update_percentage") == 5
+
+    await client.send_json(make_job_message(progress=50, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes.get("update_percentage") == 50
+
+    # Job done: download finished, Supervisor is about to restart. The entity
+    # must stay in the installing state until the new version is observed.
+    await client.send_json(make_job_message(progress=100, done=True))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes.get("in_progress") is True
+    assert hass.states.get(entity_id).attributes.get("update_percentage") is None
+
+    # New Supervisor comes up and fires STARTUP_COMPLETE.
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value,
+        version="1.0.1dev222",
+        update_available=False,
+    )
+    await client.send_json(
+        {
+            "id": message_id + 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes.get("in_progress") is False
+
+
+async def test_update_supervisor_stays_in_progress_until_restart(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test in_progress stays True after install returns, until Supervisor restart."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    entity_id = "update.home_assistant_supervisor_update"
+    assert hass.states.get(entity_id).attributes.get("in_progress") is False
+
+    supervisor_client.supervisor.update.return_value = None
+    await hass.services.async_call(
+        "update", "install", {"entity_id": entity_id}, blocking=True
+    )
+
+    # The install HTTP call returned, but Supervisor is still restarting.
+    # The base UpdateEntity reset _attr_in_progress; _update_ongoing keeps us in progress.
+    assert hass.states.get(entity_id).attributes.get("in_progress") is True
+
+    # Supervisor comes up with the new version and fires STARTUP_COMPLETE.
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value,
+        version="1.0.1dev222",
+        update_available=False,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes.get("in_progress") is False
+
+
+async def test_update_supervisor_completes_on_any_version_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test completion is detected when installed version changes from the pre-install one.
+
+    If upstream publishes an even newer release between install-start and the
+    post-restart refresh, installed_version will not equal latest_version but
+    will differ from the pre-install version. _update_ongoing must still clear.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    entity_id = "update.home_assistant_supervisor_update"
+
+    supervisor_client.supervisor.update.return_value = None
+    await hass.services.async_call(
+        "update", "install", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).attributes.get("in_progress") is True
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value,
+        version="1.0.1dev222",
+        version_latest="1.0.2dev223",
+        update_available=True,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes.get("in_progress") is False
+
+
 async def test_update_addon_with_error(
     hass: HomeAssistant,
     update_addon: AsyncMock,
@@ -1464,10 +1620,7 @@ async def test_update_core_with_backup_and_error(
 
 
 async def test_release_notes_between_versions(
-    hass: HomeAssistant,
-    addon_changelog: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, addon_changelog: AsyncMock, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test release notes between versions."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -1502,10 +1655,7 @@ async def test_release_notes_between_versions(
 
 
 async def test_release_notes_full(
-    hass: HomeAssistant,
-    addon_changelog: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, addon_changelog: AsyncMock, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test release notes no match."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -1552,10 +1702,7 @@ async def test_release_notes_full(
 
 
 async def test_not_release_notes(
-    hass: HomeAssistant,
-    addon_changelog: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, addon_changelog: AsyncMock, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test handling where there are no release notes."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -1588,19 +1735,14 @@ async def test_not_release_notes(
     assert result["result"] is None
 
 
-async def test_no_os_entity(hass: HomeAssistant) -> None:
+async def test_no_os_entity(
+    hass: HomeAssistant, supervisor_root_info: AsyncMock
+) -> None:
     """Test handling where there is no os entity."""
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            return_value={
-                "supervisor": "222",
-                "homeassistant": "0.110.0",
-                "hassos": None,
-            },
-        ),
-    ):
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
+    )
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
             "hassio",
@@ -1624,9 +1766,7 @@ async def test_setting_up_core_update_when_addon_fails(
     addon_installed.side_effect = SupervisorBadRequestError("Addon Test does not exist")
     addon_stats.side_effect = SupervisorBadRequestError("add-on is not running")
     addon_changelog.side_effect = SupervisorBadRequestError("add-on is not running")
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-    ):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
             "hassio",

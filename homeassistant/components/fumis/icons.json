@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "sensor": {
+      "combustion_chamber_temperature": {
+        "default": "mdi:thermometer-high"
+      },
+      "detailed_stove_status": {
+        "default": "mdi:fireplace"
+      },
+      "fan_1_speed": {
+        "default": "mdi:fan"
+      },
+      "fan_2_speed": {
+        "default": "mdi:fan"
+      },
+      "fuel_quantity": {
+        "default": "mdi:gauge"
+      },
+      "fuel_used": {
+        "default": "mdi:counter"
+      },
+      "igniter_starts": {
+        "default": "mdi:counter"
+      },
+      "misfires": {
+        "default": "mdi:alert-outline"
+      },
+      "overheatings": {
+        "default": "mdi:thermometer-alert"
+      },
+      "power_output": {
+        "default": "mdi:fire"
+      },
+      "pressure": {
+        "default": "mdi:gauge"
+      },
+      "stove_status": {
+        "default": "mdi:fireplace"
+      },
+      "time_to_service": {
+        "default": "mdi:wrench-clock"
+      },
+      "wifi_signal_strength": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}

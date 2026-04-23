@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ac_air_000001][fan.air_purifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -67,8 +68,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][fan.air_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -133,8 +135,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][fan.range_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -193,8 +196,9 @@
 # ---
 # name: test_all_entities[fake_fan][fan.fake_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -261,8 +265,9 @@
 # ---
 # name: test_all_entities[generic_fan_3_speed][fan.bedroom_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,

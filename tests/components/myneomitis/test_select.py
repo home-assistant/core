@@ -14,7 +14,7 @@ RELAIS_DEVICE = {
     "_id": "relais1",
     "name": "Relais Device",
     "model": "EWS",
-    "state": {"relayMode": 1, "targetMode": 2},
+    "state": {"deviceType": 0, "targetMode": 2},
     "connected": True,
     "program": {"data": {}},
 }
@@ -23,7 +23,7 @@ PILOTE_DEVICE = {
     "_id": "pilote1",
     "name": "Pilote Device",
     "model": "EWS",
-    "state": {"targetMode": 1},
+    "state": {"deviceType": 1, "targetMode": 1},
     "connected": True,
     "program": {"data": {}},
 }
