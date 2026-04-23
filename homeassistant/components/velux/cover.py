@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
 
     entities: list[VeluxCover] = []
     for node in pyvlx.nodes:

@@ -67,6 +67,7 @@ def mock_discovered_config_entry() -> MockConfigEntry:
 def mock_window() -> AsyncMock:
     """Create a mock Velux window with a rain sensor."""
     window = AsyncMock(spec=Window, autospec=True)
+    window.node_id = 1
     window.name = "Test Window"
     window.rain_sensor = True
     window.serial_number = "123456789"
@@ -85,6 +86,7 @@ def mock_window() -> AsyncMock:
 def mock_dual_roller_shutter() -> AsyncMock:
     """Create a mock Velux dual roller shutter."""
     cover = AsyncMock(spec=DualRollerShutter, autospec=True)
+    cover.node_id = 2
     cover.name = "Test Dual Roller Shutter"
     cover.serial_number = "987654321"
     cover.is_opening = False
@@ -101,6 +103,7 @@ def mock_dual_roller_shutter() -> AsyncMock:
 def mock_blind() -> AsyncMock:
     """Create a mock Velux blind (cover with tilt)."""
     blind = AsyncMock(spec=Blind, autospec=True)
+    blind.node_id = 3
     blind.name = "Test Blind"
     blind.serial_number = "4711"
     # Standard cover position (used by current_cover_position)
@@ -171,6 +174,7 @@ def mock_onoff_switch() -> AsyncMock:
 def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     """Create a mock Velux cover of specified type."""
     cover = AsyncMock(spec=request.param, autospec=True)
+    cover.node_id = 10
     cover.name = f"Test {request.param.__name__}"
     cover.serial_number = f"serial_{request.param.__name__}"
     cover.is_opening = False

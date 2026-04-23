@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities for the Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
         VeluxExteriorHeatingNumber(node, config_entry.entry_id)
         for node in pyvlx.nodes
