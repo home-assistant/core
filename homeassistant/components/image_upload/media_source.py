@@ -27,7 +27,7 @@ async def async_get_media_source(hass: HomeAssistant) -> ImageUploadMediaSource:
 class ImageUploadMediaSource(MediaSource):
     """Provide images as media sources."""
 
-    name: str = "Image Upload"
+    name: str = "Image upload"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize ImageMediaSource."""
@@ -79,7 +79,7 @@ class ImageUploadMediaSource(MediaSource):
             identifier=None,
             media_class=MediaClass.APP,
             media_content_type="",
-            title="Image Upload",
+            title="Image upload",
             can_play=False,
             can_expand=True,
             children_media_class=MediaClass.IMAGE,

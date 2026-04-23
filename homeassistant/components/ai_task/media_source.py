@@ -25,7 +25,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     hass.data[DATA_MEDIA_SOURCE] = source = local_source.LocalSource(
         hass,
         DOMAIN,
-        "AI Generated Images",
+        "AI generated images",
         {IMAGE_DIR: str(media_dir)},
         f"/{DOMAIN}",
     )
