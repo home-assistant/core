@@ -4346,3 +4346,100 @@ async def test_state_condition_duration_unavailable_unknown(
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=11))
     assert test_all(hass) is False
+
+
+@pytest.mark.parametrize(
+    "compound_type",
+    ["and", "or", "not"],
+)
+async def test_compound_condition_forwards_async_unload(
+    hass: HomeAssistant, compound_type: str
+) -> None:
+    """Test that and/or/not compound conditions forward async_unload to children."""
+    config = {
+        "condition": compound_type,
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": "test.entity_1",
+                "state": STATE_ON,
+            },
+            {
+                "condition": "state",
+                "entity_id": "test.entity_2",
+                "state": STATE_ON,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    # The compound checker should hold child checkers
+    assert hasattr(test, "_checks")
+    assert len(test._checks) == 2
+
+    # Patch async_unload on children to verify forwarding
+    child_unloads = [Mock() for _ in test._checks]
+    for child, mock_unload in zip(test._checks, child_unloads, strict=True):
+        child.async_unload = mock_unload
+
+    test.async_unload()
+
+    for mock_unload in child_unloads:
+        mock_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("outer_type", "inner_type"),
+    [
+        (outer, inner)
+        for outer in ("and", "or", "not")
+        for inner in ("and", "or", "not")
+    ],
+)
+async def test_nested_compound_condition_forwards_async_unload(
+    hass: HomeAssistant, outer_type: str, inner_type: str
+) -> None:
+    """Test that nested compound conditions forward async_unload recursively."""
+    config = {
+        "condition": outer_type,
+        "conditions": [
+            {
+                "condition": inner_type,
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "test.entity_1",
+                        "state": STATE_ON,
+                    },
+                ],
+            },
+            {
+                "condition": "state",
+                "entity_id": "test.entity_2",
+                "state": STATE_ON,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    # Outer compound with 2 children: an inner compound and a leaf
+    assert len(test._checks) == 2
+    inner_checker = test._checks[0]
+    assert hasattr(inner_checker, "_checks")
+    assert len(inner_checker._checks) == 1
+
+    # Patch the innermost leaf's async_unload
+    innermost_unload = Mock()
+    inner_checker._checks[0].async_unload = innermost_unload
+
+    leaf_unload = Mock()
+    test._checks[1].async_unload = leaf_unload
+
+    test.async_unload()
+
+    innermost_unload.assert_called_once()
+    leaf_unload.assert_called_once()
