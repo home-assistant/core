@@ -51,7 +51,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ADMIN_SERVICES,
@@ -64,6 +63,7 @@ from .const import (
     DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
+    HUAWEI_LTE_CONFIG,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
@@ -279,8 +279,6 @@ class Router:
 
 
 type HuaweiLteConfigEntry = ConfigEntry[Router]
-
-HUAWEI_LTE_CONFIG: HassKey[ConfigType] = HassKey(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) -> bool:
