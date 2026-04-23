@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.nobo_hub import async_setup_entry
 from homeassistant.components.nobo_hub.const import (
     CONF_AUTO_DISCOVERED,
+    CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
 )
@@ -173,6 +174,71 @@ async def test_setup_autodiscovered_rediscovery_failure(
 
     assert exc_info.value.translation_key == expected_key
     assert exc_info.value.translation_placeholders == expected_placeholders
+
+
+@pytest.mark.parametrize(
+    ("stored_value", "expected_value"),
+    [
+        ("Constant", "constant"),
+        ("Now", "now"),
+        ("constant", "constant"),
+    ],
+)
+async def test_migrate_options_lowercases_override_type(
+    hass: HomeAssistant,
+    stored_value: str,
+    expected_value: str,
+) -> None:
+    """Legacy capitalized override_type values are lowercased on migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Eco Hub",
+        unique_id=SERIAL,
+        data={
+            CONF_SERIAL: SERIAL,
+            CONF_IP_ADDRESS: STORED_IP,
+            CONF_AUTO_DISCOVERED: False,
+        },
+        options={CONF_OVERRIDE_TYPE: stored_value},
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    hub = _make_hub_mock()
+    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
+        mock_cls.return_value = hub
+        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.options == {CONF_OVERRIDE_TYPE: expected_value}
+
+
+async def test_migrate_options_without_override_type(hass: HomeAssistant) -> None:
+    """Migration still bumps the version when no override_type is stored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Eco Hub",
+        unique_id=SERIAL,
+        data={
+            CONF_SERIAL: SERIAL,
+            CONF_IP_ADDRESS: STORED_IP,
+            CONF_AUTO_DISCOVERED: False,
+        },
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    hub = _make_hub_mock()
+    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
+        mock_cls.return_value = hub
+        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.options == {}
 
 
 async def test_setup_registers_hub_device(
