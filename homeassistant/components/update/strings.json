@@ -1,7 +1,35 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted updates to become available.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_available": {
+      "description": "Tests if one or more updates are available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
+        }
+      },
+      "name": "Update is available"
+    },
+    "is_not_available": {
+      "description": "Tests if one or more updates are not available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
+        }
+      },
+      "name": "Update is not available"
+    }
   },
   "device_automation": {
     "extra_fields": {
@@ -60,6 +88,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
@@ -98,8 +132,10 @@
       "description": "Triggers after one or more updates become available.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::update::common::trigger_behavior_description%]",
           "name": "[%key:component::update::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::trigger_for_name%]"
         }
       },
       "name": "Update became available"

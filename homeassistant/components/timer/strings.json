@@ -1,15 +1,17 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted timers.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_active": {
       "description": "Tests if one or more timers are active.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is active"
@@ -18,8 +20,10 @@
       "description": "Tests if one or more timers are idle.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is idle"
@@ -28,8 +32,10 @@
       "description": "Tests if one or more timers are paused.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is paused"

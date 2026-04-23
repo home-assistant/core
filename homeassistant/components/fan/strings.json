@@ -1,17 +1,19 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted fans.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted fans to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more fans are off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::condition_behavior_description%]",
           "name": "[%key:component::fan::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::fan::common::condition_for_name%]"
         }
       },
       "name": "Fan is off"
@@ -20,8 +22,10 @@
       "description": "Tests if one or more fans are on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::condition_behavior_description%]",
           "name": "[%key:component::fan::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::fan::common::condition_for_name%]"
         }
       },
       "name": "Fan is on"
@@ -199,8 +203,10 @@
       "description": "Triggers after one or more fans turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::fan::common::trigger_for_name%]"
         }
       },
       "name": "Fan turned off"
@@ -209,8 +215,10 @@
       "description": "Triggers after one or more fans turn on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::fan::common::trigger_for_name%]"
         }
       },
       "name": "Fan turned on"

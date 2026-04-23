@@ -21,7 +21,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -36,23 +35,18 @@ from .const import (
     ATTR_FORECAST_DAILY,
     ATTR_FORECAST_HOURLY,
     ATTRIBUTION,
-    DOMAIN,
 )
-from .coordinator import WeatherKitDataUpdateCoordinator
+from .coordinator import WeatherKitConfigEntry, WeatherKitDataUpdateCoordinator
 from .entity import WeatherKitEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeatherKitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator: WeatherKitDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-
-    async_add_entities([WeatherKitWeather(coordinator)])
+    async_add_entities([WeatherKitWeather(config_entry.runtime_data)])
 
 
 condition_code_to_hass = {

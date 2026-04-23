@@ -11,9 +11,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_NAME,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
@@ -26,13 +26,12 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DOMAIN,
     METRIC_KEY_MODE,
     MODE_ON,
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .entity import ValloxEntity
 
 
@@ -279,12 +278,12 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ValloxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    name = hass.data[DOMAIN][entry.entry_id]["name"]
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    name = entry.data[CONF_NAME]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         description.entity_type(name, coordinator, description)

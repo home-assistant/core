@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from xknx.devices import Device as XknxDevice
@@ -18,6 +19,15 @@ from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+
+
+@dataclass(slots=True, frozen=True)
+class KnxEntityIdentifier:
+    """Class to identify KNX entities in KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool  # ui or yaml entity
 
 
 class KnxUiEntityPlatformController(PlatformControllerBase):
@@ -57,6 +67,8 @@ class _KnxEntityBase(Entity):
     _knx_module: KNXModule
     _device: XknxDevice
 
+    _knx_entity_identifier: KnxEntityIdentifier | None = None
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -75,10 +87,16 @@ class _KnxEntityBase(Entity):
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
         if uid := self.unique_id:
+            self._knx_entity_identifier = KnxEntityIdentifier(
+                platform=self.platform_data.domain,
+                unique_id=uid,
+                ui=isinstance(self, KnxUiEntity),
+            )
             self._knx_module.add_to_group_address_entities(
                 group_addresses=self._device.group_addresses(),
-                identifier=(self.platform_data.domain, uid),
+                identifier=self._knx_entity_identifier,
             )
+
         # super call needed to have methods of multi-inherited classes called
         # eg. for restoring state (like _KNXSwitch)
         await super().async_added_to_hass()
@@ -87,10 +105,10 @@ class _KnxEntityBase(Entity):
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
-        if uid := self.unique_id:
+        if self._knx_entity_identifier:
             self._knx_module.remove_from_group_address_entities(
                 group_addresses=self._device.group_addresses(),
-                identifier=(self.platform_data.domain, uid),
+                identifier=self._knx_entity_identifier,
             )
 
 

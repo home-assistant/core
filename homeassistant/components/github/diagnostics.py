@@ -21,7 +21,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: GithubConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = {"options": {**config_entry.options}}
+    data: dict[str, Any] = {}
     client = GitHubAPI(
         token=config_entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
@@ -38,7 +38,7 @@ async def async_get_config_entry_diagnostics(
     repositories = config_entry.runtime_data
     data["repositories"] = {}
 
-    for repository, coordinator in repositories.items():
-        data["repositories"][repository] = coordinator.data
+    for coordinator in repositories.values():
+        data["repositories"][coordinator.data["full_name"]] = coordinator.data
 
     return data

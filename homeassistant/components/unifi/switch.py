@@ -50,6 +50,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -66,6 +67,8 @@ from .entity import (
     async_wlan_device_info_fn,
 )
 from .hub import UnifiHub
+
+PARALLEL_UPDATES = 1
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
@@ -208,8 +211,6 @@ async def async_traffic_rule_control_fn(
     """Control traffic rule state."""
     traffic_rule = hub.api.traffic_rules[obj_id].raw
     await hub.api.request(TrafficRuleEnableRequest.create(traffic_rule, target))
-    # Update the traffic rules so the UI is updated appropriately
-    await hub.api.traffic_rules.update()
 
 
 async def async_traffic_route_control_fn(
@@ -218,8 +219,6 @@ async def async_traffic_route_control_fn(
     """Control traffic route state."""
     traffic_route = hub.api.traffic_routes[obj_id].raw
     await hub.api.request(TrafficRouteSaveRequest.create(traffic_route, target))
-    # Update the traffic routes so the UI is updated appropriately
-    await hub.api.traffic_routes.update()
 
 
 async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
@@ -262,8 +261,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
         key="DPI restriction",
-        translation_key="dpi_restriction",
-        has_entity_name=False,
         entity_category=EntityCategory.CONFIG,
         allowed_fn=lambda hub, obj_id: hub.config.option_dpi_restrictions,
         api_handler_fn=lambda api: api.dpi_groups,
@@ -278,7 +275,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy](
         key="Firewall policy control",
-        translation_key="firewall_policy_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.firewall_policies,
@@ -305,7 +301,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[PortForwarding, PortForward](
         key="Port forward control",
-        translation_key="port_forward_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.port_forwarding,
@@ -318,7 +313,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[TrafficRules, TrafficRule](
         key="Traffic rule control",
-        translation_key="traffic_rule_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.traffic_rules,
@@ -331,7 +325,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[TrafficRoutes, TrafficRoute](
         key="Traffic route control",
-        translation_key="traffic_route_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.traffic_routes,
@@ -353,14 +346,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_poe_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         is_on_fn=lambda hub, port: port.poe_mode != "off",
-        name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="Port control",
-        translation_key="port_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -446,11 +438,31 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.entity_description.control_fn(self.hub, self._obj_id, True)
+        try:
+            await self.entity_description.control_fn(self.hub, self._obj_id, True)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
+        if coordinator := self.hub.entity_loader.get_data_update_coordinator(
+            self.entity_description.api_handler_fn(self.api)
+        ):
+            await coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.entity_description.control_fn(self.hub, self._obj_id, False)
+        try:
+            await self.entity_description.control_fn(self.hub, self._obj_id, False)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
+        if coordinator := self.hub.entity_loader.get_data_update_coordinator(
+            self.entity_description.api_handler_fn(self.api)
+        ):
+            await coordinator.async_request_refresh()
 
     @callback
     def async_update_state(
@@ -464,7 +476,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             return
 
         description = self.entity_description
-        obj = description.object_fn(self.api, self._obj_id)
+        obj = self.get_object()
         if (is_on := description.is_on_fn(self.hub, obj)) != self.is_on:
             self._attr_is_on = is_on
 

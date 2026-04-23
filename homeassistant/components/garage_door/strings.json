@@ -1,16 +1,14 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted garage doors.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted garage doors to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_closed": {
       "description": "Tests if one or more garage doors are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::garage_door::common::condition_behavior_description%]",
           "name": "[%key:component::garage_door::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +18,6 @@
       "description": "Tests if one or more garage doors are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::garage_door::common::condition_behavior_description%]",
           "name": "[%key:component::garage_door::common::condition_behavior_name%]"
         }
       },
@@ -48,8 +45,10 @@
       "description": "Triggers after one or more garage doors close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::garage_door::common::trigger_behavior_description%]",
           "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::garage_door::common::trigger_for_name%]"
         }
       },
       "name": "Garage door closed"
@@ -58,8 +57,10 @@
       "description": "Triggers after one or more garage doors open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::garage_door::common::trigger_behavior_description%]",
           "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::garage_door::common::trigger_for_name%]"
         }
       },
       "name": "Garage door opened"

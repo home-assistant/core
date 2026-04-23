@@ -53,6 +53,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
         Platform.SWITCH.value: vol.All(cv.ensure_list, [dict]),
         Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
+        Platform.TIME.value: vol.All(cv.ensure_list, [dict]),
         Platform.UPDATE.value: vol.All(cv.ensure_list, [dict]),
         Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
         Platform.VALVE.value: vol.All(cv.ensure_list, [dict]),

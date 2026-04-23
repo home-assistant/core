@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 import serial
-from serial.tools import list_ports
 import ultraheat_api
 import voluptuous as vol
 
@@ -45,9 +44,7 @@ class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_DEVICE] == CONF_MANUAL_PATH:
                 return await self.async_step_setup_serial_manual_path()
 
-            dev_path = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, user_input[CONF_DEVICE]
-            )
+            dev_path = user_input[CONF_DEVICE]
             _LOGGER.debug("Using this path : %s", dev_path)
 
             try:
@@ -118,23 +115,19 @@ class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
 
 async def get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
-    ports = await hass.async_add_executor_job(list_ports.comports)
+    ports = await usb.async_scan_serial_ports(hass)
     port_descriptions = {}
     for port in ports:
-        # this prevents an issue with usb_device_from_port
-        # not working for ports without vid on RPi
-        if port.vid:
-            usb_device = usb.usb_device_from_port(port)
-            dev_path = usb.get_serial_by_id(usb_device.device)
+        if isinstance(port, usb.USBDevice):
             human_name = usb.human_readable_device_name(
-                dev_path,
-                usb_device.serial_number,
-                usb_device.manufacturer,
-                usb_device.description,
-                usb_device.vid,
-                usb_device.pid,
+                port.device,
+                port.serial_number,
+                port.manufacturer,
+                port.description,
+                port.vid,
+                port.pid,
             )
-            port_descriptions[dev_path] = human_name
+            port_descriptions[port.device] = human_name
 
     return port_descriptions
 

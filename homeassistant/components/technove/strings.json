@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "MAC address does not match the configured device. Expected to connect to device with MAC: `{expected_mac}`, but connected to device with MAC: `{actual_mac}`. \n\nPlease ensure you reconfigure against the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -60,11 +62,15 @@
       "status": {
         "name": "Status",
         "state": {
+          "evse_fault": "EVSE fault",
+          "ground_fault": "Ground fault",
           "high_tariff_period": "High tariff period",
           "out_of_activation_period": "Out of activation period",
+          "pilot_fault": "Pilot fault",
           "plugged_charging": "Plugged, charging",
           "plugged_waiting": "Plugged, waiting",
-          "unplugged": "Unplugged"
+          "unplugged": "Unplugged",
+          "ventilation_required": "Ventilation required"
         }
       },
       "voltage_in": {

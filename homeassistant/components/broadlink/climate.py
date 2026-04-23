@@ -34,6 +34,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink climate entities."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.CLIMATE]:
