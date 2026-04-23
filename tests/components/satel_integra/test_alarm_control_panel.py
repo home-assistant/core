@@ -18,13 +18,20 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
+from . import (
+    MOCK_CODE,
+    MOCK_ENTRY_ID,
+    get_monitor_callbacks,
+    setup_integration,
+    trigger_connection_status_update,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -240,3 +247,24 @@ async def test_alarm_panel_last_reported(
 
     assert first_reported != hass.states.get("alarm_control_panel.home").last_reported
     assert len(events) == 1  # last_reported shall not fire state_changed
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    entity_id = "alarm_control_panel.home"
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+    await trigger_connection_status_update(hass, mock_satel, False)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await trigger_connection_status_update(hass, mock_satel, True)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED

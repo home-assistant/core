@@ -115,3 +115,15 @@ def get_monitor_callbacks(
         partitions_cb, zones_cb, outputs_cb = call.args
 
     return partitions_cb, zones_cb, outputs_cb
+
+
+async def trigger_connection_status_update(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    status: bool,
+) -> None:
+    """Trigger a connection status update."""
+    mock_satel.connected = status
+    for call in mock_satel.add_connection_status_callback.call_args_list:
+        call[0][0]()
+    await hass.async_block_till_done()
