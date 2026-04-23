@@ -76,14 +76,12 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
 
         self._attr_has_entity_name = True
 
-        self._attr_unique_id += "_event"
-
         self._attr_translation_key = (
             "main" if self._insteon_device_group.group == 1 else "additional"
         ) + "_button_press"
 
         self._attr_translation_placeholders = {
-            "button": self._insteon_device_group.name.rpartition('_')[-1].upper()
+            "button": self._insteon_device_group.name.rpartition("_")[-1].upper()
         }
 
         @callback
@@ -120,6 +118,11 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                 self._insteon_event_listeners.append((event, async_fire_button_event))
 
         self._attr_event_types = event_types
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for the event entity."""
+        return super().unique_id + "_event"
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe any registered Insteon event listeners."""

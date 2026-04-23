@@ -39,22 +39,12 @@ class InsteonBaseEntity(Entity):
         self._insteon_device = device
         self._insteon_device_group = device.groups[group]
 
-        if self._insteon_device_group.group == 0x01:
-            self._attr_unique_id = self._insteon_device.id
-        else:
-            self._attr_unique_id = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
-
-        self._attr_extra_state_attributes = {
-            "insteon_address": self.address,
-            "insteon_group": self.insteon_group,
-        }
-
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
 
     @property
-    def address(self):
+    def address(self) -> str:
         """Return the address of the node."""
         return str(self._insteon_device.address)
 
@@ -62,6 +52,23 @@ class InsteonBaseEntity(Entity):
     def insteon_group(self):
         """Return the INSTEON group that the entity responds to."""
         return self._insteon_device_group.group
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self._insteon_device_group.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
+        return uid
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Provide attributes for display on device card."""
+        return {
+            "insteon_address": self.address,
+            "insteon_group": self.insteon_group,
+        }
 
     @property
     def device_info(self) -> DeviceInfo:
