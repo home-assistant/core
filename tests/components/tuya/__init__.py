@@ -32,7 +32,7 @@ DEVICE_MOCKS = sorted(
 
 
 class TuyaNotificationHelper:
-    """Helper to raise manager events to device listener."""
+    """Helper to raise manager events to device listeners."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager) -> None:
         """Initialize the helper."""
