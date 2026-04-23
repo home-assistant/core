@@ -605,7 +605,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
             # Disconnect any partially connected client before clearing reference
-            if self.mqtt_client is not None:  # pragma: no cover - defensive cleanup in exception path
+            if (
+                self.mqtt_client is not None
+            ):  # pragma: no cover - defensive cleanup in exception path
                 with contextlib.suppress(Exception):
                     await _async_call_cleanup_method(
                         self.mqtt_client,
@@ -621,7 +623,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
             # Disconnect any partially connected client before clearing reference
-            if self.mqtt_client is not None:  # pragma: no cover - defensive cleanup in exception path
+            if (
+                self.mqtt_client is not None
+            ):  # pragma: no cover - defensive cleanup in exception path
                 with contextlib.suppress(Exception):
                     await _async_call_cleanup_method(
                         self.mqtt_client,
