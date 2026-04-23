@@ -4,7 +4,11 @@ from collections.abc import Mapping
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.condition import Condition, EntityConditionBase
+from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR,
+    Condition,
+    EntityConditionBase,
+)
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
 from .models import CoverDomainSpec
@@ -14,6 +18,7 @@ class CoverConditionBase(EntityConditionBase):
     """Base condition for cover state checks."""
 
     _domain_specs: Mapping[str, CoverDomainSpec]
+    _schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected cover state."""
