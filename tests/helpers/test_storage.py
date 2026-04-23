@@ -1,6 +1,7 @@
 """Tests for the storage helper."""
 
 import asyncio
+from compression import zstd
 from datetime import timedelta
 import json
 import os
@@ -1382,3 +1383,130 @@ async def test_load_empty_returns_none_and_read_only(
     await store.async_save({"new": "data"})
     assert hass_storage[MOCK_KEY]["data"] == MOCK_DATA
     assert hass_storage[MOCK_KEY]["version"] == 99
+
+
+async def test_compress_save_load_round_trip(tmpdir: py.path.local) -> None:
+    """Test that a compressed store saves a .zst file and loads back correctly."""
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, compress=True)
+        await store.async_save(MOCK_DATA)
+
+        storage_path = Path(config_dir.strpath) / ".storage"
+        zst_file = storage_path / (MOCK_KEY + ".zst")
+        plain_file = storage_path / MOCK_KEY
+
+        assert zst_file.is_file()
+        assert not plain_file.exists()
+
+        raw = zstd.decompress(zst_file.read_bytes())
+        on_disk = json.loads(raw)
+        assert on_disk["data"] == MOCK_DATA
+
+        loaded = await store.async_load()
+        assert loaded == MOCK_DATA
+
+        await hass.async_stop(force=True)
+
+
+async def test_compress_migrates_plain_to_compressed(tmpdir: py.path.local) -> None:
+    """Test that saving with compress=True removes an existing plain file."""
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        plain_store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+        await plain_store.async_save(MOCK_DATA)
+
+        storage_path = Path(config_dir.strpath) / ".storage"
+        plain_file = storage_path / MOCK_KEY
+        assert plain_file.is_file()
+
+        compressed_store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, compress=True)
+
+        # Before the first compressed write the plain file is still the fallback.
+        loaded = await compressed_store.async_load()
+        assert loaded == MOCK_DATA
+
+        # Saving with compress=True should write .zst and remove the plain file.
+        await compressed_store.async_save(MOCK_DATA2)
+
+        zst_file = storage_path / (MOCK_KEY + ".zst")
+        assert zst_file.is_file()
+        assert not plain_file.exists()
+
+        loaded = await compressed_store.async_load()
+        assert loaded == MOCK_DATA2
+
+        await hass.async_stop(force=True)
+
+
+async def test_compress_corrupt_file(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a corrupt .zst file is handled gracefully."""
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, compress=True)
+        await store.async_save(MOCK_DATA)
+
+        storage_path = Path(config_dir.strpath) / ".storage"
+        zst_file = storage_path / (MOCK_KEY + ".zst")
+
+        def _corrupt_file() -> None:
+            zst_file.write_bytes(b"this is not valid zstd data")
+
+        await hass.async_add_executor_job(_corrupt_file)
+
+        loaded = await store.async_load()
+        assert loaded is None
+        assert "Unrecoverable error decoding storage" in caplog.text
+
+        files = await hass.async_add_executor_job(os.listdir, storage_path)
+        corrupt_files = [f for f in files if ".corrupt" in f]
+        assert len(corrupt_files) == 1
+
+        await hass.async_stop(force=True)
+
+
+async def test_compress_store_manager_cache(tmpdir: py.path.local) -> None:
+    """Test that compressed stores are cached and served by the store manager."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage() -> py.path.local:
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        payload = json.dumps(
+            {
+                "version": MOCK_VERSION,
+                "minor_version": 1,
+                "key": MOCK_KEY,
+                "data": MOCK_DATA,
+            }
+        ).encode()
+        tmp_storage.join(MOCK_KEY + ".zst").write_binary(zstd.compress(payload))
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload([MOCK_KEY + ".zst"])
+
+        # The cache key for a compressed store is key + ".zst".
+        result = store_manager.async_fetch(MOCK_KEY + ".zst")
+        assert result is not None
+        exists, cached_data = result
+        assert exists is True
+        assert cached_data["data"] == MOCK_DATA  # type: ignore[index]
+
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, compress=True)
+        loaded = await store.async_load()
+        assert loaded == MOCK_DATA
+
+        await hass.async_stop(force=True)
