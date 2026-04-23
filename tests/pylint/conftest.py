@@ -140,6 +140,29 @@ def decorator_checker_fixture(hass_decorator, linter) -> BaseChecker:
     return type_hint_checker
 
 
+@pytest.fixture(name="hass_enforce_config_flow_no_name", scope="package")
+def hass_enforce_config_flow_no_name_fixture() -> ModuleType:
+    """Fixture to the content for the config_flow_no_name check."""
+    return _load_plugin_from_file(
+        "hass_enforce_config_flow_no_name",
+        "pylint/plugins/hass_enforce_config_flow_no_name.py",
+    )
+
+
+@pytest.fixture(name="enforce_config_flow_no_name_checker")
+def enforce_config_flow_no_name_checker_fixture(
+    hass_enforce_config_flow_no_name, linter
+) -> BaseChecker:
+    """Fixture to provide a config_flow_no_name checker."""
+    # Clear the helper integration cache between tests
+    hass_enforce_config_flow_no_name._is_helper_cache.clear()
+    checker = hass_enforce_config_flow_no_name.HassEnforceConfigFlowNoNameChecker(
+        linter
+    )
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="hass_enforce_config_flow_no_polling", scope="package")
 def hass_enforce_config_flow_no_polling_fixture() -> ModuleType:
     """Fixture to the content for the config_flow_no_polling check."""
