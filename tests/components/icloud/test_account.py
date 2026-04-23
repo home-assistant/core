@@ -232,7 +232,7 @@ async def test_setup_auth_required_exception_calls_reauth(
     with (
         patch(
             "homeassistant.components.icloud.account.PyiCloudService",
-            side_effect=PyiCloudAuthRequiredException(None),
+            side_effect=PyiCloudAuthRequiredException("test@example.com", MagicMock()),
         ),
         patch.object(account, "_require_reauth") as mock_reauth,
     ):
