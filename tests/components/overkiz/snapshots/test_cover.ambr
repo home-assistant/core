@@ -462,7 +462,7 @@
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
+    'supported_features': <CoverEntityFeature: 255>,
     'translation_key': None,
     'unique_id': 'io://1234-5678-5010/2150846',
     'unit_of_measurement': None,
@@ -471,11 +471,12 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.basement_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 90,
+      'current_position': 80,
+      'current_tilt_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Basement Roller Shutter',
       'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.basement_roller_shutter',
@@ -840,7 +841,7 @@
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
+    'supported_features': <CoverEntityFeature: 255>,
     'translation_key': None,
     'unique_id': 'io://1234-5678-5010/12931361',
     'unit_of_measurement': None,
@@ -849,18 +850,19 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 50,
+      'current_position': 0,
+      'current_tilt_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Veranda Roller Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.veranda_roller_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.workshop_screen-entry]
@@ -1119,7 +1121,6 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 50,
       'device_class': 'gate',
       'friendly_name': 'Garden Gate',
       'is_closed': True,
@@ -1767,7 +1768,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bathroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Bathroom Blinds',
@@ -1779,7 +1780,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-entry]
@@ -1822,7 +1823,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Bedroom Blinds',
@@ -1834,7 +1835,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.dining_room_blinds-entry]
@@ -1932,7 +1933,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.garage_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 69,
       'device_class': 'blind',
       'friendly_name': 'Garage Blinds',
@@ -1944,7 +1945,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-entry]
@@ -1987,7 +1988,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Guest Room Blinds',
@@ -1999,7 +2000,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-entry]
@@ -2042,7 +2043,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Hallway Blinds',
@@ -2054,7 +2055,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-entry]
@@ -2097,7 +2098,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Kitchen Blinds',
@@ -2109,7 +2110,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-entry]
@@ -2152,7 +2153,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Living Room Blinds',
@@ -2164,7 +2165,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-entry]
@@ -2207,7 +2208,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Master Bedroom Blinds',
@@ -2219,7 +2220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-entry]
@@ -2262,7 +2263,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 69,
       'device_class': 'blind',
       'friendly_name': 'Nursery Blinds',
@@ -2274,7 +2275,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-entry]
@@ -2317,7 +2318,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Office Blinds',
@@ -2329,7 +2330,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-entry]
@@ -2372,7 +2373,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -8,
+      'current_position': 0,
       'current_tilt_position': 72,
       'device_class': 'blind',
       'friendly_name': 'Study Blinds',
@@ -2384,7 +2385,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.back_door_shutter-entry]
@@ -2427,7 +2428,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.back_door_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -24,
+      'current_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Back Door Shutter',
       'is_closed': False,
@@ -2438,7 +2439,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.front_door_shutter-entry]
@@ -2481,7 +2482,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.front_door_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': -24,
+      'current_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Front Door Shutter',
       'is_closed': False,
@@ -2492,7 +2493,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window-entry]
