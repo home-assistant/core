@@ -35,6 +35,13 @@ DEFAULT_MAX_TEMP = 28
 PARALLEL_UPDATES = 0
 
 VIN_YEAR_CODE_TO_YEAR = {
+    "C": 2012,
+    "D": 2013,
+    "E": 2014,
+    "F": 2015,
+    "G": 2016,
+    "H": 2017,
+    "J": 2018,
     "K": 2019,
     "L": 2020,
     "M": 2021,

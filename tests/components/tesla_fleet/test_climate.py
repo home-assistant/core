@@ -217,7 +217,7 @@ async def test_climate_set_fan_mode_bioweapon_unsupported_vehicle(
     ):
         await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
 
-    with pytest.raises((ServiceValidationError, ServiceNotSupported)):
+    with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
