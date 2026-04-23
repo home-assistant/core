@@ -64,6 +64,11 @@ class HassEnforceConfigFlowNoNameChecker(BaseChecker):
         if current_module != "config_flow":
             return
 
+        # Check field name first (cheap) before doing heavier checks.
+        field_name = _get_schema_field_name(node)
+        if field_name is None or field_name not in _NAME_FIELD_NAMES:
+            return
+
         # Helper integrations legitimately ask users for a name since there
         # is no device to discover the name from.
         integration = parts[2]
@@ -72,10 +77,6 @@ class HassEnforceConfigFlowNoNameChecker(BaseChecker):
 
         # Subentry flows may legitimately ask for a name.
         if _is_in_subentry_flow(node):
-            return
-
-        field_name = _get_schema_field_name(node)
-        if field_name is None:
             return
 
         if field_name in _NAME_FIELD_NAMES:
@@ -98,7 +99,7 @@ def _is_helper_integration(integration: str, module: nodes.Module) -> bool:
     result = False  # default to flagging when path is unknown
     if module.file and module.file != "<?>":
         file_path = Path(module.file)
-        for parent in (file_path.parent, *file_path.parents):
+        for parent in file_path.parents:
             if parent.parent.name == "components":
                 manifest = parent / "manifest.json"
                 if manifest.exists():
