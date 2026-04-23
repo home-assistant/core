@@ -33,6 +33,7 @@ from homeassistant.components.esphome.domain_data import DomainData
 from homeassistant.components.esphome.encryption_key_storage import (
     ENCRYPTION_KEY_STORAGE_KEY,
 )
+from homeassistant.components.esphome.ffmpeg_proxy import FFmpegProxyData
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -2201,7 +2202,7 @@ async def test_user_flow_name_conflict_migrate(
     mock_client: APIClient,
 ) -> None:
     """Test handle migration on name conflict."""
-    hass.data[ESPHOME_DATA] = DomainData()
+    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE_NAME: "test"},
@@ -2576,7 +2577,7 @@ async def test_reconfig_name_conflict_migrate(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test reconfig initiation when device has been replaced."""
-    hass.data[ESPHOME_DATA] = DomainData()
+    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

@@ -20,8 +20,8 @@ STORAGE_VERSION = 1
 class DomainData:
     """Define a class that stores global esphome data."""
 
+    ffmpeg_proxy_data: FFmpegProxyData
     _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
-    ffmpeg_proxy_data: FFmpegProxyData | None = None
 
     def get_entry_data(self, entry: ESPHomeConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry."""

@@ -43,7 +43,6 @@ def async_create_proxy_url(
 ) -> str:
     """Create a use proxy URL that automatically converts the media."""
     data = hass.data[ESPHOME_DATA].ffmpeg_proxy_data
-    assert data is not None
     return data.async_create_proxy_url(
         device_id, media_url, media_format, rate, channels, width
     )
@@ -376,10 +375,10 @@ class FFmpegProxyView(HomeAssistantView):
 
 
 @callback
-def async_setup(hass: HomeAssistant) -> None:
+def async_setup(hass: HomeAssistant) -> FFmpegProxyData:
     """Set up the ffmpeg proxy."""
     proxy_data = FFmpegProxyData()
-    hass.data[ESPHOME_DATA].ffmpeg_proxy_data = proxy_data
     hass.http.register_view(
         FFmpegProxyView(ffmpeg.get_ffmpeg_manager(hass), proxy_data)
     )
+    return proxy_data

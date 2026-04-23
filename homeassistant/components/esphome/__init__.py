@@ -73,8 +73,9 @@ def _async_scan_serial_ports(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
-    hass.data[ESPHOME_DATA] = DomainData()
-    ffmpeg_proxy.async_setup(hass)
+    hass.data[ESPHOME_DATA] = DomainData(
+        ffmpeg_proxy_data=ffmpeg_proxy.async_setup(hass)
+    )
     await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
     async_setup_websocket_api(hass)

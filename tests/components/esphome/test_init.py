@@ -11,6 +11,7 @@ from homeassistant.components.esphome.domain_data import DomainData
 from homeassistant.components.esphome.encryption_key_storage import (
     async_get_encryption_key_storage,
 )
+from homeassistant.components.esphome.ffmpeg_proxy import FFmpegProxyData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -39,7 +40,7 @@ async def test_remove_entry_clears_dynamic_encryption_key(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that removing an entry clears the dynamic encryption key from device and storage."""
-    hass.data[ESPHOME_DATA] = DomainData()
+    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
 
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
@@ -111,7 +112,7 @@ async def test_remove_entry_device_rejects_key_removal(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that when device rejects key removal, key remains in storage."""
-    hass.data[ESPHOME_DATA] = DomainData()
+    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
 
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
@@ -141,7 +142,7 @@ async def test_remove_entry_connection_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that connection error during key clearing does not remove key from storage."""
-    hass.data[ESPHOME_DATA] = DomainData()
+    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
 
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
