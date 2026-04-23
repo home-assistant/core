@@ -290,6 +290,7 @@ class ConditionChecker(abc.ABC):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
+        self._unloaded = False
 
     def __call__(
         self, _: HomeAssistant, variables: TemplateVarsType | None = None
@@ -299,6 +300,8 @@ class ConditionChecker(abc.ABC):
 
     def __del__(self) -> None:
         """Clean up when the checker is deleted."""
+        if self._unloaded:
+            return
         try:
             self.async_unload()
         except Exception:
@@ -328,6 +331,7 @@ class ConditionChecker(abc.ABC):
 
         Intended to be overridden in derived classes that need to do cleanup.
         """
+        self._unloaded = True
 
 
 class LegacyConditionChecker(ConditionChecker):

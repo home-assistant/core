@@ -54,6 +54,7 @@ from homeassistant.helpers.condition import (
     BEHAVIOR_ANY,
     CONDITIONS,
     Condition,
+    ConditionChecker,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
     async_validate_condition_config,
@@ -4346,3 +4347,47 @@ async def test_state_condition_duration_unavailable_unknown(
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=11))
     assert test_all(hass) is False
+
+
+async def test_condition_checker_del_calls_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ calls async_unload if not already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_called_once()
+
+
+async def test_condition_checker_del_skips_if_already_unloaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ does not call async_unload if already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # First call sets the flag
+    checker.async_unload()
+    unload_mock.assert_called_once()
+    unload_mock.reset_mock()
+
+    # __del__ should skip since _unloaded is True
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_not_called()
