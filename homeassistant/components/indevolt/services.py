@@ -43,7 +43,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             hass,
             call,
             RealtimeAction.CHARGE,
-            power_key="max_charge_power",
         )
 
     async def discharge(call: ServiceCall) -> None:
@@ -52,7 +51,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             hass,
             call,
             RealtimeAction.DISCHARGE,
-            power_key="max_discharge_power",
         )
 
     hass.services.async_register(
@@ -67,7 +65,6 @@ async def _async_handle_realtime_action(
     hass: HomeAssistant,
     call: ServiceCall,
     action_code: RealtimeAction,
-    power_key: str,
 ) -> None:
     """Validate and execute a realtime action for one or more coordinators."""
     coordinators = await _async_get_coordinators_from_call(hass, call)
