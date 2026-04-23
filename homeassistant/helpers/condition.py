@@ -322,7 +322,7 @@ class ConditionChecker(abc.ABC):
 
     @callback
     def async_on_unload(self, func: Callable[[], None]) -> None:
-        """Add a function to call when config entry is unloaded."""
+        """Add a function to call when the condition checker is unloaded."""
         self._on_unload.append(func)
 
     def async_unload(self) -> None:
