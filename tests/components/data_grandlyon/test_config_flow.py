@@ -124,6 +124,40 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we abort if already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        )
+        await hass.async_block_till_done()
+
+    # Second flow shows the form but aborts on submit
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 # Stop subentry tests
 
 

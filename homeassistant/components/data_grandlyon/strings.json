@@ -24,8 +24,7 @@
   "config_subentries": {
     "stop": {
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-        "auth_required": "Authentication is required to add a stop."
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
       },
       "entry_type": "Transit stop",
       "initiate_flow": {
@@ -35,7 +34,6 @@
         "user": {
           "data": {
             "line": "Line",
-            "name": "[%key:common::config_flow::data::name%]",
             "stop_id": "Stop ID"
           }
         }
