@@ -50,7 +50,7 @@ async def load_integration(
     """Set up the Worldclock integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="America/New_York",
+        title=get_config[CONF_TIME_ZONE],
         source=SOURCE_USER,
         options=get_config,
         entry_id="1",
