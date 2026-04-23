@@ -1,4 +1,5 @@
 """Webhook handlers for mobile_app."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 

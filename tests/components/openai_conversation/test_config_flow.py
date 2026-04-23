@@ -1196,7 +1196,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-1.5",
+        CONF_IMAGE_MODEL: "gpt-image-2",
         CONF_MAX_TOKENS: 200,
         CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,

@@ -1,4 +1,5 @@
 """The Smappee integration."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from pysmappee import Smappee, helper, mqtt
 import voluptuous as vol

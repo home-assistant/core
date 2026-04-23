@@ -40,6 +40,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
     selects: list[Entity] = []
 
