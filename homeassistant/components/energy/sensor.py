@@ -761,12 +761,13 @@ class EnergyPowerSensor(SensorEntity):
             device_id = None
             source_name = None
             # Check first sensor
+            # default to WATT
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
-                # For combined mode, always use Watts because we may have different source units; for inverted mode, copy source unit
-                if self._is_combined:
-                    self._attr_native_unit_of_measurement = UnitOfPower.WATT
-                else:
+                # For combined mode, always use Watts because we may have different source units;
+                # for inverted mode, copy source unit or set Watt if it was not set
+                if not self._is_combined:
                     self._attr_native_unit_of_measurement = (
                         source_entry.unit_of_measurement
                     )
