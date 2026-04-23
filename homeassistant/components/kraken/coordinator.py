@@ -10,15 +10,14 @@ import krakenex
 import pykrakenapi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_TRACKED_ASSET_PAIRS,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TRACKED_ASSET_PAIR,
     DOMAIN,
+    SCAN_INTERVAL,
     KrakenResponse,
 )
 from .utils import get_tradable_asset_pairs
@@ -65,10 +64,7 @@ class KrakenData:
                     f"Unable to fetch data from Kraken.com: {error}"
                 ) from error
         except pykrakenapi.pykrakenapi.CallRateLimitError:
-            _LOGGER.warning(
-                "Exceeded the Kraken.com call rate limit. Increase the update interval"
-                " to prevent this error"
-            )
+            _LOGGER.warning("Exceeded the Kraken.com call rate limit")
         return None
 
     def _get_kraken_data(self) -> KrakenResponse:
@@ -100,7 +96,6 @@ class KrakenData:
         """Set up the Kraken integration."""
         if not self._config_entry.options:
             options = {
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             }
             self._hass.config_entries.async_update_entry(
@@ -115,9 +110,7 @@ class KrakenData:
             name=DOMAIN,
             config_entry=self._config_entry,
             update_method=self.async_update,
-            update_interval=timedelta(
-                seconds=self._config_entry.options[CONF_SCAN_INTERVAL]
-            ),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         await self.coordinator.async_config_entry_first_refresh()
         # Wait 1 second to avoid triggering the KrakenAPI CallRateLimiter
@@ -129,8 +122,3 @@ class KrakenData:
             for tracked_pair in self._config_entry.options[CONF_TRACKED_ASSET_PAIRS]
             if (pair := self.tradable_asset_pairs.get(tracked_pair)) is not None
         )
-
-    def set_update_interval(self, update_interval: int) -> None:
-        """Set the coordinator update_interval to the supplied update_interval."""
-        if self.coordinator is not None:
-            self.coordinator.update_interval = timedelta(seconds=update_interval)

@@ -8,12 +8,15 @@ import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_TRACKED_ASSET_PAIRS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from .coordinator import KrakenConfigEntry
 from .utils import get_tradable_asset_pairs
 
@@ -22,6 +25,7 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for kraken."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -75,14 +79,6 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         )
 
         options = {
-            # Polling interval is user-configurable, which is no longer allowed
-            # pylint: disable-next=hass-config-flow-polling-field
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
             vol.Optional(
                 CONF_TRACKED_ASSET_PAIRS,
                 default=tracked_asset_pairs,
