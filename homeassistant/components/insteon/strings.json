@@ -50,10 +50,10 @@
   "entity": {
     "event": {
       "additional_button_press": {
-        "name": "Button {button} Press"
+        "name": "Button {button} press"
       },
       "main_button_press": {
-        "name": "Button Press"
+        "name": "Button press"
       }
     }
   },
