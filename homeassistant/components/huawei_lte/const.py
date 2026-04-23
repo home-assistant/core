@@ -1,6 +1,11 @@
 """Huawei LTE constants."""
 
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
+
 DOMAIN = "huawei_lte"
+
+HUAWEI_LTE_CONFIG: HassKey[ConfigType] = HassKey(DOMAIN)
 
 CONF_MANUFACTURER = "manufacturer"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"

@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -31,16 +32,17 @@ class MatterEntryData:
     listen_task: asyncio.Task
 
 
+type MatterConfigEntry = ConfigEntry[MatterEntryData]
+
+
 @callback
 def get_matter(hass: HomeAssistant) -> MatterAdapter:
     """Return MatterAdapter instance."""
     # NOTE: This assumes only one Matter connection/fabric can exist.
     # Shall we support connecting to multiple servers in the client or by
     # config entries? In case of the config entry we need to fix this.
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    matter_entry_data: MatterEntryData = next(iter(hass.data[DOMAIN].values()))
-    return matter_entry_data.adapter
+    entries: list[MatterConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    return entries[0].runtime_data.adapter
 
 
 def get_operational_instance_id(
