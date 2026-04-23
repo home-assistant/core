@@ -155,10 +155,10 @@ async def test_on_remote_control_already_added(
     # Check number of entities (remote and button events and media_player)
     entity_ids_available = list(entity_registry.entities.keys())
 
-    assert list(entity_registry.entities.keys()) == unordered(
+    assert entity_ids_available == unordered(
         [*get_balance_entity_ids(), *get_remote_entity_ids()]
     )
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 async def test_on_remote_control_paired(
@@ -239,7 +239,7 @@ async def test_on_remote_control_paired(
             *get_remote_entity_ids("66666666"),
         ]
     )
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 async def test_on_remote_control_unpaired(
@@ -295,7 +295,7 @@ async def test_on_remote_control_unpaired(
     entity_ids_available = list(entity_registry.entities.keys())
 
     assert entity_ids_available == unordered(get_balance_entity_ids())
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 # async def test_setup_entry_remote_unpaired(

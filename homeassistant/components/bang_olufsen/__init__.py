@@ -58,15 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     # Remove casts to str
     assert entry.unique_id
 
-    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=entry.title,
-        model=entry.data[CONF_MODEL],
-    )
-
     client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
 
     # Check API and WebSocket connection
@@ -82,6 +73,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     ) as error:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
+
+    # Fetch the device friendly name before creating the device and entities
+    # to ensure all entities get consistent entity IDs.
+    beolink_self = await client.get_beolink_self()
+
+    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=beolink_self.friendly_name,
+        model=entry.data[CONF_MODEL],
+    )
 
     websocket = BeoWebsocket(hass, entry, client)
 

@@ -568,6 +568,9 @@ async def test_async_update_beolink_listener(
     )
 
     # Add another entity
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2
+    )
     mock_config_entry_core.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
 
@@ -1329,6 +1332,9 @@ async def test_async_join_players(
     )
 
     # Add another entity
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2
+    )
     mock_config_entry_core.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
 
@@ -1392,6 +1398,9 @@ async def test_async_join_players_invalid(
         mock_mozart_client.get_source_change_notifications.call_args[0][0]
     )
 
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2
+    )
     mock_config_entry_core.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
 
