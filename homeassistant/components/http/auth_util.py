@@ -49,7 +49,7 @@ def async_user_not_allowed_do_auth(
     return "user_cannot_authenticate_remotely"
 
 
-# Human-readable descriptions for OAuth2 error_description field.
+# Human-readable descriptions for auth access errors.
 # Keys match the translation keys returned by async_user_not_allowed_do_auth.
 AUTH_ACCESS_ERROR_DESCRIPTIONS: dict[str, str] = {
     "user_not_active": "User is not active",
