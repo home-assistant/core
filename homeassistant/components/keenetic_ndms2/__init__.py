@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -17,7 +17,6 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
 from .router import KeeneticConfigEntry, KeeneticRouter
 
@@ -27,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: KeeneticConfigEntry) -> bool:
     """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
     async_add_defaults(hass, entry)
 
     router = KeeneticRouter(hass, entry)
@@ -85,12 +83,8 @@ async def async_unload_entry(
     return unload_ok
 
 
-def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry):
+def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry) -> None:
     """Populate default options."""
-    host: str = entry.data[CONF_HOST]
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    imported_options: dict = hass.data[DOMAIN].get(f"imported_options_{host}", {})
     options = {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
@@ -98,7 +92,6 @@ def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry):
         CONF_TRY_HOTSPOT: True,
         CONF_INCLUDE_ARP: True,
         CONF_INCLUDE_ASSOCIATED: True,
-        **imported_options,
         **entry.options,
     }
 
