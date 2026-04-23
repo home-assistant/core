@@ -193,6 +193,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
+    component.async_register_entity_service(
+        TodoServices.UPDATE_LIST,
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional(ATTR_STATUS): vol.In(
+                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                    ),
+                }
+            ),
+            cv.has_at_least_one_key(
+                ATTR_STATUS,
+            ),
+        ),
+        _async_update_todo_list,
+        required_features=[TodoListEntityFeature.UPDATE_TODO_LIST],
+    )
 
     await component.async_setup(config)
     return True
@@ -265,6 +282,10 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
+        raise NotImplementedError
+
+    async def async_update_todo_list(self, info: dict[str, Any]) -> None:
+        """Update all items in the To-do list."""
         raise NotImplementedError
 
     async def async_move_todo_item(
@@ -538,3 +559,13 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
     ]
     if uids:
         await entity.async_delete_todo_items(uids=uids)
+
+
+async def _async_update_todo_list(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Update all items in the To-do list."""
+    info = {}
+    if status := call.data.get("status"):
+        info["status"] = TodoItemStatus(status)
+
+    if info:
+        await entity.async_update_todo_list(info=info)

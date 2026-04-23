@@ -1,6 +1,6 @@
 """A shopping list todo platform."""
 
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -41,6 +41,7 @@ class ShoppingTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_LIST
     )
 
     def __init__(self, data: ShoppingData, unique_id: str) -> None:
@@ -55,7 +56,7 @@ class ShoppingTodoListEntity(TodoListEntity):
         )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
+        """Update an item in the To-do list."""
         data = {
             "name": item.summary,
             "complete": item.status == TodoItemStatus.COMPLETED,
@@ -67,8 +68,17 @@ class ShoppingTodoListEntity(TodoListEntity):
                 f"Shopping list item '{item.uid}' was not found"
             ) from err
 
+    async def async_update_todo_list(self, info: dict[str, Any]) -> None:
+        """Update all items in the To-do list."""
+        data = {}
+        if status := info.get("status"):
+            data["complete"] = status == TodoItemStatus.COMPLETED
+
+        if data:
+            await self._data.async_update_list(info=data)
+
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Add an item to the To-do list."""
+        """Delete items from the To-do list."""
         await self._data.async_remove_items(set(uids))
 
     async def async_move_todo_item(

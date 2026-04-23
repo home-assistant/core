@@ -1,6 +1,6 @@
 """Tests for todo platform of local_todo."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import datetime
 import textwrap
 from typing import Any
@@ -27,11 +27,12 @@ from .conftest import TEST_ENTITY
 
 from tests.typing import WebSocketGenerator
 
+type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
+type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
+
 
 @pytest.fixture
-async def ws_get_items(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[], Awaitable[dict[str, str]]]:
+async def ws_get_items(hass_ws_client: WebSocketGenerator) -> WsGetItemsType:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
@@ -51,12 +52,10 @@ async def ws_get_items(
 
 
 @pytest.fixture
-async def ws_move_item(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[str, str | None], Awaitable[None]]:
+async def ws_move_item(hass_ws_client: WebSocketGenerator) -> WsMoveItemType:
     """Fixture to move an item in the todo list."""
 
-    async def move(uid: str, previous_uid: str | None) -> None:
+    async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
         data = {
@@ -67,15 +66,14 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        assert resp.get("success")
+        return await client.receive_json()
 
     return move
 
 
 @pytest.fixture(autouse=True)
 async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    """Set the time zone for the tests that keeps UTC-6 all year round."""
     await hass.config.async_set_time_zone("America/Regina")
 
 
@@ -106,7 +104,7 @@ async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -151,7 +149,7 @@ async def test_add_item(
 async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -195,7 +193,7 @@ async def test_remove_item(
 async def test_bulk_remove(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test removing multiple todo items."""
     for i in range(5):
@@ -269,7 +267,7 @@ EXPECTED_UPDATE_ITEM = {
 async def test_update_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
     expected_state: str,
@@ -396,7 +394,7 @@ async def test_update_item(
 async def test_update_existing_field(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -447,7 +445,7 @@ async def test_update_existing_field(
 async def test_rename(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test renaming a todo item."""
 
@@ -521,8 +519,8 @@ async def test_rename(
 async def test_move_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[None]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -547,7 +545,8 @@ async def test_move_item(
     previous_uid = None
     if dst_idx is not None:
         previous_uid = uids[dst_idx]
-    await ws_move_item(uids[src_idx], previous_uid)
+    resp = await ws_move_item(uids[src_idx], previous_uid)
+    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -583,7 +582,7 @@ async def test_move_item_previous_unknown(
     hass: HomeAssistant,
     setup_integration: None,
     hass_ws_client: WebSocketGenerator,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
@@ -739,7 +738,7 @@ async def test_parse_existing_ics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     snapshot: SnapshotAssertion,
     expected_state: str,
 ) -> None:
@@ -812,3 +811,164 @@ async def test_susbcribe(
     assert items[0]["summary"] == "milk"
     assert items[0]["status"] == "needs_action"
     assert "uid" in items[0]
+
+
+async def test_reset_item_via_update(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test resetting a todo item via update action."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+    item_uid = item.pop("uid")
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Complete item
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "completed"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "completed",
+        "completed": "2023-11-18T08:00:00+00:00",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+    # Reset item
+    update_time = datetime(2023, 11, 18, 8, 1, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "needs_action"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is not completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item.get("completed") is None  # automatically unset
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "needs_action",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+
+@pytest.mark.parametrize(
+    "info",
+    [
+        {ATTR_STATUS: "needs_action"},
+        {ATTR_STATUS: "completed"},
+    ],
+)
+async def test_bulk_update(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+    info: dict[str, Any],
+) -> None:
+    """Test bulk update of a todo list."""
+
+    total_items = 5
+    completed_items = [0, 2, 3]
+    expected_state = total_items - len(completed_items)
+
+    # Populate list
+    for _i in range(total_items):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {
+                ATTR_ITEM: f"item {_i}",
+            },
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    items = await ws_get_items()
+    assert len(items) == total_items
+    uids = [item["uid"] for item in items]
+    names = [item["summary"] for item in items]
+
+    for _i in completed_items:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {
+                ATTR_ITEM: uids[_i],
+                ATTR_STATUS: "completed",
+            },
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == str(expected_state)
+
+    # Bulk-update list
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_LIST,
+        info,
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == total_items
+    assert [item["summary"] for item in items] == names
+
+    # Verify status
+    if status := info.get("status"):
+        assert not [item for item in items if item["status"] != status]
+        expected_state = 0 if status == "completed" else total_items
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == str(expected_state)

@@ -1,7 +1,9 @@
 """Fixtures for the todo component tests."""
 
 from collections.abc import Generator
+import datetime
 from unittest.mock import AsyncMock
+import zoneinfo
 
 import pytest
 
@@ -18,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from . import TEST_DOMAIN, MockFlow, MockTodoListEntity
 
 from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
+
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +66,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
 @pytest.fixture(autouse=True)
 async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    """Set the time zone for the tests that keeps UTC-6 all year round."""
     await hass.config.async_set_time_zone("America/Regina")
 
 
@@ -70,8 +74,17 @@ async def set_time_zone(hass: HomeAssistant) -> None:
 def mock_test_entity_items() -> list[TodoItem]:
     """Fixture that creates the items returned by the test entity."""
     return [
-        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
+        TodoItem(
+            summary="Item #1",
+            uid="1",
+            status=TodoItemStatus.NEEDS_ACTION,
+        ),
+        TodoItem(
+            summary="Item #2",
+            uid="2",
+            status=TodoItemStatus.COMPLETED,
+            completed=datetime.datetime(2026, 3, 27, 11, 0, 0, tzinfo=TEST_TIMEZONE),
+        ),
     ]
 
 
@@ -85,9 +98,11 @@ def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_LIST
     )
     entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
-    entity1.async_update_todo_item = AsyncMock()
+    entity1.async_update_todo_item = AsyncMock(wraps=entity1.async_update_todo_item)
     entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
+    entity1.async_update_todo_list = AsyncMock(wraps=entity1.async_update_todo_list)
     entity1.async_move_todo_item = AsyncMock()
     return entity1

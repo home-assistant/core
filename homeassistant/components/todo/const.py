@@ -32,6 +32,7 @@ class TodoServices(StrEnum):
     REMOVE_ITEM = "remove_item"
     GET_ITEMS = "get_items"
     REMOVE_COMPLETED_ITEMS = "remove_completed_items"
+    UPDATE_LIST = "update_list"
 
 
 class TodoListEntityFeature(IntFlag):
@@ -44,6 +45,7 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
+    UPDATE_TODO_LIST = 128
 
 
 class TodoItemStatus(StrEnum):

@@ -35,6 +35,9 @@ from . import create_mock_platform
 
 from tests.typing import WebSocketGenerator
 
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
+TEST_OFFSET = "-06:00"
+
 ITEM_1 = {
     "uid": "1",
     "summary": "Item #1",
@@ -44,9 +47,8 @@ ITEM_2 = {
     "uid": "2",
     "summary": "Item #2",
     "status": "completed",
+    "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
 }
-TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
-TEST_OFFSET = "-06:00"
 
 
 async def test_unload_entry(
@@ -81,7 +83,7 @@ async def test_list_todo_items(
     state = hass.states.get("todo.entity1")
     assert state
     assert state.state == "1"
-    assert state.attributes == {"supported_features": 15}
+    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 143}
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -124,7 +126,7 @@ async def test_get_items_service(
     state = hass.states.get("todo.entity1")
     assert state
     assert state.state == "1"
-    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 15}
+    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 143}
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -952,6 +954,12 @@ async def test_move_todo_item_service_invalid_input(
             TodoServices.REMOVE_COMPLETED_ITEMS,
             None,
         ),
+        (
+            TodoServices.UPDATE_LIST,
+            {
+                ATTR_STATUS: "needs_action",
+            },
+        ),
     ],
 )
 async def test_unsupported_service(
@@ -1052,6 +1060,59 @@ async def test_remove_completed_items_service_raises(
         )
 
 
+@pytest.mark.parametrize(
+    "status",
+    [
+        "needs_action",
+        "completed",
+    ],
+)
+async def test_update_todo_list_action(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    status: str,
+) -> None:
+    """Test reset todo items service."""
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.UPDATE_LIST,
+        {ATTR_STATUS: status},
+        target={ATTR_ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_list.call_args
+    assert args
+    info = args.kwargs.get("info")
+    assert sorted(info) == ["status"]
+    assert info["status"] == (expected_status := TodoItemStatus(status))
+
+    assert not [
+        item for item in test_entity.todo_items or () if item.status != expected_status
+    ], f"Items should have been changed to {expected_status}"
+
+
+async def test_update_todo_list_action_raises(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test reset todo items from a To-do list that raises an error."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    test_entity.async_update_todo_list.side_effect = HomeAssistantError("Ooops")
+    with pytest.raises(HomeAssistantError, match="Ooops"):
+        await hass.services.async_call(
+            DOMAIN,
+            TodoServices.UPDATE_LIST,
+            {ATTR_STATUS: "needs_action"},
+            target={ATTR_ENTITY_ID: "todo.entity1"},
+            blocking=True,
+        )
+
+
 async def test_subscribe(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1094,7 +1155,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
         ]
     }
@@ -1122,7 +1183,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
             {
                 "summary": "Item #3",
