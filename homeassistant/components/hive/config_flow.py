@@ -51,13 +51,14 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         # Login to Hive with user data.
         if user_input is not None:
             self.data.update(user_input)
+            self.data[CONF_USERNAME] = self.data[CONF_USERNAME].lower()
             self.hive_auth = Auth(
-                username=self.data[CONF_USERNAME].lower(),
+                username=self.data[CONF_USERNAME],
                 password=self.data[CONF_PASSWORD],
             )
 
             # Get user from existing entry and abort if already setup
-            await self.async_set_unique_id(self.data[CONF_USERNAME].lower())
+            await self.async_set_unique_id(self.data[CONF_USERNAME])
             if self.context["source"] != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
