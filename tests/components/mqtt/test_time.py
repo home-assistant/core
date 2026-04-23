@@ -53,7 +53,7 @@ DEFAULT_CONFIG = {
 async def async_set_value(
     hass: HomeAssistant, entity_id: str, value: datetime.time | None
 ) -> None:
-    """Set input_time to value."""
+    """Set time value."""
     await hass.services.async_call(
         time.DOMAIN,
         time.SERVICE_SET_VALUE,
