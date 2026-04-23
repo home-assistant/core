@@ -23,9 +23,9 @@ from typing import TYPE_CHECKING, Any, TypedDict
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import ThreadConfigEntry
 from .dataset_store import async_get_store
 from .discovery import async_read_zeroconf_cache
 
@@ -128,7 +128,7 @@ def _get_routes_and_neighbors():
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ThreadConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for all known thread networks."""
     networks: dict[str, Network] = {}
