@@ -547,14 +547,15 @@ class EntityConditionBase(Condition):
             for entity_id in removed:
                 self._valid_since.pop(entity_id, None)
 
-        unsub = async_track_target_selector_state_change_event(
-            self._hass,
-            self._target_config,
-            _state_change_listener,
-            self.entity_filter,
-            _on_entities_update,
+        self.async_on_unload(
+            async_track_target_selector_state_change_event(
+                self._hass,
+                self._target_config,
+                _state_change_listener,
+                self.entity_filter,
+                _on_entities_update,
+            )
         )
-        self._on_unload.append(unsub)
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked value from a state based on the DomainSpec."""
