@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from pyicloud.exceptions import PyiCloudAuthRequiredException
+
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -15,7 +17,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
-from pyicloud.exceptions import PyiCloudAuthRequiredException, PyiCloudFailedLoginException
 
 from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
 
