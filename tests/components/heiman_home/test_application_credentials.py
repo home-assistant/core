@@ -543,3 +543,43 @@ async def test_token_request_oauth2_error_reraise(hass: HomeAssistant) -> None:
     ):
         # The OAuth2TokenRequestReauthError from _raise_token_error should be re-raised
         await impl._token_request({"grant_type": "refresh_token"})
+
+
+async def test_token_request_without_client_secret_pkce(hass: HomeAssistant) -> None:
+    """Test token request without client_secret (PKCE-style OAuth client)."""
+    credential = MagicMock()
+    credential.client_id = "test-client-id"
+    credential.client_secret = None  # PKCE clients don't have a secret
+
+    impl = HeimanOAuth2Implementation(
+        hass,
+        "heiman_home",
+        credential,
+        authorization_server=MagicMock(),
+    )
+    impl.token_url = "https://example.com/token"
+
+    # Mock the session and response
+    mock_response = MagicMock(spec=ClientResponse)
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"access_token": "test-token"})
+    mock_response.text = AsyncMock(return_value='{"access_token": "test-token"}')
+    mock_response.release = MagicMock()
+
+    mock_session = MagicMock()
+    mock_session.post = AsyncMock(return_value=mock_response)
+
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
+    ):
+        result = await impl._token_request({"grant_type": "authorization_code"})
+
+        assert result == {"access_token": "test-token"}
+        # Verify post was called without auth parameter (auth=None)
+        call_args = mock_session.post.call_args
+        assert call_args is not None
+        # auth should be None when client_secret is None
+        assert call_args.kwargs.get("auth") is None

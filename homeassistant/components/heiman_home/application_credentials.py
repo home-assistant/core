@@ -64,10 +64,16 @@ class HeimanOAuth2Implementation(AuthImplementation):
         resp = None
         result: dict | None = None
         try:
+            # Only use BasicAuth if client_secret is set (PKCE-style clients may not have one)
+            auth = (
+                BasicAuth(self.client_id, self.client_secret)
+                if self.client_secret
+                else None
+            )
             resp = await session.post(
                 self.token_url,
                 data=request_data,
-                auth=BasicAuth(self.client_id, self.client_secret),
+                auth=auth,
             )
 
             # Check for error status codes
