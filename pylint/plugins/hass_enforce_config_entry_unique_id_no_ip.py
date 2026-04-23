@@ -101,18 +101,29 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
 
 
 def _value_references_ip(node: nodes.NodeNG) -> str | None:
-    """Return the IP/host reference name if the expression contains an IP ref.
+    """Return the IP/host reference name if the expression looks IP-based.
 
-    Recursively checks the node tree for IP/host references, catching:
+    Checks for:
     - Direct Name reference: ``CONF_HOST``
     - Subscript: ``data[CONF_HOST]``, ``user_input["host"]``
     - Call: ``data.get(CONF_HOST)`` or ``data.get("host")``
     - Embedded references: ``f"prefix_{data[CONF_HOST]}"``
     """
-    # Direct name: CONF_HOST
+    # Direct name: CONF_HOST (only at top level, not recursively,
+    # to avoid matching local variables like `host` in `host.api.mac`)
     if isinstance(node, nodes.Name) and node.name in _IP_HOST_NAMES:
         return str(node.name)
 
+    return _check_subscript_or_call_ip(node)
+
+
+def _check_subscript_or_call_ip(node: nodes.NodeNG) -> str | None:
+    """Check for IP references in subscript/call patterns, recursively.
+
+    Unlike ``_value_references_ip``, this does NOT match bare Name nodes,
+    avoiding false positives from local variables named ``host`` used in
+    attribute chains like ``host.api.mac_address``.
+    """
     # Subscript: data[CONF_HOST] or data["host"]
     if isinstance(node, nodes.Subscript):
         key = node.slice
@@ -144,7 +155,7 @@ def _value_references_ip(node: nodes.NodeNG) -> str | None:
 
     # Recurse into child nodes to catch embedded references (e.g. f-strings)
     for child in node.get_children():
-        ref = _value_references_ip(child)
+        ref = _check_subscript_or_call_ip(child)
         if ref:
             return ref
 
@@ -174,7 +185,7 @@ def _resolve_variable_ip_ref(name_node: nodes.Name) -> str | None:
                 and target.name == name_node.name
                 and assign.value
             ):
-                ref = _value_references_ip(assign.value)
+                ref = _check_subscript_or_call_ip(assign.value)
                 if ref:
                     return ref
 
