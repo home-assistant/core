@@ -62,7 +62,7 @@ rules:
     status: exempt
     comment: |
       Not relevant.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: done
 
