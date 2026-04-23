@@ -3108,7 +3108,7 @@ async def _setup_numerical_condition(
     entity_ids: str | list[str],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
-) -> condition.ConditionCheckerBase:
+) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
@@ -3437,7 +3437,7 @@ async def _setup_numerical_condition_with_unit(
     domain_specs: Mapping[str, DomainSpec] | None = None,
     base_unit: str = UnitOfTemperature.CELSIUS,
     unit_converter: type = TemperatureConverter,
-) -> condition.ConditionCheckerBase:
+) -> condition.ConditionChecker:
     """Set up a numerical condition with unit conversion via a mock platform."""
     condition_cls = make_entity_numerical_condition_with_unit(
         domain_specs or _DEFAULT_DOMAIN_SPECS, base_unit, unit_converter
@@ -3958,7 +3958,7 @@ async def _setup_state_condition(
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
     support_duration: bool = False,
-) -> condition.ConditionCheckerBase:
+) -> condition.ConditionChecker:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,

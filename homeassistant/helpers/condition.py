@@ -282,43 +282,45 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 )
 
 
-class ConditionCheckerBase(abc.ABC):
+class ConditionChecker(abc.ABC):
     """Base class for condition checkers."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
-        self._unsub: list[Callable[[], None]] = []
+        self._on_unload: list[Callable[[], None]] = []
 
     def __call__(
         self, _: HomeAssistant, variables: TemplateVarsType | None = None
     ) -> bool | None:
         """Check the condition."""
-        return self.async_check(variables)
+        return self.async_check(variables=variables)
 
     def __del__(self) -> None:
-        """Unsubscribe from listeners when the checker is deleted."""
-        self.async_unsubscribe()
+        """Clean up when the checker is deleted."""
+        self.async_unload()
 
-    def async_check(self, variables: TemplateVarsType | None = None) -> bool | None:
+    def async_check(
+        self, *, variables: TemplateVarsType | None = None, **kwargs: Any
+    ) -> bool | None:
         """Check the condition."""
         with trace_condition(variables):
             result = self._check(variables)
             condition_trace_update_result(result=result)
             return result
 
-    def async_unsubscribe(self) -> None:
-        """Unsubscribe from listeners."""
-        for unsub in self._unsub:
-            unsub()
-        self._unsub.clear()
+    def async_unload(self) -> None:
+        """Clean up any resources held by the checker."""
+        for cb in self._on_unload:
+            cb()
+        self._on_unload.clear()
 
     @abc.abstractmethod
     def _check(self, variables: TemplateVarsType) -> bool | None:
         """Check the condition."""
 
 
-class LegacyConditionChecker(ConditionCheckerBase):
+class LegacyConditionChecker(ConditionChecker):
     """Condition checker wrapping a legacy condition factory function."""
 
     def __init__(self, hass: HomeAssistant, checker: ConditionCheckerType) -> None:
@@ -330,14 +332,14 @@ class LegacyConditionChecker(ConditionCheckerBase):
         return self._checker(self._hass, variables)
 
 
-class DisabledConditionChecker(ConditionCheckerBase):
+class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
     def _check(self, variables: TemplateVarsType | None) -> None:
         return None
 
 
-class Condition(ConditionCheckerBase):
+class Condition(ConditionChecker):
     """Condition class."""
 
     @classmethod
@@ -904,7 +906,7 @@ async def _async_get_condition_platform(
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> ConditionCheckerBase:
+) -> ConditionChecker:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
