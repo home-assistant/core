@@ -920,7 +920,7 @@ fressnapftracker==0.2.2
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fumis
-fumis==0.2.1
+fumis==0.3.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
