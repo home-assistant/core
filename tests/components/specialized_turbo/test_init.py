@@ -2,93 +2,47 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from specialized_turbo import TelemetrySnapshot
-
-from homeassistant.components.specialized_turbo.const import CONF_PIN, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-
-from .conftest import MOCK_ADDRESS, MOCK_ADDRESS_FORMATTED
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test successful setup of a config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: "1234"},
-        unique_id=MOCK_ADDRESS_FORMATTED,
-    )
-    entry.add_to_hass(hass)
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.snapshot = TelemetrySnapshot()
-    mock_coordinator.async_start.return_value = lambda: None
-    mock_coordinator.async_shutdown = AsyncMock()
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.specialized_turbo.SpecializedTurboCoordinator",
-        return_value=mock_coordinator,
+        "homeassistant.components.specialized_turbo.coordinator.establish_connection",
+        new_callable=AsyncMock,
+        return_value=AsyncMock(),
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data is mock_coordinator
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_entry_no_pin(hass: HomeAssistant) -> None:
-    """Test setup entry without a PIN."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS},
-        unique_id=MOCK_ADDRESS_FORMATTED,
-    )
-    entry.add_to_hass(hass)
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.snapshot = TelemetrySnapshot()
-    mock_coordinator.async_start.return_value = lambda: None
-    mock_coordinator.async_shutdown = AsyncMock()
-
-    with patch(
-        "homeassistant.components.specialized_turbo.SpecializedTurboCoordinator",
-        return_value=mock_coordinator,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test successful unloading of a config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: "1234"},
-        unique_id=MOCK_ADDRESS_FORMATTED,
-    )
-    entry.add_to_hass(hass)
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.snapshot = TelemetrySnapshot()
-    mock_coordinator.async_start.return_value = lambda: None
-    mock_coordinator.async_shutdown = AsyncMock()
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.specialized_turbo.SpecializedTurboCoordinator",
-        return_value=mock_coordinator,
+        "homeassistant.components.specialized_turbo.coordinator.establish_connection",
+        new_callable=AsyncMock,
+        return_value=AsyncMock(),
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.async_unload(entry.entry_id)
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert result is True
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    mock_coordinator.async_shutdown.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

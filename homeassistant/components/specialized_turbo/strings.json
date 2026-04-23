@@ -109,9 +109,6 @@
       "rider_power": {
         "name": "Rider power"
       },
-      "speed": {
-        "name": "Speed"
-      },
       "system_temp": {
         "name": "System temperature"
       }

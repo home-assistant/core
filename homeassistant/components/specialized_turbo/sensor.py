@@ -134,7 +134,6 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     # --- Motor / Rider ---
     SpecializedSensorEntityDescription(
         key="speed",
-        translation_key="speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
