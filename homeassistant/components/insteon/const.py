@@ -43,12 +43,11 @@ INSTEON_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SWITCH,
-    # set up event entities last to ensure devices have been created before events are added
-    Platform.EVENT,
 ]
 
 X10_PLATFORMS = [
