@@ -123,7 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     for node in pyvlx.nodes:
         if isinstance(node, OpeningDevice):
             coordinator = VeluxLimitationCoordinator(hass, entry, node)
-            await coordinator.async_config_entry_first_refresh()
             limitation_coordinators[node.node_id] = coordinator
 
     entry.runtime_data = VeluxData(
