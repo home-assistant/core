@@ -28,8 +28,7 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         self._cached_manufacturer = MANUFACTURER
         self._cached_model: str | None = None
 
-        if vehicle := self.get_vehicle():
-            self._cache_vehicle_metadata(vehicle)
+        self.get_vehicle()
 
     def _cache_vehicle_metadata(self, vehicle: ScorpionTrackVehicle) -> None:
         """Cache the latest immutable vehicle metadata."""

@@ -46,6 +46,23 @@ async def test_tracker_helper_methods_handle_removed_vehicle(
     assert attributes["removed_from_share"] is True
 
 
+async def test_tracker_initialization_caches_vehicle_metadata_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Tracker initialization should not cache metadata twice."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    with patch(
+        "homeassistant.components.scorpiontrack.entity.ScorpionTrackEntity._cache_vehicle_metadata",
+    ) as mock_cache:
+        ScorpionTrackTrackerEntity(coordinator, 1)
+
+    assert mock_cache.call_count == 1
+
+
 async def test_tracker_helper_methods_handle_missing_and_future_timestamps(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
