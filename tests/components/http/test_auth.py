@@ -606,10 +606,7 @@ async def test_async_user_not_allowed_do_auth(
     user.local_only = True
 
     # No current request
-    assert (
-        async_user_not_allowed_do_auth(hass, user)
-        == "no_request_available"
-    )
+    assert async_user_not_allowed_do_auth(hass, user) == "no_request_available"
 
     trusted_request = Mock(remote="192.168.1.123")
     untrusted_request = Mock(remote=UNTRUSTED_ADDRESSES[0])

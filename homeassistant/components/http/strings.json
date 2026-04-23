@@ -1,19 +1,19 @@
 {
   "exceptions": {
-    "user_not_active": {
-      "message": "User is not active"
+    "invalid_remote_ip": {
+      "message": "Invalid remote IP"
     },
     "no_request_available": {
       "message": "No request available to validate local access"
     },
+    "user_cannot_authenticate_remotely": {
+      "message": "User cannot authenticate remotely"
+    },
     "user_local_only": {
       "message": "User is local only"
     },
-    "invalid_remote_ip": {
-      "message": "Invalid remote IP"
-    },
-    "user_cannot_authenticate_remotely": {
-      "message": "User cannot authenticate remotely"
+    "user_not_active": {
+      "message": "User is not active"
     }
   },
   "issues": {

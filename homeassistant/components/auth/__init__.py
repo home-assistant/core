@@ -146,9 +146,7 @@ from homeassistant.auth.models import (
 )
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import (
-    async_sign_path,
-)
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.auth_util import (
     AUTH_ACCESS_ERROR_DESCRIPTIONS,
     async_user_not_allowed_do_auth,
