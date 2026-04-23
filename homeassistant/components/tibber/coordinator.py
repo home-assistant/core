@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import random
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, TypedDict, cast
 
 from aiohttp.client_exceptions import ClientError
 import tibber
@@ -311,36 +310,22 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
         self.async_set_updated_data(self._build_price_data())
 
     @callback
-    def async_add_listener(
-        self, update_callback: CALLBACK_TYPE, context: Any = None
-    ) -> Callable[[], None]:
+    def _schedule_refresh(self) -> None:
         """Start listening to fetched price data when entities subscribe."""
-        had_listeners = bool(self._listeners)
-        remove_listener = super().async_add_listener(update_callback, context)
-
-        if not had_listeners:
+        super()._schedule_refresh()
+        if self._unsub_price_fetch_listener is None:
             self._unsub_price_fetch_listener = (
                 self._price_fetch_coordinator.async_add_listener(
                     self._async_handle_price_fetch_update
                 )
             )
 
-        @callback
-        def _remove_listener() -> None:
-            """Remove the listener and stop fetch updates when unused."""
-            remove_listener()
-            if not self._listeners and self._unsub_price_fetch_listener is not None:
-                self._unsub_price_fetch_listener()
-                self._unsub_price_fetch_listener = None
-
-        return _remove_listener
-
-    async def async_shutdown(self) -> None:
-        """Release any fetch coordinator listener before shutdown."""
+    def _unschedule_refresh(self) -> None:
+        """Stop listening to fetched price data when unused."""
+        super()._unschedule_refresh()
         if self._unsub_price_fetch_listener is not None:
             self._unsub_price_fetch_listener()
             self._unsub_price_fetch_listener = None
-        await super().async_shutdown()
 
     def _time_until_next_15_minute(self) -> timedelta:
         """Return time until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
