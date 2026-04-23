@@ -28,21 +28,14 @@ _IP_HOST_NAMES: frozenset[str] = frozenset(
     }
 )
 
-# Method/attribute names that set the unique ID.
-_UNIQUE_ID_SETTERS: frozenset[str] = frozenset(
-    {
-        "_attr_unique_id",
-        "unique_id",
-    }
-)
-
 
 class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
     """Checker for IP/hostname-based unique IDs.
 
-    Detects assignments to ``unique_id`` where the value comes from a
-    host/IP config key. Also detects ``async_set_unique_id`` calls with
-    IP-based arguments.
+    Detects ``async_set_unique_id`` calls where the argument directly
+    references an IP/hostname config key, or where the argument is a
+    variable that was assigned from an IP/hostname source within the
+    same function.
     """
 
     name = "hass_enforce_config_entry_unique_id_no_ip"
@@ -62,36 +55,6 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
         ),
     }
     options = ()
-
-    def visit_assign(self, node: nodes.Assign) -> None:
-        """Check unique_id = ... assignments."""
-        root_name = node.root().name
-        if not root_name.startswith("homeassistant.components."):
-            return
-
-        parts = root_name.split(".")
-        current_module = parts[3] if len(parts) > 3 else "__init__"
-        if current_module not in {"config_flow", "__init__"}:
-            return
-
-        for target in node.targets:
-            target_name = None
-            if isinstance(target, nodes.AssignName):
-                target_name = target.name
-            elif isinstance(target, nodes.AssignAttr):
-                target_name = target.attrname
-
-            if target_name not in _UNIQUE_ID_SETTERS:
-                continue
-
-            if node.value:
-                ref = _value_references_ip(node.value)
-                if ref:
-                    self.add_message(
-                        "hass-unique-id-ip-based",
-                        node=node,
-                        args=(ref,),
-                    )
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check async_set_unique_id(host-based-value) calls."""
@@ -121,7 +84,14 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
         if unique_id_node is None:
             return
 
+        # Check the argument directly first
         ref = _value_references_ip(unique_id_node)
+
+        # If the argument is a plain variable, resolve it by scanning
+        # assignments in the enclosing function
+        if ref is None and isinstance(unique_id_node, nodes.Name):
+            ref = _resolve_variable_ip_ref(unique_id_node)
+
         if ref:
             self.add_message(
                 "hass-unique-id-ip-based",
@@ -131,14 +101,15 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
 
 
 def _value_references_ip(node: nodes.NodeNG) -> str | None:
-    """Return the IP/host reference name if the expression looks IP-based.
+    """Return the IP/host reference name if the expression contains an IP ref.
 
-    Checks for:
+    Recursively checks the node tree for IP/host references, catching:
     - Direct Name reference: ``CONF_HOST``
     - Subscript: ``data[CONF_HOST]``, ``user_input["host"]``
     - Call: ``data.get(CONF_HOST)`` or ``data.get("host")``
+    - Embedded references: ``f"prefix_{data[CONF_HOST]}"``
     """
-    # Direct name: unique_id = CONF_HOST
+    # Direct name: CONF_HOST
     if isinstance(node, nodes.Name) and node.name in _IP_HOST_NAMES:
         return str(node.name)
 
@@ -170,6 +141,42 @@ def _value_references_ip(node: nodes.NodeNG) -> str | None:
             and first_arg.value in _IP_HOST_NAMES
         ):
             return first_arg.value
+
+    # Recurse into child nodes to catch embedded references (e.g. f-strings)
+    for child in node.get_children():
+        ref = _value_references_ip(child)
+        if ref:
+            return ref
+
+    return None
+
+
+def _resolve_variable_ip_ref(name_node: nodes.Name) -> str | None:
+    """Resolve a variable back to its assignments in the enclosing function.
+
+    If any assignment to the variable in the same function references an
+    IP/host source, return the reference name.
+    """
+    # Find the enclosing function
+    current = name_node.parent
+    while current is not None:
+        if isinstance(current, nodes.FunctionDef):
+            break
+        current = current.parent
+    else:
+        return None
+
+    # Scan all assignments in the function for this variable name
+    for assign in current.nodes_of_class(nodes.Assign):
+        for target in assign.targets:
+            if (
+                isinstance(target, nodes.AssignName)
+                and target.name == name_node.name
+                and assign.value
+            ):
+                ref = _value_references_ip(assign.value)
+                if ref:
+                    return ref
 
     return None
 

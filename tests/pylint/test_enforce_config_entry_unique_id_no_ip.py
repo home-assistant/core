@@ -39,22 +39,8 @@ from . import assert_no_messages
             """
         unique_id = data[CONF_HOST]
         """,
-            "homeassistant.components.test.sensor",
-            id="ip_in_sensor_not_flagged",
-        ),
-        pytest.param(
-            """
-        unique_id = data[CONF_HOST]
-        """,
-            "some.other.module",
-            id="outside_components",
-        ),
-        pytest.param(
-            """
-        some_var = data[CONF_HOST]
-        """,
             "homeassistant.components.test.config_flow",
-            id="not_unique_id_target",
+            id="assign_not_checked",
         ),
         pytest.param(
             """
@@ -85,84 +71,6 @@ def test_enforce_unique_id_no_ip(
 
     with assert_no_messages(linter):
         walker.walk(root_node)
-
-
-@pytest.mark.parametrize(
-    ("code", "module_name"),
-    [
-        pytest.param(
-            """
-        unique_id = data[CONF_HOST]
-        """,
-            "homeassistant.components.test.config_flow",
-            id="assign_conf_host",
-        ),
-        pytest.param(
-            """
-        unique_id = user_input["host"]
-        """,
-            "homeassistant.components.test.config_flow",
-            id="assign_string_host",
-        ),
-        pytest.param(
-            """
-        unique_id = data[CONF_IP_ADDRESS]
-        """,
-            "homeassistant.components.test.config_flow",
-            id="assign_conf_ip_address",
-        ),
-        pytest.param(
-            """
-        self._attr_unique_id = data[CONF_HOST]
-        """,
-            "homeassistant.components.test.config_flow",
-            id="attr_unique_id",
-        ),
-        pytest.param(
-            """
-        unique_id = data.get(CONF_HOST)
-        """,
-            "homeassistant.components.test.config_flow",
-            id="dict_get_conf_host",
-        ),
-        pytest.param(
-            """
-        unique_id = data.get("ip_address")
-        """,
-            "homeassistant.components.test.config_flow",
-            id="dict_get_string_ip",
-        ),
-        pytest.param(
-            """
-        unique_id = CONF_HOST
-        """,
-            "homeassistant.components.test.config_flow",
-            id="direct_name_ref",
-        ),
-        pytest.param(
-            """
-        unique_id = data[CONF_HOST]
-        """,
-            "homeassistant.components.test",
-            id="init_file",
-        ),
-    ],
-)
-def test_enforce_unique_id_no_ip_bad_assign(
-    linter: UnittestLinter,
-    enforce_config_entry_unique_id_no_ip_checker: BaseChecker,
-    code: str,
-    module_name: str,
-) -> None:
-    """Bad assignment test cases."""
-    root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_entry_unique_id_no_ip_checker)
-
-    walker.walk(root_node)
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].msg_id == "hass-unique-id-ip-based"
 
 
 @pytest.mark.parametrize(
@@ -208,6 +116,67 @@ def test_enforce_unique_id_no_ip_bad_assign(
     ],
 )
 def test_enforce_unique_id_no_ip_bad_call(
+    linter: UnittestLinter,
+    enforce_config_entry_unique_id_no_ip_checker: BaseChecker,
+    code: str,
+    module_name: str,
+) -> None:
+    """Bad async_set_unique_id call test cases."""
+    root_node = astroid.parse(code, module_name)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_config_entry_unique_id_no_ip_checker)
+
+    walker.walk(root_node)
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "hass-unique-id-ip-based"
+
+
+@pytest.mark.parametrize(
+    ("code", "module_name"),
+    [
+        pytest.param(
+            """
+async def async_step_user(self, user_input=None):
+    unique_id = data[CONF_HOST]
+    await self.async_set_unique_id(unique_id)
+        """,
+            "homeassistant.components.test.config_flow",
+            id="variable_from_subscript",
+        ),
+        pytest.param(
+            """
+async def async_step_user(self, user_input=None):
+    unique_id = f"prefix_{data[CONF_HOST]}"
+    await self.async_set_unique_id(unique_id)
+        """,
+            "homeassistant.components.test.config_flow",
+            id="variable_from_fstring",
+        ),
+        pytest.param(
+            """
+async def async_step_user(self, user_input=None):
+    if discovered:
+        unique_id = device.mac
+    else:
+        unique_id = data[CONF_HOST]
+    await self.async_set_unique_id(unique_id)
+        """,
+            "homeassistant.components.test.config_flow",
+            id="variable_from_conditional",
+        ),
+        pytest.param(
+            """
+async def async_step_user(self, user_input=None):
+    unique_id = data.get(CONF_HOST)
+    await self.async_set_unique_id(unique_id)
+        """,
+            "homeassistant.components.test.config_flow",
+            id="variable_from_dict_get",
+        ),
+    ],
+)
+def test_enforce_unique_id_no_ip_bad_call_variable(
     linter: UnittestLinter,
     enforce_config_entry_unique_id_no_ip_checker: BaseChecker,
     code: str,
