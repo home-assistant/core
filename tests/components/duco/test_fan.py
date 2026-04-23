@@ -164,12 +164,12 @@ async def test_fan_set_state_triggers_deferred_refresh(
     # Immediate refresh fires synchronously inside the blocking call.
     assert mock_duco_client.async_get_nodes.call_count == 1
 
-    # Advance time past the last deferred-refresh delay (10 s).
-    freezer.tick(timedelta(seconds=11))
+    # Advance time past the last deferred-refresh delay (9 s).
+    freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # 1 immediate + 5 deferred refreshes (1, 3, 5, 7, 10 s).
+    # 1 immediate + 5 deferred refreshes (1, 3, 5, 7, 9 s).
     assert mock_duco_client.async_get_nodes.call_count == 6
 
 
