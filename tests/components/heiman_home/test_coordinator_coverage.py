@@ -1,6 +1,7 @@
 """Additional tests for Heiman Home coordinator to improve coverage."""
 
 from datetime import UTC, datetime, timedelta
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import HeimanConnectionError, HeimanMQTTError
@@ -1036,8 +1037,6 @@ async def test_coordinator_cache_expiry(hass: HomeAssistant) -> None:
 
 async def test_coordinator_derive_metadata_parsing(hass: HomeAssistant) -> None:
     """Test deriveMetadata parsing and property updates."""
-    import json
-
     mock_api_client = MagicMock()
     mock_wrapper = MagicMock()
     mock_wrapper.async_get_user_info = AsyncMock(return_value=MagicMock())

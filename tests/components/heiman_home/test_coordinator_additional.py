@@ -441,8 +441,8 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
         # This should handle the exception gracefully (lines 589-590)
         await coordinator.async_init_mqtt_client()
 
-        # MQTT client should still be set even though connect failed
-        assert coordinator.mqtt_client is not None
+        # MQTT client should be cleared after failure so future calls can retry
+        assert coordinator.mqtt_client is None
 
 
 async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) -> None:

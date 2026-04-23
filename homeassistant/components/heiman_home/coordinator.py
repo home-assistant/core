@@ -592,8 +592,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
+            # Clear mqtt_client so future calls can retry
+            self.mqtt_client = None
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
+            # Clear mqtt_client so future calls can retry
+            self.mqtt_client = None
 
     def _on_device_property_update(
         self, device_id: str, properties: dict[str, Any]
