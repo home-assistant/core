@@ -971,7 +971,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         )
                     ]
                 )
-                model_args["messages"].extend(new_messages)  # type: ignore[attr-defined]
+                cast(list[MessageParam], model_args["messages"]).extend(new_messages)
             except anthropic.AuthenticationError as err:
                 # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
                 await coordinator.async_request_refresh()
