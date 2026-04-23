@@ -229,17 +229,15 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
-        if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
-            try:
-                prefix, image_data = thumb.split(",", 1)
-                image = base64.b64decode(image_data, validate=True)
-            except binascii.Error, ValueError:
-                return await super().async_get_media_image()
-
+        thumb = self._media_meta["thumb"]
+        try:
+            prefix, image_data = thumb.split(",", 1)
+            image = base64.b64decode(image_data, validate=True)
             mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-            return (image, mime)
+        except binascii.Error, ValueError:
+            return await super().async_get_media_image()
 
-        return await super().async_get_media_image()
+        return image, mime
 
     @rpc_call
     async def async_media_play(self) -> None:
