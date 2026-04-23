@@ -2,9 +2,6 @@
 # name: test_diagnostics
   dict({
     'config_entry_data': dict({
-      'contact': dict({
-        'email': '**REDACTED**',
-      }),
       'logo': 'https://home-assistant.io/logo.png',
       'space': 'Home',
       'state': dict({
@@ -18,7 +15,7 @@
         'https://home-assistant.io/cam2',
       ]),
       'contact': dict({
-        'email': '**REDACTED**',
+        'email': 'hello@home-assistant.io',
       }),
       'feeds': dict({
         'blog': dict({
@@ -28,11 +25,11 @@
           'type': 'ical',
           'url': 'https://home-assistant.io/calendar',
         }),
-        'flicker': dict({
+        'flickr': dict({
           'url': 'https://www.flickr.com/photos/home-assistant',
         }),
         'wiki': dict({
-          'type': 'mediawiki',
+          'type': 'rss',
           'url': 'https://home-assistant.io/wiki',
         }),
       }),

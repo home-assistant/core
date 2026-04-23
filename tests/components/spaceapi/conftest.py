@@ -16,7 +16,6 @@ ENTRY_DATA = {
     "logo": "https://home-assistant.io/logo.png",
     "url": "https://home-assistant.io",
     "state": {"entity_id": "test.test_door"},
-    "contact": {"email": "hello@home-assistant.io"},
 }
 
 ENTRY_OPTIONS = {
@@ -33,9 +32,9 @@ ENTRY_OPTIONS = {
     "cam": ["https://home-assistant.io/cam1", "https://home-assistant.io/cam2"],
     "feeds": {
         "blog": {"url": "https://home-assistant.io/blog"},
-        "wiki": {"type": "mediawiki", "url": "https://home-assistant.io/wiki"},
+        "wiki": {"type": "rss", "url": "https://home-assistant.io/wiki"},
         "calendar": {"type": "ical", "url": "https://home-assistant.io/calendar"},
-        "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
+        "flickr": {"url": "https://www.flickr.com/photos/home-assistant"},
     },
     "projects": [
         "https://home-assistant.io/projects/1",
