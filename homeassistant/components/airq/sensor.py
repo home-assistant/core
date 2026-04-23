@@ -24,12 +24,13 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQConfigEntry, AirQCoordinator
+from . import AirQConfigEntry
 from .const import ACTIVITY_BECQUEREL_PER_CUBIC_METER
+from .coordinator import AirQCoordinator
+from .entity import AirQEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -445,10 +446,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirQSensor(CoordinatorEntity, SensorEntity):
+class AirQSensor(AirQEntity, SensorEntity):
     """Representation of a Sensor."""
 
-    _attr_has_entity_name = True
+    entity_description: AirQEntityDescription
 
     def __init__(
         self,
@@ -456,15 +457,10 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         description: AirQEntityDescription,
     ) -> None:
         """Initialize a single sensor."""
-        super().__init__(coordinator)
-        self.entity_description: AirQEntityDescription = description
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
 
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
-        self._attr_native_value = description.value(coordinator.data)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the sensor value."""
+        return self.entity_description.value(self.coordinator.data)

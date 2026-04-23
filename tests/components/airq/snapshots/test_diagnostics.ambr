@@ -36,6 +36,7 @@
       'manufacturer': 'CorantGmbH',
       'model': 'model',
       'name': '**REDACTED**',
+      'serial_number': 'id',
       'sw_version': 'sw',
     }),
     'options': dict({
