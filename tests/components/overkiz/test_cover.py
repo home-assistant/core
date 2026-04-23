@@ -133,24 +133,10 @@ async def test_cover_entities_snapshot(
     ("device", "service", "command_name", "expected_state"),
     [
         (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        pytest.param(
-            AWNING,
-            SERVICE_OPEN_COVER,
-            "deploy",
-            CoverState.OPENING,
-            marks=pytest.mark.xfail(reason="Awning deploy not mapped to opening state"),
-        ),
+        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        pytest.param(
-            AWNING,
-            SERVICE_CLOSE_COVER,
-            "undeploy",
-            CoverState.CLOSING,
-            marks=pytest.mark.xfail(
-                reason="Awning undeploy not mapped to closing state"
-            ),
-        ),
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
@@ -668,3 +654,151 @@ async def test_awning_direct_position_mapping(
         ],
     )
     assert hass.states.get(AWNING.entity_id).attributes[ATTR_CURRENT_POSITION] == 100
+
+
+async def test_moving_offset_missing_closure_states(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that is_opening/is_closing return None when closure states are missing while moving."""
+    await setup_overkiz_integration(fixture=PERGOLA.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=PERGOLA.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_MOVING.value,
+                        "type": 6,
+                        "value": True,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(PERGOLA.entity_id)
+    assert state.state == CoverState.CLOSED
+
+
+async def test_moving_offset_none_values(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that is_opening/is_closing return None when closure value_as_int is None."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_MOVING.value,
+                        "type": 6,
+                        "value": True,
+                    },
+                    {
+                        "name": OverkizState.CORE_CLOSURE.value,
+                        "type": 1,
+                        "value": None,
+                    },
+                    {
+                        "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                        "type": 1,
+                        "value": 50,
+                    },
+                    {
+                        "name": OverkizState.CORE_OPEN_CLOSED.value,
+                        "type": 3,
+                        "value": OverkizCommandParam.OPEN.value,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(SHUTTER.entity_id)
+    assert state.state == CoverState.OPEN
+
+
+async def test_tilt_position_none_value(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that tilt position returns None when value_as_int is None."""
+    await setup_overkiz_integration(fixture=PERGOLA.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=PERGOLA.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_SLATE_ORIENTATION.value,
+                        "type": 1,
+                        "value": None,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(PERGOLA.entity_id)
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+
+async def test_low_speed_cover_open_close(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test low speed cover open and close send correct commands."""
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+    entity_id = "cover.nursery_shutter_low_speed"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=LOW_SPEED.device_url,
+        command_name="setClosureAndLinearSpeed",
+        parameters=[0, OverkizCommandParam.LOWSPEED],
+    )
+
+    mock_client.execute_command.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=LOW_SPEED.device_url,
+        command_name="setClosureAndLinearSpeed",
+        parameters=[100, OverkizCommandParam.LOWSPEED],
+    )
