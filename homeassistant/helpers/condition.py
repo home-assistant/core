@@ -312,6 +312,11 @@ class ConditionChecker(abc.ABC):
             condition_trace_update_result(result=result)
             return result
 
+    @callback
+    def async_on_unload(self, func: Callable[[], None]) -> None:
+        """Add a function to call when config entry is unloaded."""
+        self._on_unload.append(func)
+
     def async_unload(self) -> None:
         """Clean up any resources held by the checker."""
         for cb in self._on_unload:
