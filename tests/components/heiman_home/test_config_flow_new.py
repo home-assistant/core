@@ -55,7 +55,7 @@ async def test_oauth_create_entry_token_expired(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "token_invalid"
+        assert result["reason"] == "token_expired"
         mock_api_client.close.assert_called_once()
 
 
@@ -167,7 +167,7 @@ async def test_oauth_create_entry_homes_token_expired(hass: HomeAssistant) -> No
         )
 
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "token_invalid"
+        assert result["reason"] == "token_expired"
         mock_api_client.close.assert_called_once()
 
 

@@ -265,7 +265,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # when only some devices need fetching.
         for device_id, device in devices.items():
             device_detail = self._device_detail_cache.get(device_id)
-            if device_detail:
+            if device_detail is not None:
                 self._process_device_detail(device, device_detail)
 
         # Identify devices that need detail fetching (not in cache)
@@ -318,8 +318,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Cache the result (including None for failed requests)
             self._device_detail_cache[device_id] = device_detail
 
-            # Process the detail if available
-            if device_detail and device_id in devices:
+            # Process the detail if available (use is not None to handle empty dict)
+            if device_detail is not None and device_id in devices:
                 self._process_device_detail(
                     devices[device_id], device_detail
                 )  # pragma: no cover - normal execution path covered in integration tests
