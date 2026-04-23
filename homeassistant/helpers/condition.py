@@ -1119,13 +1119,13 @@ class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, variables, **kwargs) is False:
+                    if check(self._hass, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -1153,13 +1153,13 @@ class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, variables) is True:
+                    if check(self._hass, **kwargs) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
@@ -1187,13 +1187,13 @@ class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, variables, **kwargs):
+                    if check(self._hass, **kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
