@@ -6,7 +6,7 @@ from datetime import tzinfo
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,7 +26,7 @@ async def async_setup_entry(
         [
             WorldClockSensor(
                 time_zone,
-                entry.options[CONF_NAME],
+                entry.title,
                 entry.options[CONF_TIME_FORMAT],
                 entry.entry_id,
             )

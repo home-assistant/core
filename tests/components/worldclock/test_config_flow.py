@@ -7,11 +7,10 @@ from unittest.mock import AsyncMock
 from homeassistant import config_entries
 from homeassistant.components.worldclock.const import (
     CONF_TIME_FORMAT,
-    DEFAULT_NAME,
     DEFAULT_TIME_STR_FORMAT,
     DOMAIN,
 )
-from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -30,7 +29,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: DEFAULT_NAME,
             CONF_TIME_ZONE: "America/New_York",
         },
     )
@@ -38,8 +36,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
+    assert result["title"] == "America/New_York"
     assert result["options"] == {
-        CONF_NAME: DEFAULT_NAME,
         CONF_TIME_ZONE: "America/New_York",
         CONF_TIME_FORMAT: DEFAULT_TIME_STR_FORMAT,
     }
@@ -65,7 +63,6 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_NAME: DEFAULT_NAME,
         CONF_TIME_ZONE: "America/New_York",
         CONF_TIME_FORMAT: "%a, %b %d, %Y %I:%M %p",
     }
@@ -75,7 +72,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     # Check the entity was updated, no new entity was created
     assert len(hass.states.async_all()) == 1
 
-    state = hass.states.get("sensor.worldclock_sensor")
+    state = hass.states.get("sensor.america_new_york")
     assert state is not None
 
 
@@ -93,7 +90,6 @@ async def test_entry_already_exist(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: DEFAULT_NAME,
             CONF_TIME_ZONE: "America/New_York",
             CONF_TIME_FORMAT: DEFAULT_TIME_STR_FORMAT,
         },

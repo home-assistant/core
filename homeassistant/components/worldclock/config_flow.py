@@ -8,7 +8,7 @@ import zoneinfo
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -19,10 +19,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 
-from .const import CONF_TIME_FORMAT, DEFAULT_NAME, DEFAULT_TIME_STR_FORMAT, DOMAIN
+from .const import CONF_TIME_FORMAT, DEFAULT_TIME_STR_FORMAT, DOMAIN
 
 TIME_STR_OPTIONS = [
     SelectOptionDict(
@@ -55,7 +54,6 @@ async def get_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     )
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
             vol.Required(CONF_TIME_ZONE): SelectSelector(
                 SelectSelectorConfig(
                     options=get_timezones, mode=SelectSelectorMode.DROPDOWN, sort=True
@@ -101,4 +99,4 @@ class WorldclockConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, options[CONF_NAME])
+        return cast(str, options[CONF_TIME_ZONE])
