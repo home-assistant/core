@@ -147,8 +147,8 @@ async def test_fan_set_state_triggers_deferred_refresh(
 ) -> None:
     """Test that coordinator refreshes fire after a state change.
 
-    One immediate refresh is followed by 6 deferred refreshes (1, 5, 10, 15,
-    20, 25 s) so the airflow target sensor picks up the updated FlowLvlTgt
+    One immediate refresh is followed by 5 deferred refreshes (1, 3, 5, 7,
+    9 s) so the airflow target sensor picks up the updated FlowLvlTgt
     value regardless of firmware latency.
     """
     mock_duco_client.async_set_ventilation_state = AsyncMock()
