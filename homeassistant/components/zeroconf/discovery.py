@@ -24,12 +24,9 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo as _ZeroconfServiceInfo,
 )
 from homeassistant.loader import HomeKitDiscoveredIntegration, ZeroconfMatcher
-from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, REQUEST_TIMEOUT
-
-if TYPE_CHECKING:
-    from .models import HaZeroconf
+from .models import HaZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,9 +48,6 @@ ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
 DUPLICATE_INSTANCE_ID_ISSUE_ID = "duplicate_instance_id"
-
-
-DATA_DISCOVERY: HassKey[ZeroconfDiscovery] = HassKey("zeroconf_discovery")
 
 
 def build_homekit_model_lookups(

@@ -24,6 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if coordinator is None:
         coordinator = NextBusDataUpdateCoordinator(hass, entry_agency)
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         hass.data[DOMAIN][coordinator_key] = coordinator
 
     coordinator.add_stop_route(entry_stop, entry.data[CONF_ROUTE])

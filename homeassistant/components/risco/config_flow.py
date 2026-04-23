@@ -234,6 +234,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
             self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
             schema = schema.extend(
                 {
+                    # Polling interval is user-configurable, which is no longer allowed
+                    # pylint: disable-next=hass-config-flow-polling-field
                     vol.Required(
                         CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
                     ): int,
