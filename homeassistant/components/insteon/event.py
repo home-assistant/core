@@ -74,6 +74,12 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
         """Initialize the event entity."""
         super().__init__(device=device, group=group)
 
+        self._events = device.events[group].values()
+        self._event_names = [item.name for item in self._events]
+
+        # keep track of registered event listeners so we can unsubscribe later
+        self._insteon_event_listeners: list[tuple[Event, Callable[..., None]]] = []
+
         self._attr_has_entity_name = True
 
         self._attr_translation_key = (
@@ -83,6 +89,21 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
         self._attr_translation_placeholders = {
             "button": self._insteon_device_group.name.rpartition("_")[-1].upper()
         }
+
+        self._attr_device_class = EventDeviceClass.BUTTON
+
+        event_types: list[str] = []
+
+        # if the device is only a subset of 4 button events
+        # set the device class to button and add the event types to the entity description.
+        if set(self._event_names).issubset(_BUTTON_EVENT_NAMES):
+            for event in self._events:
+                event_types.append(event.name.removesuffix("_event"))
+
+        self._attr_event_types = event_types
+
+    async def async_added_to_hass(self):
+        """Subscribe Insteon event listeners."""
 
         @callback
         def async_fire_button_event(
@@ -99,36 +120,22 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                 self._trigger_event(name.removesuffix("_event"), {})
                 self.async_write_ha_state()
 
-        event_types: list[str] = []
+        # subscribe and track the event listeners
+        for event in self._events:
+            _LOGGER.debug(
+                "Registering event for %s group %d %s",
+                str(event.address),
+                event.group,
+                event.name,
+            )
+            event.subscribe(async_fire_button_event, force_strong_ref=True)
+            self._insteon_event_listeners.append((event, async_fire_button_event))
 
-        # keep track of registered event listeners so we can unsubscribe later
-        self._insteon_event_listeners: list[tuple[Event, Callable[..., None]]] = []
-
-        events = device.events[group].values()
-        event_names = [item.name for item in events]
-
-        # Set the event device class via the entity attr so EventEntity cache
-        # invalidation and state handling continue to work correctly.
-        # if the device is only a subset of 4 button events
-        # set the device class to button and add the event types to the entity description.
-        if set(event_names).issubset(_BUTTON_EVENT_NAMES):
-            self._attr_device_class = EventDeviceClass.BUTTON
-
-            for event in events:
-                event_types.append(event.name.removesuffix("_event"))
-                _register_entity_event(event, async_fire_button_event)
-                self._insteon_event_listeners.append((event, async_fire_button_event))
-
-        self._attr_event_types = event_types
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for the event entity."""
-        return super().unique_id + "_event"
+        return await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe any registered Insteon event listeners."""
-        for event, listener in getattr(self, "_insteon_event_listeners", []):
+        for event, listener in self._insteon_event_listeners:
             try:
                 event.unsubscribe(listener)
             except (TypeError, ValueError) as err:  # only handle expected call errors
@@ -138,4 +145,5 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                     getattr(event, "group", "?"),
                     err,
                 )
+
         await super().async_will_remove_from_hass()
