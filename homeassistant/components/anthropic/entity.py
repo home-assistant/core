@@ -703,14 +703,13 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(  # noqa: C901
+    async def _get_model_args(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
-        max_iterations: int = MAX_TOOL_ITERATIONS,
-    ) -> None:
-        """Generate an answer for the chat log."""
+    ) -> MessageCreateParamsStreaming:
+        """Get the model arguments."""
         options = self.subentry.data
 
         preloaded_tools = [
@@ -953,6 +952,17 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
             model_args["tools"] = tools
 
+        return model_args
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        model_args = await self._get_model_args(chat_log, structure_name, structure)
         coordinator = self.entry.runtime_data
         client = coordinator.client
 
@@ -974,7 +984,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         )
                     ]
                 )
-                messages.extend(new_messages)
+                model_args["messages"].extend(new_messages)  # type: ignore[attr-defined]
             except anthropic.AuthenticationError as err:
                 # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
                 await coordinator.async_request_refresh()
