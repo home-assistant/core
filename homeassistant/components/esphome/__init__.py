@@ -140,8 +140,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
     async_delete_issue(
         hass, DOMAIN, DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
     )
-    domain_data = hass.data.setdefault(ESPHOME_DATA, DomainData())
-    await domain_data.get_or_create_store(hass, entry).async_remove()
+    await hass.data[ESPHOME_DATA].get_or_create_store(hass, entry).async_remove()
 
     await _async_clear_dynamic_encryption_key(hass, entry)
 

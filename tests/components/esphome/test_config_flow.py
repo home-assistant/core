@@ -27,7 +27,9 @@ from homeassistant.components.esphome.const import (
     CONF_SUBSCRIBE_LOGS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
+    ESPHOME_DATA,
 )
+from homeassistant.components.esphome.domain_data import DomainData
 from homeassistant.components.esphome.encryption_key_storage import (
     ENCRYPTION_KEY_STORAGE_KEY,
 )
@@ -2199,6 +2201,7 @@ async def test_user_flow_name_conflict_migrate(
     mock_client: APIClient,
 ) -> None:
     """Test handle migration on name conflict."""
+    hass.data[ESPHOME_DATA] = DomainData()
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE_NAME: "test"},
@@ -2573,6 +2576,7 @@ async def test_reconfig_name_conflict_migrate(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test reconfig initiation when device has been replaced."""
+    hass.data[ESPHOME_DATA] = DomainData()
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
