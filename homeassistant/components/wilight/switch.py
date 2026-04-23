@@ -9,14 +9,12 @@ from pywilight.wilight_device import PyWiLightDevice
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import WiLightDevice
-from .parent_device import WiLightParent
+from .parent_device import WiLightConfigEntry
 from .support import wilight_to_hass_trigger, wilight_trigger as wl_trigger
 
 # Attr of features supported by the valve switch entities
@@ -76,11 +74,11 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiLightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight switches from a config entry."""
-    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
+    parent = entry.runtime_data
 
     # Handle a discovered WiLight device.
     assert parent.api

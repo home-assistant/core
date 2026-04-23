@@ -1,0 +1,79 @@
+"""The UniFi Access integration."""
+
+from __future__ import annotations
+
+from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
+
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import create_no_verify_ssl_context
+
+from .const import DOMAIN
+from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.EVENT,
+    Platform.IMAGE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the UniFi Access integration."""
+    await async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) -> bool:
+    """Set up UniFi Access from a config entry."""
+    session = async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL])
+
+    ssl_context = (
+        None if entry.data[CONF_VERIFY_SSL] else create_no_verify_ssl_context()
+    )
+    client = UnifiAccessApiClient(
+        host=entry.data[CONF_HOST],
+        api_token=entry.data[CONF_API_TOKEN],
+        session=session,
+        verify_ssl=entry.data[CONF_VERIFY_SSL],
+        ssl_context=ssl_context,
+    )
+
+    try:
+        await client.authenticate()
+    except ApiAuthError as err:
+        raise ConfigEntryAuthFailed(
+            f"Authentication failed for UniFi Access at {entry.data[CONF_HOST]}"
+        ) from err
+    except ApiConnectionError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to UniFi Access at {entry.data[CONF_HOST]}"
+        ) from err
+
+    coordinator = UnifiAccessCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+    entry.async_on_unload(client.close)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: UnifiAccessConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

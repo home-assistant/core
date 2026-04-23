@@ -78,7 +78,7 @@ class SisyphusLight(LightEntity):
         return not self._table.is_sleeping
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the current brightness of the table's ring light."""
         return self._table.brightness * 255
 

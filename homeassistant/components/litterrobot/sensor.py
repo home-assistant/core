@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Pet, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +22,8 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _WhiskerEntityT
+
+PARALLEL_UPDATES = 0
 
 
 def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
@@ -44,8 +46,10 @@ class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEnti
     value_fn: Callable[[_WhiskerEntityT], float | datetime | str | None]
 
 
-ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
-    LitterRobot: [  # type: ignore[type-abstract]  # only used for isinstance check
+ROBOT_SENSOR_MAP: dict[
+    type[Robot] | tuple[type[Robot], ...], list[RobotSensorEntityDescription]
+] = {
+    LitterRobot: [
         RobotSensorEntityDescription[LitterRobot](
             key="waste_drawer_level",
             translation_key="waste_drawer",
@@ -145,7 +149,9 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
                 )
             ),
         ),
-        RobotSensorEntityDescription[LitterRobot4](
+    ],
+    (LitterRobot4, LitterRobot5): [
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="litter_level",
             translation_key="litter_level",
             native_unit_of_measurement=PERCENTAGE,
@@ -153,7 +159,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.litter_level,
         ),
-        RobotSensorEntityDescription[LitterRobot4](
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="pet_weight",
             translation_key="pet_weight",
             native_unit_of_measurement=UnitOfMass.POUNDS,
@@ -226,23 +232,47 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     coordinator = entry.runtime_data
-    entities: list[LitterRobotSensorEntity] = [
-        LitterRobotSensorEntity(
-            robot=robot, coordinator=coordinator, description=description
-        )
-        for robot in coordinator.account.robots
-        for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
-        if isinstance(robot, robot_type)
-        for description in entity_descriptions
-    ]
-    entities.extend(
-        LitterRobotSensorEntity(
-            robot=pet, coordinator=coordinator, description=description
-        )
-        for pet in coordinator.account.pets
-        for description in PET_SENSORS
-    )
-    async_add_entities(entities)
+    known_robots: set[str] = set()
+    known_pets: set[str] = set()
+
+    def _check_robots_and_pets() -> None:
+        entities: list[LitterRobotSensorEntity] = []
+
+        all_robots = coordinator.account.robots
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            entities.extend(
+                LitterRobotSensorEntity(
+                    robot=robot, coordinator=coordinator, description=description
+                )
+                for robot in all_robots
+                if robot.serial in new_robots
+                for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
+                if isinstance(robot, robot_type)
+                for description in entity_descriptions
+            )
+
+        all_pets = coordinator.account.pets
+        current_pets = {pet.id for pet in all_pets}
+        new_pets = current_pets - known_pets
+        if new_pets:
+            known_pets.update(new_pets)
+            entities.extend(
+                LitterRobotSensorEntity(
+                    robot=pet, coordinator=coordinator, description=description
+                )
+                for pet in all_pets
+                if pet.id in new_pets
+                for description in PET_SENSORS
+            )
+
+        if entities:
+            async_add_entities(entities)
+
+    _check_robots_and_pets()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots_and_pets))
 
 
 class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):

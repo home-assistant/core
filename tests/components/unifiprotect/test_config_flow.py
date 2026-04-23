@@ -30,8 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from . import (
     DEVICE_HOSTNAME,
@@ -40,7 +38,6 @@ from . import (
     DIRECT_CONNECT_DOMAIN,
     UNIFI_DISCOVERY,
     UNIFI_DISCOVERY_PARTIAL,
-    _patch_discovery,
 )
 from .conftest import (
     DEFAULT_API_KEY,
@@ -53,24 +50,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-
-DHCP_DISCOVERY = DhcpServiceInfo(
-    hostname=DEVICE_HOSTNAME,
-    ip=DEVICE_IP_ADDRESS,
-    macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
-)
-SSDP_DISCOVERY = (
-    SsdpServiceInfo(
-        ssdp_usn="mock_usn",
-        ssdp_st="mock_st",
-        ssdp_location=f"http://{DEVICE_IP_ADDRESS}:41417/rootDesc.xml",
-        upnp={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "serialNumber": DEVICE_MAC_ADDRESS,
-        },
-    ),
-)
 
 # Base user input without credentials (for tests that override them)
 BASE_USER_INPUT = {
@@ -524,6 +503,10 @@ async def test_form_reauth_auth(
             return_value=True,
         ) as mock_setup,
         patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
             return_value=None,
         ),
@@ -559,8 +542,6 @@ async def test_form_options(
     ufp_config_entry.add_to_hass(hass)
 
     with (
-        _patch_discovery(),
-        patch("homeassistant.components.unifiprotect.async_start_discovery"),
         patch(
             "homeassistant.components.unifiprotect.utils.ProtectApiClient"
         ) as mock_api,
@@ -596,42 +577,17 @@ async def test_form_options(
         await hass.config_entries.async_unload(ufp_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("source", "data"),
-    [
-        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_SSDP, SSDP_DISCOVERY),
-    ],
-)
-async def test_discovered_by_ssdp_or_dhcp(
-    hass: HomeAssistant, source: str, data: DhcpServiceInfo | SsdpServiceInfo
-) -> None:
-    """Test we handoff to unifi-discovery when discovered via ssdp or dhcp."""
-
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source},
-            data=data,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "discovery_started"
-
-
 async def test_discovered_by_unifi_discovery_direct_connect(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
 ) -> None:
     """Test a discovery from unifi-discovery."""
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -710,13 +666,12 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -743,7 +698,6 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     mock_config.add_to_hass(hass)
 
     with (
-        _patch_discovery(),
         patch(
             "homeassistant.components.unifiprotect.config_flow.async_console_is_alive",
             return_value=False,
@@ -781,7 +735,6 @@ async def test_discovered_by_unifi_discovery_does_not_update_ip_when_console_is_
     mock_config.add_to_hass(hass)
 
     with (
-        _patch_discovery(),
         patch(
             "homeassistant.components.unifiprotect.config_flow.async_console_is_alive",
             return_value=True,
@@ -817,13 +770,12 @@ async def test_discovered_host_not_updated_if_existing_is_a_hostname(
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -835,13 +787,12 @@ async def test_discovered_by_unifi_discovery(
 ) -> None:
     """Test a discovery from unifi-discovery."""
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -905,13 +856,12 @@ async def test_discovered_by_unifi_discovery_partial(
 ) -> None:
     """Test a discovery from unifi-discovery partial."""
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT_PARTIAL,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT_PARTIAL,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -989,13 +939,12 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -1020,13 +969,12 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -1056,7 +1004,6 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     other_ip_dict["direct_connect_domain"] = "nomatchsameip.ui.direct"
 
     with (
-        _patch_discovery(),
         patch.object(
             hass.loop,
             "getaddrinfo",
@@ -1099,7 +1046,6 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     other_ip_dict["direct_connect_domain"] = "nomatchsameip.ui.direct"
 
     with (
-        _patch_discovery(),
         patch.object(hass.loop, "getaddrinfo", side_effect=OSError),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1189,7 +1135,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     other_ip_dict["source_ip"] = "127.0.0.2"
     other_ip_dict["direct_connect_domain"] = "y.ui.direct"
 
-    with _patch_discovery(), patch.object(hass.loop, "getaddrinfo", return_value=[]):
+    with patch.object(hass.loop, "getaddrinfo", return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -1210,13 +1156,12 @@ async def test_discovery_can_be_ignored(hass: HomeAssistant) -> None:
         source=config_entries.SOURCE_IGNORE,
     )
     mock_config.add_to_hass(hass)
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -1252,13 +1197,12 @@ async def test_discovery_with_both_ignored_and_normal_entry(
     # Discovery should:
     # 1. Skip all ignored entries with different MAC (line 182 - continue)
     # 2. Continue to discovery flow since no matching entries
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     # Flow continues to discovery step since no match found
     assert result["type"] is FlowResultType.FORM
@@ -1308,13 +1252,12 @@ async def test_discovery_confirm_fallback_to_ip(
     mock_api_meta_info: Mock,
 ) -> None:
     """Test discovery confirm falls back to IP when direct connect fails."""
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -1359,13 +1302,12 @@ async def test_discovery_confirm_with_api_key_error(
     mock_api_meta_info: Mock,
 ) -> None:
     """Test discovery confirm preserves API key in form data on error."""
-    with _patch_discovery():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=UNIFI_DISCOVERY_DICT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -1917,9 +1859,15 @@ async def test_reauth_empty_credentials_keeps_existing(
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
-    with patch(
-        "homeassistant.components.unifiprotect.async_setup",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         # Submit with empty credentials - should keep existing
         result = await hass.config_entries.flow.async_configure(
@@ -2003,9 +1951,15 @@ async def test_reauth_credential_update(
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
-    with patch(
-        "homeassistant.components.unifiprotect.async_setup",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

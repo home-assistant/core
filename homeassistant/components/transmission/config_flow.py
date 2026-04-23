@@ -40,8 +40,10 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SSL,
     DOMAIN,
+    MIN_REQUIRED_TRANSMISSION_VERSION,
     SUPPORTED_ORDER_MODES,
 )
+from .helpers import create_version
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -80,13 +82,17 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             try:
-                await get_api(self.hass, user_input)
+                api = await get_api(self.hass, user_input)
 
             except TransmissionAuthError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
             except TransmissionConnectError, TransmissionError:
                 errors["base"] = "cannot_connect"
+            else:
+                version = create_version(api.server_version)
+                if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
+                    errors["base"] = "transmission_version"
 
             if not errors:
                 return self.async_create_entry(
@@ -115,14 +121,20 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input = {**reauth_entry.data, **user_input}
             try:
-                await get_api(self.hass, user_input)
+                api = await get_api(self.hass, user_input)
 
             except TransmissionAuthError:
                 errors[CONF_PASSWORD] = "invalid_auth"
             except TransmissionConnectError, TransmissionError:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
+                version = create_version(api.server_version)
+                if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
+                    errors["base"] = "transmission_version"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data=user_input
+                    )
 
         return self.async_show_form(
             description_placeholders={

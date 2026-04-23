@@ -17,7 +17,6 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -30,17 +29,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Number Input from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
 
 
@@ -183,6 +182,27 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
+        not_device_type=(device_types.Speaker,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="power_on_level",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="power_on_level",
+            native_max_value=255,
+            native_min_value=0,
+            mode=NumberMode.BOX,
+            # use 255 to indicate that the value should revert to the default
+            device_to_ha=lambda x: 255 if x is None else x,
+            ha_to_device=lambda x: None if x == 255 else int(x),
+            native_step=1,
+            native_unit_of_measurement=None,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.LevelControl.Attributes.StartUpCurrentLevel,),
         not_device_type=(device_types.Speaker,),
         # allow None value to account for 'default' value
         allow_none_value=True,
@@ -378,6 +398,47 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.OccupancySensing.Attributes.HoldTime,),
+        # HoldTime is shared by PIR-specific numbers as a required attribute.
+        # Keep discovery open so this generic schema does not block them.
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="OccupancySensingPIRUnoccupiedToOccupiedDelay",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="detection_delay",
+            native_max_value=65534,
+            native_min_value=0,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
+            # This attribute is mandatory when the PIRUnoccupiedToOccupiedDelay is present
+            clusters.OccupancySensing.Attributes.HoldTime,
+        ),
+        featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="OccupancySensingPIRUnoccupiedToOccupiedThreshold",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="detection_threshold",
+            native_max_value=254,
+            native_min_value=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedThreshold,
+            clusters.OccupancySensing.Attributes.HoldTime,
+        ),
+        featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -498,6 +559,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOff,
         ),
+        product_id=(2, 16),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -514,6 +576,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
+        product_id=(2, 16),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,

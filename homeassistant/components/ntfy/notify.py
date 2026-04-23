@@ -27,7 +27,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
-from .services import ATTR_ATTACH_FILE, ATTR_FILENAME, ATTR_SEQUENCE_ID
+from .services import (
+    ACTIONS_MAP,
+    ATTR_ACTION,
+    ATTR_ACTIONS,
+    ATTR_ATTACH_FILE,
+    ATTR_FILENAME,
+    ATTR_SEQUENCE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +65,16 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Publish a message to a topic."""
-        await self.publish(message=message, title=title)
+        """Publish a message to a topic via notify.send_message action."""
+        await self._publish(message=message, title=title)
 
     async def publish(self, **kwargs: Any) -> None:
-        """Publish a message to a topic."""
+        """Publish a message to a topic via ntfy.publish action."""
+        await self._publish(**kwargs)
+        self._async_record_notification()
+
+    async def _publish(self, **kwargs: Any) -> None:
+        """Shared internal helper to publish a message to a topic."""
         attachment = None
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
@@ -104,6 +116,15 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 )
 
                 params.setdefault(ATTR_FILENAME, media.path.name)
+
+        actions: list[dict[str, Any]] | None = params.get(ATTR_ACTIONS)
+        if actions:
+            params["actions"] = [
+                ACTIONS_MAP[action[ATTR_ACTION]](
+                    **{k: v for k, v in action.items() if k != ATTR_ACTION}
+                )
+                for action in actions
+            ]
 
         msg = Message(topic=self.topic, **params)
         try:

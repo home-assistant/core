@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ToGrillConfigEntry
-from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, MAX_PROBE_COUNT
 from .coordinator import ToGrillCoordinator
 from .entity import ToGrillEntity
 
@@ -123,12 +123,64 @@ def _get_temperature_descriptions(
     )
 
 
+def _get_ambient_temperatures(
+    coordinator: ToGrillCoordinator, alarm_type: AlarmType
+) -> tuple[float | None, float | None]:
+    if not (packet := coordinator.get_packet(PacketA8Notify, 0)):
+        return None, None
+    if packet.alarm_type != alarm_type:
+        return None, None
+    return packet.temperature_1, packet.temperature_2
+
+
 ENTITY_DESCRIPTIONS = (
     *[
         description
         for probe_number in range(1, MAX_PROBE_COUNT + 1)
         for description in _get_temperature_descriptions(probe_number)
     ],
+    ToGrillNumberEntityDescription(
+        key="ambient_temperature_minimum",
+        translation_key="ambient_temperature_minimum",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=0,
+        native_max_value=400,
+        mode=NumberMode.BOX,
+        icon="mdi:thermometer-chevron-down",
+        set_packet=lambda coordinator, value: PacketA300Write(
+            probe=0,
+            minimum=None if value == 0.0 else value,
+            maximum=_get_ambient_temperatures(coordinator, AlarmType.TEMPERATURE_RANGE)[
+                1
+            ],
+        ),
+        get_value=lambda x: _get_ambient_temperatures(x, AlarmType.TEMPERATURE_RANGE)[
+            0
+        ],
+        entity_supported=lambda x: x.get(CONF_HAS_AMBIENT, False),
+    ),
+    ToGrillNumberEntityDescription(
+        key="ambient_temperature_maximum",
+        translation_key="ambient_temperature_maximum",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=0,
+        native_max_value=400,
+        mode=NumberMode.BOX,
+        icon="mdi:thermometer-chevron-up",
+        set_packet=lambda coordinator, value: PacketA300Write(
+            probe=0,
+            minimum=_get_ambient_temperatures(coordinator, AlarmType.TEMPERATURE_RANGE)[
+                0
+            ],
+            maximum=None if value == 0.0 else value,
+        ),
+        get_value=lambda x: _get_ambient_temperatures(x, AlarmType.TEMPERATURE_RANGE)[
+            1
+        ],
+        entity_supported=lambda x: x.get(CONF_HAS_AMBIENT, False),
+    ),
     ToGrillNumberEntityDescription(
         key="alarm_interval",
         translation_key="alarm_interval",

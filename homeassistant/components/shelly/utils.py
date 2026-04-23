@@ -76,10 +76,12 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
+    SHELLY_WALL_DISPLAY_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
+    WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
 
@@ -120,7 +122,7 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get custom name from device settings."""
-    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+    if block and (key := block.type + "s") and key in device.settings:
         assert block.channel
 
         if name := device.settings[key][int(block.channel)].get("name"):
@@ -249,6 +251,8 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
 def get_coiot_port(hass: HomeAssistant) -> int:
     """Get CoIoT port from config."""
     if DOMAIN in hass.data:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
     return DEFAULT_COAP_PORT
 
@@ -587,6 +591,9 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         beta and gen in BLOCK_GENERATIONS
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
+
+    if model in SHELLY_WALL_DISPLAY_MODELS:
+        return WALL_DISPLAY_RELEASE_URL
 
     if beta:
         return GEN2_BETA_RELEASE_URL
@@ -967,6 +974,30 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
 def format_ble_addr(ble_addr: str) -> str:
     """Format BLE address to use in unique_id."""
     return ble_addr.replace(":", "").upper()
+
+
+@callback
+def async_migrate_rpc_sensor_description_unique_ids(
+    entity_entry: er.RegistryEntry,
+) -> dict[str, Any] | None:
+    """Migrate RPC sensor unique_ids after sensor description key rename."""
+    unique_id_map = {
+        "-temperature_0": "-temperature_tc",
+        "-humidity_0": "-humidity_rh",
+    }
+
+    for old_suffix, new_suffix in unique_id_map.items():
+        if entity_entry.unique_id.endswith(old_suffix):
+            new_unique_id = entity_entry.unique_id.removesuffix(old_suffix) + new_suffix
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+
+    return None
 
 
 @callback

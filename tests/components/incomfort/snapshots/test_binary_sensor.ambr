@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -102,8 +104,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -152,8 +155,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -202,8 +206,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -252,8 +257,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -303,8 +309,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -353,8 +360,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -403,8 +411,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -453,8 +462,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -504,8 +514,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -554,8 +565,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -604,8 +616,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -654,8 +667,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -705,8 +719,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -755,8 +770,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -805,8 +821,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -855,8 +872,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -906,8 +924,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -956,8 +975,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

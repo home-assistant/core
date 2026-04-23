@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import AsyncExitStack
-from datetime import timedelta
 import logging
 
 from aiohttp import CookieJar
@@ -23,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -32,13 +31,13 @@ from .const import (
     DOMAIN,
     POWERWALL_API_CHANGED,
     POWERWALL_COORDINATOR,
-    UPDATE_INTERVAL,
 )
-from .models import (
+from .coordinator import (
     PowerwallBaseInfo,
     PowerwallConfigEntry,
     PowerwallData,
     PowerwallRuntimeData,
+    PowerwallUpdateCoordinator,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
@@ -221,15 +220,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     )
     manager.save_auth_cookie()
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name="Powerwall site",
-        update_method=manager.async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-        always_update=False,
-    )
+    coordinator = PowerwallUpdateCoordinator(hass, entry, manager)
 
     await coordinator.async_config_entry_first_refresh()
 

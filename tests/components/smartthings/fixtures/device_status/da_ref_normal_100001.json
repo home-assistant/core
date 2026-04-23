@@ -1,0 +1,215 @@
+{
+  "components": {
+    "onedoor": {
+      "contactSensor": {
+        "contact": {
+          "value": "closed",
+          "timestamp": "2025-12-09T19:17:58.742Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": null
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": null
+        }
+      }
+    },
+    "cooler": {
+      "contactSensor": {
+        "contact": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": null
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 1,
+          "unit": "C",
+          "timestamp": "2025-11-02T10:44:35.450Z"
+        }
+      }
+    },
+    "freezer": {
+      "contactSensor": {
+        "contact": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": null
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": null
+        }
+      }
+    },
+    "main": {
+      "custom.disabledComponents": {
+        "disabledComponents": {
+          "value": null
+        }
+      },
+      "contactSensor": {
+        "contact": {
+          "value": "closed",
+          "timestamp": "2025-12-09T19:17:58.742Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": null
+        },
+        "mnhw": {
+          "value": null
+        },
+        "di": {
+          "value": "C097277F-0DCF-0000-0000-000000000000",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "mnsl": {
+          "value": null
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "n": {
+          "value": "Refrigerator",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "mnmo": {
+          "value": "DONGLE_0281|00090741|00090028001130300100000000000000",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "vid": {
+          "value": "DA-REF-NORMAL-100001",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "mnml": {
+          "value": null
+        },
+        "mnpv": {
+          "value": null
+        },
+        "mnos": {
+          "value": null
+        },
+        "pi": {
+          "value": "shp",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-11-02T10:44:35.429Z"
+        }
+      },
+      "refrigeration": {
+        "defrost": {
+          "value": null
+        },
+        "rapidCooling": {
+          "value": "off",
+          "timestamp": "2025-12-09T09:20:45.161Z"
+        },
+        "rapidFreezing": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": null
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22083101,
+          "timestamp": "2024-01-27T15:33:41.832Z"
+        }
+      },
+      "refresh": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "custom.waterFilter": {
+        "waterFilterUsageStep": {
+          "value": null
+        },
+        "waterFilterResetType": {
+          "value": null
+        },
+        "waterFilterCapacity": {
+          "value": null
+        },
+        "waterFilterLastResetDate": {
+          "value": null
+        },
+        "waterFilterUsage": {
+          "value": null
+        },
+        "waterFilterStatus": {
+          "value": null
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": null
+        }
+      }
+    },
+    "cvroom": {
+      "contactSensor": {
+        "contact": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": null
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": null
+        }
+      }
+    }
+  }
+}

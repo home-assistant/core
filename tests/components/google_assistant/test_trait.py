@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1325,7 +1325,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
         "thermostatTemperatureRange": {
-            "minThresholdCelsius": 7,
+            "minThresholdCelsius": 7.2,
             "maxThresholdCelsius": 35,
         },
         "thermostatTemperatureUnit": "F",
@@ -1373,6 +1373,43 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
     }
 
 
+async def test_temperature_setting_climate_range_fahrenheit_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Test that Fahrenheit range bounds are reported to Google with decimal precision.
+
+    Regression test: when a climate entity advertises an integer Fahrenheit min/max
+    whose Celsius equivalent is non-integer (e.g. 62°F = 16.666…°C), rounding the
+    converted value to a whole degree Celsius causes Google Home to display a range
+    shifted by up to 1°F when it converts back for display. Reporting one decimal
+    place of Celsius precision keeps Google's displayed range aligned with
+    Home Assistant's.
+    """
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.COOL,
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+                climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ATTR_MIN_TEMP: 62,
+                climate.ATTR_MAX_TEMP: 86,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    attrs = trt.sync_attributes()
+    assert attrs["thermostatTemperatureRange"] == {
+        "minThresholdCelsius": 16.7,
+        "maxThresholdCelsius": 30,
+    }
+    # 16.7°C → 62.06°F (displays as 62°F, matching Home Assistant's min of 62°F);
+    # the pre-fix value of 17°C → 62.6°F would have displayed as 63°F.
+
+
 async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain - range."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
@@ -1409,7 +1446,7 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
         "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
         "thermostatTemperatureRange": {
             "minThresholdCelsius": 10,
-            "maxThresholdCelsius": 27,
+            "maxThresholdCelsius": 26.7,
         },
         "thermostatTemperatureUnit": "F",
     }
@@ -2291,12 +2328,10 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "reversible": False,
         "supportsFanSpeedPercent": True,
-        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
-        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeedPercent": 10})
@@ -2311,7 +2346,7 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
 
 
 async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
-    """Test FanSpeed trait speed control percentage step for fan domain."""
+    """Test FanSpeed trait falls back to percent-only when percentage_step is missing."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
         fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
@@ -2322,6 +2357,9 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
         State(
             "fan.living_room_fan",
             STATE_ON,
+            attributes={
+                "percentage": 50,
+            },
         ),
         BASIC_CONFIG,
     )
@@ -2329,12 +2367,10 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "reversible": False,
         "supportsFanSpeedPercent": True,
-        "availableFanSpeeds": ANY,
     }
-    # If a fan state has (temporary) no percentage_step attribute return 1 available
+
     assert trt.query_attributes() == {
-        "currentFanSpeedPercent": 0,
-        "currentFanSpeedSetting": "1/5",
+        "currentFanSpeedPercent": 50,
     }
 
 
@@ -2343,7 +2379,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     [
         (
             33,
-            1.0,
+            20.0,
             "2/5",
             [
                 ["Low", "Min", "Slow", "1"],
@@ -2356,7 +2392,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
         ),
         (
             40,
-            1.0,
+            20.0,
             "2/5",
             [
                 ["Low", "Min", "Slow", "1"],
@@ -2421,7 +2457,7 @@ async def test_fan_speed_ordered(
 
     assert trt.sync_attributes() == {
         "reversible": False,
-        "supportsFanSpeedPercent": True,
+        "supportsFanSpeedPercent": False,
         "availableFanSpeeds": {
             "ordered": True,
             "speeds": [
@@ -2435,7 +2471,6 @@ async def test_fan_speed_ordered(
     }
 
     assert trt.query_attributes() == {
-        "currentFanSpeedPercent": percentage,
         "currentFanSpeedSetting": speed,
     }
 
@@ -2484,12 +2519,10 @@ async def test_fan_reverse(
     assert trt.sync_attributes() == {
         "reversible": True,
         "supportsFanSpeedPercent": True,
-        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
-        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_REVERSE, params={})

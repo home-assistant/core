@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
+import anthropic
+from anthropic.resources.messages.messages import DEPRECATED_MODELS
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -18,8 +20,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .config_flow import get_model_list
-from .const import CONF_CHAT_MODEL, DEFAULT, DEPRECATED_MODELS, DOMAIN
+from .const import CONF_CHAT_MODEL, DOMAIN
+from .coordinator import model_alias
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
@@ -58,22 +60,32 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         if entry.entry_id in self._model_list_cache:
             model_list = self._model_list_cache[entry.entry_id]
         else:
-            client = entry.runtime_data
+            client = entry.runtime_data.client
             model_list = [
                 model_option
-                for model_option in await get_model_list(client)
-                if not model_option["value"].startswith(tuple(DEPRECATED_MODELS))
+                for model_option in await self.get_model_list(client)
+                if model_option["value"] not in DEPRECATED_MODELS
             ]
             self._model_list_cache[entry.entry_id] = model_list
 
         if "opus" in model:
-            suggested_model = "claude-opus-4-5"
-        elif "haiku" in model:
-            suggested_model = "claude-haiku-4-5"
+            family = "claude-opus"
         elif "sonnet" in model:
-            suggested_model = "claude-sonnet-4-5"
+            family = "claude-sonnet"
         else:
-            suggested_model = cast(str, DEFAULT[CONF_CHAT_MODEL])
+            family = "claude-haiku"
+
+        suggested_model = next(
+            (
+                model_option["value"]
+                for model_option in sorted(
+                    (m for m in model_list if family in m["value"]),
+                    key=lambda x: x["value"],
+                    reverse=True,
+                )
+            ),
+            vol.UNDEFINED,
+        )
 
         schema = vol.Schema(
             {
@@ -94,8 +106,25 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 "model": model,
                 "subentry_name": subentry.title,
                 "subentry_type": self._format_subentry_type(subentry.subentry_type),
+                "retirement_date": DEPRECATED_MODELS[model],
             },
         )
+
+    async def get_model_list(
+        self, client: anthropic.AsyncAnthropic
+    ) -> list[SelectOptionDict]:
+        """Get list of available models."""
+        try:
+            models = (await client.models.list(timeout=10.0)).data
+        except anthropic.AnthropicError:
+            models = []
+        return [
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias(model_info.id),
+            )
+            for model_info in models
+        ]
 
     def _iter_deprecated_subentries(self) -> Iterator[tuple[str, str]]:
         """Yield entry/subentry pairs that use deprecated models."""
@@ -104,7 +133,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 continue
             for subentry in entry.subentries.values():
                 model = subentry.data.get(CONF_CHAT_MODEL)
-                if model and model.startswith(tuple(DEPRECATED_MODELS)):
+                if model and model in DEPRECATED_MODELS:
                     yield entry.entry_id, subentry.subentry_id
 
     async def _async_next_target(
@@ -131,7 +160,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 continue
 
             model = subentry.data.get(CONF_CHAT_MODEL)
-            if not model or not model.startswith(tuple(DEPRECATED_MODELS)):
+            if not model or model not in DEPRECATED_MODELS:
                 continue
 
             self._current_entry_id = entry_id
@@ -151,7 +180,9 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             is None
             or (subentry := entry.subentries.get(self._current_subentry_id)) is None
         ):
-            raise HomeAssistantError("Subentry not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="subentry_not_found"
+            )
 
         updated_data = {
             **subentry.data,
@@ -180,4 +211,6 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id == "model_deprecated":
         return ModelDeprecatedRepairFlow()
-    raise HomeAssistantError("Unknown issue ID")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN, translation_key="unknown_issue_id"
+    )

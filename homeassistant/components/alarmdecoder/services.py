@@ -13,9 +13,6 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
-
-SERVICE_ALARM_KEYPRESS = "alarm_keypress"
 ATTR_KEYPRESS = "keypress"
 
 
@@ -26,7 +23,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ALARM_TOGGLE_CHIME,
+        "alarm_toggle_chime",
         entity_domain=ALARM_CONTROL_PANEL_DOMAIN,
         schema={
             vol.Required(ATTR_CODE): cv.string,
@@ -37,7 +34,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ALARM_KEYPRESS,
+        "alarm_keypress",
         entity_domain=ALARM_CONTROL_PANEL_DOMAIN,
         schema={
             vol.Required(ATTR_KEYPRESS): cv.string,

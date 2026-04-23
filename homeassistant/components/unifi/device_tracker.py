@@ -35,6 +35,7 @@ from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"

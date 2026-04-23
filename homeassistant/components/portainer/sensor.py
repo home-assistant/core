@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyportainer import StackType
+
 from homeassistant.components.sensor import (
     EntityCategory,
     SensorDeviceClass,
@@ -20,15 +22,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
-    PortainerCoordinator,
+    PortainerStackData,
+    PortainerVolumeData,
 )
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
     PortainerEndpointEntity,
+    PortainerStackEntity,
+    PortainerVolumeEntity,
 )
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,6 +48,20 @@ class PortainerEndpointSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer endpoint sensor description."""
 
     value_fn: Callable[[PortainerCoordinatorData], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerStackSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer stack sensor description."""
+
+    value_fn: Callable[[PortainerStackData], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerVolumeSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer volume sensor description."""
+
+    value_fn: Callable[[PortainerVolumeData], StateType]
 
 
 CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
@@ -277,6 +296,50 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
+STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
+    PortainerStackSensorEntityDescription(
+        key="stack_type",
+        translation_key="stack_type",
+        value_fn=lambda data: (
+            "swarm"
+            if data.stack.type == StackType.SWARM
+            else "compose"
+            if data.stack.type == StackType.COMPOSE
+            else "kubernetes"
+            if data.stack.type == StackType.KUBERNETES
+            else None
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["swarm", "compose", "kubernetes"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerStackSensorEntityDescription(
+        key="stack_containers_count",
+        translation_key="stack_containers_count",
+        value_fn=lambda data: data.container_count,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+VOLUME_SENSORS: tuple[PortainerVolumeSensorEntityDescription, ...] = (
+    PortainerVolumeSensorEntityDescription(
+        key="volume_driver",
+        translation_key="volume_driver",
+        value_fn=lambda data: data.volume.driver,
+    ),
+    PortainerVolumeSensorEntityDescription(
+        key="volume_size",
+        translation_key="volume_size",
+        value_fn=lambda data: (
+            data.volume.usage_data.size if data.volume.usage_data else None
+        ),
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -315,8 +378,40 @@ async def async_setup_entry(
             for entity_description in CONTAINER_SENSORS
         )
 
+    def _async_add_new_stacks(
+        stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
+    ) -> None:
+        """Add new stack sensors."""
+        async_add_entities(
+            PortainerStackSensor(
+                coordinator,
+                entity_description,
+                stack,
+                endpoint,
+            )
+            for (endpoint, stack) in stacks
+            for entity_description in STACK_SENSORS
+        )
+
+    def _async_add_new_volumes(
+        volumes: list[tuple[PortainerCoordinatorData, PortainerVolumeData]],
+    ) -> None:
+        """Add new volume sensors."""
+        async_add_entities(
+            PortainerVolumeSensor(
+                coordinator,
+                entity_description,
+                volume.volume,
+                endpoint,
+            )
+            for (endpoint, volume) in volumes
+            for entity_description in VOLUME_SENSORS
+        )
+
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
+    coordinator.new_volumes_callbacks.append(_async_add_new_volumes)
 
     _async_add_new_endpoints(
         [
@@ -332,25 +427,26 @@ async def async_setup_entry(
             for container in endpoint.containers.values()
         ]
     )
+    _async_add_new_stacks(
+        [
+            (endpoint, stack)
+            for endpoint in coordinator.data.values()
+            for stack in endpoint.stacks.values()
+        ]
+    )
+    _async_add_new_volumes(
+        [
+            (endpoint, volume)
+            for endpoint in coordinator.data.values()
+            for volume in endpoint.volumes.values()
+        ]
+    )
 
 
 class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
     """Representation of a Portainer container sensor."""
 
     entity_description: PortainerContainerSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerContainerSensorEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -363,20 +459,30 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
 
     entity_description: PortainerEndpointSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerEndpointSensorEntityDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer endpoint sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
         return self.entity_description.value_fn(endpoint_data)
+
+
+class PortainerStackSensor(PortainerStackEntity, SensorEntity):
+    """Representation of a Portainer stack sensor."""
+
+    entity_description: PortainerStackSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.stack_data)
+
+
+class PortainerVolumeSensor(PortainerVolumeEntity, SensorEntity):
+    """Representation of a Portainer volume sensor."""
+
+    entity_description: PortainerVolumeSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.volume_data)

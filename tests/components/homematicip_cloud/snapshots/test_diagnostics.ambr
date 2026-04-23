@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'accessPointId': '3014F7110000000000000000',
+    'clients': dict({
+      '00000000-0000-0000-0000-000000000000': dict({
+        'id': '00000000-0000-0000-0000-000000000000',
+        'label': 'Home Assistant',
+        'refreshToken': None,
+      }),
+    }),
+    'devices': dict({
+      '3014F7110000000000000001': dict({
+        'id': '3014F7110000000000000001',
+        'label': 'Living Room Thermostat',
+        'serializedGlobalTradeItemNumber': '3014F7110000000000000002',
+        'type': 'WALL_MOUNTED_THERMOSTAT_PRO',
+      }),
+    }),
+    'home': dict({
+      'id': '00000000-0000-0000-0000-000000000000',
+      'location': dict({
+        'city': '**REDACTED**',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+      }),
+      'weather': dict({
+        'temperature': 18.3,
+      }),
+    }),
+  })
+# ---

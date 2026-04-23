@@ -106,12 +106,12 @@
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]"
     },
     "deprecated_method": {
-      "description": "This system is using the {installation_type} installation type, which has been deprecated and will become unsupported following the release of Home Assistant 2025.12. While you can continue using your current setup after that point, we strongly recommend migrating to a supported installation method.",
-      "title": "Deprecation notice: Installation method"
+      "description": "This system is using the {installation_type} installation type, which has been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to a supported installation method.",
+      "title": "Unsupported installation method"
     },
     "deprecated_method_architecture": {
-      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been deprecated and will no longer be supported after the release of Home Assistant 2025.12.",
-      "title": "Deprecation notice"
+      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to supported hardware and use a supported installation method.",
+      "title": "Unsupported installation method and architecture"
     },
     "deprecated_os_aarch64": {
       "description": "This system is running on a 32-bit operating system (`armv7`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. To continue using Home Assistant on this hardware, you will need to install a 64-bit operating system. Please refer to our [installation guide]({installation_guide}).",
@@ -203,16 +203,20 @@
         }
       },
       "title": "Storage corruption detected for {storage_key}"
+    },
+    "unsupported_local_deps": {
+      "description": "This system is running Home Assistant outside a virtual environment or a Docker container. This is not supported and will not work after the release of Home Assistant 2026.11.",
+      "title": "Deprecation notice: Installation method"
     }
   },
   "services": {
     "check_config": {
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs.",
-      "name": "Check configuration"
+      "name": "Check Home Assistant configuration"
     },
     "reload_all": {
       "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant.",
-      "name": "Reload all"
+      "name": "Reload all Home Assistant configuration"
     },
     "reload_config_entry": {
       "description": "Reloads the specified config entry.",
@@ -240,7 +244,7 @@
           "name": "Safe mode"
         }
       },
-      "name": "[%key:common::action::restart%]"
+      "name": "Restart Home Assistant"
     },
     "save_persistent_states": {
       "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval.",
@@ -262,11 +266,11 @@
           "name": "[%key:common::config_flow::data::longitude%]"
         }
       },
-      "name": "Set location"
+      "name": "Set Home Assistant location"
     },
     "stop": {
       "description": "Stops Home Assistant.",
-      "name": "[%key:common::action::stop%]"
+      "name": "Stop Home Assistant"
     },
     "toggle": {
       "description": "Generic action to toggle devices on/off under any domain.",

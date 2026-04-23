@@ -1,4 +1,5 @@
 """The Waze Travel Time data coordinator."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Collection
@@ -20,17 +21,20 @@ from .const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
+    CONF_BASE_COORDINATES,
     CONF_DESTINATION,
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DOMAIN,
     IMPERIAL_UNITS,
     SEMAPHORE,
 )
+from .helpers import base_coordinates_to_tuple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +55,8 @@ async def async_get_travel_times(
     units: Literal["metric", "imperial"] = "metric",
     incl_filters: Collection[str] | None = None,
     excl_filters: Collection[str] | None = None,
+    time_delta: int = 0,
+    base_coordinates: tuple[float, float] | None = None,
 ) -> list[CalcRoutesResponse]:
     """Get all available routes."""
 
@@ -74,6 +80,8 @@ async def async_get_travel_times(
             avoid_ferries=avoid_ferries,
             real_time=realtime,
             alternatives=3,
+            time_delta=time_delta,
+            base_coords=base_coordinates,
         )
 
         if len(routes) < 1:
@@ -204,6 +212,14 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 CONF_AVOID_SUBSCRIPTION_ROADS
             ]
             avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
+            time_delta = int(
+                timedelta(**self.config_entry.options[CONF_TIME_DELTA]).total_seconds()
+                / 60
+            )
+            base_coordinates = base_coordinates_to_tuple(
+                self.config_entry.options.get(CONF_BASE_COORDINATES)
+            )
+
             routes = await async_get_travel_times(
                 self.client,
                 origin_coordinates,
@@ -216,6 +232,8 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 self.config_entry.options[CONF_UNITS],
                 incl_filter,
                 excl_filter,
+                time_delta,
+                base_coordinates,
             )
             if len(routes) < 1:
                 travel_data = WazeTravelTimeData(

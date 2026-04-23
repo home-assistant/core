@@ -12,12 +12,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from . import ProsegurConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +31,12 @@ STATE_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ProsegurConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Prosegur alarm control panel platform."""
     async_add_entities(
-        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])],
+        [ProsegurAlarm(entry.data["contract"], entry.runtime_data)],
         update_before_add=True,
     )
 

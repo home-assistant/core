@@ -3,10 +3,15 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
+from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
-from teltasync import TeltonikaConnectionError
+from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
+from teltasync.error_codes import TeltonikaErrorCode
 
+from homeassistant.components.teltonika.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -91,3 +96,95 @@ async def test_sensor_update_failure_and_recovery(
     state = hass.states.get("sensor.rutx50_test_internal_modem_rssi")
     assert state is not None
     assert state.state == "-63"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expect_reauth"),
+    [
+        (TeltonikaAuthenticationError("Invalid credentials"), True),
+        (
+            ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=401,
+                message="Unauthorized",
+                headers={},
+            ),
+            True,
+        ),
+        (
+            ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=500,
+                message="Server error",
+                headers={},
+            ),
+            False,
+        ),
+    ],
+    ids=["auth_exception", "http_auth_error", "http_non_auth_error"],
+)
+async def test_sensor_update_exception_paths(
+    hass: HomeAssistant,
+    mock_modems: AsyncMock,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
+    expect_reauth: bool,
+) -> None:
+    """Test auth and non-auth exceptions during updates."""
+    mock_modems.get_status.side_effect = side_effect
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rutx50_test_internal_modem_rssi")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    has_reauth = any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
+    assert has_reauth is expect_reauth
+
+
+@pytest.mark.parametrize(
+    ("error_code", "expect_reauth"),
+    [
+        (TeltonikaErrorCode.UNAUTHORIZED_ACCESS, True),
+        (999, False),
+    ],
+    ids=["api_auth_error", "api_non_auth_error"],
+)
+async def test_sensor_update_unsuccessful_response_paths(
+    hass: HomeAssistant,
+    mock_modems: AsyncMock,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    error_code: int,
+    expect_reauth: bool,
+) -> None:
+    """Test unsuccessful API response handling."""
+    mock_modems.get_status.side_effect = None
+    mock_modems.get_status.return_value = MagicMock(
+        success=False,
+        data=None,
+        errors=[MagicMock(code=error_code, error="API error")],
+    )
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rutx50_test_internal_modem_rssi")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    has_reauth = any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
+    assert has_reauth is expect_reauth

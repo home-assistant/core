@@ -18,6 +18,9 @@
       "dynamic_control": {
         "default": "mdi:lightbulb-on-outline"
       },
+      "hdr_processing": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
       "input": {
         "default": "mdi:hdmi-port"
       },
@@ -26,6 +29,9 @@
       },
       "light_power": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "picture_mode": {
+        "default": "mdi:movie-roll"
       }
     },
     "sensor": {
