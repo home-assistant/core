@@ -2,7 +2,8 @@
 
 The calendar platform creates three calendar entities:
 - Daily events: Hebrew date (all-day) and halachic times (timed instants)
-- Yearly events: Holidays, weekly Torah portions, Omer count
+- Yearly events: Holidays, weekly Torah portions, candle lighting/havdalah
+  (with Omer count only when enabled)
 - Learning schedule: Daf Yomi (disabled by default)
 
 Tests verify platform behavior: entity registration, event formatting,
@@ -411,3 +412,33 @@ async def test_event_property(hass: HomeAssistant) -> None:
     assert state.state == "on"
     assert "message" in state.attributes
     assert "start_time" in state.attributes
+
+
+@pytest.mark.freeze_time("2024-01-15 12:00:00")
+@pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize(
+    "calendar_events",
+    [
+        {
+            CONF_DAILY_EVENTS: [
+                event_type
+                for event_type in DailyCalendarEventType
+                if event_type != DailyCalendarEventType.HEBREW_DATE
+            ],
+            CONF_YEARLY_EVENTS: [],
+            CONF_LEARNING_SCHEDULE: [],
+        }
+    ],
+)
+@pytest.mark.usefixtures("setup")
+async def test_event_property_timed_events_only_returns_upcoming_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test timed-only daily calendars select the current/next upcoming event."""
+    state = hass.states.get(DAILY_EVENTS)
+    assert state is not None
+    assert state.state == "on"
+
+    start_time = dt.datetime.fromisoformat(state.attributes["start_time"])
+    assert start_time.date() == dt.date(2024, 1, 15)
+    assert start_time.time() > dt.time(12, 0, 0)
