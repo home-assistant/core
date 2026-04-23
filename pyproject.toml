@@ -122,6 +122,7 @@ load-plugins = [
   "hass_decorator",
   "hass_enforce_class_module",
   "hass_enforce_config_entry_unique_id_no_ip",
+  "hass_enforce_config_flow_no_polling",
   "hass_enforce_greek_micro_char",
   "hass_enforce_runtime_data",
   "hass_enforce_sorted_platforms",

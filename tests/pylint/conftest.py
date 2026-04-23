@@ -161,6 +161,27 @@ def enforce_config_entry_unique_id_no_ip_checker_fixture(
     return checker
 
 
+@pytest.fixture(name="hass_enforce_config_flow_no_polling", scope="package")
+def hass_enforce_config_flow_no_polling_fixture() -> ModuleType:
+    """Fixture to the content for the config_flow_no_polling check."""
+    return _load_plugin_from_file(
+        "hass_enforce_config_flow_no_polling",
+        "pylint/plugins/hass_enforce_config_flow_no_polling.py",
+    )
+
+
+@pytest.fixture(name="enforce_config_flow_no_polling_checker")
+def enforce_config_flow_no_polling_checker_fixture(
+    hass_enforce_config_flow_no_polling, linter
+) -> BaseChecker:
+    """Fixture to provide a config_flow_no_polling checker."""
+    checker = hass_enforce_config_flow_no_polling.HassEnforceConfigFlowNoPollingChecker(
+        linter
+    )
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="hass_enforce_runtime_data", scope="package")
 def hass_enforce_runtime_data_fixture() -> ModuleType:
     """Fixture to the content for the hass_enforce_runtime_data check."""
