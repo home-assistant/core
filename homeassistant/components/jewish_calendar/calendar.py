@@ -44,7 +44,7 @@ type JewishCalendarEventType = (
 class JewishCalendarCalendarEntityDescription(CalendarEntityDescription):
     """Jewish Calendar calendar entity description."""
 
-    set_value_fn: Callable[
+    value_fn: Callable[
         [JewishCalendarEventType, date, HDateInfo, Zmanim],
         list[CalendarEvent] | CalendarEvent | None,
     ]
@@ -164,18 +164,18 @@ CALENDARS = (
     JewishCalendarCalendarEntityDescription(
         key=CONF_DAILY_EVENTS,
         translation_key=CONF_DAILY_EVENTS,
-        set_value_fn=_create_daily_event,
+        value_fn=_create_daily_event,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_LEARNING_SCHEDULE,
         translation_key=CONF_LEARNING_SCHEDULE,
-        set_value_fn=_create_learning_event,
+        value_fn=_create_learning_event,
         entity_registry_enabled_default=False,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_YEARLY_EVENTS,
         translation_key=CONF_YEARLY_EVENTS,
-        set_value_fn=_create_yearly_event,
+        value_fn=_create_yearly_event,
     ),
 )
 
@@ -252,7 +252,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         zmanim = self.coordinator.make_zmanim(target_date)
 
         for event_type in self._events_config:
-            if _events := self.entity_description.set_value_fn(
+            if _events := self.entity_description.value_fn(
                 event_type, target_date, info, zmanim
             ):
                 events.extend(_events if isinstance(_events, list) else [_events])
