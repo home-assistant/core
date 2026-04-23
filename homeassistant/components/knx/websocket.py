@@ -14,6 +14,7 @@ from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -75,7 +76,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_delete_expose)
     websocket_api.async_register_command(hass, ws_validate_expose)
 
-    if DOMAIN not in hass.data.get("frontend_panels", {}):
+    if not async_panel_exists(hass, DOMAIN):
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(

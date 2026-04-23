@@ -11,6 +11,7 @@ from pypck.device import DeviceConnection
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.websocket_api import (
     ActiveConnection,
@@ -76,7 +77,7 @@ async def register_panel_and_ws_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_add_entity)
     websocket_api.async_register_command(hass, websocket_delete_entity)
 
-    if DOMAIN not in hass.data.get("frontend_panels", {}):
+    if not async_panel_exists(hass, DOMAIN):
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(
