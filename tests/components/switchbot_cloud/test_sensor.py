@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from . import (
     CONTACT_SENSOR_INFO,
     HUB3_INFO,
+    LOCK_ULTRA_INFO,
     METER_INFO,
     MOTION_SENSOR_INFO,
     WATER_DETECTOR_INFO,
@@ -32,6 +33,7 @@ from tests.common import snapshot_platform
         (HUB3_INFO, 3),
         (MOTION_SENSOR_INFO, 4),
         (WATER_DETECTOR_INFO, 5),
+        (LOCK_ULTRA_INFO, 5),
     ],
 )
 async def test_meter(

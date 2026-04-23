@@ -20,6 +20,8 @@ async def async_setup_entry(
 
     async def async_discover_binary_sensor(device_id):
         """Discover and add a discovered sensor."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSensor(client, device_id)])
 

@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
         raise ConfigEntryAuthFailed(
-            "Invalid credentials for iAqualink"
+            "Invalid credentials for iAquaLink"
         ) from auth_exception
     except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
         raise ConfigEntryAuthFailed(
-            "Invalid credentials for iAqualink"
+            "Invalid credentials for iAquaLink"
         ) from auth_exception
     except AqualinkServiceException as svc_exception:
         await aqualink.close()
@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         except AqualinkServiceUnauthorizedException as auth_exception:
             await aqualink.close()
             raise ConfigEntryAuthFailed(
-                "Invalid credentials for iAqualink"
+                "Invalid credentials for iAquaLink"
             ) from auth_exception
         except AqualinkServiceException as svc_exception:
             await aqualink.close()
