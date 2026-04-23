@@ -12,11 +12,11 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
     """Test that the image media source is created."""
     item = await media_source.async_browse_media(hass, "media-source://")
 
-    assert any(c.title == "AI Generated Images" for c in item.children)
+    assert any(c.title == "AI generated images" for c in item.children)
 
     source = await async_get_media_source(hass)
     assert isinstance(source, media_source.local_source.LocalSource)
-    assert source.name == "AI Generated Images"
+    assert source.name == "AI generated images"
     assert source.domain == "ai_task"
     assert list(source.media_dirs) == ["image"]
     # Depending on Docker, the default is one of the two paths

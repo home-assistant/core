@@ -15,7 +15,6 @@ from homeassistant.components.lock import (
     LockEntityDescription,
     LockEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -34,7 +33,7 @@ from .const import (
     LOGGER,
 )
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .lock_helpers import (
     DoorLockFeature,
     GetLockCredentialStatusResult,
@@ -70,11 +69,11 @@ DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.LOCK, async_add_entities)
 
 

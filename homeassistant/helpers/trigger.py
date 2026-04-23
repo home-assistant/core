@@ -499,6 +499,7 @@ class EntityTriggerBase(Trigger):
                 )
 
             if not self._duration:
+                # Call action immediately if duration is not specified or 0
                 call_action()
                 return
 
