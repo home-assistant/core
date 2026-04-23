@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from . import HuaweiLteConfigEntry
 
 ENTRY_FIELDS_DATA_TO_REDACT = {
     "mac",
@@ -74,13 +73,13 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: HuaweiLteConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return async_redact_data(
         {
             "entry": entry.data,
-            "router": hass.data[DOMAIN].routers[entry.entry_id].data,
+            "router": entry.runtime_data.data,
         },
         TO_REDACT,
     )

@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
+from typing import Any
 
 from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum, NetworkModeEnum
 
@@ -14,14 +15,13 @@ from homeassistant.components.select import (
     SelectEntity,
     SelectEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Router
-from .const import DOMAIN, KEY_NET_NET_MODE
+from . import HuaweiLteConfigEntry, Router
+from .const import KEY_NET_NET_MODE
 from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,18 +31,16 @@ _LOGGER = logging.getLogger(__name__)
 class HuaweiSelectEntityDescription(SelectEntityDescription):
     """Class describing Huawei LTE select entities."""
 
-    setter_fn: Callable[[str], None]
+    setter_fn: Callable[[str], Any]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HuaweiLteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    router = hass.data[DOMAIN].routers[config_entry.entry_id]
+    router = config_entry.runtime_data
     selects: list[Entity] = []
 
     desc = HuaweiSelectEntityDescription(

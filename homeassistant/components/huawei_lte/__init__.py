@@ -1,5 +1,4 @@
 """Support for Huawei LTE routers."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -9,7 +8,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, cast
 from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
@@ -64,6 +63,7 @@ from .const import (
     DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
+    HUAWEI_LTE_CONFIG,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
@@ -108,7 +108,7 @@ class Router:
     """Class for router state."""
 
     hass: HomeAssistant
-    config_entry: ConfigEntry
+    config_entry: HuaweiLteConfigEntry
     connection: Connection
     url: str
 
@@ -278,14 +278,10 @@ class Router:
         self.connection.requests_session.close()
 
 
-class HuaweiLteData(NamedTuple):
-    """Shared state."""
-
-    hass_config: ConfigType
-    routers: dict[str, Router]
+type HuaweiLteConfigEntry = ConfigEntry[Router]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
 
@@ -352,7 +348,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
 
     # Store reference to router
-    hass.data[DOMAIN].routers[entry.entry_id] = router
+    entry.runtime_data = router
 
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
@@ -417,7 +413,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_NAME: entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
             CONF_RECIPIENT: entry.options.get(CONF_RECIPIENT),
         },
-        hass.data[DOMAIN].hass_config,
+        hass.data[HUAWEI_LTE_CONFIG],
     )
 
     def _update_router(*_: Any) -> None:
@@ -440,15 +436,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: HuaweiLteConfigEntry
+) -> bool:
     """Unload config entry."""
 
     # Forward config entry unload to platforms
     await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
-    # Forget about the router and invoke its cleanup
-    router = hass.data[DOMAIN].routers.pop(config_entry.entry_id)
-    await hass.async_add_executor_job(router.cleanup)
+    # Invoke router cleanup
+    await hass.async_add_executor_job(config_entry.runtime_data.cleanup)
 
     return True
 
@@ -456,8 +453,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
+    hass.data[HUAWEI_LTE_CONFIG] = config
 
     def service_handler(service: ServiceCall) -> None:
         """Apply a service.
@@ -465,21 +461,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.
         """
-        routers = hass.data[DOMAIN].routers
+        routers = [
+            entry.runtime_data
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        ]
         if url := service.data.get(CONF_URL):
-            router = next(
-                (router for router in routers.values() if router.url == url), None
-            )
+            router = next((router for router in routers if router.url == url), None)
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
             return
         elif len(routers) == 1:
-            router = next(iter(routers.values()))
+            router = routers[0]
         else:
             _LOGGER.error(
                 "%s: more than one router configured, must specify one of URLs %s",
                 service.service,
-                sorted(router.url for router in routers.values()),
+                sorted(router.url for router in routers),
             )
             return
         if not router:
@@ -509,7 +506,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: HuaweiLteConfigEntry
+) -> bool:
     """Migrate config entry to new version."""
     if config_entry.version == 1:
         options = dict(config_entry.options)
