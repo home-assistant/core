@@ -1,0 +1,122 @@
+# serializer version: 1
+# name: test_select_entities[select.living_room_week_profile-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Default',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.living_room_week_profile',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Week profile',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Week profile',
+    'platform': 'nobo_hub',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'week_profile',
+    'unique_id': '102000013098:1:profile',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.living_room_week_profile-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living room Week profile',
+      'options': list([
+        'Default',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.living_room_week_profile',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Default',
+  })
+# ---
+# name: test_select_entities[select.my_eco_hub_global_override-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'away',
+        'comfort',
+        'eco',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.my_eco_hub_global_override',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Global override',
+    'options': dict({
+    }),
+    'original_device_class': 'nobo_hub__override',
+    'original_icon': None,
+    'original_name': 'Global override',
+    'platform': 'nobo_hub',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'global_override',
+    'unique_id': '102000013098',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.my_eco_hub_global_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'nobo_hub__override',
+      'friendly_name': 'My Eco Hub Global override',
+      'options': list([
+        'none',
+        'away',
+        'comfort',
+        'eco',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.my_eco_hub_global_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
