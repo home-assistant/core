@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -32,7 +36,7 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
-            connections={(CONNECTION_NETWORK_MAC, self._device_id)},
+            connections={(CONNECTION_NETWORK_MAC, format_mac(self._device_id))},
             configuration_url=f"https://www.ptdevices.com/device/level/{self.device['id']}",
             manufacturer="ParemTech inc.",
             model=self.device["device_type"],
