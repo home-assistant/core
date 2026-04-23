@@ -205,7 +205,6 @@ async def test_climate_set_fan_mode_bioweapon_unsupported_vehicle(
     entity_id = "climate.test_climate"
     mock_data = deepcopy(mock_vehicle_data.return_value)
     response = mock_data.get("response", mock_data)
-    response["vin"] = "5YJ3CBE24KF152671"
     if "climate_state" in response:
         response["climate_state"].pop("bioweapon_mode", None)
     mock_vehicle_data.return_value = mock_data
