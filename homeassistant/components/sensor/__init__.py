@@ -208,19 +208,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
     _get_uptime: Callable[[datetime], datetime] | None = None
-    _uptime_drift_tolerance: int | None = None
 
     def _normalize_uptime(self, current_uptime: datetime) -> datetime:
         """Normalize uptime to suppress small drift between updates."""
-        drift_tolerance = max(
-            self._attr_uptime_drift_tolerance, UPTIME_MIN_TOLERANCE_SECONDS
-        )
-        if self._get_uptime is None or self._uptime_drift_tolerance != drift_tolerance:
+        if self._get_uptime is None:
+            drift_tolerance = max(
+                self._attr_uptime_drift_tolerance, UPTIME_MIN_TOLERANCE_SECONDS
+            )
             self._get_uptime = ignore_variance(
                 func=lambda value: value,
                 ignored_variance=timedelta(seconds=drift_tolerance),
             )
-            self._uptime_drift_tolerance = drift_tolerance
         return self._get_uptime(current_uptime)
 
     @callback
