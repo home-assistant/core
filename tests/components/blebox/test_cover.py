@@ -34,6 +34,8 @@ from .conftest import async_setup_entity, mock_feature
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
+INVERTED_POSITION_FIXTURES = ["shutterbox"]
+NON_INVERTED_POSITION_FIXTURES = ["gatecontroller", "gatebox"]
 
 
 @pytest.fixture(name="shutterbox")
@@ -276,9 +278,9 @@ async def test_stop(feature, hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == CoverState.OPEN
 
 
-@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update(feature, hass: HomeAssistant) -> None:
-    """Test cover updating."""
+@pytest.mark.parametrize("feature", INVERTED_POSITION_FIXTURES, indirect=["feature"])
+async def test_update_inverted(feature, hass: HomeAssistant) -> None:
+    """Test cover updating (shutterBox inverts position)."""
 
     feature_mock, entity_id = feature
 
@@ -296,12 +298,30 @@ async def test_update(feature, hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
+    "feature", NON_INVERTED_POSITION_FIXTURES, indirect=["feature"]
 )
-async def test_set_position(feature, hass: HomeAssistant) -> None:
-    """Test cover position setting."""
+async def test_update_gate(feature, hass: HomeAssistant) -> None:
+    """Test gate cover updating (position reported without inversion)."""
 
     feature_mock, entity_id = feature
+
+    def initial_update():
+        feature_mock.current = 29
+        feature_mock.state = 2  # manually stopped
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 29
+    assert state.state == CoverState.OPEN
+
+
+async def test_set_position_shutterbox(shutterbox, hass: HomeAssistant) -> None:
+    """Test cover position setting (shutterBox inverts position)."""
+
+    feature_mock, entity_id = shutterbox
 
     def initial_update():
         feature_mock.state = 3  # closed
@@ -309,7 +329,34 @@ async def test_set_position(feature, hass: HomeAssistant) -> None:
     def set_position(position):
         assert position == 99  # inverted
         feature_mock.state = 1  # opening
-        # feature_mock.current = position
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.async_set_position = AsyncMock(side_effect=set_position)
+
+    await async_setup_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == CoverState.CLOSED
+
+    feature_mock.async_update = AsyncMock()
+    await hass.services.async_call(
+        "cover",
+        SERVICE_SET_COVER_POSITION,
+        {"entity_id": entity_id, ATTR_POSITION: 1},
+        blocking=True,
+    )  # almost closed
+    assert hass.states.get(entity_id).state == CoverState.OPENING
+
+
+async def test_set_position_gatecontroller(gatecontroller, hass: HomeAssistant) -> None:
+    """Test gateController position setting (no inversion)."""
+
+    feature_mock, entity_id = gatecontroller
+
+    def initial_update():
+        feature_mock.state = 3  # closed
+
+    def set_position(position):
+        assert position == 1  # not inverted
+        feature_mock.state = 1  # opening
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_set_position = AsyncMock(side_effect=set_position)

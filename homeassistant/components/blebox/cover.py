@@ -27,6 +27,10 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "shutter": CoverDeviceClass.SHUTTER,
 }
 
+# Gate devices report position using the same convention as Home Assistant
+# (0 = closed, 100 = open); shutterBox uses the inverted convention.
+GATE_DEVICE_CLASSES = {"gate", "gatebox"}
+
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
     # all blebox covers
@@ -62,6 +66,7 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
         self._attr_device_class = BLEBOX_TO_COVER_DEVICE_CLASSES[feature.device_class]
+        self._invert_position = feature.device_class not in GATE_DEVICE_CLASSES
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
@@ -84,8 +89,9 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         position = self._feature.current
         if position == -1:  # possible for shutterBox
             return None
-
-        return None if position is None else 100 - position
+        if position is None:
+            return None
+        return 100 - position if self._invert_position else position
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -128,7 +134,9 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         position = kwargs[ATTR_POSITION]
-        await self._feature.async_set_position(100 - position)
+        await self._feature.async_set_position(
+            100 - position if self._invert_position else position
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
