@@ -708,7 +708,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
-    ) -> MessageCreateParamsStreaming:
+    ) -> tuple[MessageCreateParamsStreaming, str | None]:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
 
@@ -937,7 +937,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
             model_args["tools"] = tools
 
-        return model_args
+        return model_args, structure_name
 
     async def _async_handle_chat_log(
         self,
@@ -947,7 +947,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
-        model_args = await self._get_model_args(chat_log, structure_name, structure)
+        model_args, structure_name = await self._get_model_args(
+            chat_log, structure_name, structure
+        )
         coordinator = self.entry.runtime_data
         client = coordinator.client
 
