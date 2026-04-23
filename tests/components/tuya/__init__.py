@@ -31,7 +31,7 @@ DEVICE_MOCKS = sorted(
 )
 
 
-class MockDeviceListener:
+class TuyaNotificationHelper:
     """Helper to raise manager events to device listener."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager) -> None:
@@ -217,7 +217,7 @@ async def initialize_entry(
 async def check_selective_state_update(
     hass: HomeAssistant,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     *,
     entity_id: str,
@@ -241,13 +241,13 @@ async def check_selective_state_update(
 
     # Trigger device offline
     freezer.tick(10)
-    await mock_listener.async_mock_offline(mock_device)
+    await notification_helper.async_mock_offline(mock_device)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert hass.states.get(entity_id).last_reported.isoformat() == unavailable_reported
 
     # Trigger device online
     freezer.tick(10)
-    await mock_listener.async_mock_online(mock_device)
+    await notification_helper.async_mock_online(mock_device)
     assert hass.states.get(entity_id).state == initial_state
     assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
 
@@ -255,12 +255,12 @@ async def check_selective_state_update(
     # in updated properties - state should not change
     freezer.tick(10)
     mock_device.status[dpcode] = None
-    await mock_listener.async_send_device_update(mock_device, {})
+    await notification_helper.async_send_device_update(mock_device, {})
     assert hass.states.get(entity_id).state == initial_state
     assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
 
     # Trigger device update with provided updates
     freezer.tick(30)
-    await mock_listener.async_send_device_update(mock_device, updates)
+    await notification_helper.async_send_device_update(mock_device, updates)
     assert hass.states.get(entity_id).state == expected_state
     assert hass.states.get(entity_id).last_reported.isoformat() == last_reported
