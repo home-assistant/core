@@ -1286,8 +1286,8 @@ async def test_sensor_signal_strength_non_numeric_skips_device_class(
 ) -> None:
     """Test signal_strength config skips device class for non-numeric values.
 
-    This tests lines 229-230 where non-numeric signal_strength values
-    don't get the device class applied.
+    When signal_strength has a non-numeric value, the sensor should not
+    apply the signal_strength device class.
     """
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1314,7 +1314,7 @@ async def test_sensor_signal_strength_non_numeric_skips_device_class(
         property_identifier="signal_strength",
     )
 
-    # Should not have signal_strength device class set (lines 229-230)
+    # Should not have signal_strength device class set
     # because value is non-numeric
     assert sensor.device_class != SensorDeviceClass.SIGNAL_STRENGTH
 
@@ -1324,8 +1324,8 @@ async def test_sensor_native_value_non_numeric_for_device_class(
 ) -> None:
     """Test native_value returns None for non-numeric values with numeric device class.
 
-    This tests lines 333-341 where native_value returns None when
-    the value type doesn't match the device class expectations.
+    When a sensor has a numeric device class but the value is not numeric,
+    native_value should return None and log a warning.
     """
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1355,7 +1355,7 @@ async def test_sensor_native_value_non_numeric_for_device_class(
     # Manually set device class to temperature to trigger the check
     sensor._attr_device_class = SensorDeviceClass.TEMPERATURE
 
-    # native_value should return None and log warning (lines 333-341)
+    # native_value should return None and log warning
     result = sensor.native_value
 
     # Should return None for non-numeric value with numeric device class
