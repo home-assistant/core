@@ -117,7 +117,7 @@ class LunatoneSensor(
     @property
     def name(self) -> str:
         """Return the display name of this sensor."""
-        return self._sensor.name if self._sensor else ""
+        return self._sensor.name if self._sensor else f"DALI-2 Sensor {self._sensor_id}"
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
