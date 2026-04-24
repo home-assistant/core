@@ -29,7 +29,7 @@ class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             if not (error := await self._async_try_connect(user_input[CONF_HOST])):
                 return self.async_create_entry(
-                    title=DEFAULT_NAME,
+                    title=f"{DEFAULT_NAME} ({user_input[CONF_HOST]})",
                     data=user_input,
                 )
             errors["base"] = error

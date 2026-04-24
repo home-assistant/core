@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.const import CONF_HOST
 
 HOST = "1.2.3.4"
-NAME = "Android TV / Fire TV"
+NAME = "Android TV / Fire TV (1.2.3.4)"
 
 CONF_DATA = {CONF_HOST: HOST}
 
