@@ -145,7 +145,7 @@ async def test_websocket(
         await hass.async_block_till_done()
     assert mock_wled.update.call_count == num_updates_before_websocket
 
-    # Resolve Future with a connection losed.
+    # Resolve Future with a closed connection.
     connection_finished.set_exception(WLEDConnectionClosedError)
     await hass.async_block_till_done()
 
