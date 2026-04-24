@@ -4442,12 +4442,12 @@ async def test_compound_condition_forwards_async_unload(
     test = await condition.async_from_config(hass, config)
 
     # The compound checker should hold child checkers
-    assert hasattr(test, "_checks")
-    assert len(test._checks) == 2
+    assert hasattr(test, "_conditions")
+    assert len(test._conditions) == 2
 
     test.async_unload()
 
-    for child in test._checks:
+    for child in test._conditions:
         child.async_unload.assert_called_once()
 
 
@@ -4479,12 +4479,12 @@ async def test_nested_compound_condition_forwards_async_unload(
     test = await condition.async_from_config(hass, config)
 
     # Outer compound with 2 children: an inner compound and a leaf
-    assert len(test._checks) == 2
-    inner_checker = test._checks[0]
-    assert hasattr(inner_checker, "_checks")
-    assert len(inner_checker._checks) == 1
+    assert len(test._conditions) == 2
+    inner_checker = test._conditions[0]
+    assert hasattr(inner_checker, "_conditions")
+    assert len(inner_checker._conditions) == 1
 
     test.async_unload()
 
-    test._checks[0]._checks[0].async_unload.assert_called_once()
-    test._checks[1].async_unload.assert_called_once()
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
+    test._conditions[1].async_unload.assert_called_once()
