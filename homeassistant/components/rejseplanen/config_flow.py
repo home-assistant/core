@@ -141,20 +141,9 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the stop subentry step."""
 
-        errors: dict[str, str] = {}
         if user_input is not None:
             stop_id = user_input[CONF_STOP_ID]
             name = user_input[CONF_NAME]
-
-            if errors:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(
-                        CONFIG_STOP_SCHEMA, user_input
-                    ),
-                    errors=errors,
-                )
-
             selected_keys: str | list = user_input.get(CONF_DEPARTURE_TYPE, [])
             departure_types = [
                 DEPARTURE_TYPE_TO_CLASS[key]

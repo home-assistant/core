@@ -28,6 +28,18 @@
       },
       "step": {
         "user": {
+          "data": {
+            "departure_type": "Departure type",
+            "direction": "Direction",
+            "name": "Name",
+            "stop_id": "Stop ID"
+          },
+          "data_description": {
+            "departure_type": "Select which types of departures to include",
+            "direction": "Optional destination filter for departures",
+            "name": "An optional name for this stop subentry",
+            "stop_id": "The Rejseplanen stop ID for the stop to monitor"
+          },
           "description": "Set up stop subentry for Rejseplanen, see the [documentation]({documentation_url}) for information on obtaining the stop id.",
           "title": "Add Stop"
         }

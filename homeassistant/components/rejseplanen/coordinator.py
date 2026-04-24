@@ -84,7 +84,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             )
         # Get all departures for this stop
         _LOGGER.debug("Fetching data for stop IDs: %s", stop_ids)
-        # py_rejseplan 1.0.8 passes these values straight to aiohttp/yarl query encoding.
+        # These values are passed through to aiohttp/yarl query encoding.
         # Use int flags instead of bools because yarl rejects bool query variable types.
         departure_board, _ = await self.api.get_departures_async(
             list(stop_ids), use_bus=1, use_train=1, use_metro=1

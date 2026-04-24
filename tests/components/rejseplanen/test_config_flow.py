@@ -1,6 +1,7 @@
 """Test the Rejseplanen config flow."""
 
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from py_rejseplan import enums
@@ -83,8 +84,8 @@ async def test_form_user_step(
 async def test_config_flow_error_cases(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    patch_args,
-    expected_errors,
+    patch_args: dict[str, Any],
+    expected_errors: dict[str, str],
 ) -> None:
     """Test invalid authentication handling."""
 
@@ -224,9 +225,9 @@ async def test_stop_subentry_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: AsyncMock,
-    user_input,
-    expected_title,
-    expected_data,
+    user_input: dict[str, Any],
+    expected_title: str,
+    expected_data: dict[str, Any],
 ) -> None:
     """Test adding a stop as a subentry under the main Rejseplanen entry."""
 

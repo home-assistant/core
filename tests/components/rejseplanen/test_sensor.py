@@ -53,7 +53,9 @@ async def test_sensor_snapshot(
 
 
 @pytest.mark.parametrize("stop_id", [123456, 456789, 999999])
-def test_get_current_departures(stop_id: int, patch_sensor_now) -> None:
+def test_get_current_departures(
+    stop_id: int, patch_sensor_now: FrozenDateTimeFactory
+) -> None:
     """Test the _get_current_departures helper function."""
 
     departures = make_mock_departures(stop_id)
@@ -75,7 +77,7 @@ def test_get_current_departures(stop_id: int, patch_sensor_now) -> None:
 
 
 def test_get_next_departure_cleanup_time_with_mock_api(
-    patch_sensor_now, mock_api
+    patch_sensor_now: FrozenDateTimeFactory, mock_api: AsyncMock
 ) -> None:
     """Test _get_next_departure_cleanup_time using the mock_api for departures."""
 

@@ -51,7 +51,7 @@ async def test_setup_entry_first_refresh_fails(
     ],
 )
 async def test_coordinator_fetch_errors(
-    setup_integration, mock_config_entry, error
+    setup_integration: None, mock_config_entry: MockConfigEntry, error: Exception
 ) -> None:
     """Test that different exceptions during data fetch are handled as UpdateFailed."""
     coordinator = mock_config_entry.runtime_data
