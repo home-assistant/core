@@ -157,9 +157,6 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
-      "uptime": {
-        "name": "Last boot"
-      },
       "volume_disk_temp_avg": {
         "name": "Average disk temp"
       },
