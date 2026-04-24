@@ -366,8 +366,7 @@ async def test_hub_device_info_mac_connections(
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_device(identifiers={(DOMAIN, SERIAL)})
     assert device is not None
-    expected_connections = {
+    assert device.connections == {
         ("mac", "00:11:32:xx:xx:59"),
         ("mac", "00:11:32:xx:xx:5a"),
     }
-    assert device.connections == expected_connections
