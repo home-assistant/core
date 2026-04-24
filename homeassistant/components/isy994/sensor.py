@@ -320,17 +320,12 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
 
-        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s)
+        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
+        # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
+        # this guard can be removed.
         if (
             self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE
-            and self.raw_unit_of_measurement
-            not in (
-                UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-                UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-                UnitOfVolumeFlowRate.LITERS_PER_HOUR,
-                UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-                UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
-            )
+            and self.raw_unit_of_measurement not in UnitOfVolumeFlowRate
         ):
             self._attr_device_class = None
             self._attr_state_class = SensorStateClass.MEASUREMENT
