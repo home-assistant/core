@@ -105,10 +105,17 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                     translation_key="update_error",
                 ) from error
 
-            if response.get("error") == "no_readings":
-                _LOGGER.debug("No readings for %s", sensor.name)
-                sensor.data = None
-                continue
+            if data_error := response.get("error"):
+                if data_error == "no_readings":
+                    sensor.data = None
+                    _LOGGER.debug("No readings for %s", sensor.name)
+                    continue
+                _LOGGER.debug("Error: %s", data_error)
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="update_error"
+                )
+
+            current_data = response.get("data", {}).get("current")
 
             current_data = response.get("data", {}).get("current")
             if not current_data:
