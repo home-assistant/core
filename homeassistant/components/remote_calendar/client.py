@@ -12,6 +12,10 @@ async def get_calendar(
     """Make an HTTP GET request using Home Assistant's async HTTPX client with timeout."""
     auth: Auth | None = None
     if username is not None and password is not None:
+        if not url.lower().startswith("https://"):
+            raise ValueError(
+                "Basic authentication requires HTTPS to protect credentials"
+            )
         auth = BasicAuth(username, password)
 
     return await client.get(
