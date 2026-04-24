@@ -108,11 +108,11 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
 
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
+        states: dict[int, State] = {}
         try:
             # Use include filtering to only fetch parameters we actually use.
             # BSB-LAN is a serial bus — it processes one parameter at a time,
             # so concurrent requests offer no speed benefit over sequential.
-            states: dict[int, State] = {}
             for circuit in self.circuits:
                 states[circuit] = await self.client.state(
                     include=STATE_INCLUDE, circuit=circuit
