@@ -548,20 +548,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for event_code in sensor.event_codes
     }
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     stop_event = threading.Event()
     _start_event_monitor(hass, name, api, event_codes, stop_event)
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "device": device,
-        "stop_event": stop_event,
-    }
-
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
-        stop_event.set()
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        raise
+    hass.data[DOMAIN][entry.entry_id] = {"device": device, "stop_event": stop_event}
     return True
 
 
