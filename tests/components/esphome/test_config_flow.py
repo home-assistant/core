@@ -41,7 +41,6 @@ from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.setup import async_setup_component
 
 from . import VALID_NOISE_PSK
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
@@ -2200,8 +2199,6 @@ async def test_user_flow_name_conflict_migrate(
     mock_client: APIClient,
 ) -> None:
     """Test handle migration on name conflict."""
-    await async_setup_component(hass, DOMAIN, {})
-
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE_NAME: "test"},
@@ -2576,8 +2573,6 @@ async def test_reconfig_name_conflict_migrate(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test reconfig initiation when device has been replaced."""
-    await async_setup_component(hass, DOMAIN, {})
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

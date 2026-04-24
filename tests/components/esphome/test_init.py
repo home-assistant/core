@@ -1,6 +1,6 @@
 """ESPHome set up tests."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aioesphomeapi import APIConnectionError
 import pytest
@@ -12,7 +12,6 @@ from homeassistant.components.esphome.encryption_key_storage import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -39,13 +38,6 @@ async def test_remove_entry_clears_dynamic_encryption_key(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that removing an entry clears the dynamic encryption key from device and storage."""
-    with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=False
-    ):
-        # async_setup_component automatically loads all pre-existing entries,
-        # but we don't want to load the entry since we're testing removal
-        await async_setup_component(hass, DOMAIN, {})
-
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
     await storage.async_store_key(
@@ -116,13 +108,6 @@ async def test_remove_entry_device_rejects_key_removal(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that when device rejects key removal, key remains in storage."""
-    with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=False
-    ):
-        # async_setup_component automatically loads all pre-existing entries,
-        # but we don't want to actually load the entry
-        await async_setup_component(hass, DOMAIN, {})
-
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
     await storage.async_store_key(
@@ -151,13 +136,6 @@ async def test_remove_entry_connection_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that connection error during key clearing does not remove key from storage."""
-    with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=False
-    ):
-        # async_setup_component automatically loads all pre-existing entries,
-        # but we don't want to actually load the entry
-        await async_setup_component(hass, DOMAIN, {})
-
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
     await storage.async_store_key(
