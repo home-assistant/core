@@ -46,7 +46,7 @@ CONF_TIMEZONE = "timezone"
 
 PARALLEL_UPDATES = 0
 
-DEFAULT_NAME = "MQTT DateTime"
+DEFAULT_NAME = "MQTT Date/Time"
 
 MQTT_DATETIME_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
