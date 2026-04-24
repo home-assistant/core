@@ -807,9 +807,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or (
-                    not options[CONF_WEB_SEARCH] and not options[CONF_WEB_FETCH]
-                )
+                or (not options[CONF_WEB_SEARCH] and not options[CONF_WEB_FETCH])
             ):
                 tools.append(
                     CodeExecutionTool20250825Param(
