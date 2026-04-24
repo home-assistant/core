@@ -108,6 +108,37 @@ async def test_last_alarm_pic_sensor_not_created(
 
 
 @pytest.mark.usefixtures("mock_ezviz_client")
+async def test_migrated_last_alarm_pic_sensor_is_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrated last_alarm_pic sensor entities are removed on setup."""
+    migrated_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "ezviz",
+        "C123456789_Camera 1.last_alarm_pic",
+        config_entry=mock_config_entry,
+    )
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": {
+            "name": "Camera 1",
+            "device_sub_category": "CAMERA",
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "version": "1.0.0",
+            "last_alarm_time": "2023-01-01T12:00:00Z",
+            "last_alarm_pic": "https://example.com/image.jpg",
+            "encrypted": False,
+        }
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(migrated_entry.entity_id) is None
+
+
+@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_image_entity_not_created_without_alarm_pic(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -134,3 +165,45 @@ async def test_image_entity_not_created_without_alarm_pic(
     # Check that image entity was NOT created
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is None
+
+
+@pytest.mark.usefixtures("mock_ezviz_client")
+async def test_image_entity_updates_last_alarm_pic_on_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test the image entity updates its alarm picture on refresh."""
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": {
+            "name": "Camera 1",
+            "device_sub_category": "CAMERA",
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "version": "1.0.0",
+            "last_alarm_time": "2023-01-01T12:00:00Z",
+            "last_alarm_pic": "https://example.com/image-1.jpg",
+            "encrypted": False,
+        }
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": {
+            "name": "Camera 1",
+            "device_sub_category": "CAMERA",
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "version": "1.0.0",
+            "last_alarm_time": "2023-01-01T12:05:00Z",
+            "last_alarm_pic": "https://example.com/image-2.jpg",
+            "encrypted": False,
+        }
+    }
+
+    await coordinator.async_request_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.camera_1_last_motion_image")
+    assert state is not None
+    assert state.attributes.get("last_alarm_pic") == "https://example.com/image-2.jpg"
