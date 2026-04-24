@@ -1067,4 +1067,3 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
     assert len(added_entities) == 1
     assert added_entities[0].unique_id == "device-1_temperature_sensor"
     assert added_entities[0]._property_identifier == "temperature"
-

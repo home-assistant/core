@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -35,9 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 # - New device detection
 # - Firmware version updates
 UPDATE_INTERVAL = timedelta(minutes=30)
-
-
-
 
 
 @dataclass
@@ -205,7 +201,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         Cache is invalidated every 5 minutes to balance freshness and API load.
         """
         cloud_wrapper = self.api_client.cloud_client
-        
+
         # Use SDK's batch processing method
         await cloud_wrapper.async_fetch_and_process_device_details(
             devices=devices,

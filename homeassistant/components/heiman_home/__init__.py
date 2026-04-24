@@ -6,6 +6,7 @@ import contextlib
 import logging
 
 from heimanconnect import DeviceManagement
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -112,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     # Initialize MQTT client after successful first refresh
     try:
         await coordinator.async_init_mqtt_client()
-    except Exception:  # pragma: no cover - defensive cleanup for rare MQTT init failures
+    except Exception:
         # Clean up resources if MQTT initialization fails
         mqtt_client = getattr(coordinator, "mqtt_client", None)
         if mqtt_client is not None:
