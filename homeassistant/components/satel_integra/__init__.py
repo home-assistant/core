@@ -173,7 +173,7 @@ async def async_migrate_entry(
             hass.config_entries.async_update_subentry(
                 config_entry,
                 subentry,
-                data={**subentry.data, CONF_ENABLE_TEMPERATURE_SENSOR: False},
+                data={CONF_ENABLE_TEMPERATURE_SENSOR: False} | subentry.data,
             )
 
         hass.config_entries.async_update_entry(config_entry, minor_version=3)

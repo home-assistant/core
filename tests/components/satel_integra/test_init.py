@@ -12,25 +12,29 @@ from satel_integra import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_PANEL_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import (
     CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
+    CONF_OUTPUT_NUMBER,
+    CONF_PARTITION_NUMBER,
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
+    CONF_ZONE_NUMBER,
+    CONF_ZONE_TYPE,
     DOMAIN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
-    CONF_OUTPUT_NUMBER,
-    CONF_PARTITION_NUMBER,
-    CONF_SWITCHABLE_OUTPUT_NUMBER,
-    CONF_ZONE_NUMBER,
     MOCK_CONFIG_DATA,
     MOCK_CONFIG_OPTIONS,
     MOCK_ENTRY_ID,
@@ -173,8 +177,21 @@ async def test_config_flow_migration_v2_2_to_v2_3(
         version=2,
         minor_version=2,
     )
+
     config_entry.subentries = deepcopy(
-        {MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY}
+        {
+            MOCK_ZONE_SUBENTRY.subentry_id: ConfigSubentry(
+                subentry_type=MOCK_ZONE_SUBENTRY.subentry_type,
+                subentry_id=MOCK_ZONE_SUBENTRY.subentry_id,
+                unique_id=MOCK_ZONE_SUBENTRY.unique_id,
+                title=MOCK_ZONE_SUBENTRY.title,
+                data={
+                    CONF_NAME: "Zone",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
+                    CONF_ZONE_NUMBER: 1,
+                },
+            )
+        }
     )
 
     await setup_integration(hass, config_entry)
@@ -185,6 +202,9 @@ async def test_config_flow_migration_v2_2_to_v2_3(
     subentry = config_entry.subentries.get(MOCK_ZONE_SUBENTRY.subentry_id)
     assert subentry is not None
     assert subentry.data[CONF_ENABLE_TEMPERATURE_SENSOR] is False
+    assert subentry.data[CONF_NAME] == "Zone"
+    assert subentry.data[CONF_ZONE_TYPE] == BinarySensorDeviceClass.MOTION
+    assert subentry.data[CONF_ZONE_NUMBER] == 1
 
 
 async def test_parent_device_exists(
