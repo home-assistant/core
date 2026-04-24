@@ -55,7 +55,9 @@ async def _validate_connection(
         _LOGGER.exception("Unexpected exception during config flow")
         return (None, "unknown")
     else:
-        return (serial_number or None, None)
+        if not serial_number:
+            return (None, "no_serial_number")
+        return (serial_number, None)
 
 
 class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -83,8 +85,7 @@ class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
-                unique_id = serial_number or f"{host}:{port}"
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
