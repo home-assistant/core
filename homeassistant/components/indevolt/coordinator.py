@@ -177,4 +177,4 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""
-        return int(self.data[EMERGENCY_SOC_READ_KEY])
+        return int(self.data.get(EMERGENCY_SOC_READ_KEY, 10))

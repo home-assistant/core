@@ -106,7 +106,7 @@ async def test_button_press_standby_rejected_command(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
-    # Simulate stop() returning False (device rejected the command)
+    # Simulate stop() returning False (e.g. device rejected the command)
     mock_indevolt.stop.return_value = False
 
     # Mock call to pause (dis)charging

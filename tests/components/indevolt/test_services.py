@@ -1,6 +1,6 @@
 """Tests for Indevolt services/actions."""
 
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock
 
 from indevolt_api import PowerExceedsMaxError, SocBelowMinimumError
 import pytest
@@ -10,9 +10,7 @@ from homeassistant.components.indevolt.const import (
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     PORTABLE_MODE,
-    REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
-    RealtimeAction,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -35,10 +33,10 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
 @pytest.mark.parametrize(
-    ("service_name", "power", "target_soc", "realtime_action"),
+    ("service_name", "power", "target_soc"),
     [
-        ("charge", 1200, 60, RealtimeAction.CHARGE.value),
-        ("discharge", 1200, 40, RealtimeAction.DISCHARGE.value),
+        ("charge", 1200, 60),
+        ("discharge", 1200, 40),
     ],
 )
 async def test_service_charge_discharge(
@@ -48,7 +46,6 @@ async def test_service_charge_discharge(
     service_name: str,
     power: int,
     target_soc: int,
-    realtime_action: int,
 ) -> None:
     """Test charge and discharge services."""
     await setup_integration(hass, mock_config_entry)
@@ -68,13 +65,14 @@ async def test_service_charge_discharge(
         blocking=True,
     )
 
-    # Verify set_data was called with correct parameters
-    mock_indevolt.set_data.assert_has_calls(
-        [
-            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, [realtime_action, power, target_soc]),
-        ]
+    # Verify energy mode switch and charge/discharge were called correctly
+    mock_indevolt.set_data.assert_called_once_with(
+        ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE
     )
+    if service_name == "charge":
+        mock_indevolt.charge.assert_called_once_with(power, target_soc)
+    else:
+        mock_indevolt.discharge.assert_called_once_with(power, target_soc)
 
 
 @pytest.mark.parametrize("generation", [1], indirect=True)
@@ -131,8 +129,8 @@ async def test_service_target_soc_below_minimum(
     await setup_integration(hass, mock_config_entry)
 
     # Configure the API mock to raise SocBelowMinimumError
-    mock_indevolt.check_charge_limits.side_effect = SocBelowMinimumError(3)
-    mock_indevolt.check_discharge_limits.side_effect = SocBelowMinimumError(3)
+    mock_indevolt.check_charge_limits.side_effect = SocBelowMinimumError(3, 5, 2)
+    mock_indevolt.check_discharge_limits.side_effect = SocBelowMinimumError(3, 5, 2)
 
     # Mock call to start service (target SOC below hard minimum)
     with pytest.raises(ServiceValidationError) as exc_info:
