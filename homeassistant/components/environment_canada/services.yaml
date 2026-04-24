@@ -12,10 +12,11 @@ set_radar_type:
   fields:
     radar_type:
       required: true
-      example: Snow
+      example: Rain
       selector:
         select:
           options:
             - "Auto"
             - "Rain"
             - "Snow"
+            - "Precip Type"

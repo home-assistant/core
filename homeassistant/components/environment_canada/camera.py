@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from env_canada import ECRadar
+from env_canada import ECMap
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
@@ -13,13 +13,20 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_OBSERVATION_TIME
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
 SET_RADAR_TYPE_SCHEMA: VolDictType = {
-    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow"]),
+    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow", "Precip Type"]),
+}
+
+_RADAR_TYPE_TO_LAYER: dict[str, str] = {
+    "Rain": "rain",
+    "Snow": "snow",
+    "Precip Type": "precip_type",
 }
 
 
@@ -40,13 +47,13 @@ async def async_setup_entry(
     )
 
 
-class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera):
+class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
     """Implementation of an Environment Canada radar camera."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "radar"
 
-    def __init__(self, coordinator: ECDataUpdateCoordinator[ECRadar]) -> None:
+    def __init__(self, coordinator: ECDataUpdateCoordinator[ECMap]) -> None:
         """Initialize the camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
@@ -78,6 +85,13 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
 
     async def async_set_radar_type(self, radar_type: str) -> None:
         """Set the type of radar to retrieve."""
+        if radar_type == "Auto":
+            # Choose rain for months April through October, snow otherwise
+            layer = "rain" if dt_util.now().month in range(4, 11) else "snow"
+        else:
+            layer = _RADAR_TYPE_TO_LAYER[radar_type]
+
+        # Apply new layer and clear cache to force refresh
+        self.radar_object.layer = layer
         self.radar_object.clear_cache()
-        self.radar_object.precip_type = radar_type.lower()
-        await self.radar_object.update()
+        await self.coordinator.async_request_refresh()
