@@ -303,7 +303,7 @@ async def test_stale_reading(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unknown"
+    assert hass.states.get("sensor.test_temperature").state == "unavailable"
 
 
 async def test_other_error(hass: HomeAssistant) -> None:
