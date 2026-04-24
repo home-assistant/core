@@ -48,6 +48,17 @@
       }
     }
   },
+  "exceptions": {
+    "frequency_not_supported": {
+      "message": "Broadlink devices cannot transmit on {frequency} Hz"
+    },
+    "modulation_not_supported": {
+      "message": "Broadlink devices only support OOK modulation, got {modulation}"
+    },
+    "transmit_failed": {
+      "message": "Failed to transmit RF command: {error}"
+    }
+  },
   "entity": {
     "select": {
       "day_of_week": {
