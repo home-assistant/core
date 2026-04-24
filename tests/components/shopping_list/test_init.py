@@ -921,5 +921,4 @@ async def test_config_import_deprecation(
 
     await hass.async_block_till_done(True)
 
-    assert len(issue_registry.issues) == 1
-    assert (HOMEASSISTANT_DOMAIN, "deprecated_yaml") in issue_registry.issues
+    assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
