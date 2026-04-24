@@ -8,7 +8,7 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-import aiohttp
+from aiohttp import ClientError, ClientSession
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -75,7 +75,7 @@ class MobileAppNotifyEntity(NotifyEntity):
     _attr_name = None
     _attr_supported_features = NotifyEntityFeature.TITLE
 
-    def __init__(self, entry: ConfigEntry, session: aiohttp.ClientSession) -> None:
+    def __init__(self, entry: ConfigEntry, session: ClientSession) -> None:
         """Initialize the notify entity."""
 
         self._attr_unique_id = entry.data[ATTR_DEVICE_ID]
@@ -96,81 +96,6 @@ class MobileAppNotifyEntity(NotifyEntity):
         """Send the push notification."""
         placeholders = {"device_name": self.entry.title}
 
-        async def _send_message(data: dict[str, Any]):
-            reg_info = {
-                ATTR_APP_ID: self.entry.data[ATTR_APP_ID],
-                ATTR_APP_VERSION: self.entry.data[ATTR_APP_VERSION],
-                ATTR_WEBHOOK_ID: self.entry.data[ATTR_WEBHOOK_ID],
-            }
-            if ATTR_OS_VERSION in self.entry.data:
-                reg_info[ATTR_OS_VERSION] = self.entry.data[ATTR_OS_VERSION]
-
-            try:
-                async with asyncio.timeout(10):
-                    response = await self.session.post(
-                        self.entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
-                        json={
-                            **data,
-                            ATTR_PUSH_TOKEN: self.entry.data[ATTR_APP_DATA][
-                                ATTR_PUSH_TOKEN
-                            ],
-                            "registration_info": reg_info,
-                        },
-                    )
-                    result: dict[str, Any] = await response.json()
-
-                log_rate_limits(self.hass, self.entry.title, result, logging.DEBUG)
-
-                if response.status in (
-                    HTTPStatus.OK,
-                    HTTPStatus.CREATED,
-                    HTTPStatus.ACCEPTED,
-                ):
-                    return
-
-                fallback_error = result.get("errorMessage", "Unknown error")
-                fallback_message = (
-                    f"Internal server error, please try again later: {fallback_error}"
-                )
-                message = result.get("message", fallback_message)
-
-                if "message" in result:
-                    if message[-1] not in [".", "?", "!"]:
-                        message += "."
-                    message += (
-                        " This message is generated externally to Home Assistant."
-                    )
-                _LOGGER.debug(
-                    "Error sending notification to %s: %s", self.entry.title, message
-                )
-
-                if response.status == HTTPStatus.TOO_MANY_REQUESTS:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="rate_limit_exceeded_sending_notification",
-                        translation_placeholders=placeholders,
-                    )
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="error_sending_notification",
-                    translation_placeholders=placeholders,
-                )
-            except TimeoutError as e:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="timeout_sending_notification",
-                    translation_placeholders=placeholders,
-                ) from e
-            except aiohttp.ClientError as e:
-                _LOGGER.debug(
-                    "Error sending notification to %s:", self.entry.title, exc_info=True
-                )
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="error_sending_notification",
-                    translation_placeholders=placeholders,
-                ) from e
-
         data: dict[str, Any] = {}
         if message is not None:
             data[ATTR_MESSAGE] = message
@@ -184,9 +109,12 @@ class MobileAppNotifyEntity(NotifyEntity):
             push_channel: PushChannel = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL][
                 self.entry.data[ATTR_WEBHOOK_ID]
             ]
-            push_channel.async_send_notification(data, _send_message)
+            push_channel.async_send_notification(
+                data,
+                partial(_send_message, self.session, self.entry),
+            )
         elif ATTR_PUSH_URL in self.entry.data[ATTR_APP_DATA]:
-            await _send_message(data)
+            await _send_message(self.session, self.entry, data)
         else:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -208,7 +136,7 @@ def push_registrations(hass: HomeAssistant) -> dict[str, str]:
     return targets
 
 
-def log_rate_limits(hass, device_name, resp, level=logging.INFO):
+def log_rate_limits(device_name, resp, level=logging.INFO):
     """Output rate limit log line at given level."""
     if ATTR_PUSH_RATE_LIMITS not in resp:
         return
@@ -265,87 +193,113 @@ class MobileAppNotificationService(BaseNotificationService):
         if (data_arg := kwargs.get(ATTR_DATA)) is not None:
             data[ATTR_DATA] = data_arg
 
-        local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
+        local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][
+            DATA_PUSH_CHANNEL
+        ]
 
         failed_targets = []
         for target in targets:
-            registration = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target].data
+            entry: ConfigEntry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
 
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(
                     data,
-                    partial(
-                        self._async_send_remote_message_target, target, registration
-                    ),
+                    partial(self._async_send_remote_message_target, entry),
                 )
                 continue
 
             # Test if local push only.
-            if ATTR_PUSH_URL not in registration[ATTR_APP_DATA]:
+            if ATTR_PUSH_URL not in entry.data[ATTR_APP_DATA]:
                 failed_targets.append(target)
                 continue
 
-            await self._async_send_remote_message_target(target, registration, data)
+            await self._async_send_remote_message_target(entry, data)
 
         if failed_targets:
             raise HomeAssistantError(
                 f"Device(s) with webhook id(s) {', '.join(failed_targets)} not connected to local push notifications"
             )
 
-    async def _async_send_remote_message_target(self, target, registration, data):
+    async def _async_send_remote_message_target(
+        self, entry: ConfigEntry, data: dict[str, Any]
+    ):
         """Send a message to a target."""
-        app_data = registration[ATTR_APP_DATA]
-        push_token = app_data[ATTR_PUSH_TOKEN]
-        push_url = app_data[ATTR_PUSH_URL]
-
-        target_data = dict(data)
-        target_data[ATTR_PUSH_TOKEN] = push_token
-
-        reg_info = {
-            ATTR_APP_ID: registration[ATTR_APP_ID],
-            ATTR_APP_VERSION: registration[ATTR_APP_VERSION],
-            ATTR_WEBHOOK_ID: target,
-        }
-        if ATTR_OS_VERSION in registration:
-            reg_info[ATTR_OS_VERSION] = registration[ATTR_OS_VERSION]
-
-        target_data["registration_info"] = reg_info
-
         try:
-            async with asyncio.timeout(10):
-                response = await async_get_clientsession(self.hass).post(
-                    push_url, json=target_data
-                )
-                result = await response.json()
-
-            if response.status in (
-                HTTPStatus.OK,
-                HTTPStatus.CREATED,
-                HTTPStatus.ACCEPTED,
-            ):
-                log_rate_limits(self.hass, registration[ATTR_DEVICE_NAME], result)
-                return
-
-            fallback_error = result.get("errorMessage", "Unknown error")
-            fallback_message = (
-                f"Internal server error, please try again later: {fallback_error}"
-            )
-            message = result.get("message", fallback_message)
-
-            if "message" in result:
-                if message[-1] not in [".", "?", "!"]:
-                    message += "."
-                message += " This message is generated externally to Home Assistant."
-
-            if response.status == HTTPStatus.TOO_MANY_REQUESTS:
-                _LOGGER.warning(message)
-                log_rate_limits(
-                    self.hass, registration[ATTR_DEVICE_NAME], result, logging.WARNING
-                )
+            await _send_message(async_get_clientsession(self.hass), entry, data)
+        except HomeAssistantError as e:
+            if e.translation_key == "rate_limit_exceeded_sending_notification":
+                _LOGGER.warning(str(e))
             else:
-                _LOGGER.error(message)
+                _LOGGER.error(str(e))
 
-        except TimeoutError:
-            _LOGGER.error("Timeout sending notification to %s", push_url)
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error sending notification to %s: %r", push_url, err)
+
+async def _send_message(
+    session: ClientSession,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+):
+    reg_info = {
+        ATTR_APP_ID: entry.data[ATTR_APP_ID],
+        ATTR_APP_VERSION: entry.data[ATTR_APP_VERSION],
+        ATTR_WEBHOOK_ID: entry.data[ATTR_WEBHOOK_ID],
+    }
+    if ATTR_OS_VERSION in entry.data:
+        reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
+
+    try:
+        async with asyncio.timeout(10):
+            response = await session.post(
+                entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
+                json={
+                    **data,
+                    ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
+                    "registration_info": reg_info,
+                },
+            )
+            result: dict[str, Any] = await response.json()
+
+        log_rate_limits(entry.title, result, logging.DEBUG)
+
+        if response.status in (
+            HTTPStatus.OK,
+            HTTPStatus.CREATED,
+            HTTPStatus.ACCEPTED,
+        ):
+            return
+
+        fallback_error = result.get("errorMessage", "Unknown error")
+        fallback_message = (
+            f"Internal server error, please try again later: {fallback_error}"
+        )
+        message = result.get("message", fallback_message)
+
+        if "message" in result:
+            if message[-1] not in [".", "?", "!"]:
+                message += "."
+            message += " This message is generated externally to Home Assistant."
+        _LOGGER.debug("Error sending notification to %s: %s", entry.title, message)
+
+        if response.status == HTTPStatus.TOO_MANY_REQUESTS:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limit_exceeded_sending_notification",
+                translation_placeholders={"device_name": entry.title},
+            )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="error_sending_notification",
+            translation_placeholders={"device_name": entry.title},
+        )
+    except TimeoutError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_sending_notification",
+            translation_placeholders={"device_name": entry.title},
+        ) from e
+    except ClientError as e:
+        _LOGGER.debug("Error sending notification to %s:", entry.title, exc_info=True)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="error_sending_notification",
+            translation_placeholders={"device_name": entry.title},
+        ) from e
