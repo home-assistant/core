@@ -314,6 +314,18 @@ class IcloudAccount:
 
         try:
             self.api.authenticate()
+        except PyiCloudFailedLoginException:
+            _LOGGER.error(
+                (
+                    "Your password for '%s' is no longer working; Go to the "
+                    "Integrations menu and click on Configure on the discovered Apple "
+                    "iCloud card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+            self.api = None
+            self._require_reauth()
+            return
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning(
                 "Authentication failed in keep_alive, will retry next cycle: %s", err

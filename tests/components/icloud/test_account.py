@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from pyicloud.exceptions import PyiCloudFailedLoginException
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -203,6 +204,32 @@ async def test_keep_alive_auth_exception_reschedules(
 
     mock_schedule.assert_called_once()
     assert account._fetch_interval == 2
+
+
+async def test_keep_alive_failed_login_triggers_reauth(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive triggers reauth on PyiCloudFailedLoginException instead of retrying.
+
+    Permanent credential failures (bad password) must not be retried — the integration
+    should stop polling and prompt the user to re-enter credentials via reauth.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.authenticate.side_effect = PyiCloudFailedLoginException("bad password")
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.keep_alive()
+
+    mock_reauth.assert_called_once()
+    mock_schedule.assert_not_called()
+    assert account.api is None
+    mock_logger.error.assert_called_once()
 
 
 async def test_keep_alive_success_sends_locate_before_update(
