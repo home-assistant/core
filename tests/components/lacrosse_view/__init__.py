@@ -36,7 +36,7 @@ TEST_STALE_SENSOR = Sensor(
         "data": {
             "current": {
                 "Temperature": {
-                    "spot": {"value": "2", "time": 1},
+                    "spot": {"value": "2", "time": 1767225600},
                     "unit": "degrees_celsius",
                 }
             }
