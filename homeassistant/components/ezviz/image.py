@@ -70,6 +70,13 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         """Entity gets data from ezviz API so always available."""
         return True
 
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return extra state attributes."""
+        return {
+            "last_alarm_pic": self.data.get("last_alarm_pic"),
+        }
+
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
