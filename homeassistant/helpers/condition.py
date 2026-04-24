@@ -1665,21 +1665,17 @@ class ConditionsChecker:
 
     def __init__(
         self,
-        checks: list[ConditionChecker],
+        conditions: list[ConditionChecker],
         logger: logging.Logger,
         name: str,
     ) -> None:
         """Initialize condition checker."""
-        self._checks = checks
+        self._conditions = conditions
         self._logger = logger
         self._name = name
         self._unloaded = False
 
-    def __call__(
-        self,
-        variables: TemplateVarsType | None = None,
-        **kwargs: Any,
-    ) -> bool:
+    def __call__(self, variables: TemplateVarsType = None) -> bool:
         """Check all conditions."""
         return self.async_check(variables=variables)
 
@@ -1695,23 +1691,23 @@ class ConditionsChecker:
     def async_unload(self) -> None:
         """Clean up child conditions."""
         self._unloaded = True
-        for check in self._checks:
-            check.async_unload()
+        for condition in self._conditions:
+            condition.async_unload()
 
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
     ) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
-        for index, check in enumerate(self._checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["condition", str(index)]):
-                    if check.async_check(variables=variables, **kwargs) is False:
+                    if condition.async_check(variables=variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "condition", index=index, total=len(self._checks), error=ex
+                        "condition", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
