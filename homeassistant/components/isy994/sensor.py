@@ -148,6 +148,7 @@ UOM_TO_DEVICE_CLASS = {
     "131": SensorDeviceClass.SIGNAL_STRENGTH,
     "133": SensorDeviceClass.FREQUENCY,
     "138": SensorDeviceClass.PRESSURE,
+    "142": SensorDeviceClass.VOLUME_FLOW_RATE,
     "143": SensorDeviceClass.VOLUME_FLOW_RATE,
     "144": SensorDeviceClass.VOLUME_FLOW_RATE,
 }
@@ -300,6 +301,28 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
             return self.hass.config.units.temperature_unit
         return raw_units
 
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Get the device class for the ISY sensor device."""
+        if self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE:
+            # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
+            # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
+            # this guard can be removed.
+            if self.raw_unit_of_measurement in UnitOfVolumeFlowRate:
+                return SensorDeviceClass.VOLUME_FLOW_RATE
+            return None
+        return self._attr_device_class
+
+    @property
+    def state_class(self) -> SensorStateClass | None:
+        """Get the state class for the ISY sensor device."""
+        if (
+            self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE
+            and self.raw_unit_of_measurement not in UnitOfVolumeFlowRate
+        ):
+            return SensorStateClass.MEASUREMENT
+        return self._attr_state_class
+
 
 class ISYAuxSensorEntity(ISYSensorEntity):
     """Representation of an ISY aux sensor device."""
@@ -319,17 +342,6 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
-
-        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
-        # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
-        # this guard can be removed.
-        if (
-            self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE
-            and self.raw_unit_of_measurement not in UnitOfVolumeFlowRate
-        ):
-            self._attr_device_class = None
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-
         self._attr_unique_id = unique_id
         self._change_handler: EventListener = None
         self._availability_handler: EventListener = None

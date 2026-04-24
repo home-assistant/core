@@ -323,6 +323,110 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_snapshots[sensor.flow_rate_gps-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flow_rate_gps',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'isy994',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00_22 22 22 9',
+    'unit_of_measurement': 'gal/s',
+  })
+# ---
+# name: test_sensor_snapshots[sensor.flow_rate_gps-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Flow Rate GPS',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gal/s',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flow_rate_gps',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1',
+  })
+# ---
+# name: test_sensor_snapshots[sensor.flow_rate_gps_flow_rate_gps_device_communication_errors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.flow_rate_gps_flow_rate_gps_device_communication_errors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flow Rate GPS Device Communication Errors',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flow Rate GPS Device Communication Errors',
+    'platform': 'isy994',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00_22 22 22 9_ERR',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshots[sensor.flow_rate_gps_flow_rate_gps_device_communication_errors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Flow Rate GPS Flow Rate GPS Device Communication Errors',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flow_rate_gps_flow_rate_gps_device_communication_errors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_snapshots[sensor.flow_rate_lph-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

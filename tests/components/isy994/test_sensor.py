@@ -1,5 +1,7 @@
 """Test the ISY994 sensor platform."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +19,7 @@ async def test_sensor_snapshots(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_isy: MagicMock,
-    mock_node: callable,
+    mock_node: Callable[..., Any],
 ) -> None:
     """Test sensors with snapshots."""
     mock_config_entry.add_to_hass(hass)
@@ -46,6 +48,13 @@ async def test_sensor_snapshots(
     node3.uom = "144"
     node3.prec = "0"
     nodes.append(("Sensors/Flow Rate GPH", node3))
+
+    # Node 9: Gallons per Second (142) - Should have NO device_class due to guard
+    node9 = mock_node(mock_isy, "22 22 22 9", "Flow Rate GPS", "GenericSensor")
+    node9.status = 1
+    node9.uom = "142"
+    node9.prec = "1"
+    nodes.append(("Sensors/Flow Rate GPS", node9))
 
     # Other UOMs from test_mappings
     # Temperature (4)
