@@ -117,7 +117,7 @@ SENSOR_DATA: list[SensorData] = [
         daliSensorAddress=SensorDaliAddress(line=0, address=0, instanceNumber=0),
     ),
 ]
-SENSORS_DATA: list[SensorData] = SensorsData(sensors=SENSOR_DATA)
+SENSORS_DATA = SensorsData(sensors=SENSOR_DATA)
 
 
 def build_devices_data() -> DevicesData:

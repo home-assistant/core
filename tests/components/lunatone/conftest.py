@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
-from lunatone_rest_api_client.models import InfoData
+from lunatone_rest_api_client.models import InfoData, SensorsData
 import pytest
 
 from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
@@ -149,10 +149,15 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_info:
         sensors = mock_info.return_value
-        sensors.data = SENSORS_DATA
-        type(sensors).sensors = PropertyMock(
-            side_effect=lambda s=sensors: build_sensors_mock(s)
-        )
+
+        def _set_data(data: SensorsData) -> None:
+            sensors.data = data
+            type(sensors).sensors = PropertyMock(
+                side_effect=lambda s=sensors: build_sensors_mock(s)
+            )
+
+        sensors.set_data = _set_data
+        sensors.set_data(SENSORS_DATA)
         yield sensors
 
 
