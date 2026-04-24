@@ -13,7 +13,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_PANEL_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.satel_integra.const import CONF_ENCRYPTION_KEY, DOMAIN
+from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
+from homeassistant.components.satel_integra.const import (
+    CONF_ENABLE_TEMPERATURE_SENSOR,
+    CONF_ENCRYPTION_KEY,
+    DOMAIN,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -33,6 +38,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    MOCK_ZONE_TEMPERATURE_SUBENTRY,
     setup_integration,
 )
 
@@ -151,6 +157,35 @@ async def test_config_flow_migration_v2_1_to_v2_2(
         CONF_PORT: 7094,
         CONF_ENCRYPTION_KEY: None,
     }
+
+
+async def test_config_flow_migration_v2_2_to_v2_3(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+) -> None:
+    """Test that the temperature sensor option is added to zone subentries."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.2",
+        data=MOCK_CONFIG_DATA,
+        options=MOCK_CONFIG_OPTIONS,
+        entry_id=MOCK_ENTRY_ID,
+        version=2,
+        minor_version=2,
+    )
+    config_entry.subentries = {
+        MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id: MOCK_ZONE_TEMPERATURE_SUBENTRY
+    }
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.version == SatelConfigFlow.VERSION
+    assert config_entry.minor_version == SatelConfigFlow.MINOR_VERSION
+
+    subentry = config_entry.subentries.get(MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id)
+    assert subentry is not None
+    assert subentry.data[CONF_ENABLE_TEMPERATURE_SENSOR] is False
 
 
 async def test_parent_device_exists(
