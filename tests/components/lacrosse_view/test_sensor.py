@@ -280,7 +280,7 @@ async def test_mixed_readings(hass: HomeAssistant) -> None:
 
 
 async def test_stale_reading(hass: HomeAssistant) -> None:
-    """Test that a stale spot reading is ignored and sensor reports unknown."""
+    """Test that a stale spot reading is ignored and sensor reports unavailable."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
