@@ -87,6 +87,22 @@ async def test_timer_turn_on(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_timer_turn_off(
+    hass: HomeAssistant,
+    mock_fumis: MagicMock,
+) -> None:
+    """Test turning off the timer."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.clou_duo_timer"},
+        blocking=True,
+    )
+
+    mock_fumis.set_timer.assert_called_once_with(enabled=False)
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_switch_error_handling(
     hass: HomeAssistant,
     mock_fumis: MagicMock,
