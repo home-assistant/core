@@ -1,750 +1,2102 @@
 # serializer version: 1
-# name: test_setup_platform[botched][binary_sensor.bathroom_dn_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.bathroom_dn_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Bathroom Dn zone faults',
+      'friendly_name': 'Bathroom Dn battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bathroom_dn_zone_faults',
+    'entity_id': 'binary_sensor.bathroom_dn_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.dead_zone_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.bathroom_dn_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Bathroom Dn connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bathroom_dn_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.bathroom_dn_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Dead Zone zone faults',
+      'friendly_name': 'Bathroom Dn fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dead_zone_zone_faults',
+    'entity_id': 'binary_sensor.bathroom_dn_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.front_room_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.dead_zone_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Dead Zone battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dead_zone_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.dead_zone_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Dead Zone connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dead_zone_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.dead_zone_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Dead Zone fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dead_zone_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.front_room_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
       'faults': list([
         dict({
           'fault': 'temp_zone_actuator_low_battery',
           'since': datetime.datetime(2022, 3, 2, 4, 50, 20, tzinfo=UTC-03:00),
         }),
       ]),
-      'friendly_name': 'Front Room zone faults',
+      'friendly_name': 'Front Room battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_room_zone_faults',
+    'entity_id': 'binary_sensor.front_room_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.kids_room_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.front_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Front Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.front_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.front_room_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Kids Room zone faults',
+      'friendly_name': 'Front Room fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kids_room_zone_faults',
+    'entity_id': 'binary_sensor.front_room_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.kitchen_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.kids_room_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Kitchen zone faults',
+      'friendly_name': 'Kids Room battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kitchen_zone_faults',
+    'entity_id': 'binary_sensor.kids_room_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.main_bedroom_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.kids_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kids Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kids_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.kids_room_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Main Bedroom zone faults',
+      'friendly_name': 'Kids Room fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_bedroom_zone_faults',
+    'entity_id': 'binary_sensor.kids_room_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.main_room_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.kitchen_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kitchen battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.kitchen_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kitchen connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.kitchen_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kitchen fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.main_bedroom_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Bedroom battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_bedroom_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.main_bedroom_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Bedroom connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_bedroom_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.main_bedroom_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Bedroom fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_bedroom_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.main_room_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Room battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_room_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.main_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
       'faults': list([
         dict({
           'fault': 'temp_zone_actuator_communication_lost',
           'since': datetime.datetime(2022, 3, 2, 15, 56, 1, tzinfo=UTC-03:00),
         }),
       ]),
-      'friendly_name': 'Main Room zone faults',
+      'friendly_name': 'Main Room connection',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_room_zone_faults',
+    'entity_id': 'binary_sensor.main_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.main_room_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Room fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_room_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.my_home_dhw_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home DHW battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_dhw_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.my_home_dhw_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home DHW connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_dhw_connection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.my_home_dhw_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_dhw_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home DHW faults',
+      'friendly_name': 'My Home DHW fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_dhw_faults',
+    'entity_id': 'binary_sensor.my_home_dhw_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.my_home_gateway_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.my_home_gateway_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home gateway faults',
+      'friendly_name': 'My Home gateway fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_gateway_faults',
+    'entity_id': 'binary_sensor.my_home_gateway_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.my_home_system_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_system_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'My Home system faults',
+      'friendly_name': 'My Home system battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_system_faults',
+    'entity_id': 'binary_sensor.my_home_system_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.spare_room_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.my_home_system_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Spare Room zone faults',
+      'friendly_name': 'My Home system fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.spare_room_zone_faults',
+    'entity_id': 'binary_sensor.my_home_system_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.bathroom_dn_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.spare_room_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Bathroom Dn zone faults',
+      'friendly_name': 'Spare Room battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bathroom_dn_zone_faults',
+    'entity_id': 'binary_sensor.spare_room_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.dead_zone_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.spare_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Spare Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.spare_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[botched][binary_sensor.spare_room_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Dead Zone zone faults',
+      'friendly_name': 'Spare Room fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dead_zone_zone_faults',
+    'entity_id': 'binary_sensor.spare_room_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.front_room_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.bathroom_dn_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Front Room zone faults',
+      'friendly_name': 'Bathroom Dn battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_room_zone_faults',
+    'entity_id': 'binary_sensor.bathroom_dn_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.kids_room_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.bathroom_dn_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Bathroom Dn connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bathroom_dn_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.bathroom_dn_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Kids Room zone faults',
+      'friendly_name': 'Bathroom Dn fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kids_room_zone_faults',
+    'entity_id': 'binary_sensor.bathroom_dn_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.kitchen_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.dead_zone_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Kitchen zone faults',
+      'friendly_name': 'Dead Zone battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kitchen_zone_faults',
+    'entity_id': 'binary_sensor.dead_zone_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.main_bedroom_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.dead_zone_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Dead Zone connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dead_zone_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.dead_zone_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Main Bedroom zone faults',
+      'friendly_name': 'Dead Zone fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_bedroom_zone_faults',
+    'entity_id': 'binary_sensor.dead_zone_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.main_room_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.front_room_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Main Room zone faults',
+      'friendly_name': 'Front Room battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_room_zone_faults',
+    'entity_id': 'binary_sensor.front_room_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.my_home_dhw_faults-state]
+# name: test_setup_platform[default][binary_sensor.front_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Front Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.front_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.front_room_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home DHW faults',
+      'friendly_name': 'Front Room fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_dhw_faults',
+    'entity_id': 'binary_sensor.front_room_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.my_home_gateway_faults-state]
+# name: test_setup_platform[default][binary_sensor.kids_room_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'My Home gateway faults',
+      'friendly_name': 'Kids Room battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_gateway_faults',
+    'entity_id': 'binary_sensor.kids_room_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.my_home_system_faults-state]
+# name: test_setup_platform[default][binary_sensor.kids_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kids Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kids_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.kids_room_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home system faults',
+      'friendly_name': 'Kids Room fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_system_faults',
+    'entity_id': 'binary_sensor.kids_room_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.spare_room_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.kitchen_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Spare Room zone faults',
+      'friendly_name': 'Kitchen battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.spare_room_zone_faults',
+    'entity_id': 'binary_sensor.kitchen_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h032585][binary_sensor.my_home_gateway_faults-state]
+# name: test_setup_platform[default][binary_sensor.kitchen_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kitchen connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.kitchen_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home gateway faults',
+      'friendly_name': 'Kitchen fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_gateway_faults',
+    'entity_id': 'binary_sensor.kitchen_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h032585][binary_sensor.my_home_system_faults-state]
+# name: test_setup_platform[default][binary_sensor.main_bedroom_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'My Home system faults',
+      'friendly_name': 'Main Bedroom battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_system_faults',
+    'entity_id': 'binary_sensor.main_bedroom_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h032585][binary_sensor.thermostat_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.main_bedroom_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Bedroom connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_bedroom_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.main_bedroom_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'THERMOSTAT zone faults',
+      'friendly_name': 'Main Bedroom fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_zone_faults',
+    'entity_id': 'binary_sensor.main_bedroom_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.my_home_gateway_faults-state]
+# name: test_setup_platform[default][binary_sensor.main_room_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'My Home gateway faults',
+      'friendly_name': 'Main Room battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_gateway_faults',
+    'entity_id': 'binary_sensor.main_room_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.my_home_system_faults-state]
+# name: test_setup_platform[default][binary_sensor.main_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.main_room_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home system faults',
+      'friendly_name': 'Main Room fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_system_faults',
+    'entity_id': 'binary_sensor.main_room_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.thermostat_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.my_home_dhw_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'THERMOSTAT zone faults',
+      'friendly_name': 'My Home DHW battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_zone_faults',
+    'entity_id': 'binary_sensor.my_home_dhw_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.thermostat_zone_faults_2-state]
+# name: test_setup_platform[default][binary_sensor.my_home_dhw_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home DHW connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_dhw_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.my_home_dhw_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'THERMOSTAT zone faults',
+      'friendly_name': 'My Home DHW fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_zone_faults_2',
+    'entity_id': 'binary_sensor.my_home_dhw_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.thermostat_2_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.my_home_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.my_home_gateway_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Thermostat 2 zone faults',
+      'friendly_name': 'My Home gateway fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_2_zone_faults',
+    'entity_id': 'binary_sensor.my_home_gateway_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.thermostat_zone_faults-state]
+# name: test_setup_platform[default][binary_sensor.my_home_system_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.my_home_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.my_home_system_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.spare_room_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Spare Room battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.spare_room_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.spare_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Spare Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.spare_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[default][binary_sensor.spare_room_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Spare Room fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.spare_room_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.my_home_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.my_home_gateway_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.my_home_system_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.my_home_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.my_home_system_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.thermostat_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.thermostat_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h032585][binary_sensor.thermostat_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.my_home_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.my_home_gateway_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.my_home_system_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.my_home_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.my_home_system_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.thermostat_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.thermostat_battery_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_battery_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.thermostat_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.thermostat_connection_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_connection_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.thermostat_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h099625][binary_sensor.thermostat_fault_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'THERMOSTAT fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_fault_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_2_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat 2 battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_2_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_2_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat 2 connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_2_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_2_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat 2 fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_2_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
       'faults': list([
         dict({
           'fault': 'temp_zone_sensor_communication_lost',
           'since': datetime.datetime(2025, 2, 6, 11, 20, 29, tzinfo=UTC+01:00),
         }),
       ]),
-      'friendly_name': 'Thermostat zone faults',
+      'friendly_name': 'Thermostat connection',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_zone_faults',
+    'entity_id': 'binary_sensor.thermostat_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.vr_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Vr********** gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vr_gateway_connection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.vr_gateway_faults-state]
+# name: test_setup_platform[h139906][binary_sensor.vr_gateway_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Vr********** gateway faults',
+      'friendly_name': 'Vr********** gateway fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.vr_gateway_faults',
+    'entity_id': 'binary_sensor.vr_gateway_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.vr_system_faults-state]
+# name: test_setup_platform[h139906][binary_sensor.vr_system_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Vr********** system faults',
+      'friendly_name': 'Vr********** system battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.vr_system_faults',
+    'entity_id': 'binary_sensor.vr_system_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.ba_zone_faults-state]
+# name: test_setup_platform[h139906][binary_sensor.vr_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Vr********** system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vr_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.vr_system_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Ba****** zone faults',
+      'friendly_name': 'Vr********** system fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ba_zone_faults',
+    'entity_id': 'binary_sensor.vr_system_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.ka_zone_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ba_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Ka********* zone faults',
+      'friendly_name': 'Ba****** battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ka_zone_faults',
+    'entity_id': 'binary_sensor.ba_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.ka_zone_faults_2-state]
+# name: test_setup_platform[h157546][binary_sensor.ba_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Ba****** connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ba_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.ba_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Ka***** zone faults',
+      'friendly_name': 'Ba****** fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ka_zone_faults_2',
+    'entity_id': 'binary_sensor.ba_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.kl_gateway_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ka_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Kl******** gateway faults',
+      'friendly_name': 'Ka********* battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kl_gateway_faults',
+    'entity_id': 'binary_sensor.ka_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.kl_system_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ka_battery_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'Kl******** system faults',
+      'friendly_name': 'Ka***** battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kl_system_faults',
+    'entity_id': 'binary_sensor.ka_battery_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.sl_zone_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ka_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Ka********* connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ka_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.ka_connection_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Ka***** connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ka_connection_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.ka_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Sl******** zone faults',
+      'friendly_name': 'Ka********* fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.sl_zone_faults',
+    'entity_id': 'binary_sensor.ka_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.wo_zone_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ka_fault_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Wo******* zone faults',
+      'friendly_name': 'Ka***** fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.wo_zone_faults',
+    'entity_id': 'binary_sensor.ka_fault_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[minimal][binary_sensor.main_room_zone_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.kl_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kl******** gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kl_gateway_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.kl_gateway_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Main Room zone faults',
+      'friendly_name': 'Kl******** gateway fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_room_zone_faults',
+    'entity_id': 'binary_sensor.kl_gateway_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[minimal][binary_sensor.my_home_gateway_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.kl_system_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      'device_class': 'battery',
       'faults': list([
       ]),
-      'friendly_name': 'My Home gateway faults',
+      'friendly_name': 'Kl******** system battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_gateway_faults',
+    'entity_id': 'binary_sensor.kl_system_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[minimal][binary_sensor.my_home_system_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.kl_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Kl******** system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kl_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.kl_system_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'My Home system faults',
+      'friendly_name': 'Kl******** system fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_home_system_faults',
+    'entity_id': 'binary_sensor.kl_system_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[sys_004][binary_sensor.living_room_gateway_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.sl_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Sl******** battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sl_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.sl_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Sl******** connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sl_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.sl_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Sl******** fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sl_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.wo_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Wo******* battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wo_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.wo_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Wo******* connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wo_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[h157546][binary_sensor.wo_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Wo******* fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wo_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.main_room_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Room battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_room_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.main_room_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Room connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_room_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.main_room_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Main Room fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_room_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.my_home_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.my_home_gateway_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home gateway fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_gateway_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.my_home_system_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.my_home_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_platform[minimal][binary_sensor.my_home_system_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'My Home system fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.living_room_gateway_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
       'faults': list([
         dict({
           'fault': 'gateway_communication_lost',
           'since': datetime.datetime(2023, 5, 4, 18, 47, 36, 772704, tzinfo=UTC+02:00),
         }),
       ]),
-      'friendly_name': 'Living room gateway faults',
+      'friendly_name': 'Living room gateway connection',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.living_room_gateway_faults',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_setup_platform[sys_004][binary_sensor.living_room_system_faults-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'faults': list([
-      ]),
-      'friendly_name': 'Living room system faults',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.living_room_system_faults',
+    'entity_id': 'binary_sensor.living_room_gateway_connection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[sys_004][binary_sensor.thermostat_zone_faults-state]
+# name: test_setup_platform[sys_004][binary_sensor.living_room_gateway_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'faults': list([
       ]),
-      'friendly_name': 'Thermostat zone faults',
+      'friendly_name': 'Living room gateway fault',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_zone_faults',
+    'entity_id': 'binary_sensor.living_room_gateway_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.living_room_system_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Living room system battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.living_room_system_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.living_room_system_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+        dict({
+          'fault': 'gateway_communication_lost',
+          'since': datetime.datetime(2023, 5, 4, 18, 47, 36, 772704, tzinfo=UTC+02:00),
+        }),
+      ]),
+      'friendly_name': 'Living room system connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.living_room_system_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.living_room_system_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Living room system fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.living_room_system_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.thermostat_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.thermostat_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'faults': list([
+        dict({
+          'fault': 'gateway_communication_lost',
+          'since': datetime.datetime(2023, 5, 4, 18, 47, 36, 772704, tzinfo=UTC+02:00),
+        }),
+      ]),
+      'friendly_name': 'Thermostat connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.thermostat_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'faults': list([
+      ]),
+      'friendly_name': 'Thermostat fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
