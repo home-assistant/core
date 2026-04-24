@@ -70,6 +70,8 @@ class SatelIntegraTemperatureSensor(
             device_number,
         )
 
+        self._attr_unique_id = f"{self.unique_id}_temperature"
+
     @property
     def native_value(self) -> float | None:
         """Return the state."""
