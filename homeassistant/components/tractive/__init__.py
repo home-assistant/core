@@ -112,6 +112,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     except aiotractive.exceptions.TractiveError as error:
         await client.close()
         raise ConfigEntryNotReady from error
+    except Exception:
+        await client.close()
+        raise
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
     # So we have to remove None values from trackables list.
