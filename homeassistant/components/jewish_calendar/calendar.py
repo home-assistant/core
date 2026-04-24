@@ -223,14 +223,14 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         return None
 
     async def async_get_events(
-        self, hass: HomeAssistant, start: datetime, end: datetime
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         events = []
 
         # Convert datetime to date for iteration
-        start_ordinal = start.date().toordinal()
-        end_ordinal = end.date().toordinal()
+        start_ordinal = start_date.date().toordinal()
+        end_ordinal = end_date.date().toordinal()
 
         for ordinal in range(start_ordinal, end_ordinal + 1):
             current_date = date.fromordinal(ordinal)
@@ -238,7 +238,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
             events.extend(day_events)
 
         # Filter out events not in start/end range
-        return self._filter_start_end(events, start, end)
+        return self._filter_start_end(events, start_date, end_date)
 
     def _get_next_event(self, _date: date | datetime) -> CalendarEvent | None:
         """For a given datetime or date, return the next event."""
@@ -260,9 +260,9 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
 
     def _event_sort_key(self, event: CalendarEvent) -> datetime:
         """Return a sortable datetime for an event start."""
-        if isinstance(event.start, date):
-            return datetime.combine(event.start, datetime.min.time(), tzinfo=UTC)
-        return event.start
+        if isinstance(event.start, datetime):
+            return event.start
+        return datetime.combine(event.start, datetime.min.time(), tzinfo=UTC)
 
     def _get_events_for_date(self, target_date: date) -> list[CalendarEvent]:
         """Get all configured events for a specific date."""
