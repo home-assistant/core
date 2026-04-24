@@ -44,6 +44,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
 
+    for coordinator in (
+        coordinator_zones,
+        coordinator_outputs,
+        coordinator_partitions,
+    ):
+        coordinator.setup()
+
     await client.async_connect(
         coordinator_zones.zones_update_callback,
         coordinator_outputs.outputs_update_callback,
