@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 import logging
 
 from hdate import HDateInfo, Zmanim
@@ -260,7 +260,8 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         # Since all calendar events have the same start and end time,
         # it is enough to compare the start time
         return [
-            e for e in events
+            e
+            for e in events
             if start <= self._date_to_dt(e.start, datetime.max.time()) <= end
         ]
 
@@ -268,7 +269,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         """Return a key for calendar events based on event start."""
         return self._date_to_dt(event.start, datetime.min.time())
 
-    def _date_to_dt(self, val: date | datetime, time: datetime.time) -> datetime:
+    def _date_to_dt(self, val: date | datetime, time: time) -> datetime:
         """Return a datetime for comparison."""
         if isinstance(val, datetime):
             return val
