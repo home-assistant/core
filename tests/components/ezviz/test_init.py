@@ -14,6 +14,29 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+def _mock_camera_data(**kwargs: object) -> dict[str, object]:
+    """Return a valid mocked EZVIZ camera payload for integration setup."""
+    data: dict[str, object] = {
+        "name": "Camera 1",
+        "device_sub_category": "CAMERA",
+        "mac_address": "AA:BB:CC:DD:EE:FF",
+        "version": "1.0.0",
+        "status": 1,
+        "encrypted": False,
+        "supportExt": {},
+        "switches": {},
+        "local_ip": "192.168.1.100",
+        "local_rtsp_port": 554,
+        "alarm_notify": False,
+        "upgrade_available": False,
+        "upgrade_in_progress": False,
+        "upgrade_percent": 0,
+        "latest_firmware_info": None,
+    }
+    data.update(kwargs)
+    return data
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -39,15 +62,10 @@ async def test_image_entity_has_last_alarm_pic_attribute(
     """Test that image entity includes last_alarm_pic as an attribute."""
     # Mock coordinator data with last_alarm_pic
     mock_coordinator_data = {
-        "C123456789": {
-            "name": "Camera 1",
-            "device_sub_category": "CAMERA",
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "version": "1.0.0",
-            "last_alarm_time": "2023-01-01T12:00:00Z",
-            "last_alarm_pic": "https://example.com/image.jpg",
-            "encrypted": False,
-        }
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image.jpg",
+        )
     }
 
     # Mock the load_cameras method to return our test data
@@ -73,23 +91,18 @@ async def test_last_alarm_pic_sensor_not_created(
     """Test that last_alarm_pic sensor is not created."""
     # Mock coordinator data with all sensor fields
     mock_coordinator_data = {
-        "C123456789": {
-            "name": "Camera 1",
-            "device_sub_category": "CAMERA",
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "version": "1.0.0",
-            "battery_level": 85,
-            "alarm_sound_mod": "soft",
-            "last_alarm_time": "2023-01-01T12:00:00Z",
-            "last_alarm_pic": "https://example.com/image.jpg",
-            "supported_channels": 1,
-            "local_ip": "192.168.1.100",
-            "wan_ip": "203.0.113.1",
-            "PIR_Status": "active",
-            "last_alarm_type_code": "motion",
-            "last_alarm_type_name": "Motion Detected",
-            "encrypted": False,
-        }
+        "C123456789": _mock_camera_data(
+            battery_level=85,
+            alarm_sound_mod="soft",
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image.jpg",
+            supported_channels=1,
+            local_ip="192.168.1.100",
+            wan_ip="203.0.113.1",
+            PIR_Status="active",
+            last_alarm_type_code="motion",
+            last_alarm_type_name="Motion Detected",
+        )
     }
 
     # Mock the load_cameras method to return our test data
@@ -115,6 +128,8 @@ async def test_migrated_last_alarm_pic_sensor_is_removed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrated last_alarm_pic sensor entities are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+
     migrated_entry = entity_registry.async_get_or_create(
         "sensor",
         "ezviz",
@@ -122,18 +137,14 @@ async def test_migrated_last_alarm_pic_sensor_is_removed(
         config_entry=mock_config_entry,
     )
     mock_ezviz_client.load_cameras.return_value = {
-        "C123456789": {
-            "name": "Camera 1",
-            "device_sub_category": "CAMERA",
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "version": "1.0.0",
-            "last_alarm_time": "2023-01-01T12:00:00Z",
-            "last_alarm_pic": "https://example.com/image.jpg",
-            "encrypted": False,
-        }
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image.jpg",
+        )
     }
 
-    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entity_registry.async_get(migrated_entry.entity_id) is None
 
@@ -147,14 +158,9 @@ async def test_image_entity_not_created_without_alarm_pic(
     """Test that image entity is not created when last_alarm_pic is missing."""
     # Mock coordinator data without last_alarm_pic
     mock_coordinator_data = {
-        "C123456789": {
-            "name": "Camera 1",
-            "device_sub_category": "CAMERA",
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "version": "1.0.0",
-            "battery_level": 85,
-            "encrypted": False,
-        }
+        "C123456789": _mock_camera_data(
+            battery_level=85,
+        )
     }
 
     # Mock the load_cameras method to return our test data
@@ -175,30 +181,20 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
 ) -> None:
     """Test the image entity updates its alarm picture on refresh."""
     mock_ezviz_client.load_cameras.return_value = {
-        "C123456789": {
-            "name": "Camera 1",
-            "device_sub_category": "CAMERA",
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "version": "1.0.0",
-            "last_alarm_time": "2023-01-01T12:00:00Z",
-            "last_alarm_pic": "https://example.com/image-1.jpg",
-            "encrypted": False,
-        }
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image-1.jpg",
+        )
     }
 
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
     mock_ezviz_client.load_cameras.return_value = {
-        "C123456789": {
-            "name": "Camera 1",
-            "device_sub_category": "CAMERA",
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "version": "1.0.0",
-            "last_alarm_time": "2023-01-01T12:05:00Z",
-            "last_alarm_pic": "https://example.com/image-2.jpg",
-            "encrypted": False,
-        }
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:05:00Z",
+            last_alarm_pic="https://example.com/image-2.jpg",
+        )
     }
 
     await coordinator.async_request_refresh()
