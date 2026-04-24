@@ -76,6 +76,12 @@ def _retrieve_external_ipv6_state(status: FritzStatus, last_value: str) -> str:
     return str(status.external_ipv6)
 
 
+def _retrieve_ipv6_prefix_state(status: FritzStatus, last_value: str) -> str:
+    """Return ipv6 prefix from device."""
+    info = status.ipv6_prefix_info
+    return f"{info['NewIPv6Prefix']}/{info['NewPrefixLength']}"
+
+
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
     return round(status.transmission_rate[0] / 1000, 1)  # type: ignore[no-any-return]
@@ -195,6 +201,12 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         key="external_ipv6",
         translation_key="external_ipv6",
         value_fn=_retrieve_external_ipv6_state,
+        is_suitable=lambda info: info.ipv6_active,
+    ),
+    FritzConnectionSensorEntityDescription(
+        key="ipv6_prefix",
+        translation_key="ipv6_prefix",
+        value_fn=_retrieve_ipv6_prefix_state,
         is_suitable=lambda info: info.ipv6_active,
     ),
     FritzConnectionSensorEntityDescription(

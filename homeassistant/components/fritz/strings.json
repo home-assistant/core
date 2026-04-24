@@ -135,6 +135,9 @@
       "gb_sent": {
         "name": "GB sent"
       },
+      "ipv6_prefix": {
+        "name": "IPv6 prefix"
+      },
       "kb_s_received": {
         "name": "Download throughput"
       },
