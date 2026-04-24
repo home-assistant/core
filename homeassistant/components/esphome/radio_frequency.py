@@ -59,6 +59,8 @@ class EsphomeRadioFrequencyEntity(
             frequency=command.frequency,
             timings=timings,
             modulation=MODULATION_TYPE_TO_ESPHOME[command.modulation],
+            # In ESPHome, repeat_count is total number of times to send the command, while in rf_protocols
+            # it's the number of additional times to send it, so we need to add 1 here.
             repeat_count=command.repeat_count + 1,
             device_id=self._static_info.device_id,
         )
