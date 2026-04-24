@@ -17,11 +17,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_MAC_ADDRESS,
-    CONF_SCAN_INTERVAL,
     CONF_UPDATE_MODE,
     CONF_WIBEEE_ID,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
     MODE_LOCAL_PUSH,
     MODE_POLLING,
 )
@@ -80,17 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
 
     # Create coordinator based on mode
     if mode == MODE_POLLING:
-        scan_interval = timedelta(
-            seconds=entry.options.get(
-                CONF_SCAN_INTERVAL,
-                int(DEFAULT_SCAN_INTERVAL.total_seconds()),
-            )
-        )
         coordinator = WibeeeCoordinator(
             hass,
             api,
             name=f"Wibeee {device_info.mac_addr_short}",
-            update_interval=scan_interval,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         await coordinator.async_config_entry_first_refresh()
     else:
