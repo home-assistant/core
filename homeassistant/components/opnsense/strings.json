@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "import_failed_missing_interfaces": "The following OPNsense tracker interfaces were not found: {missing}. Found interfaces were: {found}. Please manually set up a config entry and remove the YAML config",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_url": "URL is invalid or unreachable",
       "invalid_version": "Unsupported OPNsense firmware version",
