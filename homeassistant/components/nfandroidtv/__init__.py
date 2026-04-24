@@ -31,15 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NFAndroidTV from a config entry."""
 
     try:
-        entry.runtime_data = await hass.async_add_executor_job(
-            Notifications, entry.data[CONF_HOST]
-        )
+        client = await hass.async_add_executor_job(Notifications, entry.data[CONF_HOST])
     except ConnectError as e:
-        _LOGGER.debug("Error", exc_info=True)
+        _LOGGER.debug("Full exception:", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_connection_error",
+            translation_placeholders={CONF_NAME: entry.title},
         ) from e
+
+    entry.runtime_data = client
 
     hass.async_create_task(
         discovery.async_load_platform(
