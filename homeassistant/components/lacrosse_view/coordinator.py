@@ -28,7 +28,8 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     name: str
     id: str
     hass: HomeAssistant
-    devices: list[Sensor] | None = None
+    devices: list[Sensor] | None
+    last_login: float
     config_entry: LaCrosseConfigEntry
 
     def __init__(
@@ -39,15 +40,13 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     ) -> None:
         """Initialize DataUpdateCoordinator for LaCrosse View."""
         self.api = api
-        self.hass = hass
+        self.username = entry.data["username"]
+        self.password = entry.data["password"]
+        self.name = entry.data["name"]
+        self.id = entry.data["id"]
 
-        self.username: str = entry.data["username"]
-        self.password: str = entry.data["password"]
-        self.name: str = entry.data["name"]
-        self.id: str = entry.data["id"]
-
-        self.last_login: float = time()
-        self.devices: list[Sensor] | None = None
+        self.last_login = time()
+        self.devices = None
 
         super().__init__(
             hass,
@@ -63,7 +62,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
 
         # Refresh auth token once per hour
         if now - self.last_login > 59 * 60:
-            _LOGGER.debug("Refreshing LaCrosse View token")
+            _LOGGER.debug("Refreshing token")
             self.last_login = now
             try:
                 await self.api.login(self.username, self.password)
@@ -96,14 +95,15 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                     isinstance(error_data, dict)
                     and error_data.get("error") == "no_readings"
                 ):
-                    _LOGGER.debug("No readings for %s", sensor.name)
                     sensor.data = None
+                    _LOGGER.debug("No readings for %s", sensor.name)
                     continue
 
                 raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_error",
+                    translation_domain=DOMAIN, translation_key="update_error"
                 ) from error
+
+            _LOGGER.debug("Got data: %s", response)
 
             if data_error := response.get("error"):
                 if data_error == "no_readings":
@@ -117,17 +117,16 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
 
             current_data = response.get("data", {}).get("current")
             if not current_data:
-                _LOGGER.debug(
-                    "No current data payload for %s, retaining old value", sensor.name
-                )
+                _LOGGER.debug("No current data payload for %s", sensor.name)
                 continue
 
             previous_data = sensor.data or {}
-            filtered_data: dict[str, dict] = {}
+            filtered_data: dict[str, dict | None] = {}
 
             for field, field_data in current_data.items():
                 spot = field_data.get("spot") if field_data else None
                 if not spot:
+                    filtered_data[field] = field_data
                     continue
 
                 timestamp = spot.get("time")
@@ -146,8 +145,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                             field,
                             age.total_seconds() / 3600,
                         )
-                        if field in previous_data:
-                            filtered_data[field] = previous_data[field]
+                        filtered_data[field] = previous_data.get(field)
                         continue
 
                 filtered_data[field] = field_data

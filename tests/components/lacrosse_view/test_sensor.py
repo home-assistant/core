@@ -1,12 +1,14 @@
 """Test the LaCrosse View sensors."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from lacrosse_view import HTTPError, Sensor
 import pytest
 
-from homeassistant.components.lacrosse_view.const import DOMAIN
+from homeassistant.components.lacrosse_view.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -27,7 +29,7 @@ from . import (
     TEST_UNSUPPORTED_SENSOR,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_entities_added(hass: HomeAssistant) -> None:
@@ -201,7 +203,7 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unavailable"
+    assert hass.states.get("sensor.test_temperature").state == "unknown"
 
 
 async def test_no_readings(hass: HomeAssistant) -> None:
@@ -280,7 +282,7 @@ async def test_mixed_readings(hass: HomeAssistant) -> None:
 
 
 async def test_stale_reading(hass: HomeAssistant) -> None:
-    """Test that a stale spot reading is ignored and sensor reports unavailable."""
+    """Test that a stale spot reading is ignored and sensor reports unknown."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
@@ -303,7 +305,49 @@ async def test_stale_reading(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unavailable"
+    assert hass.states.get("sensor.test_temperature").state == "unknown"
+
+
+async def test_stale_reading_retains_previous_value(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a stale reading retains the previous valid sensor value."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    sensor = TEST_SENSOR.model_copy()
+    fresh_status = sensor.data
+    stale_status = TEST_STALE_SENSOR.data
+    sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
+        ),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensor_status",
+            side_effect=[fresh_status, stale_status],
+        ) as mock_get_sensor_status,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test_temperature")
+        assert state is not None
+        assert state.state == "2"
+        assert mock_get_sensor_status.call_count == 1
+
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert mock_get_sensor_status.call_count == 2
+        state = hass.states.get("sensor.test_temperature")
+        assert state is not None
+        assert state.state == "2"
 
 
 async def test_other_error(hass: HomeAssistant) -> None:
