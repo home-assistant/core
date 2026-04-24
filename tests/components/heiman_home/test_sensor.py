@@ -785,6 +785,44 @@ async def test_sensor_apply_sensor_config_co_concentration(hass: HomeAssistant) 
     assert sensor.device_class == SensorDeviceClass.CO
 
 
+async def test_sensor_no_false_positive_color_matches_co_concentration(
+    hass: HomeAssistant,
+) -> None:
+    """Test that 'color' does not falsely match 'co_concentration'.
+    
+    This verifies the word-boundary matching logic prevents substring matches
+    that would incorrectly assign device_class. For example, a property named
+    'color' should NOT match the 'co_concentration' sensor type.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-color"
+    mock_device.device_name = "Color Device"
+    mock_device.online = True
+    mock_device.properties = {
+        "color": DeviceProperty(
+            identifier="color",
+            name="Color",
+            value="red",
+            data_type="string",
+            readable=True,
+        )
+    }
+
+    mock_coordinator.get_device.return_value = mock_device
+
+    sensor = HeimanSensorEntity(
+        coordinator=mock_coordinator,
+        device=mock_device,
+        property_identifier="color",
+    )
+
+    # Should NOT have CO device class (that would be a false positive)
+    assert sensor.device_class is None
+    # Should NOT have CO unit of measurement
+    assert sensor.native_unit_of_measurement is None
+
+
 async def test_sensor_native_value_none(hass: HomeAssistant) -> None:
     """Test sensor entity native_value when property value is None."""
     mock_coordinator = MagicMock()

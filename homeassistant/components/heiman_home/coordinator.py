@@ -26,6 +26,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import HeimanApiClient
 from .const import CONF_HOME_ID, CONF_USER_ID
+from .utils import async_call_cleanup_method
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,20 +47,6 @@ class HeimanData:
     devices: dict[str, HeimanDevice] = field(default_factory=dict)
     last_update: datetime | None = None
     errors: dict[str, str] = field(default_factory=dict)
-
-
-async def _async_call_cleanup_method(
-    target: object, method_names: tuple[str, ...]
-) -> None:
-    """Call the first available cleanup method on a target."""
-    for method_name in method_names:
-        method = getattr(target, method_name, None)
-        if method is None:
-            continue
-        result = method()
-        if hasattr(result, "__await__"):
-            await result
-        return
 
 
 class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
@@ -329,7 +316,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Disconnect any partially connected client before clearing reference
             if self.mqtt_client is not None:
                 with contextlib.suppress(Exception):
-                    await _async_call_cleanup_method(
+                    await async_call_cleanup_method(
                         self.mqtt_client,
                         (
                             "async_disconnect",
@@ -345,7 +332,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Disconnect any partially connected client before clearing reference
             if self.mqtt_client is not None:
                 with contextlib.suppress(Exception):
-                    await _async_call_cleanup_method(
+                    await async_call_cleanup_method(
                         self.mqtt_client,
                         (
                             "async_disconnect",

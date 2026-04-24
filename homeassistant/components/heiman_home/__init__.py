@@ -39,6 +39,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import HeimanDataUpdateCoordinator
+from .utils import async_call_cleanup_method
 
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
 
@@ -108,7 +109,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     # First refresh - let Home Assistant handle retries via exceptions
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        # Clean up resources if first refresh fails after wrapper initialization
+        with contextlib.suppress(Exception):
+            await async_call_cleanup_method(api_client, ("async_close", "close"))
+        raise
 
     # Initialize MQTT client after successful first refresh
     try:
@@ -118,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         mqtt_client = getattr(coordinator, "mqtt_client", None)
         if mqtt_client is not None:
             with contextlib.suppress(Exception):
-                await _async_call_cleanup_method(
+                await async_call_cleanup_method(
                     mqtt_client,
                     (
                         "async_disconnect",
@@ -126,26 +133,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
                     ),
                 )
         with contextlib.suppress(Exception):
-            await _async_call_cleanup_method(api_client, ("async_close", "close"))
+            await async_call_cleanup_method(api_client, ("async_close", "close"))
         raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-async def _async_call_cleanup_method(
-    target: object, method_names: tuple[str, ...]
-) -> None:
-    """Call the first available cleanup method on a target."""
-    for method_name in method_names:
-        method = getattr(target, method_name, None)
-        if method is None:
-            continue
-        result = method()
-        if hasattr(result, "__await__"):
-            await result
-        return
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
@@ -160,7 +153,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     mqtt_client = getattr(coordinator, "mqtt_client", None)
     if mqtt_client is not None:
         try:
-            await _async_call_cleanup_method(
+            await async_call_cleanup_method(
                 mqtt_client,
                 (
                     "async_disconnect",
@@ -174,7 +167,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     api_client = getattr(coordinator, "api_client", None)
     if api_client is not None:
         try:
-            await _async_call_cleanup_method(
+            await async_call_cleanup_method(
                 api_client,
                 (
                     "async_close",

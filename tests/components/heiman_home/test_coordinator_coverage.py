@@ -11,8 +11,8 @@ from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_I
 from homeassistant.components.heiman_home.coordinator import (
     HeimanData,
     HeimanDataUpdateCoordinator,
-    _async_call_cleanup_method,
 )
+from homeassistant.components.heiman_home.utils import async_call_cleanup_method
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -25,7 +25,7 @@ async def test_async_call_cleanup_method_with_none_method(hass: HomeAssistant) -
     type(mock_target).nonexistent = property(lambda self: None)
 
     # This should skip the None method and continue
-    await _async_call_cleanup_method(mock_target, ("nonexistent",))
+    await async_call_cleanup_method(mock_target, ("nonexistent",))
 
 
 async def test_async_call_cleanup_method_sync_method(hass: HomeAssistant) -> None:
@@ -34,7 +34,7 @@ async def test_async_call_cleanup_method_sync_method(hass: HomeAssistant) -> Non
     mock_target.close = MagicMock(return_value=None)  # Sync method
 
     # Should call the sync method without awaiting
-    await _async_call_cleanup_method(mock_target, ("close", "async_close"))
+    await async_call_cleanup_method(mock_target, ("close", "async_close"))
     mock_target.close.assert_called_once()
 
 

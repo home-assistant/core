@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["heimanconnect"],
   "quality_scale": "bronze",
-  "requirements": ["heiman-connect==1.0.8"]
+  "requirements": ["heiman-connect==1.0.9"]
 }
