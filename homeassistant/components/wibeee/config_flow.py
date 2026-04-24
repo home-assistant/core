@@ -462,13 +462,6 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
             if not errors:
                 new_options = {
                     CONF_UPDATE_MODE: new_mode,
-                    CONF_SCAN_INTERVAL: user_input.get(
-                        CONF_SCAN_INTERVAL,
-                        options.get(
-                            CONF_SCAN_INTERVAL,
-                            int(DEFAULT_SCAN_INTERVAL.total_seconds()),
-                        ),
-                    ),
                 }
                 return self.async_create_entry(title="", data=new_options)
 
@@ -490,26 +483,6 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                 )
             ),
         }
-
-        # Always show polling interval so users can set it when switching modes
-        schema_dict[
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=int(
-                    options.get(
-                        CONF_SCAN_INTERVAL,
-                        int(DEFAULT_SCAN_INTERVAL.total_seconds()),
-                    )
-                ),
-            )
-        ] = NumberSelector(
-            NumberSelectorConfig(
-                min=5,
-                max=300,
-                unit_of_measurement="seconds",
-                mode=NumberSelectorMode.BOX,
-            )
-        )
 
         # Show auto-configure option for local push
         schema_dict[vol.Optional(CONF_AUTO_CONFIGURE, default=False)] = (

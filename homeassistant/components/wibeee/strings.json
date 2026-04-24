@@ -86,12 +86,10 @@
       "init": {
         "data": {
           "auto_configure": "Auto-configure device for Local Push",
-          "scan_interval": "Polling interval (seconds)",
           "update_mode": "Update mode"
         },
         "data_description": {
           "auto_configure": "Automatically configure the WiBeee to send data to this Home Assistant instance.",
-          "scan_interval": "How often to poll the device for new data. Lower values give faster updates but may overwhelm the device. Default is 30 seconds.",
           "update_mode": "**Local Push** (recommended): Device sends data to HA in real time. **Polling**: Periodically fetch data."
         },
         "description": "Configure update settings",
