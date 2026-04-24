@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
@@ -238,16 +237,12 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         normalized_prop = property_identifier.lower()
         sensor_key = property_aliases.get(normalized_prop, normalized_prop)
 
-        # Use exact match or word-boundary match to avoid false positives
+        # Use exact match to avoid false positives
         # e.g., "color" should not match "co_concentration"
         for desc in SENSOR_TYPES:
-            # Exact match first (highest priority)
             if desc.key == sensor_key:
                 config = desc
                 matched_key = desc.key
-                break
-            # Word-boundary match: check if sensor_key contains the key as a whole word
-            # This handles cases like "current_temperature" matching "temperature"
                 break
 
         if config and prop:

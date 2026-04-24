@@ -789,7 +789,7 @@ async def test_sensor_no_false_positive_color_matches_co_concentration(
     hass: HomeAssistant,
 ) -> None:
     """Test that 'color' does not falsely match 'co_concentration'.
-    
+
     This verifies the word-boundary matching logic prevents substring matches
     that would incorrectly assign device_class. For example, a property named
     'color' should NOT match the 'co_concentration' sensor type.

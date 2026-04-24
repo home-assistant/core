@@ -38,8 +38,7 @@ from .const import (
     CONF_TYPE_LIST,
     PLATFORMS,
 )
-from .coordinator import HeimanDataUpdateCoordinator
-from .utils import async_call_cleanup_method
+from .coordinator import HeimanDataUpdateCoordinator, _async_call_cleanup_method
 
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
 
@@ -114,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     except Exception:
         # Clean up resources if first refresh fails after wrapper initialization
         with contextlib.suppress(Exception):
-            await async_call_cleanup_method(api_client, ("async_close", "close"))
+            await _async_call_cleanup_method(api_client, ("async_close", "close"))
         raise
 
     # Initialize MQTT client after successful first refresh
@@ -125,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         mqtt_client = getattr(coordinator, "mqtt_client", None)
         if mqtt_client is not None:
             with contextlib.suppress(Exception):
-                await async_call_cleanup_method(
+                await _async_call_cleanup_method(
                     mqtt_client,
                     (
                         "async_disconnect",
@@ -133,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
                     ),
                 )
         with contextlib.suppress(Exception):
-            await async_call_cleanup_method(api_client, ("async_close", "close"))
+            await _async_call_cleanup_method(api_client, ("async_close", "close"))
         raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -153,7 +152,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     mqtt_client = getattr(coordinator, "mqtt_client", None)
     if mqtt_client is not None:
         try:
-            await async_call_cleanup_method(
+            await _async_call_cleanup_method(
                 mqtt_client,
                 (
                     "async_disconnect",
@@ -167,7 +166,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     api_client = getattr(coordinator, "api_client", None)
     if api_client is not None:
         try:
-            await async_call_cleanup_method(
+            await _async_call_cleanup_method(
                 api_client,
                 (
                     "async_close",

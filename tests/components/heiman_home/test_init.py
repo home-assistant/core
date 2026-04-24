@@ -568,7 +568,6 @@ async def test_setup_mqtt_init_failure_with_cleanup(
 ) -> None:
     """Test setup handles MQTT initialization failure with proper cleanup (lines 116-130).
 
-
     When MQTT initialization fails, the integration should:
     1. Disconnect any partially connected MQTT client
     2. Close the API client
@@ -637,7 +636,7 @@ async def test_setup_first_refresh_failure_with_cleanup(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
     """Test setup cleans up API client when first refresh fails (lines 112-118).
-    
+
     When async_config_entry_first_refresh raises an exception after the API
     wrapper has been initialized, the integration should close the API client
     to prevent resource leaks.

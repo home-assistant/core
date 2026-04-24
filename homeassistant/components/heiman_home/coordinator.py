@@ -26,7 +26,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import HeimanApiClient
 from .const import CONF_HOME_ID, CONF_USER_ID
-from .utils import async_call_cleanup_method
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +35,33 @@ _LOGGER = logging.getLogger(__name__)
 # - New device detection
 # - Firmware version updates
 UPDATE_INTERVAL = timedelta(minutes=30)
+
+
+async def _async_call_cleanup_method(
+    target: object, method_names: tuple[str, ...]
+) -> None:
+    """Call the first available cleanup method on a target.
+
+    This helper function attempts to call cleanup methods in order of preference.
+    It supports both sync and async methods, automatically detecting and awaiting
+    coroutines when necessary.
+
+    Args:
+        target: The object to call the cleanup method on
+        method_names: Tuple of method names to try in order of preference
+
+    Example:
+        >>> await _async_call_cleanup_method(mqtt_client, ("async_disconnect", "disconnect"))
+        >>> await _async_call_cleanup_method(api_client, ("async_close", "close"))
+    """
+    for method_name in method_names:
+        method = getattr(target, method_name, None)
+        if method is None:
+            continue
+        result = method()
+        if hasattr(result, "__await__"):
+            await result
+        return
 
 
 @dataclass
@@ -316,7 +342,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Disconnect any partially connected client before clearing reference
             if self.mqtt_client is not None:
                 with contextlib.suppress(Exception):
-                    await async_call_cleanup_method(
+                    await _async_call_cleanup_method(
                         self.mqtt_client,
                         (
                             "async_disconnect",
@@ -332,7 +358,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Disconnect any partially connected client before clearing reference
             if self.mqtt_client is not None:
                 with contextlib.suppress(Exception):
-                    await async_call_cleanup_method(
+                    await _async_call_cleanup_method(
                         self.mqtt_client,
                         (
                             "async_disconnect",
