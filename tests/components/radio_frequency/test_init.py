@@ -80,7 +80,7 @@ async def test_async_send_command_success(
     await async_send_command(hass, ENTITY_ID, command)
 
     assert len(mock_rf_entity.send_command_calls) == 1
-    assert mock_rf_entity.send_command_calls[0] is command
+    assert mock_rf_entity.send_command_calls[0].command is command
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None

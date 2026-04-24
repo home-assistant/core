@@ -14,8 +14,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Context, HomeAssistant, State
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.radio_frequency.conftest import MockRadioFrequencyEntity
@@ -31,30 +32,44 @@ async def test_turn_on_off_sends_commands(
     """Test turning the light on and off sends the correct RF commands."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+    context = Context()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID},
+        context=context,
         blocking=True,
     )
 
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.context is context
     assert len(mock_rf_entity.send_command_calls) == 1
-    assert mock_rf_entity.send_command_calls[0] is COMMANDS.load_command("turn_on")
+    command = mock_rf_entity.send_command_calls[0]
+    assert command.command is COMMANDS.load_command("turn_on")
+    assert command.context is context
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
+        context=context,
         blocking=True,
     )
 
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.context is context
     assert len(mock_rf_entity.send_command_calls) == 2
-    assert mock_rf_entity.send_command_calls[1] is COMMANDS.load_command("turn_off")
+    command = mock_rf_entity.send_command_calls[1]
+    assert command.command is COMMANDS.load_command("turn_off")
+    assert command.context is context
 
 
 async def test_restore_state(

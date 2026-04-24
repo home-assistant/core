@@ -36,7 +36,6 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_is_on = False
     _attr_name = None
     _attr_should_poll = False
 
@@ -61,4 +60,6 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
     async def _async_send_command(self, name: str) -> None:
         """Load the named command and send it via the configured transmitter."""
         command = await self.hass.async_add_executor_job(COMMANDS.load_command, name)
-        await async_send_command(self.hass, self._transmitter, command)
+        await async_send_command(
+            self.hass, self._transmitter, command, context=self._context
+        )

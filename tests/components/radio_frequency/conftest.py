@@ -1,6 +1,6 @@
 """Common fixtures for the Radio Frequency tests."""
 
-from typing import override
+from typing import NamedTuple, override
 
 import pytest
 from rf_protocols import ModulationType, RadioFrequencyCommand
@@ -19,6 +19,13 @@ async def init_integration(hass: HomeAssistant) -> None:
     """Set up the Radio Frequency integration for testing."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
+
+
+class MockCommand(NamedTuple):
+    """Data structure to store calls to async_send_command."""
+
+    command: RadioFrequencyCommand
+    context: object | None
 
 
 class MockRadioFrequencyCommand(RadioFrequencyCommand):
@@ -60,7 +67,7 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
             if frequency_ranges is None
             else frequency_ranges
         )
-        self.send_command_calls: list[RadioFrequencyCommand] = []
+        self.send_command_calls: list[MockCommand] = []
 
     @property
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
@@ -69,7 +76,9 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
 
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Mock send command."""
-        self.send_command_calls.append(command)
+        self.send_command_calls.append(
+            MockCommand(command=command, context=self._context)
+        )
 
 
 @pytest.fixture

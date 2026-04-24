@@ -20,7 +20,9 @@ from tests.components.radio_frequency.conftest import MockRadioFrequencyEntity
 
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the user config flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -34,7 +36,6 @@ async def test_user_flow(
         user_input={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID},
     )
 
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
