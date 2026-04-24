@@ -1646,39 +1646,72 @@ async def async_conditions_from_config(
     condition_configs: list[ConfigType],
     logger: logging.Logger,
     name: str,
-) -> Callable[[TemplateVarsType], bool]:
+) -> ConditionsChecker:
     """AND all conditions."""
     checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
+    return ConditionsChecker(hass, checks, logger, name)
 
-    def check_conditions(variables: TemplateVarsType = None) -> bool:
+
+class ConditionsChecker(CompoundConditionChecker):
+    """Condition checker that ANDs multiple conditions.
+
+    Used by automations and template entities. Unlike AndConditionChecker,
+    this logs warnings on errors instead of raising, and uses "condition"
+    as the trace path prefix.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        checks: list[ConditionChecker],
+        logger: logging.Logger,
+        name: str,
+    ) -> None:
+        """Initialize condition checker."""
+        super().__init__(hass, checks)
+        self._logger = logger
+        self._name = name
+
+    # The function previously returned by async_conditions_from_config
+    # did not accept hass as first argument, so we need to override the
+    # __call__ provided for backwawrds comaptibitility
+    def __call__(  # type: ignore[override]
+        self,
+        variables: TemplateVarsType | None = None,
+        **kwargs: Any,
+    ) -> bool:
+        """Check all conditions."""
+        # The implicit AND can't be disabled, so the call will never return None
+        return self.async_check(variables=variables)  # type: ignore[return-value]
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
-        for index, check in enumerate(checks):
+        for index, check in enumerate(self._checks):
             try:
                 with trace_path(["condition", str(index)]):
-                    if check(hass, variables) is False:
+                    if check(self._hass, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "condition", index=index, total=len(checks), error=ex
+                        "condition", index=index, total=len(self._checks), error=ex
                     )
                 )
 
         if errors:
-            logger.warning(
+            self._logger.warning(
                 "Error evaluating condition in '%s':\n%s",
-                name,
+                self._name,
                 ConditionErrorContainer("condition", errors=errors),
             )
             return False
 
         return True
-
-    return check_conditions
 
 
 @callback
