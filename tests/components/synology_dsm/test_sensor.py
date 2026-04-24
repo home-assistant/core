@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
     mock_dsm_external_usb_devices_usb0,
@@ -356,3 +356,17 @@ async def test_no_external_usb(
     """Test Synology DSM without USB."""
     sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_1_device_size")
     assert sensor is None
+
+
+async def test_hub_device_info_mac_connections(
+    hass: HomeAssistant,
+    setup_dsm_with_usb: MagicMock,
+) -> None:
+    """Test that the hub DeviceInfo includes MAC address connections."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    assert device is not None
+    assert device.connections == {
+        ("mac", "00:11:32:xx:xx:59"),
+        ("mac", "00:11:32:xx:xx:5a"),
+    }
