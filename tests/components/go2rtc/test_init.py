@@ -835,14 +835,14 @@ async def test_generic_workaround(
         image = await async_get_image(hass, camera.entity_id)
         assert image.content == image_bytes
 
-    identifier = get_camera_identifier(camera)
-    rest_client.streams.add.assert_called_once_with(
-        identifier,
-        [
-            "ffmpeg:https://my_stream_url.m3u8",
-            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
-        ],
-    )
+        identifier = get_camera_identifier(camera)
+        rest_client.streams.add.assert_called_once_with(
+            identifier,
+            [
+                "ffmpeg:https://my_stream_url.m3u8",
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        )
 
 
 async def _test_camera_orientation(

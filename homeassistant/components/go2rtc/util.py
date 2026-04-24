@@ -21,5 +21,7 @@ def get_go2rtc_unix_socket_path(path: str | Path) -> str:
 
 def get_camera_identifier(camera: Camera) -> str:
     """Get the Go2rtc camera identifier."""
-    attr = camera.unique_id or camera.entity_id
+    attr = camera.entity_id
+    if camera.unique_id is not None:
+        attr = f"{camera.platform.platform_name}_{camera.unique_id}"
     return quote(attr, safe=_SAFE_CHARS)
