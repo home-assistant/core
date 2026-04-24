@@ -117,13 +117,22 @@ class IcloudAccount:
                 raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
             self.api = None
-            # Login failed which means credentials need to be updated.
-            _LOGGER.error(
-                _MSG_PASSWORD_NO_LONGER_WORKING,
-                self._config_entry.data[CONF_USERNAME],
-            )
-
+            if requires_2fa:
+                _LOGGER.warning(
+                    (
+                        "2FA authentication required for '%s'; Go to the "
+                        "Integrations menu and click on Configure on the iCloud "
+                        "card to enter your verification code"
+                    ),
+                    self._config_entry.data[CONF_USERNAME],
+                )
+            else:
+                _LOGGER.error(
+                    _MSG_PASSWORD_NO_LONGER_WORKING,
+                    self._config_entry.data[CONF_USERNAME],
+                )
             self._require_reauth()
             return
 
