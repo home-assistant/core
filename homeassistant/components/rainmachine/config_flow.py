@@ -102,7 +102,10 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
         # A new rain machine: We will change out the unique id
         # for the mac address once we authenticate, however we want to
         # prevent multiple different rain machines on the same network
-        # from being shown in discovery
+        # from being shown in discovery.
+        # Uses the discovered IP address as a temporary unique ID for
+        # discovery de-duplication until the MAC address is available.
+        # pylint: disable-next=hass-unique-id-ip-based
         await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()
         self.discovered_ip_address = ip_address
