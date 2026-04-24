@@ -218,7 +218,7 @@ async def test_departure_cleanup_trigger(
     # Departures at 11:01 CET = 10:01 UTC → cleanup_v1 at 10:01:15 UTC.
     departures_v1 = make_mock_departures(123456)
     for dep in departures_v1:
-        dep.stopExtId = "123456"  # Match sensor's string stop_id
+        dep.stopExtId = 123456  # Match sensor's string stop_id
         dep.rtTime = Time(11, 1, 0)  # 11:01 CET = 10:01 UTC
 
     mock_board_v1 = MagicMock()
@@ -240,10 +240,8 @@ async def test_departure_cleanup_trigger(
     mock_board_v2 = MagicMock()
     mock_board_v2.departures = departures_v2
 
-    # Configure get_departures so any periodic refresh returns v2 data, keeping
-    # cleanup_time unchanged and preventing unwanted timer cancellation.
-    mock_api.get_departures.return_value = (mock_board_v2, None)
-
+    # Update the coordinator data directly so the listeners reschedule cleanup
+    # without relying on a periodic refresh.
     coordinator.data = mock_board_v2
     coordinator.async_update_listeners()
     await hass.async_block_till_done()

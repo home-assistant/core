@@ -4,6 +4,10 @@ from typing import Any
 
 from py_rejseplan.api.departures import DeparturesAPIClient as Rejseplanen
 from py_rejseplan.dataclasses.transport_mappings import DEPARTURE_TYPE_TO_CLASS
+from py_rejseplan.exceptions import (
+    APIError as RejseplanenAPIError,
+    ConnectionError as RejseplanenConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -91,7 +95,8 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step of the config flow."""
 
-        self._async_abort_entries_match(user_input)
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(
@@ -106,7 +111,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await api.validate_auth_key_async()
-        except ConnectionError, TimeoutError, OSError:
+        except RejseplanenConnectionError, RejseplanenAPIError, OSError:
             errors["base"] = "cannot_connect"
         else:
             if not result:
