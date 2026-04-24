@@ -40,16 +40,6 @@ DEFAULT_OPTIONS = {
 }
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Create a mock config entry for air-Q."""
-    return MockConfigEntry(
-        data=TEST_USER_DATA,
-        domain=DOMAIN,
-        unique_id=TEST_DEVICE_INFO["id"],
-    )
-
-
 async def test_user_flow(
     hass: HomeAssistant,
     mock_airq: AsyncMock,
