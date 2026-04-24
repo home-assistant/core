@@ -155,8 +155,10 @@
   },
   "config_panel": {
     "common": {
+      "exposes_count": "Exposes: {count}",
       "group_address": "Group address",
-      "group_addresses": "Group addresses"
+      "group_addresses": "Group addresses",
+      "monitor_x_group_addresses": "Monitor {count} group addresses"
     },
     "dashboard": {
       "connection_flow": {
