@@ -116,8 +116,6 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                 )
 
             current_data = response.get("data", {}).get("current")
-
-            current_data = response.get("data", {}).get("current")
             if not current_data:
                 _LOGGER.debug(
                     "No current data payload for %s, retaining old value", sensor.name
