@@ -210,6 +210,12 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-import-constant-unnecessary-alias",
             "Used when a constant alias is unnecessary",
         ),
+        "W7428": (
+            "`%s` is not allowed; use `%s` instead",
+            "hass-avoid-datetime-now",
+            "Used when datetime.datetime.now() or datetime.datetime.utcnow() "
+            "is called instead of homeassistant.util.dt equivalents",
+        ),
     }
     options = ()
 
@@ -425,6 +431,30 @@ class HassImportsFormatChecker(BaseChecker):
                             name[0],
                         ),
                     )
+
+    def visit_call(self, node: nodes.Call) -> None:
+        """Check for disallowed datetime.now() and datetime.utcnow() calls."""
+        if not isinstance(node.func, nodes.Attribute):
+            return
+        if node.func.attrname not in ("now", "utcnow"):
+            return
+        replacement = f"dt_util.{node.func.attrname}"
+        expr = node.func.expr
+        # Detect `datetime.now()` / `datetime.utcnow()` where datetime is the class
+        if isinstance(expr, nodes.Name) and expr.name == "datetime":
+            self.add_message(
+                "hass-avoid-datetime-now",
+                node=node,
+                args=(f"datetime.{node.func.attrname}()", replacement),
+            )
+            return
+        # Detect `X.datetime.now()` / `X.datetime.utcnow()` where X is the module
+        if isinstance(expr, nodes.Attribute) and expr.attrname == "datetime":
+            self.add_message(
+                "hass-avoid-datetime-now",
+                node=node,
+                args=(f"{expr.as_string()}.{node.func.attrname}()", replacement),
+            )
 
 
 def register(linter: PyLinter) -> None:
