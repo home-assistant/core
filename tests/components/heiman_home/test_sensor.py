@@ -848,7 +848,9 @@ async def test_sensor_native_value_none(hass: HomeAssistant) -> None:
     assert sensor.native_value is None
 
 
-async def test_sensor_native_value_filters_unsupported_types(hass: HomeAssistant) -> None:
+async def test_sensor_native_value_filters_unsupported_types(
+        hass: HomeAssistant,
+) -> None:
     """Test sensor entity filters out unsupported value types (bool, dict, list).
 
     Home Assistant sensor platforms only support str, int, float, or None as

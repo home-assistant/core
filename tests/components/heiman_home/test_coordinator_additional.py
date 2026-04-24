@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import HeimanDevice
 
@@ -336,7 +337,7 @@ async def test_coordinator_read_device_properties_with_returned_properties(
 
 
 async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> None:
-    """Test MQTT init handles general exceptions (lines 589-590)."""
+    """Test MQTT init re-raises general exceptions after cleanup (lines 356-374)."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -381,8 +382,9 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
         )
         mock_mqtt_class.return_value = mock_mqtt_instance
 
-        # This should handle the exception gracefully (lines 589-590)
-        await coordinator.async_init_mqtt_client()
+        # Exception should be re-raised after cleanup
+        with pytest.raises(Exception, match="Unexpected error"):
+            await coordinator.async_init_mqtt_client()
 
         # MQTT client should be cleared after failure so future calls can retry
         assert coordinator.mqtt_client is None

@@ -109,7 +109,8 @@ async def async_setup_entry(
 
     def _get_structure_hash() -> int:
         """Calculate a hash of the current device/property structure.
-        
+
+
         This allows us to detect when new devices or properties are added,
         without scanning all properties on every update.
         """
@@ -123,13 +124,15 @@ async def async_setup_entry(
     def _create_sensors_for_devices() -> None:
         """Create sensors for all devices and add new ones."""
         nonlocal last_structure_hash
+
         
         # Check if structure has changed (new devices or properties)
         current_hash = _get_structure_hash()
         if current_hash == last_structure_hash and existing_entities:
             # No structural changes, skip expensive scan
             return
-        
+
+
         last_structure_hash = current_hash
         devices = coordinator.get_all_devices()
         new_sensors = []

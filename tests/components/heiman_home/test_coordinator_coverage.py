@@ -472,7 +472,7 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
 
 
 async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> None:
-    """Test MQTT init handles HeimanMQTTError (lines 330-347)."""
+    """Test MQTT init re-raises HeimanMQTTError after cleanup (lines 340-357)."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -513,7 +513,9 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
         mock_mqtt_instance.async_disconnect = AsyncMock()
         mock_mqtt_class.return_value = mock_mqtt_instance
 
-        await coordinator.async_init_mqtt_client()
+        # Exception should be re-raised after cleanup
+        with pytest.raises(HeimanMQTTError, match="MQTT connection failed"):
+            await coordinator.async_init_mqtt_client()
 
         # MQTT client should be cleared after failure
         assert coordinator.mqtt_client is None
