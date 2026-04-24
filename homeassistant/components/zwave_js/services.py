@@ -43,11 +43,7 @@ from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
 
 from . import const
-from .access_control_helpers import (
-    CREDENTIAL_RULE_REVERSE_MAP,
-    CREDENTIAL_TYPE_REVERSE_MAP,
-    USER_TYPE_REVERSE_MAP,
-)
+from .access_control_helpers import CREDENTIAL_RULE_REVERSE_MAP, USER_TYPE_REVERSE_MAP
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
     async_get_node_from_device_id,
@@ -178,22 +174,6 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_INDEX): uint16_id},
         func="async_clear_all_credentials",
-    )
-
-    async_register_platform_entity_service(
-        hass,
-        const.DOMAIN,
-        const.SERVICE_GET_CREDENTIAL_STATUS,
-        entity_domain=LOCK_DOMAIN,
-        schema={
-            vol.Required(const.ATTR_USER_INDEX): uint16_id,
-            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
-                CREDENTIAL_TYPE_REVERSE_MAP.keys()
-            ),
-            vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
-        },
-        func="async_get_credential_status",
-        supports_response=SupportsResponse.ONLY,
     )
 
 

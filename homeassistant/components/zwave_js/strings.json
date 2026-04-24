@@ -337,9 +337,6 @@
     "get_credential_capabilities_failed": {
       "message": "Failed to get credential capabilities: {error}"
     },
-    "get_credential_status_failed": {
-      "message": "Failed to get credential status: {error}"
-    },
     "get_lock_usercode_not_found": {
       "message": "Code slot {code_slot} not found on lock {entity_id}"
     },
@@ -509,24 +506,6 @@
     "get_credential_capabilities": {
       "description": "Queries the credential management capabilities of a lock.",
       "name": "Get credential capabilities"
-    },
-    "get_credential_status": {
-      "description": "Queries the status of a credential slot on a lock.",
-      "fields": {
-        "credential_slot": {
-          "description": "Credential slot index to query.",
-          "name": "Credential slot"
-        },
-        "credential_type": {
-          "description": "The type of credential to query.",
-          "name": "Credential type"
-        },
-        "user_index": {
-          "description": "User slot index that owns the credential.",
-          "name": "User index"
-        }
-      },
-      "name": "Get credential status"
     },
     "get_lock_usercode": {
       "description": "Gets user codes from a lock.",

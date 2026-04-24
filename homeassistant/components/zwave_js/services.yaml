@@ -241,46 +241,6 @@ clear_all_credentials:
           step: 1
           mode: box
 
-get_credential_status:
-  target:
-    entity:
-      domain: lock
-      integration: zwave_js
-  fields:
-    user_index:
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 65535
-          step: 1
-          mode: box
-    credential_type:
-      required: true
-      selector:
-        select:
-          options:
-            - pin_code
-            - password
-            - rfid_code
-            - ble
-            - nfc
-            - uwb
-            - eye_biometric
-            - face_biometric
-            - finger_biometric
-            - hand_biometric
-            - unspecified_biometric
-            - desfire
-    credential_slot:
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 65535
-          step: 1
-          mode: box
-
 set_config_parameter:
   fields:
     area_id:

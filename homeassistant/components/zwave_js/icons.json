@@ -60,9 +60,6 @@
     "bulk_set_partial_config_parameters": {
       "service": "mdi:cogs"
     },
-    "clear_lock_usercode": {
-      "service": "mdi:eraser"
-    },
     "clear_all_credentials": {
       "service": "mdi:eraser-variant"
     },
@@ -72,17 +69,20 @@
     "clear_credential": {
       "service": "mdi:eraser"
     },
+    "clear_lock_usercode": {
+      "service": "mdi:eraser"
+    },
     "clear_user": {
       "service": "mdi:account-remove"
     },
     "get_credential_capabilities": {
       "service": "mdi:information"
     },
-    "get_credential_status": {
-      "service": "mdi:lock-smart"
-    },
     "get_lock_usercode": {
       "service": "mdi:lock-smart"
+    },
+    "get_users": {
+      "service": "mdi:account-group"
     },
     "invoke_cc_api": {
       "service": "mdi:api"
@@ -105,16 +105,13 @@
     "set_config_parameter": {
       "service": "mdi:cog"
     },
+    "set_credential": {
+      "service": "mdi:lock-smart"
+    },
     "set_lock_configuration": {
       "service": "mdi:shield-lock"
     },
     "set_lock_usercode": {
-      "service": "mdi:lock-smart"
-    },
-    "get_users": {
-      "service": "mdi:account-group"
-    },
-    "set_credential": {
       "service": "mdi:lock-smart"
     },
     "set_user": {

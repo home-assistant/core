@@ -200,15 +200,6 @@ class SetCredentialReturn(TypedDict):
     user_index: int
 
 
-class CredentialStatusResult(TypedDict):
-    """Return type for get_credential_status."""
-
-    credential_exists: bool
-    user_index: int
-    credential_type: str
-    credential_slot: int
-
-
 # --- Business logic functions ---
 
 
@@ -346,12 +337,24 @@ async def async_set_user(
 
 async def async_clear_user(node: Node, user_index: int) -> None:
     """Delete a single access-control user."""
+    if not await node.access_control.async_is_supported():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="access_control_not_supported",
+        )
+
     status = await node.access_control.async_delete_user(user_index)
     _raise_on_set_user_error(status)
 
 
 async def async_clear_all_users(node: Node) -> None:
     """Delete all access-control users."""
+    if not await node.access_control.async_is_supported():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="access_control_not_supported",
+        )
+
     status = await node.access_control.async_delete_all_users()
     _raise_on_set_user_error(status)
 
@@ -429,6 +432,12 @@ async def async_clear_credential(
     credential_slot: int,
 ) -> None:
     """Delete a single credential."""
+    if not await node.access_control.async_is_supported():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="access_control_not_supported",
+        )
+
     status = await node.access_control.async_delete_credential(
         user_index, credential_type, credential_slot
     )
@@ -437,28 +446,15 @@ async def async_clear_credential(
 
 async def async_clear_all_credentials(node: Node, user_index: int) -> None:
     """Delete all credentials for a user."""
+    if not await node.access_control.async_is_supported():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="access_control_not_supported",
+        )
+
     credentials = await node.access_control.async_get_credentials_cached(user_index)
     for cred in credentials:
         status = await node.access_control.async_delete_credential(
             user_index, cred.type, cred.slot
         )
         _raise_on_set_credential_error(status)
-
-
-async def async_get_credential_status(
-    node: Node,
-    user_index: int,
-    credential_type: UserCredentialType,
-    credential_slot: int,
-) -> CredentialStatusResult:
-    """Query the status of a credential slot."""
-    credential = await node.access_control.async_get_credential_cached(
-        credential_type, credential_slot
-    )
-
-    return CredentialStatusResult(
-        credential_exists=credential is not None,
-        user_index=user_index,
-        credential_type=CREDENTIAL_TYPE_MAP.get(credential_type, str(credential_type)),
-        credential_slot=credential_slot,
-    )

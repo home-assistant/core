@@ -31,7 +31,6 @@ from .access_control_helpers import (
     CREDENTIAL_TYPE_REVERSE_MAP,
     USER_TYPE_REVERSE_MAP,
     CredentialCapabilitiesResult,
-    CredentialStatusResult,
     SetCredentialReturn,
     SetUserReturn,
     UsersResult,
@@ -338,21 +337,4 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         except BaseZwaveJSServerError as err:
             raise _credential_service_error(
                 "clear_all_credentials_failed", err, user_index=str(user_index)
-            ) from err
-
-    async def async_get_credential_status(
-        self, **kwargs: Any
-    ) -> CredentialStatusResult:
-        """Return the status of a credential slot."""
-        credential_type = kwargs[const.ATTR_CREDENTIAL_TYPE]
-        try:
-            return await access_control_helpers.async_get_credential_status(
-                self.info.node,
-                user_index=kwargs[const.ATTR_USER_INDEX],
-                credential_type=CREDENTIAL_TYPE_REVERSE_MAP[credential_type],
-                credential_slot=kwargs[const.ATTR_CREDENTIAL_SLOT],
-            )
-        except BaseZwaveJSServerError as err:
-            raise _credential_service_error(
-                "get_credential_status_failed", err
             ) from err
