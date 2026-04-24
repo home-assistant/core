@@ -124,34 +124,18 @@ def _check_subscript_or_call_ip(node: nodes.NodeNG) -> str | None:
     avoiding false positives from local variables named ``host`` used in
     attribute chains like ``host.api.mac_address``.
     """
-    # Subscript: data[CONF_HOST] or data["host"]
-    if isinstance(node, nodes.Subscript):
-        key = node.slice
-        if isinstance(key, nodes.Name) and key.name in _IP_HOST_NAMES:
-            return str(key.name)
-        if (
-            isinstance(key, nodes.Const)
-            and isinstance(key.value, str)
-            and key.value in _IP_HOST_NAMES
-        ):
-            return key.value
-
-    # Call: data.get(CONF_HOST) or data.get("host")
-    if (
-        isinstance(node, nodes.Call)
-        and isinstance(node.func, nodes.Attribute)
-        and node.func.attrname == "get"
-        and node.args
-    ):
-        first_arg = node.args[0]
-        if isinstance(first_arg, nodes.Name) and first_arg.name in _IP_HOST_NAMES:
-            return str(first_arg.name)
-        if (
-            isinstance(first_arg, nodes.Const)
-            and isinstance(first_arg.value, str)
-            and first_arg.value in _IP_HOST_NAMES
-        ):
-            return first_arg.value
+    match node:
+        # Subscript: data[CONF_HOST] or data["host"]
+        case nodes.Subscript(
+            slice=nodes.Name(name=val) | nodes.Const(value=str(val))
+        ) if val in _IP_HOST_NAMES:
+            return str(val)
+        # Call: data.get(CONF_HOST) or data.get("host")
+        case nodes.Call(
+            func=nodes.Attribute(attrname="get"),
+            args=[nodes.Name(name=val) | nodes.Const(value=str(val)), *_],
+        ) if val in _IP_HOST_NAMES:
+            return str(val)
 
     # Recurse into child nodes to catch embedded references (e.g. f-strings),
     # but skip function call arguments -- a call like get_unique_id(host)
