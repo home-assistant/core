@@ -104,9 +104,33 @@ async def async_setup_entry(
 
     # Track existing entities to avoid duplicates
     existing_entities: set[str] = set()
+    # Track device/property count to detect structural changes
+    last_structure_hash: int = 0
+
+    def _get_structure_hash() -> int:
+        """Calculate a hash of the current device/property structure.
+        
+        This allows us to detect when new devices or properties are added,
+        without scanning all properties on every update.
+        """
+        devices = coordinator.get_all_devices()
+        structure = []
+        for device in devices:
+            structure.append(device.device_id)
+            structure.extend(sorted(device.properties.keys()))
+        return hash(tuple(structure))
 
     def _create_sensors_for_devices() -> None:
         """Create sensors for all devices and add new ones."""
+        nonlocal last_structure_hash
+        
+        # Check if structure has changed (new devices or properties)
+        current_hash = _get_structure_hash()
+        if current_hash == last_structure_hash and existing_entities:
+            # No structural changes, skip expensive scan
+            return
+        
+        last_structure_hash = current_hash
         devices = coordinator.get_all_devices()
         new_sensors = []
 
@@ -163,7 +187,7 @@ async def async_setup_entry(
     _create_sensors_for_devices()
 
     # Listen for coordinator updates to add new devices dynamically
-    # Only trigger discovery when coordinator data changes (new devices/properties)
+    # Uses structure hash to avoid scanning on every MQTT property update
     entry.async_on_unload(coordinator.async_add_listener(_create_sensors_for_devices))
 
 
@@ -323,7 +347,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         if not prop:
             return None
 
-        return prop.value
+        return DeviceProperty.validate_sensor_value(prop.value)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -848,6 +848,52 @@ async def test_sensor_native_value_none(hass: HomeAssistant) -> None:
     assert sensor.native_value is None
 
 
+async def test_sensor_native_value_filters_unsupported_types(hass: HomeAssistant) -> None:
+    """Test sensor entity filters out unsupported value types (bool, dict, list).
+
+    Home Assistant sensor platforms only support str, int, float, or None as
+    native values. This test verifies that the SDK's validate_sensor_value method
+    correctly filters out unsupported types to prevent HA errors.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-1"
+    mock_device.device_name = "Test Device"
+    mock_device.online = True
+
+    # Test various unsupported types
+    test_cases = [
+        ("bool_prop", True, None, "bool should be filtered"),
+        ("dict_prop", {"key": "value"}, None, "dict should be filtered"),
+        ("list_prop", [1, 2, 3], None, "list should be filtered"),
+        ("tuple_prop", (1, 2), None, "tuple should be filtered"),
+        ("set_prop", {1, 2, 3}, None, "set should be filtered"),
+        # Valid types should pass through
+        ("str_prop", "test", "test", "str should be returned"),
+        ("int_prop", 42, 42, "int should be returned"),
+        ("float_prop", 25.5, 25.5, "float should be returned"),
+        ("none_prop", None, None, "None should be returned"),
+    ]
+
+    for prop_name, prop_value, expected_result, description in test_cases:
+        mock_device.properties = {
+            prop_name: DeviceProperty(
+                identifier=prop_name,
+                name=prop_name,
+                value=prop_value,
+            )
+        }
+        mock_coordinator.get_device.return_value = mock_device
+
+        sensor = HeimanSensorEntity(
+            coordinator=mock_coordinator,
+            device=mock_device,
+            property_identifier=prop_name,
+        )
+
+        assert sensor.native_value == expected_result, description
+
+
 async def test_sensor_creation_readable_without_entity_marker(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
