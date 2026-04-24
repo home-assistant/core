@@ -167,7 +167,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         (h for h in homes if h.home_id == home_id),
                         homes[0],
                     )
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:
                 _LOGGER.warning("Failed to fetch home info: %s", err)
                 self.data.errors["home_info"] = str(err)
 

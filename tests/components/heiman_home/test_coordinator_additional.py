@@ -2,9 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import HeimanDevice
+import pytest
 
 from homeassistant.components.heiman_home.const import CONF_HOME_ID
 from homeassistant.components.heiman_home.coordinator import (

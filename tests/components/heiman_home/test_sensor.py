@@ -849,7 +849,7 @@ async def test_sensor_native_value_none(hass: HomeAssistant) -> None:
 
 
 async def test_sensor_native_value_filters_unsupported_types(
-        hass: HomeAssistant,
+    hass: HomeAssistant,
 ) -> None:
     """Test sensor entity filters out unsupported value types (bool, dict, list).
 
