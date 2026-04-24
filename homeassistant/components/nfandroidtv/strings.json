@@ -36,6 +36,12 @@
     },
     "invalid_notification_image": {
       "message": "Invalid image data provided. Got {type}"
+    },
+    "notify_connection_error": {
+      "message": "Failed to send notification to {name} due to a connection error"
+    },
+    "setup_connection_error": {
+      "message": "Failed to connect to {name}"
     }
   }
 }
