@@ -242,7 +242,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.18.0
+aioesphomeapi==44.21.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
