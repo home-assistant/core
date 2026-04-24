@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -34,6 +35,27 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str
     _box_name: str
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        try:
+            box_name, _ = await self._validate_input(discovery_info.ip)
+        except DucoConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except DucoError:
+            _LOGGER.exception("Unexpected error discovering Duco box via DHCP")
+            return self.async_abort(reason="unknown")
+
+        self._host = discovery_info.ip
+        self._box_name = box_name
+        self.context["title_placeholders"] = {"name": box_name}
+
+        return await self.async_step_discovery_confirm()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

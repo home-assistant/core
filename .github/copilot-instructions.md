@@ -38,4 +38,4 @@ When validation guarantees a dict key exists, prefer direct key access (`data["k
 
 # Skills
 
-- Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
+- ha-integration-knowledge: .claude/skills/ha-integration-knowledge/SKILL.md

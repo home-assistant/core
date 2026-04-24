@@ -55,11 +55,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: >-
-      Users can pair new modules (CO2 sensors, humidity sensors, zone valves)
-      to their Duco box. Dynamic device support to be added in a follow-up PR.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -74,11 +70,7 @@ rules:
       handled by the coordinator (unavailable entities) and resolve automatically.
       There are no credentials to expire and no versioned API to become
       incompatible with.
-  stale-devices:
-    status: todo
-    comment: >-
-      To be implemented together with dynamic device support in a follow-up PR.
-
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done

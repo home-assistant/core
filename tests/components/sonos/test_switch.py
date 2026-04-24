@@ -2,10 +2,10 @@
 
 from copy import copy
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
-from soco.exceptions import SoCoException
+from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -20,6 +20,8 @@ from homeassistant.components.sonos.switch import (
     ATTR_RECURRENCE,
     ATTR_SPEECH_ENHANCEMENT,
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
+    ATTR_TV_AUTOPLAY,
+    ATTR_TV_UNGROUP_AUTOPLAY,
     ATTR_VOLUME,
 )
 from homeassistant.components.ssdp import SsdpChange
@@ -32,9 +34,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -340,6 +345,303 @@ async def test_alarm_change_device(
     alarm_14 = entity_registry.async_get(entity_id)
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
+
+
+async def test_tv_autoplay_switch(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test TV autoplay switch creation, state and turn on/off for HT devices."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    assert entity_registry.entities.get(entity_id) is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Turn off: should call SetAutoplayRoomUUID with empty RoomUUID
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
+        [("RoomUUID", ""), ("Source", "TV")]
+    )
+    soco.deviceProperties.SetAutoplayRoomUUID.reset_mock()
+
+    # Turn on: should call SetAutoplayRoomUUID with speaker's own UID
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
+        [("RoomUUID", soco.uid), ("Source", "TV")]
+    )
+
+
+async def test_tv_autoplay_poll_state(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that TV autoplay switch polls state from device."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": "", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Simulate poll returning enabled
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    await async_update_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
+async def test_tv_autoplay_not_created_for_non_ht(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that TV autoplay switch is not created when device raises SoCoUPnPException.
+
+    Non-HT devices don't support the GetAutoplayRoomUUID action and raise
+    SoCoUPnPException, which is the capability check we rely on. The conftest
+    mock raises SoCoUPnPException by default to simulate non-HT devices.
+    """
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+    assert entity_id not in entity_registry.entities
+
+
+async def test_tv_autoplay_toggle_failure_raises(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test that HomeAssistantError is raised when TV autoplay toggle fails."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": "", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    soco.deviceProperties.SetAutoplayRoomUUID = Mock(
+        side_effect=SoCoUPnPException("Toggle failed", 500, "")
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+async def test_tv_ungroup_autoplay_switch(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ungroup-on-autoplay switch creation, state and turn on/off."""
+    entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "0", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    assert entity_registry.entities.get(entity_id) is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Turn off: should send IncludeLinkedZones=1 (include group = stop ungrouping)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
+        [("IncludeLinkedZones", "1"), ("Source", "TV")]
+    )
+    soco.deviceProperties.SetAutoplayLinkedZones.reset_mock()
+
+    # Turn on: should send IncludeLinkedZones=0 (don't include group = ungroup)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
+        [("IncludeLinkedZones", "0"), ("Source", "TV")]
+    )
+
+
+async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ungroup-on-autoplay reflects device state regardless of TV autoplay state.
+
+    The device manages the dependency between the two settings. HA should poll
+    the actual device value and not force the switch unavailable or off.
+    """
+    ungroup_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    # TV autoplay is disabled — the scenario we're testing
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": "", "Source": "TV"}
+    )
+    # IncludeLinkedZones=0 means ungroup = ON, even when TV autoplay is disabled.
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "0", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    state = hass.states.get(ungroup_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate the device reporting ungroup as off while TV autoplay remains
+    # disabled. The switch should show OFF, not unavailable.
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": "", "Source": "TV"}
+    )
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "1", "Source": "TV"}
+    )
+    await async_update_entity(hass, ungroup_id)
+
+    state = hass.states.get(ungroup_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_tv_ungroup_autoplay_unavailable_when_linked_zones_missing(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test ungroup-on-autoplay becomes unavailable when IncludeLinkedZones is absent."""
+    entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "0", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Simulate a poll where the response is missing IncludeLinkedZones
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(return_value={"Source": "TV"})
+    await async_update_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_tv_ungroup_autoplay_toggle_failure_raises(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test that HomeAssistantError is raised when ungroup-on-autoplay toggle fails."""
+    entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "0", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    soco.deviceProperties.SetAutoplayLinkedZones = Mock(
+        side_effect=SoCoUPnPException("Toggle failed", 500, "")
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+async def test_tv_ungroup_autoplay_not_created_for_non_ht(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that ungroup-on-autoplay switch is not created when device raises SoCoUPnPException.
+
+    Non-HT devices don't support the GetAutoplayLinkedZones action and raise
+    SoCoUPnPException, which is the capability check we rely on. The conftest
+    mock raises SoCoUPnPException by default to simulate non-HT devices.
+    """
+    entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+    assert entity_id not in entity_registry.entities
 
 
 async def test_alarm_update_exception_logs_warning(

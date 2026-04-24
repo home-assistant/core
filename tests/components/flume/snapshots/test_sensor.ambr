@@ -1,0 +1,413 @@
+# serializer version: 1
+# name: test_sensors[sensor.flume_sensor_sensor_location_24_hours-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_24_hours',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '24 hours',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': '24 hours',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_24_hrs',
+    'unique_id': 'last_24_hrs_1234',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_DAY: 'gal/d'>,
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_24_hours-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'Flume Sensor Sensor Location 24 hours',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_DAY: 'gal/d'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_24_hours',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.4',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_30_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_30_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '30 days',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '30 days',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_30_days',
+    'unique_id': 'last_30_days_1234',
+    'unit_of_measurement': 'gal/mo',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_30_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'friendly_name': 'Flume Sensor Sensor Location 30 days',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gal/mo',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_30_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150.8',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_60_minutes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_60_minutes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '60 minutes',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': '60 minutes',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_60_min',
+    'unique_id': 'last_60_min_1234',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_60_minutes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'Flume Sensor Sensor Location 60 minutes',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_60_minutes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.5',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_interval',
+    'unique_id': 'current_interval_1234',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'Flume Sensor Sensor Location Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.23',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current day',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Current day',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'today',
+    'unique_id': 'today_1234',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'device_class': 'water',
+      'friendly_name': 'Flume Sensor Sensor Location Current day',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.2',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current month',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Current month',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'month_to_date',
+    'unique_id': 'month_to_date_1234',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'device_class': 'water',
+      'friendly_name': 'Flume Sensor Sensor Location Current month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.1',
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current_week-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current_week',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current week',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Current week',
+    'platform': 'flume',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'week_to_date',
+    'unique_id': 'week_to_date_1234',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_sensors[sensor.flume_sensor_sensor_location_current_week-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Flume API',
+      'device_class': 'water',
+      'friendly_name': 'Flume Sensor Sensor Location Current week',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flume_sensor_sensor_location_current_week',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.5',
+  })
+# ---
