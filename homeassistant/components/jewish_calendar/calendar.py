@@ -254,7 +254,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         self,
         events: list[CalendarEvent],
         start: datetime,
-        end: datetime = datetime.max.replace(tzinfo=UTC)
+        end: datetime = datetime.max.replace(tzinfo=UTC),
     ) -> list[CalendarEvent]:
         """Keep only the events that are in the start-end range specified."""
         # Since all calendar events have the same start and end time,
