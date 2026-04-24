@@ -63,9 +63,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -100,7 +98,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Energy Energy Device Communication Errors',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_energy_device_communication_errors',
@@ -174,9 +171,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -211,7 +206,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Flow Rate GPH Flow Rate GPH Device Communication Errors',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gph_flow_rate_gph_device_communication_errors',
@@ -285,9 +279,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -322,7 +314,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Flow Rate GPM Flow Rate GPM Device Communication Errors',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gpm_flow_rate_gpm_device_communication_errors',
@@ -497,9 +488,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -534,7 +523,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Flow Rate LPH Flow Rate LPH Device Communication Errors',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_lph_flow_rate_lph_device_communication_errors',
@@ -608,9 +596,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -645,7 +631,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Power Node Power Node Device Communication Errors',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.power_node_power_node_device_communication_errors',
@@ -838,9 +823,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -875,7 +858,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rain Rate Rain Rate Device Communication Errors',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rain_rate_rain_rate_device_communication_errors',
@@ -949,9 +931,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -986,7 +966,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Temperature Temperature Device Communication Errors',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.temperature_temperature_device_communication_errors',
@@ -1063,9 +1042,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1100,7 +1077,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Water Meter Water Meter Device Communication Errors',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_meter_water_meter_device_communication_errors',

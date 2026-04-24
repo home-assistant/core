@@ -231,6 +231,8 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif self._attr_device_class is not None:
             self._attr_state_class = SensorStateClass.MEASUREMENT
+        else:
+            self._attr_state_class = None
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -346,6 +348,8 @@ class ISYAuxSensorEntity(ISYSensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif self._attr_device_class is not None:
             self._attr_state_class = SensorStateClass.MEASUREMENT
+        else:
+            self._attr_state_class = None
 
         self._attr_unique_id = unique_id
         self._change_handler: EventListener = None
