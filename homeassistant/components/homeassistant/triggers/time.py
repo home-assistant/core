@@ -225,7 +225,7 @@ async def async_attach_trigger(  # noqa: C901
         elif (
             new_state.domain == "sensor"
             and new_state.attributes.get(ATTR_DEVICE_CLASS)
-            == sensor.SensorDeviceClass.TIMESTAMP
+            in (sensor.SensorDeviceClass.TIMESTAMP, sensor.SensorDeviceClass.UPTIME)
             and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):
             trigger_dt = dt_util.parse_datetime(new_state.state)
