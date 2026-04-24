@@ -269,11 +269,11 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         """Return a key for calendar events based on event start."""
         return self._date_to_dt(event.start, datetime.min.time())
 
-    def _date_to_dt(self, val: date | datetime, time: time) -> datetime:
+    def _date_to_dt(self, val: date | datetime, _time: time) -> datetime:
         """Return a datetime for comparison."""
         if isinstance(val, datetime):
             return val
-        return datetime.combine(val, time, tzinfo=UTC)
+        return datetime.combine(val, _time, tzinfo=UTC)
 
     def _get_events_for_date(self, target_date: date) -> list[CalendarEvent]:
         """Get all configured events for a specific date."""
