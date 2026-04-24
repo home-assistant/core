@@ -4487,7 +4487,7 @@ async def test_nested_compound_condition_forwards_async_unload(
 
     test.async_unload()
 
-    test._conditions[0]._checks[0].async_unload.assert_called_once()
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
     test._conditions[1].async_unload.assert_called_once()
 
 
