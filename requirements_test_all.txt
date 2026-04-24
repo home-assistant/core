@@ -242,7 +242,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.18.0
+aioesphomeapi==44.21.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -414,7 +414,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==1.0.2
+aiotractive==1.0.3
 
 # homeassistant.components.unifi
 aiounifi==90
@@ -920,7 +920,7 @@ fressnapftracker==0.2.2
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fumis
-fumis==0.2.1
+fumis==0.3.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -1109,7 +1109,7 @@ hole==0.9.0
 holidays==0.94
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.7
+home-assistant-frontend==20260325.8
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1181,7 +1181,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.2.3
+indevolt-api==1.4.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1684,7 +1684,7 @@ pyHomee==1.3.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.37.1
+pyTibber==0.37.2
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2424,6 +2424,10 @@ renson-endura-delta==1.7.2
 # homeassistant.components.reolink
 reolink-aio==0.19.1
 
+# homeassistant.components.honeywell_string_lights
+# homeassistant.components.radio_frequency
+rf-protocols==2.1.0
+
 # homeassistant.components.rflink
 rflink==0.0.67
 
@@ -2709,7 +2713,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.3.0
+uiprotect==10.3.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
