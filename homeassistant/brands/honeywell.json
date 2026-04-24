@@ -1,5 +1,5 @@
 {
   "domain": "honeywell",
   "name": "Honeywell",
-  "integrations": ["lyric", "evohome", "honeywell"]
+  "integrations": ["lyric", "evohome", "honeywell", "honeywell_string_lights"]
 }

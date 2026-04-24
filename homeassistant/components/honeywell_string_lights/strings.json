@@ -1,0 +1,19 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "No radio frequency transmitter supports 433.92 MHz OOK transmissions. Please add a compatible transmitter first.",
+      "no_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "transmitter": "Radio frequency transmitter"
+        },
+        "data_description": {
+          "transmitter": "The radio frequency transmitter used to control the Honeywell String Lights."
+        }
+      }
+    }
+  }
+}

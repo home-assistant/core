@@ -311,6 +311,7 @@ FLOWS = {
         "homewizard",
         "homeworks",
         "honeywell",
+        "honeywell_string_lights",
         "hr_energy_qube",
         "html5",
         "huawei_lte",
