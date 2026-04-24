@@ -6,6 +6,7 @@ import logging
 import time
 from typing import Any
 
+from connectlife_cloud import DeviceInfo as HisenseDeviceInfo
 from connectlife_cloud.mode_converter import (
     find_device_value_for_ha_fan_mode,
     find_device_value_for_ha_mode,
@@ -43,9 +44,10 @@ from .const import (
     StatusKey,
 )
 from .coordinator import HisenseACPluginDataUpdateCoordinator
-from .models import DeviceInfo as HisenseDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 # Fan mode mapping: HA string format to HA constant
 # This ensures consistent mapping throughout the code
@@ -112,6 +114,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
+    _attr_parallel_updates = PARALLEL_UPDATES
 
     def __init__(
         self,
@@ -123,7 +126,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._coordinator = coordinator
         self._device_id: str | None = device.puid
         self._attr_unique_id = f"{device.device_id}_climate"
-        self._attr_name = "Test AC Device"
+        self._attr_name = device.name
         self._attr_translation_key = "climate"
 
         # Set device-specific attributes

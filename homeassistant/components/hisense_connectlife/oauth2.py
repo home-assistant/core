@@ -11,8 +11,9 @@ from connectlife_cloud import CLIENT_ID, CLIENT_SECRET, OAUTH2_AUTHORIZE, OAUTH2
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 
-from .const import DOMAIN
+from .const import DOMAIN, HA_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +44,11 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
     def name(self) -> str:
         """Name of the implementation."""
         return "Hisense AC"
+
+    @property
+    def redirect_uri(self) -> str:
+        """Return the redirect uri."""
+        return f"{HA_HOST}{AUTH_CALLBACK_PATH}"
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
@@ -80,7 +86,7 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
         session = async_get_clientsession(self.hass)
         data["client_id"] = self.client_id
         data["client_secret"] = self.client_secret
-        data["redirect_uri"] = self.redirect_uri
+        data["redirect_uri"] = f"{HA_HOST}{AUTH_CALLBACK_PATH}"
 
         resp = await session.post(self.token_url, data=data)
         resp.raise_for_status()
@@ -91,61 +97,3 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
             resp_json["expires_at"] = time.time() + resp_json["expires_in"]
 
         return resp_json
-
-
-class OAuth2Session:
-    """OAuth2 session handler."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        oauth2_implementation: HisenseOAuth2Implementation,
-        token: dict[str, Any] | None = None,
-    ) -> None:
-        """Initialize OAuth2 session."""
-        self.hass = hass
-        self.oauth2_implementation = oauth2_implementation
-        self.token = token or {}
-        self.session = async_get_clientsession(hass)
-
-        _LOGGER.debug(
-            "Initialized OAuth2Session with token info: %s",
-            {
-                k: "***" if k in ("access_token", "refresh_token") else v
-                for k, v in self.token.items()
-            },
-        )
-
-    async def async_ensure_token_valid(self) -> None:
-        """Ensure that the token is valid."""
-        if not self.token:
-            _LOGGER.error("No token available")
-            raise ValueError("No token available")
-
-        if self._is_token_expired():
-            _LOGGER.debug("Token has expired, refreshing")
-            token_data = await self.oauth2_implementation.async_refresh_token(
-                self.token
-            )
-            self.token.update(token_data)
-            _LOGGER.debug("Token refreshed successfully")
-
-    def _is_token_expired(self) -> bool:
-        """Check if token is expired."""
-        expires_at = self.token.get("expires_at")
-        if not expires_at:
-            expires_in = self.token.get("expires_in", 0)
-            if expires_in:
-                self.token["expires_at"] = time.time() + expires_in
-                return False
-            return True
-        return time.time() >= expires_at - 300  # Refresh 5 minutes before expiry
-
-    async def async_get_access_token(self) -> str:
-        """Get the access token."""
-        await self.async_ensure_token_valid()
-        return self.token["access_token"]
-
-    async def close(self) -> None:
-        """Close the session."""
-        # Session is managed by Home Assistant, no need to close

@@ -7,12 +7,12 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
+from connectlife_cloud import DeviceInfo
 import pytest
 
 from homeassistant.components.hisense_connectlife.coordinator import (
     HisenseACPluginDataUpdateCoordinator,
 )
-from homeassistant.components.hisense_connectlife.models import DeviceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 

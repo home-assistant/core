@@ -26,6 +26,8 @@ ATTR_WATER_TANK_TEMP = "water_tank_temperature"
 ATTR_ZONE_TEMPERATURE = "zone_temperature"
 ATTR_AC_TYPE = "ac_type"
 
+# HA_HOST
+HA_HOST = "http://homeassistant.local:8123"
 
 # WebSocket
 WEBSOCKET_RECONNECT_INTERVAL = 30  # seconds

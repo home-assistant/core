@@ -53,3 +53,57 @@ rules:
   unique-config-entry:
     status: done
     comment: Prevent duplicate config entries
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Reauth flow will be added in a follow-up PR
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      Diagnostics support will be added in a follow-up PR
+  discovery-update-info:
+    status: exempt
+    comment: Not applicable for this integration
+  discovery:
+    status: exempt
+    comment: This integration does not support device discovery
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: Not applicable for this integration
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: Not applicable for this integration
+  repair-issues:
+    status: exempt
+    comment: Not applicable for this integration
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

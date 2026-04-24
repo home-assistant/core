@@ -11,8 +11,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 
-from .const import DOMAIN
+from .const import DOMAIN, HA_HOST
 from .oauth2 import HisenseOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,7 +147,7 @@ class OAuth2FlowHandler(
                     }
                 ),
                 description_placeholders={
-                    "oauth_callback_url": "uri",
+                    "oauth_callback_url": f"{HA_HOST}{AUTH_CALLBACK_PATH}",
                     "app_name": "Hisense AC",
                     "app_id": CLIENT_ID,
                 },

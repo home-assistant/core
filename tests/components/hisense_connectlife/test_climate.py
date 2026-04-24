@@ -3,6 +3,7 @@
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from connectlife_cloud import DeviceInfo
 import pytest
 
 from homeassistant.components.climate import (
@@ -18,7 +19,6 @@ from homeassistant.components.hisense_connectlife.climate import (
     async_setup_entry,
 )
 from homeassistant.components.hisense_connectlife.const import StatusKey
-from homeassistant.components.hisense_connectlife.models import DeviceInfo
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
@@ -118,7 +118,7 @@ async def entity(hass: HomeAssistant, mock_coordinator, mock_device):
 async def test_climate_initialization(entity) -> None:
     """Test climate entity initialization."""
     assert entity.unique_id == f"{DEVICE_ID}_climate"
-    assert entity.name == "Test AC Device"
+    assert entity.name == "Test AC"
     assert entity.available is True
     assert entity.temperature_unit == UnitOfTemperature.CELSIUS
     assert entity.min_temp == 16

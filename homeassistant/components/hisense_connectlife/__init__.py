@@ -4,18 +4,25 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp.client_exceptions import ClientError, ClientResponseError
+from connectlife_cloud import HisenseApiClient
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .api import HisenseApiClient
 from .config_flow import OAuth2FlowHandler
 from .const import DOMAIN
 from .coordinator import HisenseACPluginDataUpdateCoordinator
-from .oauth2 import HisenseOAuth2Implementation, OAuth2Session
+from .oauth2 import HisenseOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,26 +48,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Setting up config entry: %s", entry.title)
 
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
-        )
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
             "OAuth2 implementation temporarily unavailable"
         ) from err
 
-    ha_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    ha_session = OAuth2Session(hass, entry, implementation)
     await ha_session.async_ensure_token_valid()
 
-    token_info = dict(ha_session.token or {})
+    session = OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed(
+                "OAuth session is not valid, reauth required"
+            ) from err
+        raise ConfigEntryNotReady from err
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
+    access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
 
-    hisense_impl = HisenseOAuth2Implementation(hass)
-    oauth_session = OAuth2Session(
-        hass=hass, oauth2_implementation=hisense_impl, token=token_info
-    )
-    api_client = HisenseApiClient(hass, oauth_session)
+    api_client = HisenseApiClient(token=access_token)
 
     coordinator = HisenseACPluginDataUpdateCoordinator(hass, api_client, entry)
 

@@ -9,15 +9,14 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
+from connectlife_cloud import DeviceInfo, HisenseApiClient
 from connectlife_cloud.devices import get_device_parser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import HisenseApiClient
 from .const import UPDATE_INTERVAL
-from .models import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
