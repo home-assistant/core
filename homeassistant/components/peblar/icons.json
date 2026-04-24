@@ -6,6 +6,14 @@
       },
       "active_warning_codes": {
         "default": "mdi:alert"
+      },
+      "lock_state": {
+        "default": "mdi:lock"
+      }
+    },
+    "button": {
+      "socket_unlock": {
+        "default": "mdi:lock-open"
       }
     },
     "number": {
@@ -14,6 +22,12 @@
       }
     },
     "select": {
+      "buzzer_volume": {
+        "default": "mdi:volume-high"
+      },
+      "led_brightness": {
+        "default": "mdi:brightness-6"
+      },
       "smart_charging": {
         "default": "mdi:lightning-bolt",
         "state": {
@@ -41,6 +55,9 @@
       },
       "force_single_phase": {
         "default": "mdi:power-cycle"
+      },
+      "socket_lock": {
+        "default": "mdi:lock"
       }
     },
     "update": {

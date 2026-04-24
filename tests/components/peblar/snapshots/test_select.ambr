@@ -1,4 +1,132 @@
 # serializer version: 1
+# name: test_entities[select][select.peblar_ev_charger_buzzer_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.peblar_ev_charger_buzzer_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Buzzer volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buzzer volume',
+    'platform': 'peblar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'buzzer_volume',
+    'unique_id': '23-45-A4O-MOF_buzzer_volume',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select][select.peblar_ev_charger_buzzer_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Peblar EV Charger Buzzer volume',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.peblar_ev_charger_buzzer_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_entities[select][select.peblar_ev_charger_led_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic',
+        'off',
+        'dim',
+        'medium',
+        'bright',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.peblar_ev_charger_led_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED brightness',
+    'platform': 'peblar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'led_brightness',
+    'unique_id': '23-45-A4O-MOF_led_brightness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select][select.peblar_ev_charger_led_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Peblar EV Charger LED brightness',
+      'options': list([
+        'automatic',
+        'off',
+        'dim',
+        'medium',
+        'bright',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.peblar_ev_charger_led_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_entities[select][select.peblar_ev_charger_smart_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

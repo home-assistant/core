@@ -62,6 +62,14 @@
       },
       "active_warning_codes": {
         "name": "Active warnings"
+      },
+      "lock_state": {
+        "name": "Socket lock"
+      }
+    },
+    "button": {
+      "socket_unlock": {
+        "name": "Unlock socket"
       }
     },
     "number": {
@@ -70,6 +78,25 @@
       }
     },
     "select": {
+      "buzzer_volume": {
+        "name": "Buzzer volume",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "led_brightness": {
+        "name": "LED brightness",
+        "state": {
+          "automatic": "Automatic",
+          "bright": "Bright",
+          "dim": "Dim",
+          "medium": "Medium",
+          "off": "Off"
+        }
+      },
       "smart_charging": {
         "name": "Smart charging",
         "state": {
@@ -158,6 +185,9 @@
       },
       "force_single_phase": {
         "name": "Force single phase"
+      },
+      "socket_lock": {
+        "name": "Keep socket locked"
       }
     },
     "update": {

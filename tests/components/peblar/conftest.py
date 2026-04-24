@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
@@ -77,6 +78,41 @@ def mock_peblar() -> Generator[MagicMock]:
         )
 
         yield peblar
+
+
+@pytest.fixture
+def mock_peblar_with_socket(mock_peblar: MagicMock) -> MagicMock:
+    """Return a mocked Peblar client with socket hardware enabled."""
+    mock_peblar.system_information.return_value = PeblarSystemInformation.from_json(
+        json.dumps(
+            {
+                **json.loads(load_fixture("system_information.json", DOMAIN)),
+                "HwHasSocket": True,
+            }
+        )
+    )
+    return mock_peblar
+
+
+@pytest.fixture
+async def init_integration_with_socket(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_peblar_with_socket: MagicMock,
+    request: pytest.FixtureRequest,
+) -> MockConfigEntry:
+    """Set up the Peblar integration with socket hardware for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    context = nullcontext()
+    if platform := getattr(request, "param", None):
+        context = patch("homeassistant.components.peblar.PLATFORMS", [platform])
+
+    with context:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
 
 
 @pytest.fixture
