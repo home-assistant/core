@@ -654,12 +654,12 @@ HA_HVAC_TO_ISY = {
 
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
-TOTAL_INCREASING_DEVICE_CLASSES = (
+TOTAL_INCREASING_DEVICE_CLASSES = {
     SensorDeviceClass.ENERGY,
     SensorDeviceClass.WATER,
     SensorDeviceClass.GAS,
     SensorDeviceClass.PRECIPITATION,
-)
+}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
     BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],
