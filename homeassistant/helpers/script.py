@@ -92,11 +92,7 @@ from . import (
     template,
     trigger as trigger_helper,
 )
-from .condition import (
-    ConditionChecker,
-    ConditionCheckerTypeOptional,
-    trace_condition_function,
-)
+from .condition import ConditionChecker, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
@@ -686,14 +682,12 @@ class _ScriptRun:
 
     ### Condition actions ###
 
-    async def _async_get_condition(
-        self, config: ConfigType
-    ) -> ConditionCheckerTypeOptional:
+    async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
         return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _test_conditions(
         self,
-        conditions: list[ConditionCheckerTypeOptional],
+        conditions: list[ConditionChecker],
         name: str,
         condition_path: str | None = None,
     ) -> bool | None:
@@ -1417,12 +1411,12 @@ def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
 
 
 class _ChooseData(TypedDict):
-    choices: list[tuple[list[ConditionCheckerTypeOptional], Script]]
+    choices: list[tuple[list[ConditionChecker], Script]]
     default: Script | None
 
 
 class _IfData(TypedDict):
-    if_conditions: list[ConditionCheckerTypeOptional]
+    if_conditions: list[ConditionChecker]
     if_then: Script
     if_else: Script | None
 
@@ -1946,9 +1940,7 @@ class Script:
             sub_script.async_unload()
         self._sequence_scripts.clear()
 
-    async def _async_get_condition(
-        self, config: ConfigType
-    ) -> ConditionCheckerTypeOptional:
+    async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
         config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._condition_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)

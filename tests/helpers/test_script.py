@@ -7121,7 +7121,7 @@ async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None
 
 
 async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
-    """Test that async_unload raises ValueError if the script is running."""
+    """Test that async_unload raises RuntimeError if the script is running."""
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"wait_template": "{{ false }}"},
