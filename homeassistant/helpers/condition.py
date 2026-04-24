@@ -1646,39 +1646,80 @@ async def async_conditions_from_config(
     condition_configs: list[ConfigType],
     logger: logging.Logger,
     name: str,
-) -> Callable[[TemplateVarsType], bool]:
+) -> ConditionsChecker:
     """AND all conditions."""
     checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
+    return ConditionsChecker(checks, logger, name)
 
-    def check_conditions(variables: TemplateVarsType = None) -> bool:
+
+class ConditionsChecker:
+    """Condition checker that ANDs multiple conditions.
+
+    Used by automations and template entities. Unlike AndConditionChecker,
+    this logs warnings on errors instead of raising, and uses "condition"
+    as the trace path prefix.
+    """
+
+    def __init__(
+        self,
+        conditions: list[ConditionChecker],
+        logger: logging.Logger,
+        name: str,
+    ) -> None:
+        """Initialize condition checker."""
+        self._conditions = conditions
+        self._logger = logger
+        self._name = name
+        self._unloaded = False
+
+    def __call__(self, variables: TemplateVarsType = None) -> bool:
+        """Check all conditions."""
+        return self.async_check(variables=variables)
+
+    def __del__(self) -> None:
+        """Clean up when the checker is deleted."""
+        if self._unloaded:
+            return
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading condition checker")
+
+    def async_unload(self) -> None:
+        """Clean up child conditions."""
+        self._unloaded = True
+        for condition in self._conditions:
+            condition.async_unload()
+
+    def async_check(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["condition", str(index)]):
-                    if check(hass, variables) is False:
+                    if condition.async_check(variables=variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "condition", index=index, total=len(checks), error=ex
+                        "condition", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
         if errors:
-            logger.warning(
+            self._logger.warning(
                 "Error evaluating condition in '%s':\n%s",
-                name,
+                self._name,
                 ConditionErrorContainer("condition", errors=errors),
             )
             return False
 
         return True
-
-    return check_conditions
 
 
 @callback
