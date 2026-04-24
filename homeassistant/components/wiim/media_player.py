@@ -783,16 +783,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         content, content_type = None, None
         websession = async_get_clientsession(self.hass)
-        with suppress(TimeoutError):
-            response = await websession.get(
+        with suppress(TimeoutError, aiohttp.ClientError):
+            async with websession.get(
                 url,
                 ssl=False,
                 timeout=MEDIA_IMAGE_FETCH_TIMEOUT,
-            )
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
-                if response.headers.get("Content-Type"):
-                    content_type = response.headers["Content-Type"].split(";")[0]
+            ) as response:
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
+                    if response.headers.get("Content-Type"):
+                        content_type = response.headers["Content-Type"].split(";")[0]
 
         if content is None:
             LOGGER.debug(
