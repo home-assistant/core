@@ -24,9 +24,9 @@ from .const import (
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     PORTABLE_MODE,
-    REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
     SENSOR_KEYS,
+    RealtimeAction,
 )
 
 EMERGENCY_SOC_READ_KEY: Final = "6105"
@@ -148,19 +148,25 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if refresh:
                 await self.async_request_refresh()
 
-    async def async_execute_realtime_action(self, action: list[int]) -> None:
+    async def async_realtime_action(
+        self,
+        action_code: RealtimeAction,
+        power: int = 0,
+        target_soc: int = 0,
+    ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
 
-        try:
-            success = await self.async_push_data(REALTIME_ACTION_KEY, action)
-
-        except (DeviceTimeoutError, DeviceConnectionError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_execute_realtime_action",
-            ) from err
+        match action_code:
+            case RealtimeAction.CHARGE:
+                success = await self.api.charge(power, target_soc)
+            case RealtimeAction.DISCHARGE:
+                success = await self.api.discharge(power, target_soc)
+            case RealtimeAction.STOP:
+                success = await self.api.stop()
+            case _:
+                return
 
         if not success:
             raise HomeAssistantError(
@@ -169,6 +175,12 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         await self.async_request_refresh()
+
+    async def async_execute_realtime_action(self, action: list[int]) -> None:
+        """Backward-compatible wrapper around async_realtime_action."""
+        await self.async_realtime_action(
+            RealtimeAction(action[0]), action[1], action[2]
+        )
 
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""
