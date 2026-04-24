@@ -211,14 +211,14 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         # Get today's events first
-        if (_event := self._get_next_event(dt_util.now())):
+        if _event := self._get_next_event(dt_util.now()):
             return _event
 
         # Look for the next event in the next 30 days
         today = dt_util.now().date()
         for days_ahead in range(1, 31):
             future_date = today + timedelta(days=days_ahead)
-            if (_event := self._get_next_event(future_date)):
+            if _event := self._get_next_event(future_date):
                 return _event
         return None
 
@@ -245,7 +245,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         if isinstance(_date, date):
             _date = datetime.combine(_date, datetime.min.time(), tzinfo=UTC)
 
-        if (events := self._get_events_for_date(_date.date())):
+        if events := self._get_events_for_date(_date.date()):
             return self._filter_start_end(events, _date)[0]
 
         return None
