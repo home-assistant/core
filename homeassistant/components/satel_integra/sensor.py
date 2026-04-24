@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENABLE_TEMPERATURE_SENSOR, CONF_ZONE_NUMBER, SUBENTRY_TYPE_ZONE
@@ -70,14 +70,7 @@ class SatelIntegraTemperatureSensor(
             device_number,
         )
 
-        self._attr_native_value = self._get_state_from_coordinator()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self._get_state_from_coordinator()
-        self.async_write_ha_state()
-
-    def _get_state_from_coordinator(self) -> float | None:
-        """Get temperature from coordinator data."""
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
         return self.coordinator.data.get(self._device_number)
