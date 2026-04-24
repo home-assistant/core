@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
