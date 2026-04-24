@@ -18,6 +18,7 @@ from typing import (
     Any,
     Final,
     Literal,
+    Never,
     Protocol,
     TypedDict,
     Unpack,
@@ -293,7 +294,7 @@ class ConditionChecker(abc.ABC):
         self._unloaded = False
 
     def __call__(
-        self, hass: HomeAssistant, variables: TemplateVarsType | None = None
+        self, hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool | None:
         """Check the condition."""
         return self.async_check(variables=variables)
@@ -321,11 +322,11 @@ class ConditionChecker(abc.ABC):
         self._unloaded = True
 
     def async_check(
-        self, *, variables: TemplateVarsType | None = None, **kwargs: Any
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
     ) -> bool | None:
         """Check the condition."""
         with trace_condition(variables):
-            result = self._async_check(variables=variables, **kwargs)
+            result = self._async_check(variables=variables)
             condition_trace_update_result(result=result)
             return result
 

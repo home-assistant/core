@@ -63,12 +63,7 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    TemplateVarsType,
-    UndefinedType,
-)
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2155,14 +2150,14 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        def _async_check(self, variables: TemplateVarsType) -> bool:
+        def _async_check(self, **kwargs) -> bool:
             """Check the condition."""
             return True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        def _async_check(self, variables: TemplateVarsType) -> bool:
+        def _async_check(self, **kwargs) -> bool:
             """Check the condition."""
             return False
 
@@ -2302,7 +2297,7 @@ async def test_get_condition_platform_registers_conditions(
         ) -> ConfigType:
             return config
 
-        def _async_check(self, variables: TemplateVarsType) -> bool:
+        def _async_check(self, **kwargs) -> bool:
             """Check the condition."""
             return True
 
