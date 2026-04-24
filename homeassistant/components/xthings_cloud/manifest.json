@@ -8,6 +8,6 @@
   "iot_class": "cloud_push",
   "loggers": ["homeassistant.components.xthings_cloud"],
   "quality_scale": "bronze",
-  "requirements": ["ha-xthings-cloud==1.0.4"],
+  "requirements": ["ha-xthings-cloud==1.0.5"],
   "single_config_entry": true
 }

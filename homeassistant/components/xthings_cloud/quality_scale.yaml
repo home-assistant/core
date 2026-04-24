@@ -59,9 +59,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: No entities disabled by default.
-  discovery:
-    status: exempt
-    comment: Cloud integration, nothing to discover locally.
+  discovery: todo
   stale-devices:
     status: exempt
     comment: Single config entry, devices managed by coordinator.

@@ -58,10 +58,10 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            instance_id = await async_get_instance_id(self.hass)
+            session = async_get_clientsession(self.hass)
+            client = XthingsCloudApiClient(session)
             try:
-                instance_id = await async_get_instance_id(self.hass)
-                session = async_get_clientsession(self.hass)
-                client = XthingsCloudApiClient(session)
                 token_data = await client.async_login(
                     user_input[CONF_EMAIL],
                     user_input[CONF_PASSWORD],

@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This account is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "cannot_connect": "Unable to connect to Xthings Cloud.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "device_not_found": "Device not found.",
       "device_offline": "Device is offline.",
       "email_empty": "Email cannot be empty.",
@@ -14,7 +14,7 @@
       "password_wrong": "Incorrect password.",
       "token_expired": "Token expired, please log in again.",
       "token_invalid": "Invalid token, please log in again.",
-      "unknown": "An unknown error occurred.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "user_disabled": "This account has been disabled.",
       "user_not_activated": "This account has not been activated.",
       "user_not_logged_in": "Session expired, please log in again."
@@ -22,8 +22,8 @@
     "step": {
       "user": {
         "data": {
-          "email": "Email",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "The email address used to register your Xthings Cloud account.",
