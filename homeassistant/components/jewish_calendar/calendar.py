@@ -259,13 +259,20 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         """Keep only the events that are in the start-end range specified."""
         # Since all calendar events have the same start and end time,
         # it is enough to compare the start time
-        return [e for e in events if start <= self._event_start_dt(e) <= end]
+        return [
+            e for e in events
+            if start <= self._date_to_dt(e.start, datetime.max.time()) <= end
+        ]
 
-    def _event_start_dt(self, event: CalendarEvent) -> datetime:
-        """Return a sortable datetime for an event start."""
-        if isinstance(event.start, datetime):
-            return event.start
-        return datetime.combine(event.start, datetime.min.time(), tzinfo=UTC)
+    def _event_sort_key(self, event: CalendarEvent) -> datetime:
+        """Return a key for calendar events based on event start."""
+        return self._date_to_dt(event.start, datetime.min.time())
+
+    def _date_to_dt(self, val: date | datetime, time: datetime.time) -> datetime:
+        """Return a datetime for comparison."""
+        if isinstance(val, datetime):
+            return val
+        return datetime.combine(val, time, tzinfo=UTC)
 
     def _get_events_for_date(self, target_date: date) -> list[CalendarEvent]:
         """Get all configured events for a specific date."""
@@ -280,7 +287,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
             ):
                 events.extend(_events if isinstance(_events, list) else [_events])
 
-        return sorted(events, key=self._event_start_dt)
+        return sorted(events, key=self._event_sort_key)
 
     def _update_times(self, zmanim: Zmanim) -> list[datetime | None]:
         """Return a list of times to update the calendar."""
