@@ -1471,13 +1471,16 @@ SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
-EVENT_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_EVENT): string,
-        vol.Optional(CONF_EVENT_DATA): vol.All(dict, template_complex),
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): vol.All(dict, template_complex),
-    }
+EVENT_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_EVENT): string,
+            vol.Optional(CONF_EVENT_DATA): vol.All(dict, template_complex),
+            vol.Optional(CONF_EVENT_DATA_TEMPLATE): vol.All(dict, template_complex),
+        }
+    ),
 )
 
 
@@ -1900,20 +1903,26 @@ TRIGGER_SCHEMA = vol.All(
     [vol.All(_trigger_pre_validator, _base_trigger_validator)],
 )
 
-_SCRIPT_DELAY_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_DELAY): positive_time_period_template,
-    }
+_SCRIPT_DELAY_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_DELAY): positive_time_period_template,
+        }
+    ),
 )
 
-_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_WAIT_TEMPLATE): template,
-        vol.Optional(CONF_TIMEOUT): positive_time_period_template,
-        vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
-    }
+_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_WAIT_TEMPLATE): template,
+            vol.Optional(CONF_TIMEOUT): positive_time_period_template,
+            vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
+        }
+    ),
 )
 
 DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
@@ -1927,99 +1936,128 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-_SCRIPT_SCENE_SCHEMA = vol.Schema(
-    {**SCRIPT_ACTION_BASE_SCHEMA, vol.Required(CONF_SCENE): entity_domain("scene")}
+_SCRIPT_SCENE_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {**SCRIPT_ACTION_BASE_SCHEMA, vol.Required(CONF_SCENE): entity_domain("scene")}
+    ),
 )
 
-_SCRIPT_REPEAT_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_REPEAT): vol.All(
-            {
-                vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
-                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
-                    dynamic_template, vol.All(list, template_complex)
-                ),
-                vol.Exclusive(CONF_WHILE, "repeat"): CONDITIONS_SCHEMA,
-                vol.Exclusive(CONF_UNTIL, "repeat"): CONDITIONS_SCHEMA,
-                vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
-            },
-            has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
-        ),
-    }
-)
-
-_SCRIPT_CHOOSE_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_CHOOSE): vol.All(
-            ensure_list,
-            [
+_SCRIPT_REPEAT_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_REPEAT): vol.All(
                 {
-                    vol.Optional(CONF_ALIAS): string,
-                    vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
+                    vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(
+                        vol.Coerce(int), template
+                    ),
+                    vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
+                        dynamic_template, vol.All(list, template_complex)
+                    ),
+                    vol.Exclusive(CONF_WHILE, "repeat"): CONDITIONS_SCHEMA,
+                    vol.Exclusive(CONF_UNTIL, "repeat"): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
-                }
-            ],
-        ),
-        vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
-    }
+                },
+                has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
+            ),
+        }
+    ),
 )
 
-_SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
-        vol.Optional(CONF_TIMEOUT): positive_time_period_template,
-        vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
-    }
+_SCRIPT_CHOOSE_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_CHOOSE): vol.All(
+                ensure_list,
+                [
+                    {
+                        vol.Optional(CONF_ALIAS): string,
+                        vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
+                        vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+                    }
+                ],
+            ),
+            vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
+        }
+    ),
 )
 
-_SCRIPT_IF_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_IF): CONDITIONS_SCHEMA,
-        vol.Required(CONF_THEN): SCRIPT_SCHEMA,
-        vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
-    }
+_SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
+            vol.Optional(CONF_TIMEOUT): positive_time_period_template,
+            vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
+        }
+    ),
 )
 
-_SCRIPT_SET_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-    }
+_SCRIPT_IF_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_IF): CONDITIONS_SCHEMA,
+            vol.Required(CONF_THEN): SCRIPT_SCHEMA,
+            vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
+        }
+    ),
 )
 
-_SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(
-            CONF_SET_CONVERSATION_RESPONSE
-        ): SCRIPT_CONVERSATION_RESPONSE_SCHEMA,
-    }
+_SCRIPT_SET_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        }
+    ),
 )
 
-_SCRIPT_STOP_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(
-            CONF_RESPONSE_VARIABLE,
-            "error_or_response",
-            msg="not allowed to add a response to an error stop action",
-        ): str,
-    }
+_SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(
+                CONF_SET_CONVERSATION_RESPONSE
+            ): SCRIPT_CONVERSATION_RESPONSE_SCHEMA,
+        }
+    ),
 )
 
-_SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        # The frontend stores data here. Don't use in core.
-        vol.Remove("metadata"): dict,
-        vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
-    }
+_SCRIPT_STOP_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_STOP): vol.Any(None, string),
+            vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
+            vol.Exclusive(
+                CONF_RESPONSE_VARIABLE,
+                "error_or_response",
+                msg="not allowed to add a response to an error stop action",
+            ): str,
+        }
+    ),
+)
+
+_SCRIPT_SEQUENCE_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            # The frontend stores data here. Don't use in core.
+            vol.Remove("metadata"): dict,
+            vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+        }
+    ),
 )
 
 _parallel_sequence_action = vol.All(
@@ -2030,13 +2068,17 @@ _parallel_sequence_action = vol.All(
     },
 )
 
-_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_PARALLEL): vol.All(
-            ensure_list, [vol.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)]
-        ),
-    }
+_SCRIPT_PARALLEL_SCHEMA = vol.All(
+    deprecated(CONF_CONTINUE_ON_ERROR),
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_PARALLEL): vol.All(
+                ensure_list,
+                [vol.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)],
+            ),
+        }
+    ),
 )
 
 
