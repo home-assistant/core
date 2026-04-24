@@ -4538,10 +4538,10 @@ async def test_conditions_from_config_nested_forwards_async_unload(
 
     assert len(test._conditions) == 2
     inner_checker = test._conditions[0]
-    assert hasattr(inner_checker, "_checks")
-    assert len(inner_checker._checks) == 1
+    assert hasattr(inner_checker, "_conditions")
+    assert len(inner_checker._conditions) == 1
 
     test.async_unload()
 
-    test._conditions[0]._checks[0].async_unload.assert_called_once()
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
     test._conditions[1].async_unload.assert_called_once()
