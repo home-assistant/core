@@ -252,23 +252,19 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         return None
 
     def _filter_start_end(
-        self,
-        events: list[CalendarEvent],
-        start: datetime,
-        end: datetime = datetime.max.replace(tzinfo=UTC),
+        self, events: list[CalendarEvent], start: datetime, end: datetime | None = None
     ) -> list[CalendarEvent]:
         """Keep only the events that are in the start-end range specified."""
-        # Since all calendar events have the same start and end time,
-        # it is enough to compare the start time
         return [
             e
             for e in events
-            if start <= self._date_to_dt(e.start, datetime.max.time()) <= end
+            if start <= self._date_to_dt(e.start, time.max)
+            and (end is None or self._date_to_dt(e.start, time.max) <= end)
         ]
 
     def _event_sort_key(self, event: CalendarEvent) -> datetime:
         """Return a key for calendar events based on event start."""
-        return self._date_to_dt(event.start, datetime.min.time())
+        return self._date_to_dt(event.start, time.min)
 
     def _date_to_dt(self, val: date | datetime, _time: time) -> datetime:
         """Return a datetime for comparison."""

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_candle_lighting_on_friday[New York]
+# name: test_candle_lighting_on_friday[calendar_events0-New York]
   list([
     dict({
       'description': 'Candle lighting time: 16:31',

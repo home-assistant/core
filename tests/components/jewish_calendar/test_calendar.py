@@ -261,6 +261,16 @@ async def test_omer_count(
 
 @pytest.mark.freeze_time("2024-01-12 12:00:00")
 @pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize(
+    "calendar_events",
+    [
+        {
+            CONF_YEARLY_EVENTS: [
+                YearlyCalendarEventType.CANDLE_LIGHTING,
+            ],
+        }
+    ],
+)
 @pytest.mark.usefixtures("setup")
 async def test_candle_lighting_on_friday(
     hass: HomeAssistant,
