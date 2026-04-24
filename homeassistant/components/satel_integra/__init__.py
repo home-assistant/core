@@ -65,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_outputs.outputs_update_callback,
         coordinator_partitions.partitions_update_callback,
     )
+    await coordinator_temperatures.async_config_entry_first_refresh()
 
     entry.runtime_data = SatelIntegraData(
         client=client,
@@ -73,8 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_partitions=coordinator_partitions,
         coordinator_temperatures=coordinator_temperatures,
     )
-
-    await coordinator_temperatures.async_config_entry_first_refresh()
 
     async def async_close_connection(event: Event) -> None:
         """Close Satel Integra connection on HA Stop."""
