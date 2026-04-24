@@ -33,7 +33,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: The hub's serial number is used as the unique ID and is immutable. IP address changes are handled by the reconfigure flow.
