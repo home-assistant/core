@@ -107,6 +107,9 @@ async def test_no_departures(
     train_number_sensor = hass.states.get("sensor.mock_title_train_number")
     assert train_number_sensor.state == STATE_UNKNOWN
 
+    departure_delay_sensor = hass.states.get("sensor.mock_title_departure_delay")
+    assert departure_delay_sensor.state == STATE_UNKNOWN
+
 
 async def test_departure_delay(
     hass: HomeAssistant,
