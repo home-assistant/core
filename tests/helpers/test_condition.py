@@ -4388,6 +4388,39 @@ async def test_condition_checker_del_skips_if_already_unloaded(
     unload_mock.assert_not_called()
 
 
+async def _setup_mock_integration(hass: HomeAssistant) -> None:
+    """Set up a mock integration with conditions."""
+
+    class MockCondition(Condition):
+        def __new__(cls, *args: Any, **kwargs: Any) -> Condition:
+            """Return a mock instance that tracks async_setup and async_unload calls."""
+            mocked = Mock(spec=Condition)
+            mocked.async_setup = AsyncMock()
+            mocked.async_unload = Mock()
+            return mocked
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config  # Return the config unchanged for testing
+
+        def _async_check(self, **kwargs: Any) -> bool | None:
+            """Check the condition."""
+            raise NotImplementedError
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+
 @pytest.mark.parametrize(
     "compound_type",
     ["and", "or", "not"],
@@ -4396,19 +4429,12 @@ async def test_compound_condition_forwards_async_unload(
     hass: HomeAssistant, compound_type: str
 ) -> None:
     """Test that and/or/not compound conditions forward async_unload to children."""
+    await _setup_mock_integration(hass)
     config = {
         "condition": compound_type,
         "conditions": [
-            {
-                "condition": "state",
-                "entity_id": "test.entity_1",
-                "state": STATE_ON,
-            },
-            {
-                "condition": "state",
-                "entity_id": "test.entity_2",
-                "state": STATE_ON,
-            },
+            {"condition": "test"},
+            {"condition": "test"},
         ],
     }
     config = cv.CONDITION_SCHEMA(config)
@@ -4419,15 +4445,10 @@ async def test_compound_condition_forwards_async_unload(
     assert hasattr(test, "_checks")
     assert len(test._checks) == 2
 
-    # Patch async_unload on children to verify forwarding
-    child_unloads = [Mock() for _ in test._checks]
-    for child, mock_unload in zip(test._checks, child_unloads, strict=True):
-        child.async_unload = mock_unload
-
     test.async_unload()
 
-    for mock_unload in child_unloads:
-        mock_unload.assert_called_once()
+    for child in test._checks:
+        child.async_unload.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -4442,24 +4463,15 @@ async def test_nested_compound_condition_forwards_async_unload(
     hass: HomeAssistant, outer_type: str, inner_type: str
 ) -> None:
     """Test that nested compound conditions forward async_unload recursively."""
+    await _setup_mock_integration(hass)
     config = {
         "condition": outer_type,
         "conditions": [
             {
                 "condition": inner_type,
-                "conditions": [
-                    {
-                        "condition": "state",
-                        "entity_id": "test.entity_1",
-                        "state": STATE_ON,
-                    },
-                ],
+                "conditions": [{"condition": "test"}],
             },
-            {
-                "condition": "state",
-                "entity_id": "test.entity_2",
-                "state": STATE_ON,
-            },
+            {"condition": "test"},
         ],
     }
     config = cv.CONDITION_SCHEMA(config)
@@ -4472,14 +4484,7 @@ async def test_nested_compound_condition_forwards_async_unload(
     assert hasattr(inner_checker, "_checks")
     assert len(inner_checker._checks) == 1
 
-    # Patch the innermost leaf's async_unload
-    innermost_unload = Mock()
-    inner_checker._checks[0].async_unload = innermost_unload
-
-    leaf_unload = Mock()
-    test._checks[1].async_unload = leaf_unload
-
     test.async_unload()
 
-    innermost_unload.assert_called_once()
-    leaf_unload.assert_called_once()
+    test._checks[0]._checks[0].async_unload.assert_called_once()
+    test._checks[1].async_unload.assert_called_once()
