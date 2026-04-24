@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import cache
+from typing import Self
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
+from .const import ESPHOME_DATA
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
 
 STORAGE_VERSION = 1
@@ -32,3 +35,12 @@ class DomainData:
                 hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
             ),
         )
+
+    @classmethod
+    @cache
+    def get(cls, hass: HomeAssistant) -> Self:
+        """Get the global DomainData instance stored in hass.data."""
+        # A singleton pattern is used because some actions may be run despite the
+        # integration never being loaded (eg. removing a disabled integration)
+        ret = hass.data[ESPHOME_DATA] = cls()  # type: ignore[misc]
+        return ret
