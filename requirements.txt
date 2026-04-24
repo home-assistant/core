@@ -47,7 +47,7 @@ python-slugify==8.0.4
 PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.33.1
-rf-protocols==2.0.0
+rf-protocols==2.1.0
 securetar==2026.4.1
 SQLAlchemy==2.0.49
 standard-aifc==3.13.0

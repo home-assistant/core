@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/radio_frequency",
   "integration_type": "entity",
   "quality_scale": "internal",
-  "requirements": ["rf-protocols==2.0.0"]
+  "requirements": ["rf-protocols==2.1.0"]
 }
