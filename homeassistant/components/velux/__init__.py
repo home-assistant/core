@@ -123,6 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     for node in pyvlx.nodes:
         if isinstance(node, Window) and node.rain_sensor:
             coordinator = VeluxLimitationCoordinator(hass, entry, node)
+            # do not await coordinator.async_config_entry_first_refresh() here to avoid doing
+            # it for disabled entities, the entities will call it when they are added to hass
             limitation_coordinators[node.node_id] = coordinator
 
     entry.runtime_data = VeluxData(
