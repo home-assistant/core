@@ -145,8 +145,9 @@ async def test_rain_sensor_unavailability(
     mock_window.get_limitation_min.side_effect = None
     mock_window.get_limitation_min.return_value.position_percent = 0
     mock_window.get_limitation_max.side_effect = None
+    mock_window.get_limitation_max.return_value.position_percent = 100
     await update_polled_entities(hass, freezer)
-
+    await update_polled_entities(hass, freezer)
     # Entity should be available again
     state = hass.states.get(test_entity_id)
     assert state is not None
