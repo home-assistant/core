@@ -357,6 +357,21 @@ class DisabledConditionChecker(ConditionChecker):
         return None
 
 
+class CompoundConditionChecker(ConditionChecker):
+    """Base class for compound condition checkers (and/or/not)."""
+
+    def __init__(self, hass: HomeAssistant, checks: list[ConditionChecker]) -> None:
+        """Initialize condition checker."""
+        super().__init__(hass)
+        self._checks = checks
+
+    def async_unload(self) -> None:
+        """Clean up child conditions."""
+        for check in self._checks:
+            check.async_unload()
+        super().async_unload()
+
+
 class Condition(ConditionChecker):
     """Condition class."""
 
@@ -974,31 +989,39 @@ async def async_from_config(
         check_factory = check_factory.func
 
     if inspect.iscoroutinefunction(check_factory):
-        checker = cast(ConditionCheckerType, await factory(hass, config))
+        checker = await factory(hass, config)
     else:
-        checker = cast(ConditionCheckerType, factory(config))
-    return LegacyConditionChecker(hass, checker)
+        checker = factory(config)
+    if isinstance(checker, ConditionChecker):
+        return checker
+    return LegacyConditionChecker(hass, cast(ConditionCheckerType, checker))
 
 
 async def async_and_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'AND'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return AndConditionChecker(hass, checks)
 
-    def if_and_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class AndConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'and' compound conditions."""
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables) is False:
+                    if check(self._hass, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "and", index=index, total=len(self._checks), error=ex
+                    )
                 )
 
         # Raise the errors if no check was false
@@ -1007,28 +1030,32 @@ async def async_and_from_config(
 
         return True
 
-    return if_and_condition
-
 
 async def async_or_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'OR'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return OrConditionChecker(hass, checks)
 
-    def if_or_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class OrConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'or' compound conditions."""
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables) is True:
+                    if check(self._hass, **kwargs) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "or", index=index, total=len(self._checks), error=ex
+                    )
                 )
 
         # Raise the errors if no check was true
@@ -1037,28 +1064,32 @@ async def async_or_from_config(
 
         return False
 
-    return if_or_condition
-
 
 async def async_not_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'NOT'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return NotConditionChecker(hass, checks)
 
-    def if_not_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class NotConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'not' compound conditions."""
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if check(self._hass, **kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "not", index=index, total=len(self._checks), error=ex
+                    )
                 )
 
         # Raise the errors if no check was true
@@ -1066,8 +1097,6 @@ async def async_not_from_config(
             raise ConditionErrorContainer("not", errors=errors)
 
         return True
-
-    return if_not_condition
 
 
 def numeric_state(
