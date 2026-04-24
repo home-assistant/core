@@ -543,6 +543,7 @@ class EntityConditionBase(Condition):
 
     def async_unload(self) -> None:
         """Unsubscribe from listeners."""
+        super().async_unload()
         for cb in self._on_unload:
             cb()
         self._on_unload.clear()
