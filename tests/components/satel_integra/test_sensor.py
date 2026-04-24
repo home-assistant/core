@@ -13,12 +13,12 @@ from homeassistant.components.satel_integra.coordinator import (
     TEMPERATURE_SENSOR_UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_ENTRY_ID, setup_integration
+from . import MOCK_ENTRY_ID, setup_integration, trigger_connection_status_update
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -106,3 +106,24 @@ async def test_temperature_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.5"
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_temperature_zone: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    entity_id = "sensor.zone_temperature"
+
+    await setup_integration(hass, mock_config_entry_with_temperature_zone)
+
+    assert hass.states.get(entity_id).state == "21.5"
+
+    await trigger_connection_status_update(hass, mock_satel, False)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await trigger_connection_status_update(hass, mock_satel, True)
+
+    assert hass.states.get(entity_id).state == "21.5"
