@@ -6075,6 +6075,61 @@
     'state': 'unknown',
   })
 # ---
+# name: test_device[wall_display_xl][media_player.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 152117>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-media-media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][media_player.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test name',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'supported_features': <MediaPlayerEntityFeature: 152117>,
+      'volume_level': 0.7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
 # name: test_device[wall_display_xl][sensor.test_name_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
