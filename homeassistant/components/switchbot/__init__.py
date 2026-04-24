@@ -27,9 +27,11 @@ from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
+    CONF_ROLLER_SHADE_QUIET_MODE,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
+    DEFAULT_ROLLER_SHADE_QUIET_MODE,
     DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
     DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
     DOMAIN,
@@ -381,6 +383,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
             minor_version=2,
         )
         _LOGGER.debug("Migration to version %s.2 successful", version)
+
+    if version == 1 and minor_version < 3:
+        new_options = {**entry.options}
+
+        sensor_type = entry.data.get(CONF_SENSOR_TYPE)
+        if (
+            sensor_type == SupportedModels.ROLLER_SHADE
+            and CONF_ROLLER_SHADE_QUIET_MODE not in new_options
+        ):
+            new_options[CONF_ROLLER_SHADE_QUIET_MODE] = DEFAULT_ROLLER_SHADE_QUIET_MODE
+
+        hass.config_entries.async_update_entry(
+            entry,
+            options=new_options,
+            minor_version=3,
+        )
+        _LOGGER.debug("Migration to version %s.3 successful", version)
 
     return True
 

@@ -43,12 +43,14 @@ from .const import (
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
+    CONF_ROLLER_SHADE_QUIET_MODE,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     CURTAIN_SPEED_MAX,
     CURTAIN_SPEED_MIN,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
+    DEFAULT_ROLLER_SHADE_QUIET_MODE,
     DOMAIN,
     ENCRYPTED_MODELS,
     ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS,
@@ -80,7 +82,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -143,6 +145,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
         if sensor_type == SupportedModels.CURTAIN:
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+        if sensor_type == SupportedModels.ROLLER_SHADE:
+            options[CONF_ROLLER_SHADE_QUIET_MODE] = DEFAULT_ROLLER_SHADE_QUIET_MODE
 
         return self.async_create_entry(
             title=name,
@@ -509,6 +513,21 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                             mode=selector.NumberSelectorMode.SLIDER,
                         )
                     )
+                }
+            )
+        if (
+            CONF_SENSOR_TYPE in self.config_entry.data
+            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.ROLLER_SHADE
+        ):
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_ROLLER_SHADE_QUIET_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_ROLLER_SHADE_QUIET_MODE,
+                            DEFAULT_ROLLER_SHADE_QUIET_MODE,
+                        ),
+                    ): bool
                 }
             )
 
