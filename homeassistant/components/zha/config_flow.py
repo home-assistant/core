@@ -22,7 +22,6 @@ from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     ZigbeeFlowStrategy,
 )
-from homeassistant.components.usb import async_scan_serial_ports
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
@@ -132,7 +131,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     _flow_strategy: ZigbeeFlowStrategy | None = None
     _overwrite_ieee_during_restore: bool = False
     _hass: HomeAssistant
-    _title: str
 
     def __init__(self) -> None:
         """Initialize flow instance."""
@@ -204,17 +202,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 # Did not autodetect anything, proceed to manual radio type
                 return await self.async_step_manual_pick_radio_type()
 
-            ports = await async_scan_serial_ports(self.hass)
-            port = next((p for p in ports if p.device == device_path), None)
-            if port is not None and port.manufacturer:
-                self._title = (
-                    f"{port.description or ''}"
-                    f"{', s/n: ' + port.serial_number if port.serial_number else ''}"
-                    f" - {port.manufacturer}"
-                )
-            else:
-                self._title = device_path
-
             return await self.async_step_verify_radio()
 
         default_path = self._radio_mgr.device_path or vol.UNDEFINED
@@ -260,7 +247,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         errors = {}
 
         if user_input is not None:
-            self._title = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_path = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_settings = DEVICE_SCHEMA(
                 {
@@ -870,7 +856,11 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={CONF_NAME: self._title},
+            description_placeholders={
+                CONF_NAME: self.context.get("title_placeholders", {}).get(
+                    CONF_NAME, self._radio_mgr.device_path or ""
+                )
+            },
         )
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
@@ -896,15 +886,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
 
         self._radio_mgr.device_path = dev_path
-        self._title = description or usb.human_readable_device_name(
-            dev_path,
-            serial_number,
-            manufacturer,
-            description,
-            vid,
-            pid,
-        )
-        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        self.context["title_placeholders"] = {
+            CONF_NAME: description
+            or usb.human_readable_device_name(
+                dev_path,
+                serial_number,
+                manufacturer,
+                description,
+                vid,
+                pid,
+            )
+        }
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
@@ -963,7 +955,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         )
 
         self.context["title_placeholders"] = {CONF_NAME: title}
-        self._title = title
         self._radio_mgr.device_path = device_path
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_settings = DEVICE_SCHEMA(
@@ -996,7 +987,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             device_path=device_path,
         )
 
-        self._title = name
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
@@ -1013,11 +1003,15 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             DOMAIN, include_ignore=False
         )
         data = self._get_config_entry_data()
+        title = (
+            self.context.get("title_placeholders", {}).get(CONF_NAME)
+            or self._radio_mgr.device_path
+        )
 
         if len(zha_config_entries) == 1:
             return self.async_update_reload_and_abort(
                 entry=zha_config_entries[0],
-                title=self._title,
+                title=title,
                 data=data,
                 reload_even_if_entry_is_unchanged=True,
                 reason="reconfigure_successful",
@@ -1033,7 +1027,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
 
             return self.async_create_entry(
-                title=self._title,
+                title=title,
                 data=data,
             )
         # This should never be reached
@@ -1051,7 +1045,6 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         self._radio_mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
         self._radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
         self._radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
-        self._title = config_entry.title
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
