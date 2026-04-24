@@ -53,7 +53,6 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_image_entity_has_last_alarm_pic_attribute(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -82,7 +81,6 @@ async def test_image_entity_has_last_alarm_pic_attribute(
     assert "last_alarm_pic" in EzvizLastMotion._unrecorded_attributes
 
 
-@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_last_alarm_pic_sensor_not_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -120,7 +118,6 @@ async def test_last_alarm_pic_sensor_not_created(
     assert battery_entity is not None
 
 
-@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_migrated_last_alarm_pic_sensor_is_removed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -149,13 +146,12 @@ async def test_migrated_last_alarm_pic_sensor_is_removed(
     assert entity_registry.async_get(migrated_entry.entity_id) is None
 
 
-@pytest.mark.usefixtures("mock_ezviz_client")
-async def test_image_entity_not_created_without_alarm_pic(
+async def test_image_entity_created_without_alarm_pic(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
 ) -> None:
-    """Test that image entity is not created when last_alarm_pic is missing."""
+    """Test that image entity is created even when last_alarm_pic is missing."""
     # Mock coordinator data without last_alarm_pic
     mock_coordinator_data = {
         "C123456789": _mock_camera_data(
@@ -168,12 +164,12 @@ async def test_image_entity_not_created_without_alarm_pic(
 
     await setup_integration(hass, mock_config_entry)
 
-    # Check that image entity was NOT created
+    # Check that image entity was created, but has no image URL yet
     state = hass.states.get("image.camera_1_last_motion_image")
-    assert state is None
+    assert state is not None
+    assert state.attributes.get("last_alarm_pic") is None
 
 
-@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_image_entity_updates_last_alarm_pic_on_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

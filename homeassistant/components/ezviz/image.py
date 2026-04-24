@@ -37,9 +37,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        EzvizLastMotion(hass, coordinator, camera)
-        for camera in coordinator.data
-        if coordinator.data[camera].get("last_alarm_pic")
+        EzvizLastMotion(hass, coordinator, camera) for camera in coordinator.data
     )
 
 
@@ -73,11 +71,11 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         return True
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return extra state attributes."""
-        return {
-            "last_alarm_pic": self.data.get("last_alarm_pic"),
-        }
+        if last_alarm_pic := self.data.get("last_alarm_pic"):
+            return {"last_alarm_pic": last_alarm_pic}
+        return {}
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
@@ -104,7 +102,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         last_alarm_pic = self.data.get("last_alarm_pic")
-        if last_alarm_pic and last_alarm_pic != self._attr_image_url:
+        if last_alarm_pic != self._attr_image_url:
             _LOGGER.debug("Image url changed to %s", last_alarm_pic)
 
             self._attr_image_url = last_alarm_pic
