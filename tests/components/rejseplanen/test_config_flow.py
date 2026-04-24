@@ -42,7 +42,7 @@ async def test_form_user_step(
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.rejseplanen.config_flow.Rejseplanen.validate_auth_key",
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen.validate_auth_key_async",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -95,12 +95,10 @@ async def test_config_flow_error_cases(
     with patch(
         "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
     ) as mock_client:
-        mock_client.return_value.validate_auth_key.return_value = patch_args[
-            "return_value"
-        ]
-        mock_client.return_value.validate_auth_key.side_effect = patch_args[
-            "side_effect"
-        ]
+        mock_client.return_value.validate_auth_key_async = AsyncMock(
+            return_value=patch_args["return_value"],
+            side_effect=patch_args["side_effect"],
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: TEST_API_KEY},
@@ -115,8 +113,7 @@ async def test_config_flow_error_cases(
     with patch(
         "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
     ) as mock_client:
-        mock_client.return_value.validate_auth_key.return_value = True
-        mock_client.return_value.validate_auth_key.side_effect = None
+        mock_client.return_value.validate_auth_key_async = AsyncMock(return_value=True)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: TEST_API_KEY},

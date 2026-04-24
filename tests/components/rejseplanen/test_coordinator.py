@@ -76,8 +76,11 @@ async def test_coordinator_fetch_data_with_stops(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    # Verify the API was called with stop IDs (lines 82-84 executed)
-    assert mock_api.get_departures.called
+    # Verify the API was called with stop IDs
+    assert mock_api.get_departures_async.called
+    args, kwargs = mock_api.get_departures_async.call_args
+    assert sorted(args[0]) == [123456, 456789]
+    assert kwargs == {"use_bus": 1, "use_train": 1, "use_metro": 1}
 
 
 async def test_coordinator_get_filtered_departures_no_data(

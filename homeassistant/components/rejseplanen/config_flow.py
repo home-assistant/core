@@ -105,7 +105,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
         api = Rejseplanen(auth_key=auth_key)
 
         try:
-            result = await self.hass.async_add_executor_job(api.validate_auth_key)
+            result = await api.validate_auth_key_async()
         except ConnectionError, TimeoutError, OSError:
             errors["base"] = "cannot_connect"
         else:

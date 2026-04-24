@@ -53,7 +53,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
                 for subentry in self.config_entry.subentries.values()
                 if subentry.subentry_type == "stop"
             }
-            board = await self.hass.async_add_executor_job(self._fetch_data, stop_ids)
+            board = await self._fetch_data(stop_ids)
         except (APIError, HTTPError) as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
         except ConnectionError as error:  # network errors
@@ -68,7 +68,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         self.last_update_success_time = dt_util.now()
         return board
 
-    def _fetch_data(self, stop_ids: set[int]) -> DepartureBoard:
+    async def _fetch_data(self, stop_ids: set[int]) -> DepartureBoard:
         """Fetch data from Rejseplanen API."""
         if not stop_ids:
             _LOGGER.debug(
@@ -84,7 +84,11 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             )
         # Get all departures for this stop
         _LOGGER.debug("Fetching data for stop IDs: %s", stop_ids)
-        departure_board, _ = self.api.get_departures(list(stop_ids))
+        # py_rejseplan 1.0.8 passes these values straight to aiohttp/yarl query encoding.
+        # Use int flags instead of bools because yarl rejects bool query variable types.
+        departure_board, _ = await self.api.get_departures_async(
+            list(stop_ids), use_bus=1, use_train=1, use_metro=1
+        )
         return departure_board
 
     def get_filtered_departures(

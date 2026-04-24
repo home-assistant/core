@@ -228,7 +228,7 @@ def mock_rejseplanen_coordinator(hass: HomeAssistant) -> Generator[Mock]:
 
         mock_api.get_filtered_departures = Mock(side_effect=get_filtered_departures)
 
-        def get_departures(stop_ids, *args, **kwargs):
+        async def get_departures_async(stop_ids, *args, **kwargs):
             all_departures = []
             for stop_id in stop_ids:
                 all_departures.extend(make_mock_departures(int(stop_id)))
@@ -236,7 +236,8 @@ def mock_rejseplanen_coordinator(hass: HomeAssistant) -> Generator[Mock]:
             mock_board.departures = all_departures
             return (mock_board, None)
 
-        mock_api.get_departures = Mock(side_effect=get_departures)
+        mock_api.get_departures_async = AsyncMock(side_effect=get_departures_async)
+        mock_api.validate_auth_key_async = AsyncMock(return_value=True)
         mock_api.calculate_departure_type_bitflag = Mock(return_value=0)
         yield mock_api
 
