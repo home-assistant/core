@@ -148,18 +148,12 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_realtime_action(
         self,
         action_code: IndevoltRealtimeAction,
-        power: int = 0,
-        target_soc: int = 0,
     ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
 
         match action_code:
-            case IndevoltRealtimeAction.CHARGE:
-                success = await self.api.charge(power, target_soc)
-            case IndevoltRealtimeAction.DISCHARGE:
-                success = await self.api.discharge(power, target_soc)
-            case _:
+            case IndevoltRealtimeAction.STOP:
                 success = await self.api.stop()
 
         if not success:

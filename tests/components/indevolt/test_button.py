@@ -99,16 +99,16 @@ async def test_button_press_standby_already_in_realtime_mode(
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_button_press_standby_timeout_error(
+async def test_button_press_standby_rejected_command(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing standby raises HomeAssistantError when the device times out."""
+    """Test pressing standby raises HomeAssistantError when the device rejects the command."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
-    # Simulate stop() returning False (e.g. device rejected the command)
+    # Simulate stop() returning False (device rejected the command)
     mock_indevolt.stop.return_value = False
 
     # Mock call to pause (dis)charging
