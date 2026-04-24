@@ -14,6 +14,7 @@ from pyezvizapi.exceptions import (
 from homeassistant.const import CONF_TIMEOUT, CONF_TYPE, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     ATTR_TYPE_CAMERA,
@@ -107,6 +108,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
+
+    # Remove any existing last_alarm_pic sensor entities that were migrated to image attributes
+    if sensor_type == ATTR_TYPE_CLOUD:
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        for entity_entry in entries:
+            if (
+                entity_entry.domain == "sensor"
+                and "last_alarm_pic" in entity_entry.unique_id
+            ):
+                entity_registry.async_remove(entity_entry.entity_id)
+                _LOGGER.debug(
+                    "Removed migrated last_alarm_pic sensor entity: %s",
+                    entity_entry.entity_id,
+                )
 
     return True
 
