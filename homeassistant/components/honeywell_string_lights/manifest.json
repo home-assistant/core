@@ -1,0 +1,12 @@
+{
+  "domain": "honeywell_string_lights",
+  "name": "Honeywell String Lights",
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "dependencies": ["radio_frequency"],
+  "documentation": "https://www.home-assistant.io/integrations/honeywell_string_lights",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze",
+  "requirements": ["rf-protocols==2.1.0"]
+}

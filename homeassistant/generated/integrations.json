@@ -2332,6 +2332,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fumis": {
+      "name": "Fumis",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "futurenow": {
       "name": "P5 FutureNow",
       "integration_type": "hub",
@@ -2969,6 +2975,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Honeywell Total Connect Comfort (US)"
+        },
+        "honeywell_string_lights": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Honeywell String Lights"
         }
       }
     },
@@ -3080,7 +3092,7 @@
       "iot_class": "local_polling"
     },
     "iaqualink": {
-      "name": "Jandy iAqualink",
+      "name": "Jandy iAquaLink",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling",

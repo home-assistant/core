@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/acer_projector",
   "iot_class": "local_polling",
   "quality_scale": "legacy",
-  "requirements": ["serialx==1.2.2"]
+  "requirements": ["serialx==1.4.1"]
 }
