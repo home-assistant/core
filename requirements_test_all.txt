@@ -2709,7 +2709,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.3.0
+uiprotect==10.3.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
