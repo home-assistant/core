@@ -8,6 +8,10 @@ from typing import Any
 
 from pyinsteon.address import Address
 from pyinsteon.device_types.device_base import Device
+from pyinsteon.device_types.ipdb import (
+    GeneralController_MiniRemote_4,
+    GeneralController_MiniRemote_8,
+)
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
@@ -90,8 +94,16 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
         # set the button press translation keys and event types
         if set(self._event_names).issubset(_BUTTON_EVENT_NAMES):
             self._attr_device_class = EventDeviceClass.BUTTON
+            # simple button is usually group 1
+            simple_button = self._insteon_device_group.group == 1
+            # some devices don't have a simple button, only labeled buttons
+            if any(isinstance(self._insteon_device, device_class) for device_class in (
+                   GeneralController_MiniRemote_4,
+                   GeneralController_MiniRemote_8,
+            )):
+                simple_button = False
             self._attr_translation_key = (
-                "simple" if self._insteon_device_group.group == 1 else "labeled"
+                "simple" if simple_button else "labeled"
             ) + "_button"
 
             self._attr_translation_placeholders = {
