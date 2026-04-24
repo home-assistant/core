@@ -73,10 +73,8 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             LOGGER,
             config_entry=entry,
             name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
-        # Init manually to work around pylint warnings.
-        self.last_update_success = True
-        self.update_interval = SCAN_INTERVAL
 
     @property
     def has_main_light(self) -> bool:
