@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.percentage import percentage_to_ordered_list_item
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from . import DreoConfigEntry
 from .const import (
@@ -28,8 +32,49 @@ from .coordinator import (
 )
 from .entity import DreoEntity
 
-UNIQUE_ID_SUFFIX = "fan"
 PARALLEL_UPDATES = 0
+
+
+@dataclass(slots=True)
+class DreoFanStateData:
+    """Processed Dreo fan state for the fan entity."""
+
+    is_on: bool
+    mode: str | None = None
+    oscillate: bool | None = None
+    speed_percentage: int | None = None
+
+
+def process_fan_data(
+    status: dict[str, Any], model_config: dict[str, Any]
+) -> DreoFanStateData:
+    """Process raw status data for the fan entity."""
+    fan_state = DreoFanStateData(is_on=status.get(FIELD_POWER_ON) is True)
+
+    if (mode := status.get(FIELD_MODE)) is not None:
+        fan_state.mode = str(mode)
+
+    if (oscillate := status.get(FIELD_OSCILLATE)) is not None:
+        fan_state.oscillate = bool(oscillate)
+
+    if (speed := status.get(FIELD_SPEED)) is not None:
+        try:
+            speed_value = int(float(speed))
+        except TypeError, ValueError:
+            speed_value = None
+
+        if speed_value == 0:
+            fan_state.speed_percentage = 0
+        elif (
+            speed_value is not None
+            and (speed_values := get_speed_values(model_config))
+            and speed_value in speed_values
+        ):
+            fan_state.speed_percentage = ordered_list_item_to_percentage(
+                speed_values, speed_value
+            )
+
+    return fan_state
 
 
 async def async_setup_entry(
@@ -47,35 +92,26 @@ async def async_setup_entry(
 class DreoFan(DreoEntity, FanEntity):
     """Dreo fan."""
 
-    _attr_supported_features = (
-        FanEntityFeature.PRESET_MODE
-        | FanEntityFeature.SET_SPEED
-        | FanEntityFeature.OSCILLATE
-        | FanEntityFeature.TURN_ON
-        | FanEntityFeature.TURN_OFF
-    )
-    _attr_is_on = False
-    _attr_percentage = 0
-    _attr_preset_mode = None
-    _attr_oscillating = None
-    _attr_speed_count = 100
-
     def __init__(self, coordinator: DreoDataUpdateCoordinator) -> None:
         """Initialize the Dreo fan."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.device_id}_{UNIQUE_ID_SUFFIX}"
+        self._attr_unique_id = coordinator.device_id
+        self._attr_supported_features = (
+            FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.OSCILLATE
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
 
         model_config = coordinator.model_config
         fan_model_config = get_fan_model_config(model_config)
         self._speed_values = get_speed_values(model_config) or []
         if self._speed_values:
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._attr_speed_count = len(self._speed_values)
         self._attr_preset_modes = fan_model_config.get("preset_modes")
-
-    async def async_added_to_hass(self) -> None:
-        """Register the fan and sync its initial state."""
-        await super().async_added_to_hass()
-        self._update_attributes()
+        if self.coordinator.data:
+            self._update_attributes()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -88,7 +124,9 @@ class DreoFan(DreoEntity, FanEntity):
         if not self.coordinator.data:
             return
 
-        fan_state_data = self.coordinator.data
+        fan_state_data = process_fan_data(
+            self.coordinator.data, self.coordinator.model_config
+        )
         self._attr_is_on = fan_state_data.is_on
 
         if not fan_state_data.is_on:
@@ -98,7 +136,7 @@ class DreoFan(DreoEntity, FanEntity):
         else:
             self._attr_preset_mode = fan_state_data.mode
             self._attr_oscillating = fan_state_data.oscillate
-            self._attr_percentage = fan_state_data.speed_percentage or 0
+            self._attr_percentage = fan_state_data.speed_percentage
 
     @property
     def is_on(self) -> bool | None:
@@ -138,7 +176,7 @@ class DreoFan(DreoEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.async_send_command(ERROR_TURN_OFF_FAILED, **{FIELD_POWER_ON: False})
+        await self.async_send_command(ERROR_TURN_OFF_FAILED, poweron=False)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of fan."""

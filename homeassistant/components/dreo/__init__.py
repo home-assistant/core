@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pydreo import DreoBusinessException, DreoException
@@ -16,8 +15,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import FAN_DEVICE_TYPE
 from .coordinator import DreoDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 type DreoConfigEntry = ConfigEntry[DreoData]
 
@@ -83,13 +80,8 @@ async def async_setup_device_coordinator(
     if device["deviceType"] != FAN_DEVICE_TYPE:
         return
 
-    model_config = device.get("config")
-    if model_config is None:
-        _LOGGER.warning("Model config is not available for model %s", device["model"])
-        return
-
     coordinator = DreoDataUpdateCoordinator(
-        hass, config_entry, client, device, model_config
+        hass, config_entry, client, device, device["config"]
     )
     await coordinator.async_refresh()
     coordinators[coordinator.device_id] = coordinator

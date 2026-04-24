@@ -92,7 +92,7 @@ async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get("fan.living_room_fan")
     assert entity is not None
-    assert entity.unique_id == "test-fan-123_fan"
+    assert entity.unique_id == "test-fan-123"
     assert entity.device_id == device.id
 
 
@@ -623,8 +623,8 @@ async def test_fan_service_error_handling(hass: HomeAssistant) -> None:
             }
         ]
         mock_client.get_status.return_value = {
-            "power_switch": False,
-            "connected": True,
+            FIELD_POWER_ON: False,
+            FIELD_CONNECTED: True,
         }
         mock_client.update_status.side_effect = DreoException("Service error")
 
@@ -659,8 +659,8 @@ async def test_fan_setup_missing_coordinator(hass: HomeAssistant) -> None:
             }
         ]
         mock_client.get_status.return_value = {
-            "power_switch": True,
-            "connected": True,
+            FIELD_POWER_ON: True,
+            FIELD_CONNECTED: True,
         }
 
         config_entry = await init_integration(hass)
@@ -780,7 +780,7 @@ async def test_fan_execute_command_with_zero_speed(hass: HomeAssistant) -> None:
 
 
 async def test_fan_execute_command_without_speed_range(hass: HomeAssistant) -> None:
-    """Test fan command execution when speed_range is not configured."""
+    """Test percentage control is unavailable without a configured speed range."""
     with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
@@ -805,16 +805,15 @@ async def test_fan_execute_command_without_speed_range(hass: HomeAssistant) -> N
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        "set_percentage",
-        {ATTR_ENTITY_ID: "fan.no_speed_range_fan", ATTR_PERCENTAGE: 50},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="does not support action"):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            "set_percentage",
+            {ATTR_ENTITY_ID: "fan.no_speed_range_fan", ATTR_PERCENTAGE: 50},
+            blocking=True,
+        )
 
-    mock_client.update_status.assert_called_with(
-        "test-fan-no-speed-range", **{FIELD_POWER_ON: True}
-    )
+    mock_client.update_status.assert_not_called()
 
 
 async def test_fan_set_percentage_service_with_discrete_speed_values(

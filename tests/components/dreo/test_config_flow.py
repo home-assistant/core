@@ -35,7 +35,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login = MagicMock()
+        mock_client.login = MagicMock(return_value={})
 
         result = await flow.async_step_user(user_input)
 
@@ -90,22 +90,6 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "invalid_auth"
 
 
-async def test_user_step_unknown_error(hass: HomeAssistant) -> None:
-    """Test user step falls back to the unknown error key."""
-    flow = DreoFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    user_input = {CONF_USERNAME: "test@example.com", CONF_PASSWORD: "password123"}
-
-    with patch.object(flow, "_validate_login", return_value=(False, None)):
-        result = await flow.async_step_user(user_input)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is not None
-    assert result["errors"]["base"] == "unknown"
-
-
 async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> None:
     """Test user step when unique ID is already configured."""
     existing_entry = MockConfigEntry(
@@ -120,9 +104,15 @@ async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> No
 
     user_input = {CONF_USERNAME: "existing@example.com", CONF_PASSWORD: "password123"}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=user_input
-    )
+    with patch(
+        "homeassistant.components.dreo.config_flow.DreoClient"
+    ) as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock(return_value={})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=user_input
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -147,9 +137,15 @@ async def test_user_step_unique_id_is_case_insensitive(
         CONF_PASSWORD: "password123",
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=user_input
-    )
+    with patch(
+        "homeassistant.components.dreo.config_flow.DreoClient"
+    ) as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock(return_value={})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=user_input
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -177,7 +173,7 @@ async def test_user_step_allows_multiple_accounts(hass: HomeAssistant) -> None:
         "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login = MagicMock()
+        mock_client.login = MagicMock(return_value={})
 
         result = await flow.async_step_user(user_input)
 
@@ -195,12 +191,12 @@ async def test_validate_login_success(hass: HomeAssistant) -> None:
         "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login = MagicMock()
+        mock_client.login = MagicMock(return_value={"userId": "12345"})
 
-        is_valid, error = await flow._validate_login("test_user", "test_pass")
+        auth_data, error = await flow._validate_login("test_user", "test_pass")
 
         mock_client_class.assert_called_once_with("test_user", "test_pass")
-        assert is_valid is True
+        assert auth_data == {"userId": "12345"}
         assert error is None
 
 
@@ -215,9 +211,9 @@ async def test_validate_login_connection_error(hass: HomeAssistant) -> None:
         mock_client = mock_client_class.return_value
         mock_client.login.side_effect = DreoException("Network error")
 
-        is_valid, error = await flow._validate_login("test_user", "test_pass")
+        auth_data, error = await flow._validate_login("test_user", "test_pass")
 
-        assert is_valid is False
+        assert auth_data is None
         assert error == "cannot_connect"
 
 
@@ -232,7 +228,38 @@ async def test_validate_login_invalid_credentials(hass: HomeAssistant) -> None:
         mock_client = mock_client_class.return_value
         mock_client.login.side_effect = DreoBusinessException("Invalid auth")
 
-        is_valid, error = await flow._validate_login("test_user", "test_pass")
+        auth_data, error = await flow._validate_login("test_user", "test_pass")
 
-        assert is_valid is False
+        assert auth_data is None
         assert error == "invalid_auth"
+
+
+async def test_user_step_prefers_user_id_for_unique_id(hass: HomeAssistant) -> None:
+    """Test config flow prefers a returned user id for the unique id."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "existing@example.com",
+            CONF_PASSWORD: "password123",
+        },
+        unique_id="abc-123",
+    )
+    existing_entry.add_to_hass(hass)
+
+    user_input = {
+        CONF_USERNAME: "existing@example.com",
+        CONF_PASSWORD: "password123",
+    }
+
+    with patch(
+        "homeassistant.components.dreo.config_flow.DreoClient"
+    ) as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock(return_value={"userId": "abc-123"})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=user_input
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

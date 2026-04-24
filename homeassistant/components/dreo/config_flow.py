@@ -1,5 +1,6 @@
 """Config flow to configure Dreo."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from pydreo import DreoBusinessException, DreoException
@@ -23,17 +24,26 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _validate_login(
         self, username: str, password: str
-    ) -> tuple[bool, str | None]:
+    ) -> tuple[dict[str, Any] | None, str | None]:
         """Validate login credentials."""
         client = DreoClient(username, password)
 
         try:
-            await self.hass.async_add_executor_job(client.login)
+            auth_data = await self.hass.async_add_executor_job(client.login)
         except DreoBusinessException:
-            return False, "invalid_auth"
+            return None, "invalid_auth"
         except DreoException:
-            return False, "cannot_connect"
-        return True, None
+            return None, "cannot_connect"
+        return dict(auth_data) if isinstance(auth_data, Mapping) else {}, None
+
+    @staticmethod
+    def _get_unique_id(username: str, auth_data: dict[str, Any]) -> str:
+        """Return the best available unique id for the account."""
+        for key in ("user_id", "userId", "uid", "id"):
+            value = auth_data.get(key)
+            if value is not None:
+                return str(value)
+        return username.lower()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -45,16 +55,18 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            await self.async_set_unique_id(username.lower())
-            self._abort_if_unique_id_configured()
-
-            is_valid, error = await self._validate_login(username, password)
-            if is_valid:
+            auth_data, error = await self._validate_login(username, password)
+            if auth_data is not None:
+                await self.async_set_unique_id(
+                    self._get_unique_id(username, auth_data)
+                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=username,
                     data={CONF_USERNAME: username, CONF_PASSWORD: password},
                 )
-            errors["base"] = error or "unknown"
+            assert error is not None
+            errors["base"] = error
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

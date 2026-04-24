@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -12,15 +11,10 @@ from pydreo.cloud.client import DreoClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.percentage import ordered_list_item_to_percentage
 
 from .const import (
     DOMAIN,
     FIELD_CONNECTED,
-    FIELD_MODE,
-    FIELD_OSCILLATE,
-    FIELD_POWER_ON,
-    FIELD_SPEED,
 )
 
 if TYPE_CHECKING:
@@ -43,7 +37,7 @@ def get_speed_values(model_config: dict[str, Any]) -> list[int] | None:
     """Return normalized supported fan speed values."""
     raw_speed_values = get_fan_model_config(model_config).get("speed_range")
 
-    if not isinstance(raw_speed_values, list | tuple) or len(raw_speed_values) < 2:
+    if not isinstance(raw_speed_values, (list, tuple)) or len(raw_speed_values) < 2:
         return None
 
     try:
@@ -65,49 +59,7 @@ def get_speed_values(model_config: dict[str, Any]) -> list[int] | None:
     return normalized_speed_values
 
 
-@dataclass(slots=True)
-class DreoFanDeviceData:
-    """Data specific to Dreo fan devices."""
-
-    is_on: bool = False
-    mode: str | None = None
-    oscillate: bool | None = None
-    speed_percentage: int | None = None
-
-    @staticmethod
-    def process_fan_data(
-        status: dict[str, Any], model_config: dict[str, Any]
-    ) -> DreoFanDeviceData:
-        """Process fan device specific data."""
-        fan_data = DreoFanDeviceData(is_on=status.get(FIELD_POWER_ON) is True)
-
-        if (mode := status.get(FIELD_MODE)) is not None:
-            fan_data.mode = str(mode)
-
-        if (oscillate := status.get(FIELD_OSCILLATE)) is not None:
-            fan_data.oscillate = bool(oscillate)
-
-        if (speed := status.get(FIELD_SPEED)) is not None:
-            try:
-                speed_value = int(float(speed))
-            except TypeError, ValueError:
-                speed_value = None
-
-            if speed_value == 0:
-                fan_data.speed_percentage = 0
-            elif (
-                speed_value is not None
-                and (speed_values := get_speed_values(model_config))
-                and speed_value in speed_values
-            ):
-                fan_data.speed_percentage = ordered_list_item_to_percentage(
-                    speed_values, speed_value
-                )
-
-        return fan_data
-
-
-class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoFanDeviceData]):
+class DreoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Dreo data."""
 
     def __init__(
@@ -131,7 +83,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoFanDeviceData]):
         self.device_id = str(device["deviceSn"])
         self.model_config = model_config
 
-    async def _async_update_data(self) -> DreoFanDeviceData:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get device status from Dreo API and process it."""
 
         try:
@@ -149,4 +101,4 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoFanDeviceData]):
         if status.get(FIELD_CONNECTED) is not True:
             raise UpdateFailed(f"Device {self.device_id} is unavailable")
 
-        return DreoFanDeviceData.process_fan_data(status, self.model_config)
+        return status

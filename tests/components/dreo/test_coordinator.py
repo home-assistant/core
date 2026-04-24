@@ -11,7 +11,7 @@ from homeassistant.components.dreo.const import (
     FIELD_POWER_ON,
     FIELD_SPEED,
 )
-from homeassistant.components.dreo.coordinator import DreoFanDeviceData
+from homeassistant.components.dreo.fan import process_fan_data
 
 
 async def test_speed_range_conversion_logic() -> None:
@@ -30,7 +30,7 @@ async def test_speed_range_conversion_logic() -> None:
             "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
             "speed_range": [1, 6],
         }
-        fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+        fan_data = process_fan_data(status, model_config)
         assert fan_data.speed_percentage == expected_percentage
 
 
@@ -48,7 +48,7 @@ async def test_data_type_conversion_algorithms() -> None:
         "speed_range": [1, 6],
     }
 
-    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+    fan_data = process_fan_data(status, model_config)
 
     assert fan_data.mode == "123"
     assert fan_data.oscillate is True
@@ -63,7 +63,7 @@ async def test_speed_values_list_conversion_logic() -> None:
         "speed_range": [1, 3, 5, 7, 9, 12],
     }
 
-    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+    fan_data = process_fan_data(status, model_config)
 
     assert fan_data.speed_percentage == 66
 
@@ -74,7 +74,7 @@ async def test_data_processing_with_missing_speed_range() -> None:
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
     }
-    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+    fan_data = process_fan_data(status, model_config)
 
     assert fan_data.is_on is True
     assert fan_data.speed_percentage is None
@@ -89,7 +89,7 @@ async def test_process_fan_data_edge_cases() -> None:
         "speed_range": [1, 6],
     }
 
-    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+    fan_data = process_fan_data(status, model_config)
     assert fan_data.is_on is False
     assert fan_data.mode is None
     assert fan_data.oscillate is None
@@ -102,9 +102,7 @@ async def test_process_fan_data_edge_cases() -> None:
         FIELD_SPEED: 3,
     }
 
-    fan_data_zero = DreoFanDeviceData.process_fan_data(
-        status_zero_oscillate, model_config
-    )
+    fan_data_zero = process_fan_data(status_zero_oscillate, model_config)
     assert fan_data_zero.oscillate is False
     assert fan_data_zero.speed_percentage == 50
 
@@ -117,6 +115,6 @@ async def test_process_fan_data_zero_speed() -> None:
         "speed_range": [1, 6],
     }
 
-    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+    fan_data = process_fan_data(status, model_config)
 
     assert fan_data.speed_percentage == 0
