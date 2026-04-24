@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
+import voluptuous as vol
 from aiohttp import CookieJar
 from peblar import (
     AccessMode,
@@ -14,10 +15,15 @@ from peblar import (
 )
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
@@ -81,9 +87,84 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
     # Forward the setup to the platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Register RFID services once (shared across all entries)
+    if not hass.services.has_service(DOMAIN, "list_rfid_tokens"):
+        _async_register_services(hass)
+
     return True
+
+
+def _async_register_services(hass: HomeAssistant) -> None:
+    """Register RFID management services."""
+
+    def _get_peblar(call: ServiceCall) -> Peblar:
+        entry_id: str = call.data["config_entry_id"]
+        entry: PeblarConfigEntry | None = hass.config_entries.async_get_entry(entry_id)  # type: ignore[assignment]
+        if entry is None or entry.domain != DOMAIN:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_config_entry",
+                translation_placeholders={"config_entry_id": entry_id},
+            )
+        return entry.runtime_data.user_configuration_coordinator.peblar
+
+    async def _handle_list_rfid_tokens(call: ServiceCall) -> ServiceResponse:
+        peblar = _get_peblar(call)
+        tokens = await peblar.rfid_tokens()
+        return {
+            "tokens": [
+                {
+                    "uid": t.rfid_token_uid,
+                    "description": t.rfid_token_description,
+                }
+                for t in tokens
+            ]
+        }
+
+    async def _handle_add_rfid_token(call: ServiceCall) -> None:
+        peblar = _get_peblar(call)
+        await peblar.add_rfid_token(
+            rfid_token_uid=call.data["uid"],
+            rfid_token_description=call.data["description"],
+        )
+
+    async def _handle_remove_rfid_token(call: ServiceCall) -> None:
+        peblar = _get_peblar(call)
+        await peblar.delete_rfid_token(uid=call.data["uid"])
+
+    hass.services.async_register(
+        DOMAIN,
+        "list_rfid_tokens",
+        _handle_list_rfid_tokens,
+        schema=vol.Schema({vol.Required("config_entry_id"): str}),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "add_rfid_token",
+        _handle_add_rfid_token,
+        schema=vol.Schema({
+            vol.Required("config_entry_id"): str,
+            vol.Required("uid"): str,
+            vol.Required("description"): str,
+        }),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "remove_rfid_token",
+        _handle_remove_rfid_token,
+        schema=vol.Schema({
+            vol.Required("config_entry_id"): str,
+            vol.Required("uid"): str,
+        }),
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Unload Peblar config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded and not hass.config_entries.async_loaded_entries(DOMAIN):
+        hass.services.async_remove(DOMAIN, "list_rfid_tokens")
+        hass.services.async_remove(DOMAIN, "add_rfid_token")
+        hass.services.async_remove(DOMAIN, "remove_rfid_token")
+    return unloaded

@@ -173,8 +173,79 @@
     "communication_error": {
       "message": "An error occurred while communicating with the Peblar EV charger: {error}"
     },
+    "invalid_config_entry": {
+      "message": "Config entry '{config_entry_id}' is not a valid Peblar config entry."
+    },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Peblar EV charger: {error}"
+    }
+  },
+  "services": {
+    "list_rfid_tokens": {
+      "name": "List RFID tokens",
+      "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "The Peblar EV charger to list RFID tokens for.",
+          "selector": {
+            "config_entry": {
+              "integration": "peblar"
+            }
+          }
+        }
+      }
+    },
+    "add_rfid_token": {
+      "name": "Add RFID token",
+      "description": "Adds an RFID token to the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "The Peblar EV charger to add the RFID token to.",
+          "selector": {
+            "config_entry": {
+              "integration": "peblar"
+            }
+          }
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The unique identifier of the RFID token.",
+          "selector": {
+            "text": {}
+          }
+        },
+        "description": {
+          "name": "Description",
+          "description": "A human-readable label for this RFID token.",
+          "selector": {
+            "text": {}
+          }
+        }
+      }
+    },
+    "remove_rfid_token": {
+      "name": "Remove RFID token",
+      "description": "Removes an RFID token from the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "The Peblar EV charger to remove the RFID token from.",
+          "selector": {
+            "config_entry": {
+              "integration": "peblar"
+            }
+          }
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The unique identifier of the RFID token to remove.",
+          "selector": {
+            "text": {}
+          }
+        }
+      }
     }
   }
 }
