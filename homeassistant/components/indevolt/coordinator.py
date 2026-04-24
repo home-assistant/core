@@ -26,7 +26,6 @@ from .const import (
     PORTABLE_MODE,
     REALTIME_ACTION_MODE,
     SENSOR_KEYS,
-    RealtimeAction,
 )
 
 EMERGENCY_SOC_READ_KEY: Final = "6105"
@@ -150,12 +149,14 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_realtime_action(
         self,
-        action_code: IndevoltRealtimeAction | RealtimeAction,
+        action_code: IndevoltRealtimeAction,
         power: int = 0,
         target_soc: int = 0,
     ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
+
+        success = False
 
         match int(action_code):
             case IndevoltRealtimeAction.CHARGE:
@@ -164,8 +165,6 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 success = await self.api.discharge(power, target_soc)
             case IndevoltRealtimeAction.STOP:
                 success = await self.api.stop()
-            case _:
-                return
 
         if not success:
             raise HomeAssistantError(
@@ -177,4 +176,4 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""
-        return int(self.data.get(EMERGENCY_SOC_READ_KEY, 10))
+        return int(self.data[EMERGENCY_SOC_READ_KEY])

@@ -5,7 +5,11 @@ from __future__ import annotations
 import asyncio
 from typing import Final, Never
 
-from indevolt_api import PowerExceedsMaxError, SocBelowMinimumError
+from indevolt_api import (
+    IndevoltRealtimeAction,
+    PowerExceedsMaxError,
+    SocBelowMinimumError,
+)
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -13,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN, RealtimeAction
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 
 RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
@@ -39,18 +43,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
-        await _async_handle_realtime_action(
-            hass,
-            call,
-            RealtimeAction.CHARGE,
-        )
+        await _async_handle_realtime_action(hass, call, IndevoltRealtimeAction.CHARGE)
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
         await _async_handle_realtime_action(
-            hass,
-            call,
-            RealtimeAction.DISCHARGE,
+            hass, call, IndevoltRealtimeAction.DISCHARGE
         )
 
     hass.services.async_register(
@@ -64,7 +62,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 async def _async_handle_realtime_action(
     hass: HomeAssistant,
     call: ServiceCall,
-    action_code: RealtimeAction,
+    action: IndevoltRealtimeAction,
 ) -> None:
     """Validate and execute a realtime action for one or more coordinators."""
     coordinators = await _async_get_coordinators_from_call(hass, call)
@@ -72,14 +70,8 @@ async def _async_handle_realtime_action(
     power: int = call.data["power"]
     target_soc: int = call.data["target_soc"]
 
-    _validate_realtime_action(
-        coordinators,
-        power,
-        target_soc,
-        action_code=action_code,
-    )
-
-    await _execute_realtime_action(coordinators, action_code, power, target_soc)
+    _validate_realtime_action(coordinators, action, power, target_soc)
+    await _execute_realtime_action(coordinators, action, power, target_soc)
 
 
 async def _async_get_coordinators_from_call(
@@ -103,9 +95,9 @@ async def _async_get_coordinators_from_call(
 
 def _validate_realtime_action(
     coordinators: list[IndevoltCoordinator],
+    action: IndevoltRealtimeAction,
     power: int,
     target_soc: int,
-    action_code: RealtimeAction,
 ) -> None:
     """Validates parameters prior to calling async_execute_realtime_action."""
 
@@ -114,7 +106,7 @@ def _validate_realtime_action(
     for coordinator in coordinators:
         try:
             try:
-                if action_code == RealtimeAction.CHARGE:
+                if action == IndevoltRealtimeAction.CHARGE:
                     coordinator.api.check_charge_limits(
                         power, target_soc, coordinator.generation
                     )
@@ -151,14 +143,14 @@ def _validate_realtime_action(
 
 async def _execute_realtime_action(
     coordinators: list[IndevoltCoordinator],
-    action_code: RealtimeAction,
+    action: IndevoltRealtimeAction,
     power: int,
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
     results: list[None | BaseException] = await asyncio.gather(
         *(
-            coordinator.async_realtime_action(action_code, power, target_soc)
+            coordinator.async_realtime_action(action, power, target_soc)
             for coordinator in coordinators
         ),
         return_exceptions=True,
