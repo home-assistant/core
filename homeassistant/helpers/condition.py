@@ -307,6 +307,19 @@ class ConditionChecker(abc.ABC):
         except Exception:
             _LOGGER.exception("Error while unloading condition checker")
 
+    async def async_setup(self) -> None:
+        """Set up the condition checker.
+
+        Intended to be overridden in derived classes that need to do setup.
+        """
+
+    def async_unload(self) -> None:
+        """Clean up any resources held by the checker.
+
+        Intended to be overridden in derived classes that need to do unloading.
+        """
+        self._unloaded = True
+
     def async_check(
         self, *, variables: TemplateVarsType | None = None, **kwargs: Any
     ) -> bool | None:
@@ -319,19 +332,6 @@ class ConditionChecker(abc.ABC):
     @abc.abstractmethod
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
         """Check the condition."""
-
-    async def async_setup(self) -> None:
-        """Set up the condition checker.
-
-        Intended to be overridden in derived classes that need to do async setup.
-        """
-
-    def async_unload(self) -> None:
-        """Clean up any resources held by the checker.
-
-        Intended to be overridden in derived classes that need to do cleanup.
-        """
-        self._unloaded = True
 
 
 class LegacyConditionChecker(ConditionChecker):
