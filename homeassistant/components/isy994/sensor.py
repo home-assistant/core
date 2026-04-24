@@ -167,6 +167,17 @@ ISY_CONTROL_TO_ENTITY_CATEGORY = {
 }
 
 
+def _check_volume_flow_rate_uom(
+    device_class: SensorDeviceClass | None, uom: str | None
+) -> SensorDeviceClass | None:
+    """Check if the volume flow rate unit is supported."""
+    if device_class != SensorDeviceClass.VOLUME_FLOW_RATE:
+        return device_class
+    if uom is not None and UOM_FRIENDLY_NAME.get(uom) in UnitOfVolumeFlowRate:
+        return device_class
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IsyConfigEntry,
@@ -211,20 +222,9 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
             uom = uom[0]
 
         # Determine device class
-        device_class = UOM_TO_DEVICE_CLASS.get(uom)
-
-        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
-        # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
-        # this guard can be removed.
-        if (
-            device_class == SensorDeviceClass.VOLUME_FLOW_RATE
-            and (uom := self._node.uom)
-            and isinstance(uom, str)
-            and UOM_FRIENDLY_NAME.get(uom) not in UnitOfVolumeFlowRate
-        ):
-            device_class = None
-
-        self._attr_device_class = device_class
+        self._attr_device_class = _check_volume_flow_rate_uom(
+            UOM_TO_DEVICE_CLASS.get(uom), uom
+        )
 
         # Determine state class
         if self._attr_device_class in TOTAL_INCREASING_DEVICE_CLASSES:
@@ -332,20 +332,21 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
 
-        device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
+        uom = None
+        if control in self._node.aux_properties:
+            uom = self._node.aux_properties[control].uom
 
-        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
-        # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
-        # this guard can be removed.
-        if device_class == SensorDeviceClass.VOLUME_FLOW_RATE:
-            uom = None
-            if control in self._node.aux_properties:
-                uom = self._node.aux_properties[control].uom
-            if uom is None or UOM_FRIENDLY_NAME.get(uom) not in UnitOfVolumeFlowRate:
-                device_class = None
+        # Determine device class
+        self._attr_device_class = _check_volume_flow_rate_uom(
+            ISY_CONTROL_TO_DEVICE_CLASS.get(control), uom
+        )
 
-        self._attr_device_class = device_class
-        self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
+        # Determine state class
+        if self._attr_device_class in TOTAL_INCREASING_DEVICE_CLASSES:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif self._attr_device_class is not None:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+
         self._attr_unique_id = unique_id
         self._change_handler: EventListener = None
         self._availability_handler: EventListener = None

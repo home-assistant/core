@@ -35,7 +35,7 @@ async def test_sensor_snapshots(
     # Mock nodes covering various UOMs and device classes
     nodes = []
 
-    # Standardized UOMs from PR 169017
+    # Standardized UOMs
     # Node 1: Liters per Hour
     node1 = mock_node(mock_isy, "22 22 22 1", "Flow Rate LPH", "GenericSensor")
     node1.status = 1000
