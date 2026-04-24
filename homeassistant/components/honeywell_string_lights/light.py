@@ -59,7 +59,7 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
 
     async def _async_send_command(self, name: str) -> None:
         """Load the named command and send it via the configured transmitter."""
-        command = await self.hass.async_add_executor_job(COMMANDS.load_command, name)
+        command = await COMMANDS.async_load_command(name)
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context
         )
