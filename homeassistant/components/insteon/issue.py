@@ -5,6 +5,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import DOMAIN
 
+
 @callback
 def deprecated_event_bus(hass: HomeAssistant, event: str) -> None:
     """Raise a deprecation issue for listeners on the event bus."""
