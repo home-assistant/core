@@ -448,6 +448,46 @@ async def test_zone_temperature_sensor_validation_on_reconfigure(
     assert mock_reload_after_entry_update.call_count == 0
 
 
+async def test_zone_temperature_sensor_validation_on_reconfigure_requires_loaded_entry(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test temperature validation only runs against a loaded config entry."""
+    mock_config_entry_with_subentries.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (
+            mock_config_entry_with_subentries.entry_id,
+            MOCK_ZONE_SUBENTRY.subentry_type,
+        ),
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "subentry_id": MOCK_ZONE_SUBENTRY.subentry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Backdoor",
+            CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+            CONF_ENABLE_TEMPERATURE_SENSOR: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+    assert (
+        mock_config_entry_with_subentries.subentries.get(MOCK_ZONE_SUBENTRY.subentry_id)
+        == MOCK_ZONE_SUBENTRY
+    )
+    mock_satel.read_temperature.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     ("subentry", "error_field"),
     [
