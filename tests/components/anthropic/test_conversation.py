@@ -1793,7 +1793,7 @@ async def test_web_fetch(
             ),
             title="Latest Home Assistant Release Notes",
         ),
-        retrieved_at="2025-10-31T12:00:00.637242",
+        retrieved_at="2025-10-31T12:00:00.637242Z",
     )
 
     mock_create_stream.return_value = [
