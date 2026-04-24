@@ -1309,6 +1309,9 @@ async def test_migration_from_v2_1(
     }
 
 
+@pytest.mark.skip(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_devices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
