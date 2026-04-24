@@ -1096,7 +1096,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == port.device
+    assert result2["title"] == ""
     assert result2["data"] == {
         "device": {
             "path": port.device,
