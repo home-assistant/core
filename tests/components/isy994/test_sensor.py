@@ -2,12 +2,14 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.isy994.const import UOM_FRIENDLY_NAME
 from homeassistant.components.isy994.sensor import (
     ISY_CONTROL_TO_STATE_CLASS,
     UOM_TO_DEVICE_CLASS,
     ISYSensorEntity,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfVolumeFlowRate
 
 
 def test_mappings() -> None:
@@ -18,6 +20,11 @@ def test_mappings() -> None:
     assert UOM_TO_DEVICE_CLASS["143"] == SensorDeviceClass.VOLUME_FLOW_RATE
     assert UOM_TO_DEVICE_CLASS["69"] == SensorDeviceClass.WATER
     assert UOM_TO_DEVICE_CLASS["24"] == SensorDeviceClass.PRECIPITATION_INTENSITY
+
+    # Test UOM to Unit String
+    assert UOM_FRIENDLY_NAME["130"] == UnitOfVolumeFlowRate.LITERS_PER_HOUR
+    assert UOM_FRIENDLY_NAME["143"] == UnitOfVolumeFlowRate.GALLONS_PER_MINUTE
+    assert UOM_FRIENDLY_NAME["144"] == UnitOfVolumeFlowRate.GALLONS_PER_HOUR
 
     # Test Control to State Class
     assert ISY_CONTROL_TO_STATE_CLASS["TPW"] == SensorStateClass.TOTAL_INCREASING
