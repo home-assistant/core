@@ -15,63 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
-async def test_coordinator_process_device_info_updates_existing_dbm_level(
-    hass: HomeAssistant,
-) -> None:
-    """Test processing DeviceINFO updates existing DBM_Level property (line 411)."""
-    config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
-    config_entry.entry_id = "test-entry"
-
-    mock_api_client = MagicMock()
-    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
-    mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
-
-    # Create device with existing DBM_Level property
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_type = "sensor"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "DeviceINFO_DBM": DeviceProperty(
-            identifier="DeviceINFO_DBM",
-            name="Signal Strength",
-            value=-65,
-            readable=True,
-            entity="sensor",
-        ),
-        "DeviceINFO_DBM_Level": DeviceProperty(
-            identifier="DeviceINFO_DBM_Level",
-            name="DBM Level",
-            value="medium",  # Existing value
-            readable=True,
-            entity="sensor",
-        ),
-    }
-    mock_device.raw_data = {}
-    mock_device.firmware_version = None
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=MagicMock(),
-        api_client=mock_api_client,
-        config_entry=config_entry,
-    )
-
-    # Test updating existing DBM_Level (should hit line 411)
-    device_info = {"DBM": -45, "DBM_Level": "strong"}
-    prop_item = {"property": "DeviceINFO", "value": device_info}
-
-    coordinator._update_device_property(mock_device, prop_item)
-
-    # Verify DBM_Level was updated (not recreated)
-    assert mock_device.properties["DeviceINFO_DBM_Level"].value == "strong"
-    # Should still be the same object reference
-    assert "DeviceINFO_DBM_Level" in mock_device.properties
-
-
 async def test_coordinator_get_device(hass: HomeAssistant) -> None:
     """Test getting device by ID (line 466)."""
     config_entry = MagicMock(spec=ConfigEntry)

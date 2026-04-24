@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.heiman_home import async_migrate_entry, async_unload_entry
+import pytest
+
+from homeassistant.components.heiman_home import async_unload_entry
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -207,29 +209,6 @@ async def test_setup_entry_oauth2_implementation_unavailable(
     # When OAuth2 implementation is unavailable, entry should be in SETUP_RETRY state
     # because ConfigEntryNotReady is raised
     assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_migrate_entry(hass: HomeAssistant, setup_credentials: None) -> None:
-    """Test entry migration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    result = await async_migrate_entry(hass, entry)
-    assert result is True
 
 
 async def test_setup_oauth2_token_reauth_error(
@@ -542,38 +521,6 @@ async def test_unload_with_api_client_close_exception(
     unload_ok = await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert unload_ok is True
-
-
-async def test_unload_cleans_hass_data_when_coordinator_none(
-    hass: HomeAssistant, setup_credentials: None
-) -> None:
-    """Test unload when coordinator is None.
-
-    This tests the case where runtime_data is None.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Call async_unload_entry directly - coordinator is None
-    unload_ok = await async_unload_entry(hass, entry)
-    await hass.async_block_till_done()
-
-    # Should succeed
     assert unload_ok is True
 
 

@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 from heimanconnect import DeviceProperty, HeimanDevice
-import pytest
 
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.components.heiman_home.sensor import (
@@ -369,151 +368,6 @@ async def test_sensor_apply_sensor_config_non_numeric(hass: HomeAssistant) -> No
 
     # Non-numeric sensors should not have state_class
     assert not hasattr(sensor, "state_class") or sensor.state_class is None
-
-
-async def test_sensor_apply_icon_temperature(hass: HomeAssistant) -> None:
-    """Test icon application for temperature sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "temperature": DeviceProperty(
-            identifier="temperature",
-            name="Temperature",
-            value=25.5,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="temperature",
-    )
-
-    # Check icon for temperature
-    assert sensor.icon == "mdi:thermometer"
-
-
-async def test_sensor_apply_icon_humidity(hass: HomeAssistant) -> None:
-    """Test icon application for humidity sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "humidity": DeviceProperty(
-            identifier="humidity",
-            name="Humidity",
-            value=60.0,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="humidity",
-    )
-
-    # Check icon for humidity
-    assert sensor.icon == "mdi:water-percent"
-
-
-async def test_sensor_apply_icon_battery(hass: HomeAssistant) -> None:
-    """Test icon application for battery sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "battery": DeviceProperty(
-            identifier="battery",
-            name="Battery",
-            value=85,
-            data_type="int",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="battery",
-    )
-
-    # Check icon for battery
-    assert sensor.icon == "mdi:battery"
-
-
-async def test_sensor_apply_icon_signal_strength(hass: HomeAssistant) -> None:
-    """Test icon application for signal strength sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "RSSI": DeviceProperty(
-            identifier="RSSI",
-            name="Signal Strength",
-            value=-60,
-            data_type="int",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="RSSI",
-    )
-
-    # Check icon for signal strength
-    assert sensor.icon == "mdi:signal"
-
-
-async def test_sensor_apply_icon_default(hass: HomeAssistant) -> None:
-    """Test default icon application for unknown sensor type."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "unknown": DeviceProperty(
-            identifier="unknown",
-            name="Unknown Sensor",
-            value=100,
-            data_type="int",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="unknown",
-    )
-
-    # Check default icon
-    assert sensor.icon == "mdi:gauge"
 
 
 async def test_sensor_entity_device_info(hass: HomeAssistant) -> None:
@@ -931,93 +785,6 @@ async def test_sensor_apply_sensor_config_co_concentration(hass: HomeAssistant) 
     assert sensor.device_class == SensorDeviceClass.CO
 
 
-async def test_sensor_apply_icon_voltage(hass: HomeAssistant) -> None:
-    """Test icon application for voltage sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "voltage": DeviceProperty(
-            identifier="voltage",
-            name="Voltage",
-            value=220.0,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="voltage",
-    )
-
-    # Check icon for voltage
-    assert sensor.icon == "mdi:flash-triangle"
-
-
-async def test_sensor_apply_icon_power(hass: HomeAssistant) -> None:
-    """Test icon application for power sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "power": DeviceProperty(
-            identifier="power",
-            name="Power",
-            value=100.0,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="power",
-    )
-
-    # Check icon for power
-    assert sensor.icon == "mdi:flash"
-
-
-async def test_sensor_apply_icon_energy(hass: HomeAssistant) -> None:
-    """Test icon application for energy sensor."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "energy": DeviceProperty(
-            identifier="energy",
-            name="Energy",
-            value=10.5,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="energy",
-    )
-
-    # Check icon for energy
-    assert sensor.icon == "mdi:lightning-bolt"
-
-
 async def test_sensor_native_value_none(hass: HomeAssistant) -> None:
     """Test sensor entity native_value when property value is None."""
     mock_coordinator = MagicMock()
@@ -1041,97 +808,6 @@ async def test_sensor_native_value_none(hass: HomeAssistant) -> None:
 
     # Test None value
     assert sensor.native_value is None
-
-
-async def test_sensor_apply_icon_lowercase_matching(hass: HomeAssistant) -> None:
-    """Test icon application with lowercase property identifier matching."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "Temperature": DeviceProperty(
-            identifier="Temperature",
-            name="Temperature",
-            value=25.5,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="Temperature",
-    )
-
-    # Check icon - should match via lowercase fallback
-    assert sensor.icon == "mdi:thermometer"
-
-
-async def test_sensor_apply_icon_temperature_default(hass: HomeAssistant) -> None:
-    """Test default icon for temperature when icon config not found."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "temperature_value": DeviceProperty(
-            identifier="temperature_value",
-            name="Temperature Value",
-            value=25.5,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="temperature_value",
-    )
-
-    # Check device class is set to temperature for temperature_value
-    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
-    # Should use default icon for temperature device class (not in ENTITY_ICONS)
-    assert sensor.icon == "mdi:thermometer"
-
-
-async def test_sensor_apply_icon_humidity_default(hass: HomeAssistant) -> None:
-    """Test default icon for humidity when icon config not found."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "humidity_value": DeviceProperty(
-            identifier="humidity_value",
-            name="Humidity Value",
-            value=60.0,
-            data_type="float",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="humidity_value",
-    )
-
-    # Check device class is set to humidity for humidity_value
-    assert sensor.device_class == SensorDeviceClass.HUMIDITY
-    # Should use default icon for humidity device class (not in ENTITY_ICONS)
-    assert sensor.icon == "mdi:water-percent"
 
 
 async def test_sensor_creation_readable_without_entity_marker(
@@ -1319,13 +995,11 @@ async def test_sensor_signal_strength_non_numeric_skips_device_class(
     assert sensor.device_class != SensorDeviceClass.SIGNAL_STRENGTH
 
 
-async def test_sensor_native_value_non_numeric_for_device_class(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test native_value returns None for non-numeric values with numeric device class.
+async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
+    """Test sensor platform skips bool/list/dict properties.
 
-    When a sensor has a numeric device class but the value is not numeric,
-    native_value should return None and log a warning.
+    This covers sensor.py line 146 where non-scalar properties are filtered out.
+    Properties with bool, list, or dict values should not create sensors.
     """
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1333,119 +1007,64 @@ async def test_sensor_native_value_non_numeric_for_device_class(
     mock_device.device_name = "Test Device"
     mock_device.online = True
 
-    # Create a sensor with numeric device class but string value
+    # Create properties of different types
     mock_device.properties = {
+        # Valid numeric property - should create sensor
         "temperature": DeviceProperty(
             identifier="temperature",
             name="Temperature",
-            value="hot",  # String value for numeric device class
-            data_type="string",
+            value=25.5,
+            data_type="float",
             readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="temperature",
-    )
-
-    # Manually set device class to temperature to trigger the check
-    sensor._attr_device_class = SensorDeviceClass.TEMPERATURE
-
-    # native_value should return None and log warning
-    result = sensor.native_value
-
-    # Should return None for non-numeric value with numeric device class
-    assert result is None
-    # Warning should be logged
-    assert (
-        "non-numeric" in caplog.text.lower()
-        or "validation error" in caplog.text.lower()
-    )
-
-
-async def test_sensor_native_value_bool_for_numeric_device_class(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test native_value returns None for boolean values with numeric device class.
-
-    Boolean values should be rejected for numeric device classes.
-    """
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-
-    # Create a sensor with numeric device class but boolean value
-    mock_device.properties = {
-        "battery": DeviceProperty(
-            identifier="battery",
-            name="Battery",
-            value=True,  # Boolean value
+        ),
+        # Bool property - should be skipped (line 146)
+        "is_active": DeviceProperty(
+            identifier="is_active",
+            name="Is Active",
+            value=True,
             data_type="bool",
             readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="battery",
-    )
-
-    # Manually set device class to battery to trigger the check
-    sensor._attr_device_class = SensorDeviceClass.BATTERY
-
-    # native_value should return None
-    result = sensor.native_value
-
-    # Should return None for boolean value with numeric device class
-    assert result is None
-
-
-async def test_sensor_native_value_list_for_numeric_device_class(
-    hass: HomeAssistant,
-) -> None:
-    """Test native_value returns None for list values with numeric device class.
-
-    List values should be rejected for numeric device classes.
-    """
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-
-    # Create a sensor with numeric device class but list value
-    mock_device.properties = {
-        "power": DeviceProperty(
-            identifier="power",
-            name="Power",
-            value=[100, 200],  # List value
+        ),
+        # List property - should be skipped (line 146)
+        "supported_modes": DeviceProperty(
+            identifier="supported_modes",
+            name="Supported Modes",
+            value=["auto", "manual", "eco"],
             data_type="array",
             readable=True,
-        )
+        ),
+        # Dict property - should be skipped (line 146)
+        "config": DeviceProperty(
+            identifier="config",
+            name="Configuration",
+            value={"key1": "value1", "key2": "value2"},
+            data_type="object",
+            readable=True,
+        ),
     }
 
+    mock_coordinator.get_all_devices.return_value = [mock_device]
+    mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
+    mock_coordinator.async_add_listener = MagicMock()
 
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="power",
-    )
+    # Create a mock config entry and set runtime_data
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.runtime_data = mock_coordinator
 
-    # Manually set device class to power to trigger the check
-    sensor._attr_device_class = SensorDeviceClass.POWER
+    # Mock async_add_entities callback
+    added_entities = []
 
-    # native_value should return None
-    result = sensor.native_value
+    def async_add_entities(entities):
+        added_entities.extend(entities)
 
-    # Should return None for list value with numeric device class
-    assert result is None
+    # Call sensor setup directly
+    await async_setup_entry(hass, entry, async_add_entities)
+    await hass.async_block_till_done()
+
+    # Only the numeric temperature property should create a sensor
+    # Bool, list, and dict properties should be filtered out (line 146)
+    assert len(added_entities) == 1
+    assert added_entities[0].unique_id == "device-1_temperature_sensor"
+    assert added_entities[0]._property_identifier == "temperature"
+

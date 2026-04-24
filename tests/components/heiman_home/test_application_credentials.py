@@ -583,3 +583,118 @@ async def test_token_request_without_client_secret_pkce(hass: HomeAssistant) -> 
         assert call_args is not None
         # auth should be None when client_secret is None
         assert call_args.kwargs.get("auth") is None
+
+
+async def test_token_request_oauth2_error_inner_reraise(hass: HomeAssistant) -> None:
+    """Test that OAuth2 errors from _parse_token_response are re-raised at line 102.
+
+    This specifically tests the inner try-except block where OAuth2TokenRequestError
+    is caught and re-raised (line 102).
+    """
+    credential = MagicMock()
+    credential.client_id = "test-client-id"
+    credential.client_secret = "test-client-secret"
+
+    impl = HeimanOAuth2Implementation(
+        hass,
+        "heiman_home",
+        credential,
+        authorization_server=MagicMock(),
+    )
+    impl.token_url = "https://example.com/token"
+
+    # Create an OAuth2TokenRequestError
+    oauth2_error = OAuth2TokenRequestError(
+        request_info=RequestInfo(
+            url=URL("https://example.com/token"),
+            method="POST",
+            headers={},  # type: ignore[arg-type]
+            real_url=URL("https://example.com/token"),
+        ),
+        history=(),
+        status=400,
+        headers={},
+        domain="heiman_home",
+    )
+
+    # Mock response where _parse_token_response raises OAuth2TokenRequestError
+    mock_response = MagicMock(spec=ClientResponse)
+    mock_response.status = 400
+    mock_response.text = AsyncMock(return_value='{"error": "invalid_request"}')
+    mock_response.json = AsyncMock(side_effect=oauth2_error)
+    mock_response.release = MagicMock()
+    mock_response.request_info = RequestInfo(
+        url=URL("https://example.com/token"),
+        method="POST",
+        headers={},  # type: ignore[arg-type]
+        real_url=URL("https://example.com/token"),
+    )
+    mock_response.history = ()
+    mock_response.headers = {}
+
+    mock_session = MagicMock()
+    mock_session.post = AsyncMock(return_value=mock_response)
+
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        pytest.raises(OAuth2TokenRequestError),
+    ):
+        # The OAuth2TokenRequestError should be re-raised at line 102
+        await impl._token_request({"grant_type": "refresh_token"})
+
+
+async def test_token_request_parse_returns_none_assertion(hass: HomeAssistant) -> None:
+    """Test assertion when _parse_token_response returns None (line 110).
+
+    This tests the defensive check that should never trigger in normal operation.
+    We use mocking to force _parse_token_response to return None.
+    """
+    credential = MagicMock()
+    credential.client_id = "test-client-id"
+    credential.client_secret = "test-client-secret"
+
+    impl = HeimanOAuth2Implementation(
+        hass,
+        "heiman_home",
+        credential,
+        authorization_server=MagicMock(),
+    )
+    impl.token_url = "https://example.com/token"
+
+    # Mock response
+    mock_response = MagicMock(spec=ClientResponse)
+    mock_response.status = 200
+    mock_response.text = AsyncMock(return_value='{"access_token": "test"}')
+    mock_response.json = AsyncMock(return_value={"access_token": "test"})
+    mock_response.release = MagicMock()
+    mock_response.request_info = RequestInfo(
+        url=URL("https://example.com/token"),
+        method="POST",
+        headers={},  # type: ignore[arg-type]
+        real_url=URL("https://example.com/token"),
+    )
+    mock_response.history = ()
+    mock_response.headers = {}
+
+    mock_session = MagicMock()
+    mock_session.post = AsyncMock(return_value=mock_response)
+
+    # Patch _parse_token_response to return None (simulating unexpected behavior)
+    with (
+        patch(
+            "homeassistant.components.heiman_home.application_credentials.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        patch.object(
+            impl,
+            "_parse_token_response",
+            new_callable=AsyncMock,
+            return_value=None,  # Force return None to trigger assertion
+        ),
+        pytest.raises(AssertionError, match="Unexpected"),
+    ):
+        # This should trigger the assertion at line 110
+        await impl._token_request({"grant_type": "refresh_token"})

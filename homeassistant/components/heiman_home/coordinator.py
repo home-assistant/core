@@ -6,7 +6,6 @@ import asyncio
 import contextlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-import json
 import logging
 from typing import Any
 
@@ -20,7 +19,6 @@ from heimanconnect import (
     HeimanMQTTError,
     HeimanUser,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -39,32 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=30)
 
 
-def _infer_entity_type(prop_value: Any) -> str | None:
-    """Infer the appropriate entity type from a property value.
 
-    Args:
-        prop_value: The property value to analyze.
-
-    Returns:
-        The entity type string (e.g., "sensor"), or None when the value
-        cannot be represented by a supported inferred platform.
-    """
-    if isinstance(prop_value, bool):
-        # Do not infer boolean properties as sensors because the sensor
-        # platform rejects bool native values. Once a binary_sensor
-        # platform is added, this should return "binary_sensor".
-        return None
-    if isinstance(prop_value, (int, float)):
-        # Numeric values are typically sensors.
-        return "sensor"
-    if isinstance(prop_value, str):
-        # String values are valid sensor native values.
-        return "sensor"
-    if isinstance(prop_value, (dict, list, tuple, set)):
-        # Non-scalar values cannot be represented as sensor native values.
-        return None
-    # Keep other scalar-like values discoverable.
-    return "sensor"
 
 
 @dataclass
@@ -85,9 +58,9 @@ async def _async_call_cleanup_method(
     for method_name in method_names:
         method = getattr(target, method_name, None)
         if method is None:
-            continue  # pragma: no cover - defensive cleanup helper
+            continue
         result = method()
-        if hasattr(result, "__await__"):  # pragma: no cover - defensive cleanup helper
+        if hasattr(result, "__await__"):
             await result
         return
 
@@ -130,21 +103,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         self.data = HeimanData()
         self.mqtt_client: HeimanMqttClient | None = None
         self.oauth_session = oauth_session
-        # Cache for device details to avoid N+1 API calls
+        # Cache for device details to avoid N+1 API calls (managed by SDK)
         self._device_detail_cache: dict[str, dict[str, Any] | None] = {}
-        self._device_detail_cache_timestamp: datetime | None = None
         # Cache TTL: 5 minutes
         self._device_detail_cache_ttl = 300
 
     async def _async_update_data(self) -> HeimanData:
-        """Fetch data from Heiman API.
-
-        Returns:
-            HeimanData object with updated information
-
-        Raises:
-            UpdateFailed: If data fetch fails
-        """
+        """Update coordinator data."""
         # Ensure client is initialized
         await self.api_client._ensure_initialized()  # noqa: SLF001
 
@@ -216,9 +181,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             else:
                 devices = devices_dict
 
-            # Extract firmware version from device list
-            self._extract_firmware_versions(devices)
-
             # Get detailed info for filtered devices to populate property values
             await self._update_device_details(devices)
 
@@ -236,241 +198,31 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             if not self.data.devices:
                 raise UpdateFailed(f"Failed to fetch devices: {err}") from err
 
-    def _extract_firmware_versions(self, devices: dict[str, HeimanDevice]) -> None:
-        """Extract firmware versions from device data."""
-        for device in devices.values():
-            # First check if device raw_data has firmwareInfo
-            if hasattr(device, "raw_data") and device.raw_data:
-                firmware_info = device.raw_data.get("firmwareInfo", {})
-                if isinstance(firmware_info, dict) and "version" in firmware_info:
-                    device.firmware_version = firmware_info.get("version")
-
-            # Try to get firmware version from device's firmware_info attribute
-            if hasattr(device, "firmware_info") and device.firmware_info:
-                if (
-                    isinstance(device.firmware_info, dict)
-                    and "version" in device.firmware_info
-                ):
-                    device.firmware_version = device.firmware_info.get("version")
-
     async def _update_device_details(self, devices: dict[str, HeimanDevice]) -> None:
         """Update device details including properties from deriveMetadata.
 
-        Uses caching to avoid N+1 API calls. Cache is invalidated every 5 minutes
-        or when a device is not found in cache. Fetches device details concurrently
-        with a limit of 5 concurrent requests to prevent overwhelming the API.
+        Uses the SDK's batch processing method with caching and concurrency control.
+        Cache is invalidated every 5 minutes to balance freshness and API load.
         """
-        now = datetime.now(UTC)
-
-        # Check if cache needs refresh
-        cache_expired = (
-            self._device_detail_cache_timestamp is None
-            or (now - self._device_detail_cache_timestamp).total_seconds()
-            > self._device_detail_cache_ttl
-        )
-
-        # If cache expired, clear it
-        if cache_expired:
-            self._device_detail_cache.clear()
-            self._device_detail_cache_timestamp = now
-
-        # Process cached device details first so deriveMetadata is applied even
-        # when only some devices need fetching.
-        for device_id, device in devices.items():
-            device_detail = self._device_detail_cache.get(device_id)
-            if device_detail is not None:
-                self._process_device_detail(device, device_detail)
-
-        # Identify devices that need detail fetching (not in cache)
-        devices_to_fetch = [
-            device_id
-            for device_id in devices
-            if device_id not in self._device_detail_cache
-        ]
-
-        if not devices_to_fetch:
-            return
-
-        # Create a semaphore to limit concurrent requests
-        semaphore = asyncio.Semaphore(5)
-
         cloud_wrapper = self.api_client.cloud_client
-
-        async def fetch_device_detail(
-            device_id: str,
-        ) -> tuple[str, dict[str, Any] | None]:
-            """Fetch device detail with concurrency control."""
-            async with semaphore:
-                try:
-                    # Accessing _async_get_device_detail is necessary as there's no
-                    # public alternative for getting detailed device information
-                    device_detail = await cloud_wrapper._async_get_device_detail(  # noqa: SLF001
-                        device_id
-                    )
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.debug(
-                        "Failed to get device details for %s: %s",
-                        device_id,
-                        err,
-                    )
-                    return device_id, None
-                else:
-                    return (
-                        device_id,
-                        device_detail,
-                    )
-
-        # Fetch all device details concurrently
-        results = await asyncio.gather(
-            *[fetch_device_detail(device_id) for device_id in devices_to_fetch],
-            return_exceptions=False,
+        
+        # Use SDK's batch processing method
+        await cloud_wrapper.async_fetch_and_process_device_details(
+            devices=devices,
+            cache=self._device_detail_cache,
+            cache_ttl=self._device_detail_cache_ttl,
+            max_concurrent=5,
         )
-
-        # Process results and update cache
-        for device_id, device_detail in results:
-            # Cache the result (including None for failed requests)
-            self._device_detail_cache[device_id] = device_detail
-
-            # Process the detail if available (use is not None to handle empty dict)
-            if device_detail is not None and device_id in devices:
-                self._process_device_detail(devices[device_id], device_detail)
-
-    def _process_device_detail(
-        self, device: HeimanDevice, device_detail: dict[str, Any]
-    ) -> None:
-        """Process device detail and update properties."""
-        # Extract firmware version from firmwareInfo (if not retrieved earlier)
-        if not device.firmware_version:
-            firmware_info = device_detail.get("firmwareInfo", {})
-            if isinstance(firmware_info, dict) and "version" in firmware_info:
-                device.firmware_version = firmware_info.get("version")
-
-        # Extract property values from deriveMetadata and update device object
-        if "deriveMetadata" in device_detail:
-            try:
-                metadata_str = device_detail.get("deriveMetadata", "")
-                if metadata_str:
-                    # deriveMetadata is a JSON string that parses to a list of property objects
-                    metadata_list = json.loads(metadata_str)
-
-                    # Iterate through the list and update properties
-                    if isinstance(metadata_list, list):
-                        for prop_item in metadata_list:
-                            self._update_device_property(device, prop_item)
-            except Exception:
-                _LOGGER.exception(
-                    "Failed to parse deriveMetadata for %s", device.device_id
-                )
-
-    def _update_device_property(
-        self, device: HeimanDevice, prop_item: dict[str, Any]
-    ) -> None:
-        """Update a single device property from metadata."""
-        prop_id = prop_item.get("property", "") or prop_item.get("id", "")
-        prop_value = prop_item.get("value")
-
-        if not prop_id or prop_value is None:
-            return
-
-        # Special handling for DeviceINFO object
-        if prop_id == "DeviceINFO" and isinstance(prop_value, dict):
-            self._process_device_info(device, prop_value)
-        elif prop_id in device.properties:
-            if prop_id == "RSSI":
-                # Keep RSSI as numeric dBm value for sensor compatibility
-                # Also create a separate DBM_Level property for signal strength display
-                # Validate numeric type to avoid TypeError from string values
-                numeric_prop_value: float | int | None = None
-                if isinstance(prop_value, (int, float)) and not isinstance(
-                    prop_value, bool
-                ):
-                    numeric_prop_value = prop_value
-
-                device.properties[prop_id].value = (
-                    numeric_prop_value if numeric_prop_value is not None else prop_value
-                )
-                if numeric_prop_value is not None:
-                    dbm_level_value = self._convert_dbm_to_level(numeric_prop_value)
-                    if dbm_level_value is not None:
-                        if "DeviceINFO_DBM_Level" in device.properties:
-                            device.properties[
-                                "DeviceINFO_DBM_Level"
-                            ].value = dbm_level_value
-            else:
-                # Update regular property
-                device.properties[prop_id].value = prop_value
-
-    def _process_device_info(
-        self, device: HeimanDevice, device_info: dict[str, Any]
-    ) -> None:
-        """Process DeviceINFO nested structure."""
-        # Extract MAC address
-        mac_value = device_info.get("MAC")
-        if mac_value and "DeviceINFO_MAC" in device.properties:
-            device.properties["DeviceINFO_MAC"].value = mac_value
-
-        # Extract DBM (signal strength in dBm)
-        dbm_value = device_info.get("DBM")
-        if dbm_value is not None and "DeviceINFO_DBM" in device.properties:
-            device.properties["DeviceINFO_DBM"].value = dbm_value
-
-        # Extract DBM_Level (signal strength level)
-        dbm_level_value = device_info.get("DBM_Level")
-        numeric_dbm_value: float | int | None = None
-        if isinstance(dbm_value, (int, float)) and not isinstance(dbm_value, bool):
-            numeric_dbm_value = dbm_value
-        if dbm_level_value is None and numeric_dbm_value is not None:
-            # Convert numeric DBM to level string if DBM_Level not provided
-            dbm_level_value = self._convert_dbm_to_level(numeric_dbm_value)
-
-        if dbm_level_value is not None:
-            # Update existing property or create if it doesn't exist
-            if "DeviceINFO_DBM_Level" in device.properties:
-                device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
-            else:
-                # Create the property if it doesn't exist
-                dbm_property = device.properties.get("DeviceINFO_DBM")
-                device.properties["DeviceINFO_DBM_Level"] = DeviceProperty(
-                    identifier="DeviceINFO_DBM_Level",
-                    name="DBM Level",
-                    value=dbm_level_value,
-                    readable=getattr(dbm_property, "readable", True),
-                    entity=getattr(dbm_property, "entity", "sensor"),
-                )
-
-        # Extract IP address
-        ip_value = device_info.get("IP")
-        if ip_value and "DeviceINFO_IP" in device.properties:
-            device.properties["DeviceINFO_IP"].value = ip_value
 
     def _merge_device_states(self, devices: dict[str, HeimanDevice]) -> None:
         """Merge old device states with new device data."""
         old_devices = self.data.devices.copy()
         self.data.devices = devices
 
-        # Merge old device states (preserve old values only when new values are None)
+        # Use the SDK's merge_from method to handle property merging
         for device_id, new_device in devices.items():
             if device_id in old_devices:
-                old_device = old_devices[device_id]
-                # Preserve old device's online status and other dynamic properties
-                for prop_id, old_prop in old_device.properties.items():
-                    if prop_id not in new_device.properties:
-                        # Keep runtime-discovered properties (e.g. MQTT-only fields)
-                        # when they are not present in the next poll response.
-                        new_device.properties[prop_id] = old_prop
-                        continue
-
-                    if prop_id in new_device.properties:
-                        # Only copy old value if new value is None
-                        if (
-                            new_device.properties[prop_id].value is None
-                            and old_prop.value is not None
-                        ):
-                            new_device.properties[prop_id].value = old_prop.value
-
-                # Copy online status only when the new status is unknown
-                if new_device.online is None and old_device.online is not None:
-                    new_device.online = old_device.online
+                new_device.merge_from(old_devices[device_id])
 
     def get_device(self, device_id: str) -> HeimanDevice | None:
         """Get device by ID.
@@ -505,26 +257,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             for device in self.data.devices.values()
             if device.device_type == device_type
         ]
-
-    @staticmethod
-    def _convert_dbm_to_level(dbm_value: float) -> str:
-        """Convert numeric DBM value to signal strength level string.
-
-        Args:
-            dbm_value: Signal strength in dBm (negative number)
-
-        Returns:
-            Signal level string: "strong", "medium", "weak", or "very_weak"
-        """
-        # DBM values are typically negative numbers
-        # Closer to 0 = stronger signal
-        if dbm_value >= -50:
-            return "strong"
-        if dbm_value >= -65:
-            return "medium"
-        if dbm_value >= -75:
-            return "weak"
-        return "very_weak"
 
     async def async_init_mqtt_client(self) -> None:
         """Initialize MQTT client for real-time updates."""
@@ -563,17 +295,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 _LOGGER.warning("Cannot initialize MQTT: user_id not available")
                 return
 
-            # Get user display name (prefer nickName, fallback to email)
+            # Get user display name using SDK method
             user_display_name = None
-            try:
-                if self.data.user_info:
-                    # Try to get nickName first
-                    user_display_name = getattr(self.data.user_info, "nick_name", None)
-                    if not user_display_name:
-                        # Fallback to email
-                        user_display_name = getattr(self.data.user_info, "email", None)
-            except Exception as err:  # noqa: BLE001  # pragma: no cover - defensive exception handling
-                _LOGGER.warning("Failed to get user display name: %s", err)
+            if self.data.user_info:
+                user_display_name = self.data.user_info.get_display_name()
 
             # Get cloud client reference for child device detection
             cloud_client = None
@@ -581,7 +306,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 # Access the underlying cloud client from the wrapper
                 if hasattr(self.api_client, "_wrapper") and self.api_client._wrapper:  # noqa: SLF001
                     cloud_client = self.api_client._wrapper.cloud_client  # noqa: SLF001
-            except Exception as err:  # noqa: BLE001  # pragma: no cover - defensive exception handling
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Failed to get cloud_client reference: %s", err)
 
             # Get devices dictionary for child device detection
@@ -605,9 +330,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
             # Disconnect any partially connected client before clearing reference
-            if (
-                self.mqtt_client is not None
-            ):  # pragma: no cover - defensive cleanup in exception path
+            if self.mqtt_client is not None:
                 with contextlib.suppress(Exception):
                     await _async_call_cleanup_method(
                         self.mqtt_client,
@@ -623,9 +346,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
             # Disconnect any partially connected client before clearing reference
-            if (
-                self.mqtt_client is not None
-            ):  # pragma: no cover - defensive cleanup in exception path
+            if self.mqtt_client is not None:
                 with contextlib.suppress(Exception):
                     await _async_call_cleanup_method(
                         self.mqtt_client,
@@ -659,8 +380,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 device.properties[prop_name].value = prop_value
             else:
                 # Add new property if it doesn't exist
-                # Infer entity type from property value to avoid incorrect modeling
-                entity_type = _infer_entity_type(prop_value)
+                # Infer entity type from property value using SDK method
+                entity_type = DeviceProperty.infer_entity_type(prop_value)
                 if entity_type is not None:
                     device.properties[prop_name] = DeviceProperty(
                         identifier=prop_name,
@@ -707,8 +428,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         device.properties[prop_name].value = prop_value
                     else:
                         # Add new property if it doesn't exist
-                        # Infer entity type from property value to avoid incorrect modeling
-                        entity_type = _infer_entity_type(prop_value)
+                        # Infer entity type from property value using SDK method
+                        entity_type = DeviceProperty.infer_entity_type(prop_value)
                         if entity_type is not None:
                             device.properties[prop_name] = DeviceProperty(
                                 identifier=prop_name,

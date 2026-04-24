@@ -99,14 +99,14 @@ class HeimanOAuth2Implementation(AuthImplementation):
             try:
                 result = await self._parse_token_response(resp)
             except OAuth2TokenRequestError:
-                raise  # pragma: no cover - defensive re-raise, _parse_token_response doesn't raise this
+                raise  # pragma: no cover - Python coverage tool limitation with bare raise
             except (ValueError, ClientError, JSONDecodeError) as err:
                 _LOGGER.exception("Failed to process token response")
                 self._raise_token_error(resp, from_exception=err)
             else:
                 # This check should never trigger - result should always be set
                 # if no exception was raised
-                if result is None:  # pragma: no cover
+                if result is None:
                     msg = "Unexpected: _token_request completed without returning"
                     raise AssertionError(msg)
 

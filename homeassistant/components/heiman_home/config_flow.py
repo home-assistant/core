@@ -1,13 +1,12 @@
 """Config flow to configure Heiman."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
-from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -58,19 +57,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             # Initialize the client before using cloud_client
             await api_client._ensure_initialized()  # noqa: SLF001
 
-            # Get user info
+            # Get user info and homes
             try:
                 user_info = await api_client.cloud_client.async_get_user_info()
-            except HeimanTokenExpiredError:
-                return self.async_abort(reason="token_expired")
-            except HeimanAuthError:
-                return self.async_abort(reason="token_invalid")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.error("Failed to get user info: %s", err)
-                return self.async_abort(reason="user_info_failed")
-
-            # Get home info
-            try:
                 homes = await api_client.cloud_client.async_get_homes()
                 if not homes:
                     return self.async_abort(reason="no_homes")
@@ -79,36 +68,13 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except HeimanAuthError:
                 return self.async_abort(reason="token_invalid")
             except Exception as err:  # noqa: BLE001
-                _LOGGER.error("Failed to get homes: %s", err)
-                return self.async_abort(reason="homes_fetch_failed")
+                _LOGGER.error("Failed to fetch account information: %s", err)
+                return self.async_abort(reason="account_info_failed")
 
             # Store temporary data for home selection
             self._auth_info.homes = homes if isinstance(homes, list) else []
             self._auth_info.user_info = user_info
             self._auth_info.auth_data = data
-
-            # Check if this is a re-authentication flow
-            if self.source == SOURCE_REAUTH:
-                # For re-auth, use existing home_id from the entry being re-authenticated
-                reauth_entry = self._get_reauth_entry()
-                config_data = {
-                    **data,
-                    CONF_HOME_ID: reauth_entry.data.get(CONF_HOME_ID),
-                    CONF_USER_ID: user_info.user_id,
-                }
-
-                # Get title from user info (nick_name or email)
-                title = (
-                    getattr(user_info, "nick_name", None)
-                    or getattr(user_info, "email", None)
-                    or "Heiman Home"
-                )
-
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates=config_data,
-                    title=title,
-                )
 
             # Enter home selection step for new entries
             return await self.async_step_select_home()
@@ -141,13 +107,8 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 CONF_USER_ID: self._auth_info.user_info.user_id,
             }
 
-            # Get title from user info (nick_name or email)
-            user_info = self._auth_info.user_info
-            title = (
-                getattr(user_info, "nick_name", None)
-                or getattr(user_info, "email", None)
-                or "Heiman Home"
-            )
+            # Get title from user info using SDK method
+            title = self._auth_info.user_info.get_display_name() or "Heiman Home"
 
             return self.async_create_entry(
                 title=title,
@@ -159,30 +120,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             step_id="select_home",
             data_schema=self._get_home_selection_schema(),
             description_placeholders={
-                "user_email": getattr(self._auth_info.user_info, "email", None)
-                or "User",
-            },
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-authentication request."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-authentication confirmation."""
-        if user_input is not None:
-            # User confirmed re-authentication, start OAuth flow
-            return await self.async_step_pick_implementation()
-
-        reauth_entry = self._get_reauth_entry()
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            description_placeholders={
-                "name": reauth_entry.title,
+                "user_email": self._auth_info.user_info.email or "User",
             },
         )
 

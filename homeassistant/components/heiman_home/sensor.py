@@ -6,22 +6,91 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
-
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
+)
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SENSOR_TYPES
+from .const import DOMAIN
 from .coordinator import HeimanDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+# Sensor Entity Descriptions
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        translation_key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="voltage",
+        translation_key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power",
+        translation_key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="energy",
+        translation_key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="co_concentration",
+        translation_key="co_concentration",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="signal_strength",
+        translation_key="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -73,7 +142,7 @@ async def async_setup_entry(
                         "bool",
                         "array",
                         "object",
-                    } or isinstance(prop.value, (bool, list, dict)):  # pragma: no cover
+                    } or isinstance(prop.value, (bool, list, dict)):
                         continue
                     unique_id = f"{device.device_id}_{property_id}_sensor"
                     if unique_id not in existing_entities:
@@ -141,8 +210,6 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         # Apply device class and unit based on property type (only if property exists)
         if prop:
             self._apply_sensor_config(property_identifier, prop)
-            # Apply icon
-            self._apply_icon(property_identifier, prop)
 
     def _apply_sensor_config(
         self, property_identifier: str, prop: DeviceProperty | None
@@ -153,56 +220,27 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             property_identifier: Property identifier
             prop: Property object
         """
-        # Map common properties to standard device classes
-        property_mapping = {
-            "temperature": {
-                "device_class": SensorDeviceClass.TEMPERATURE,
-                "key": "temperature",
-            },
-            "humidity": {"device_class": SensorDeviceClass.HUMIDITY, "key": "humidity"},
-            "battery": {"device_class": SensorDeviceClass.BATTERY, "key": "battery"},
-            "voltage": {"device_class": SensorDeviceClass.VOLTAGE, "key": "voltage"},
-            "power": {"device_class": SensorDeviceClass.POWER, "key": "power"},
-            "energy": {"device_class": SensorDeviceClass.ENERGY, "key": "energy"},
-            "co_concentration": {
-                "device_class": SensorDeviceClass.CO,
-                "key": "co_concentration",
-            },
-            "signal_strength": {
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "key": "signal_strength",
-            },
-            "rssi": {
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "key": "signal_strength",
-            },
-            "signal": {
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "key": "signal_strength",
-            },
-            "linkquality": {
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "key": "signal_strength",
-            },
-            "lqi": {
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "key": "signal_strength",
-            },
+        # Map property name aliases to SENSOR_TYPES keys
+        # This handles variations like RSSI, Signal, LinkQuality -> signal_strength
+        property_aliases = {
+            "rssi": "signal_strength",
+            "signal": "signal_strength",
+            "linkquality": "signal_strength",
+            "lqi": "signal_strength",
         }
 
-        # Try to match known properties
+        # Find matching SensorEntityDescription from SENSOR_TYPES
         config = None
         matched_key = None
-        for key, cfg in property_mapping.items():
-            if key in property_identifier.lower():
-                # Find matching SensorEntityDescription from SENSOR_TYPES
-                # so this entity can copy supported sensor attributes such as
-                # device class, native unit of measurement, and state class
-                for desc in SENSOR_TYPES:
-                    if desc.key == cfg["key"]:
-                        config = desc
-                        matched_key = cfg["key"]
-                        break
+
+        # First check if property has an alias
+        normalized_prop = property_identifier.lower()
+        sensor_key = property_aliases.get(normalized_prop, normalized_prop)
+
+        for desc in SENSOR_TYPES:
+            if desc.key in sensor_key or sensor_key in desc.key:
+                config = desc
+                matched_key = desc.key
                 break
 
         if config and prop:
@@ -259,34 +297,6 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
 
-    def _apply_icon(
-        self, property_identifier: str, prop: DeviceProperty | None
-    ) -> None:
-        """Apply icon based on device class.
-
-        Args:
-            property_identifier: Property identifier
-            prop: Property object
-        """
-        # Set default icon based on device class
-        device_class = getattr(self, "_attr_device_class", None)
-        if device_class == SensorDeviceClass.TEMPERATURE:
-            self._attr_icon = "mdi:thermometer"
-        elif device_class == SensorDeviceClass.HUMIDITY:
-            self._attr_icon = "mdi:water-percent"
-        elif device_class == SensorDeviceClass.BATTERY:
-            self._attr_icon = "mdi:battery"
-        elif device_class == SensorDeviceClass.SIGNAL_STRENGTH:
-            self._attr_icon = "mdi:signal"
-        elif device_class == SensorDeviceClass.VOLTAGE:
-            self._attr_icon = "mdi:flash-triangle"
-        elif device_class == SensorDeviceClass.POWER:
-            self._attr_icon = "mdi:flash"
-        elif device_class == SensorDeviceClass.ENERGY:
-            self._attr_icon = "mdi:lightning-bolt"
-        else:
-            self._attr_icon = "mdi:gauge"
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -310,57 +320,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         if not prop:
             return None
 
-        value = prop.value
-
-        # Handle non-scalar property values (e.g., list/dict)
-        # SensorEntity.native_value only supports scalar types
-        if value is None:
-            return None
-
-        # Boolean values are not valid native sensor states.
-        # Return None so numeric device classes do not bypass validation
-        # with a non-numeric string state; boolean properties should be
-        # exposed by the binary_sensor platform instead.
-        if isinstance(value, bool):
-            return None
-
-        if not isinstance(value, (str, int, float)):
-            _LOGGER.warning(
-                "Sensor %s returned unsupported native value: %s (%s). "
-                "Returning None to avoid Home Assistant validation error",
-                self.name,
-                value,
-                type(value).__name__,
-            )
-            return None
-
-        device_class = getattr(self, "_attr_device_class", None)
-
-        # Validate value type matches device class expectations
-        # For numeric device classes, ensure value is actually numeric.
-        # Boolean values are already returned as None above, so only
-        # reject remaining non-numeric scalar values here.
-        if device_class in (
-            SensorDeviceClass.SIGNAL_STRENGTH,
-            SensorDeviceClass.TEMPERATURE,
-            SensorDeviceClass.HUMIDITY,
-            SensorDeviceClass.BATTERY,
-            SensorDeviceClass.VOLTAGE,
-            SensorDeviceClass.POWER,
-            SensorDeviceClass.ENERGY,
-        ):
-            if not isinstance(value, (int, float)):
-                _LOGGER.warning(
-                    "Sensor %s has device class %s but value is non-numeric: %s (%s). "
-                    "Returning None to avoid Home Assistant validation error",
-                    self.name,
-                    device_class,
-                    value,
-                    type(value).__name__,
-                )
-                return None
-
-        return value
+        return prop.value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

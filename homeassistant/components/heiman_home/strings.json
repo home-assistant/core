@@ -1,8 +1,8 @@
 {
   "config": {
     "abort": {
+      "account_info_failed": "Failed to fetch account information from Heiman Home.",
       "already_configured": "Account is already configured.",
-      "homes_fetch_failed": "Failed to fetch home information from Heiman Home.",
       "missing_credentials": "OAuth2 credentials are not configured. Please set up application credentials first.",
       "no_homes": "No homes found in your Heiman Home account.",
       "reauth_account_mismatch": "Re-authentication failed: Account mismatch.",
@@ -10,8 +10,7 @@
       "reauth_successful": "Re-authentication successful",
       "reauth_user_mismatch": "Re-authentication failed: User mismatch.",
       "token_expired": "Your authentication token has expired. Please re-authenticate to continue using the integration.",
-      "token_invalid": "Failed to authenticate with Heiman Home API. The token may be invalid.",
-      "user_info_failed": "Failed to fetch user information from Heiman Home."
+      "token_invalid": "Failed to authenticate with Heiman Home API. The token may be invalid."
     },
     "error": {
       "authorize_url_timeout": "Authorization URL timed out. Please try again.",
