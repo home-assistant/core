@@ -1655,7 +1655,7 @@ async def async_conditions_from_config(
     return ConditionsChecker(hass, checks, logger, name)
 
 
-class ConditionsChecker(CompoundConditionChecker):
+class ConditionsChecker(ConditionChecker):
     """Condition checker that ANDs multiple conditions.
 
     Used by automations and template entities. Unlike AndConditionChecker,
@@ -1671,7 +1671,8 @@ class ConditionsChecker(CompoundConditionChecker):
         name: str,
     ) -> None:
         """Initialize condition checker."""
-        super().__init__(hass, checks)
+        super().__init__(hass)
+        self._checks = checks
         self._logger = logger
         self._name = name
 
@@ -1685,6 +1686,12 @@ class ConditionsChecker(CompoundConditionChecker):
     ) -> bool:
         """Check all conditions."""
         return self.async_check(variables=variables)
+
+    def async_unload(self) -> None:
+        """Clean up child conditions."""
+        for check in self._checks:
+            check.async_unload()
+        super().async_unload()
 
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
