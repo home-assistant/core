@@ -32,7 +32,7 @@ triggers:
       - on_fast
 ```
 """,
-"example_yaml_trigger": """
+                "example_yaml_trigger": """
 ```yaml
 triggers:
   - trigger: event.received
