@@ -4,66 +4,11 @@ from unittest.mock import MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.isy994.const import UOM_FRIENDLY_NAME
-from homeassistant.components.isy994.sensor import (
-    ISY_CONTROL_TO_STATE_CLASS,
-    UOM_TO_DEVICE_CLASS,
-    ISYSensorEntity,
-)
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import Platform, UnitOfVolumeFlowRate
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
-
-
-def test_mappings() -> None:
-    """Test that mappings are correctly defined."""
-    # Test UOM to Device Class
-    assert UOM_TO_DEVICE_CLASS["4"] == SensorDeviceClass.TEMPERATURE
-    assert UOM_TO_DEVICE_CLASS["33"] == SensorDeviceClass.ENERGY
-    assert UOM_TO_DEVICE_CLASS["143"] == SensorDeviceClass.VOLUME_FLOW_RATE
-    assert UOM_TO_DEVICE_CLASS["69"] == SensorDeviceClass.WATER
-    assert UOM_TO_DEVICE_CLASS["24"] == SensorDeviceClass.PRECIPITATION_INTENSITY
-
-    # Test UOM to Unit String
-    assert UOM_FRIENDLY_NAME["130"] == UnitOfVolumeFlowRate.LITERS_PER_HOUR
-    assert UOM_FRIENDLY_NAME["143"] == UnitOfVolumeFlowRate.GALLONS_PER_MINUTE
-    assert UOM_FRIENDLY_NAME["144"] == UnitOfVolumeFlowRate.GALLONS_PER_HOUR
-
-    # Test Control to State Class
-    assert ISY_CONTROL_TO_STATE_CLASS["TPW"] == SensorStateClass.TOTAL_INCREASING
-    assert ISY_CONTROL_TO_STATE_CLASS["CPW"] == SensorStateClass.MEASUREMENT
-
-
-def test_isy_sensor_entity_properties() -> None:
-    """Test ISYSensorEntity property logic."""
-    mock_node = MagicMock()
-    mock_node.isy.uuid = "12345"
-    mock_node.address = "1 2 3 1"
-    mock_node.name = "Test Node"
-    mock_node.status = 100
-    mock_node.uom = "4"  # Celsius
-    mock_node.prec = "1"
-    mock_node.status_events.subscribe.return_value = MagicMock()
-
-    entity = ISYSensorEntity(mock_node)
-
-    # Should use UOM mapping
-    assert entity.device_class == SensorDeviceClass.TEMPERATURE
-    assert entity.state_class == SensorStateClass.MEASUREMENT
-
-    # Should respect explicit attribute
-    entity._attr_device_class = SensorDeviceClass.HUMIDITY
-    assert entity.device_class == SensorDeviceClass.HUMIDITY
-
-    # Test state_class for TOTAL_INCREASING
-    mock_node.uom = "33"  # Energy
-    entity._attr_device_class = None
-    entity._attr_state_class = None
-    assert entity.device_class == SensorDeviceClass.ENERGY
-    assert entity.state_class == SensorStateClass.TOTAL_INCREASING
 
 
 async def test_sensor_snapshots(
@@ -77,36 +22,77 @@ async def test_sensor_snapshots(
     """Test sensors with snapshots."""
     mock_config_entry.add_to_hass(hass)
 
-    # Mock some nodes with standardized UOMs from PR 169017
+    # Mock nodes covering various UOMs and device classes
+    nodes = []
+
+    # Standardized UOMs from PR 169017
     # Node 1: Liters per Hour
     node1 = mock_node(mock_isy, "22 22 22 1", "Flow Rate LPH", "GenericSensor")
     node1.status = 1000
     node1.uom = "130"
     node1.prec = "1"
+    nodes.append(("Sensors/Flow Rate LPH", node1))
 
     # Node 2: Gallons per Minute
     node2 = mock_node(mock_isy, "22 22 22 2", "Flow Rate GPM", "GenericSensor")
     node2.status = 50
     node2.uom = "143"
     node2.prec = "1"
+    nodes.append(("Sensors/Flow Rate GPM", node2))
 
     # Node 3: Gallons per Hour
     node3 = mock_node(mock_isy, "22 22 22 3", "Flow Rate GPH", "GenericSensor")
     node3.status = 300
     node3.uom = "144"
     node3.prec = "0"
+    nodes.append(("Sensors/Flow Rate GPH", node3))
 
-    mock_isy.nodes.__iter__.return_value = [
-        ("Sensors/Flow Rate LPH", node1),
-        ("Sensors/Flow Rate GPM", node2),
-        ("Sensors/Flow Rate GPH", node3),
-    ]
+    # Other UOMs from test_mappings
+    # Temperature (4)
+    node4 = mock_node(mock_isy, "22 22 22 4", "Temperature", "GenericSensor")
+    node4.status = 215
+    node4.uom = "4"
+    node4.prec = "1"
+    nodes.append(("Sensors/Temperature", node4))
+
+    # Energy (33) - TOTAL_INCREASING
+    node5 = mock_node(mock_isy, "22 22 22 5", "Energy", "GenericSensor")
+    node5.status = 123456
+    node5.uom = "33"
+    node5.prec = "0"
+    nodes.append(("Sensors/Energy", node5))
+
+    # Precipitation Intensity (24)
+    node6 = mock_node(mock_isy, "22 22 22 6", "Rain Rate", "GenericSensor")
+    node6.status = 12
+    node6.uom = "24"
+    node6.prec = "1"
+    nodes.append(("Sensors/Rain Rate", node6))
+
+    # Water (69)
+    node7 = mock_node(mock_isy, "22 22 22 7", "Water Meter", "GenericSensor")
+    node7.status = 9876
+    node7.uom = "69"
+    node7.prec = "0"
+    nodes.append(("Sensors/Water Meter", node7))
+
+    # Aux Properties (TPW, CPW)
+    node8 = mock_node(mock_isy, "22 22 22 8", "Power Node", "GenericSensor")
+    node8.status = 0
+    node8.uom = "73"  # Watts
+    node8.aux_properties = {
+        "TPW": MagicMock(value=50000, uom="33", prec="0"),  # Total Power (Energy)
+        "CPW": MagicMock(value=250, uom="73", prec="0"),  # Current Power
+    }
+    nodes.append(("Sensors/Power Node", node8))
+
+    mock_isy.nodes.__iter__.return_value = nodes
 
     with patch("homeassistant.components.isy994.PLATFORMS", [Platform.SENSOR]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Enable disabled entities
+    # Enable disabled entities (like aux sensors)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )

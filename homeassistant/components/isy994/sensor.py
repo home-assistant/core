@@ -29,13 +29,19 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     _LOGGER,
+    TOTAL_INCREASING_DEVICE_CLASSES,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_INDEX,
@@ -145,12 +151,6 @@ UOM_TO_DEVICE_CLASS = {
     "143": SensorDeviceClass.VOLUME_FLOW_RATE,
     "144": SensorDeviceClass.VOLUME_FLOW_RATE,
 }
-TOTAL_INCREASING_DEVICE_CLASSES = (
-    SensorDeviceClass.ENERGY,
-    SensorDeviceClass.WATER,
-    SensorDeviceClass.GAS,
-    SensorDeviceClass.PRECIPITATION,
-)
 ISY_CONTROL_TO_STATE_CLASS = {
     control: (
         SensorStateClass.TOTAL_INCREASING
@@ -201,6 +201,22 @@ async def async_setup_entry(
 
 class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     """Representation of an ISY sensor device."""
+
+    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
+        """Initialize the ISY sensor."""
+        super().__init__(node, device_info=device_info)
+        uom = self._node.uom
+        if isinstance(uom, list):
+            uom = uom[0]
+
+        # Determine device class
+        self._attr_device_class = UOM_TO_DEVICE_CLASS.get(uom)
+
+        # Determine state class
+        if self._attr_device_class in TOTAL_INCREASING_DEVICE_CLASSES:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif self._attr_device_class is not None:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -270,35 +286,6 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         return value
 
     @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Get the device class for the ISY sensor device."""
-        if (device_class := getattr(self, "_attr_device_class", None)) is not None:
-            return cast(SensorDeviceClass, device_class)
-
-        if self.target is None:
-            return None
-
-        uom = self.target.uom
-
-        # Backwards compatibility for ISYv4 Firmware:
-        if isinstance(uom, list):
-            uom = uom[0]
-
-        return UOM_TO_DEVICE_CLASS.get(uom)
-
-    @property
-    def state_class(self) -> SensorStateClass | None:
-        """Get the state class for the ISY sensor device."""
-        if (state_class := getattr(self, "_attr_state_class", None)) is not None:
-            return cast(SensorStateClass, state_class)
-
-        if self.device_class in TOTAL_INCREASING_DEVICE_CLASSES:
-            return SensorStateClass.TOTAL_INCREASING
-        if self.device_class is not None:
-            return SensorStateClass.MEASUREMENT
-        return None
-
-    @property
     def native_unit_of_measurement(self) -> str | None:
         """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
@@ -332,6 +319,22 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
+
+        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s)
+        if (
+            self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE
+            and self.raw_unit_of_measurement
+            not in (
+                UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+                UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+                UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+                UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+                UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+            )
+        ):
+            self._attr_device_class = None
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+
         self._attr_unique_id = unique_id
         self._change_handler: EventListener = None
         self._availability_handler: EventListener = None
