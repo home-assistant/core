@@ -17,7 +17,6 @@ ENERGY_MODE_WRITE_KEY: Final = "47005"
 PORTABLE_MODE: Final = 0
 
 # API write key and value for real-time control mode
-REALTIME_ACTION_KEY: Final = "47015"
 REALTIME_ACTION_MODE: Final = 4
 
 # API key fields
