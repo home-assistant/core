@@ -1406,10 +1406,8 @@ async def async_replace_device(
         ):
             ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
-    if (
-        (domain_data := hass.data.get(ESPHOME_DATA))
-        and (store := domain_data.get_or_create_store(hass, entry))
-        and (data := await store.async_load())
-    ):
+    domain_data = DomainData.get(hass)
+    store = domain_data.get_or_create_store(hass, entry)
+    if data := await store.async_load():
         data["device_info"]["mac_address"] = upper_mac
         await store.async_save(data)
