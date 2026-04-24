@@ -39,7 +39,7 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData]):
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"Velux limitation {node.name}",
+            name=f"Velux limitation {node.name or f'#{node.node_id}'}",
             update_interval=SCAN_INTERVAL,
         )
         self.node = node
