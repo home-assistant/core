@@ -46,10 +46,6 @@
     }
   },
   "entity": {
-    "button": {
-      "reboot": { "name": "Reboot Device" },
-      "reset_energy": { "name": "Reset Energy Counters" }
-    },
     "sensor": {
       "active_energy": { "name": "Active Energy" },
       "active_power": { "name": "Active Power" },

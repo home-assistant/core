@@ -1,19 +1,4 @@
-"""Wibeee Energy Monitor integration for Home Assistant.
-
-This integration communicates with Wibeee (formerly Mirubee) energy monitoring
-devices manufactured by Smilics/Circutor over the local network.
-
-Supports two update modes:
-- **Local Push** (default): The WiBeee pushes data to HA's built-in HTTP
-  server (port 8123 by default) at ``/Wibeee/receiverAvg``.
-  Can auto-configure the device to point to the HA instance.
-- **Polling**: Periodically fetches status.xml from the device.
-
-No HACS required - included as a built-in Home Assistant integration.
-
-Documentation: https://github.com/fquinto/pywibeee
-Device info: http://wibeee.circutor.com/
-"""
+"""The Wibeee integration."""
 
 from __future__ import annotations
 
@@ -36,7 +21,7 @@ from .const import (
     CONF_UPDATE_MODE,
     CONF_WIBEEE_ID,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,  # noqa: F401 — re-exported for other modules
+    DOMAIN,
     MODE_LOCAL_PUSH,
     MODE_POLLING,
 )
@@ -45,7 +30,7 @@ from .push_receiver import async_setup_push_receiver
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
