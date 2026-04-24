@@ -17,8 +17,9 @@ from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import FFmpegManager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.hass_dict import HassKey
 
-from .const import ESPHOME_DATA
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def async_create_proxy_url(
     width: int | None = None,
 ) -> str:
     """Create a use proxy URL that automatically converts the media."""
-    data = hass.data[ESPHOME_DATA].ffmpeg_proxy_data
+    data = hass.data[DATA_FFMPEG_PROXY]
     return data.async_create_proxy_url(
         device_id, media_url, media_format, rate, channels, width
     )
@@ -374,11 +375,14 @@ class FFmpegProxyView(HomeAssistantView):
         return resp
 
 
+DATA_FFMPEG_PROXY: HassKey[FFmpegProxyData] = HassKey(f"{DOMAIN}.ffmpeg_proxy")
+
+
 @callback
-def async_setup(hass: HomeAssistant) -> FFmpegProxyData:
+def async_setup(hass: HomeAssistant) -> None:
     """Set up the ffmpeg proxy."""
     proxy_data = FFmpegProxyData()
+    hass.data[DATA_FFMPEG_PROXY] = proxy_data
     hass.http.register_view(
         FFmpegProxyView(ffmpeg.get_ffmpeg_manager(hass), proxy_data)
     )
-    return proxy_data

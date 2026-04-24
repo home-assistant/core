@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
-
-if TYPE_CHECKING:
-    from .ffmpeg_proxy import FFmpegProxyData
 
 STORAGE_VERSION = 1
 
@@ -20,7 +16,6 @@ STORAGE_VERSION = 1
 class DomainData:
     """Define a class that stores global esphome data."""
 
-    ffmpeg_proxy_data: FFmpegProxyData
     _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
 
     def get_entry_data(self, entry: ESPHomeConfigEntry) -> RuntimeEntryData:
