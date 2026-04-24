@@ -210,7 +210,7 @@ async def test_controlling_validation_state_via_topic(
 async def test_ambiguous_date_time_state_update(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, received_state: str
 ) -> None:
-    """Test the has a timezone but a time zine is also defined."""
+    """Test the where the state has a timezone and a timezone is defined."""
     await mqtt_mock_entry()
     await hass.async_block_till_done()
 
@@ -220,6 +220,39 @@ async def test_ambiguous_date_time_state_update(
     async_fire_mqtt_message(hass, "state-topic", received_state)
     state = hass.states.get("datetime.test")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                datetime.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "timezone": "Invalid",
+                }
+            }
+        }
+    ],
+)
+async def test_date_time_with_invalid_timezone_identifier(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test config with an invalid zimezone identifier."""
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("datetime.test")
+    assert state.state == STATE_UNKNOWN
+
+    assert (
+        "Ignoring invalid timezone identifier for entity datetime.test, got 'Invalid'"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

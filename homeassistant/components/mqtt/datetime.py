@@ -108,6 +108,13 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
 
         async def async_set_zone_info(timezone: str) -> None:
             self._zone_info = await async_get_time_zone(timezone)
+            if self._zone_info:
+                return
+            _LOGGER.warning(
+                "Ignoring invalid timezone identifier for entity %s, got '%s'",
+                self.entity_id,
+                timezone,
+            )
 
         if timezone := config.get(CONF_TIMEZONE):
             self.hass.async_create_task(async_set_zone_info(timezone))
