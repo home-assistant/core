@@ -140,6 +140,27 @@ def decorator_checker_fixture(hass_decorator, linter) -> BaseChecker:
     return type_hint_checker
 
 
+@pytest.fixture(name="hass_enforce_config_entry_unique_id_no_ip", scope="package")
+def hass_enforce_config_entry_unique_id_no_ip_fixture() -> ModuleType:
+    """Fixture to the content for the unique_id_no_ip check."""
+    return _load_plugin_from_file(
+        "hass_enforce_config_entry_unique_id_no_ip",
+        "pylint/plugins/hass_enforce_config_entry_unique_id_no_ip.py",
+    )
+
+
+@pytest.fixture(name="enforce_config_entry_unique_id_no_ip_checker")
+def enforce_config_entry_unique_id_no_ip_checker_fixture(
+    hass_enforce_config_entry_unique_id_no_ip, linter
+) -> BaseChecker:
+    """Fixture to provide a unique_id_no_ip checker."""
+    checker = hass_enforce_config_entry_unique_id_no_ip.HassEnforceConfigEntryUniqueIdNoIpChecker(
+        linter
+    )
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="hass_enforce_config_flow_no_polling", scope="package")
 def hass_enforce_config_flow_no_polling_fixture() -> ModuleType:
     """Fixture to the content for the config_flow_no_polling check."""
