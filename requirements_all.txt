@@ -1329,7 +1329,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.2.3
+indevolt-api==1.4.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2839,6 +2839,9 @@ renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
 reolink-aio==0.19.1
+
+# homeassistant.components.radio_frequency
+rf-protocols==2.0.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
