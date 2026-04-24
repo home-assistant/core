@@ -1415,6 +1415,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
+/homeassistant/components/radio_frequency/ @home-assistant/core
+/tests/components/radio_frequency/ @home-assistant/core
 /homeassistant/components/radiotherm/ @vinnyfuria
 /tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter

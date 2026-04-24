@@ -36,6 +36,7 @@ base_platforms: &base_platforms
   - homeassistant/components/image_processing/**
   - homeassistant/components/infrared/**
   - homeassistant/components/lawn_mower/**
+  - homeassistant/components/radio_frequency/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**
   - homeassistant/components/media_player/**

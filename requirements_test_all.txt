@@ -2424,6 +2424,9 @@ renson-endura-delta==1.7.2
 # homeassistant.components.reolink
 reolink-aio==0.19.1
 
+# homeassistant.components.radio_frequency
+rf-protocols==2.0.0
+
 # homeassistant.components.rflink
 rflink==0.0.67
 
