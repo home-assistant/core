@@ -1368,7 +1368,7 @@ isal==1.8.0
 ismartgate==5.0.2
 
 # homeassistant.components.israel_rail
-israel-rail-api==0.1.4
+israel-rail-api==0.1.5
 
 # homeassistant.components.abode
 jaraco.abode==6.4.0
