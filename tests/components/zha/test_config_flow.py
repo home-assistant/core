@@ -346,7 +346,6 @@ async def test_zeroconf_discovery(
     await hass.async_block_till_done()
 
     assert result_form["type"] is FlowResultType.CREATE_ENTRY
-    assert result_form["title"] == entry_name
     assert result_form["context"]["unique_id"] == unique_id
     assert result_form["data"] == {
         CONF_DEVICE: {
@@ -406,7 +405,6 @@ async def test_legacy_zeroconf_discovery_zigate(
     await hass.async_block_till_done()
 
     assert result_form["type"] is FlowResultType.CREATE_ENTRY
-    assert result_form["title"] == "some name"
     assert result_form["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
@@ -547,7 +545,6 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "zigbee radio"
     assert result3["data"] == {
         "device": {
             "baudrate": 115200,
@@ -1096,7 +1093,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == ""
     assert result2["data"] == {
         "device": {
             "path": port.device,
@@ -1299,7 +1295,6 @@ async def test_hardware_not_onboarded(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result_create["title"] == "Yellow"
     assert result_create["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
@@ -1353,7 +1348,6 @@ async def test_hardware_no_flow_strategy(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result_create["title"] == "Yellow"
     assert result_create["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
@@ -1408,7 +1402,6 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result_create["type"] is FlowResultType.CREATE_ENTRY
-    assert result_create["title"] == "Yellow"
     assert result_create["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
@@ -1455,7 +1448,6 @@ async def test_hardware_flow_strategy_recommended(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result_create["type"] is FlowResultType.CREATE_ENTRY
-    assert result_create["title"] == "Yellow"
     assert result_create["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
@@ -1827,7 +1819,6 @@ async def test_onboarding_auto_formation_new_hardware(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "zigbee radio"
     assert result["data"] == {
         "device": {
             "baudrate": 115200,
@@ -2649,6 +2640,7 @@ async def test_options_flow_reconfigure_no_reset(
     entry = MockConfigEntry(
         version=config_flow.ZhaConfigFlowHandler.VERSION,
         domain=DOMAIN,
+        title="My custom Zigbee name",
         data={
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "/dev/ttyUSB_old",
@@ -2727,6 +2719,8 @@ async def test_options_flow_reconfigure_no_reset(
 
     # The entry is updated
     assert entry.data["device"]["path"] == "/dev/ttyUSB_new"
+    # The user-customized title is preserved across reconfigure
+    assert entry.title == "My custom Zigbee name"
 
 
 async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
@@ -3334,7 +3328,6 @@ async def test_plug_in_old_radio_config_entry_removed(
     # Since config entry was removed, flow skipped to maybe_confirm_ezsp_restore
     # and restored backup, creating a new entry in the end
     assert result_recommended["type"] is FlowResultType.CREATE_ENTRY
-    assert result_recommended["title"] == "zigbee radio"
     assert result_recommended["data"] == {
         "device": {
             "baudrate": 115200,

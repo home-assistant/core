@@ -1003,12 +1003,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             DOMAIN, include_ignore=False
         )
         data = self._get_config_entry_data()
-        title = self.context.get("title_placeholders", {}).get(CONF_NAME, "")
 
         if len(zha_config_entries) == 1:
             return self.async_update_reload_and_abort(
                 entry=zha_config_entries[0],
-                title=title,
                 data=data,
                 reload_even_if_entry_is_unchanged=True,
                 reason="reconfigure_successful",
@@ -1023,10 +1021,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             )
             await self.async_set_unique_id(unique_id)
 
-            return self.async_create_entry(
-                title=title,
-                data=data,
-            )
+            return self.async_create_entry(title="", data=data)
         # This should never be reached
         return self.async_abort(reason="single_instance_allowed")
 
