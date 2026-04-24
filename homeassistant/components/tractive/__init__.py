@@ -80,7 +80,6 @@ type TractiveConfigEntry = ConfigEntry[TractiveData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
     """Set up tractive from a config entry."""
-    _LOGGER.warning("Tractive 429 fix v10")
     data = entry.data
 
     client = aiotractive.Tractive(
@@ -106,9 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     trackables = []
     try:
         for obj in await client.trackable_objects():
-            # To avoid hitting Tractive API rate limits,
-            # we add a small delay between requests
-            await asyncio.sleep(4)
+            # To avoid hitting Tractive API rate limits, we add a small
+            # delay between requests to fetch trackable details.
+            await asyncio.sleep(2)
             trackables.append(await _generate_trackables(client, obj))
     except aiotractive.exceptions.TractiveError as error:
         _LOGGER.warning("Error fetching trackable objects: %s", error)
