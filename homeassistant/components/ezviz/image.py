@@ -37,9 +37,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        EzvizLastMotion(hass, coordinator, camera)
-        for camera in coordinator.data
-        if coordinator.data[camera].get("last_alarm_pic") is not None
+        EzvizLastMotion(hass, coordinator, camera) for camera in coordinator.data
     )
 
 
