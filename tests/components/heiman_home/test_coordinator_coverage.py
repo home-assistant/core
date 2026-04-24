@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from heimanconnect import HeimanConnectionError, HeimanMQTTError
+from heimanconnect import HeimanApiError, HeimanConnectionError, HeimanMQTTError
 from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import DeviceProperty as SDKDeviceProperty, HeimanDevice
 import pytest
@@ -140,7 +140,7 @@ async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> Non
 
     # Home info fails
     mock_cloud_wrapper.async_get_homes = AsyncMock(
-        side_effect=RuntimeError("Failed to get homes")
+        side_effect=HeimanApiError("Failed to get homes")
     )
 
     coordinator = HeimanDataUpdateCoordinator(
@@ -424,7 +424,7 @@ async def test_coordinator_mqtt_init_with_user_info(hass: HomeAssistant) -> None
 async def test_coordinator_mqtt_init_cloud_client_access_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init handles cloud_client access error (lines 309-310)."""
+    """Test MQTT init handles missing _wrapper gracefully."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -434,10 +434,8 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
-    # Make accessing _wrapper raise an exception
-    type(mock_api_client)._wrapper = property(
-        lambda self: (_ for _ in ()).throw(RuntimeError("Wrapper access error"))
-    )
+    # Remove _wrapper attribute so getattr returns None
+    del mock_api_client._wrapper
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -462,7 +460,7 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
         mock_mqtt_instance.connect = AsyncMock()
         mock_mqtt_class.return_value = mock_mqtt_instance
 
-        # Should handle exception gracefully
+        # Should handle missing _wrapper gracefully
         await coordinator.async_init_mqtt_client()
 
         # MQTT client should still be created with cloud_client=None

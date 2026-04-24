@@ -104,33 +104,37 @@ async def async_setup_entry(
 
     # Track existing entities to avoid duplicates
     existing_entities: set[str] = set()
-    # Track device/property count to detect structural changes
-    last_structure_hash: int = 0
+    # Track device and property counts to detect structural changes
+    last_device_count: int = 0
+    last_property_count: int = 0
 
-    def _get_structure_hash() -> int:
-        """Calculate a hash of the current device/property structure.
+    def _check_structure_changed() -> bool:
+        """Check if device/property structure has changed.
 
-        This allows us to detect when new devices or properties are added,
-        without scanning all properties on every update.
+        Uses device and property counts as a lightweight heuristic to detect
+        when new devices or properties are added, without iterating all properties.
         """
+        nonlocal last_device_count, last_property_count
+
         devices = coordinator.get_all_devices()
-        structure = []
-        for device in devices:
-            structure.append(device.device_id)
-            structure.extend(sorted(device.properties.keys()))
-        return hash(tuple(structure))
+        current_device_count = len(devices)
+        current_property_count = sum(len(d.properties) for d in devices)
+
+        if (
+            current_device_count != last_device_count
+            or current_property_count != last_property_count
+        ):
+            last_device_count = current_device_count
+            last_property_count = current_property_count
+            return True
+        return False
 
     def _create_sensors_for_devices() -> None:
         """Create sensors for all devices and add new ones."""
-        nonlocal last_structure_hash
-
         # Check if structure has changed (new devices or properties)
-        current_hash = _get_structure_hash()
-        if current_hash == last_structure_hash and existing_entities:
+        if not _check_structure_changed() and existing_entities:
             # No structural changes, skip expensive scan
             return
-
-        last_structure_hash = current_hash
         devices = coordinator.get_all_devices()
         new_sensors = []
 

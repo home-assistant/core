@@ -11,6 +11,8 @@ from typing import Any
 from heimanconnect import (
     DeviceManagement,
     DeviceProperty,
+    HeimanApiError,
+    HeimanAuthError,
     HeimanConnectionError,
     HeimanDevice,
     HeimanHome,
@@ -167,7 +169,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         (h for h in homes if h.home_id == home_id),
                         homes[0],
                     )
-            except Exception as err:
+            except (
+                HeimanConnectionError,
+                HeimanApiError,
+                HeimanAuthError,
+            ) as err:
                 _LOGGER.warning("Failed to fetch home info: %s", err)
                 self.data.errors["home_info"] = str(err)
 
@@ -312,13 +318,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Get cloud client reference for child device detection
             cloud_client = None
-            try:
-                # Access the underlying cloud client from the wrapper
-                wrapper = getattr(self.api_client, "_wrapper", None)
-                if wrapper:
-                    cloud_client = wrapper.cloud_client
-            except Exception as err:
-                _LOGGER.warning("Failed to get cloud_client reference: %s", err)
+            wrapper = getattr(self.api_client, "_wrapper", None)
+            if wrapper:
+                cloud_client = wrapper.cloud_client
 
             # Get devices dictionary for child device detection
             devices_dict = dict(self.data.devices) if self.data.devices else {}
