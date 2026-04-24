@@ -59,6 +59,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_MSG_PASSWORD_NO_LONGER_WORKING = (
+    "Your password for '%s' is no longer working; Go to the "
+    "Integrations menu and click on Configure on the discovered Apple "
+    "iCloud card to login again"
+)
+
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
@@ -114,11 +120,7 @@ class IcloudAccount:
             self.api = None
             # Login failed which means credentials need to be updated.
             _LOGGER.error(
-                (
-                    "Your password for '%s' is no longer working; Go to the "
-                    "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again"
-                ),
+                _MSG_PASSWORD_NO_LONGER_WORKING,
                 self._config_entry.data[CONF_USERNAME],
             )
 
@@ -316,11 +318,7 @@ class IcloudAccount:
             self.api.authenticate()
         except PyiCloudFailedLoginException:
             _LOGGER.error(
-                (
-                    "Your password for '%s' is no longer working; Go to the "
-                    "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again"
-                ),
+                _MSG_PASSWORD_NO_LONGER_WORKING,
                 self._config_entry.data[CONF_USERNAME],
             )
             self.api = None
@@ -334,11 +332,12 @@ class IcloudAccount:
             self._schedule_next_fetch()
             return
 
-        try:
-            self.api.devices.refresh(locate=True)
-            _LOGGER.debug("Triggered active location refresh (shouldLocate=True)")
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("Could not trigger active location refresh: %s", err)
+        if not self.api.requires_2fa:
+            try:
+                self.api.devices.refresh(locate=True)
+                _LOGGER.debug("Triggered active location refresh (shouldLocate=True)")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning("Could not trigger active location refresh: %s", err)
         self.update_devices()
 
     def get_devices_with_name(self, name: str) -> list[Any]:
