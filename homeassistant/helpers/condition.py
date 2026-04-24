@@ -1015,7 +1015,7 @@ class AndConditionChecker(CompoundConditionChecker):
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check.async_check(**kwargs) is False:
+                    if check(self._hass, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -1049,7 +1049,7 @@ class OrConditionChecker(CompoundConditionChecker):
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check.async_check(**kwargs) is True:
+                    if check(self._hass, **kwargs) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
@@ -1083,7 +1083,7 @@ class NotConditionChecker(CompoundConditionChecker):
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check.async_check(**kwargs):
+                    if check(self._hass, **kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
