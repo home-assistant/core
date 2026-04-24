@@ -629,6 +629,7 @@ FLOWS = {
         "ruuvitag_ble",
         "rympro",
         "sabnzbd",
+        "saj",
         "samsungtv",
         "sanix",
         "satel_integra",
