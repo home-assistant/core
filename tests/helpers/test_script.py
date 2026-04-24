@@ -7,6 +7,7 @@ from functools import reduce
 import logging
 import operator
 from types import MappingProxyType
+from typing import Any
 from unittest import mock
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -41,6 +42,7 @@ from homeassistant.helpers import (
     template,
     trace,
 )
+from homeassistant.helpers.condition import Condition
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
@@ -48,9 +50,12 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
+    MockModule,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_integration,
+    mock_platform,
 )
 
 ENTITY_ID = "script.test"
@@ -2289,7 +2294,7 @@ async def test_condition_created_once(async_from_config, hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     async_from_config.assert_called_once()
-    assert len(script_obj._config_cache) == 1
+    assert len(script_obj._condition_cache) == 1
 
 
 async def test_condition_all_cached(hass: HomeAssistant) -> None:
@@ -2312,7 +2317,7 @@ async def test_condition_all_cached(hass: HomeAssistant) -> None:
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert len(script_obj._config_cache) == 2
+    assert len(script_obj._condition_cache) == 2
 
 
 @pytest.mark.parametrize("count", [3, script.ACTION_TRACE_NODE_MAX_LEN * 2])
@@ -6898,3 +6903,242 @@ async def test_enabled_sequence_in_parallel(
         ],
     }
     assert_action_trace(expected_trace)
+
+
+async def _setup_mock_condition_integration(hass: HomeAssistant) -> None:
+    """Set up a mock integration with conditions that track async_unload calls."""
+
+    class MockCondition(Condition):
+        def __new__(cls, *args: Any, **kwargs: Any) -> Condition:
+            """Return a mock instance that tracks async_setup and async_unload calls."""
+            mocked = mock.Mock(spec=Condition)
+            mocked.async_setup = AsyncMock()
+            mocked.async_unload = mock.Mock()
+            return mocked
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: dict[str, Any]
+        ) -> dict[str, Any]:
+            """Validate config."""
+            return config
+
+        def _async_check(self, **kwargs: Any) -> bool | None:
+            """Check the condition."""
+            raise NotImplementedError
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", mock.Mock(async_get_conditions=async_get_conditions)
+    )
+
+
+async def test_async_unload_clears_condition_cache(hass: HomeAssistant) -> None:
+    """Test that async_unload clears _condition_cache and unloads conditions."""
+    await _setup_mock_condition_integration(hass)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"condition": "test"},
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(script_obj._condition_cache) == 1
+    cached_cond = next(iter(script_obj._condition_cache.values()))
+
+    script_obj.async_unload()
+
+    assert len(script_obj._condition_cache) == 0
+    cached_cond.async_unload.assert_called_once()
+
+
+async def test_async_unload_clears_repeat_scripts(hass: HomeAssistant) -> None:
+    """Test that async_unload unloads repeat sub-scripts."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "repeat": {
+                    "count": 1,
+                    "sequence": [{"event": "test_event"}],
+                }
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(script_obj._repeat_script) == 1
+    sub_script = next(iter(script_obj._repeat_script.values()))
+
+    with mock.patch.object(sub_script, "async_unload") as unload_mock:
+        script_obj.async_unload()
+
+    assert len(script_obj._repeat_script) == 0
+    unload_mock.assert_called_once()
+
+
+async def test_async_unload_clears_choose_data(hass: HomeAssistant) -> None:
+    """Test that async_unload unloads choose sub-scripts."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "choose": [
+                    {
+                        "conditions": "{{ true }}",
+                        "sequence": [{"event": "test_event"}],
+                    }
+                ],
+                "default": [{"event": "default_event"}],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(script_obj._choose_data) == 1
+    choose_data = next(iter(script_obj._choose_data.values()))
+    _choice_conditions, choice_script = choose_data["choices"][0]
+    default_script = choose_data["default"]
+
+    with (
+        mock.patch.object(choice_script, "async_unload") as choice_unload,
+        mock.patch.object(default_script, "async_unload") as default_unload,
+    ):
+        script_obj.async_unload()
+
+    assert len(script_obj._choose_data) == 0
+    choice_unload.assert_called_once()
+    default_unload.assert_called_once()
+
+
+async def test_async_unload_clears_if_data(hass: HomeAssistant) -> None:
+    """Test that async_unload unloads if/then/else sub-scripts."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "if": "{{ true }}",
+                "then": [{"event": "then_event"}],
+                "else": [{"event": "else_event"}],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(script_obj._if_data) == 1
+    if_data = next(iter(script_obj._if_data.values()))
+    then_script = if_data["if_then"]
+    else_script = if_data["if_else"]
+
+    with (
+        mock.patch.object(then_script, "async_unload") as then_unload,
+        mock.patch.object(else_script, "async_unload") as else_unload,
+    ):
+        script_obj.async_unload()
+
+    assert len(script_obj._if_data) == 0
+    then_unload.assert_called_once()
+    else_unload.assert_called_once()
+
+
+async def test_async_unload_clears_parallel_scripts(hass: HomeAssistant) -> None:
+    """Test that async_unload unloads parallel sub-scripts."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "parallel": [
+                    {"sequence": [{"event": "test_event_1"}]},
+                    {"sequence": [{"event": "test_event_2"}]},
+                ],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(script_obj._parallel_scripts) == 1
+    parallel_scripts = next(iter(script_obj._parallel_scripts.values()))
+    assert len(parallel_scripts) == 2
+
+    with (
+        mock.patch.object(parallel_scripts[0], "async_unload") as unload_0,
+        mock.patch.object(parallel_scripts[1], "async_unload") as unload_1,
+    ):
+        script_obj.async_unload()
+
+    assert len(script_obj._parallel_scripts) == 0
+    unload_0.assert_called_once()
+    unload_1.assert_called_once()
+
+
+async def test_script_del_calls_async_unload(hass: HomeAssistant) -> None:
+    """Test that __del__ calls async_unload if not already called."""
+    sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    unload_mock = mock.Mock(wraps=script_obj.async_unload)
+    script_obj.async_unload = unload_mock
+
+    # Pylint says we should `del script_obj`. However, that's not guaranteed
+    # to immediately call __del__.
+    script_obj.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_called_once()
+
+
+async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None:
+    """Test that __del__ does not call async_unload if already called."""
+    sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    unload_mock = mock.Mock(wraps=script_obj.async_unload)
+    script_obj.async_unload = unload_mock
+
+    # First call sets the flag
+    script_obj.async_unload()
+    unload_mock.assert_called_once()
+    unload_mock.reset_mock()
+
+    # __del__ should skip since _unloaded is True
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    script_obj.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_not_called()
+
+
+async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
+    """Test that async_unload raises RuntimeError if the script is running."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"wait_template": "{{ false }}"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
+
+    assert script_obj.is_running
+
+    with pytest.raises(RuntimeError, match="Cannot unload script"):
+        script_obj.async_unload()
+
+    await script_obj.async_stop()
+    assert not script_obj.is_running
+
+    # Should succeed now
+    script_obj.async_unload()
