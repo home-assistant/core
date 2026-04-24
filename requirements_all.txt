@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.4.1
+aioamazondevices==13.4.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -425,7 +425,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==1.0.2
+aiotractive==1.0.3
 
 # homeassistant.components.unifi
 aiounifi==88
@@ -1229,7 +1229,7 @@ hole==0.9.0
 holidays==0.94
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.7
+home-assistant-frontend==20260325.8
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1925,7 +1925,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.37.1
+pyTibber==0.37.2
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2155,7 +2155,7 @@ pyhaversion==22.8.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.8
+pyhive-integration==1.0.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
