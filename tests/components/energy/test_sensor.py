@@ -1396,7 +1396,7 @@ async def test_power_sensor_manager_creation_no_states(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test SensorManager creates power sensors correctly."""
+    """Test SensorManager creates power sensors correctly when no states are created."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
@@ -1448,10 +1448,10 @@ async def test_power_sensor_manager_creation_no_states(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
 
 
-async def test_power_sensor_manager_creation_no_energy_unit(
+async def test_power_sensor_manager_creation_no_power_unit(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test SensorManager creates power sensors correctly."""
+    """Test SensorManager creates power sensors correctly when no power unit is set."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()

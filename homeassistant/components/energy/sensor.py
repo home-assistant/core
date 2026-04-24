@@ -771,6 +771,7 @@ class EnergyPowerSensor(SensorEntity):
                     if source_state := self.hass.states.get(self._source_sensors[0]):
                         self._attr_native_unit_of_measurement = (
                             source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                            or UnitOfPower.WATT
                         )
                     else:
                         self._attr_native_unit_of_measurement = (
