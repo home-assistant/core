@@ -25,19 +25,21 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._serial = serial
-        self._camera_name = self.data["name"]
+        self._camera_name = self.data.get("name") or serial
 
         connections = set()
-        if mac_address := self.data["mac_address"]:
+        if mac_address := self.data.get("mac_address"):
             connections.add((CONNECTION_NETWORK_MAC, mac_address))
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             connections=connections,
             manufacturer=MANUFACTURER,
-            model=self.data["device_sub_category"],
-            name=self.data["name"],
-            sw_version=self.data["version"],
+            model=self.data.get("device_sub_category")
+            or self.data.get("device_category")
+            or "EZVIZ",
+            name=self.data.get("name") or serial,
+            sw_version=self.data.get("version"),
         )
 
     @property
@@ -48,7 +50,7 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.data["status"] != 2
+        return self.data.get("status") != 2
 
 
 class EzvizBaseEntity(Entity):
@@ -64,19 +66,21 @@ class EzvizBaseEntity(Entity):
         """Initialize the entity."""
         self._serial = serial
         self.coordinator = coordinator
-        self._camera_name = self.data["name"]
+        self._camera_name = self.data.get("name") or serial
 
         connections = set()
-        if mac_address := self.data["mac_address"]:
+        if mac_address := self.data.get("mac_address"):
             connections.add((CONNECTION_NETWORK_MAC, mac_address))
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             connections=connections,
             manufacturer=MANUFACTURER,
-            model=self.data["device_sub_category"],
-            name=self.data["name"],
-            sw_version=self.data["version"],
+            model=self.data.get("device_sub_category")
+            or self.data.get("device_category")
+            or "EZVIZ",
+            name=self.data.get("name") or serial,
+            sw_version=self.data.get("version"),
         )
 
     @property
@@ -87,4 +91,4 @@ class EzvizBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.data["status"] != 2
+        return self.data.get("status") != 2

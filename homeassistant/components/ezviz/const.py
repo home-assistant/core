@@ -26,6 +26,7 @@ ATTR_TYPE = "type_value"
 # Service names
 SERVICE_WAKE_DEVICE = "wake_device"
 SERVICE_DETECTION_SENSITIVITY = "set_alarm_detection_sensibility"
+SERVICE_SET_POLLING_INTERVAL = "set_polling_interval"
 
 # Defaults
 EU_URL = "apiieu.ezvizlife.com"
@@ -33,3 +34,7 @@ RUSSIA_URL = "apirus.ezvizru.com"
 DEFAULT_CAMERA_USERNAME = "admin"
 DEFAULT_TIMEOUT = 25
 DEFAULT_FFMPEG_ARGUMENTS = "/Streaming/Channels/102"
+DEFAULT_SCAN_INTERVAL = 30
+CONF_SCAN_INTERVAL = "scan_interval"
+
+NON_CAMERA_DEVICE_CATEGORIES = {"Detector", "lighting", "Socket"}

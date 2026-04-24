@@ -68,11 +68,18 @@ ALARM_SOUND_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
 
 def battery_work_mode_current_option(ezvizSelect: EzvizSelect) -> str | None:
     """Return the selected entity option to represent the entity state."""
-    battery_work_mode = getattr(
-        BatteryCameraWorkMode,
-        ezvizSelect.data[ezvizSelect.entity_description.key],
-        BatteryCameraWorkMode.UNKNOWN,
-    )
+    raw = ezvizSelect.data[ezvizSelect.entity_description.key]
+    if isinstance(raw, int):
+        try:
+            battery_work_mode = BatteryCameraWorkMode(raw)
+        except ValueError:
+            battery_work_mode = BatteryCameraWorkMode.UNKNOWN
+    else:
+        battery_work_mode = getattr(
+            BatteryCameraWorkMode,
+            str(raw),
+            BatteryCameraWorkMode.UNKNOWN,
+        )
     if battery_work_mode == BatteryCameraWorkMode.UNKNOWN:
         return None
 

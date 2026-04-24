@@ -46,6 +46,9 @@
     "set_alarm_detection_sensibility": {
       "service": "mdi:motion-sensor"
     },
+    "set_polling_interval": {
+      "service": "mdi:timer-refresh"
+    },
     "wake_device": {
       "service": "mdi:sleep-off"
     }
