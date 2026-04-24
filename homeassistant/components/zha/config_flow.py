@@ -1003,7 +1003,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             DOMAIN, include_ignore=False
         )
         data = self._get_config_entry_data()
-        title = (
+        assert self._radio_mgr.device_path is not None
+        title: str = (
             self.context.get("title_placeholders", {}).get(CONF_NAME)
             or self._radio_mgr.device_path
         )
