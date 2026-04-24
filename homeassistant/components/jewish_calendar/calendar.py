@@ -242,7 +242,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
 
     def _get_next_event(self, _date: date | datetime) -> CalendarEvent | None:
         """For a given datetime or date, return the next event."""
-        if isinstance(_date, date):
+        if not isinstance(_date, datetime):
             _date = datetime.combine(_date, datetime.min.time(), tzinfo=UTC)
 
         if events := self._get_events_for_date(_date.date()):
