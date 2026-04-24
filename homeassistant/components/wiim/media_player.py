@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
+from contextlib import suppress
 from functools import wraps
+from hashlib import sha1
+from http import HTTPStatus
 from typing import Any, Concatenate
+from urllib.parse import urlparse
 
+import aiohttp
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
@@ -33,6 +38,11 @@ from homeassistant.components.media_player import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -48,6 +58,13 @@ MEDIA_CONTENT_ID_FAVORITES = (
 MEDIA_CONTENT_ID_PLAYLISTS = (
     f"{MEDIA_TYPE_WIIM_LIBRARY}/{MEDIA_CONTENT_ID_ROOT}/playlists"
 )
+MEDIA_IMAGE_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+
+
+def _group_member_state_signal(member_udn: str) -> str:
+    """Return the dispatcher signal for a grouped member state refresh."""
+    return f"wiim_group_member_state_{member_udn}"
+
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -67,6 +84,7 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.GROUPING
 )
 
 
@@ -178,17 +196,67 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return self._wiim_data.controller.get_device(group_snapshot.leader_udn)
 
     @callback
+    def _is_local_https_media_image(self, url: str) -> bool:
+        """Return True if the media image is served by the current metadata device over HTTPS."""
+        parsed_url = urlparse(url)
+        if parsed_url.scheme != "https" or not parsed_url.hostname:
+            return False
+
+        metadata_device = self._metadata_device
+        valid_hosts = {
+            host
+            for host in (
+                metadata_device.ip_address,
+                urlparse(metadata_device.presentation_url).hostname
+                if metadata_device.presentation_url
+                else None,
+                urlparse(metadata_device.http_api_url).hostname
+                if metadata_device.http_api_url
+                else None,
+            )
+            if host
+        }
+        return parsed_url.hostname in valid_hosts
+
+    @callback
     def _clear_media_metadata(self) -> None:
         """Clear media metadata attributes."""
         self._attr_media_title = None
         self._attr_media_artist = None
         self._attr_media_album_name = None
         self._attr_media_image_url = None
+        self._attr_media_image_hash = None
         self._attr_media_content_id = None
         self._attr_media_content_type = None
         self._attr_media_duration = None
         self._attr_media_position = None
         self._attr_media_position_updated_at = None
+
+    @callback
+    def _set_media_image_hash(
+        self,
+        *,
+        image_url: str | None,
+        media_uri: str | None,
+        title: str | None,
+        artist: str | None,
+        album: str | None,
+    ) -> None:
+        """Set a cache-busting media image hash for Home Assistant.
+
+        Some WiiM sources reuse the same artwork URL across tracks, so the
+        default HA URL-based hash is not sufficient to invalidate the image cache.
+        """
+        if not image_url:
+            self._attr_media_image_hash = None
+            return
+
+        digest_source = "|".join(
+            value or "" for value in (image_url, media_uri, title, artist, album)
+        )
+        self._attr_media_image_hash = sha1(
+            digest_source.encode("utf-8"), usedforsecurity=False
+        ).hexdigest()
 
     @callback
     def _get_command_target_device(self, action_name: str) -> WiimDevice:
@@ -208,6 +276,44 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             target_device.udn,
         )
         return target_device
+
+    @callback
+    def _async_handle_group_member_state_refresh(self) -> None:
+        """Refresh follower state when the group leader pushes an update."""
+        group_snapshot = self._get_group_snapshot()
+        if group_snapshot.role != WiimGroupRole.FOLLOWER:
+            LOGGER.debug(
+                "Ignoring group member refresh for %s because role is %s",
+                self.entity_id,
+                group_snapshot.role,
+            )
+            return
+
+        LOGGER.debug(
+            "Follower %s received propagated group update from leader %s",
+            self.entity_id,
+            group_snapshot.leader_udn,
+        )
+        self._update_ha_state_from_sdk_cache()
+
+    @callback
+    def _async_propagate_group_state_update(
+        self, group_snapshot: WiimGroupSnapshot
+    ) -> None:
+        """Notify grouped followers to refresh from the leader's latest cache."""
+        if group_snapshot.role != WiimGroupRole.LEADER:
+            return
+
+        for member_udn in group_snapshot.member_udns:
+            if member_udn == self._device.udn:
+                continue
+
+            LOGGER.debug(
+                "Leader %s propagating grouped state refresh to follower %s",
+                self.entity_id,
+                member_udn,
+            )
+            async_dispatcher_send(self.hass, _group_member_state_signal(member_udn))
 
     @callback
     def _update_ha_state_from_sdk_cache(
@@ -269,6 +375,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_artist = media.artist
             self._attr_media_album_name = media.album
             self._attr_media_image_url = media.image_url
+            self._set_media_image_hash(
+                image_url=media.image_url,
+                media_uri=media.uri,
+                title=media.title,
+                artist=media.artist,
+                album=media.album,
+            )
             self._attr_media_content_id = media.uri
             self._attr_media_content_type = MediaType.MUSIC
             self._attr_media_duration = media.duration
@@ -290,6 +403,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if write_state:
             self.async_write_ha_state()
+            self._async_propagate_group_state_update(group_snapshot)
 
     @callback
     def _handle_sdk_general_device_update(self, device: WiimDevice) -> None:
@@ -350,14 +464,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     sdk_status_str,
                 )
             else:
-                self._device.playing_status = sdk_status
                 if sdk_status == SDKPlayingStatus.STOPPED:
                     LOGGER.debug(
                         "Device %s: TransportState is STOPPED. Resetting media position and metadata",
                         self.entity_id,
                     )
-                    self._device.current_position = 0
-                    self._device.current_track_duration = 0
                     self._attr_media_position_updated_at = None
                     self._attr_media_duration = None
                     self._attr_media_position = None
@@ -474,6 +585,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                _group_member_state_signal(self._device.udn),
+                self._async_handle_group_member_state_refresh,
+            )
+        )
         LOGGER.debug(
             "Added %s (UDN: %s) to entity maps in hass.data",
             self.entity_id,
@@ -651,6 +769,40 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             source
         )
 
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch the current media image.
+
+        Bypass HA's URL-only image cache for device-local HTTPS artwork so
+        same-URL images can still refresh when the media metadata changes.
+        """
+        if (url := self.media_image_url) is None:
+            return None, None
+
+        if not self._is_local_https_media_image(url):
+            return await super().async_get_media_image()
+
+        content, content_type = None, None
+        websession = async_get_clientsession(self.hass)
+        with suppress(TimeoutError):
+            response = await websession.get(
+                url,
+                ssl=False,
+                timeout=MEDIA_IMAGE_FETCH_TIMEOUT,
+            )
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+                if response.headers.get("Content-Type"):
+                    content_type = response.headers["Content-Type"].split(";")[0]
+
+        if content is None:
+            LOGGER.debug(
+                "Failed to fetch local HTTPS media image for %s from %s",
+                self.entity_id,
+                url,
+            )
+
+        return content, content_type
+
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -791,3 +943,43 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id,
         )
         raise BrowseError(f"Invalid browse path: {media_content_id}")
+
+    @media_player_exception_wrap
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join group_members (entity_ids) to the group led by the current player."""
+        follower_udns_to_join: list[str] = []
+        for member_entity_id in group_members:
+            if member_entity_id == self.entity_id:
+                LOGGER.debug("Skipping joining self to group: %s", member_entity_id)
+                continue
+
+            follower_udn = self._wiim_data.entity_id_to_udn_map.get(member_entity_id)
+            if follower_udn is None:
+                LOGGER.warning(
+                    "Unable to resolve group member entity_id %s to a UDN",
+                    member_entity_id,
+                )
+                continue
+
+            follower_udns_to_join.append(follower_udn)
+
+        LOGGER.debug(
+            "Player %s (UDN %s) joining follower UDNs: %s from entity_ids: %s",
+            self.entity_id,
+            self._device.udn,
+            follower_udns_to_join,
+            group_members,
+        )
+        await self._wiim_data.controller.async_join_group(
+            self._device.udn, follower_udns_to_join
+        )
+
+    @media_player_exception_wrap
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group it is currently in."""
+        LOGGER.debug(
+            "Player %s (UDN %s) attempting to unjoin from group",
+            self.entity_id,
+            self._device.udn,
+        )
+        await self._wiim_data.controller.async_ungroup_device(self._device.udn)

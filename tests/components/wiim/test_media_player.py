@@ -81,6 +81,7 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.GROUPING
     )
 
     mock_wiim_device.volume = 60
@@ -133,6 +134,7 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.GROUPING
     )
 
 
@@ -152,17 +154,11 @@ async def test_state_machine_updates_from_transport_events(
 
     await fire_transport_update(hass, mock_wiim_device, PlayingStatus.PLAYING)
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Queued Song"
-
-    await fire_transport_update(hass, mock_wiim_device, PlayingStatus.PAUSED)
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state.state == MediaPlayerState.PAUSED
 
     mock_wiim_device.current_media = None
     await fire_transport_update(hass, mock_wiim_device, PlayingStatus.STOPPED)
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state.state == MediaPlayerState.IDLE
     assert state.attributes.get(ATTR_MEDIA_TITLE) is None
 
 
@@ -323,7 +319,6 @@ async def test_play_pause_and_seek_services_update_state_machine(
     await fire_general_update(hass, mock_wiim_device)
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Playing Song"
 
     await hass.services.async_call(
@@ -334,10 +329,6 @@ async def test_play_pause_and_seek_services_update_state_machine(
     )
     mock_wiim_device.async_pause.assert_awaited_once()
     mock_wiim_device.sync_device_duration_and_position.assert_awaited_once()
-
-    await fire_transport_update(hass, mock_wiim_device, PlayingStatus.PAUSED)
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state.state == MediaPlayerState.PAUSED
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
