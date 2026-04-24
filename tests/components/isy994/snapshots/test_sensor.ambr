@@ -329,9 +329,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -366,7 +364,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Flow Rate GPS',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'gal/s',
     }),
     'context': <ANY>,

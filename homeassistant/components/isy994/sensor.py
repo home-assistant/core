@@ -211,7 +211,20 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
             uom = uom[0]
 
         # Determine device class
-        self._attr_device_class = UOM_TO_DEVICE_CLASS.get(uom)
+        device_class = UOM_TO_DEVICE_CLASS.get(uom)
+
+        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
+        # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
+        # this guard can be removed.
+        if (
+            device_class == SensorDeviceClass.VOLUME_FLOW_RATE
+            and (uom := self._node.uom)
+            and isinstance(uom, str)
+            and UOM_FRIENDLY_NAME.get(uom) not in UnitOfVolumeFlowRate
+        ):
+            device_class = None
+
+        self._attr_device_class = device_class
 
         # Determine state class
         if self._attr_device_class in TOTAL_INCREASING_DEVICE_CLASSES:
@@ -301,28 +314,6 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
             return self.hass.config.units.temperature_unit
         return raw_units
 
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Get the device class for the ISY sensor device."""
-        if self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE:
-            # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
-            # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
-            # this guard can be removed.
-            if self.raw_unit_of_measurement in UnitOfVolumeFlowRate:
-                return SensorDeviceClass.VOLUME_FLOW_RATE
-            return None
-        return self._attr_device_class
-
-    @property
-    def state_class(self) -> SensorStateClass | None:
-        """Get the state class for the ISY sensor device."""
-        if (
-            self._attr_device_class == SensorDeviceClass.VOLUME_FLOW_RATE
-            and self.raw_unit_of_measurement not in UnitOfVolumeFlowRate
-        ):
-            return SensorStateClass.MEASUREMENT
-        return self._attr_state_class
-
 
 class ISYAuxSensorEntity(ISYSensorEntity):
     """Representation of an ISY aux sensor device."""
@@ -340,7 +331,20 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._control = control
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
-        self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
+
+        device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
+
+        # VOLUME_FLOW_RATE will break with UOM of 142 (gal/s) which is not in the
+        # UnitOfVolumeFlowRate enum. If it is added to the enum in the future,
+        # this guard can be removed.
+        if device_class == SensorDeviceClass.VOLUME_FLOW_RATE:
+            uom = None
+            if control in self._node.aux_properties:
+                uom = self._node.aux_properties[control].uom
+            if uom is None or UOM_FRIENDLY_NAME.get(uom) not in UnitOfVolumeFlowRate:
+                device_class = None
+
+        self._attr_device_class = device_class
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
         self._attr_unique_id = unique_id
         self._change_handler: EventListener = None
