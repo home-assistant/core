@@ -296,7 +296,10 @@ class ConditionChecker(abc.ABC):
     def __call__(
         self, hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool | None:
-        """Check the condition."""
+        """Check the condition.
+
+        `hass` parameter is for backwards compatibility only and is always ignored.
+        """
         return self.async_check(variables=variables)
 
     def __del__(self) -> None:

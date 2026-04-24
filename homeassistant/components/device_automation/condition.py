@@ -88,7 +88,7 @@ class DeviceCondition(Condition):
         self._config = config.options
 
     async def async_setup(self) -> None:
-        """Test a device condition."""
+        """Set up a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
