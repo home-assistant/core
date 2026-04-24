@@ -65,6 +65,12 @@ _MSG_PASSWORD_NO_LONGER_WORKING = (
     "iCloud card to log in again"
 )
 
+_MSG_2FA_REQUIRED = (
+    "2FA authentication required for '%s'; go to the "
+    "Integrations menu and click on Configure on the iCloud "
+    "card to enter your verification code"
+)
+
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
@@ -121,11 +127,7 @@ class IcloudAccount:
             self.api = None
             if requires_2fa:
                 _LOGGER.warning(
-                    (
-                        "2FA authentication required for '%s'; Go to the "
-                        "Integrations menu and click on Configure on the iCloud "
-                        "card to enter your verification code"
-                    ),
+                    _MSG_2FA_REQUIRED,
                     self._config_entry.data[CONF_USERNAME],
                 )
             else:
@@ -172,6 +174,7 @@ class IcloudAccount:
 
         if self.api.requires_2fa:
             self._require_reauth()
+            self._fetch_interval = self._max_interval
             self._schedule_next_fetch()
             return
 
@@ -330,19 +333,18 @@ class IcloudAccount:
             self.api = None
             if requires_2fa:
                 _LOGGER.warning(
-                    (
-                        "2FA authentication required for '%s'; Go to the "
-                        "Integrations menu and click on Configure on the iCloud "
-                        "card to enter your verification code"
-                    ),
+                    _MSG_2FA_REQUIRED,
                     self._config_entry.data[CONF_USERNAME],
                 )
+                self._require_reauth()
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
             else:
                 _LOGGER.error(
                     _MSG_PASSWORD_NO_LONGER_WORKING,
                     self._config_entry.data[CONF_USERNAME],
                 )
-            self._require_reauth()
+                self._require_reauth()
             return
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning(

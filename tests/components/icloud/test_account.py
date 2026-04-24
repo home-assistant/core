@@ -280,12 +280,15 @@ async def test_keep_alive_failed_login_2fa_logs_warning_not_error(
 
     with (
         patch.object(account, "_require_reauth") as mock_reauth,
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
         patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
     ):
         account.keep_alive()
 
     mock_reauth.assert_called_once()
+    mock_schedule.assert_called_once()
     assert account.api is None
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
     mock_logger.warning.assert_called_once()
     mock_logger.error.assert_not_called()
 
@@ -330,3 +333,4 @@ async def test_update_devices_requires_2fa_reschedules(
 
     mock_reauth.assert_called_once()
     mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
