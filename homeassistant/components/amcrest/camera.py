@@ -48,7 +48,6 @@ from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
-    from .models import AmcrestConfiguredDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +170,7 @@ class AmcrestCam(Camera):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice | AmcrestConfiguredDevice,
+        device: AmcrestDevice,
         ffmpeg: FFmpegManager,
         device_info: DeviceInfo | None = None,
         unique_id: str | None = None,

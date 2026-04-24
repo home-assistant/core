@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
-    from .models import AmcrestConfiguredDevice
 
 PRIVACY_MODE_KEY = "privacy_mode"
 
@@ -90,7 +89,7 @@ class AmcrestSwitch(SwitchEntity):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice | AmcrestConfiguredDevice,
+        device: AmcrestDevice,
         entity_description: SwitchEntityDescription,
         unique_id: str | None = None,
     ) -> None:

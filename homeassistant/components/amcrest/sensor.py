@@ -30,7 +30,6 @@ from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
-    from .models import AmcrestConfiguredDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +106,7 @@ class AmcrestSensor(SensorEntity):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice | AmcrestConfiguredDevice,
+        device: AmcrestDevice,
         description: SensorEntityDescription,
         unique_id: str | None = None,
     ) -> None:

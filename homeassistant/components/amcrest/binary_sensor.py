@@ -39,7 +39,6 @@ from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
-    from .models import AmcrestConfiguredDevice
 
 
 @dataclass(frozen=True)
@@ -202,7 +201,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice | AmcrestConfiguredDevice,
+        device: AmcrestDevice,
         entity_description: AmcrestSensorEntityDescription,
         unique_id: str | None = None,
     ) -> None:

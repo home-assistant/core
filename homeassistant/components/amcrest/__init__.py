@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -55,7 +56,6 @@ from .const import (
     SERVICE_UPDATE,
 )
 from .helpers import service_signal
-from .models import AmcrestConfiguredDevice
 from .sensor import SENSOR_KEYS
 from .services import async_setup_services
 from .switch import SWITCH_KEYS
@@ -513,10 +513,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         authentication = None
 
-    device = AmcrestConfiguredDevice(
-        hass,
-        entry,
-        name,
+    device = AmcrestDevice(
         api,
         authentication,
         ffmpeg_arguments,
@@ -524,6 +521,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         resolution,
         control_light,
     )
+    device.name = name
+    device.serial_number = ""
+    device.device_info = None
 
     try:
         device.serial_number = (await api.async_serial_number or "").strip()
@@ -534,6 +534,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, identifier)},
+        name=name,
+        serial_number=device.serial_number or None,
+        manufacturer="Amcrest",
+        configuration_url=api.get_base_url(),
+    )
+    device.device_info = DeviceInfo(
         identifiers={(DOMAIN, identifier)},
         name=name,
         serial_number=device.serial_number or None,
@@ -582,3 +589,7 @@ class AmcrestDevice:
     resolution: int
     control_light: bool
     channel: int = 0
+    # Populated for config entries (and safe for YAML entities to ignore)
+    name: str = ""
+    serial_number: str = ""
+    device_info: DeviceInfo | None = None
