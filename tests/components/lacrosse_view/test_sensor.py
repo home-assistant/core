@@ -201,7 +201,7 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unknown"
+    assert hass.states.get("sensor.test_temperature").state == "unavailable"
 
 
 async def test_no_readings(hass: HomeAssistant) -> None:
