@@ -9,7 +9,6 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -18,7 +17,6 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .helpers import assert_result_info, render, render_to_info
@@ -312,86 +310,6 @@ def test_timedelta(mock_is_safe, hass: HomeAssistant) -> None:
 
         result = render(hass, "{{relative_time(now() - timedelta(weeks=2, days=1))}}")
         assert result == "15 days"
-
-
-async def test_closest_function_home_vs_group_entity_id(hass: HomeAssistant) -> None:
-    """Test closest function home vs group entity id."""
-    hass.states.async_set(
-        "test_domain.object",
-        "happy",
-        {
-            "latitude": hass.config.latitude + 0.1,
-            "longitude": hass.config.longitude + 0.1,
-        },
-    )
-
-    hass.states.async_set(
-        "not_in_group.but_closer",
-        "happy",
-        {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
-    )
-
-    assert await async_setup_component(hass, "group", {})
-    await hass.async_block_till_done()
-    await group.Group.async_create_group(
-        hass,
-        "location group",
-        created_by_service=False,
-        entity_ids=["test_domain.object"],
-        icon=None,
-        mode=None,
-        object_id=None,
-        order=None,
-    )
-
-    info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
-    assert_result_info(
-        info, "test_domain.object", {"group.location_group", "test_domain.object"}
-    )
-    assert info.rate_limit is None
-
-
-async def test_closest_function_home_vs_group_state(hass: HomeAssistant) -> None:
-    """Test closest function home vs group state."""
-    hass.states.async_set(
-        "test_domain.object",
-        "happy",
-        {
-            "latitude": hass.config.latitude + 0.1,
-            "longitude": hass.config.longitude + 0.1,
-        },
-    )
-
-    hass.states.async_set(
-        "not_in_group.but_closer",
-        "happy",
-        {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
-    )
-
-    assert await async_setup_component(hass, "group", {})
-    await hass.async_block_till_done()
-    await group.Group.async_create_group(
-        hass,
-        "location group",
-        created_by_service=False,
-        entity_ids=["test_domain.object"],
-        icon=None,
-        mode=None,
-        object_id=None,
-        order=None,
-    )
-
-    info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
-    assert_result_info(
-        info, "test_domain.object", {"group.location_group", "test_domain.object"}
-    )
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, "{{ closest(states.group.location_group).entity_id }}")
-    assert_result_info(
-        info, "test_domain.object", {"test_domain.object", "group.location_group"}
-    )
-    assert info.rate_limit is None
 
 
 def test_async_render_to_info_with_branching(hass: HomeAssistant) -> None:
