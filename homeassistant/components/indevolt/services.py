@@ -107,7 +107,7 @@ def _validate_realtime_action(
     target_soc: int,
     action_code: RealtimeAction,
 ) -> None:
-    """Validates parameters prior to calling async_execute_realtime_action."""
+    """Validate parameters prior to calling `_execute_realtime_action`."""
 
     errors: list[str] = []
 
