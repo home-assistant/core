@@ -91,15 +91,15 @@ class LunatoneSensor(
         self._sensor = self.coordinator.data.get(self._sensor_id)
         self._attr_unique_id = f"{config_entry_unique_id}-sensor{sensor_id}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self._config_entry_unique_id))},
+        )
         if (
             self._sensor
             and self._sensor.data.address_type == SensorAddressType.DALI
             and self._sensor.data.dali_sensor_address
         ):
-            return DeviceInfo(
+            device_info = DeviceInfo(
                 identifiers={
                     (
                         DOMAIN,
@@ -114,9 +114,7 @@ class LunatoneSensor(
                 ),
                 via_device=(DOMAIN, str(self._config_entry_unique_id)),
             )
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._config_entry_unique_id))},
-        )
+        self._attr_device_info = device_info
 
     @property
     def name(self) -> str:
