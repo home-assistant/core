@@ -26,7 +26,7 @@ async def async_setup_entry(
     runtime_data = config_entry.runtime_data
 
     temperature_subentries = filter(
-        lambda subentry: subentry.data.get(CONF_ENABLE_TEMPERATURE_SENSOR, False),
+        lambda subentry: subentry.data[CONF_ENABLE_TEMPERATURE_SENSOR],
         config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE),
     )
 
