@@ -30,7 +30,6 @@ class HoneywellStringLightsEntity(Entity):
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Honeywell",
             model="String Lights",
-            name=entry.title,
         )
 
     async def async_added_to_hass(self) -> None:
