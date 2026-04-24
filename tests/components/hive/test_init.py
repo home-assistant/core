@@ -37,9 +37,7 @@ def _make_mock_hive(hub_extra: dict) -> MagicMock:
     """Return a mocked Hive instance whose startSession returns a minimal devices dict."""
     hub_data = {**_HUB_BASE, **hub_extra}
     mock_hive = MagicMock()
-    mock_hive.session.startSession = AsyncMock(
-        return_value={"parent": [hub_data]}
-    )
+    mock_hive.session.startSession = AsyncMock(return_value={"parent": [hub_data]})
     return mock_hive
 
 
@@ -63,9 +61,7 @@ async def test_hub_device_registers_mac_connection(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "hive-hub-id")}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "hive-hub-id")})
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, "00:1c:2b:1c:2e:68") in device.connections
 
@@ -90,9 +86,7 @@ async def test_hub_device_no_mac_connection_when_absent(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "hive-hub-id")}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "hive-hub-id")})
     assert device is not None
     assert not any(
         conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device.connections
