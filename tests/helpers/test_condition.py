@@ -452,9 +452,9 @@ async def test_conditions_from_config_has_and_semantics(
     test = await condition.async_conditions_from_config(
         hass, configs, logging.getLogger(__name__), "test"
     )
-    assert test(hass) is True
+    assert test() is True
     hass.states.async_set("binary_sensor.test_two", STATE_OFF)
-    assert test(hass) is False
+    assert test() is False
 
 
 async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> None:
