@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_e
 
 from .client import SatelClient
 from .const import (
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -165,6 +166,17 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             config_entry, data=new_data, minor_version=2
         )
+
+    # 2.3 Added temperature sensor option to zone subentries
+    if config_entry.version == 2 and config_entry.minor_version < 3:
+        for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
+            hass.config_entries.async_update_subentry(
+                config_entry,
+                subentry,
+                data={**subentry.data, CONF_ENABLE_TEMPERATURE_SENSOR: False},
+            )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
