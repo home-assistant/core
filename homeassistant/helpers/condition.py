@@ -1684,8 +1684,17 @@ class ConditionsChecker(CompoundConditionChecker):
         **kwargs: Any,
     ) -> bool:
         """Check all conditions."""
-        # The implicit AND can't be disabled, so the call will never return None
-        return self.async_check(variables=variables)  # type: ignore[return-value]
+        return self.async_check(variables=variables)
+
+    def async_check(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool:
+        """Check the condition.
+
+        Overrides the base class to skip the outer trace_condition wrapper.
+        The individual child conditions handle their own tracing.
+        """
+        return self._async_check(variables=variables)
 
     @callback
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
