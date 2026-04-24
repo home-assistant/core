@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -139,3 +139,9 @@ class LunatoneSensor(
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement for the sensor."""
         return SENSOR_UNIT_MAPPING.get(self._sensor.data.unit) if self._sensor else None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._sensor = self.coordinator.data[self._sensor_id]
+        self.async_write_ha_state()
