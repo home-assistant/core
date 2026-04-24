@@ -106,7 +106,7 @@ async def test_flow_reconfigure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth flow."""
+    """Test reconfigure flow."""
 
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -137,7 +137,7 @@ async def test_flow_reconfigure_errors(
     exception: Exception,
     error: str,
 ) -> None:
-    """Test reauth flow errors."""
+    """Test reconfigure flow errors."""
 
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -174,7 +174,7 @@ async def test_flow_reconfigure_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth flow aborts if already configured."""
+    """Test reconfigure flow aborts if already configured."""
     MockConfigEntry(
         domain=DOMAIN,
         title="Android TV / Fire TV (4.3.2.1)",

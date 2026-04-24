@@ -43,7 +43,7 @@ class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfigure flow for ntfy."""
+        """Handle reconfigure flow for Notification for Android TV / Fire TV."""
         errors: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
 
