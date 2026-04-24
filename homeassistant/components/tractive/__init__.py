@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     except aiotractive.exceptions.TractiveError as error:
         await client.close()
         raise ConfigEntryNotReady from error
-    except Exception:
+    except ConfigEntryNotReady:
         await client.close()
         raise
 
