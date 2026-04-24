@@ -1,9 +1,13 @@
 """Test ai_task media source."""
 
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task.media_source import async_get_media_source
+from homeassistant.components.media_player import BrowseError
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -33,3 +37,20 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
         match="AI Task media source requires at least one media directory configured",
     ):
         await async_get_media_source(hass)
+
+
+async def test_browse_media_directory_not_exist_error(
+    hass: HomeAssistant, init_components: None
+) -> None:
+    """Test browsing AI task media source when directory doesn't exist."""
+    source = await async_get_media_source(hass)
+
+    with patch.object(Path, "exists", return_value=False):
+        item = media_source.MediaSourceItem(hass, "ai_task", "image/", None)
+
+        with pytest.raises(BrowseError) as excinfo:
+            await source.async_browse_media(item)
+
+        error_message = str(excinfo.value)
+        assert "No AI-generated images found" in error_message
+        assert "ai_task.generate_image" in error_message

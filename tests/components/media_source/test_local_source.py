@@ -34,6 +34,26 @@ async def temp_dir(hass: HomeAssistant) -> AsyncGenerator[str]:
         yield str(target_dir)
 
 
+async def test_non_ai_task_directory_not_exist_error(hass: HomeAssistant) -> None:
+    """Test that non-AI task media sources show original error message."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(hass, {"media_dirs": {"local": local_media}})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Test that regular media source still shows original error
+    with patch.object(Path, "exists", return_value=False):
+        with pytest.raises(BrowseError) as excinfo:
+            await media_source.async_browse_media(
+                hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/"
+            )
+
+        # Should show original error for non-AI task domains
+        assert str(excinfo.value) == "Media directory does not exist."
+
+
 async def test_async_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     local_media = hass.config.path("media")
@@ -58,6 +78,14 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3"
         )
     assert str(excinfo.value) == "Path is not a directory."
+
+    # Test that non-AI domains still show original error for missing directory
+    with patch.object(Path, "exists", return_value=False):
+        with pytest.raises(BrowseError) as excinfo:
+            await media_source.async_browse_media(
+                hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/"
+            )
+        assert str(excinfo.value) == "Media directory does not exist."
 
     # Test invalid base
     with pytest.raises(BrowseError) as excinfo:
