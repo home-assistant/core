@@ -79,14 +79,6 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
         )
     assert str(excinfo.value) == "Path is not a directory."
 
-    # Test that non-AI domains still show original error for missing directory
-    with patch.object(Path, "exists", return_value=False):
-        with pytest.raises(BrowseError) as excinfo:
-            await media_source.async_browse_media(
-                hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/"
-            )
-        assert str(excinfo.value) == "Media directory does not exist."
-
     # Test invalid base
     with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(

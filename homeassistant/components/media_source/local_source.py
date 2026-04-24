@@ -59,6 +59,7 @@ class LocalSource(MediaSource):
         name: str,
         media_dirs: dict[str, str],
         url_prefix: str,
+        missing_dir_error: str | None = None,
     ) -> None:
         """Initialize local source."""
         super().__init__(domain)
@@ -66,6 +67,7 @@ class LocalSource(MediaSource):
         self.name = name
         self.media_dirs = media_dirs
         self.url_prefix = url_prefix
+        self.missing_dir_error = missing_dir_error
 
     @callback
     def async_full_path(self, source_dir_id: str, location: str) -> Path:
@@ -211,14 +213,8 @@ class LocalSource(MediaSource):
 
         if not full_path.exists():
             if location == "":
-                # Context-aware error message based on domain
-                if self.domain == "ai_task":
-                    raise BrowseError(
-                        "No AI-generated images found. "
-                        "Use the ai_task.generate_image action to create images."
-                    )
-                raise BrowseError("Media directory does not exist.")
-            raise BrowseError("Path does not exist.")
+                error_msg = self.missing_dir_error or "Media directory does not exist."
+                raise BrowseError(error_msg)
 
         if not full_path.is_dir():
             raise BrowseError("Path is not a directory.")
