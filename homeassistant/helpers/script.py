@@ -1394,10 +1394,6 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
             )
         )
 
-    # Unload all scripts to clean up cached conditions and sub-scripts
-    for script in hass.data[DATA_SCRIPTS]:
-        script["instance"].async_unload()
-
 
 type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
@@ -1913,7 +1909,9 @@ class Script:
         are guaranteed to not be running if the parent is not running.
         """
         if self._runs:
-            raise ValueError(f"Cannot unload script '{self.name}' while it is running")
+            raise RuntimeError(
+                f"Cannot unload script '{self.name}' while it is running"
+            )
         self._unloaded = True
 
         for cond in self._condition_cache.values():

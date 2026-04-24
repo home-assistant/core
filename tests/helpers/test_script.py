@@ -7134,7 +7134,7 @@ async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
 
     assert script_obj.is_running
 
-    with pytest.raises(ValueError, match="Cannot unload script"):
+    with pytest.raises(RuntimeError, match="Cannot unload script"):
         script_obj.async_unload()
 
     await script_obj.async_stop()
