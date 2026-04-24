@@ -1,0 +1,35 @@
+# Describes the format for available Green Planet Energy services
+
+get_cheapest_duration:
+  fields:
+    mode:
+      required: false
+      default: "cheapest_window"
+      selector:
+        select:
+          options:
+            - label: Cheapest window
+              value: "cheapest_window"
+            - label: Price schedule
+              value: "price_schedule"
+    duration:
+      required: true
+      example: 2.5
+      selector:
+        number:
+          min: 0.5
+          max: 24
+          step: 0.5
+          unit_of_measurement: "h"
+    time_range:
+      required: false
+      default: "full_day"
+      selector:
+        select:
+          options:
+            - label: Full day (00:00-24:00)
+              value: "full_day"
+            - label: Day (06:00-18:00)
+              value: "day"
+            - label: Night (18:00-06:00)
+              value: "night"

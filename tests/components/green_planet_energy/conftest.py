@@ -58,8 +58,30 @@ def mock_api() -> Generator[MagicMock]:
             f"gpe_price_{hour:02d}_tomorrow": 25.0 + (hour * 1.0) for hour in range(24)
         }
 
-        # Combine all prices
-        all_prices = {**today_prices, **tomorrow_prices}
+        # 15-minute resolution data for today and tomorrow.
+        # Each quarter-hour slot within an hour carries a slight offset so tests
+        # can distinguish individual slots:
+        #   HH:00 → base + 0.0, HH:15 → base + 0.1, HH:30 → base + 0.2, HH:45 → base + 0.3
+        today_quarter_prices = {
+            f"gpe_price_{hour:02d}_{minute:02d}": round(20.0 + hour + minute / 100, 2)
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+        tomorrow_quarter_prices = {
+            f"gpe_price_{hour:02d}_{minute:02d}_tomorrow": round(
+                25.0 + hour + minute / 100, 2
+            )
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+
+        # Combine all prices — 15-min keys take priority but hourly keys are also present.
+        all_prices = {
+            **today_prices,
+            **tomorrow_prices,
+            **today_quarter_prices,
+            **tomorrow_quarter_prices,
+        }
 
         # Make get_electricity_prices async since coordinator uses it
         mock_api_instance.get_electricity_prices = AsyncMock(return_value=all_prices)
@@ -84,6 +106,17 @@ def mock_api() -> Generator[MagicMock]:
             return 20.0 + (hour * 1.0)
 
         mock_api_instance.get_current_price.side_effect = get_current_price_mock
+
+        # Mock cheapest duration methods
+        # For day period (6-18), cheapest 2.5h window would be starting at hour 6
+        # Average of hours 6, 7, and half of 8 in Cent/kWh:
+        # (26.0 + 27.0 + 28.0 * 0.5) / 2.5 = 26.6 Cent/kWh
+        mock_api_instance.get_cheapest_duration_day.return_value = (26.6, 6)
+
+        # For night period (18-6), cheapest 2.5h window would be early morning
+        # Average of hours 0, 1, and half of 2 tomorrow in Cent/kWh:
+        # (25.0 + 26.0 + 27.0 * 0.5) / 2.5 = 25.8 Cent/kWh
+        mock_api_instance.get_cheapest_duration_night.return_value = (25.8, 0)
 
         mock_api_class.return_value = mock_api_instance
         yield mock_api_instance
