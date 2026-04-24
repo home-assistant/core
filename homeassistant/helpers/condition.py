@@ -1652,10 +1652,10 @@ async def async_conditions_from_config(
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
-    return ConditionsChecker(hass, checks, logger, name)
+    return ConditionsChecker(checks, logger, name)
 
 
-class ConditionsChecker(ConditionChecker):
+class ConditionsChecker:
     """Condition checker that ANDs multiple conditions.
 
     Used by automations and template entities. Unlike AndConditionChecker,
@@ -1665,21 +1665,17 @@ class ConditionsChecker(ConditionChecker):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         checks: list[ConditionChecker],
         logger: logging.Logger,
         name: str,
     ) -> None:
         """Initialize condition checker."""
-        super().__init__(hass)
         self._checks = checks
         self._logger = logger
         self._name = name
+        self._unloaded = False
 
-    # The function previously returned by async_conditions_from_config
-    # did not accept hass as first argument, so we need to override the
-    # __call__ provided for backwards compatibility
-    def __call__(  # type: ignore[override]
+    def __call__(
         self,
         variables: TemplateVarsType | None = None,
         **kwargs: Any,
@@ -1687,30 +1683,30 @@ class ConditionsChecker(ConditionChecker):
         """Check all conditions."""
         return self.async_check(variables=variables)
 
+    def __del__(self) -> None:
+        """Clean up when the checker is deleted."""
+        if self._unloaded:
+            return
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading condition checker")
+
     def async_unload(self) -> None:
         """Clean up child conditions."""
+        self._unloaded = True
         for check in self._checks:
             check.async_unload()
-        super().async_unload()
 
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
     ) -> bool:
-        """Check the condition.
-
-        Overrides the base class to skip the outer trace_condition wrapper.
-        The individual child conditions handle their own tracing.
-        """
-        return self._async_check(variables=variables)
-
-    @callback
-    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["condition", str(index)]):
-                    if check.async_check(**kwargs) is False:
+                    if check.async_check(variables=variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
