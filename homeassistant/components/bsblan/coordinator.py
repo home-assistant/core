@@ -49,7 +49,7 @@ DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
 class BSBLanFastData:
     """BSBLan fast-polling data."""
 
-    state: State
+    states: dict[int, State]
     sensor: Sensor
     dhw: HotWaterState | None = None
 
@@ -94,6 +94,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         hass: HomeAssistant,
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
+        circuits: list[int],
     ) -> None:
         """Initialize the BSB-LAN fast coordinator."""
         super().__init__(
@@ -103,14 +104,19 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             name=f"{DOMAIN}_fast_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_FAST,
         )
+        self.circuits: list[int] = circuits
 
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
+        states: dict[int, State] = {}
         try:
-            # Client is already initialized in async_setup_entry
-            # Use include filtering to only fetch parameters we actually use
-            # This reduces response time significantly (~0.2s per parameter)
-            state = await self.client.state(include=STATE_INCLUDE)
+            # Use include filtering to only fetch parameters we actually use.
+            # BSB-LAN is a serial bus — it processes one parameter at a time,
+            # so concurrent requests offer no speed benefit over sequential.
+            for circuit in self.circuits:
+                states[circuit] = await self.client.state(
+                    include=STATE_INCLUDE, circuit=circuit
+                )
             sensor = await self.client.sensor(include=SENSOR_INCLUDE)
 
         except BSBLANAuthError as err:
@@ -140,7 +146,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             )
 
         return BSBLanFastData(
-            state=state,
+            states=states,
             sensor=sensor,
             dhw=dhw,
         )
