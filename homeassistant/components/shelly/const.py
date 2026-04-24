@@ -106,6 +106,12 @@ RPC_RECONNECT_INTERVAL = 60
 # Shelly Air - Maximum work hours before lamp replacement
 SHAIR_MAX_WORK_HOURS: Final = 9000
 
+# Tolerance (in native Wh) below which a decrease on a TOTAL_INCREASING energy
+# sensor is treated as floating-point jitter and discarded, so the recorder
+# does not mistake it for a device reset (issue #166816). Drops to exactly 0.0
+# and drops >= this threshold still pass through as genuine resets.
+SH_ENERGY_EPSILON: Final = 0.001
+
 # Map Shelly input events
 INPUTS_EVENTS_DICT: Final = {
     "S": "single",

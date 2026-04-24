@@ -1808,6 +1808,63 @@ async def test_rpc_switch_no_energy_returned_sensor(
     assert hass.states.get("sensor.test_name_test_switch_0_energy_consumed") is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_energy_sensor_jitter_is_filtered(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Issue #166816 - sub-epsilon decreases must not corrupt total_increasing.
+
+    Simulates the sequence 5.0 -> 5.00001 -> 5.0 on a TOTAL_INCREASING
+    energy sensor: the tiny decrease (< SH_ENERGY_EPSILON) must be swallowed,
+    while a genuine reset to 0.0 must still pass through.
+    """
+    entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_energy"
+    status = {
+        "sys": {},
+        "switch:0": {
+            "id": 0,
+            "output": True,
+            "apower": 85.3,
+            "aenergy": {"total": 5.0},
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get(entity_id))
+    state_initial = state.state
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "switch:0", "aenergy", {"total": 5.00001}
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    state_after_increase = state.state
+    assert state_after_increase != state_initial
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "switch:0", "aenergy", {"total": 5.0}
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == state_after_increase
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "switch:0", "aenergy", {"total": 0.0}
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert float(state.state) == 0.0
+
+
 async def test_rpc_shelly_ev_sensors(
     hass: HomeAssistant,
     mock_rpc_device: Mock,

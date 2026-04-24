@@ -42,7 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
+from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC, SH_ENERGY_EPSILON
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -70,6 +70,30 @@ from .utils import (
 )
 
 PARALLEL_UPDATES = 0
+
+
+def _filter_energy_jitter(last_value: StateType, new_value: StateType) -> StateType:
+    """Swallow sub-epsilon decreases on TOTAL_INCREASING energy sensors.
+
+    Shelly firmware occasionally reports an energy counter value that is a
+    few parts-per-million smaller than the previous reading (issue #166816).
+    The recorder interprets any decrease on a ``total_increasing`` sensor as
+    a device reset, which corrupts long-term statistics. This helper returns
+    the previous value when the decrease is strictly less than
+    ``SH_ENERGY_EPSILON`` so the false reset is suppressed. A drop to exactly
+    ``0.0`` and any drop greater than or equal to the epsilon pass through
+    unchanged so genuine resets are preserved.
+    """
+    if (
+        isinstance(last_value, (int, float))
+        and not isinstance(last_value, bool)
+        and isinstance(new_value, (int, float))
+        and not isinstance(new_value, bool)
+        and new_value != 0.0
+        and 0.0 < last_value - new_value < SH_ENERGY_EPSILON
+    ):
+        return last_value
+    return new_value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,12 +137,22 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         if not description.role:
             self.configure_translation_attributes()
 
+        self._prev_energy_value: StateType = None
+
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         attribute_value = self.attribute_value
 
         if not self.option_map:
+            if (
+                self.entity_description.state_class is SensorStateClass.TOTAL_INCREASING
+                and self.entity_description.device_class is SensorDeviceClass.ENERGY
+            ):
+                attribute_value = _filter_energy_jitter(
+                    self._prev_energy_value, attribute_value
+                )
+                self._prev_energy_value = attribute_value
             return attribute_value
 
         if not isinstance(attribute_value, str):
@@ -1812,11 +1846,23 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         """Initialize sensor."""
         super().__init__(coordinator, block, attribute, description)
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self._prev_energy_value: StateType = None
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.attribute_value
+        attribute_value = self.attribute_value
+
+        if (
+            self.entity_description.state_class is SensorStateClass.TOTAL_INCREASING
+            and self.entity_description.device_class is SensorDeviceClass.ENERGY
+        ):
+            attribute_value = _filter_energy_jitter(
+                self._prev_energy_value, attribute_value
+            )
+            self._prev_energy_value = attribute_value
+
+        return attribute_value
 
 
 class RestSensor(ShellyRestAttributeEntity, SensorEntity):
