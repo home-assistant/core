@@ -2,26 +2,35 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
+import telnetlib  # pylint: disable=deprecated-module
 from typing import Final
 
-import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    ScannerEntity,
+    SourceType,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import LEASES_REGEX
 from .model import Device
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+SCAN_INTERVAL: Final = timedelta(seconds=120)
+
+SIGNAL_ACTIONTEC_UPDATE: Final = "actiontec_update"
 
 PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -32,54 +41,79 @@ PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> ActiontecDeviceScanner | None:
-    """Validate the configuration and return an Actiontec scanner."""
-    scanner = ActiontecDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
-    return scanner if scanner.success_init else None
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Actiontec device tracker platform."""
+    host: str = config[CONF_HOST]
+    username: str = config[CONF_USERNAME]
+    password: str = config[CONF_PASSWORD]
+
+    scanner = ActiontecScanner(hass, host, username, password, async_add_entities)
+
+    data = await hass.async_add_executor_job(scanner.get_actiontec_data)
+    if data is None:
+        _LOGGER.error("Could not connect to Actiontec router")
+        return
+
+    scanner.process_results(data)
+
+    track_time_interval(hass, scanner.update, SCAN_INTERVAL)
 
 
-class ActiontecDeviceScanner(DeviceScanner):
-    """Class which queries an actiontec router for connected devices."""
+class ActiontecScanner:
+    """Manage scanning the Actiontec router for connected devices."""
 
-    def __init__(self, config: ConfigType) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        username: str,
+        password: str,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Initialize the scanner."""
-        self.host: str = config[CONF_HOST]
-        self.username: str = config[CONF_USERNAME]
-        self.password: str = config[CONF_PASSWORD]
-        self.last_results: list[Device] = []
+        self.hass = hass
+        self.host = host
+        self.username = username
+        self.password = password
+        self.async_add_entities = async_add_entities
+        self.tracked_devices: dict[str, ActiontecDeviceEntity] = {}
+
+    def process_results(self, devices: list[Device]) -> None:
+        """Process scan results and add/update entities."""
+        active_macs: set[str] = set()
+        new_entities: list[ActiontecDeviceEntity] = []
+
+        for device in devices:
+            if device.timevalid <= -60:
+                continue
+            mac = device.mac_address
+            active_macs.add(mac)
+
+            if mac not in self.tracked_devices:
+                entity = ActiontecDeviceEntity(mac, device.ip_address)
+                self.tracked_devices[mac] = entity
+                new_entities.append(entity)
+
+        if new_entities:
+            self.async_add_entities(new_entities)
+
+        # Update connected state for all tracked devices
+        for mac, entity in self.tracked_devices.items():
+            entity.set_connected(mac in active_macs)
+
+        dispatcher_send(self.hass, SIGNAL_ACTIONTEC_UPDATE)
+
+    def update(self, now=None) -> None:
+        """Update device states from the router."""
         data = self.get_actiontec_data()
-        self.success_init = data is not None
-
-    def scan_devices(self) -> list[str]:
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return [client.mac_address for client in self.last_results]
-
-    def get_device_name(self, device: str) -> str | None:
-        """Return the name of the given device or None if we don't know."""
-        for client in self.last_results:
-            if client.mac_address == device:
-                return client.ip_address
-        return None
-
-    def _update_info(self) -> bool:
-        """Ensure the information from the router is up to date.
-
-        Return boolean if scanning successful.
-        """
-        _LOGGER.debug("Scanning")
-        if not self.success_init:
-            return False
-
-        if (actiontec_data := self.get_actiontec_data()) is None:
-            return False
-        self.last_results = [
-            device for device in actiontec_data if device.timevalid > -60
-        ]
-        _LOGGER.debug("Scan successful")
-        return True
+        if data is None:
+            return
+        self.process_results(data)
 
     def get_actiontec_data(self) -> list[Device] | None:
         """Retrieve data from Actiontec MI424WR and return parsed result."""
@@ -114,3 +148,57 @@ class ActiontecDeviceScanner(DeviceScanner):
                     )
                 )
         return devices
+
+
+class ActiontecDeviceEntity(ScannerEntity):
+    """Representation of a device connected to the Actiontec router."""
+
+    _attr_should_poll = False
+
+    def __init__(self, mac: str, ip_address: str) -> None:
+        """Initialize the device entity."""
+        self._mac = mac
+        self._ip_address = ip_address
+        self._connected = True
+
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type."""
+        return SourceType.ROUTER
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected."""
+        return self._connected
+
+    @property
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname (IP address used as name)."""
+        return self._ip_address
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the IP address of the device."""
+        return self._ip_address
+
+    def set_connected(self, connected: bool) -> None:
+        """Set the connected state."""
+        self._connected = connected
+
+    async def async_added_to_hass(self) -> None:
+        """Register dispatcher listener."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ACTIONTEC_UPDATE, self._async_update
+            )
+        )
+
+    @callback
+    def _async_update(self) -> None:
+        """Update the entity."""
+        self.async_write_ha_state()
