@@ -97,10 +97,13 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
             # simple button is usually group 1
             simple_button = self._insteon_device_group.group == 1
             # some devices don't have a simple button, only labeled buttons
-            if any(isinstance(self._insteon_device, device_class) for device_class in (
-                   GeneralController_MiniRemote_4,
-                   GeneralController_MiniRemote_8,
-            )):
+            if any(
+                isinstance(self._insteon_device, device_class)
+                for device_class in (
+                    GeneralController_MiniRemote_4,
+                    GeneralController_MiniRemote_8,
+                )
+            ):
                 simple_button = False
             self._attr_translation_key = (
                 "simple" if simple_button else "labeled"
