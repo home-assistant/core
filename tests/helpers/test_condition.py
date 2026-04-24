@@ -2150,16 +2150,16 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: True
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: False
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return False
 
     async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
         return {
@@ -2297,8 +2297,9 @@ async def test_get_condition_platform_registers_conditions(
         ) -> ConfigType:
             return config
 
-        async def async_get_checker(self) -> ConditionChecker:
-            return lambda **kwargs: True
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
 
     async def async_get_conditions(
         hass: HomeAssistant,
@@ -3103,7 +3104,7 @@ async def _setup_numerical_condition(
     entity_ids: str | list[str],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
@@ -3432,7 +3433,7 @@ async def _setup_numerical_condition_with_unit(
     domain_specs: Mapping[str, DomainSpec] | None = None,
     base_unit: str = UnitOfTemperature.CELSIUS,
     unit_converter: type = TemperatureConverter,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a numerical condition with unit conversion via a mock platform."""
     condition_cls = make_entity_numerical_condition_with_unit(
         domain_specs or _DEFAULT_DOMAIN_SPECS, base_unit, unit_converter
@@ -3953,7 +3954,7 @@ async def _setup_state_condition(
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
     support_duration: bool = False,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,
@@ -4341,3 +4342,47 @@ async def test_state_condition_duration_unavailable_unknown(
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=11))
     assert test_all(hass) is False
+
+
+async def test_condition_checker_del_calls_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ calls async_unload if not already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_called_once()
+
+
+async def test_condition_checker_del_skips_if_already_unloaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ does not call async_unload if already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # First call sets the flag
+    checker.async_unload()
+    unload_mock.assert_called_once()
+    unload_mock.reset_mock()
+
+    # __del__ should skip since _unloaded is True
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_not_called()
