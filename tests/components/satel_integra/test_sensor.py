@@ -44,7 +44,7 @@ async def test_sensor_not_created_by_default(
 
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{MOCK_ENTRY_ID}_zones_1"
+            "sensor", DOMAIN, f"{MOCK_ENTRY_ID}_zones_1_temperature"
         )
         is None
     )
@@ -72,7 +72,7 @@ async def test_sensors(
     )
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_zones_1")}
+        identifiers={(DOMAIN, f"{MOCK_ENTRY_ID}_zones_1")}
     )
     assert device_entry == snapshot(name="device-zone")
 
