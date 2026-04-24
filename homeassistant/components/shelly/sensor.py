@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Final, cast
 
 from aioshelly.block_device import Block
@@ -37,10 +38,12 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -196,6 +199,92 @@ class RpcBluTrvSensor(RpcSensor):
         self._attr_device_info = get_blu_trv_device_info(
             coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
+
+
+class RpcSwitchTimerSensor(ShellyRpcAttributeEntity, SensorEntity):
+    """Represent a RPC switch timer sensor."""
+
+    entity_description: RpcSensorDescription
+    _update_unsub: CALLBACK_TYPE | None = None
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize timer sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self.configure_translation_attributes()
+
+    def _get_timer_remaining_seconds(self) -> int | None:
+        """Get timer remaining time in seconds."""
+        timer_started_at = self.status.get("timer_started_at")
+        timer_duration = self.status.get("timer_duration")
+
+        # Timer not active or invalid types
+        if not isinstance(timer_started_at, (int, float)) or timer_started_at == 0:
+            return None
+        if not isinstance(timer_duration, (int, float)) or timer_duration is None:
+            return None
+
+        # Calculate elapsed time
+        current_time = dt_util.utcnow().timestamp()
+        elapsed = current_time - timer_started_at
+        timer_remaining = timer_duration - elapsed
+
+        # Timer expired
+        if timer_remaining <= 0:
+            return None
+
+        return int(timer_remaining)
+
+    @property
+    def native_value(self) -> int | None:
+        """Return timer remaining time in seconds."""
+        return self._get_timer_remaining_seconds()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self._cancel_update_interval)
+        self._check_and_schedule_updates()
+
+    @callback
+    def _cancel_update_interval(self) -> None:
+        """Cancel the update interval subscription."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+
+    @callback
+    def _update_timer_state(self, _: datetime) -> None:
+        """Update timer state every second."""
+        self._check_and_schedule_updates()
+        self.async_write_ha_state()
+
+    @callback
+    def _check_and_schedule_updates(self) -> None:
+        """Check timer state and schedule/cancel per-second updates."""
+        timer_active = self._get_timer_remaining_seconds() is not None
+
+        if timer_active and self._update_unsub is None:
+            # Timer is active, start per-second updates
+            self._update_unsub = async_track_time_interval(
+                self.hass,
+                self._update_timer_state,
+                timedelta(seconds=1),
+            )
+        elif not timer_active and self._update_unsub is not None:
+            # Timer stopped, cancel updates
+            self._cancel_update_interval()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Handle device update."""
+        self._check_and_schedule_updates()
+        self.async_write_ha_state()
 
 
 BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -1721,6 +1810,18 @@ RPC_SENSORS: Final = {
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
+    ),
+    "timer_remaining": RpcSensorDescription(
+        key="switch",
+        sub_key="timer_remaining",
+        translation_key="timer_remaining",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: True,
+        entity_class=RpcSwitchTimerSensor,
     ),
 }
 
