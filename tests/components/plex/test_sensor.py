@@ -72,6 +72,9 @@ class MockPlexTVEpisode(MockPlexMedia):
     parentYear = 2021
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_library_sensor_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
