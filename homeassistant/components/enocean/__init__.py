@@ -14,7 +14,12 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import (
+    DOMAIN,
+    SIGNAL_OBSERVATION,
+    SIGNAL_RECEIVE_MESSAGE,
+    SIGNAL_SEND_MESSAGE,
+)
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
@@ -49,8 +54,18 @@ async def async_setup_entry(
     """Set up an EnOcean gateway for the given entry."""
     gateway = Gateway(port=config_entry.data[CONF_DEVICE])
 
+    # immediately store the gateway in the hass.data to make it available for platform setup
+    hass.data.setdefault(DOMAIN, gateway)
+
+    # this is the Gateway's low level callback; it is used for the legacy code
+    # once all code is migrated to use the high-level observation callback, this can be removed
     gateway.add_erp1_received_callback(
         lambda packet: async_dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
+    )
+
+    # this is the Gateway's high-level callback; it is used for all new code
+    gateway.add_observation_callback(
+        lambda obs: async_dispatcher_send(hass, SIGNAL_OBSERVATION, obs)
     )
 
     try:
@@ -64,6 +79,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
+
     return True
 
 
