@@ -1,19 +1,18 @@
 """ESPHome set up tests."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioesphomeapi import APIConnectionError
 import pytest
 
 from homeassistant.components.esphome import DOMAIN
-from homeassistant.components.esphome.const import CONF_NOISE_PSK, ESPHOME_DATA
-from homeassistant.components.esphome.domain_data import DomainData
+from homeassistant.components.esphome.const import CONF_NOISE_PSK
 from homeassistant.components.esphome.encryption_key_storage import (
     async_get_encryption_key_storage,
 )
-from homeassistant.components.esphome.ffmpeg_proxy import FFmpegProxyData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +39,12 @@ async def test_remove_entry_clears_dynamic_encryption_key(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that removing an entry clears the dynamic encryption key from device and storage."""
-    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
+    with patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=False
+    ):
+        # async_setup_component automatically loads all pre-existing entries,
+        # but we don't want to load the entry since we're testing removal
+        await async_setup_component(hass, DOMAIN, {})
 
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
@@ -112,7 +116,12 @@ async def test_remove_entry_device_rejects_key_removal(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that when device rejects key removal, key remains in storage."""
-    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
+    with patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=False
+    ):
+        # async_setup_component automatically loads all pre-existing entries,
+        # but we don't want to actually load the entry
+        await async_setup_component(hass, DOMAIN, {})
 
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
@@ -142,7 +151,12 @@ async def test_remove_entry_connection_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that connection error during key clearing does not remove key from storage."""
-    hass.data[ESPHOME_DATA] = DomainData(ffmpeg_proxy_data=FFmpegProxyData())
+    with patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=False
+    ):
+        # async_setup_component automatically loads all pre-existing entries,
+        # but we don't want to actually load the entry
+        await async_setup_component(hass, DOMAIN, {})
 
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
