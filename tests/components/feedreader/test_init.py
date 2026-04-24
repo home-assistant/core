@@ -70,6 +70,9 @@ async def test_setup_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.skip(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_storage_data_writing(
     hass: HomeAssistant,
     events: list[Event],
