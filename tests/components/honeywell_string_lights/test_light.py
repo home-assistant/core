@@ -25,8 +25,8 @@ ENTITY_ID = "light.honeywell_string_lights"
 
 async def test_turn_on_off_sends_commands(
     hass: HomeAssistant,
-    mock_transmitter: MockRadioFrequencyEntity,
-    init_integration: MockConfigEntry,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    init_string_lights: MockConfigEntry,
 ) -> None:
     """Test turning the light on and off sends the correct RF commands."""
     state = hass.states.get(ENTITY_ID)
@@ -42,8 +42,8 @@ async def test_turn_on_off_sends_commands(
     )
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
-    assert len(mock_transmitter.send_command_calls) == 1
-    assert mock_transmitter.send_command_calls[0] is COMMANDS.load_command("turn_on")
+    assert len(mock_rf_entity.send_command_calls) == 1
+    assert mock_rf_entity.send_command_calls[0] is COMMANDS.load_command("turn_on")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -53,13 +53,13 @@ async def test_turn_on_off_sends_commands(
     )
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    assert len(mock_transmitter.send_command_calls) == 2
-    assert mock_transmitter.send_command_calls[1] is COMMANDS.load_command("turn_off")
+    assert len(mock_rf_entity.send_command_calls) == 2
+    assert mock_rf_entity.send_command_calls[1] is COMMANDS.load_command("turn_off")
 
 
 async def test_restore_state(
     hass: HomeAssistant,
-    mock_transmitter: MockRadioFrequencyEntity,
+    mock_rf_entity: MockRadioFrequencyEntity,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light restores its previous on state."""
@@ -74,12 +74,12 @@ async def test_restore_state(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, init_string_lights: MockConfigEntry
 ) -> None:
     """Test unloading the config entry removes the entity."""
     assert hass.states.get(ENTITY_ID) is not None
 
-    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    assert await hass.config_entries.async_unload(init_string_lights.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)

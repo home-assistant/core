@@ -13,12 +13,14 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import TRANSMITTER_ENTITY_ID
+
 from tests.common import MockConfigEntry
 from tests.components.radio_frequency.conftest import MockRadioFrequencyEntity
 
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_transmitter: MockRadioFrequencyEntity
+    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
 ) -> None:
     """Test the user config flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -29,12 +31,11 @@ async def test_user_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_TRANSMITTER: mock_transmitter.entity_id},
+        user_input={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID},
     )
 
     entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(mock_transmitter.entity_id)
-    assert entity_entry is not None
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Honeywell String Lights"
@@ -44,7 +45,6 @@ async def test_user_flow(
 
 async def test_unique_id_already_configured(
     hass: HomeAssistant,
-    mock_transmitter: MockRadioFrequencyEntity,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test aborting when the same transmitter is already configured."""
@@ -55,7 +55,7 @@ async def test_unique_id_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_TRANSMITTER: mock_transmitter.entity_id},
+        user_input={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID},
     )
 
     assert result["type"] is FlowResultType.ABORT
