@@ -281,8 +281,12 @@ async def test_mixed_readings(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.no_readings_temperature").state == "unavailable"
 
 
-async def test_stale_reading(hass: HomeAssistant) -> None:
+async def test_stale_reading(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that a stale spot reading is ignored and sensor reports unknown."""
+    freezer.move_to("2026-01-01T02:00:00+00:00")
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
@@ -313,6 +317,7 @@ async def test_stale_reading_retains_previous_value(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a stale reading retains the previous valid sensor value."""
+    freezer.move_to("2026-01-01T02:00:00+00:00")
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
