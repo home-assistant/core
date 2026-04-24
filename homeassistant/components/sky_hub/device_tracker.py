@@ -2,80 +2,139 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 
 from pyskyqhub.skyq_hub import SkyQHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    SCAN_INTERVAL,
+    ScannerEntity,
 )
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_HOST = "192.168.1.254"
+
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST): cv.string}
+    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> SkyHubDeviceScanner | None:
-    """Return a Sky Hub scanner if successful."""
-    host = config[DEVICE_TRACKER_DOMAIN].get(CONF_HOST, "192.168.1.254")
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Sky Hub device tracker platform."""
+    host: str = config[CONF_HOST]
     websession = async_get_clientsession(hass)
     hub = SkyQHub(websession, host)
 
     _LOGGER.debug("Initialising Sky Hub")
     await hub.async_connect()
-    if hub.success_init:
-        return SkyHubDeviceScanner(hub)
+    if not hub.success_init:
+        return
 
-    return None
+    tracked: set[str] = set()
+    connected_macs: set[str] = set()
+    device_names: dict[str, str] = {}
+    signal = f"sky_hub_update_{host}"
 
-
-class SkyHubDeviceScanner(DeviceScanner):
-    """Class which queries a Sky Hub router."""
-
-    def __init__(self, hub):
-        """Initialise the scanner."""
-        self._hub = hub
-        self.last_results = {}
-
-    async def async_scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        await self._async_update_info()
-        return [device.mac for device in self.last_results]
-
-    async def async_get_device_name(self, device):
-        """Return the name of the given device."""
-        return next(
-            (result.name for result in self.last_results if result.mac == device),
-            None,
-        )
-
-    async def async_get_extra_attributes(self, device):
-        """Get extra attributes of a device."""
-        device = next(
-            (result for result in self.last_results if result.mac == device), None
-        )
-        if device is None:
-            return {}
-
-        return device.asdict()
-
-    async def _async_update_info(self):
-        """Ensure the information from the Sky Hub is up to date."""
+    async def async_scan_devices(now: datetime | None = None) -> None:
+        """Scan for devices and update state."""
         _LOGGER.debug("Scanning")
-
-        if not (data := await self._hub.async_get_skyhub_data()):
+        data = await hub.async_get_skyhub_data()
+        if not data:
             return
 
-        self.last_results = data
+        new_connected = {device.mac for device in data}
+        for device in data:
+            device_names[device.mac] = device.name
+
+        connected_macs.clear()
+        connected_macs.update(new_connected)
+
+        new_macs = [mac for mac in new_connected if mac not in tracked]
+        tracked.update(new_macs)
+        if new_macs:
+            async_add_entities(
+                [
+                    SkyHubDeviceTracker(
+                        mac, device_names[mac], connected_macs, device_names, signal
+                    )
+                    for mac in new_macs
+                ]
+            )
+
+        async_dispatcher_send(hass, signal)
+
+    await async_scan_devices()
+
+    scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    async_track_time_interval(hass, async_scan_devices, scan_interval)
+
+
+class SkyHubDeviceTracker(ScannerEntity):
+    """Representation of a Sky Hub tracked device."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        mac: str,
+        name: str,
+        connected_macs: set[str],
+        device_names: dict[str, str],
+        signal: str,
+    ) -> None:
+        """Initialize a Sky Hub device tracker entity."""
+        self._mac = mac
+        self._attr_name = name
+        self._connected_macs = connected_macs
+        self._device_names = device_names
+        self._signal = signal
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._mac in self._connected_macs
+
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self._device_names.get(self._mac)
+
+    @property
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._signal,
+                self._async_update_state,
+            )
+        )
+
+    @callback
+    def _async_update_state(self) -> None:
+        """Update the device state."""
+        self.async_write_ha_state()
