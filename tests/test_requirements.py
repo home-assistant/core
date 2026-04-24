@@ -633,7 +633,20 @@ async def test_discovery_requirements_zeroconf(
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 2
+    assert len(mock_process.mock_calls) == 11
+    assert {call_args[1][0] for call_args in mock_process.mock_calls} == {
+        "assist_pipeline",
+        "backup",
+        "camera",
+        "cloud",
+        "conversation",
+        "ffmpeg",
+        "hassio",
+        "matter",
+        "network",
+        "tts",
+        "zeroconf",
+    }
     assert mock_process.mock_calls[0][1][1] == zeroconf.requirements
 
 
