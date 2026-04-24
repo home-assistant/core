@@ -129,7 +129,7 @@ ATTR_CREDENTIAL_DATA = "credential_data"
 ATTR_CREDENTIAL_SLOT = "credential_slot"
 ATTR_CREDENTIAL_TYPE = "credential_type"
 ATTR_CREDENTIAL_RULE = "credential_rule"
-ATTR_USER_INDEX = "user_index"
+ATTR_USER_ID = "user_id"
 ATTR_USER_NAME = "user_name"
 ATTR_USER_TYPE = "user_type"
 

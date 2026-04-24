@@ -172,7 +172,7 @@ class Credential(TypedDict):
 class UserEntry(TypedDict):
     """A single user entry in the users list."""
 
-    user_index: int
+    user_id: int
     user_name: str | None
     active: bool
     user_type: str
@@ -190,14 +190,14 @@ class UsersResult(TypedDict):
 class SetUserReturn(TypedDict):
     """Return type for set_user."""
 
-    user_index: int
+    user_id: int
 
 
 class SetCredentialReturn(TypedDict):
     """Return type for set_credential."""
 
     credential_slot: int
-    user_index: int
+    user_id: int
 
 
 # --- Business logic functions ---
@@ -272,7 +272,7 @@ async def async_get_users(node: Node) -> UsersResult:
 
     user_list: list[UserEntry] = [
         UserEntry(
-            user_index=user.user_id,
+            user_id=user.user_id,
             user_name=user.user_name,
             active=user.active,
             user_type=USER_TYPE_MAP.get(user.user_type, str(user.user_type)),
@@ -294,13 +294,13 @@ async def async_get_users(node: Node) -> UsersResult:
 
 async def async_set_user(
     node: Node,
-    user_index: int | None = None,
+    user_id: int | None = None,
     user_name: str | None = None,
     user_type: UserCredentialUserType | None = None,
     credential_rule: UserCredentialRule | None = None,
     active: bool | None = None,
 ) -> SetUserReturn:
-    """Create or update an access-control user. Returns the allocated user_index."""
+    """Create or update an access-control user. Returns the allocated user_id."""
     supported = await node.access_control.async_is_supported()
     if not supported:
         raise HomeAssistantError(
@@ -309,15 +309,15 @@ async def async_set_user(
         )
 
     # Auto-find first available user slot
-    if user_index is None:
+    if user_id is None:
         user_caps = await node.access_control.async_get_user_capabilities_cached()
         users = await node.access_control.async_get_users_cached()
         used_ids = {u.user_id for u in users}
-        user_index = next(
+        user_id = next(
             (i for i in range(1, user_caps.max_users + 1) if i not in used_ids),
             None,
         )
-        if user_index is None:
+        if user_id is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_available_user_slots",
@@ -330,12 +330,12 @@ async def async_set_user(
         credential_rule=credential_rule,
     )
 
-    status = await node.access_control.async_set_user(user_index, options)
+    status = await node.access_control.async_set_user(user_id, options)
     _raise_on_set_user_error(status)
-    return SetUserReturn(user_index=user_index)
+    return SetUserReturn(user_id=user_id)
 
 
-async def async_clear_user(node: Node, user_index: int) -> None:
+async def async_clear_user(node: Node, user_id: int) -> None:
     """Delete a single access-control user."""
     if not await node.access_control.async_is_supported():
         raise HomeAssistantError(
@@ -343,7 +343,7 @@ async def async_clear_user(node: Node, user_index: int) -> None:
             translation_key="access_control_not_supported",
         )
 
-    status = await node.access_control.async_delete_user(user_index)
+    status = await node.access_control.async_delete_user(user_id)
     _raise_on_set_user_error(status)
 
 
@@ -361,15 +361,15 @@ async def async_clear_all_users(node: Node) -> None:
 
 async def async_set_credential(
     node: Node,
-    user_index: int,
+    user_id: int,
     credential_type: UserCredentialType,
     credential_data: str,
     credential_slot: int | None = None,
 ) -> SetCredentialReturn:
     """Add or update a credential (PIN/password only).
 
-    user_index must refer to an existing user. To create a new user, call
-    async_set_user first, then pass the returned user_index here. This service
+    user_id must refer to an existing user. To create a new user, call
+    async_set_user first, then pass the returned user_id here. This service
     does not create or modify users.
     """
     supported = await node.access_control.async_is_supported()
@@ -415,19 +415,19 @@ async def async_set_credential(
             )
 
     status = await node.access_control.async_set_credential(
-        user_index, credential_type, credential_slot, credential_data
+        user_id, credential_type, credential_slot, credential_data
     )
     _raise_on_set_credential_error(status)
 
     return SetCredentialReturn(
         credential_slot=credential_slot,
-        user_index=user_index,
+        user_id=user_id,
     )
 
 
 async def async_clear_credential(
     node: Node,
-    user_index: int,
+    user_id: int,
     credential_type: UserCredentialType,
     credential_slot: int,
 ) -> None:
@@ -439,12 +439,12 @@ async def async_clear_credential(
         )
 
     status = await node.access_control.async_delete_credential(
-        user_index, credential_type, credential_slot
+        user_id, credential_type, credential_slot
     )
     _raise_on_set_credential_error(status)
 
 
-async def async_clear_all_credentials(node: Node, user_index: int) -> None:
+async def async_clear_all_credentials(node: Node, user_id: int) -> None:
     """Delete all credentials for a user."""
     if not await node.access_control.async_is_supported():
         raise HomeAssistantError(
@@ -452,9 +452,9 @@ async def async_clear_all_credentials(node: Node, user_index: int) -> None:
             translation_key="access_control_not_supported",
         )
 
-    credentials = await node.access_control.async_get_credentials_cached(user_index)
+    credentials = await node.access_control.async_get_credentials_cached(user_id)
     for cred in credentials:
         status = await node.access_control.async_delete_credential(
-            user_index, cred.type, cred.slot
+            user_id, cred.type, cred.slot
         )
         _raise_on_set_credential_error(status)

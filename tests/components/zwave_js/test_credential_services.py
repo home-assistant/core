@@ -91,7 +91,7 @@ async def test_set_user_auto_find(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test set_user with auto-find user slot returns allocated user_index."""
+    """Test set_user with auto-find user slot returns allocated user_id."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
@@ -113,7 +113,7 @@ async def test_set_user_auto_find(
     api.async_set_user.assert_called_once()
     call_args = api.async_set_user.call_args
     assert call_args[0][0] == 1  # auto-found user_id
-    assert result[entity_id]["user_index"] == 1
+    assert result[entity_id]["user_id"] == 1
 
 
 async def test_set_user_explicit_index(
@@ -135,7 +135,7 @@ async def test_set_user_explicit_index(
         "set_user",
         {
             ATTR_ENTITY_ID: entity_id,
-            "user_index": 5,
+            "user_id": 5,
             "user_name": "Bob",
         },
         blocking=True,
@@ -145,7 +145,7 @@ async def test_set_user_explicit_index(
     api.async_set_user.assert_called_once()
     call_args = api.async_set_user.call_args
     assert call_args[0][0] == 5
-    assert result[entity_id]["user_index"] == 5
+    assert result[entity_id]["user_id"] == 5
 
 
 async def test_set_user_no_slots(
@@ -200,7 +200,7 @@ async def test_clear_user(
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
             ),
-            "user_index": 3,
+            "user_id": 3,
         },
         blocking=True,
     )
@@ -319,7 +319,7 @@ async def test_get_users(
 
     assert result[entity_id]["max_users"] == 20
     assert len(result[entity_id]["users"]) == 1
-    assert result[entity_id]["users"][0]["user_index"] == 1
+    assert result[entity_id]["users"][0]["user_id"] == 1
     assert result[entity_id]["users"][0]["user_name"] == "Alice"
     assert result[entity_id]["users"][0]["active"] is True
 
@@ -332,7 +332,7 @@ async def test_set_credential_auto_slot(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test set_credential with explicit user_index and auto-find slot."""
+    """Test set_credential with explicit user_id and auto-find slot."""
     api = _mock_access_control(lock_schlage_be469)
 
     pin_cap = MagicMock()
@@ -348,7 +348,7 @@ async def test_set_credential_auto_slot(
         "set_credential",
         {
             ATTR_ENTITY_ID: entity_id,
-            "user_index": 2,
+            "user_id": 2,
             "credential_type": "pin_code",
             "credential_data": "1234",
         },
@@ -358,7 +358,7 @@ async def test_set_credential_auto_slot(
 
     api.async_set_user.assert_not_called()
     api.async_set_credential.assert_called_once()
-    assert result[entity_id]["user_index"] == 2
+    assert result[entity_id]["user_id"] == 2
     assert result[entity_id]["credential_slot"] == 1
 
 
@@ -370,7 +370,7 @@ async def test_set_credential_explicit_slot(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test set_credential with explicit user_index and slot."""
+    """Test set_credential with explicit user_id and slot."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
@@ -383,7 +383,7 @@ async def test_set_credential_explicit_slot(
             ATTR_ENTITY_ID: entity_id,
             "credential_type": "pin_code",
             "credential_data": "5678",
-            "user_index": 3,
+            "user_id": 3,
             "credential_slot": 2,
         },
         blocking=True,
@@ -392,7 +392,7 @@ async def test_set_credential_explicit_slot(
 
     api.async_set_user.assert_not_called()
     api.async_set_credential.assert_called_once()
-    assert result[entity_id]["user_index"] == 3
+    assert result[entity_id]["user_id"] == 3
     assert result[entity_id]["credential_slot"] == 2
 
 
@@ -426,7 +426,7 @@ async def test_set_credential_multi_target(
         "set_credential",
         {
             ATTR_ENTITY_ID: [entity_1, entity_2],
-            "user_index": 1,
+            "user_id": 1,
             "credential_type": "pin_code",
             "credential_data": "1234",
         },
@@ -437,8 +437,8 @@ async def test_set_credential_multi_target(
     api1.async_set_credential.assert_called_once()
     api2.async_set_credential.assert_called_once()
     assert set(result.keys()) == {entity_1, entity_2}
-    assert result[entity_1]["user_index"] == 1
-    assert result[entity_2]["user_index"] == 1
+    assert result[entity_1]["user_id"] == 1
+    assert result[entity_2]["user_id"] == 1
 
 
 async def test_set_credential_rejection_raises(
@@ -463,7 +463,7 @@ async def test_set_credential_rejection_raises(
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
                 ),
-                "user_index": 1,
+                "user_id": 1,
                 "credential_type": "pin_code",
                 "credential_data": "1234",
                 "credential_slot": 1,
@@ -495,7 +495,7 @@ async def test_set_user_rejection_raises(
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
                 ),
-                "user_index": 1,
+                "user_id": 1,
                 "user_name": "Guest",
             },
             blocking=True,
@@ -503,7 +503,7 @@ async def test_set_user_rejection_raises(
         )
 
 
-async def test_set_credential_requires_user_index(
+async def test_set_credential_requires_user_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -511,7 +511,7 @@ async def test_set_credential_requires_user_index(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test set_credential rejects calls without user_index."""
+    """Test set_credential rejects calls without user_id."""
     _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(vol.Invalid):
@@ -552,7 +552,7 @@ async def test_set_credential_type_not_supported(
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
                 ),
-                "user_index": 1,
+                "user_id": 1,
                 "credential_type": "pin_code",
                 "credential_data": "1234",
             },
@@ -594,7 +594,7 @@ async def test_set_credential_no_available_slots(
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
                 ),
-                "user_index": 1,
+                "user_id": 1,
                 "credential_type": "pin_code",
                 "credential_data": "1234",
             },
@@ -621,7 +621,7 @@ async def test_clear_credential(
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
             ),
-            "user_index": 1,
+            "user_id": 1,
             "credential_type": "pin_code",
             "credential_slot": 2,
         },
@@ -657,7 +657,7 @@ async def test_clear_all_credentials(
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
             ),
-            "user_index": 1,
+            "user_id": 1,
         },
         blocking=True,
     )
@@ -665,7 +665,7 @@ async def test_clear_all_credentials(
     assert api.async_delete_credential.call_count == 2
 
 
-@pytest.mark.parametrize("field", ["user_index", "credential_slot"])
+@pytest.mark.parametrize("field", ["user_id", "credential_slot"])
 @pytest.mark.parametrize("value", [0, 65536, 100000])
 async def test_set_credential_id_range_validation(
     hass: HomeAssistant,
@@ -677,14 +677,14 @@ async def test_set_credential_id_range_validation(
     field: str,
     value: int,
 ) -> None:
-    """Reject user_index / credential_slot outside 1..65535."""
+    """Reject user_id / credential_slot outside 1..65535."""
     _mock_access_control(lock_schlage_be469)
 
     payload: dict = {
         ATTR_ENTITY_ID: _lock_entity_id(
             entity_registry, device_registry, client, lock_schlage_be469
         ),
-        "user_index": 1,
+        "user_id": 1,
         "credential_type": "pin_code",
         "credential_data": "1234",
     }
@@ -700,7 +700,7 @@ async def test_set_credential_id_range_validation(
         )
 
 
-async def test_clear_user_rejects_oversize_user_index(
+async def test_clear_user_rejects_oversize_user_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -708,7 +708,7 @@ async def test_clear_user_rejects_oversize_user_index(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Reject user_index above uint16 max on clear_user."""
+    """Reject user_id above uint16 max on clear_user."""
     _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(vol.Invalid):
@@ -719,7 +719,7 @@ async def test_clear_user_rejects_oversize_user_index(
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
                 ),
-                "user_index": 70000,
+                "user_id": 70000,
             },
             blocking=True,
         )
@@ -750,7 +750,7 @@ async def test_mutation_supports_multi_target(
                     entity_registry, device_registry, client, lock_august_pro
                 ),
             ],
-            "user_index": 3,
+            "user_id": 3,
         },
         blocking=True,
     )

@@ -98,7 +98,7 @@ set_user:
       domain: lock
       integration: zwave_js
   fields:
-    user_index:
+    user_id:
       selector:
         number:
           min: 1
@@ -136,7 +136,7 @@ clear_user:
       domain: lock
       integration: zwave_js
   fields:
-    user_index:
+    user_id:
       required: true
       selector:
         number:
@@ -169,7 +169,7 @@ set_credential:
       domain: lock
       integration: zwave_js
   fields:
-    user_index:
+    user_id:
       required: true
       selector:
         number:
@@ -202,7 +202,7 @@ clear_credential:
       domain: lock
       integration: zwave_js
   fields:
-    user_index:
+    user_id:
       required: true
       selector:
         number:
@@ -232,7 +232,7 @@ clear_all_credentials:
       domain: lock
       integration: zwave_js
   fields:
-    user_index:
+    user_id:
       required: true
       selector:
         number:

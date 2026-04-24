@@ -296,7 +296,7 @@
       "message": "Access control is not supported on this device"
     },
     "clear_all_credentials_failed": {
-      "message": "Failed to clear all credentials for user {user_index}: {error}"
+      "message": "Failed to clear all credentials for user {user_id}: {error}"
     },
     "clear_all_users_failed": {
       "message": "Failed to clear all users: {error}"
@@ -308,7 +308,7 @@
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     },
     "clear_user_failed": {
-      "message": "Failed to clear user {user_index}: {error}"
+      "message": "Failed to clear user {user_id}: {error}"
     },
     "credential_rejected_add_occupied": {
       "message": "Cannot add credential: the target slot is already in use."
@@ -454,7 +454,7 @@
     "clear_all_credentials": {
       "description": "Deletes all credentials for a user on a lock.",
       "fields": {
-        "user_index": {
+        "user_id": {
           "description": "User slot index to clear all credentials for.",
           "name": "User index"
         }
@@ -476,7 +476,7 @@
           "description": "The type of credential to delete (pin_code or password).",
           "name": "Credential type"
         },
-        "user_index": {
+        "user_id": {
           "description": "User slot index that owns the credential.",
           "name": "User index"
         }
@@ -496,7 +496,7 @@
     "clear_user": {
       "description": "Deletes a single access-control user from a lock.",
       "fields": {
-        "user_index": {
+        "user_id": {
           "description": "User slot index to delete.",
           "name": "User index"
         }
@@ -742,7 +742,7 @@
           "description": "The type of credential (pin_code or password).",
           "name": "Credential type"
         },
-        "user_index": {
+        "user_id": {
           "description": "User slot index to assign the credential to. Must refer to an existing user.",
           "name": "User index"
         }
@@ -794,7 +794,7 @@
       "name": "Set lock user code"
     },
     "set_user": {
-      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_index for each targeted lock entity.",
+      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_id for each targeted lock entity.",
       "fields": {
         "active": {
           "description": "Whether the user is active.",
@@ -804,7 +804,7 @@
           "description": "Credential rule for the user (single, dual, or triple).",
           "name": "Credential rule"
         },
-        "user_index": {
+        "user_id": {
           "description": "User slot index. If not specified, the first available slot is used.",
           "name": "User index"
         },

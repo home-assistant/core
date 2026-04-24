@@ -85,7 +85,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         const.SERVICE_SET_USER,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Optional(const.ATTR_USER_INDEX): uint16_id,
+            vol.Optional(const.ATTR_USER_ID): uint16_id,
             vol.Optional(const.ATTR_USER_NAME): cv.string,
             vol.Optional(const.ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
             vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
@@ -102,7 +102,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         const.DOMAIN,
         const.SERVICE_CLEAR_USER,
         entity_domain=LOCK_DOMAIN,
-        schema={vol.Required(const.ATTR_USER_INDEX): uint16_id},
+        schema={vol.Required(const.ATTR_USER_ID): uint16_id},
         func="async_clear_user",
     )
 
@@ -141,7 +141,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         const.SERVICE_SET_CREDENTIAL,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(const.ATTR_USER_INDEX): uint16_id,
+            vol.Required(const.ATTR_USER_ID): uint16_id,
             vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
                 const.WRITABLE_CREDENTIAL_TYPES
             ),
@@ -158,7 +158,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         const.SERVICE_CLEAR_CREDENTIAL,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(const.ATTR_USER_INDEX): uint16_id,
+            vol.Required(const.ATTR_USER_ID): uint16_id,
             vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
                 const.WRITABLE_CREDENTIAL_TYPES
             ),
@@ -172,7 +172,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         const.DOMAIN,
         const.SERVICE_CLEAR_ALL_CREDENTIALS,
         entity_domain=LOCK_DOMAIN,
-        schema={vol.Required(const.ATTR_USER_INDEX): uint16_id},
+        schema={vol.Required(const.ATTR_USER_ID): uint16_id},
         func="async_clear_all_credentials",
     )
 
