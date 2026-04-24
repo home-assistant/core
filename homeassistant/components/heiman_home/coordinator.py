@@ -314,9 +314,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             cloud_client = None
             try:
                 # Access the underlying cloud client from the wrapper
-                if hasattr(self.api_client, "_wrapper") and self.api_client._wrapper:  # noqa: SLF001
-                    cloud_client = self.api_client._wrapper.cloud_client  # noqa: SLF001
-            except Exception as err:  # noqa: BLE001
+                wrapper = getattr(self.api_client, "_wrapper", None)  # noqa: SLF001
+                if wrapper:
+                    cloud_client = wrapper.cloud_client
+            except Exception as err:
                 _LOGGER.warning("Failed to get cloud_client reference: %s", err)
 
             # Get devices dictionary for child device detection
