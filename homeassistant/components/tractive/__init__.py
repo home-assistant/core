@@ -110,7 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
             await asyncio.sleep(2)
             trackables.append(await _generate_trackables(client, obj))
     except aiotractive.exceptions.TractiveError as error:
-        _LOGGER.warning("Error fetching trackable objects: %s", error)
         raise ConfigEntryNotReady from error
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
