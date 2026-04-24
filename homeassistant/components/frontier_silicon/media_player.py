@@ -2,10 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
+from functools import wraps
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
-from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, PlayCaps, PlayState
+from afsapi import (
+    AFSAPI,
+    FSApiError,
+    FSConnectionError,
+    FSNotImplementedError,
+    PlayCaps,
+    PlayRepeatMode,
+    PlayState,
+)
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -14,16 +24,50 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import FrontierSiliconConfigEntry
 from .browse_media import browse_node, browse_top_level
 from .const import DOMAIN, MEDIA_CONTENT_ID_PRESET
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def fs_command_exception_wrap[
+    _AFSAPIDeviceT: AFSAPIDevice,
+    **_P,
+    _R,
+](
+    func: Callable[Concatenate[_AFSAPIDeviceT, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_AFSAPIDeviceT, _P], Coroutine[Any, Any, _R]]:
+    """Wrap command methods and map API exceptions to HA errors."""
+
+    @wraps(func)
+    async def _wrap(self: _AFSAPIDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except FSConnectionError as err:
+            command = func.__name__.removeprefix("async_")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"command": command},
+            ) from err
+        except FSApiError as err:
+            command = func.__name__.removeprefix("async_")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"command": command, "message": str(err)},
+            ) from err
+
+    return _wrap
 
 
 async def async_setup_entry(
@@ -106,7 +150,12 @@ class AFSAPIDevice(MediaPlayerEntity):
             PlayCaps.SKIP_NEXT | PlayCaps.FAST_FORWARD | PlayCaps.SKIP_FORWARD
         ):
             features |= MediaPlayerEntityFeature.NEXT_TRACK
-
+        if self.__play_caps & (PlayCaps.REPEAT | PlayCaps.REPEAT_ONE):
+            features |= MediaPlayerEntityFeature.REPEAT_SET
+        if self.__play_caps & PlayCaps.SHUFFLE:
+            features |= MediaPlayerEntityFeature.SHUFFLE_SET
+        if self.__play_caps & PlayCaps.SEEK:
+            features |= MediaPlayerEntityFeature.SEEK
         if self._supports_sound_mode:
             features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
@@ -158,6 +207,28 @@ class AFSAPIDevice(MediaPlayerEntity):
         except FSNotImplementedError:
             self.__play_caps = self._FALLBACK_PLAY_CAPS
 
+        if self.__play_caps & (PlayCaps.REPEAT | PlayCaps.REPEAT_ONE):
+            try:
+                repeat_mode = await afsapi.get_play_repeat()
+            except FSNotImplementedError:
+                self._attr_repeat = RepeatMode.OFF
+            else:
+                self._attr_repeat = {
+                    PlayRepeatMode.OFF: RepeatMode.OFF,
+                    PlayRepeatMode.REPEAT_ALL: RepeatMode.ALL,
+                    PlayRepeatMode.REPEAT_ONE: RepeatMode.ONE,
+                }.get(repeat_mode, RepeatMode.OFF)
+        else:
+            self._attr_repeat = RepeatMode.OFF
+
+        if self.__play_caps & PlayCaps.SHUFFLE:
+            try:
+                self._attr_shuffle = bool(await afsapi.get_play_shuffle())
+            except FSNotImplementedError:
+                self._attr_shuffle = False
+        else:
+            self._attr_shuffle = False
+
         if not self._attr_sound_mode_list and self._supports_sound_mode:
             try:
                 equalisers = await afsapi.get_equalisers()
@@ -189,6 +260,21 @@ class AFSAPIDevice(MediaPlayerEntity):
             self._attr_is_volume_muted = await afsapi.get_mute()
             self._attr_media_image_url = await afsapi.get_play_graphic()
 
+            if self.__play_caps and self.__play_caps & PlayCaps.SEEK:
+                position_ms = await afsapi.get_play_position()
+                duration_ms = await afsapi.get_play_duration()
+                self._attr_media_position = (
+                    position_ms // 1000 if position_ms is not None else None
+                )
+                self._attr_media_duration = (
+                    duration_ms // 1000 if duration_ms is not None else None
+                )
+                self._attr_media_position_updated_at = dt_util.utcnow()
+            else:
+                self._attr_media_position = None
+                self._attr_media_duration = None
+                self._attr_media_position_updated_at = None
+
             if self._supports_sound_mode:
                 try:
                     eq_preset = await afsapi.get_eq_preset()
@@ -213,62 +299,82 @@ class AFSAPIDevice(MediaPlayerEntity):
             self._attr_is_volume_muted = None
             self._attr_media_image_url = None
             self._attr_sound_mode = None
+            self._attr_media_position = None
+            self._attr_media_duration = None
+            self._attr_media_position_updated_at = None
 
             self._attr_volume_level = None
 
     # Management actions
     # power control
+    @fs_command_exception_wrap
     async def async_turn_on(self) -> None:
         """Turn on the device."""
         await self.fs_device.set_power(True)
 
+    @fs_command_exception_wrap
     async def async_turn_off(self) -> None:
         """Turn off the device."""
         await self.fs_device.set_power(False)
 
+    @fs_command_exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.fs_device.play()
+        if (await self.fs_device.get_play_state()) == PlayState.STOPPED:
+            # The 'play' command only seems to work when the current stream is paused.
+            # We need to send a 'stop' command instead to resume a stopped stream.
+            await self.fs_device.stop()
+        else:
+            await self.fs_device.play()
 
+    @fs_command_exception_wrap
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.fs_device.pause()
 
+    @fs_command_exception_wrap
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.fs_device.stop()
 
+    @fs_command_exception_wrap
     async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
         await self.fs_device.rewind()
 
+    @fs_command_exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next track command (results in fast-forward)."""
         await self.fs_device.forward()
 
+    @fs_command_exception_wrap
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self.fs_device.set_mute(mute)
 
     # volume
+    @fs_command_exception_wrap
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
         await self.fs_device.set_volume(min(volume, self._max_volume or 1))
 
+    @fs_command_exception_wrap
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) - 1
         await self.fs_device.set_volume(max(volume, 0))
 
+    @fs_command_exception_wrap
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set
             volume = int(volume * self._max_volume)
             await self.fs_device.set_volume(volume)
 
+    @fs_command_exception_wrap
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.fs_device.set_power(True)
@@ -278,6 +384,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         ):
             await self.fs_device.set_mode(mode)
 
+    @fs_command_exception_wrap
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select EQ Preset."""
         if (
@@ -285,6 +392,27 @@ class AFSAPIDevice(MediaPlayerEntity):
             and (mode := self.__sound_modes_by_label.get(sound_mode)) is not None
         ):
             await self.fs_device.set_eq_preset(mode)
+
+    @fs_command_exception_wrap
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        await self.fs_device.play_repeat(
+            {
+                RepeatMode.OFF: PlayRepeatMode.OFF,
+                RepeatMode.ALL: PlayRepeatMode.REPEAT_ALL,
+                RepeatMode.ONE: PlayRepeatMode.REPEAT_ONE,
+            }.get(repeat, PlayRepeatMode.OFF)
+        )
+
+    @fs_command_exception_wrap
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Set shuffle mode."""
+        await self.fs_device.set_play_shuffle(shuffle)
+
+    @fs_command_exception_wrap
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position in seconds."""
+        await self.fs_device.set_play_position(int(position * 1000))
 
     async def async_browse_media(
         self,
@@ -297,6 +425,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         return await browse_node(self.fs_device, media_content_type, media_content_id)
 
+    @fs_command_exception_wrap
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:

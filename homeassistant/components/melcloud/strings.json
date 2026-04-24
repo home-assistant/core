@@ -66,6 +66,27 @@
       "condensing_temperature": {
         "name": "Condensing temperature"
       },
+      "daily_cooling_energy_consumed": {
+        "name": "Daily cooling energy consumed"
+      },
+      "daily_cooling_energy_produced": {
+        "name": "Daily cooling energy produced"
+      },
+      "daily_heating_energy_consumed": {
+        "name": "Daily heating energy consumed"
+      },
+      "daily_heating_energy_produced": {
+        "name": "Daily heating energy produced"
+      },
+      "daily_hot_water_energy_consumed": {
+        "name": "Daily hot water energy consumed"
+      },
+      "daily_hot_water_energy_produced": {
+        "name": "Daily hot water energy produced"
+      },
+      "demand_percentage": {
+        "name": "Demand percentage"
+      },
       "energy_consumed": {
         "name": "Energy consumed"
       },
@@ -73,16 +94,25 @@
         "name": "Energy produced"
       },
       "fan_frequency": {
-        "name": "Fan frequency"
+        "name": "Heat pump frequency"
       },
       "flow_temperature": {
         "name": "Flow temperature"
+      },
+      "flow_temperature_boiler": {
+        "name": "Boiler flow temperature"
+      },
+      "mixing_tank_temperature": {
+        "name": "Mixing tank temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
       },
       "return_temperature": {
-        "name": "Flow return temperature"
+        "name": "Return temperature"
+      },
+      "return_temperature_boiler": {
+        "name": "Boiler return temperature"
       },
       "room_temperature": {
         "name": "Room temperature"

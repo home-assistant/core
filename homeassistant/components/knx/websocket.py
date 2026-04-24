@@ -14,6 +14,7 @@ from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -64,7 +65,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_entity)
     websocket_api.async_register_command(hass, ws_delete_entity)
     websocket_api.async_register_command(hass, ws_get_entity_config)
-    websocket_api.async_register_command(hass, ws_get_entity_entries)
+    websocket_api.async_register_command(hass, ws_get_entities_by_group)
     websocket_api.async_register_command(hass, ws_create_device)
     websocket_api.async_register_command(hass, ws_get_schema)
     websocket_api.async_register_command(hass, ws_get_time_server_config)
@@ -75,7 +76,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_delete_expose)
     websocket_api.async_register_command(hass, ws_validate_expose)
 
-    if DOMAIN not in hass.data.get("frontend_panels", {}):
+    if not async_panel_exists(hass, DOMAIN):
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(
@@ -517,22 +518,22 @@ async def ws_delete_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_entries",
+        vol.Required("type"): "knx/get_entities_by_group",
     }
 )
 @provide_knx
 @callback
-def ws_get_entity_entries(
+def ws_get_entities_by_group(
     hass: HomeAssistant,
     knx: KNXModule,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Get entities configured from entity store."""
-    entity_entries = [
-        entry.extended_dict for entry in knx.config_store.get_entity_entries()
-    ]
-    connection.send_result(msg["id"], entity_entries)
+    """Get entities by group address."""
+    data = {
+        str(ga): identifiers for ga, identifiers in knx.group_address_entities.items()
+    }
+    connection.send_result(msg["id"], data)
 
 
 @websocket_api.require_admin

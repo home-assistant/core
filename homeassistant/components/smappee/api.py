@@ -36,6 +36,8 @@ class ConfigEntrySmappeeApi(api.SmappeeApi):
             None,
             None,
             token=self.session.token,
+            # Uses legacy hass.data[DOMAIN] pattern
+            # pylint: disable-next=hass-use-runtime-data
             farm=platform_to_farm[hass.data[DOMAIN][CONF_PLATFORM]],
         )
 

@@ -211,8 +211,14 @@
       "restart_required": {
         "name": "Restart required"
       },
+      "rotation": {
+        "name": "Rotation"
+      },
       "smoke_with_channel_name": {
         "name": "{channel_name} smoke"
+      },
+      "tilt": {
+        "name": "Tilt"
       }
     },
     "button": {

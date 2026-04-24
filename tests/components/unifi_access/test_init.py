@@ -24,7 +24,7 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
-from homeassistant.components.unifi_access.const import DOMAIN
+from homeassistant.components.unifi_access.const import DOMAIN, SERVICE_SET_LOCK_RULE
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -60,6 +60,7 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_client.authenticate.assert_awaited_once()
     mock_client.get_doors.assert_awaited_once()
+    assert hass.services.has_service(DOMAIN, SERVICE_SET_LOCK_RULE)
 
 
 @pytest.mark.parametrize(
@@ -332,7 +333,8 @@ async def test_ws_location_update_with_thumbnail(
     mock_client: MagicMock,
 ) -> None:
     """Test location_update_v2 with thumbnail updates image entity."""
-    assert hass.states.get(BACK_DOOR_IMAGE).state == "unknown"
+    # Back door starts without thumbnail — entity does not exist yet
+    assert hass.states.get(BACK_DOOR_IMAGE) is None
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -415,7 +417,12 @@ async def test_new_door_entities_created_on_refresh(
     # Add a new door to the API response
     mock_client.get_doors.return_value = [
         *mock_client.get_doors.return_value,
-        _make_door("door-003", "Garage Door"),
+        _make_door(
+            "door-003",
+            "Garage Door",
+            door_thumbnail="/preview/garage_door.png",
+            door_thumbnail_last_update=1700000000,
+        ),
     ]
 
     # Trigger natural refresh via WebSocket reconnect

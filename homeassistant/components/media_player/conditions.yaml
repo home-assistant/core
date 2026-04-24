@@ -1,9 +1,9 @@
 .condition_common: &condition_common
-  target:
+  target: &condition_media_player_target
     entity:
       domain: media_player
   fields:
-    behavior:
+    behavior: &condition_behavior
       required: true
       default: any
       selector:
@@ -13,8 +13,18 @@
             - all
             - any
 
-is_off: *condition_common
+.condition_common_with_for: &condition_common_with_for
+  target: *condition_media_player_target
+  fields:
+    behavior: *condition_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+is_off: *condition_common_with_for
 is_on: *condition_common
 is_not_playing: *condition_common
-is_paused: *condition_common
-is_playing: *condition_common
+is_paused: *condition_common_with_for
+is_playing: *condition_common_with_for
