@@ -1,11 +1,11 @@
 """Tests for coordinator coverage gaps - targeting 100% coverage."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import HeimanConnectionError, HeimanMQTTError
 from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import DeviceProperty as SDKDeviceProperty, HeimanDevice
+import pytest
 
 from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_ID
 from homeassistant.components.heiman_home.coordinator import (

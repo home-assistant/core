@@ -18,6 +18,7 @@ from heimanconnect import (
     HeimanMQTTError,
     HeimanUser,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant

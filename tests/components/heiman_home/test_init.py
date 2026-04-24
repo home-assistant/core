@@ -561,3 +561,72 @@ async def test_unload_returns_false_when_platforms_unload_fails(
         # But we need to also mock the cleanup path
         unload_result = await async_unload_entry(hass, entry)
         assert unload_result is False
+
+
+async def test_setup_mqtt_init_failure_with_cleanup(
+    hass: HomeAssistant, setup_credentials: None
+) -> None:
+    """Test setup handles MQTT initialization failure with proper cleanup (lines 116-130).
+    
+    When MQTT initialization fails, the integration should:
+    1. Disconnect any partially connected MQTT client
+    2. Close the API client
+    3. Re-raise the exception to fail setup
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": 9999999999,
+                "token_type": "Bearer",
+            },
+            "home_id": "test_home",
+            "user_id": "test_user",
+        },
+        unique_id="test_user",
+    )
+    entry.add_to_hass(hass)
+
+    # Create mocks for MQTT and API client
+    mock_mqtt_client = MagicMock()
+    mock_mqtt_client.async_disconnect = AsyncMock()
+
+    mock_api_client_instance = MagicMock()
+    mock_api_client_instance.async_close = AsyncMock()
+
+    mock_coordinator = MagicMock()
+    mock_coordinator.mqtt_client = mock_mqtt_client
+    mock_coordinator.api_client = mock_api_client_instance
+    # Make async_init_mqtt_client raise an exception
+    mock_coordinator.async_init_mqtt_client = AsyncMock(
+        side_effect=RuntimeError("MQTT connection failed")
+    )
+    mock_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.heiman_home.HeimanDataUpdateCoordinator",
+            return_value=mock_coordinator,
+        ),
+        patch(
+            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.heiman_home.HeimanApiClient",
+            return_value=mock_api_client_instance,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify setup failed
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify cleanup was performed
+    mock_mqtt_client.async_disconnect.assert_called_once()
+    mock_api_client_instance.async_close.assert_called_once()
