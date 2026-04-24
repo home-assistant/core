@@ -7,6 +7,12 @@ on:
       - "homeassistant/package_constraints.txt"
       - "pyproject.toml"
     forks: ["*"]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: "Pull request number to (re-)check"
+        required: true
+        type: number
 permissions:
   contents: read
   pull-requests: read
@@ -287,6 +293,17 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 **Always** post a review comment using `add-comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
+> **Note on deduplication**: The workflow automatically deletes any previous
+> requirements-check comment on the PR before posting this new one, so there
+> will always be at most one such comment. You do not need to search for or
+> delete previous comments yourself.
+
+### Comment structure
+
+Begin every comment with the HTML marker `<!-- requirements-check -->` on its
+own line (this is used by the workflow to find and remove the previous comment
+on the next run).
+
 ### 7a — Overall summary line
 
 Begin the comment with a single summary line, before anything else:
@@ -304,6 +321,7 @@ Use `—` (em dash) when a check was skipped (e.g. Release Pipeline is skipped
 when the repository is not publicly accessible).
 
 ```
+<!-- requirements-check -->
 ## Requirements Check
 
 | Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
@@ -375,3 +393,9 @@ Collapsed example (all checks passed):
   description checks as for production dependencies.
 - A package that appears in both a production file and a test file should only
   be reported once; use the production file entry as the canonical one.
+- This workflow is only triggered when a commit actually changes one of the
+  tracked requirements files (for `synchronize` events GitHub compares the
+  before/after SHAs of the push, not the entire PR diff). Members can manually
+  retrigger the workflow via `workflow_dispatch` with the PR number to re-run
+  the check after updating the PR description or fixing issues without changing
+  any requirements files.
