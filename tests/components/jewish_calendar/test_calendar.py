@@ -391,7 +391,7 @@ async def test_empty_event_config(hass: HomeAssistant, get_calendar_events) -> N
 async def test_multi_day_range(hass: HomeAssistant, get_calendar_events) -> None:
     """Test events are returned for each day in a multi-day range."""
     start = dt.datetime(2024, 1, 15, 0, 0, 0)
-    end = dt.datetime(2024, 1, 17, 23, 59, 59)
+    end = dt.datetime.combine(dt.date(2024, 1, 17), dt.time.max)
     events = await get_calendar_events(hass, DAILY_EVENTS, start, end)
     # 3 days × 4 default daily events per day = 12
     assert len(events) == 12
@@ -414,7 +414,7 @@ async def test_event_property(hass: HomeAssistant) -> None:
     assert "start_time" in state.attributes
 
 
-@pytest.mark.freeze_time("2024-01-15 12:00:00")
+@pytest.mark.freeze_time("2024-01-15 17:00:00")
 @pytest.mark.parametrize("location_data", ["New York"], indirect=True)
 @pytest.mark.parametrize(
     "calendar_events",

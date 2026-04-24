@@ -246,7 +246,8 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
             _date = datetime.combine(_date, datetime.min.time(), tzinfo=UTC)
 
         if events := self._get_events_for_date(_date.date()):
-            return self._filter_start_end(events, _date)[0]
+            if filtered_events := self._filter_start_end(events, _date):
+                return filtered_events[0]
 
         return None
 
