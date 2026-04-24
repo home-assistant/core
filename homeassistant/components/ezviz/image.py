@@ -37,12 +37,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        EzvizLastMotion(hass, coordinator, camera) for camera in coordinator.data
+        EzvizLastMotion(hass, coordinator, camera)
+        for camera in coordinator.data
+        if coordinator.data[camera].get("last_alarm_pic")
     )
 
 
 class EzvizLastMotion(EzvizEntity, ImageEntity):
     """Return Last Motion Image from Ezviz Camera."""
+
+    _unrecorded_attributes = frozenset({"last_alarm_pic"})
 
     def __init__(
         self, hass: HomeAssistant, coordinator: EzvizDataUpdateCoordinator, serial: str
