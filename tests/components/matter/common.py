@@ -22,6 +22,7 @@ FIXTURES = [
     "air_quality_sensor",
     "aqara_door_window_p2",
     "aqara_motion_p2",
+    "aqara_multi_state_p100",
     "aqara_presence_fp300",
     "aqara_sensor_w100",
     "aqara_thermostat_w500",

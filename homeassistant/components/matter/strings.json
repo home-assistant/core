@@ -259,6 +259,9 @@
       "pump_setpoint": {
         "name": "Setpoint"
       },
+      "sensitivity_level": {
+        "name": "Sensitivity"
+      },
       "speaker_setpoint": {
         "name": "Volume"
       },
