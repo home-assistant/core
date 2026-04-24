@@ -1677,7 +1677,7 @@ class ConditionsChecker(CompoundConditionChecker):
 
     # The function previously returned by async_conditions_from_config
     # did not accept hass as first argument, so we need to override the
-    # __call__ provided for backwawrds comaptibitility
+    # __call__ provided for backwards compatibility
     def __call__(  # type: ignore[override]
         self,
         variables: TemplateVarsType | None = None,
