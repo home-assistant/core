@@ -80,6 +80,7 @@ type TractiveConfigEntry = ConfigEntry[TractiveData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
     """Set up tractive from a config entry."""
+    _LOGGER.warning("Tractive 429 fix v9")
     data = entry.data
 
     client = aiotractive.Tractive(
@@ -102,12 +103,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
 
     tractive = TractiveClient(hass, client, creds["user_id"], entry)
 
+    trackables = []
     try:
-        trackable_objects = await client.trackable_objects()
-        trackables = await asyncio.gather(
-            *(_generate_trackables(client, item) for item in trackable_objects)
-        )
+        for obj in await client.trackable_objects():
+            # To avoid hitting Tractive API rate limits, we add a small delay between requests
+            _LOGGER.debug(
+                "Waiting before fetching details for next trackable to avoid rate limits"
+            )
+            await asyncio.sleep(8)
+            trackables.append(await _generate_trackables(client, obj))
     except aiotractive.exceptions.TractiveError as error:
+        _LOGGER.warning("Error fetching trackable objects: %s", error)
         raise ConfigEntryNotReady from error
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
@@ -164,12 +170,14 @@ async def _generate_trackables(
     tracker = client.tracker(trackable_data["device_id"])
     trackable_pet = client.trackable_object(trackable_data["_id"])
 
-    tracker_details, hw_info, pos_report, health_overview = await asyncio.gather(
-        tracker.details(),
-        tracker.hw_info(),
-        tracker.pos_report(),
-        trackable_pet.health_overview(),
-    )
+    # Sequential fetching with small delays to prevent HTTP 429 Rate Limits
+    tracker_details = await tracker.details()
+    await asyncio.sleep(1)
+    hw_info = await tracker.hw_info()
+    await asyncio.sleep(1)
+    pos_report = await tracker.pos_report()
+    await asyncio.sleep(1)
+    health_overview = await trackable_pet.health_overview()
 
     if not tracker_details.get("_id"):
         raise ConfigEntryNotReady(
