@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.guntamatic.const import DOMAIN
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -35,22 +34,28 @@ MOCK_PARSE_DATA = {
 @pytest.fixture
 def mock_heater() -> Generator[MagicMock]:
     """Mock the Heater class."""
-    with patch(
-        "homeassistant.components.guntamatic.Heater",
-        autospec=True,
-    ) as mock:
-        mock.return_value.get_data = MagicMock(return_value=MOCK_DATA)
-        mock.return_value.parse_data = MagicMock(return_value=MOCK_PARSE_DATA)
-        mock.return_value.host = "1.1.1.1"
-        yield mock
+    with (
+        patch(
+            "guntamatic.heater.Heater",
+            autospec=True,
+        ) as mock,
+        patch("homeassistant.components.guntamatic.Heater", new=mock),
+        patch("homeassistant.components.guntamatic.coordinator.Heater", new=mock),
+        patch("homeassistant.components.guntamatic.config_flow.Heater", new=mock),
+    ):
+        instance = mock.return_value
+        instance.parse_data.return_value = MOCK_PARSE_DATA
+        instance.host = "1.1.1.1"
+        yield instance
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1"},
+        unique_id=MOCK_DATA["Serial"][0],
     )
 
 
