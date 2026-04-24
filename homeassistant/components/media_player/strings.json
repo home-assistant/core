@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -19,6 +20,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is off"
@@ -37,6 +41,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is paused"
@@ -46,6 +53,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is playing"

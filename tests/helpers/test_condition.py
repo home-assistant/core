@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import io
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -2156,16 +2157,16 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: True
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: False
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return False
 
     async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
         return {
@@ -2303,8 +2304,9 @@ async def test_get_condition_platform_registers_conditions(
         ) -> ConfigType:
             return config
 
-        async def async_get_checker(self) -> ConditionChecker:
-            return lambda **kwargs: True
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
 
     async def async_get_conditions(
         hass: HomeAssistant,
@@ -3109,7 +3111,7 @@ async def _setup_numerical_condition(
     entity_ids: str | list[str],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
@@ -3438,7 +3440,7 @@ async def _setup_numerical_condition_with_unit(
     domain_specs: Mapping[str, DomainSpec] | None = None,
     base_unit: str = UnitOfTemperature.CELSIUS,
     unit_converter: type = TemperatureConverter,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a numerical condition with unit conversion via a mock platform."""
     condition_cls = make_entity_numerical_condition_with_unit(
         domain_specs or _DEFAULT_DOMAIN_SPECS, base_unit, unit_converter
@@ -3959,7 +3961,7 @@ async def _setup_state_condition(
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
     support_duration: bool = False,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,
@@ -4347,3 +4349,205 @@ async def test_state_condition_duration_unavailable_unknown(
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=11))
     assert test_all(hass) is False
+
+
+async def test_condition_checker_del_calls_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ calls async_unload if not already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_called_once()
+
+
+async def test_condition_checker_del_skips_if_already_unloaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ does not call async_unload if already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # First call sets the flag
+    checker.async_unload()
+    unload_mock.assert_called_once()
+    unload_mock.reset_mock()
+
+    # __del__ should skip since _unloaded is True
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_not_called()
+
+
+async def _setup_mock_integration(hass: HomeAssistant) -> None:
+    """Set up a mock integration with conditions."""
+
+    class MockCondition(Condition):
+        def __new__(cls, *args: Any, **kwargs: Any) -> Condition:
+            """Return a mock instance that tracks async_setup and async_unload calls."""
+            mocked = Mock(spec=Condition)
+            mocked.async_setup = AsyncMock()
+            mocked.async_unload = Mock()
+            return mocked
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config  # Return the config unchanged for testing
+
+        def _async_check(self, **kwargs: Any) -> bool | None:
+            """Check the condition."""
+            raise NotImplementedError
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+
+@pytest.mark.parametrize(
+    "compound_type",
+    ["and", "or", "not"],
+)
+async def test_compound_condition_forwards_async_unload(
+    hass: HomeAssistant, compound_type: str
+) -> None:
+    """Test that and/or/not compound conditions forward async_unload to children."""
+    await _setup_mock_integration(hass)
+    config = {
+        "condition": compound_type,
+        "conditions": [
+            {"condition": "test"},
+            {"condition": "test"},
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    # The compound checker should hold child checkers
+    assert hasattr(test, "_checks")
+    assert len(test._checks) == 2
+
+    test.async_unload()
+
+    for child in test._checks:
+        child.async_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("outer_type", "inner_type"),
+    [
+        (outer, inner)
+        for outer in ("and", "or", "not")
+        for inner in ("and", "or", "not")
+    ],
+)
+async def test_nested_compound_condition_forwards_async_unload(
+    hass: HomeAssistant, outer_type: str, inner_type: str
+) -> None:
+    """Test that nested compound conditions forward async_unload recursively."""
+    await _setup_mock_integration(hass)
+    config = {
+        "condition": outer_type,
+        "conditions": [
+            {
+                "condition": inner_type,
+                "conditions": [{"condition": "test"}],
+            },
+            {"condition": "test"},
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    # Outer compound with 2 children: an inner compound and a leaf
+    assert len(test._checks) == 2
+    inner_checker = test._checks[0]
+    assert hasattr(inner_checker, "_checks")
+    assert len(inner_checker._checks) == 1
+
+    test.async_unload()
+
+    test._checks[0]._checks[0].async_unload.assert_called_once()
+    test._checks[1].async_unload.assert_called_once()
+
+
+async def test_conditions_from_config_forwards_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_conditions_from_config forwards async_unload to children."""
+    await _setup_mock_integration(hass)
+    configs = [
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+
+    assert hasattr(test, "_conditions")
+    assert len(test._conditions) == 2
+
+    test.async_unload()
+
+    for child in test._conditions:
+        child.async_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "inner_type",
+    ["and", "or", "not"],
+)
+async def test_conditions_from_config_nested_forwards_async_unload(
+    hass: HomeAssistant, inner_type: str
+) -> None:
+    """Test that async_conditions_from_config forwards async_unload recursively."""
+    await _setup_mock_integration(hass)
+    configs = [
+        await condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": inner_type,
+                "conditions": [{"condition": "test"}],
+            },
+        ),
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+
+    assert len(test._conditions) == 2
+    inner_checker = test._conditions[0]
+    assert hasattr(inner_checker, "_checks")
+    assert len(inner_checker._checks) == 1
+
+    test.async_unload()
+
+    test._conditions[0]._checks[0].async_unload.assert_called_once()
+    test._conditions[1].async_unload.assert_called_once()

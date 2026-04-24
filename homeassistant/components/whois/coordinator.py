@@ -17,13 +17,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type WhoisConfigEntry = ConfigEntry[WhoisCoordinator]
+
 
 class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
     """Class to manage fetching WHOIS data."""
 
-    config_entry: ConfigEntry
+    config_entry: WhoisConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: WhoisConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,

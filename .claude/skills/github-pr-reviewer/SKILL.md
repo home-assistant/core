@@ -1,7 +1,6 @@
 ---
 name: github-pr-reviewer
-description: Reviews GitHub pull requests and provides feedback comments.
-disallowedTools: Write, Edit
+description: Reviews GitHub pull requests and provides feedback comments. This is the top skill to use for reviewing Pull Requests from GitHub.
 ---
 
 # Review GitHub Pull Request
@@ -28,12 +27,13 @@ disallowedTools: Write, Edit
 - No need to highlight things that are already good.
 
 ## Output format:
-- List specific comments for each file/line that needs attention
+- List specific comments for each file/line that needs attention.
 - In the end, summarize with an overall assessment (approve, request changes, or comment) and bullet point list of changes suggested, if any.
   - Example output:
     ```
     Overall assessment: request changes.
-    - [CRITICAL] Memory leak in homeassistant/components/sensor/my_sensor.py:143
-    - [PROBLEM] Inefficient algorithm in homeassistant/helpers/data_processing.py:87
-    - [SUGGESTION] Improve variable naming in homeassistant/helpers/config_validation.py:45
+    - [CRITICAL] sensor.py:143 - Memory leak
+    - [PROBLEM] data_processing.py:87 - Inefficient algorithm
+    - [SUGGESTION] test_init.py:45 - Improve x variable name
     ```
+  - Make sure to include the file and line number when possible in the bullet points.
