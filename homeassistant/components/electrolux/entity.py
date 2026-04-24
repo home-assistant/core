@@ -29,6 +29,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
         self,
         appliance_data: T,
         coordinator: ElectroluxDataUpdateCoordinator,
+        unique_id_suffix: str,
     ) -> None:
         """Initialize the base device."""
         super().__init__(coordinator)
@@ -42,7 +43,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
         appliance_info = appliance_data.details.applianceInfo
 
         self._appliance_data = appliance_data
-        self._attr_unique_id = f"{appliance_id}"
+        self._attr_unique_id = f"{appliance_id}_{unique_id_suffix}"
         self._appliance_id = appliance_id
         self._appliance_capabilities = appliance_data.details.capabilities
         self._reported_appliance_state = appliance_data.state.properties.get("reported")
@@ -54,18 +55,6 @@ class ElectroluxBaseEntity[T: ApplianceData](
             model=appliance_info.model,
             serial_number=appliance_info.serialNumber,
         )
-
-        self._is_entity_available = True
-
-    @property
-    def available(self) -> bool:
-        "True if the entity is available."
-        return self._is_entity_available
-
-    def set_unavailable(self) -> None:
-        """Set entity unavailable."""
-        self._is_entity_available = False
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to HA."""
@@ -86,7 +75,6 @@ class ElectroluxBaseEntity[T: ApplianceData](
 
         # Update state
         self._appliance_data.update_state(appliance_state)
-        self._reported_appliance_state = appliance_state.properties.get("reported")
         state_changed = self._update_attr_state()
 
         if state_changed:

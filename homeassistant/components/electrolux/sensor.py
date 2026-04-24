@@ -28,14 +28,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import Platform, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
-from .known_values import UNKNOWN, is_known_value, map_to_known_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +42,7 @@ ELECTROLUX_TO_HA_TEMPERATURE_UNIT = {
     "CELSIUS": UnitOfTemperature.CELSIUS,
     "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
 }
+UNKNOWN = "unknown"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,7 +52,7 @@ class ElectroluxSensorDescription(SensorEntityDescription):
     value_fn: Callable[..., StateType]
     exists_fn: Callable[[ApplianceData], bool] = lambda *args: True
     feature_name: str | None = None
-    options: list[str] | None = None
+    known_values: set[str] | None = None
 
 
 OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
@@ -64,6 +64,16 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         feature_name=APPLIANCE_STATE,
         exists_fn=lambda appliance: appliance.is_feature_supported(APPLIANCE_STATE),
+        known_values={
+            "alarm",
+            "delayed_start",
+            "end_of_cycle",
+            "idle",
+            "off",
+            "paused",
+            "ready_to_start",
+            "running",
+        },
     ),
     ElectroluxSensorDescription(
         key="food_probe_state",
@@ -73,6 +83,10 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         feature_name=FOOD_PROBE_STATE,
         exists_fn=lambda appliance: appliance.is_feature_supported(FOOD_PROBE_STATE),
+        known_values={
+            "inserted",
+            "not_inserted",
+        },
     ),
     ElectroluxSensorDescription(
         key="door_state",
@@ -82,6 +96,10 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         feature_name=DOOR_STATE,
         exists_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
+        known_values={
+            "closed",
+            "open",
+        },
     ),
     ElectroluxSensorDescription(
         key="remote_control",
@@ -91,6 +109,12 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         feature_name=REMOTE_CONTROL,
         exists_fn=lambda appliance: appliance.is_feature_supported(REMOTE_CONTROL),
+        known_values={
+            "disabled",
+            "enabled",
+            "not_safety_relevant_enabled",
+            "temporary_locked",
+        },
     ),
 )
 
@@ -176,39 +200,27 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         description: ElectroluxSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(appliance_data, coordinator)
+        super().__init__(appliance_data, coordinator, description.key)
 
         if (
-            description.options is None
-            and description.feature_name is not None
-            and description.translation_key is not None
+            description.feature_name is not None
+            and description.known_values is not None
         ):
             options = appliance_data.get_feature_state_string_options(
                 description.feature_name
             )
             snake_case_options = [
-                _convert_to_snake_case(option)
+                snake_case_option
                 for option in options
-                if is_known_value(
-                    Platform.SENSOR,
-                    description.translation_key,
-                    _convert_to_snake_case(option),
-                )
+                if (snake_case_option := _convert_to_snake_case(option))
+                in description.known_values
             ]
+
             snake_case_options.append(UNKNOWN)
             if len(snake_case_options) > 1:
                 self._attr_options = snake_case_options
 
-        if description.options is not None:
-            self._attr_options = list(description.options)
-            self._attr_options.append(UNKNOWN)
-
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{appliance_data.appliance.applianceId}_{description.key}"
-        )
-
-        self._update_attr_state()
 
     def _update_attr_state(self) -> bool:
         state_changed = False
@@ -216,9 +228,9 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         new_value = self._get_value()
         if isinstance(new_value, str):
             new_value = _convert_to_snake_case(new_value)
-            if self.translation_key:
-                new_value = map_to_known_value(
-                    Platform.SENSOR,
+            if self.translation_key and self.entity_description.known_values:
+                new_value = _map_to_known_value(
+                    self.entity_description.known_values,
                     self.translation_key,
                     new_value,
                 )
@@ -246,7 +258,6 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
         self._appliance = cast(OVAppliance | CRAppliance, appliance_data)
         self._attr_native_unit_of_measurement = self._get_temperature_unit()
         super().__init__(appliance_data, coordinator, description)
-        self._update_attr_state()
 
     def _get_value(self) -> StateType:
         return self.entity_description.value_fn(
@@ -274,3 +285,18 @@ def _convert_char_to_snake_case(char: str):
     if char.isspace():
         return "_"
     return char
+
+
+def _map_to_known_value(known_values: set[str], entity_name: str, value: str) -> str:
+    """Return provided value if it is known, otherwise log warn message and return 'unknown'."""
+    if value not in known_values:
+        _LOGGER.warning(
+            "An unknown value %s was reported for an sensor of the Electrolux integration. "
+            "Please open a PR for the integration, and include the following information: "
+            'entity name="%s", reported value="%s"',
+            value,
+            entity_name,
+            value,
+        )
+        return UNKNOWN
+    return value

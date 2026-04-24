@@ -48,9 +48,9 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 email = (await client.get_user_email()).email
                 # Don't allow the same user to be able to be set up twice
                 await self.async_set_unique_id(token_manager.get_user_id())
-            except (InvalidCredentialsException, BadCredentialsException) as _:
+            except InvalidCredentialsException, BadCredentialsException:
                 errors["base"] = "invalid_auth"
-            except FailedConnectionException as _:
+            except FailedConnectionException:
                 errors["base"] = "cannot_connect"
 
             self._abort_if_unique_id_configured()

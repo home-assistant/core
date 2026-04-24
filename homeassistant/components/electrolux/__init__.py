@@ -25,7 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
+from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE_SIGNAL, USER_AGENT
 from .coordinator import (
     ElectroluxConfigEntry,
     ElectroluxData,
@@ -181,7 +181,9 @@ async def _check_for_new_devices(
             on_livestream_opening_callback_list.append(coordinator.async_refresh)
 
             # Notify all platforms
-            async_dispatcher_send(hass, f"{NEW_APPLIANCE}_{entry.entry_id}", appliance)
+            async_dispatcher_send(
+                hass, f"{NEW_APPLIANCE_SIGNAL}_{entry.entry_id}", appliance
+            )
 
     # Detect MISSING appliances
     discovered_ids = {appliance.appliance.applianceId for appliance in appliances}
