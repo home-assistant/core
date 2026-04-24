@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
+    CONF_ROLLER_SHADE_QUIET_MODE,
     DEFAULT_RETRY_COUNT,
 )
 from homeassistant.const import (
@@ -480,7 +481,7 @@ async def test_roller_shade_controlling(
             )
             await hass.async_block_till_done()
 
-            mock_open.assert_awaited_once()
+            mock_open.assert_awaited_once_with(0)
             state = hass.states.get(entity_id)
             assert state.state == CoverState.OPEN
             assert state.attributes[ATTR_CURRENT_POSITION] == 68
@@ -502,7 +503,7 @@ async def test_roller_shade_controlling(
             )
             await hass.async_block_till_done()
 
-            mock_close.assert_awaited_once()
+            mock_close.assert_awaited_once_with(0)
             state = hass.states.get(entity_id)
             assert state.state == CoverState.CLOSED
             assert state.attributes[ATTR_CURRENT_POSITION] == 10
@@ -546,10 +547,83 @@ async def test_roller_shade_controlling(
             )
             await hass.async_block_till_done()
 
-            mock_set_position.assert_awaited_once()
+            mock_set_position.assert_awaited_once_with(50, 0)
             state = hass.states.get(entity_id)
             assert state.state == CoverState.OPEN
             assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+
+@pytest.mark.parametrize(
+    ("quiet_mode", "expected_mode"),
+    [(False, 0), (True, 1)],
+)
+async def test_roller_shade_quiet_mode_controlling(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    quiet_mode: bool,
+    expected_mode: int,
+) -> None:
+    """Test Roller Shade controlling forwards the configured quiet mode."""
+    inject_bluetooth_service_info(hass, ROLLER_SHADE_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="roller_shade")
+    entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+            CONF_ROLLER_SHADE_QUIET_MODE: quiet_mode,
+        },
+    )
+
+    info = {"battery": 39}
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.get_basic_info",
+            new=AsyncMock(return_value=info),
+        ),
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.open",
+            new=AsyncMock(return_value=True),
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.close",
+            new=AsyncMock(return_value=True),
+        ) as mock_close,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.set_position",
+            new=AsyncMock(return_value=True),
+        ) as mock_set_position,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+
+        await hass.services.async_call(
+            COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_open.assert_awaited_once_with(expected_mode)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_close.assert_awaited_once_with(expected_mode)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_position.assert_awaited_once_with(50, expected_mode)
 
 
 @pytest.mark.parametrize(

@@ -20,7 +20,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+from .const import (
+    CONF_CURTAIN_SPEED,
+    CONF_ROLLER_SHADE_QUIET_MODE,
+    DEFAULT_CURTAIN_SPEED,
+    DEFAULT_ROLLER_SHADE_QUIET_MODE,
+)
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -245,6 +250,15 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_closed = None
 
+    @callback
+    def _get_quiet_mode(self) -> int:
+        """Return 1 for quiet mode, 0 for performance mode."""
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_ROLLER_SHADE_QUIET_MODE, DEFAULT_ROLLER_SHADE_QUIET_MODE
+            )
+        )
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -264,7 +278,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the roller shade."""
 
         _LOGGER.debug("Switchbot to open roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        self._last_run_success = bool(await self._device.open(self._get_quiet_mode()))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -274,7 +288,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the roller shade."""
 
         _LOGGER.debug("Switchbot to close roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        self._last_run_success = bool(await self._device.close(self._get_quiet_mode()))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -295,7 +309,9 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         position = kwargs.get(ATTR_POSITION)
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        self._last_run_success = bool(
+            await self._device.set_position(position, self._get_quiet_mode())
+        )
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
