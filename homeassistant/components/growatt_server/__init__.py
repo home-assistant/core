@@ -341,17 +341,24 @@ async def async_setup_entry(
 
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(
-        hass, config_entry, plant_id, "total", plant_id
+        hass, config_entry, plant_id, "total", plant_id, api
     )
 
     # Create coordinators for each device
     device_coordinators = {
         device["deviceSn"]: GrowattCoordinator(
-            hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
+            hass, config_entry, device["deviceSn"], device["deviceType"], plant_id, api
         )
         for device in devices
         if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min", "sph"]
     }
+
+    # Store runtime data BEFORE first_refresh so the shared lock is available
+    # to coordinators if session expiry occurs during the initial data fetch.
+    config_entry.runtime_data = GrowattRuntimeData(
+        total_coordinator=total_coordinator,
+        devices=device_coordinators,
+    )
 
     # Perform the first refresh for the total coordinator
     await total_coordinator.async_config_entry_first_refresh()
@@ -359,12 +366,6 @@ async def async_setup_entry(
     # Perform the first refresh for each device coordinator
     for device_coordinator in device_coordinators.values():
         await device_coordinator.async_config_entry_first_refresh()
-
-    # Store runtime data in the config entry
-    config_entry.runtime_data = GrowattRuntimeData(
-        total_coordinator=total_coordinator,
-        devices=device_coordinators,
-    )
 
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
