@@ -1395,12 +1395,8 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
     # Unload all scripts to clean up cached conditions and sub-scripts
-    await asyncio.gather(
-        *(
-            create_eager_task(script["instance"].async_unload())
-            for script in hass.data[DATA_SCRIPTS]
-        )
-    )
+    for script in hass.data[DATA_SCRIPTS]:
+        script["instance"].async_unload()
 
 
 type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
@@ -1520,6 +1516,10 @@ class Script:
         """Clean up when the script is deleted."""
         if self._unloaded:
             return
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading script")
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1905,45 +1905,47 @@ class Script:
             return
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
-    async def async_unload(self) -> None:
+    def async_unload(self) -> None:
         """Unload the script, cleaning up all resources.
 
-        Stops running executions, unloads cached conditions, and recursively
-        unloads sub-scripts.
+        Unloads cached conditions, and recursively unloads sub-scripts.
+        The script must not be running when this is called; sub-scripts
+        are guaranteed to not be running if the parent is not running.
         """
+        if self._runs:
+            raise ValueError(f"Cannot unload script '{self.name}' while it is running")
         self._unloaded = True
-        await self.async_stop()
 
         for cond in self._condition_cache.values():
             cond.async_unload()
         self._condition_cache.clear()
 
         for sub_script in self._repeat_script.values():
-            await sub_script.async_unload()
+            sub_script.async_unload()
         self._repeat_script.clear()
 
         # Conditions in _choose_data and _if_data are the same objects as in
         # _condition_cache, so they're already unloaded above. Only unload scripts.
         for choose_data in self._choose_data.values():
             for _conditions, sub_script in choose_data["choices"]:
-                await sub_script.async_unload()
+                sub_script.async_unload()
             if choose_data["default"] is not None:
-                await choose_data["default"].async_unload()
+                choose_data["default"].async_unload()
         self._choose_data.clear()
 
         for if_data in self._if_data.values():
-            await if_data["if_then"].async_unload()
+            if_data["if_then"].async_unload()
             if if_data["if_else"] is not None:
-                await if_data["if_else"].async_unload()
+                if_data["if_else"].async_unload()
         self._if_data.clear()
 
         for scripts in self._parallel_scripts.values():
             for sub_script in scripts:
-                await sub_script.async_unload()
+                sub_script.async_unload()
         self._parallel_scripts.clear()
 
         for sub_script in self._sequence_scripts.values():
-            await sub_script.async_unload()
+            sub_script.async_unload()
         self._sequence_scripts.clear()
 
     async def _async_get_condition(
