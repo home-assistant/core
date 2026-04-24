@@ -55,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_zones,
         coordinator_outputs,
         coordinator_partitions,
+        coordinator_temperatures,
     ):
         coordinator.setup()
 
