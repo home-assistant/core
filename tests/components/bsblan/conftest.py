@@ -40,6 +40,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HEATING_CIRCUITS: [1],
         },
         unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=2,
     )
 
 
@@ -58,6 +60,8 @@ def mock_config_entry_dual_circuit() -> MockConfigEntry:
             CONF_HEATING_CIRCUITS: [1, 2],
         },
         unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=2,
     )
 
 

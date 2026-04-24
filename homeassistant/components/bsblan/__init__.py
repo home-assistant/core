@@ -117,8 +117,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         await bsblan.initialize()
 
         # Read available heating circuits from config entry data
-        # (discovered during config flow, defaults to [1] for old entries)
-        circuits: list[int] = entry.data.get(CONF_HEATING_CIRCUITS, [1])
+        # (populated by config flow or migration)
+        circuits: list[int] = entry.data[CONF_HEATING_CIRCUITS]
 
         # Fetch required device metadata in parallel for faster startup
         device, info = await asyncio.gather(
@@ -211,3 +211,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Unload BSBLAN config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
+    """Migrate old config entries to the latest schema."""
+    LOGGER.debug(
+        "Migrating BSB-LAN entry from version %s.%s",
+        entry.version,
+        entry.minor_version,
+    )
+
+    if entry.version > 1:
+        # Downgraded from a future version; cannot migrate.
+        return False
+
+    # 1.1 -> 1.2: Add CONF_HEATING_CIRCUITS. Attempt to discover available
+    # heating circuits from the device; fall back to [1] (pre-multi-circuit
+    # default) if the device is unreachable or the endpoint is unsupported.
+    if entry.version == 1 and entry.minor_version < 2:
+        circuits: list[int] = [1]
+        config = BSBLANConfig(
+            host=entry.data[CONF_HOST],
+            passkey=entry.data[CONF_PASSKEY],
+            port=entry.data[CONF_PORT],
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+        )
+        session = async_get_clientsession(hass)
+        bsblan = BSBLAN(config=config, session=session)
+        try:
+            await bsblan.initialize()
+            circuits = await bsblan.get_available_circuits()
+        except (BSBLANError, TimeoutError) as err:
+            LOGGER.warning(
+                "Circuit discovery during migration failed for %s (%s); "
+                "defaulting to single circuit [1]. Use Reconfigure to "
+                "rediscover additional circuits later",
+                entry.data[CONF_HOST],
+                err,
+            )
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_HEATING_CIRCUITS: circuits},
+            minor_version=2,
+        )
+        LOGGER.debug(
+            "Migrated BSB-LAN entry to version %s.%s with circuits %s",
+            entry.version,
+            entry.minor_version,
+            circuits,
+        )
+
+    return True
