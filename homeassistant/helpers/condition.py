@@ -360,10 +360,12 @@ class DisabledConditionChecker(ConditionChecker):
 class CompoundConditionChecker(ConditionChecker):
     """Base class for compound condition checkers (and/or/not)."""
 
-    def __init__(self, hass: HomeAssistant, checks: list[ConditionChecker]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, conditions: list[ConditionChecker]
+    ) -> None:
         """Initialize condition checker."""
         super().__init__(hass)
-        self._conditions = checks
+        self._conditions = conditions
 
     def async_unload(self) -> None:
         """Clean up child conditions."""
