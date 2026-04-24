@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from . import AirQConfigEntry
 
 REDACT_CONFIG = {CONF_PASSWORD, CONF_UNIQUE_ID, CONF_IP_ADDRESS, "title"}
-REDACT_DEVICE_INFO = {"identifiers", "name"}
+REDACT_DEVICE_INFO = {"identifiers", "name", "serial_number"}
 REDACT_COORDINATOR_DATA = {"DeviceID"}
 
 
