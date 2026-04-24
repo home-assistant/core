@@ -60,9 +60,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 _MSG_PASSWORD_NO_LONGER_WORKING = (
-    "Your password for '%s' is no longer working; Go to the "
+    "Your password for '%s' is no longer working; go to the "
     "Integrations menu and click on Configure on the discovered Apple "
-    "iCloud card to login again"
+    "iCloud card to log in again"
 )
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
