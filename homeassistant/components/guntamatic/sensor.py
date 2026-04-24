@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,11 +19,6 @@ from .coordinator import GuntamaticConfigEntry, GuntamaticCoordinator
 PARALLEL_UPDATES = 0
 
 GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
-    SensorEntityDescription(
-        key="status",
-        translation_key="status",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     SensorEntityDescription(
         key="program",
         translation_key="program",
@@ -119,11 +114,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            GuntamaticSensor(coordinator, description)
-            for description in GUNTAMATIC_SENSORS
-            if description.key in coordinator.data
-        ]
+        GuntamaticSensor(coordinator, description)
+        for description in GUNTAMATIC_SENSORS
+        if description.key in coordinator.data
     )
 
 

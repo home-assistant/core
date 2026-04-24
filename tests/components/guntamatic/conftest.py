@@ -39,7 +39,6 @@ def mock_heater() -> Generator[MagicMock]:
             "guntamatic.heater.Heater",
             autospec=True,
         ) as mock,
-        patch("homeassistant.components.guntamatic.Heater", new=mock),
         patch("homeassistant.components.guntamatic.coordinator.Heater", new=mock),
         patch("homeassistant.components.guntamatic.config_flow.Heater", new=mock),
     ):

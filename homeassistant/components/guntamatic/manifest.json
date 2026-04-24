@@ -8,9 +8,6 @@
     {
       "hostname": "kessel*",
       "macaddress": "0024BD*"
-    },
-    {
-      "registered_devices": true
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/guntamatic",

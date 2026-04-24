@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from guntamatic.heater import Heater
-
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import GuntamaticConfigEntry, GuntamaticCoordinator
@@ -17,7 +15,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
     """Set up guntamatic from a config entry."""
-    coordinator = GuntamaticCoordinator(hass, Heater(entry.data[CONF_HOST]), entry)
+    coordinator = GuntamaticCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

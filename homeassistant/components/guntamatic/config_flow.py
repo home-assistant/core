@@ -41,7 +41,6 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         except NoSerialException:
             return self.async_abort(reason="bad_data")
 
-        # set serial as unique id for deduplication, ip isn't a good match
         await self.async_set_unique_id(data["serial"][0])
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         self._discovered_ip = discovery_info.ip

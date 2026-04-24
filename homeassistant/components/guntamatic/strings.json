@@ -24,46 +24,46 @@
   "entity": {
     "sensor": {
       "boiler_temperature": {
-        "name": "Boiler Temperature"
+        "name": "Boiler temperature"
       },
       "buffer_bottom_temperature": {
-        "name": "Buffer Bottem Temperature"
+        "name": "Buffer bottem temperature"
       },
       "buffer_center_temperature": {
-        "name": "Buffer Center Temperature"
+        "name": "Buffer center temperature"
       },
       "buffer_load": {
-        "name": "Buffer Load"
+        "name": "Buffer load"
       },
       "buffer_top_temperature": {
-        "name": "Buffer Top Temperature"
+        "name": "Buffer top temperature"
       },
       "domestic_home_water_temperature": {
-        "name": "Domestic Home Water Temperature"
+        "name": "Domestic home water temperature"
       },
       "outdoor_temperature": {
-        "name": "Outdoor Temperature"
+        "name": "Outdoor temperature"
       },
       "program": {
         "name": "Program",
         "state": {
-          "dhw": "Domestic Hot Water",
-          "dhw_boost": "Domestic Hot Water Boost",
+          "dhw": "Domestic hot water",
+          "dhw_boost": "Domestic hot water boost",
           "heat": "Heat",
           "hibernate": "Hibernate",
-          "hibernate_to": "Hibernate To",
+          "hibernate_to": "Hibernate to",
           "off": "[%key:common::state::off%]",
           "timer": "Timer"
         }
       },
       "room_0_temperature": {
-        "name": "Room 0 Temperature"
+        "name": "Room 0 temperature"
       },
       "room_1_temperature": {
-        "name": "Room 1 Temperature"
+        "name": "Room 1 temperature"
       },
       "room_2_temperature": {
-        "name": "Room 2 Temperature"
+        "name": "Room 2 temperature"
       },
       "status": {
         "name": "Status"

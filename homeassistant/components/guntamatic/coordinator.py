@@ -8,6 +8,7 @@ from guntamatic.heater import Heater
 import requests
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,9 +22,7 @@ type GuntamaticConfigEntry = ConfigEntry[GuntamaticCoordinator]
 class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
     """Guntamatic data coordinator."""
 
-    def __init__(
-        self, hass: HomeAssistant, heater: Heater, entry: GuntamaticConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: GuntamaticConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -32,7 +31,7 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
             update_interval=SCAN_INTERVAL,
             config_entry=entry,
         )
-        self.heater = heater
+        self.heater = Heater(entry.data[CONF_HOST])
 
     async def _async_update_data(self) -> dict[str, list[str]]:
         """Fetch data from heater."""
