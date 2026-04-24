@@ -100,7 +100,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "different_device": "The device at this address is different from the originally configured device.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -122,6 +124,22 @@
         },
         "description": "Please re-authenticate with {host}.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::victron_gx::config::step::user::data_description::host%]",
+          "password": "[%key:component::victron_gx::config::step::user::data_description::password%]",
+          "port": "[%key:component::victron_gx::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::victron_gx::config::step::user::data_description::ssl%]",
+          "username": "[%key:component::victron_gx::config::step::user::data_description::username%]"
+        }
       },
       "ssdp_auth": {
         "data": {
