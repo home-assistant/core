@@ -497,6 +497,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["authentication"] = insights.data.metadata.authentication.display_name
         if insights.data.result:
             attrs["result"] = insights.data.result
+        if insights.data.metadata.direction:
+            attrs["direction"] = insights.data.metadata.direction
         for door in door_entries:
             if door.id:
                 self._dispatch_door_event(door.id, "access", event_type, attrs)
@@ -525,6 +527,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["authentication"] = source.authentication.credential_provider
         if source.event.result:
             attrs["result"] = source.event.result
+        if source.direction:
+            attrs["direction"] = source.direction
         self._dispatch_door_event(door_id, "access", event_type, attrs)
 
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:

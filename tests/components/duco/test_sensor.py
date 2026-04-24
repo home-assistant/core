@@ -5,7 +5,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import Node, NodeGeneralInfo, NodeSensorInfo, NodeVentilationInfo
+from duco.models import (
+    Node,
+    NodeGeneralInfo,
+    NodeSensorInfo,
+    NodeType,
+    NodeVentilationInfo,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -51,6 +57,7 @@ async def test_iaq_sensor_entities_disabled_by_default(
     """Test that IAQ sensor entities are disabled by default."""
     for entity_id in (
         "sensor.bathroom_rh_humidity_air_quality_index",
+        "sensor.kitchen_rh_humidity_air_quality_index",
         "sensor.office_co2_co2_air_quality_index",
     ):
         entry = entity_registry.async_get(entity_id)
@@ -203,5 +210,46 @@ async def test_deregistered_node_removes_device(
     # The device should be removed from the device registry.
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    )
+    assert device is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_node_type_logs_warning_and_creates_no_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a node with an unknown type logs a warning and creates no entities."""
+    unknown_node = Node(
+        node_id=99,
+        general=NodeGeneralInfo(
+            node_type=NodeType.UNKNOWN,
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="Unsupported device",
+            identify=0,
+        ),
+        ventilation=None,
+        sensor=None,
+    )
+
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "99" in caplog.text
+    assert "unsupported" in caplog.text.lower()
+    assert hass.states.get("sensor.unsupported_device_humidity") is None
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
     )
     assert device is None
