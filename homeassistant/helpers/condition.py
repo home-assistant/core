@@ -360,15 +360,15 @@ class DisabledConditionChecker(ConditionChecker):
 class CompoundConditionChecker(ConditionChecker):
     """Base class for compound condition checkers (and/or/not)."""
 
-    def __init__(self, hass: HomeAssistant, checks: list[ConditionChecker]) -> None:
+    def __init__(self, hass: HomeAssistant, conditions: list[ConditionChecker]) -> None:
         """Initialize condition checker."""
         super().__init__(hass)
-        self._checks = checks
+        self._conditions = conditions
 
     def async_unload(self) -> None:
         """Clean up child conditions."""
-        for check in self._checks:
-            check.async_unload()
+        for condition in self._conditions:
+            condition.async_unload()
         super().async_unload()
 
 
@@ -1012,15 +1012,15 @@ class AndConditionChecker(CompoundConditionChecker):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
-        for index, check in enumerate(self._checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, **kwargs) is False:
+                    if condition.async_check(**kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "and", index=index, total=len(self._checks), error=ex
+                        "and", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
@@ -1046,15 +1046,15 @@ class OrConditionChecker(CompoundConditionChecker):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
-        for index, check in enumerate(self._checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, **kwargs) is True:
+                    if condition.async_check(**kwargs) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "or", index=index, total=len(self._checks), error=ex
+                        "or", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
@@ -1080,15 +1080,15 @@ class NotConditionChecker(CompoundConditionChecker):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
-        for index, check in enumerate(self._checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, **kwargs):
+                    if condition.async_check(**kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "not", index=index, total=len(self._checks), error=ex
+                        "not", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
