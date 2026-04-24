@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_firmware_update_available
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'entity_picture': None,
+      'friendly_name': 'Test NAS Firmware update',
+      'in_progress': False,
+      'installed_version': '5.1.0.2548',
+      'latest_version': '5.2.0.1234 Build 20240101',
+      'release_notes': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_nas_firmware_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_firmware_update_no_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'entity_picture': None,
+      'friendly_name': 'Test NAS Firmware update',
+      'in_progress': False,
+      'installed_version': '5.1.0.2548',
+      'latest_version': '5.1.0.2548',
+      'release_notes': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_nas_firmware_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

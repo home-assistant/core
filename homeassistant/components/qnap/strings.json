@@ -100,7 +100,7 @@
         "name": "Free space ({monitor_device})"
       },
       "volume_size_total": {
-        "name": "Volume size"
+        "name": "Volume size ({monitor_device})"
       },
       "volume_size_used": {
         "name": "Used space ({monitor_device})"

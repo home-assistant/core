@@ -1,0 +1,63 @@
+{
+  "system_stats": {
+    "system": {
+      "name": "Test NAS",
+      "model": "TS-453D",
+      "serial_number": "QX1234567",
+      "temp_c": 40
+    },
+    "cpu": {
+      "temp_c": 55.0,
+      "usage_percent": 10.0
+    },
+    "memory": {
+      "total": 8192,
+      "free": 4096
+    },
+    "firmware": {
+      "version": "5.1.0.2548",
+      "build": "20230101",
+      "patch": "0"
+    },
+    "nics": {
+      "eth0": {
+        "link_status": "Up",
+        "max_speed": 1000,
+        "err_packets": 0,
+        "ip": "192.168.1.10",
+        "mac": "00:11:22:33:44:55",
+        "mask": "255.255.255.0"
+      }
+    },
+    "uptime": {
+      "days": 1,
+      "hours": 2,
+      "minutes": 3,
+      "seconds": 4
+    }
+  },
+  "system_health": "OK",
+  "smart_drive_health": {
+    "HDD 1": {
+      "health": "good",
+      "temp_c": 35,
+      "drive_number": "0",
+      "model": "TOSHIBA HDWD110",
+      "serial": "X8ABC12345",
+      "type": "HDD"
+    }
+  },
+  "volumes": {
+    "DataVol1": {
+      "free_size": 500000000000,
+      "total_size": 1000000000000
+    }
+  },
+  "bandwidth": {
+    "eth0": {
+      "tx": 1000,
+      "rx": 2000
+    }
+  },
+  "firmware_update": null
+}

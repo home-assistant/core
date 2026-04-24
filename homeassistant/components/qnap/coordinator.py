@@ -45,7 +45,7 @@ def suppress_insecure_request_warning():
         yield
 
 
-class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+class QnapCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Custom coordinator for the qnap integration."""
 
     config_entry: QnapConfigEntry
@@ -72,7 +72,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             timeout=config_entry.data.get(CONF_TIMEOUT),
         )
 
-    def _sync_update(self) -> dict[str, dict[str, Any]]:
+    def _sync_update(self) -> dict[str, Any]:
         """Get the latest data from the Qnap API."""
         with (
             suppress_insecure_request_warning()
@@ -85,8 +85,9 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 "smart_drive_health": self._api.get_smart_disk_health(),
                 "volumes": self._api.get_volumes(),
                 "bandwidth": self._api.get_bandwidth(),
+                "firmware_update": self._api.get_firmware_update(),
             }
 
-    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Qnap API."""
         return await self.hass.async_add_executor_job(self._sync_update)
