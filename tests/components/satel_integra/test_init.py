@@ -38,7 +38,6 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
-    MOCK_ZONE_TEMPERATURE_SUBENTRY,
     setup_integration,
 )
 
@@ -174,16 +173,16 @@ async def test_config_flow_migration_v2_2_to_v2_3(
         version=2,
         minor_version=2,
     )
-    config_entry.subentries = {
-        MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id: MOCK_ZONE_TEMPERATURE_SUBENTRY
-    }
+    config_entry.subentries = deepcopy(
+        {MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY}
+    )
 
     await setup_integration(hass, config_entry)
 
     assert config_entry.version == SatelConfigFlow.VERSION
     assert config_entry.minor_version == SatelConfigFlow.MINOR_VERSION
 
-    subentry = config_entry.subentries.get(MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id)
+    subentry = config_entry.subentries.get(MOCK_ZONE_SUBENTRY.subentry_id)
     assert subentry is not None
     assert subentry.data[CONF_ENABLE_TEMPERATURE_SENSOR] is False
 
