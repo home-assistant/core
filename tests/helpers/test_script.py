@@ -7122,17 +7122,15 @@ async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None
 
 async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
     """Test that async_unload raises ValueError if the script is running."""
-    event = "test_event"
     sequence = cv.SCRIPT_SCHEMA(
         [
-            {"event": event},
             {"wait_template": "{{ false }}"},
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    await script_obj.async_run(context=Context())
-    await hass.async_block_till_done()
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
 
     assert script_obj.is_running
 
