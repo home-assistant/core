@@ -198,7 +198,7 @@ async def _test_setup_and_signaling(
 @pytest.mark.parametrize(
     "camera_unique_id",
     [
-        "test_camera_unique_id",
+        "camera_unique_id",
         None,
     ],
     indirect=True,
@@ -297,7 +297,7 @@ async def test_setup_go_binary(
 @pytest.mark.parametrize(
     "camera_unique_id",
     [
-        "test_camera_unique_id",
+        "camera_unique_id",
         None,
     ],
     indirect=True,

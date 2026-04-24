@@ -188,7 +188,7 @@ def integration_config_entry(hass: HomeAssistant) -> ConfigEntry:
 @pytest.fixture
 def camera_unique_id() -> str | None:
     """Camera unique ID."""
-    return "test_camera_unique_id"
+    return "camera_unique_id"
 
 
 @pytest.fixture
