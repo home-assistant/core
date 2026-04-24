@@ -314,7 +314,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             cloud_client = None
             try:
                 # Access the underlying cloud client from the wrapper
-                wrapper = getattr(self.api_client, "_wrapper", None)  # noqa: SLF001
+                wrapper = getattr(self.api_client, "_wrapper", None)
                 if wrapper:
                     cloud_client = wrapper.cloud_client
             except Exception as err:
@@ -356,7 +356,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             self.mqtt_client = None
             # Re-raise to allow caller to handle the failure
             raise
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
             # Disconnect any partially connected client before clearing reference
             if self.mqtt_client is not None:
