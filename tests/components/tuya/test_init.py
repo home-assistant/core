@@ -20,7 +20,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     DEVICE_MOCKS,
-    MockDeviceListener,
+    TuyaNotificationHelper,
     create_device,
     create_manager,
     initialize_entry,
@@ -146,7 +146,7 @@ async def test_dynamic_add_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_manager: Manager,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Ensure add device event works correctly."""
@@ -160,7 +160,7 @@ async def test_dynamic_add_device(
     assert len(all_entries) == 1
 
     # Trigger add second device from the manager
-    await mock_listener.async_send_add_device(mock_manager, second_device)
+    await notification_helper.async_send_add_device(second_device)
 
     # Should now have two devices in the registry
     all_entries = dr.async_entries_for_config_entry(
@@ -177,7 +177,7 @@ async def test_dynamic_remove_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_manager: Manager,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Ensure remove device event works correctly."""
@@ -193,7 +193,7 @@ async def test_dynamic_remove_device(
     assert len(all_entries) == 2
 
     # Trigger remove second device from the manager
-    await mock_listener.async_send_remove_device(mock_manager, second_device)
+    await notification_helper.async_send_remove_device(second_device)
 
     # Only the main device should remain
     all_entries = dr.async_entries_for_config_entry(
