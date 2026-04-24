@@ -168,6 +168,7 @@ async def test_new_node_added_dynamically(
             iaq_co2=None,
             rh=55.0,
             iaq_rh=70,
+            temp=21.0,
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [*mock_nodes, new_node]
