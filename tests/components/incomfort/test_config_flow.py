@@ -112,7 +112,7 @@ async def test_form_validation(
     )
 
     # Simulate an issue
-    mock_incomfort().heaters.side_effect = exc
+    mock_incomfort.heaters.side_effect = exc
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG
     )
@@ -122,7 +122,7 @@ async def test_form_validation(
     }
 
     # Fix the issue and retry
-    mock_incomfort().heaters.side_effect = None
+    mock_incomfort.heaters.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG
     )
@@ -239,7 +239,7 @@ async def test_dhcp_flow_wih_auth(
 
     # Try again, but now with the correct host, but still with an auth error
     with patch.object(
-        mock_incomfort(),
+        mock_incomfort,
         "heaters",
         side_effect=InvalidGateway,
     ):
@@ -296,7 +296,7 @@ async def test_reauth_flow_failure(
     assert result["step_id"] == "reauth_confirm"
 
     with patch.object(
-        mock_incomfort(),
+        mock_incomfort,
         "heaters",
         side_effect=InvalidGateway,
     ):
@@ -348,7 +348,7 @@ async def test_reconfigure_flow_failure(
     assert result["step_id"] == "user"
 
     with patch.object(
-        mock_incomfort(),
+        mock_incomfort,
         "heaters",
         side_effect=InvalidGateway,
     ):
