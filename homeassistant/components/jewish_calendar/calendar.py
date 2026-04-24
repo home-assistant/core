@@ -211,38 +211,58 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         # Get today's events first
-        today = dt_util.now().date()
-        events = self._get_events_for_date(today)
-
-        if events:
-            # Return the first event of today
-            return events[0]
+        if (_event := self._get_next_event(dt_util.now())):
+            return _event
 
         # Look for the next event in the next 30 days
+        today = dt_util.now().date()
         for days_ahead in range(1, 31):
             future_date = today + timedelta(days=days_ahead)
-            events = self._get_events_for_date(future_date)
-            if events:
-                return events[0]
-
+            if (_event := self._get_next_event(future_date)):
+                return _event
         return None
 
     async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+        self, hass: HomeAssistant, start: datetime, end: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         events = []
 
         # Convert datetime to date for iteration
-        start_ordinal = start_date.date().toordinal()
-        end_ordinal = end_date.date().toordinal()
+        start_ordinal = start.date().toordinal()
+        end_ordinal = end.date().toordinal()
 
         for ordinal in range(start_ordinal, end_ordinal + 1):
             current_date = date.fromordinal(ordinal)
             day_events = self._get_events_for_date(current_date)
             events.extend(day_events)
 
-        return events
+        # Filter out events not in start/end range
+        return self._filter_start_end(events, start, end)
+
+    def _get_next_event(self, _date: date | datetime) -> CalendarEvent | None:
+        """For a given datetime or date, return the next event."""
+        if isinstance(_date, date):
+            _date = datetime.combine(_date, datetime.min.time(), tzinfo=UTC)
+
+        if (events := self._get_events_for_date(_date.date())):
+            return self._filter_start_end(events, _date)[0]
+
+        return None
+
+    def _filter_start_end(
+        self, events: list[CalendarEvent], start: datetime, end: datetime = datetime.max
+    ) -> list[CalendarEvent]:
+        """Keep only the events that are in the start-end range specified."""
+        # Since all calendar events have the same start and end time,
+        # it is enough to compare the start time
+        return [e for e in events if start <= e.start <= end]
+
+    def _event_sort_key(self, event: CalendarEvent) -> datetime:
+        """Return a sortable datetime for an event start."""
+        if isinstance(event.start, date):
+            return datetime.combine(event.start, datetime.min.time(), tzinfo=UTC)
+        return event.start
 
     def _get_events_for_date(self, target_date: date) -> list[CalendarEvent]:
         """Get all configured events for a specific date."""
@@ -257,7 +277,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
             ):
                 events.extend(_events if isinstance(_events, list) else [_events])
 
-        return events
+        return sorted(events, key=self._event_sort_key)
 
     def _update_times(self, zmanim: Zmanim) -> list[datetime | None]:
         """Return a list of times to update the calendar."""
