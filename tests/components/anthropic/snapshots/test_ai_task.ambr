@@ -295,7 +295,7 @@
     }),
     'tools': list([
       dict({
-        'max_uses': None,
+        'max_uses': 5,
         'name': 'web_search',
         'type': 'web_search_20250305',
       }),

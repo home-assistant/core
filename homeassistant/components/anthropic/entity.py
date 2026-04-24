@@ -703,15 +703,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(  # noqa: C901
+    async def _get_model_args(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
-        max_iterations: int = MAX_TOOL_ITERATIONS,
-    ) -> None:
-        """Generate an answer for the chat log."""
-        options = self.subentry.data
+    ) -> tuple[MessageCreateParamsStreaming, str | None]:
+        """Get the model arguments."""
+        options: dict[str, Any] = DEFAULT | self.subentry.data
 
         preloaded_tools = [
             "HassTurnOn",
@@ -729,21 +728,18 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
         messages, container_id = _convert_content(chat_log.content[1:])
 
-        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+        model = options[CONF_CHAT_MODEL]
 
         model_args = MessageCreateParamsStreaming(
             model=model,
             messages=messages,
-            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
+            max_tokens=options[CONF_MAX_TOKENS],
             system=system.content,
             stream=True,
             container=container_id,
         )
 
-        if (
-            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
-            == PromptCaching.PROMPT
-        ):
+        if options[CONF_PROMPT_CACHING] == PromptCaching.PROMPT:
             model_args["system"] = [
                 {
                     "type": "text",
@@ -751,19 +747,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     "cache_control": {"type": "ephemeral"},
                 }
             ]
-        elif (
-            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
-            == PromptCaching.AUTOMATIC
-        ):
+        elif options[CONF_PROMPT_CACHING] == PromptCaching.AUTOMATIC:
             model_args["cache_control"] = {"type": "ephemeral"}
 
         if (
             self.model_info.capabilities
             and self.model_info.capabilities.thinking.types.adaptive.supported
         ):
-            thinking_effort = options.get(
-                CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
-            )
+            thinking_effort = options[CONF_THINKING_EFFORT]
             if thinking_effort != "none":
                 model_args["thinking"] = ThinkingConfigAdaptiveParam(
                     type="adaptive", display="summarized"
@@ -772,9 +763,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
         else:
-            thinking_budget = options.get(
-                CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-            )
+            thinking_budget = options[CONF_THINKING_BUDGET]
             if (
                 self.model_info.capabilities
                 and self.model_info.capabilities.thinking.types.enabled.supported
@@ -791,9 +780,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 and self.model_info.capabilities.effort.supported
             ):
                 model_args["output_config"] = OutputConfigParam(
-                    effort=options.get(
-                        CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
-                    )
+                    effort=options[CONF_THINKING_EFFORT]
                 )
 
         tools: list[ToolUnionParam] = []
@@ -803,12 +790,12 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 for tool in chat_log.llm_api.tools
             ]
 
-        if options.get(CONF_CODE_EXECUTION):
+        if options[CONF_CODE_EXECUTION]:
             # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options.get(CONF_WEB_SEARCH)
+                or not options[CONF_WEB_SEARCH]
             ):
                 tools.append(
                     CodeExecutionTool20250825Param(
@@ -817,26 +804,26 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ),
                 )
 
-        if options.get(CONF_WEB_SEARCH):
+        if options[CONF_WEB_SEARCH]:
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options.get(CONF_CODE_EXECUTION)
+                or not options[CONF_CODE_EXECUTION]
             ):
                 web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
                     WebSearchTool20250305Param(
                         name="web_search",
                         type="web_search_20250305",
-                        max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                        max_uses=options[CONF_WEB_SEARCH_MAX_USES],
                     )
                 )
             else:
                 web_search = WebSearchTool20260209Param(
                     name="web_search",
                     type="web_search_20260209",
-                    max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                    max_uses=options[CONF_WEB_SEARCH_MAX_USES],
                 )
-            if options.get(CONF_WEB_SEARCH_USER_LOCATION):
+            if options[CONF_WEB_SEARCH_USER_LOCATION]:
                 web_search["user_location"] = {
                     "type": "approximate",
                     "city": options.get(CONF_WEB_SEARCH_CITY, ""),
@@ -937,10 +924,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 preloaded_tools.append(structure_name)
 
         if tools:
-            if (
-                options.get(CONF_TOOL_SEARCH, DEFAULT[CONF_TOOL_SEARCH])
-                and len(tools) > len(preloaded_tools) + 1
-            ):
+            if options[CONF_TOOL_SEARCH] and len(tools) > len(preloaded_tools) + 1:
                 for tool in tools:
                     if not tool["name"].endswith(tuple(preloaded_tools)):
                         tool["defer_loading"] = True
@@ -953,6 +937,19 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
             model_args["tools"] = tools
 
+        return model_args, structure_name
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        model_args, structure_name = await self._get_model_args(
+            chat_log, structure_name, structure
+        )
         coordinator = self.entry.runtime_data
         client = coordinator.client
 
@@ -974,7 +971,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         )
                     ]
                 )
-                messages.extend(new_messages)
+                cast(list[MessageParam], model_args["messages"]).extend(new_messages)
             except anthropic.AuthenticationError as err:
                 # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
                 await coordinator.async_request_refresh()
