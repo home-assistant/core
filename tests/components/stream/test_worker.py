@@ -1125,5 +1125,7 @@ def test_add_stream_from_template_decoder_only_fallback() -> None:
     result = StreamMuxer._add_stream_from_template(container, template)
 
     assert result is expected_stream
-    assert container.add_stream_from_template.call_count == 2
-    container.add_stream_from_template.assert_called_with(template, opaque=True)
+    assert container.add_stream_from_template.call_args_list == [
+        ((template,), {}),
+        ((template,), {"opaque": True}),
+    ]
