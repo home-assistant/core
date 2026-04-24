@@ -20,7 +20,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.skip(
+@pytest.mark.xfail(
     reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
 )
 async def test_diagnostics(
