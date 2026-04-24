@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import io
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -422,6 +423,38 @@ async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature", 100)
     assert test(hass)
+
+
+async def test_conditions_from_config_has_and_semantics(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_conditions_from_config returns a callable with AND semantics."""
+    hass.states.async_set("binary_sensor.test_one", STATE_ON)
+    hass.states.async_set("binary_sensor.test_two", STATE_ON)
+    configs = [
+        await condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test_one",
+                "state": STATE_ON,
+            },
+        ),
+        await condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test_two",
+                "state": STATE_ON,
+            },
+        ),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+    assert test(hass) is True
+    hass.states.async_set("binary_sensor.test_two", STATE_OFF)
+    assert test(hass) is False
 
 
 async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> None:
