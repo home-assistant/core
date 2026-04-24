@@ -455,7 +455,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(
                     CONF_WEB_SEARCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): int,
+                ): cv.positive_int,
                 vol.Optional(
                     CONF_WEB_SEARCH_USER_LOCATION,
                     default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
