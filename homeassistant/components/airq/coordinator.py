@@ -48,29 +48,25 @@ class AirQCoordinator(DataUpdateCoordinator):
         self.device_info = DeviceInfo(
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, self.device_id)},
+            serial_number=self.device_id,
         )
         self.clip_negative = clip_negative
         self.return_average = return_average
 
+    async def _async_setup(self) -> None:
+        """Fetch device info from the device."""
+        info = await self.airq.fetch_device_info()
+        self.device_info.update(
+            DeviceInfo(
+                name=info["name"],
+                model=info["model"],
+                sw_version=info["sw_version"],
+                hw_version=info["hw_version"],
+            )
+        )
+
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
-        if "name" not in self.device_info:
-            _LOGGER.debug(
-                "'name' not found in AirQCoordinator.device_info, fetching from the device"
-            )
-            info = await self.airq.fetch_device_info()
-            self.device_info.update(
-                DeviceInfo(
-                    name=info["name"],
-                    model=info["model"],
-                    sw_version=info["sw_version"],
-                    hw_version=info["hw_version"],
-                )
-            )
-            _LOGGER.debug(
-                "Updated AirQCoordinator.device_info for 'name' %s",
-                self.device_info.get("name"),
-            )
         data: dict = await self.airq.get_latest_data(
             return_average=self.return_average,
             clip_negative_values=self.clip_negative,
