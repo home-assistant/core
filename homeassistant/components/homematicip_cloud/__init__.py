@@ -25,7 +25,7 @@ from .const import (
     HMIPC_NAME,
 )
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .migration import _SORTED_CLASS_NAMES, _migrate_unique_id
+from .migration import _migrate_unique_id
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,23 +163,10 @@ async def async_migrate_entry(
         ) -> dict[str, str] | None:
             new_unique_id = _migrate_unique_id(entity_entry.unique_id)
             if new_unique_id is None:
-                # Some entities (e.g. HmipSmokeDetectorSensor) already use
-                # stable non-class-name unique_ids and don't need migration.
-                # Only warn if the ID looks like an old class-name format.
-                if any(
-                    entity_entry.unique_id.startswith(cls + "_")
-                    for cls in _SORTED_CLASS_NAMES
-                ):
-                    _LOGGER.warning(
-                        "Could not migrate unique_id for %s: %s",
-                        entity_entry.entity_id,
-                        entity_entry.unique_id,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "Skipping unique_id %s (already stable format)",
-                        entity_entry.unique_id,
-                    )
+                _LOGGER.debug(
+                    "Skipping unique_id %s (already stable format)",
+                    entity_entry.unique_id,
+                )
                 return None
             _LOGGER.debug(
                 "Migrating %s: %s -> %s",
