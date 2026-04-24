@@ -1,14 +1,13 @@
 """Platform for Lunatone sensor integration."""
 
-from lunatone_rest_api_client.models import (
-    SensorAddressType,
-    SensorMeasurementUnit,
-    SensorType,
-)
+from typing import Final
+
+from lunatone_rest_api_client.models import SensorAddressType, SensorType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -27,27 +26,50 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import LunatoneConfigEntry, LunatoneSensorsDataUpdateCoordinator
 
-SENSOR_DEVICE_CLASS_MAPPING: dict[SensorType, SensorDeviceClass] = {
-    SensorType.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
-    SensorType.AIR_HUMIDITY: SensorDeviceClass.HUMIDITY,
-    SensorType.AIR_PRESSURE: SensorDeviceClass.PRESSURE,
-    SensorType.ECO2: SensorDeviceClass.CO2,
-    SensorType.VOC: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-    SensorType.AIR_QUALITY: SensorDeviceClass.AQI,
-    SensorType.LIGHT: SensorDeviceClass.ILLUMINANCE,
-}
-
-SENSOR_UNIT_MAPPING: dict[SensorMeasurementUnit, str | None] = {
-    SensorMeasurementUnit.DEGREE_CELSIUS: UnitOfTemperature.CELSIUS,
-    SensorMeasurementUnit.PERCENT: PERCENTAGE,
-    SensorMeasurementUnit.HECTOPASCAL: UnitOfPressure.HPA,
-    SensorMeasurementUnit.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
-    SensorMeasurementUnit.PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
-    SensorMeasurementUnit.INDOOR_AIR_QUALITY: None,
-    SensorMeasurementUnit.LUX: LIGHT_LUX,
-}
-
 PARALLEL_UPDATES = 0
+SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
+    SensorType.AIR_HUMIDITY: SensorEntityDescription(
+        key="air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorType.AIR_PRESSURE: SensorEntityDescription(
+        key="air_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorType.AIR_QUALITY: SensorEntityDescription(
+        key="air_quality",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorType.ECO2: SensorEntityDescription(
+        key="eco2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorType.LIGHT: SensorEntityDescription(
+        key="light",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorType.TEMPERATURE: SensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorType.VOC: SensorEntityDescription(
+        key="voc",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -60,11 +82,16 @@ async def async_setup_entry(
 
     assert config_entry.unique_id is not None
 
-    async_add_entities(
-        LunatoneSensor(coordinator_sensors, sensor_id, config_entry.unique_id)
-        for sensor_id, sensor_data in coordinator_sensors.data.items()
-        if sensor_data.data.type in SENSOR_DEVICE_CLASS_MAPPING
-    )
+    entities = []
+    for sensor_id, sensor_data in coordinator_sensors.data.items():
+        if description := SENSOR_TYPES.get(sensor_data.data.type, None):
+            entities.append(
+                LunatoneSensor(
+                    coordinator_sensors, description, sensor_id, config_entry.unique_id
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class LunatoneSensor(
@@ -74,21 +101,25 @@ class LunatoneSensor(
 
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
         coordinator: LunatoneSensorsDataUpdateCoordinator,
+        description: SensorEntityDescription,
         sensor_id: int,
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone Sensor."""
-        super().__init__(coordinator=coordinator)
-        self._sensor_id = sensor_id
-        self._config_entry_unique_id = config_entry_unique_id
-        self._sensor = self.coordinator.data.get(self._sensor_id)
-        self._attr_unique_id = f"{config_entry_unique_id}-sensor{sensor_id}"
+        super().__init__(coordinator)
+        self.entity_description = description
 
+        self._config_entry_unique_id = config_entry_unique_id
+        self._sensor_id = sensor_id
+        self._sensor = self.coordinator.data.get(self._sensor_id)
+
+        self._attr_unique_id = (
+            f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
+        )
         device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._config_entry_unique_id))},
         )
@@ -117,26 +148,12 @@ class LunatoneSensor(
     @property
     def name(self) -> str:
         """Return the display name of this sensor."""
-        return self._sensor.name if self._sensor else f"DALI-2 Sensor {self._sensor_id}"
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of the sensor."""
-        return (
-            SENSOR_DEVICE_CLASS_MAPPING.get(self._sensor.data.type)
-            if self._sensor
-            else None
-        )
+        return self._sensor.name if self._sensor else f"Sensor {self._sensor_id}"
 
     @property
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self._sensor.data.value if self._sensor else None
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement for the sensor."""
-        return SENSOR_UNIT_MAPPING.get(self._sensor.data.unit) if self._sensor else None
 
     @callback
     def _handle_coordinator_update(self) -> None:
