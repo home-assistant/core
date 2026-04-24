@@ -49,7 +49,7 @@
   },
   "entity": {
     "event": {
-      "additional_button_press": {
+      "labeled_button": {
         "name": "Button {button_label}",
         "state_attributes": {
           "event_type": {
@@ -62,7 +62,7 @@
           }
         }
       },
-      "main_button_press": {
+      "simple_button": {
         "name": "Button",
         "state_attributes": {
           "event_type": {

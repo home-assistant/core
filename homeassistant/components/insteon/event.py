@@ -91,8 +91,8 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
         if set(self._event_names).issubset(_BUTTON_EVENT_NAMES):
             self._attr_device_class = EventDeviceClass.BUTTON
             self._attr_translation_key = (
-                "main" if self._insteon_device_group.group == 1 else "additional"
-            ) + "_button_press"
+                "simple" if self._insteon_device_group.group == 1 else "labeled"
+            ) + "_button"
 
             self._attr_translation_placeholders = {
                 "button_label": self._insteon_device_group.name.rpartition("_")[
