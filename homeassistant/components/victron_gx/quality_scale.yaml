@@ -45,7 +45,7 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
@@ -63,9 +63,11 @@ rules:
     comment: |
       Not relevant.
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration has no user-actionable repair issues to raise.
   stale-devices: done
-
   # Platinum
   async-dependency: done
   inject-websession:
