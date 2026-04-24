@@ -2,11 +2,12 @@
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections import defaultdict
+import hmac
 import json
 import logging
 import re
 
-from aiohttp import web
+from aiohttp import web, BasicAuth
 import voluptuous as vol
 
 from homeassistant.components import cloud, mqtt, webhook
@@ -164,6 +165,15 @@ async def handle_webhook(
     """
     context = hass.data[DOMAIN]["context"]
     topic_base = re.sub("/#$", "", context.mqtt_topic)
+
+    # Enforce HTTP Basic Auth before processing when secret is a shared string
+    if context.secret and isinstance(context.secret, str):
+        try:
+            basic_auth = BasicAuth.decode(request.headers.get("Authorization", ""))
+        except ValueError:
+            return web.Response(status=401)
+        if not hmac.compare_digest(basic_auth.password, context.secret):
+            return web.Response(status=401)
 
     try:
         message = await request.json()
