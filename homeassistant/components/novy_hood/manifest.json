@@ -1,0 +1,11 @@
+{
+  "domain": "novy_hood",
+  "name": "Novy Hood",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["radio_frequency"],
+  "documentation": "https://www.home-assistant.io/integrations/novy_hood",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "requirements": []
+}
