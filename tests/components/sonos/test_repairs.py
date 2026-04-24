@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+import pytest
 from soco import SoCo
 
 from homeassistant.components.sonos.const import (
@@ -18,6 +19,9 @@ from .conftest import SonosMockEvent, SonosMockSubscribe
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.skip(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_subscription_repair_issues(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
