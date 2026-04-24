@@ -62,6 +62,9 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_no_telegram()
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test restoring KNX sensor state."""
     ADDRESS = "2/2/2"
