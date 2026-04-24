@@ -92,7 +92,11 @@ from . import (
     template,
     trigger as trigger_helper,
 )
-from .condition import ConditionCheckerTypeOptional, trace_condition_function
+from .condition import (
+    ConditionChecker,
+    ConditionCheckerTypeOptional,
+    trace_condition_function,
+)
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
@@ -1390,6 +1394,14 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
             )
         )
 
+    # Unload all scripts to clean up cached conditions and sub-scripts
+    await asyncio.gather(
+        *(
+            create_eager_task(script["instance"].async_unload())
+            for script in hass.data[DATA_SCRIPTS]
+        )
+    )
+
 
 type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
@@ -1495,15 +1507,19 @@ class Script:
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._config_cache: dict[
-            frozenset[tuple[str, str]], ConditionCheckerTypeOptional
-        ] = {}
+        self._condition_cache: dict[frozenset[tuple[str, str]], ConditionChecker] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
+        self._unloaded = False
         self.variables = variables
+
+    def __del__(self) -> None:
+        """Clean up when the script is deleted."""
+        if self._unloaded:
+            return
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1889,13 +1905,54 @@ class Script:
             return
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
+    async def async_unload(self) -> None:
+        """Unload the script, cleaning up all resources.
+
+        Stops running executions, unloads cached conditions, and recursively
+        unloads sub-scripts.
+        """
+        self._unloaded = True
+        await self.async_stop()
+
+        for cond in self._condition_cache.values():
+            cond.async_unload()
+        self._condition_cache.clear()
+
+        for sub_script in self._repeat_script.values():
+            await sub_script.async_unload()
+        self._repeat_script.clear()
+
+        # Conditions in _choose_data and _if_data are the same objects as in
+        # _condition_cache, so they're already unloaded above. Only unload scripts.
+        for choose_data in self._choose_data.values():
+            for _conditions, sub_script in choose_data["choices"]:
+                await sub_script.async_unload()
+            if choose_data["default"] is not None:
+                await choose_data["default"].async_unload()
+        self._choose_data.clear()
+
+        for if_data in self._if_data.values():
+            await if_data["if_then"].async_unload()
+            if if_data["if_else"] is not None:
+                await if_data["if_else"].async_unload()
+        self._if_data.clear()
+
+        for scripts in self._parallel_scripts.values():
+            for sub_script in scripts:
+                await sub_script.async_unload()
+        self._parallel_scripts.clear()
+
+        for sub_script in self._sequence_scripts.values():
+            await sub_script.async_unload()
+        self._sequence_scripts.clear()
+
     async def _async_get_condition(
         self, config: ConfigType
     ) -> ConditionCheckerTypeOptional:
         config_cache_key = frozenset((k, str(v)) for k, v in config.items())
-        if not (cond := self._config_cache.get(config_cache_key)):
+        if not (cond := self._condition_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)
-            self._config_cache[config_cache_key] = cond
+            self._condition_cache[config_cache_key] = cond
         return cond
 
     def _prep_repeat_script(self, step: int) -> Script:
