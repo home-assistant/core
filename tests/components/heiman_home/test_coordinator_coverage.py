@@ -21,8 +21,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 async def test_async_call_cleanup_method_with_none_method(hass: HomeAssistant) -> None:
     """Test _async_call_cleanup_method when method is None (line 61)."""
     mock_target = MagicMock()
-    # Remove all methods to trigger the continue path
-    type(mock_target).nonexistent = property(lambda self: None)
+    # Set the attribute on this mock instance to trigger the continue path
+    mock_target.nonexistent = None
 
     # This should skip the None method and continue
     await _async_call_cleanup_method(mock_target, ("nonexistent",))
@@ -434,8 +434,8 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
-    # Remove _wrapper attribute so getattr returns None
-    del mock_api_client._wrapper
+    # Set _wrapper to None so getattr returns None deterministically.
+    mock_api_client._wrapper = None
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
