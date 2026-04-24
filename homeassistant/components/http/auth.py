@@ -182,6 +182,9 @@ async def async_setup_auth(  # noqa: C901
         if refresh_token is None:
             return False
 
+        if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
+            return False
+
         request[KEY_HASS_USER] = refresh_token.user
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
