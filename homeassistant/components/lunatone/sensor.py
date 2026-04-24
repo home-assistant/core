@@ -61,11 +61,9 @@ async def async_setup_entry(
     assert config_entry.unique_id is not None
 
     async_add_entities(
-        [
-            LunatoneSensor(coordinator_sensors, sensor_id, config_entry.unique_id)
-            for sensor_id, sensor_data in coordinator_sensors.data.items()
-            if sensor_data.data.type in SENSOR_DEVICE_CLASS_MAPPING
-        ]
+        LunatoneSensor(coordinator_sensors, sensor_id, config_entry.unique_id)
+        for sensor_id, sensor_data in coordinator_sensors.data.items()
+        if sensor_data.data.type in SENSOR_DEVICE_CLASS_MAPPING
     )
 
 
