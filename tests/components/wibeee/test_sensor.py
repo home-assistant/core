@@ -10,7 +10,9 @@ async def test_sensors_created(hass: HomeAssistant, loaded_entry) -> None:
     """Test that sensor entities are created."""
     states = hass.states.async_all("sensor")
     # Should have sensors for the discovered phases
-    assert len(states) > 0
+    entity_ids = {state.entity_id for state in states}
+    assert "sensor.wibeee_2233_active_power" in entity_ids
+    assert "sensor.wibeee_2233_l1_active_power" in entity_ids
 
 
 async def test_sensor_state_class(hass: HomeAssistant, loaded_entry) -> None:
