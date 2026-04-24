@@ -317,11 +317,22 @@ class IcloudAccount:
         try:
             self.api.authenticate()
         except PyiCloudFailedLoginException:
-            _LOGGER.error(
-                _MSG_PASSWORD_NO_LONGER_WORKING,
-                self._config_entry.data[CONF_USERNAME],
-            )
+            requires_2fa = self.api is not None and self.api.requires_2fa
             self.api = None
+            if requires_2fa:
+                _LOGGER.warning(
+                    (
+                        "2FA authentication required for '%s'; Go to the "
+                        "Integrations menu and click on Configure on the iCloud "
+                        "card to enter your verification code"
+                    ),
+                    self._config_entry.data[CONF_USERNAME],
+                )
+            else:
+                _LOGGER.error(
+                    _MSG_PASSWORD_NO_LONGER_WORKING,
+                    self._config_entry.data[CONF_USERNAME],
+                )
             self._require_reauth()
             return
         except Exception as err:  # noqa: BLE001

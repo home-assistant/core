@@ -203,7 +203,7 @@ async def test_keep_alive_auth_exception_reschedules(
         account.keep_alive()
 
     mock_schedule.assert_called_once()
-    assert account._fetch_interval == 2
+    assert account.fetch_interval == 2
 
 
 async def test_keep_alive_failed_login_triggers_reauth(
@@ -217,6 +217,7 @@ async def test_keep_alive_failed_login_triggers_reauth(
     """
     account = _make_account(hass, mock_store)
     account.api = MagicMock()
+    account.api.requires_2fa = False
     account.api.authenticate.side_effect = PyiCloudFailedLoginException("bad password")
 
     with (
@@ -230,6 +231,33 @@ async def test_keep_alive_failed_login_triggers_reauth(
     mock_schedule.assert_not_called()
     assert account.api is None
     mock_logger.error.assert_called_once()
+    mock_logger.warning.assert_not_called()
+
+
+async def test_keep_alive_failed_login_2fa_logs_warning_not_error(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive logs a warning (not error) when the failure is due to 2FA.
+
+    PyiCloudFailedLoginException is also raised for 2FA flows; logging 'password
+    no longer working' in that case would mislead the user.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = True
+    account.api.authenticate.side_effect = PyiCloudFailedLoginException("2FA required")
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.keep_alive()
+
+    mock_reauth.assert_called_once()
+    assert account.api is None
+    mock_logger.warning.assert_called_once()
+    mock_logger.error.assert_not_called()
 
 
 async def test_keep_alive_success_sends_locate_before_update(
