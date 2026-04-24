@@ -34,7 +34,11 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EXTERNAL_URL, SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import (
+    CONF_EXTERNAL_URL,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    EntityCategory,
+)
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -3601,6 +3605,88 @@ async def test_extract_from_target_expand_group(
     _assert_extract_from_target_command_result(
         msg,
         entities={"light.kitchen", "light.living_room"},
+    )
+
+
+async def test_extract_from_target_primary_entities_only(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test extract_from_target command with primary_entities_only parameter."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device1")},
+    )
+
+    primary_entity = entity_registry.async_get_or_create(
+        "light", "test", "unique1", device_id=device.id
+    )
+    diagnostic_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique2",
+        device_id=device.id,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    config_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "unique3",
+        device_id=device.id,
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    # Default (primary_entities_only=True): config/diagnostic entities excluded
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"device_id": [device.id]},
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={primary_entity.entity_id},
+        devices={device.id},
+    )
+
+    # Explicit primary_entities_only=True
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"device_id": [device.id]},
+            "primary_entities_only": True,
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={primary_entity.entity_id},
+        devices={device.id},
+    )
+
+    # primary_entities_only=False: config/diagnostic entities included
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"device_id": [device.id]},
+            "primary_entities_only": False,
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            primary_entity.entity_id,
+            diagnostic_entity.entity_id,
+            config_entity.entity_id,
+        },
+        devices={device.id},
     )
 
 

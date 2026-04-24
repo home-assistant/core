@@ -147,9 +147,22 @@ class SelectedEntities:
 
 
 def async_extract_referenced_entity_ids(
-    hass: HomeAssistant, target_selection: TargetSelection, expand_group: bool = True
+    hass: HomeAssistant,
+    target_selection: TargetSelection,
+    expand_group: bool = True,
+    *,
+    primary_entities_only: bool = True,
 ) -> SelectedEntities:
-    """Extract referenced entity IDs from a target selection."""
+    """Extract referenced entity IDs from a target selection.
+
+    When `primary_entities_only` is True (the default), entities with an
+    `entity_category` (i.e. config or diagnostic entities) are excluded from
+    indirect expansion via device, area, and floor. When False, those entities
+    are included. Direct label-to-entity expansion is unaffected by this flag.
+    Label targeting via labeled devices or areas follows the same filtering
+    rules as other indirect device/area expansion paths: filtered when
+    `primary_entities_only` is True, and included when it is False.
+    """
     selected = SelectedEntities()
 
     if not target_selection.has_any_target:
@@ -217,14 +230,18 @@ def async_extract_referenced_entity_ids(
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
 
+    def _include_entry(entry: er.RegistryEntry) -> bool:
+        """Return True if the entry should be included in indirect expansion."""
+        if entry.hidden_by is not None:
+            return False
+        return not primary_entities_only or entry.entity_category is None
+
     # Add indirectly referenced by device
     selected.indirectly_referenced.update(
         entry.entity_id
         for device_id in selected.referenced_devices
         for entry in entities.get_entries_for_device_id(device_id)
-        # Do not add entities which are hidden or which are config
-        # or diagnostic entities.
-        if (entry.entity_category is None and entry.hidden_by is None)
+        if _include_entry(entry)
     )
 
     # Find devices for targeted areas
@@ -243,27 +260,16 @@ def async_extract_referenced_entity_ids(
         for area_id in selected.referenced_areas
         # The entity's area matches a targeted area
         for entry in entities.get_entries_for_area_id(area_id)
-        # Do not add entities which are hidden or which are config
-        # or diagnostic entities.
-        if entry.entity_category is None and entry.hidden_by is None
+        if _include_entry(entry)
     )
     # Add indirectly referenced by area through device
     selected.indirectly_referenced.update(
         entry.entity_id
         for device_id in referenced_devices_by_area
         for entry in entities.get_entries_for_device_id(device_id)
-        # Do not add entities which are hidden or which are config
-        # or diagnostic entities.
-        if (
-            entry.entity_category is None
-            and entry.hidden_by is None
-            and (
-                # The entity's device matches a device referenced
-                # by an area and the entity
-                # has no explicitly set area
-                not entry.area_id
-            )
-        )
+        # The entity's device matches a device referenced by an area and the
+        # entity has no explicitly set area.
+        if _include_entry(entry) and not entry.area_id
     )
 
     return selected
@@ -277,11 +283,14 @@ class TargetEntityChangeTracker(abc.ABC):
         hass: HomeAssistant,
         target_selection: TargetSelection,
         entity_filter: Callable[[set[str]], set[str]],
+        *,
+        primary_entities_only: bool = True,
     ) -> None:
         """Initialize the state change tracker."""
         self._hass = hass
         self._target_selection = target_selection
         self._entity_filter = entity_filter
+        self._primary_entities_only = primary_entities_only
 
         self._registry_unsubs: list[CALLBACK_TYPE] = []
 
@@ -300,7 +309,10 @@ class TargetEntityChangeTracker(abc.ABC):
     def _handle_target_update(self, event: Event[Any] | None = None) -> None:
         """Handle updates in the tracked targets."""
         selected = async_extract_referenced_entity_ids(
-            self._hass, self._target_selection, expand_group=False
+            self._hass,
+            self._target_selection,
+            expand_group=False,
+            primary_entities_only=self._primary_entities_only,
         )
         filtered_entities = self._entity_filter(
             selected.referenced | selected.indirectly_referenced
@@ -345,9 +357,16 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         target_selection: TargetSelection,
         action: Callable[[TargetStateChangedData], Any],
         entity_filter: Callable[[set[str]], set[str]],
+        *,
+        primary_entities_only: bool = True,
     ) -> None:
         """Initialize the state change tracker."""
-        super().__init__(hass, target_selection, entity_filter)
+        super().__init__(
+            hass,
+            target_selection,
+            entity_filter,
+            primary_entities_only=primary_entities_only,
+        )
         self._action = action
         self._state_change_unsub: CALLBACK_TYPE | None = None
 
@@ -380,12 +399,24 @@ def async_track_target_selector_state_change_event(
     target_selector_config: ConfigType,
     action: Callable[[TargetStateChangedData], Any],
     entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
+    *,
+    primary_entities_only: bool = True,
 ) -> CALLBACK_TYPE:
-    """Track state changes for entities referenced directly or indirectly in a target selector."""
+    """Track state changes for entities referenced directly or indirectly in a target selector.
+
+    When `primary_entities_only` is True, indirect target expansion (via device, area,
+    and floor) skips entities with an `entity_category` (i.e. config or diagnostic entities).
+    """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:
         raise HomeAssistantError(
             f"Target selector {target_selector_config} does not have any selectors defined"
         )
-    tracker = TargetStateChangeTracker(hass, target_selection, action, entity_filter)
+    tracker = TargetStateChangeTracker(
+        hass,
+        target_selection,
+        action,
+        entity_filter,
+        primary_entities_only=primary_entities_only,
+    )
     return tracker.async_setup()

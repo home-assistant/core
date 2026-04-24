@@ -865,6 +865,7 @@ def handle_entity_source(
         vol.Required("type"): "extract_from_target",
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=False): bool,
+        vol.Optional("primary_entities_only", default=True): bool,
     }
 )
 def handle_extract_from_target(
@@ -874,7 +875,10 @@ def handle_extract_from_target(
 
     target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, target_selection, expand_group=msg["expand_group"]
+        hass,
+        target_selection,
+        expand_group=msg["expand_group"],
+        primary_entities_only=msg["primary_entities_only"],
     )
 
     extracted_dict = {
