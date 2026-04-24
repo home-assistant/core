@@ -626,6 +626,9 @@ async def test_auth_access_signed_path_with_local_only_user(
     # Remote IP is rejected for local-only user
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
+        signed_path = async_sign_path(
+            hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+        )
 
         req = await client.head(signed_path)
         assert req.status == HTTPStatus.UNAUTHORIZED
@@ -660,6 +663,9 @@ async def test_auth_access_signed_path_with_inactive_user(
     assert req.status == HTTPStatus.OK
     data = await req.json()
     assert data["user_id"] == refresh_token.user.id
+    signed_path = async_sign_path(
+        hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
 
     # Inactive user is rejected
     refresh_token.user.is_active = False
