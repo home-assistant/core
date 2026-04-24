@@ -367,6 +367,7 @@ async def test_hub_device_info_mac_connections(
     device = dev_reg.async_get_device(identifiers={(DOMAIN, SERIAL)})
     assert device is not None
     expected_connections = {
-        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in MACS
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MACS[0])),
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MACS[1])),
     }
     assert device.connections == expected_connections
