@@ -77,6 +77,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_event_bus": {
+      "description": "Detected **{listeners}** listener(s) for the event `{event}`.\n\nThe Insteon integration firing events on the event bus is deprecated and this functionality will be removed in a future release.\n\nPlease update your automations and scripts to use the event entities instead.\n\n## Example automation:\n\n{example_yaml}\n\n## Example using a purpose-specific trigger:\n\n{example_yaml_trigger}",
+      "title": "Detected use of deprecated event {event}"
+    }
+  },
   "options": {
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

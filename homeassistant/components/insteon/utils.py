@@ -29,6 +29,7 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
 )
 from .ipdb import get_device_platform_groups, get_device_platforms
+from .issue import deprecated_event_bus
 
 if TYPE_CHECKING:
     from .entity import InsteonBaseEntity
@@ -74,11 +75,10 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         else:
             event = f"insteon.{name}"
 
-        schema["deprecated"] = (
-            "Events are deprecated. Please use event entities and entity state changes instead."
-        )
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
+
+        deprecated_event_bus(hass, event)
 
     if str(device.address).startswith("X10"):
         return
