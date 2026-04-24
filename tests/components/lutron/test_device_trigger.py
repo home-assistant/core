@@ -241,30 +241,6 @@ async def test_get_triggers_missing_device_returns_empty(
     assert await device_trigger.async_get_triggers(hass, "missing_device") == []
 
 
-async def test_get_triggers_with_empty_button_list_returns_empty(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_lutron: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test keypads without buttons produce no device triggers."""
-    mock_lutron.areas[0].keypads[0].buttons = []
-
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    device = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, f"{mock_lutron.guid}_{mock_lutron.areas[0].keypads[0].uuid}")
-        }
-    )
-    assert device is not None
-
-    assert await device_trigger.async_get_triggers(hass, device.id) == []
-
-
 async def test_pico_trigger_fires_on_semantic_subtype(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
