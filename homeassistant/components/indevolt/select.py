@@ -11,7 +11,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
-from .const import ENERGY_MODE_READ_KEY, ENERGY_MODE_WRITE_KEY, PORTABLE_MODE
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -33,14 +32,14 @@ SELECTS: Final = (
     IndevoltSelectEntityDescription(
         key="energy_mode",
         translation_key="energy_mode",
-        read_key=ENERGY_MODE_READ_KEY,
-        write_key=ENERGY_MODE_WRITE_KEY,
+        read_key="7101",
+        write_key="47005",
         value_to_option={
             1: "self_consumed_prioritized",
             4: "real_time_control",
             5: "charge_discharge_schedule",
         },
-        unavailable_values=[PORTABLE_MODE],
+        unavailable_values=[0],
     ),
 )
 
