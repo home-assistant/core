@@ -7114,6 +7114,8 @@ async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None
     unload_mock.reset_mock()
 
     # __del__ should skip since _unloaded is True
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
     script_obj.__del__()  # pylint: disable=unnecessary-dunder-call
     unload_mock.assert_not_called()
 
