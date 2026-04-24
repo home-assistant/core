@@ -278,7 +278,7 @@ class TibberDataCoordinator(TibberCoordinator[None]):
 
 
 class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
-    """Handle Tibber price data and insert statistics."""
+    """Handle Tibber price data."""
 
     def __init__(
         self,
