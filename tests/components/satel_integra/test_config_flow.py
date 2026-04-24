@@ -242,15 +242,28 @@ async def test_subentry_creation(
     assert mock_reload_after_entry_update.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("read_temperature_side_effect", "expected_errors"),
+    [
+        (
+            None,
+            {CONF_ENABLE_TEMPERATURE_SENSOR: "zone_does_not_report_temperature"},
+        ),
+        (Exception("Boom"), {"base": "unknown"}),
+    ],
+)
 async def test_zone_temperature_sensor_validation_on_create(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
+    read_temperature_side_effect: Exception | None,
+    expected_errors: dict[str, str],
 ) -> None:
-    """Test temperature sensor enablement fails for zones without temperature data."""
+    """Test temperature sensor enablement validation errors."""
     await setup_integration(hass, mock_config_entry)
     mock_satel.read_temperature.return_value = None
+    mock_satel.read_temperature.side_effect = read_temperature_side_effect
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, MOCK_ZONE_SUBENTRY.subentry_type),
@@ -267,9 +280,7 @@ async def test_zone_temperature_sensor_validation_on_create(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {
-        CONF_ENABLE_TEMPERATURE_SENSOR: "zone_does_not_report_temperature"
-    }
+    assert result["errors"] == expected_errors
     assert len(mock_config_entry.subentries) == 0
     mock_satel.read_temperature.assert_awaited_once_with(1)
     assert mock_reload_after_entry_update.call_count == 0
