@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[binary_sensor.qube_heat_pump-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_anti_legionella-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump',
+    'entity_id': 'binary_sensor.qube_heat_pump_anti_legionella',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,712 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Anti-legionella',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'source_pump',
-    'unique_id': '01JQUBEHEATPUMP00000000000-source_pump',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'keypad',
-    'unique_id': '01JQUBEHEATPUMP00000000000-keypad',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'day_mode',
-    'unique_id': '01JQUBEHEATPUMP00000000000-day_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'room_sensor_enabled',
-    'unique_id': '01JQUBEHEATPUMP00000000000-room_sensor_enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_13-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_13',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'plant_sensor_enabled',
-    'unique_id': '01JQUBEHEATPUMP00000000000-plant_sensor_enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_13-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_13',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_14-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_14',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'buffer_sensor_enabled',
-    'unique_id': '01JQUBEHEATPUMP00000000000-buffer_sensor_enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_14-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_14',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_15-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_15',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'dhw_controller_enabled',
-    'unique_id': '01JQUBEHEATPUMP00000000000-dhw_controller_enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_15-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_15',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_16-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_16',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'plant_demand',
-    'unique_id': '01JQUBEHEATPUMP00000000000-plant_demand',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_16-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_16',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_17-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_17',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'external_demand',
-    'unique_id': '01JQUBEHEATPUMP00000000000-external_demand',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_17-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_17',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_18-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_18',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'thermostat_demand',
-    'unique_id': '01JQUBEHEATPUMP00000000000-thermostat_demand',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_18-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_18',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_19-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_19',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'summer_mode',
-    'unique_id': '01JQUBEHEATPUMP00000000000-summer_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_19-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_19',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'user_pump',
-    'unique_id': '01JQUBEHEATPUMP00000000000-user_pump',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_20-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_20',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'booster_security',
-    'unique_id': '01JQUBEHEATPUMP00000000000-booster_security',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_20-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_20',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_21-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_21',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'source_flow',
-    'unique_id': '01JQUBEHEATPUMP00000000000-source_flow',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_21-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_21',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_22-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_22',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Anti-legionella',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -736,420 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_22-state]
+# name: test_entities[binary_sensor.qube_heat_pump_anti_legionella-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
+      'friendly_name': 'Qube heat pump Anti-legionella',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_22',
+    'entity_id': 'binary_sensor.qube_heat_pump_anti_legionella',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_23-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_23',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pv_surplus',
-    'unique_id': '01JQUBEHEATPUMP00000000000-pv_surplus',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_23-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_23',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'four_way_valve',
-    'unique_id': '01JQUBEHEATPUMP00000000000-four_way_valve',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cooling_output',
-    'unique_id': '01JQUBEHEATPUMP00000000000-cooling_output',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'three_way_valve',
-    'unique_id': '01JQUBEHEATPUMP00000000000-three_way_valve',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'buffer_pump',
-    'unique_id': '01JQUBEHEATPUMP00000000000-buffer_pump',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'heater_step_1',
-    'unique_id': '01JQUBEHEATPUMP00000000000-heater_step_1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'heater_step_2',
-    'unique_id': '01JQUBEHEATPUMP00000000000-heater_step_2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.qube_heat_pump_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'heater_step_3',
-    'unique_id': '01JQUBEHEATPUMP00000000000-heater_step_3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_anti_legionella_timeout-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_anti_legionella_timeout_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1163,7 +63,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_anti_legionella_timeout',
+    'entity_id': 'binary_sensor.qube_heat_pump_anti_legionella_timeout_alarm',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1171,12 +71,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm: Anti-legionella timeout',
+    'object_id_base': 'Anti-legionella timeout alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Alarm: Anti-legionella timeout',
+    'original_name': 'Anti-legionella timeout alarm',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1186,21 +86,121 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_anti_legionella_timeout-state]
+# name: test_entities[binary_sensor.qube_heat_pump_anti_legionella_timeout_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Anti-legionella timeout',
+      'friendly_name': 'Qube heat pump Anti-legionella timeout alarm',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_anti_legionella_timeout',
+    'entity_id': 'binary_sensor.qube_heat_pump_anti_legionella_timeout_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_central_heating-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_booster_security-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_booster_security',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Booster security',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Booster security',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'booster_security',
+    'unique_id': '01JQUBEHEATPUMP00000000000-booster_security',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_booster_security-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Booster security',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_booster_security',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_buffer_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_buffer_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Buffer pump',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buffer pump',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'buffer_pump',
+    'unique_id': '01JQUBEHEATPUMP00000000000-buffer_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_buffer_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Buffer pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_buffer_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_buffer_sensor_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1214,7 +214,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_central_heating',
+    'entity_id': 'binary_sensor.qube_heat_pump_buffer_sensor_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1222,12 +222,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm: Central heating',
+    'object_id_base': 'Buffer sensor enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buffer sensor enabled',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'buffer_sensor_enabled',
+    'unique_id': '01JQUBEHEATPUMP00000000000-buffer_sensor_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_buffer_sensor_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Buffer sensor enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_buffer_sensor_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_central_heating_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_central_heating_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Central heating alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Alarm: Central heating',
+    'original_name': 'Central heating alarm',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1237,21 +287,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_central_heating-state]
+# name: test_entities[binary_sensor.qube_heat_pump_central_heating_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Central heating',
+      'friendly_name': 'Qube heat pump Central heating alarm',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_central_heating',
+    'entity_id': 'binary_sensor.qube_heat_pump_central_heating_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_compressor-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_compressor_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1265,7 +315,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_compressor',
+    'entity_id': 'binary_sensor.qube_heat_pump_compressor_alarm',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1273,12 +323,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm: Compressor',
+    'object_id_base': 'Compressor alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Alarm: Compressor',
+    'original_name': 'Compressor alarm',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1288,21 +338,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_compressor-state]
+# name: test_entities[binary_sensor.qube_heat_pump_compressor_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Compressor',
+      'friendly_name': 'Qube heat pump Compressor alarm',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_compressor',
+    'entity_id': 'binary_sensor.qube_heat_pump_compressor_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_cooling-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_cooling_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1316,7 +366,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_cooling',
+    'entity_id': 'binary_sensor.qube_heat_pump_cooling_alarm',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1324,12 +374,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm: Cooling',
+    'object_id_base': 'Cooling alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Alarm: Cooling',
+    'original_name': 'Cooling alarm',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1339,21 +389,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_cooling-state]
+# name: test_entities[binary_sensor.qube_heat_pump_cooling_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Cooling',
+      'friendly_name': 'Qube heat pump Cooling alarm',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_cooling',
+    'entity_id': 'binary_sensor.qube_heat_pump_cooling_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_dewpoint-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_cooling_output-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1366,8 +416,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_dewpoint',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_cooling_output',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1375,36 +425,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm: Dewpoint',
+    'object_id_base': 'Cooling output',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm: Dewpoint',
+    'original_name': 'Cooling output',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'alarm_dewpoint',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_dewpoint',
+    'translation_key': 'cooling_output',
+    'unique_id': '01JQUBEHEATPUMP00000000000-cooling_output',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_dewpoint-state]
+# name: test_entities[binary_sensor.qube_heat_pump_cooling_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Dewpoint',
+      'friendly_name': 'Qube heat pump Cooling output',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_dewpoint',
+    'entity_id': 'binary_sensor.qube_heat_pump_cooling_output',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_dhw_timeout-entry]
+# name: test_entities[binary_sensor.qube_heat_pump_day_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1417,8 +466,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_dhw_timeout',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_day_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1426,339 +475,32 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm: DHW timeout',
+    'object_id_base': 'Day mode',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm: DHW timeout',
+    'original_name': 'Day mode',
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'alarm_dhw_timeout',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_dhw_timeout',
+    'translation_key': 'day_mode',
+    'unique_id': '01JQUBEHEATPUMP00000000000-day_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_dhw_timeout-state]
+# name: test_entities[binary_sensor.qube_heat_pump_day_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: DHW timeout',
+      'friendly_name': 'Qube heat pump Day mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_dhw_timeout',
+    'entity_id': 'binary_sensor.qube_heat_pump_day_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_flow-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_flow',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Alarm: Flow',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Alarm: Flow',
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_flow',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_flow',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_flow-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Flow',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_flow',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_global-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_global',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Alarm: Global',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Alarm: Global',
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_global',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_global',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_global-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Global',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_global',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_heating-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_heating',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Alarm: Heating',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Alarm: Heating',
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_heating',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_heating',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_heating-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Heating',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_heating',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_source-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_source',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Alarm: Source',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Alarm: Source',
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_source',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_source',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_source-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Source',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_source',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_supply_too_hot-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_supply_too_hot',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Alarm: Supply too hot',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Alarm: Supply too hot',
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_supply_too_hot',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_supply_too_hot',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_supply_too_hot-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Supply too hot',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_supply_too_hot',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_working_hours-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_working_hours',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Alarm: Working hours',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Alarm: Working hours',
-    'platform': 'hr_energy_qube',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_working_hours',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_working_hours',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor.qube_heat_pump_alarm_working_hours-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Alarm: Working hours',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.qube_heat_pump_alarm_working_hours',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_entities[binary_sensor.qube_heat_pump_dewpoint-entry]
@@ -1805,6 +547,1264 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_dewpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_dewpoint_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_dewpoint_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dewpoint alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Dewpoint alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_dewpoint',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_dewpoint',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_dewpoint_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Dewpoint alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_dewpoint_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_dhw_controller_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_dhw_controller_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW controller enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW controller enabled',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_controller_enabled',
+    'unique_id': '01JQUBEHEATPUMP00000000000-dhw_controller_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_dhw_controller_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump DHW controller enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_dhw_controller_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_dhw_timeout_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_dhw_timeout_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW timeout alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'DHW timeout alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_dhw_timeout',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_dhw_timeout',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_dhw_timeout_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump DHW timeout alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_dhw_timeout_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_external_demand-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_external_demand',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External demand',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External demand',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_demand',
+    'unique_id': '01JQUBEHEATPUMP00000000000-external_demand',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_external_demand-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump External demand',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_external_demand',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_flow_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_flow_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flow alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Flow alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_flow',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_flow',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_flow_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Flow alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_flow_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_four_way_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_four_way_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Four-way valve',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Four-way valve',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'four_way_valve',
+    'unique_id': '01JQUBEHEATPUMP00000000000-four_way_valve',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_four_way_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Four-way valve',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_four_way_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_global_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_global_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Global alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Global alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_global',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_global',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_global_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Global alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_global_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heater_step_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_heater_step_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heater step 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heater step 1',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heater_step_1',
+    'unique_id': '01JQUBEHEATPUMP00000000000-heater_step_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heater_step_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Heater step 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_heater_step_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heater_step_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_heater_step_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heater step 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heater step 2',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heater_step_2',
+    'unique_id': '01JQUBEHEATPUMP00000000000-heater_step_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heater_step_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Heater step 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_heater_step_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heater_step_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_heater_step_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heater step 3',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heater step 3',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heater_step_3',
+    'unique_id': '01JQUBEHEATPUMP00000000000-heater_step_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heater_step_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Heater step 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_heater_step_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heating_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_heating_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heating alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Heating alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_heating',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_heating_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Heating alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_heating_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_keypad-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_keypad',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Keypad',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keypad',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keypad',
+    'unique_id': '01JQUBEHEATPUMP00000000000-keypad',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_keypad-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Keypad',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_keypad',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_plant_demand-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_plant_demand',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plant demand',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plant demand',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_demand',
+    'unique_id': '01JQUBEHEATPUMP00000000000-plant_demand',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_plant_demand-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Plant demand',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_plant_demand',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_plant_sensor_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_plant_sensor_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plant sensor enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plant sensor enabled',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_sensor_enabled',
+    'unique_id': '01JQUBEHEATPUMP00000000000-plant_sensor_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_plant_sensor_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Plant sensor enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_plant_sensor_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_pv_surplus-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_pv_surplus',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PV surplus',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PV surplus',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pv_surplus',
+    'unique_id': '01JQUBEHEATPUMP00000000000-pv_surplus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_pv_surplus-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump PV surplus',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_pv_surplus',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_room_sensor_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_room_sensor_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Room sensor enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Room sensor enabled',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'room_sensor_enabled',
+    'unique_id': '01JQUBEHEATPUMP00000000000-room_sensor_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_room_sensor_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Room sensor enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_room_sensor_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_source_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_source_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Source alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Source alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_source',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_source',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_source_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Source alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_source_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_source_flow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_source_flow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Source flow',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Source flow',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'source_flow',
+    'unique_id': '01JQUBEHEATPUMP00000000000-source_flow',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_source_flow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Source flow',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_source_flow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_source_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_source_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Source pump',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Source pump',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'source_pump',
+    'unique_id': '01JQUBEHEATPUMP00000000000-source_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_source_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Source pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_source_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_summer_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_summer_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Summer mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Summer mode',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'summer_mode',
+    'unique_id': '01JQUBEHEATPUMP00000000000-summer_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_summer_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Summer mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_summer_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_supply_too_hot_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_supply_too_hot_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Supply too hot alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Supply too hot alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_supply_too_hot',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_supply_too_hot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_supply_too_hot_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Supply too hot alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_supply_too_hot_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_thermostat_demand-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_thermostat_demand',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thermostat demand',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat demand',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thermostat_demand',
+    'unique_id': '01JQUBEHEATPUMP00000000000-thermostat_demand',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_thermostat_demand-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Thermostat demand',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_thermostat_demand',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_three_way_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_three_way_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Three-way valve',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Three-way valve',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_way_valve',
+    'unique_id': '01JQUBEHEATPUMP00000000000-three_way_valve',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_three_way_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump Three-way valve',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_three_way_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_user_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.qube_heat_pump_user_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User pump',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User pump',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_pump',
+    'unique_id': '01JQUBEHEATPUMP00000000000-user_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_user_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Qube heat pump User pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_user_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_working_hours_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.qube_heat_pump_working_hours_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Working hours alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Working hours alarm',
+    'platform': 'hr_energy_qube',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_working_hours',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_working_hours',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.qube_heat_pump_working_hours_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Qube heat pump Working hours alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.qube_heat_pump_working_hours_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
