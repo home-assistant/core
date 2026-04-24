@@ -66,6 +66,9 @@
       "ir_lamp": {
         "name": "IR lamp"
       },
+      "relay": {
+        "name": "Relay {token}"
+      },
       "wiper": {
         "name": "Wiper"
       }

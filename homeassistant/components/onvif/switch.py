@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +15,12 @@ from .const import DOMAIN
 from .device import ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
+
+
+class RelayOutput(Protocol):
+    """Typed relay output attributes used by the switch entity."""
+
+    token: str
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -73,11 +79,19 @@ async def async_setup_entry(
     # pylint: disable-next=hass-use-runtime-data
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    async_add_entities(
+    # Add predefined switches
+    entities: list[ONVIFSwitch | ONVIFRelaySwitch] = [
         ONVIFSwitch(device, description)
         for description in SWITCHES
         if description.supported_fn(device)
-    )
+    ]
+
+    # Add relay output switches
+    if device.capabilities.deviceio:
+        relays = await device.async_get_relay_outputs()
+        entities.extend(ONVIFRelaySwitch(device, relay) for relay in relays)
+
+    async_add_entities(entities)
 
 
 class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
@@ -109,3 +123,35 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
         await self.entity_description.turn_off_fn(self.device)(
             profile, self.entity_description.turn_off_data
         )
+
+
+class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
+    """An ONVIF relay output switch."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_translation_key = "relay"
+
+    def __init__(self, device: ONVIFDevice, relay: RelayOutput) -> None:
+        """Initialize the relay switch."""
+        super().__init__(device)
+        self._relay_token = relay.token
+        self._attr_translation_placeholders = {"token": relay.token}
+        self._attr_unique_id = f"{self.mac_or_serial}_relay_{self._relay_token}"
+
+    @property
+    def suggested_object_id(self) -> str:
+        """Return suggested object id."""
+        return self._relay_token
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on relay."""
+        await self.device.async_set_relay_output_state(self._relay_token, "active")
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off relay."""
+        await self.device.async_set_relay_output_state(self._relay_token, "inactive")
+        self._attr_is_on = False
+        self.async_write_ha_state()
