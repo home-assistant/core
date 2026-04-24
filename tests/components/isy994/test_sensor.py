@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -11,6 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def mock_sensor_platform():
+    """Mock the platforms to only include sensor."""
+    with patch("homeassistant.components.isy994.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def test_sensor_snapshots(
@@ -97,9 +105,8 @@ async def test_sensor_snapshots(
 
     mock_isy.nodes.__iter__.return_value = nodes
 
-    with patch("homeassistant.components.isy994.PLATFORMS", [Platform.SENSOR]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Enable disabled entities (like aux sensors)
     entity_entries = er.async_entries_for_config_entry(
@@ -109,8 +116,7 @@ async def test_sensor_snapshots(
         if entry.disabled_by:
             entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
 
-    with patch("homeassistant.components.isy994.PLATFORMS", [Platform.SENSOR]):
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
