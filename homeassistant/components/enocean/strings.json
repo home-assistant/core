@@ -4,6 +4,7 @@
       "invalid_dongle_path": "Invalid dongle path"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_dongle_path": "No valid dongle found for this path"
     },
     "flow_title": "{name}",
@@ -28,6 +29,330 @@
       },
       "usb_confirm": {
         "description": "{manufacturer} USB dongle detected at {device}. Do you want to set up this device?"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ch1_error_level": {
+        "name": "Channel 1 error level"
+      },
+      "ch2_error_level": {
+        "name": "Channel 2 error level"
+      },
+      "ch3_error_level": {
+        "name": "Channel 3 error level"
+      },
+      "ch4_error_level": {
+        "name": "Channel 4 error level"
+      },
+      "ch5_error_level": {
+        "name": "Channel 5 error level"
+      },
+      "ch6_error_level": {
+        "name": "Channel 6 error level"
+      },
+      "ch7_error_level": {
+        "name": "Channel 7 error level"
+      },
+      "ch8_error_level": {
+        "name": "Channel 8 error level"
+      },
+      "contact_state": {
+        "name": "Contact"
+      },
+      "day_night": {
+        "name": "Day/Night"
+      },
+      "learning_active": {
+        "name": "Learning mode"
+      },
+      "motion": {
+        "name": "Motion"
+      },
+      "occupancy_button": {
+        "name": "Occupancy"
+      }
+    },
+    "button": {
+      "learn_telegram": {
+        "name": "Send teach-in query"
+      },
+      "learning_toggle": {
+        "name": "Toggle learning mode"
+      },
+      "query_measurement": {
+        "name": "Query measurement"
+      },
+      "query_position": {
+        "name": "Query position"
+      },
+      "query_status": {
+        "name": "Query status"
+      }
+    },
+    "event": {
+      "a0": {
+        "name": "A0"
+      },
+      "a1": {
+        "name": "A1"
+      },
+      "b0": {
+        "name": "B0"
+      },
+      "b1": {
+        "name": "B1"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light"
+      }
+    },
+    "number": {
+      "max_brightness": {
+        "name": "Max. brightness"
+      },
+      "max_travel_time": {
+        "name": "Max. travel time"
+      },
+      "min_brightness": {
+        "name": "Min. brightness"
+      },
+      "ramp_time": {
+        "name": "Ramp time"
+      }
+    },
+    "select": {
+      "dimming_mode": {
+        "name": "Dimming mode",
+        "state": {
+          "absolute": "Absolute",
+          "relative": "Relative"
+        }
+      },
+      "learning_sender": {
+        "name": "Learning sender slot"
+      },
+      "learning_timeout": {
+        "name": "Learning timeout",
+        "state": {
+          "30": "30 s",
+          "60": "60 s",
+          "120": "2 min",
+          "300": "5 min"
+        }
+      },
+      "repositioning_mode": {
+        "name": "Repositioning mode",
+        "state": {
+          "direct": "Direct",
+          "down_first": "Down first",
+          "up_first": "Up first"
+        }
+      },
+      "sender_slot": {
+        "name": "Sender slot"
+      },
+      "store": {
+        "name": "Store value",
+        "state": {
+          "no": "No",
+          "yes": "Yes"
+        }
+      }
+    },
+    "sensor": {
+      "angle": {
+        "name": "Angle"
+      },
+      "connection_status": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "reconnecting": "Reconnecting"
+        }
+      },
+      "counter": {
+        "name": "Counter"
+      },
+      "counter_rate": {
+        "name": "Counter rate"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "closed": "Closed",
+          "closing": "Closing",
+          "open": "Open",
+          "opening": "Opening",
+          "stopped": "Stopped"
+        }
+      },
+      "energy": {
+        "name": "Energy"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "gas_flow": {
+        "name": "Gas flow"
+      },
+      "gas_volume": {
+        "name": "Gas volume"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "illumination": {
+        "name": "Illuminance"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "learning_remaining": {
+        "name": "Learning mode remaining"
+      },
+      "output_value": {
+        "name": "Output value"
+      },
+      "pilot_wire_mode": {
+        "name": "Pilot wire mode",
+        "state": {
+          "comfort": "Comfort",
+          "comfort_minus_1": "Comfort -1",
+          "comfort_minus_2": "Comfort -2",
+          "eco": "Economy",
+          "frost_protection": "Frost protection",
+          "off": "Off"
+        }
+      },
+      "position": {
+        "name": "Position"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "rssi": {
+        "name": "Signal strength"
+      },
+      "set_point": {
+        "name": "Set point"
+      },
+      "telegram_count": {
+        "name": "Telegram count"
+      },
+      "telegrams_received": {
+        "name": "Telegrams received"
+      },
+      "telegrams_sent": {
+        "name": "Telegrams sent"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "temperature_setpoint": {
+        "name": "Temperature setpoint"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "water_flow": {
+        "name": "Water flow"
+      },
+      "water_volume": {
+        "name": "Water volume"
+      },
+      "window_state": {
+        "name": "Window state",
+        "state": {
+          "closed": "Closed",
+          "open": "Open",
+          "tilted": "Tilted"
+        }
+      }
+    },
+    "switch": {
+      "ch1_switch_state": {
+        "name": "Channel 1"
+      },
+      "ch2_switch_state": {
+        "name": "Channel 2"
+      },
+      "ch3_switch_state": {
+        "name": "Channel 3"
+      },
+      "ch4_switch_state": {
+        "name": "Channel 4"
+      },
+      "ch5_switch_state": {
+        "name": "Channel 5"
+      },
+      "ch6_switch_state": {
+        "name": "Channel 6"
+      },
+      "ch7_switch_state": {
+        "name": "Channel 7"
+      },
+      "ch8_switch_state": {
+        "name": "Channel 8"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "device_not_found": "The selected device could not be found in the configuration."
+    },
+    "error": {
+      "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",
+      "device_name_empty": "Device name is empty.",
+      "invalid_device_id": "Device ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
+      "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7'). Only the dongle's base IDs or its chip ID can be used for sending."
+    },
+    "step": {
+      "add_device": {
+        "data": {
+          "device_class": "Device class",
+          "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+          "id": "Device ID",
+          "name": "Name",
+          "sender_id": "Sender ID (defaults to dongle's base ID; do not change unless necessary)"
+        },
+        "description": "To add an EnOcean device you need to specify at least its device type and its ID.",
+        "title": "Add new EnOcean device"
+      },
+      "delete_device": {
+        "data": { "id": "EnOcean ID" },
+        "description": "Select an EnOcean device to delete. The corresponding Home Assistant device and all its entities will also be deleted.",
+        "title": "Delete EnOcean device"
+      },
+      "edit_device": {
+        "data": {
+          "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+          "id": "Device ID",
+          "name": "Name",
+          "sender_id": "Sender ID (defaults to dongle's base ID; do not change unless necessary)"
+        },
+        "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean ID which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities.",
+        "title": "Edit EnOcean device"
+      },
+      "init": {
+        "description": "Configuration of the EnOcean integration",
+        "menu_options": {
+          "add_device": "Add new device",
+          "delete_device": "Delete configured device",
+          "select_device_to_edit": "Edit configured device"
+        }
+      },
+      "select_device_to_edit": {
+        "data": { "id": "Device" },
+        "description": "Select the EnOcean device whose settings you want to change.",
+        "title": "Select EnOcean device for editing"
       }
     }
   },

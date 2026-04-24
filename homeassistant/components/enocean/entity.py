@@ -1,68 +1,103 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
-from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
+from enocean_async import EURID, Gateway, Observable, Observation
+from enocean_async.semantics.entity import EntityCategory as LibEntityCategory
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.const import EntityCategory
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, SIGNAL_OBSERVATION
 
-
-def combine_hex(dev_id: list[int]) -> int:
-    """Combine list of integer values to one big integer.
-
-    This function replaces the previously used function from the enocean library and is considered tech debt that will have to be replaced.
-    """
-    value = 0
-    for byte in dev_id:
-        value = (value << 8) | (byte & 0xFF)
-    return value
+LIB_ENTITY_CATEGORY_MAP: dict[str, EntityCategory | None] = {
+    LibEntityCategory.CONFIG: EntityCategory.CONFIG,
+    LibEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+    LibEntityCategory.DEFAULT: None,
+}
 
 
 class EnOceanEntity(Entity):
     """Parent class for all entities associated with the EnOcean component."""
 
-    def __init__(self, dev_id: list[int]) -> None:
-        """Initialize the device."""
-        self.address: SenderAddress | None = None
+    _attr_available = False
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _track_gateway_availability = True
+    _is_gateway_entity = False
+    """If True, this entity belongs to the gateway device and observations are matched against the gateway EURID instead of ``self.address``."""
 
-        try:
-            address = Address.from_bytelist(dev_id)
-            if address.is_eurid():
-                self.address = EURID.from_number(address.to_number())
-            elif address.is_base_address():
-                self.address = BaseAddress.from_number(address.to_number())
-        except ValueError:
-            self.address = None
+    def __init__(
+        self,
+        address: EURID,
+        entity_key: str,
+        gateway: Gateway,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__()
+
+        self._attr_translation_key = entity_key
+        self._attr_unique_id = f"{address}.{entity_key}"
+
+        self.address: EURID = address
+        self.entity_key: str = entity_key
+        self.gateway: Gateway = gateway
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+        """Subscribe to gateway observations and seed initial availability."""
+        await super().async_added_to_hass()
+        if self._track_gateway_availability:
+            self._attr_available = self.gateway.is_connected
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_RECEIVE_MESSAGE, self._message_received_callback
+                self.hass, SIGNAL_OBSERVATION, self._on_observation
             )
         )
 
-    def _message_received_callback(self, telegram: ERP1Telegram) -> None:
-        """Handle incoming packets."""
-        if not self.address:
-            return
-
-        if telegram.sender == self.address:
-            self.value_changed(telegram)
-
-    def value_changed(self, telegram: ERP1Telegram) -> None:
-        """Update the internal state of the device when a packet arrives."""
-
-    def send_command(
-        self, data: list[int], optional: list[int], packet_type: ESP3PacketType
-    ) -> None:
-        """Send a command via the EnOcean dongle, if data and optional are valid bytes; otherwise, ignore."""
-        try:
-            packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
-            dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
-        except ValueError as err:
-            LOGGER.warning(
-                "Failed to send command: invalid data or optional bytes: %s", err
+    @callback
+    def _on_observation(self, observation: Observation) -> None:
+        """Filter and dispatch incoming observations."""
+        is_connection_status = Observable.CONNECTION_STATUS in observation.values
+        if is_connection_status and self._track_gateway_availability:
+            self._attr_available = (
+                observation.values[Observable.CONNECTION_STATUS] == "connected"
             )
+        observed_device = (
+            self.gateway.eurid if self._is_gateway_entity else self.address
+        )
+        if (
+            observation.device != observed_device
+            or observation.entity != self.entity_key
+        ):
+            if is_connection_status and self._track_gateway_availability:
+                self.async_write_ha_state()
+            return
+        self._update_from_observation(observation)
+
+    def _update_from_observation(self, _observation: Observation) -> None:
+        """Update entity state from a matched observation (override in subclasses)."""
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Get device info."""
+        gateway_eurid = self.gateway.eurid
+        if self.address == gateway_eurid:
+            return DeviceInfo(identifiers={(DOMAIN, str(gateway_eurid))})
+        spec = self.gateway.device_spec(self.address)
+        if spec is None:
+            return None
+
+        dt = spec.device_type
+        manufacturer = (
+            dt.manufacturer.display_name if dt.manufacturer is not None else None
+        )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self.address))},
+            manufacturer=manufacturer,
+            model=dt.model,
+            model_id=f"EEP {dt.eep}",
+            serial_number=str(self.address),
+            via_device=(DOMAIN, str(gateway_eurid)),
+        )

@@ -1,116 +1,74 @@
 """Support for EnOcean binary sensors."""
 
-from __future__ import annotations
+from enocean_async import EURID, EntityType, Gateway, Observation
+from enocean_async.semantics.value_kind import ValueKind
 
-from enocean_async import ERP1Telegram
-import voluptuous as vol
-
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import EnOceanEntity, combine_hex
+from . import EnOceanConfigEntry
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
-DEFAULT_NAME = "EnOcean binary sensor"
-DEPENDENCIES = ["enocean"]
-EVENT_BUTTON_PRESSED = "button_pressed"
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    }
-)
+PARALLEL_UPDATES = 0
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: EnOceanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Binary Sensor platform for EnOcean."""
-    dev_id: list[int] = config[CONF_ID]
-    dev_name: str = config[CONF_NAME]
-    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+    """Set up entry."""
+    gateway: Gateway = config_entry.runtime_data
+    gateway_eurid = gateway.eurid
 
-    add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
+    entities: list[EnOceanBinarySensor] = [
+        EnOceanBinarySensor(eurid, entity.id, gateway)
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.BINARY
+    ]
+
+    if gateway_eurid is not None:
+        entities.extend(
+            EnOceanBinarySensor(
+                gateway_eurid,
+                entity.id,
+                gateway,
+                LIB_ENTITY_CATEGORY_MAP.get(entity.category),
+                track_gateway_availability=False,
+            )
+            for entity in gateway.gateway_entities
+            if entity.entity_type == EntityType.BINARY
+        )
+
+    async_add_entities(entities)
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
-    """Representation of EnOcean binary sensors such as wall switches.
-
-    Supported EEPs (EnOcean Equipment Profiles):
-    - F6-02-01 (Light and Blind Control - Application Style 2)
-    - F6-02-02 (Light and Blind Control - Application Style 1)
-    """
+    """Representation of an EnOcean binary sensor."""
 
     def __init__(
         self,
-        dev_id: list[int],
-        dev_name: str,
-        device_class: BinarySensorDeviceClass | None,
+        address: EURID,
+        entity_key: str,
+        gateway: Gateway,
+        entity_category: EntityCategory | None = None,
+        track_gateway_availability: bool = True,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
-        super().__init__(dev_id)
-        self._attr_device_class = device_class
-        self.which = -1
-        self.onoff = -1
-        self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
-        self._attr_name = dev_name
+        super().__init__(address, entity_key, gateway)
+        self._attr_entity_category = entity_category
+        self._track_gateway_availability = track_gateway_availability
+        if not track_gateway_availability:
+            self._attr_available = True
 
-    def value_changed(self, telegram: ERP1Telegram) -> None:
-        """Fire an event with the data that have changed.
-
-        This method is called when there is an incoming packet associated
-        with this platform.
-        """
-        if not self.address:
-            return
-        # Energy Bow
-        pushed = None
-
-        if telegram.status == 0x30:
-            pushed = 1
-        elif telegram.status == 0x20:
-            pushed = 0
-
-        self.schedule_update_ha_state()
-
-        action = telegram.telegram_data[0]
-        if action == 0x70:
-            self.which = 0
-            self.onoff = 0
-        elif action == 0x50:
-            self.which = 0
-            self.onoff = 1
-        elif action == 0x30:
-            self.which = 1
-            self.onoff = 0
-        elif action == 0x10:
-            self.which = 1
-            self.onoff = 1
-        elif action == 0x37:
-            self.which = 10
-            self.onoff = 0
-        elif action == 0x15:
-            self.which = 10
-            self.onoff = 1
-        self.hass.bus.fire(
-            EVENT_BUTTON_PRESSED,
-            {
-                "id": self.address.to_bytelist(),
-                "pushed": pushed,
-                "which": self.which,
-                "onoff": self.onoff,
-            },
-        )
+    def _update_from_observation(self, observation: Observation) -> None:
+        """Handle an incoming observation."""
+        # Pick the first binary-kinded observable value present.
+        for obs, value in observation.values.items():
+            if obs.kind == ValueKind.BINARY:
+                self._attr_is_on = bool(value)
+                self.async_write_ha_state()
+                return

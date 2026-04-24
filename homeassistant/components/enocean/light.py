@@ -2,101 +2,82 @@
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
-from enocean_async import ERP1Telegram
-from enocean_async.esp3.packet import ESP3PacketType
-import voluptuous as vol
+from enocean_async import CentralDim, EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
-from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import EnOceanEntity, combine_hex
+from . import EnOceanConfigEntry
+from .entity import EnOceanEntity
 
-CONF_SENDER_ID = "sender_id"
-
-DEFAULT_NAME = "EnOcean Light"
-
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+PARALLEL_UPDATES = 1
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: EnOceanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the EnOcean light platform."""
-    sender_id: list[int] = config[CONF_SENDER_ID]
-    dev_name: str = config[CONF_NAME]
-    dev_id: list[int] = config[CONF_ID]
+    """Set up entry."""
+    gateway: Gateway = config_entry.runtime_data
 
-    add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
+    async_add_entities(
+        EnOceanLight(eurid, entity.id, gateway)
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.DIMMER
+    )
 
 
 class EnOceanLight(EnOceanEntity, LightEntity):
-    """Representation of an EnOcean light source."""
+    """Representation of an EnOcean light (dimmer)."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_brightness = 50
-    _attr_is_on = False
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
-    def __init__(self, sender_id: list[int], dev_id: list[int], dev_name: str) -> None:
-        """Initialize the EnOcean light source."""
-        super().__init__(dev_id)
-        self._sender_id = sender_id
-        self._attr_unique_id = str(combine_hex(dev_id))
-        self._attr_name = dev_name
+    def _update_from_observation(self, observation: Observation) -> None:
+        """Handle an incoming observation."""
+        if Observable.OUTPUT_VALUE in observation.values:
+            pct = observation.values[Observable.OUTPUT_VALUE]
+            self._attr_is_on = pct > 0
+            # Convert 0–100 % to HA brightness 0–255.
+            self._attr_brightness = round(pct * 255 / 100)
+            self.async_write_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the light source on or sets a specific dimmer value."""
-        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            self._attr_brightness = brightness
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on or dim the light."""
+        brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
+        transition: float = kwargs.get(ATTR_TRANSITION, 0)
+        await self.gateway.send_command(
+            self.address,
+            CentralDim(
+                # Convert HA brightness 0–255 to 0–100 %.
+                dim_value=brightness * 100 / 255,
+                ramp_time=round(transition),
+                entity_id=self.entity_key,
+            ),
+        )
 
-        bval = math.floor(self._attr_brightness / 256.0 * 100.0)
-        if bval == 0:
-            bval = 1
-        command = [0xA5, 0x02, bval, 0x01, 0x09]
-        command.extend(self._sender_id)
-        command.extend([0x00])
-        packet_type = ESP3PacketType(0x01)
-        self.send_command(command, [], packet_type)
-        self._attr_is_on = True
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the light source off."""
-        command = [0xA5, 0x02, 0x00, 0x01, 0x09]
-        command.extend(self._sender_id)
-        command.extend([0x00])
-        packet_type = ESP3PacketType(0x01)
-        self.send_command(command, [], packet_type)
-        self._attr_is_on = False
-
-    def value_changed(self, telegram: ERP1Telegram) -> None:
-        """Update the internal state of this device.
-
-        Dimmer devices like Eltako FUD61 send telegram in different RORGs.
-        We only care about the 4BS (0xA5).
-        """
-        if telegram.rorg == 0xA5 and telegram.telegram_data[0] == 0x02:
-            val = telegram.telegram_data[1]
-            self._attr_brightness = math.floor(val / 100.0 * 256.0)
-            self._attr_is_on = bool(val != 0)
-            self.schedule_update_ha_state()
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        transition: float = kwargs.get(ATTR_TRANSITION, 0)
+        await self.gateway.send_command(
+            self.address,
+            # Use CentralDim(0) rather than Switch so the dimmer's ramp mechanism is used.
+            CentralDim(
+                dim_value=0,
+                switch_on=False,
+                ramp_time=round(transition),
+                entity_id=self.entity_key,
+            ),
+        )
