@@ -4442,7 +4442,7 @@ async def test_compound_condition_forwards_async_unload(
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
 
-    # The compound checker should hold child checkers
+    # The compound checker should hold child conditions
     assert hasattr(test, "_conditions")
     assert len(test._conditions) == 2
 
