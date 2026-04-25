@@ -13,6 +13,7 @@ from switchbot_api import (
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
@@ -307,4 +308,5 @@ async def test_setup_entry_skips_webhook_without_external_url(
     mock_get_webook_configuration.assert_not_called()
     mock_delete_webhook.assert_not_called()
     mock_setup_webhook.assert_not_called()
+    assert entry.data[CONF_WEBHOOK_ID] not in hass.data.get(WEBHOOK_DOMAIN, {})
     assert "no external URL is available" in caplog.text

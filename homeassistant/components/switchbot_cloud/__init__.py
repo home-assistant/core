@@ -399,7 +399,18 @@ async def _initialize_webhook(
 
             hass.config_entries.async_update_entry(entry, data=new_data)
 
-        # register webhook
+        try:
+            webhook_url = webhook.async_generate_url(
+                hass,
+                entry.data[CONF_WEBHOOK_ID],
+                allow_internal=False,
+            )
+        except NoURLAvailableError:
+            _LOGGER.warning(
+                "SwitchBot Cloud webhook not configured because no external URL is available"
+            )
+            return
+
         webhook_name = ENTRY_TITLE
         if entry.title != ENTRY_TITLE:
             webhook_name = f"{ENTRY_TITLE} {entry.title}"
@@ -413,17 +424,6 @@ async def _initialize_webhook(
             _create_handle_webhook(coordinators_by_id),
         )
 
-        try:
-            webhook_url = webhook.async_generate_url(
-                hass,
-                entry.data[CONF_WEBHOOK_ID],
-                allow_internal=False,
-            )
-        except NoURLAvailableError:
-            _LOGGER.warning(
-                "SwitchBot Cloud webhook not configured because no external URL is available"
-            )
-            return
         # check if webhook is configured in switchbot cloud
 
         try:
