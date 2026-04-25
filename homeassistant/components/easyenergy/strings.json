@@ -97,7 +97,7 @@
           "name": "Config entry"
         },
         "end": {
-          "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",
+          "description": "Specifies the date until which to retrieve prices. Defaults to today if omitted.",
           "name": "End"
         },
         "incl_vat": {
@@ -105,7 +105,7 @@
           "name": "VAT included"
         },
         "start": {
-          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",
+          "description": "Specifies the date from which to retrieve prices. Defaults to today if omitted.",
           "name": "Start"
         }
       },

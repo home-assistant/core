@@ -54,16 +54,16 @@ class PriceType(StrEnum):
     GAS = "gas"
 
 
-def __get_date(date_input: str | None) -> date | datetime:
+def __get_date(date_input: str | None) -> date:
     """Get date."""
     if not date_input:
         return dt_util.now().date()
 
-    if value := dt_util.parse_datetime(date_input):
+    if value := dt_util.parse_date(date_input):
         return value
 
     raise ServiceValidationError(
-        "Invalid datetime provided.",
+        "Invalid date provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={
@@ -124,7 +124,7 @@ async def __get_prices(
     )
 
     if price_type == PriceType.ENERGY_USAGE:
-        return __serialize_prices(data.timestamp_usage_prices)
+        return __serialize_prices(data.timestamp_prices)
     return __serialize_prices(data.timestamp_return_prices)
 
 

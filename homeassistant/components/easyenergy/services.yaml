@@ -12,14 +12,14 @@ get_gas_prices:
         boolean:
     start:
       required: false
-      example: "2024-01-01 00:00:00"
+      example: "2024-01-01"
       selector:
-        datetime:
+        date:
     end:
       required: false
-      example: "2024-01-01 00:00:00"
+      example: "2024-01-01"
       selector:
-        datetime:
+        date:
 get_energy_usage_prices:
   fields:
     config_entry:
@@ -34,14 +34,14 @@ get_energy_usage_prices:
         boolean:
     start:
       required: false
-      example: "2024-01-01 00:00:00"
+      example: "2024-01-01"
       selector:
-        datetime:
+        date:
     end:
       required: false
-      example: "2024-01-01 00:00:00"
+      example: "2024-01-01"
       selector:
-        datetime:
+        date:
 get_energy_return_prices:
   fields:
     config_entry:
@@ -51,11 +51,11 @@ get_energy_return_prices:
           integration: easyenergy
     start:
       required: false
-      example: "2024-01-01 00:00:00"
+      example: "2024-01-01"
       selector:
-        datetime:
+        date:
     end:
       required: false
-      example: "2024-01-01 00:00:00"
+      example: "2024-01-01"
       selector:
-        datetime:
+        date:
