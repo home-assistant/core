@@ -37,8 +37,8 @@ async def test_device_tracker_setup(
 
     # Check the MAC addresses are correct
     entity_unique_ids = {entity.unique_id for entity in device_tracker_entities}
-    assert "ff:ff:ff:ff:ff:ff" in entity_unique_ids
-    assert "ff:ff:ff:ff:ff:fe" in entity_unique_ids
+    assert f"{mock_config_entry.entry_id}_ff:ff:ff:ff:ff:ff" in entity_unique_ids
+    assert f"{mock_config_entry.entry_id}_ff:ff:ff:ff:ff:fe" in entity_unique_ids
 
 
 async def test_device_tracker_states(
