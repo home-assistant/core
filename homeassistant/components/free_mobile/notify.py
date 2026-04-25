@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS
+from . import PLATFORMS, FreeMobileConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ async def async_get_service(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FreeMobileConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Free Mobile SMS notification service."""
@@ -130,7 +130,7 @@ class FreeSMSNotifyEntity(NotifyEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: FreeMobileConfigEntry) -> None:
         """Initialize the service."""
         self._config_entry = config_entry
         self._attr_unique_id = config_entry.entry_id
@@ -142,7 +142,7 @@ class FreeSMSNotifyEntity(NotifyEntity):
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to the Free Mobile user cell."""
         # Get the client from runtime_data
-        client: FreeClient = self._config_entry.runtime_data
+        client = self._config_entry.runtime_data
         await self.hass.async_add_executor_job(self._send_sms, message, client)
 
     def _send_sms(self, message: str, client: FreeClient) -> None:
