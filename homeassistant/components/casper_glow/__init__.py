@@ -16,6 +16,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.SELECT,
+    Platform.SENSOR,
 ]
 
 

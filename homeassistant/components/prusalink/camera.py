@@ -5,22 +5,20 @@ from __future__ import annotations
 from pyprusalink.types import PrinterState
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import JobUpdateCoordinator
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PrusaLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink camera."""
-    coordinator: JobUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]["job"]
+    coordinator = entry.runtime_data["job"]
     async_add_entities([PrusaLinkJobPreviewEntity(coordinator)])
 
 
@@ -31,7 +29,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     last_image: bytes
     _attr_translation_key = "job_preview"
 
-    def __init__(self, coordinator: JobUpdateCoordinator) -> None:
+    def __init__(self, coordinator: PrusaLinkUpdateCoordinator) -> None:
         """Initialize a PrusaLink camera entity."""
         super().__init__(coordinator)
         Camera.__init__(self)

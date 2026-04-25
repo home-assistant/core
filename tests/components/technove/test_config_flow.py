@@ -240,7 +240,6 @@ async def test_zeroconf_without_mac_station_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_technove")
 async def test_zeroconf_with_mac_station_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_technove: MagicMock
 ) -> None:
@@ -264,3 +263,89 @@ async def test_zeroconf_with_mac_station_exists_abort(
     mock_technove.update.assert_not_called()
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_technove: MagicMock,
+) -> None:
+    """Test the full reconfigure flow from start to finish."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_technove: MagicMock,
+) -> None:
+    """Test reconfiguration failure when the unique ID changes."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Change mac address to simulate a different device
+    device = mock_technove.update.return_value
+    device.info.mac_address = "AA:AA:AA:AA:AA:CC"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_reconfigure_flow_connection_error_and_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_technove: MagicMock,
+) -> None:
+    """Test reconfigure flow with connection error, then successful recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_technove.update.side_effect = TechnoVEConnectionError
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"base": "cannot_connect"}
+
+    mock_technove.update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"

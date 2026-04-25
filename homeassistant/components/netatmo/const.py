@@ -27,11 +27,9 @@ CONF_URL_WEATHER = "https://my.netatmo.com/app/weather"
 CONF_URL_CONTROL = "https://home.netatmo.com/control"
 CONF_URL_PUBLIC_WEATHER = "https://weathermap.netatmo.com/"
 
-AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
-DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
@@ -217,5 +215,15 @@ WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
 WEBHOOK_NOCAMERA_CONNECTION = "NOC-connection"
+WEBHOOK_NDB_CONNECTION = "NDB-connection"
 WEBHOOK_PUSH_TYPE = "push_type"
-CAMERA_CONNECTION_WEBHOOKS = [WEBHOOK_NACAMERA_CONNECTION, WEBHOOK_NOCAMERA_CONNECTION]
+CAMERA_CONNECTION_WEBHOOKS = [
+    WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_NOCAMERA_CONNECTION,
+    WEBHOOK_NDB_CONNECTION,
+]
+
+# Alimentation status (alim_status) for cameras and door bells (NDB).
+# For NDB there is no monitoring attribute in status but only alim_status.
+# 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
+NETATMO_ALIM_STATUS_ONLINE = 2

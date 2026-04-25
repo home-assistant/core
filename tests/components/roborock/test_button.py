@@ -199,7 +199,7 @@ async def test_press_routine_button_failure(
     [
         ("button.zeo_one_start", "START"),
         ("button.zeo_one_pause", "PAUSE"),
-        ("button.zeo_one_shutdown", "SHUTDOWN"),
+        ("button.zeo_one_shut_down", "SHUTDOWN"),
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")

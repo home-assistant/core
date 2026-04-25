@@ -7,7 +7,7 @@ import logging
 from typing import Any, Final
 
 from aiohttp import ClientError
-from indevolt_api import IndevoltAPI, TimeOutException
+from indevolt_api import IndevoltAPI, IndevoltRealtimeAction, TimeOutException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -24,7 +24,6 @@ from .const import (
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     PORTABLE_MODE,
-    REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
     SENSOR_KEYS,
 )
@@ -146,19 +145,16 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if refresh:
                 await self.async_request_refresh()
 
-    async def async_execute_realtime_action(self, action: list[int]) -> None:
+    async def async_realtime_action(
+        self,
+        action_code: IndevoltRealtimeAction,
+    ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
-
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
 
-        try:
-            success = await self.async_push_data(REALTIME_ACTION_KEY, action)
-
-        except (DeviceTimeoutError, DeviceConnectionError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_execute_realtime_action",
-            ) from err
+        match action_code:
+            case IndevoltRealtimeAction.STOP:
+                success = await self.api.stop()
 
         if not success:
             raise HomeAssistantError(

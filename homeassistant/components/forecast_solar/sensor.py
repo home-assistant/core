@@ -27,6 +27,8 @@ from . import ForecastSolarConfigEntry
 from .const import DOMAIN
 from .coordinator import ForecastSolarDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class ForecastSolarSensorEntityDescription(SensorEntityDescription):

@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import (
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_discovered_service_info,
     async_rediscover_address,
     async_register_callback,
 )
@@ -131,3 +132,17 @@ async def async_unload_entry(
                     async_rediscover_address(hass, conn[1])
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: FjaraskupanConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    for service_info in async_discovered_service_info(hass, False):
+        if (DOMAIN, service_info.address) in device_entry.identifiers:
+            return False
+
+    # No matching service info, so allow removal.
+    return True

@@ -50,7 +50,7 @@ async def test_all_button_entities(
     ("entity_id", "command"),
     [
         ("button.pve1_restart", "reboot"),
-        ("button.pve1_shutdown", "shutdown"),
+        ("button.pve1_shut_down", "shutdown"),
     ],
 )
 async def test_node_buttons(
@@ -116,7 +116,7 @@ async def test_node_all_actions_buttons(
         ("button.vm_web_restart", 100, "reboot"),
         ("button.vm_web_hibernate", 100, "hibernate"),
         ("button.vm_web_reset", 100, "reset"),
-        ("button.vm_web_shutdown", 100, "shutdown"),
+        ("button.vm_web_shut_down", 100, "shutdown"),
     ],
 )
 async def test_vm_buttons(
@@ -230,7 +230,7 @@ async def test_container_buttons(
         ("button.pve1_restart", AuthenticationError("auth failed")),
         ("button.pve1_restart", SSLError("ssl error")),
         ("button.pve1_restart", ConnectTimeout("timeout")),
-        ("button.pve1_shutdown", ResourceException(500, "error", {})),
+        ("button.pve1_shut_down", ResourceException(500, "error", {})),
     ],
 )
 async def test_node_buttons_exceptions(
@@ -367,7 +367,8 @@ async def test_container_buttons_exceptions(
 @pytest.mark.parametrize(
     ("entity_id", "translation_key"),
     [
-        ("button.pve1_start_all", "no_permission_node_power"),
+        ("button.pve1_shut_down", "no_permission_node_power"),
+        ("button.pve1_start_all", "no_permission_vm_lxc_power"),
         ("button.ct_nginx_start", "no_permission_vm_lxc_power"),
         ("button.vm_web_start", "no_permission_vm_lxc_power"),
         ("button.vm_web_create_snapshot", "no_permission_snapshot"),

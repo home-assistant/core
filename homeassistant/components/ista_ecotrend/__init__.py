@@ -23,7 +23,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
     ista = PyEcotrendIsta(
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
-        _LOGGER,
     )
 
     coordinator = IstaCoordinator(hass, entry, ista)

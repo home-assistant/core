@@ -19,7 +19,11 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -236,14 +240,16 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
             )
-        await self.send(
-            RoborockCommand.SET_CUSTOM_MODE,
-            [
-                {v: k for k, v in self._status_trait.fan_speed_mapping.items()}[
-                    fan_speed
-                ]
-            ],
-        )
+        code_mapping = {v: k for k, v in self._status_trait.fan_speed_mapping.items()}
+        if (fan_speed_code := code_mapping.get(fan_speed)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            )
+        await self.send(RoborockCommand.SET_CUSTOM_MODE, [fan_speed_code])
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Send vacuum to a specific target point."""
@@ -454,9 +460,17 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            fan_speed_code = SCWindMapping.from_value(fan_speed)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            ) from err
+        try:
+            await self.coordinator.api.set_fan_speed(fan_speed_code)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -483,6 +497,18 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
+        """Set the vacuum to go to a specific position."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
 
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
@@ -654,3 +680,15 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
+        """Set the vacuum to go to a specific position."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)

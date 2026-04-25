@@ -144,15 +144,18 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
             == DHCP_SERVICE_INFO.ip
         )
 
-    # patch_gethostbyname fixture is active
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: DHCP_SERVICE_INFO.ip,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-        },
-    )
+    with (
+        patch("homeassistant.components.obihai.config_flow.gethostbyname"),
+    ):
+        # Verify we get dropped into the normal user flow with non-default credentials
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: DHCP_SERVICE_INFO.ip,
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+            },
+        )
 
     assert result["errors"]["base"] == "invalid_auth"
     assert result["step_id"] == "user"

@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from . import views
 from .const import (
@@ -64,7 +63,6 @@ class OnboardingStorage(Store[OnboardingStoreData]):
         return old_data
 
 
-@bind_hass
 @callback
 def async_is_onboarded(hass: HomeAssistant) -> bool:
     """Return if Home Assistant has been onboarded."""
@@ -72,7 +70,6 @@ def async_is_onboarded(hass: HomeAssistant) -> bool:
     return data is None or data.onboarded is True
 
 
-@bind_hass
 @callback
 def async_is_user_onboarded(hass: HomeAssistant) -> bool:
     """Return if a user has been created as part of onboarding."""

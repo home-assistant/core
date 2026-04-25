@@ -1157,7 +1157,11 @@ async def _check_create_issue_translations(
         f"{issue.translation_key}.title",
         issue.translation_placeholders,
     )
-    if not issue.is_fixable:
+    if (
+        not issue.is_fixable
+        and issue.translation_key
+        not in ir.FRONTEND_HANDLED_ISSUES.get(issue.domain, ())
+    ):
         # Description is required for non-fixable issues
         await _validate_translation(
             issue_registry.hass,

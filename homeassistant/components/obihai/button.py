@@ -7,14 +7,14 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 
+from . import ObihaiConfigEntry
 from .connectivity import ObihaiConnection
-from .const import DOMAIN, OBIHAI
+from .const import OBIHAI
 
 BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="reboot",
@@ -26,12 +26,12 @@ BUTTON_DESCRIPTION = ButtonEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ObihaiConfigEntry,
     async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Obihai sensor entries."""
+    """Set up the Obihai button entries."""
 
-    requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
+    requester = entry.runtime_data
 
     buttons = [ObihaiButton(requester)]
     async_add_entities(buttons, update_before_add=True)

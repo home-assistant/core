@@ -80,7 +80,6 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.SEEK
     )
 
@@ -130,7 +129,6 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET

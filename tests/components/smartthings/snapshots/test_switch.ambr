@@ -149,6 +149,56 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ac_rac_000001][switch.ac_office_granit_purify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ac_office_granit_purify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Purify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Purify',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'purify',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_custom.spiMode_spiMode_spiMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][switch.ac_office_granit_purify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AC Office Granit Purify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ac_office_granit_purify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -1,6 +1,6 @@
 """Casper Glow session fixtures."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 from pycasperglow import GlowState
@@ -53,15 +53,17 @@ def mock_casper_glow() -> Generator[MagicMock]:
 
 @pytest.fixture
 def fire_callbacks(
+    hass: HomeAssistant,
     mock_casper_glow: MagicMock,
-) -> Callable[[GlowState], None]:
+) -> Callable[[GlowState], Awaitable[None]]:
     """Return a helper that fires all registered device callbacks with a given state."""
 
-    def _fire(state: GlowState) -> None:
+    async def _fire(state: GlowState) -> None:
         for cb in (
             call[0][0] for call in mock_casper_glow.register_callback.call_args_list
         ):
             cb(state)
+        await hass.async_block_till_done()
 
     return _fire
 

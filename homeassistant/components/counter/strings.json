@@ -1,7 +1,21 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted counters to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_value": {
+      "description": "Tests the value of one or more counters.",
+      "fields": {
+        "behavior": {
+          "name": "Condition passes if"
+        },
+        "threshold": {
+          "name": "Threshold type"
+        }
+      },
+      "name": "Counter value"
+    }
   },
   "entity_component": {
     "_": {
@@ -30,6 +44,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
@@ -76,8 +96,10 @@
       "description": "Triggers after one or more counters reach their maximum value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reached maximum"
@@ -86,8 +108,10 @@
       "description": "Triggers after one or more counters reach their minimum value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reached minimum"
@@ -96,8 +120,10 @@
       "description": "Triggers after one or more counters are reset.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reset"

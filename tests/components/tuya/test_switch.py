@@ -19,12 +19,18 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockDeviceListener, check_selective_state_update, initialize_entry
+from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -59,14 +65,13 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -77,7 +82,7 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_listener,
+        notification_helper,
         freezer,
         entity_id="switch.din_socket",
         dpcode="switch",
@@ -88,7 +93,6 @@ async def test_selective_state_update(
     )
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["cz_PGEkBctAbtzKOZng"],
@@ -133,7 +137,6 @@ async def test_action(
     )
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["cz_PGEkBctAbtzKOZng"],
