@@ -106,14 +106,15 @@ def _validate_realtime_action(
     for coordinator in coordinators:
         try:
             try:
-                if action == IndevoltRealtimeAction.CHARGE:
-                    coordinator.api.check_charge_limits(
-                        power, target_soc, coordinator.generation
-                    )
-                else:
-                    coordinator.api.check_discharge_limits(
-                        power, target_soc, coordinator.generation
-                    )
+                match action:
+                    case IndevoltRealtimeAction.CHARGE:
+                        coordinator.api.check_charge_limits(
+                            power, target_soc, coordinator.generation
+                        )
+                    case IndevoltRealtimeAction.DISCHARGE:
+                        coordinator.api.check_discharge_limits(
+                            power, target_soc, coordinator.generation
+                        )
 
             except PowerExceedsMaxError as err:
                 _raise_power_exceeds_max(err.power, err.max_power, err.generation)

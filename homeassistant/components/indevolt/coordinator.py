@@ -152,7 +152,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_realtime_action(
         self,
-        action_code: IndevoltRealtimeAction,
+        action: IndevoltRealtimeAction,
         power: int = 0,
         target_soc: int = 0,
     ) -> None:
@@ -162,7 +162,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         success = False
 
-        match action_code:
+        match action:
             case IndevoltRealtimeAction.CHARGE:
                 success = await self.api.charge(power, target_soc)
             case IndevoltRealtimeAction.DISCHARGE:
