@@ -372,7 +372,11 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         total_discharge_energy = 0.0
 
         for battery in batteries:
-            serial = battery.get("serialNumber", "unknown")
+            serial = battery.get("serialNumber")
+            if not serial:
+                LOGGER.debug("Skipping battery without serialNumber")
+                continue
+
             telemetries = battery.get("telemetries", [])
 
             if not telemetries:

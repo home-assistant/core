@@ -455,7 +455,7 @@ async def test_storage_service_deferred_after_inventory_failure(
     # Trigger inventory coordinator refresh
     freezer.tick(INVENTORY_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Storage sensors should now exist
     charge_entry = entity_registry.async_get_entity_id(
@@ -494,7 +494,7 @@ async def test_storage_service_not_created_when_inventory_has_no_batteries(
 
     freezer.tick(INVENTORY_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Storage sensors should still not exist
     charge_entry = entity_registry.async_get_entity_id(
