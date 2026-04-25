@@ -72,6 +72,7 @@ async def test_temperature_sensor_state_update(
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "arwn/temperature/BackYard"
     )
+    assert entity_id is not None
     state_after_first = hass.states.get(entity_id).state
     assert state_after_first not in ("unknown", "unavailable")
 
@@ -242,7 +243,7 @@ async def test_unknown_domain_ignored(
     assert len(entries) == 0
 
 
-async def test_entry_unload_removes_sensors(
+async def test_entry_unload_makes_sensors_unavailable(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     config_entry: MockConfigEntry,
