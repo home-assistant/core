@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import (
@@ -13,16 +13,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import DEGREE, UnitOfPrecipitationDepth, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads_object
+
+if TYPE_CHECKING:
+    from . import ArwnConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "arwn"
-
-DATA_ARWN = "arwn"
 TOPIC = "arwn/#"
 
 
@@ -32,9 +30,13 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
     Async friendly.
     """
     parts = topic.split("/")
+    if len(parts) < 2:
+        return None
     unit = payload.get("units", "")
     domain = parts[1]
     if domain == "temperature":
+        if len(parts) < 3:
+            return None
         name = parts[2]
         if unit == "F":
             unit = UnitOfTemperature.FAHRENHEIT
@@ -46,6 +48,8 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
             )
         ]
     if domain == "moisture":
+        if len(parts) < 3:
+            return None
         name = f"{parts[2]} Moisture"
         return [ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")]
     if domain == "rain":
@@ -108,26 +112,16 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
     return None
 
 
-def _slug(name: str) -> str:
-    return f"sensor.arwn_{slugify(name)}"
-
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ArwnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the ARWN platform."""
-
-    # Make sure MQTT integration is enabled and the client is available
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return
+    """Set up the ARWN sensor platform."""
 
     @callback
     def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
-        """Process events as sensors.
+        """Process MQTT events as sensors.
 
         When a new event on our topic (arwn/#) is received we map it
         into a known kind of sensor based on topic name. If we've
@@ -139,35 +133,44 @@ async def async_setup_platform(
         This lets us dynamically incorporate sensors without any
         configuration on our side.
         """
-        event = json_loads_object(msg.payload)
+        try:
+            event = json_loads_object(msg.payload)
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid JSON in MQTT message on %s: %s", msg.topic, msg.payload
+            )
+            return
+
         sensors = discover_sensors(msg.topic, event)
         if not sensors:
             return
 
-        if (store := hass.data.get(DATA_ARWN)) is None:
-            store = hass.data[DATA_ARWN] = {}
+        store = entry.runtime_data
 
         if "timestamp" in event:
             del event["timestamp"]
 
         for sensor in sensors:
-            if sensor.name not in store:
-                sensor.hass = hass
-                sensor.set_event(event)
-                store[sensor.name] = sensor
+            if (unique_id := sensor.unique_id) is None:
+                continue
+            if unique_id not in store:
+                store[unique_id] = sensor
+                sensor.set_initial_event(event)
                 _LOGGER.debug(
                     "Registering sensor %(name)s => %(event)s",
                     {"name": sensor.name, "event": event},
                 )
-                async_add_entities((sensor,), True)
+                async_add_entities((sensor,), False)
             else:
                 _LOGGER.debug(
                     "Recording sensor %(name)s => %(event)s",
                     {"name": sensor.name, "event": event},
                 )
-                store[sensor.name].set_event(event)
+                store[unique_id].set_event(event)
 
-    await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
+    entry.async_on_unload(
+        await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
+    )
 
 
 class ArwnSensor(SensorEntity):
@@ -186,7 +189,6 @@ class ArwnSensor(SensorEntity):
         state_class: SensorStateClass | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_id = _slug(name)
         self._attr_name = name
         # This mqtt topic for the sensor which is its uid
         self._attr_unique_id = topic
@@ -196,10 +198,15 @@ class ArwnSensor(SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
 
+    def set_initial_event(self, event: dict[str, Any]) -> None:
+        """Set the initial state before the entity is registered."""
+        ev: dict[str, Any] = dict(event)
+        self._attr_extra_state_attributes = ev
+        self._attr_native_value = ev.get(self._state_key)
+
     def set_event(self, event: dict[str, Any]) -> None:
         """Update the sensor with the most recent event."""
-        ev: dict[str, Any] = {}
-        ev.update(event)
+        ev: dict[str, Any] = dict(event)
         self._attr_extra_state_attributes = ev
         self._attr_native_value = ev.get(self._state_key)
         self.async_write_ha_state()
