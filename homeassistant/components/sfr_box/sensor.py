@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from sfrbox_api.models import DslInfo, SystemInfo, VoipInfo, WanInfo
 
@@ -236,8 +235,6 @@ async def async_setup_entry(
     """Set up the sensors."""
     data = entry.runtime_data
     system_info = data.system.data
-    if TYPE_CHECKING:
-        assert system_info is not None
 
     entities: list[SFRBoxSensor] = [
         SFRBoxSensor(data.system, description, system_info)

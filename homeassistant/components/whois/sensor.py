@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -30,7 +29,7 @@ from .const import (
     DOMAIN,
     STATUS_TYPES,
 )
-from .coordinator import WhoisCoordinator
+from .coordinator import WhoisConfigEntry, WhoisCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -158,11 +157,11 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WhoisConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
-    coordinator: WhoisCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             WhoisSensorEntity(

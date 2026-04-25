@@ -148,6 +148,31 @@ def mock_nodes() -> list[Node]:
                 iaq_rh=85,
             ),
         ),
+        Node(
+            node_id=50,
+            general=NodeGeneralInfo(
+                node_type="UCRH",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Kitchen RH",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=61.0,
+                iaq_rh=90,
+            ),
+        ),
     ]
 
 

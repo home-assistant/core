@@ -36,7 +36,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_test_credentials(
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
-        """Validate credentials against iAqualink."""
+        """Validate credentials against iAquaLink."""
         try:
             async with AqualinkClient(
                 user_input[CONF_USERNAME],

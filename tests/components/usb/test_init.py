@@ -11,12 +11,9 @@ from serialx import SerialPortInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.usb import DOMAIN
+from homeassistant.components.usb import DOMAIN, async_scan_serial_ports
 from homeassistant.components.usb.models import SerialDevice, USBDevice
-from homeassistant.components.usb.utils import (
-    async_scan_serial_ports,
-    usb_device_from_path,
-)
+from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1297,6 +1294,7 @@ async def test_register_port_event_callback_failure(
 
 async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
     """Test async_scan_serial_ports parsing."""
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
     with patch(
         "homeassistant.components.usb.utils.list_serial_ports",
         return_value=[
@@ -1344,6 +1342,92 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             description="ZBT-2",
         ),
     ]
+
+
+async def test_async_scan_serial_ports_with_scanner(hass: HomeAssistant) -> None:
+    """Contributed ports are appended to, and override, real scan results."""
+    real_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    real_usb = USBDevice(
+        device="/dev/serial/by-id/usb-Real-Stick",
+        vid="303A",
+        pid="4001",
+        serial_number="ABC123",
+        manufacturer="Nabu Casa",
+        description="ZBT-2",
+    )
+    contributed_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+    extra_socket = SerialDevice(
+        device="socket://127.0.0.1:9999",
+        serial_number=None,
+        manufacturer="Test",
+        description="Extra",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+    unregister = usb.async_register_serial_port_scanner(
+        hass, lambda _hass: [contributed_amA1, extra_socket]
+    )
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [contributed_amA1, real_usb, extra_socket]
+
+    unregister()
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+
+async def test_async_scan_serial_ports_scanner_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A scanner raising does not prevent other scanners or real ports."""
+    real_port = SerialDevice(
+        device="/dev/ttyUSB0",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    contributed_port = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    def broken_scanner(_hass: HomeAssistant) -> list:
+        raise RuntimeError("scanner broke")
+
+    usb.async_register_serial_port_scanner(hass, broken_scanner)
+    usb.async_register_serial_port_scanner(hass, lambda _hass: [contributed_port])
+
+    with patch_scanned_serial_ports(return_value=[real_port]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_port, contributed_port]
+    assert "Error in USB scanner callback" in caplog.text
+    assert "scanner broke" in caplog.text
 
 
 def test_usb_device_from_path_finds_by_symlink() -> None:
