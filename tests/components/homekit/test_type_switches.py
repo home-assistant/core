@@ -61,6 +61,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
 from homeassistant.util import dt as dt_util
@@ -1179,6 +1181,43 @@ async def test_irrigation_system_state_sync(
     assert zone6["char_active"].value == 0
     assert zone6["char_in_use"].value == 0
 
+    # Linked zone becomes unavailable — must clear active/in-use (not leave stale)
+    hass.states.async_set(linked_entity, STATE_ON)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 1
+    assert zone6["char_in_use"].value == 1
+    hass.states.async_set(linked_entity, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 0
+    assert zone6["char_in_use"].value == 0
+
+    # Linked zone becomes unknown — must clear active/in-use
+    hass.states.async_set(linked_entity, STATE_ON)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 1
+    hass.states.async_set(linked_entity, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 0
+    assert zone6["char_in_use"].value == 0
+
+    # Linked zone removed from state machine — must clear active/in-use
+    hass.states.async_set(linked_entity, STATE_ON)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 1
+    hass.states.async_remove(linked_entity)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 0
+    assert zone6["char_in_use"].value == 0
+
+    # Primary zone becoming unavailable is also handled (via async_update_state)
+    hass.states.async_set(primary_entity, STATE_ON)
+    await hass.async_block_till_done()
+    assert zone1["char_active"].value == 1
+    hass.states.async_set(primary_entity, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert zone1["char_active"].value == 0
+    assert zone1["char_in_use"].value == 0
+
 
 async def test_irrigation_system_homekit_control(
     hass: HomeAssistant, hk_driver, events: list[Event]
@@ -1352,9 +1391,11 @@ async def test_irrigation_system_with_duration_characteristics(
     assert len(call_set_value) == 2
     assert call_set_value[1].data == {"entity_id": duration_6, "value": 900}
 
-    # HA state change propagates back to HomeKit duration char
+    # HA state change propagates back to HomeKit duration char.
+    # Set duration_1 before triggering a real state transition (OFF→ON) so
+    # async_update_state fires and reads the new value.
     hass.states.async_set(duration_1, "180")
-    hass.states.async_set(primary_entity, STATE_OFF)
+    hass.states.async_set(primary_entity, STATE_ON)
     await hass.async_block_till_done()
     assert zone1["char_set_duration"].value == 180
 

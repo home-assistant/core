@@ -51,8 +51,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     Event,
@@ -716,7 +714,12 @@ class IrrigationSystem(HomeAccessory):
     ) -> None:
         """Handle a state-change event for a linked zone entity."""
         new_state = event.data["new_state"]
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None:
+            # Entity was removed from the state machine; clear zone to inactive
+            # so HomeKit does not show a stale active/in-use state.
+            if zone := self._get_zone(event.data["entity_id"]):
+                zone["char_active"].set_value(0)
+                zone["char_in_use"].set_value(0)
             return
         if zone := self._get_zone(new_state.entity_id):
             self._update_zone_state(zone, new_state)

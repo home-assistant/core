@@ -142,6 +142,31 @@ def test_validate_entity_config() -> None:
             "switch.test": {
                 CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
                 CONF_LINKED_VALVE_ENTITIES: [
+                    {"entity_id": "light.zone_1"}  # Must be switch or valve domain
+                ],
+            }
+        },
+        {
+            "switch.test": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_VALVE_ENTITIES: [
+                    {"entity_id": "switch.zone_1"},
+                    {"entity_id": "switch.zone_1"},  # Duplicate entity_id
+                ],
+            }
+        },
+        {
+            "switch.test": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_VALVE_ENTITIES: [
+                    {"entity_id": "switch.test"},  # Repeats the primary entity
+                ],
+            }
+        },
+        {
+            "switch.test": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_VALVE_ENTITIES: [
                     {
                         "entity_id": "switch.zone_6",
                         CONF_LINKED_VALVE_DURATION: "number.not_input_number",  # Must be input_number
