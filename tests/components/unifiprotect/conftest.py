@@ -187,6 +187,9 @@ def mock_entry(
 
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
+        ufp_client.subscribe_devices_websocket = Mock(return_value=Mock())
+        ufp_client.update_public = AsyncMock()
+        ufp_client.has_public_bootstrap = False
         yield ufp
 
 
