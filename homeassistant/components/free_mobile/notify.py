@@ -123,6 +123,8 @@ class FreeSMSNotifyEntity(NotifyEntity):
             _LOGGER.error("At least one parameter is missing")
         elif resp.status_code == HTTPStatus.FORBIDDEN:
             _LOGGER.error("Wrong Username/Password")
+        elif resp.status_code == HTTPStatus.PAYMENT_REQUIRED:
+            _LOGGER.error("SMS option not activated on your Free Mobile account")
         elif resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
             _LOGGER.error("Server error, try later")
         elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:

@@ -1,6 +1,7 @@
 """Test Free Mobile config flow."""
 
 
+from unittest.mock import MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.free_mobile.const import DOMAIN
@@ -87,7 +88,7 @@ async def test_flow_import(hass: HomeAssistant, mock_freesms: MagicMock) -> None
         data=CONF_INPUT,
     )
 
-    assert mock_freesms.send_sms.call_count == 1
+    assert mock_freesms.send_sms.call_count == 0
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == f"Free Mobile ({TEST_USERNAME})"
     assert result.get("data") == {
