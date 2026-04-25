@@ -152,14 +152,6 @@ UOM_TO_DEVICE_CLASS = {
     "143": SensorDeviceClass.VOLUME_FLOW_RATE,
     "144": SensorDeviceClass.VOLUME_FLOW_RATE,
 }
-ISY_CONTROL_TO_STATE_CLASS = {
-    control: (
-        SensorStateClass.TOTAL_INCREASING
-        if device_class in TOTAL_INCREASING_DEVICE_CLASSES
-        else SensorStateClass.MEASUREMENT
-    )
-    for control, device_class in ISY_CONTROL_TO_DEVICE_CLASS.items()
-}
 ISY_CONTROL_TO_ENTITY_CATEGORY = {
     PROP_RAMP_RATE: EntityCategory.DIAGNOSTIC,
     PROP_ON_LEVEL: EntityCategory.DIAGNOSTIC,

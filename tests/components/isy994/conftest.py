@@ -67,7 +67,7 @@ def mock_node():
         node.node_def_id = node_def_id
         node.type = node_type
         node.status = 0
-        node.uom = []
+        node.uom = None
         node.prec = 0
         node.protocol = "insteon"
         node.folder = None
