@@ -476,6 +476,53 @@ async def test_saving_state_with_sqlalchemy_exception(
     assert "SQLAlchemyError error processing task" not in caplog.text
 
 
+async def test_states_manager_oldest_ts_restored_after_sqlalchemy_recovery(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test oldest_ts is restored from the DB after _reopen_event_session().
+
+    Regression test for a wedge where _reopen_event_session() (triggered by a
+    SQLAlchemyError on the recorder thread) calls _close_event_session() which
+    resets the StatesManager cache, but does not reseed oldest_ts from the DB.
+    The next add_pending() then seeds oldest_ts from that state's last_updated_ts
+    (≈ "now" at recovery), not from the actual DB minimum, causing
+    has_states_before(t) and /api/history/period to falsely report "no data"
+    for any window ending before recovery.
+    """
+    instance = get_instance(hass)
+    entity_id = "test.recorder_recovery"
+
+    hass.states.async_set(entity_id, "first", {"attr": 1})
+    await async_wait_recording_done(hass)
+
+    oldest_ts_before_recovery = instance.states_manager.oldest_ts
+    assert oldest_ts_before_recovery is not None
+
+    def _throw_if_state_in_session(*args: Any, **kwargs: Any) -> None:
+        for obj in instance.event_session:
+            if isinstance(obj, States):
+                raise SQLAlchemyError(
+                    "insert the state", "fake params", "forced to fail"
+                )
+
+    with (
+        patch("time.sleep"),
+        patch.object(
+            instance.event_session,
+            "flush",
+            side_effect=_throw_if_state_in_session,
+        ),
+    ):
+        hass.states.async_set(entity_id, "fail", {"attr": 2})
+        await async_wait_recording_done(hass)
+
+    hass.states.async_set(entity_id, "after_recovery", {"attr": 3})
+    await async_wait_recording_done(hass)
+
+    assert instance.states_manager.oldest_ts == oldest_ts_before_recovery
+
+
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,

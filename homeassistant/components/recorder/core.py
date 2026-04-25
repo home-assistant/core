@@ -1279,6 +1279,8 @@ class Recorder(threading.Thread):
         """Rollback the event session and reopen it after a failure."""
         self._close_event_session()
         self._open_event_session()
+        with session_scope(session=self.get_session()) as session:
+            self.states_manager.load_from_db(session)
 
     def _open_event_session(self) -> None:
         """Open the event session."""
