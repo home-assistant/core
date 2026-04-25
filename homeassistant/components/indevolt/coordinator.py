@@ -158,21 +158,18 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
+        await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
+
+        success = False
+
         match action_code:
             case IndevoltRealtimeAction.CHARGE:
-                action = self.api.charge(power, target_soc)
+                success = await self.api.charge(power, target_soc)
             case IndevoltRealtimeAction.DISCHARGE:
-                action = self.api.discharge(power, target_soc)
+                success = await self.api.discharge(power, target_soc)
             case IndevoltRealtimeAction.STOP:
-                action = self.api.stop()
-            case _:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_execute_realtime_action",
-                )
+                success = await self.api.stop()
 
-        await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
-        success = await action
         if not success:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
