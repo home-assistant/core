@@ -248,11 +248,12 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="import_failed_missing_interfaces")
 
-                async_delete_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"import_failed_missing_interfaces_{data[CONF_URL]}",
-                )
+        # Clear any previous import issues if interfaces are now valid
+        async_delete_issue(
+            self.hass,
+            DOMAIN,
+            f"import_failed_missing_interfaces_{data[CONF_URL]}",
+        )
         return self.async_create_entry(title=import_data[CONF_URL], data=data)
 
     async def _async_check_connection(self, client: OPNsenseClient) -> None:
