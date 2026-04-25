@@ -167,12 +167,6 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             )
         except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set HVAC mode: {err}") from err
-        # Optimistically update local state so the UI reflects the change
-        # immediately. The device takes a few seconds to apply writes, so
-        # a forced refresh would read stale data and briefly revert the UI.
-        # The next regular poll (10s) will confirm the real device state.
-        self.coordinator.data.activesettings.activemode = HVAC_TO_WF_MODE[hvac_mode]
-        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature(s)."""
@@ -189,15 +183,6 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             )
         except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set temperature: {err}") from err
-        if low is not None and high is not None:
-            self.coordinator.data.tstatheatingsetpoint = low
-            self.coordinator.data.tstatcoolingsetpoint = high
-        elif temp is not None:
-            if current_mode == HVACMode.COOL:
-                self.coordinator.data.tstatcoolingsetpoint = temp
-            else:
-                self.coordinator.data.tstatheatingsetpoint = temp
-        self.async_write_ha_state()
 
     def _set_temperature(
         self,
@@ -225,5 +210,3 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             )
         except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set humidity: {err}") from err
-        self.coordinator.data.tstathumidsetpoint = humidity
-        self.async_write_ha_state()
