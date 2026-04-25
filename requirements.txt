@@ -18,7 +18,7 @@ attrs==26.1.0
 audioop-lts==0.2.2
 awesomeversion==25.8.0
 bcrypt==5.0.0
-certifi>=2021.5.30
+certifi==2025.1.31
 ciso8601==2.3.3
 cronsim==2.7
 cryptography==46.0.7
@@ -35,7 +35,7 @@ Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.47.0
 orjson==3.11.8
-packaging>=23.1
+packaging==24.2
 Pillow==12.2.0
 propcache==0.4.1
 psutil-home-assistant==0.0.1
@@ -52,9 +52,9 @@ securetar==2026.4.1
 SQLAlchemy==2.0.49
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
-typing-extensions>=4.15.0,<5.0
+typing-extensions==4.15.0
 ulid-transform==2.2.0
-urllib3>=2.0
+urllib3==2.3.0
 uv==0.11.7
 voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
