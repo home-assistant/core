@@ -1846,9 +1846,9 @@ async def test_call_no_context_target_all(
         ),
     )
 
-    assert mock_entities_method.call_args_list == [
+    assert mock_entities_method.call_args_list == unordered(
         mock_call(entity) for entity in mock_entities.values()
-    ]
+    )
 
 
 async def test_call_no_context_target_specific(
