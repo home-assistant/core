@@ -22,6 +22,8 @@ from homeassistant.util import dt as dt_util
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class HydrawiseSensorEntityDescription(SensorEntityDescription):

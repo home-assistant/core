@@ -19,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
+PARALLEL_UPDATES = 1
+
 VALVE_TYPES: tuple[ValveEntityDescription, ...] = (
     ValveEntityDescription(
         key="zone",
