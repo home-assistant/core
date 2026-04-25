@@ -221,7 +221,7 @@ async def test_alarm_panel_state_update_via_ws(
     ufp: MockUFPFixture,
     nvr: NVR,
 ) -> None:
-    """Test that WS device update triggers state refresh."""
+    """Test that public devices WS update triggers state refresh."""
     arm_mode = _make_arm_mode(NvrArmModeStatus.DISABLED)
     pb = _make_public_bootstrap(arm_mode)
     ufp.api.has_public_bootstrap = True
@@ -233,7 +233,7 @@ async def test_alarm_panel_state_update_via_ws(
     assert state is not None
     assert state.state == AlarmControlPanelState.DISARMED
 
-    # Simulate arm state change via websocket
+    # Simulate arm state change via the public devices websocket
     armed_arm_mode = _make_arm_mode(NvrArmModeStatus.ARMED)
     pb.arm_mode = armed_arm_mode
 
@@ -241,7 +241,8 @@ async def test_alarm_panel_state_update_via_ws(
     mock_msg.changed_data = {}
     mock_msg.old_obj = nvr
     mock_msg.new_obj = nvr
-    ufp.ws_msg(mock_msg)
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
     state = hass.states.get(ALARM_ENTITY_ID)

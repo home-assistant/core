@@ -15,8 +15,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectNVREntity
+from .utils import async_ufp_instance_command
 
 PARALLEL_UPDATES = 0
 
@@ -93,22 +95,24 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         super()._async_update_device_from_protect(device)
         self._refresh_alarm_state()
 
+    @async_ufp_instance_command
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
             await self.data.api.disable_arm_alarm_public()
         except GlobalAlarmManagerError as err:
             raise HomeAssistantError(
-                translation_domain="unifiprotect",
+                translation_domain=DOMAIN,
                 translation_key="global_alarm_manager",
             ) from err
 
+    @async_ufp_instance_command
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command (arms with the currently selected profile)."""
         try:
             await self.data.api.enable_arm_alarm_public()
         except GlobalAlarmManagerError as err:
             raise HomeAssistantError(
-                translation_domain="unifiprotect",
+                translation_domain=DOMAIN,
                 translation_key="global_alarm_manager",
             ) from err
