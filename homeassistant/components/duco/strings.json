@@ -47,6 +47,9 @@
       }
     },
     "sensor": {
+      "box_temperature": {
+        "name": "Box temperature"
+      },
       "iaq_co2": {
         "name": "CO2 air quality index"
       },

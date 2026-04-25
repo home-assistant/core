@@ -45,7 +45,7 @@
           'iaq_co2': None,
           'iaq_rh': None,
           'rh': None,
-          'temp': None,
+          'temp': 27.9,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': 0,
@@ -71,7 +71,7 @@
           'iaq_co2': None,
           'iaq_rh': 85,
           'rh': 42.0,
-          'temp': None,
+          'temp': 27.9,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': None,
@@ -97,7 +97,7 @@
           'iaq_co2': 80,
           'iaq_rh': None,
           'rh': None,
-          'temp': None,
+          'temp': 19.8,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': None,
@@ -123,7 +123,7 @@
           'iaq_co2': None,
           'iaq_rh': 90,
           'rh': 61.0,
-          'temp': None,
+          'temp': 22.5,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': None,

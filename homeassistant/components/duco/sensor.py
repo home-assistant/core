@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -57,6 +58,25 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         value_fn=lambda node: (
             node.ventilation.state.lower() if node.ventilation else None
         ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda node: node.sensor.temp if node.sensor else None,
+        node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
+    ),
+    DucoSensorEntityDescription(
+        key="box_temperature",
+        translation_key="box_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda node: node.sensor.temp if node.sensor else None,
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
