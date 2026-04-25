@@ -5,13 +5,12 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Final
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
-from .bridge import DiscoveryService
-from .const import COORDINATORS, DATA_DISCOVERY_SERVICE, DISCOVERY_SCAN_INTERVAL, DOMAIN
+from .bridge import DiscoveryService, RefossConfigEntry
+from .const import DISCOVERY_SCAN_INTERVAL
 from .util import refoss_discovery_server
 
 PLATFORMS: Final = [
@@ -20,14 +19,11 @@ PLATFORMS: Final = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
     """Set up Refoss from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     discover = await refoss_discovery_server(hass)
     refoss_discovery = DiscoveryService(hass, entry, discover)
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    hass.data[DOMAIN][DATA_DISCOVERY_SERVICE] = refoss_discovery
+    entry.runtime_data = refoss_discovery
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -45,16 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
     """Unload a config entry."""
-    if hass.data[DOMAIN].get(DATA_DISCOVERY_SERVICE) is not None:
-        refoss_discovery: DiscoveryService = hass.data[DOMAIN][DATA_DISCOVERY_SERVICE]
-        refoss_discovery.discovery.clean_up()
-        hass.data[DOMAIN].pop(DATA_DISCOVERY_SERVICE)
-
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(COORDINATORS)
-
-    return unload_ok
+    entry.runtime_data.discovery.clean_up()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
