@@ -5,18 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, TypedDict
-
-from tesla_powerwall import (
-    BatteryResponse,
-    DeviceType,
-    GridStatus,
-    MetersAggregatesResponse,
-    Powerwall,
-    PowerwallStatusResponse,
-    SiteInfoResponse,
-    SiteMasterResponse,
-)
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,42 +18,54 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-type PowerwallConfigEntry = ConfigEntry[PowerwallRuntimeData]
-
 
 @dataclass
 class PowerwallBaseInfo:
-    """Base information for the powerwall integration."""
+    """Base information for the powerwall."""
 
-    gateway_din: str
-    site_info: SiteInfoResponse
-    status: PowerwallStatusResponse
-    device_type: DeviceType
-    serial_numbers: list[str]
+    unique_id: str  # gateway_din (PW2) or IP (PW3)
+    site_name: str | None  # From site_info or None
+    version: str | None  # Firmware version or None
+    device_type: str  # "Powerwall 2" or "Powerwall 3"
     url: str
-    batteries: dict[str, BatteryResponse]
+    is_powerwall3: bool
+
+
+@dataclass
+class MeterData:
+    """Data for a single meter."""
+
+    instant_power: float
+    energy_exported: float
+    energy_imported: float
+    instant_average_voltage: float
+    instant_total_current: float
+    frequency: float
 
 
 @dataclass
 class PowerwallData:
-    """Point in time data for the powerwall integration."""
+    """Point in time data for the powerwall."""
 
-    charge: float
-    site_master: SiteMasterResponse
-    meters: MetersAggregatesResponse
+    charge: float  # Battery percentage
+    grid_status: str  # "UP" or "DOWN"
     grid_services_active: bool
-    grid_status: GridStatus
-    backup_reserve: float | None
-    batteries: dict[str, BatteryResponse]
+    site: MeterData
+    battery: MeterData
+    load: MeterData
+    solar: MeterData | None  # None if no solar
 
 
 class PowerwallRuntimeData(TypedDict):
-    """Run time data for the powerwall."""
+    """Runtime data for the powerwall."""
 
     coordinator: PowerwallUpdateCoordinator | None
-    api_instance: Powerwall
+    api_instance: Any  # pypowerwall.Powerwall
     base_info: PowerwallBaseInfo
-    api_changed: bool
+
+
+# Type alias for config entry with runtime data (after RuntimeData is defined)
+PowerwallConfigEntry = ConfigEntry[PowerwallRuntimeData]
 
 
 class PowerwallUpdateCoordinator(DataUpdateCoordinator[PowerwallData]):
