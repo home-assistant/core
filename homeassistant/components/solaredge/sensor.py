@@ -421,7 +421,10 @@ class SolarEdgeSensorFactory:
 
         # Create per-battery entities
         for battery in inventory_batteries:
-            serial = battery.get("SN", battery.get("serialNumber", "unknown"))
+            serial = battery.get("SN") or battery.get("serialNumber")
+            if not serial:
+                LOGGER.debug("Skipping battery without serial number in inventory")
+                continue
             storage_entities.extend(
                 SolarEdgeBatterySensor(sensor_type, self.storage_service, serial)
                 for sensor_type in BATTERY_SENSOR_TYPES
