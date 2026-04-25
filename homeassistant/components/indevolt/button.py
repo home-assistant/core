@@ -68,5 +68,4 @@ class IndevoltButtonEntity(IndevoltEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-
         await self.coordinator.async_realtime_action(IndevoltRealtimeAction.STOP)
