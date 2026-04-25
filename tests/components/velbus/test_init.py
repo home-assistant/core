@@ -228,7 +228,7 @@ async def test_migrate_property_unique_ids_rename(
     )
 
     with patch(
-        "velbusaio.helpers.get_property_key_map",
+        "homeassistant.components.velbus.get_property_key_map",
         return_value=_PROPERTY_KEY_MAP,
     ):
         await init_integration(hass, config_entry)
@@ -281,7 +281,7 @@ async def test_migrate_property_unique_ids_remove_stale(
     )
 
     with patch(
-        "velbusaio.helpers.get_property_key_map",
+        "homeassistant.components.velbus.get_property_key_map",
         return_value=_PROPERTY_KEY_MAP,
     ):
         await init_integration(hass, config_entry)
@@ -324,7 +324,7 @@ async def test_migrate_property_unique_ids_already_correct(
     )
 
     with patch(
-        "velbusaio.helpers.get_property_key_map",
+        "homeassistant.components.velbus.get_property_key_map",
         return_value=_PROPERTY_KEY_MAP,
     ):
         await init_integration(hass, config_entry)
@@ -363,7 +363,7 @@ async def test_migrate_property_unique_ids_skipped_when_no_serial(
     )
 
     with patch(
-        "velbusaio.helpers.get_property_key_map",
+        "homeassistant.components.velbus.get_property_key_map",
         return_value=_PROPERTY_KEY_MAP,
     ):
         await init_integration(hass, config_entry)
