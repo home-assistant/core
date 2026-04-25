@@ -111,7 +111,8 @@ class OPNsenseDeviceTrackerEntity(
         """Return hostname of the device."""
         device_data = self.device_data
         if device_data:
-            return device_data.get("hostname")
+            hostname = device_data.get("hostname")
+            return hostname or None
         return None
 
     @property
