@@ -149,6 +149,13 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
         serial = device.serial_number or next(
             (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
         )
+        if serial is None:
+            _LOGGER.debug(
+                "Skipping unique_id migration for entity %s: device %s has no serial number or Velbus identifier",
+                entry.entity_id,
+                device.id,
+            )
+            continue
 
         expected_unique_id = f"{serial}-{property_key}"
         if entry.unique_id != expected_unique_id:

@@ -319,6 +319,36 @@ async def test_migrate_property_unique_ids_already_correct(
     )
 
 
+async def test_migrate_property_unique_ids_skipped_when_no_serial(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration is skipped when the device has no serial number or Velbus identifier."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("other_domain", "1")},
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "old-unique-id",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+
+    with patch(
+        "velbusaio.helpers.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id("select", DOMAIN, "old-unique-id")
+
+
 async def test_device_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
