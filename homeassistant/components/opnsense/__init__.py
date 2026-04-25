@@ -19,6 +19,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -138,9 +139,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             "Invalid URL while connecting to OPNsense API endpoint at %s", url
         )
         return False
-    except OPNsenseTimeoutError:
+    except OPNsenseTimeoutError as err:
         _LOGGER.error("Timeout while connecting to OPNsense API endpoint at %s", url)
-        return False
+        # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
+        raise ConfigEntryNotReady from err
     except OPNsenseSSLError:
         _LOGGER.error(
             "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
@@ -158,12 +160,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             url,
         )
         return False
-    except OPNsenseConnectionError:
+    except OPNsenseConnectionError as err:
         _LOGGER.error(
             "Connection failure while connecting to OPNsense API endpoint at %s",
             url,
         )
-        return False
+        # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
+        raise ConfigEntryNotReady from err
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
