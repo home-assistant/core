@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 from duco.models import (
     BoardInfo,
+    DiagComponent,
+    DiagStatus,
     LanInfo,
     Node,
     NodeGeneralInfo,
@@ -146,6 +148,31 @@ def mock_nodes() -> list[Node]:
                 iaq_rh=85,
             ),
         ),
+        Node(
+            node_id=50,
+            general=NodeGeneralInfo(
+                node_type="UCRH",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Kitchen RH",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=61.0,
+                iaq_rh=90,
+            ),
+        ),
     ]
 
 
@@ -170,6 +197,10 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_diagnostics.return_value = [
+            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+        ]
+        client.async_get_write_req_remaining.return_value = 100
         yield client
 
 

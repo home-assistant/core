@@ -499,6 +499,37 @@ async def test_extract_referenced_entity_ids(
     )
 
 
+@pytest.mark.parametrize(
+    ("selector_config", "non_primary_entities"),
+    [
+        ({ATTR_AREA_ID: "own-area"}, {"light.config_in_own_area"}),
+        ({ATTR_DEVICE_ID: "device-no-area-id"}, {"light.config_no_area"}),
+        ({ATTR_AREA_ID: "test-area"}, {"light.config_in_area"}),
+    ],
+)
+@pytest.mark.usefixtures("registries_mock")
+async def test_extract_referenced_entity_ids_primary_entities_only(
+    hass: HomeAssistant,
+    selector_config: ConfigType,
+    non_primary_entities: set[str],
+) -> None:
+    """Test that primary_entities_only controls inclusion of config/diagnostic entities."""
+    target_selection = target.TargetSelection(selector_config)
+
+    selected_primary = target.async_extract_referenced_entity_ids(
+        hass, target_selection, expand_group=False, primary_entities_only=True
+    )
+    selected_all = target.async_extract_referenced_entity_ids(
+        hass, target_selection, expand_group=False, primary_entities_only=False
+    )
+
+    assert (
+        selected_all.indirectly_referenced
+        == selected_primary.indirectly_referenced | non_primary_entities
+    )
+    assert non_primary_entities.isdisjoint(selected_primary.indirectly_referenced)
+
+
 async def test_async_track_target_selector_state_change_event_empty_selector(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

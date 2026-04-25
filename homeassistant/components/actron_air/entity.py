@@ -24,7 +24,7 @@ def actron_air_command[_EntityT: ActronAirEntity, **_P](
     """
 
     @wraps(func)
-    async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self: _EntityT, /, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap API calls with exception handling."""
         try:
             await func(self, *args, **kwargs)
