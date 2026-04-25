@@ -435,6 +435,7 @@ async def test_ui_expose_create_and_update(
                         "attribute": "brightness",
                     },
                 ],
+                "notes": "This is a note",
             },
         }
     )
