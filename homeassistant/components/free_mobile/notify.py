@@ -72,29 +72,6 @@ async def async_get_service(
         )
         return None
 
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Free Mobile",
-            },
-        )
-        await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-        return FreeSMSNotificationService(
-            config[CONF_USERNAME], config[CONF_ACCESS_TOKEN]
-        )
-
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
