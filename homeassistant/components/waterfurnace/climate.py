@@ -176,7 +176,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
-        current_mode = self.hvac_mode
+        current_mode = hvac_mode if hvac_mode is not None else self.hvac_mode
         try:
             await self.hass.async_add_executor_job(
                 self._set_temperature, low, high, temp, current_mode
