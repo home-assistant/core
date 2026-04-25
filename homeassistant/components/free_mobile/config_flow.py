@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import Any
-from http import HTTPStatus
 
 from freesms import FreeClient
 import requests.exceptions
@@ -114,8 +114,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (import_data[CONF_USERNAME] and import_data[CONF_ACCESS_TOKEN]):
                 _LOGGER.error("Failed to initialize FreeClient")
                 return self.async_abort(reason="client_initialization_failed")
-            else:
-                raise
+            raise
 
         return self.async_create_entry(
             title=f"Free Mobile ({import_data[CONF_USERNAME]})",

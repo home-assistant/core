@@ -25,12 +25,12 @@
   },
   "issues": {
     "deprecated_yaml_import_issue_import_failed": {
-      "title": "YAML configuration for Free Mobile could not be imported",
-      "description": "Configuring Free Mobile notifications via YAML is deprecated and an existing YAML configuration could not be imported. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead."
+      "description": "Configuring Free Mobile notifications via YAML is deprecated and an existing YAML configuration could not be imported. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead.",
+      "title": "YAML configuration for Free Mobile could not be imported"
     },
     "deprecated_yaml_import_issue_removed_yaml": {
-      "title": "YAML configuration for Free Mobile is deprecated",
-      "description": "Configuring Free Mobile notifications via YAML is deprecated and will be removed in a future release. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead."
+      "description": "Configuring Free Mobile notifications via YAML is deprecated and will be removed in a future release. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead.",
+      "title": "YAML configuration for Free Mobile is deprecated"
     }
   }
 }

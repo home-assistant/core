@@ -63,7 +63,7 @@ async def async_get_service(
                 "integration_title": "Free Mobile",
             },
         )
-        return None
+        return
 
     ir.async_create_issue(
         hass,
@@ -82,7 +82,7 @@ async def async_get_service(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    return None
+    return
 
 
 async def async_setup_entry(
