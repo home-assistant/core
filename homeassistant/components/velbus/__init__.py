@@ -142,7 +142,6 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
-    entities_renamed = False
     property_key_map = await hass.async_add_executor_job(get_property_key_map)
     for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
         if not entry.original_name or not entry.device_id:
@@ -181,24 +180,11 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
                 ent_reg.async_update_entity(
                     entry.entity_id, new_unique_id=expected_unique_id
                 )
-                entities_renamed = True
         else:
             _LOGGER.debug(
                 "Unique_id is ok: %s = %s", entry.unique_id, expected_unique_id
             )
 
-    issue_id = f"entity_ids_changed_{entry_id}"
-    if entities_renamed:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="entity_ids_changed",
-        )
-    else:
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

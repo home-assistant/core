@@ -209,10 +209,9 @@ async def test_migrate_property_unique_ids_rename(
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
     controller: MagicMock,
 ) -> None:
-    """Test that a property entity with an outdated unique_id gets renamed and an issue is created."""
+    """Test that a property entity with an outdated unique_id gets renamed."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
@@ -239,12 +238,6 @@ async def test_migrate_property_unique_ids_rename(
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"entity_ids_changed_{config_entry.entry_id}"
-        )
-        is not None
-    )
 
 
 async def test_migrate_property_unique_ids_remove_stale(
@@ -252,7 +245,6 @@ async def test_migrate_property_unique_ids_remove_stale(
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
     controller: MagicMock,
 ) -> None:
     """Test that a stale property entity is removed when the correct one already exists."""
@@ -292,12 +284,6 @@ async def test_migrate_property_unique_ids_remove_stale(
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"entity_ids_changed_{config_entry.entry_id}"
-        )
-        is None
-    )
 
 
 async def test_migrate_property_unique_ids_already_correct(
@@ -305,7 +291,6 @@ async def test_migrate_property_unique_ids_already_correct(
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
     controller: MagicMock,
 ) -> None:
     """Test that a property entity with a correct unique_id is left unchanged."""
@@ -332,12 +317,6 @@ async def test_migrate_property_unique_ids_already_correct(
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"entity_ids_changed_{config_entry.entry_id}"
-        )
-        is None
-    )
 
 
 async def test_migrate_property_unique_ids_skipped_when_no_serial(
@@ -345,7 +324,6 @@ async def test_migrate_property_unique_ids_skipped_when_no_serial(
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
     controller: MagicMock,
 ) -> None:
     """Test that migration is skipped when the device has no serial number or Velbus identifier."""
@@ -369,12 +347,6 @@ async def test_migrate_property_unique_ids_skipped_when_no_serial(
         await init_integration(hass, config_entry)
 
     assert entity_registry.async_get_entity_id("select", DOMAIN, "old-unique-id")
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"entity_ids_changed_{config_entry.entry_id}"
-        )
-        is None
-    )
 
 
 async def test_device_registry(
