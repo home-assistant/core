@@ -1,4 +1,4 @@
-"""Tests for iAqualink config flow."""
+"""Tests for iAquaLink config flow."""
 
 from unittest.mock import patch
 

@@ -1,7 +1,9 @@
 """Support for Tuya Smart devices."""
 
-from typing import Any, NamedTuple
+from pathlib import Path
+from typing import Any
 
+from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -11,8 +13,9 @@ from tuya_sharing import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
     CONF_ENDPOINT,
@@ -26,38 +29,63 @@ from .const import (
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
-type TuyaConfigEntry = ConfigEntry[HomeAssistantTuyaData]
-
-
-class HomeAssistantTuyaData(NamedTuple):
-    """Tuya data stored in the Home Assistant data object."""
-
-    manager: Manager
-    listener: SharingDeviceListener
-
-
-def create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
-    """Create a Tuya Manager instance."""
-    return Manager(
-        TUYA_CLIENT_ID,
-        entry.data[CONF_USER_CODE],
-        entry.data[CONF_TERMINAL_ID],
-        entry.data[CONF_ENDPOINT],
-        entry.data[CONF_TOKEN_INFO],
-        token_listener,
-    )
+type TuyaConfigEntry = ConfigEntry[DeviceListener]
 
 
 class DeviceListener(SharingDeviceListener):
     """Device Update Listener."""
 
+    manager: Manager
+
     def __init__(
         self,
         hass: HomeAssistant,
-        manager: Manager,
+        entry: TuyaConfigEntry,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
+        self._entry = entry
+
+    def initialize(self) -> None:
+        """Initialize device listener.
+
+        Needs to be called in executor as these make blocking calls:
+        - `register_tuya_quirks`
+        - `Manager` initialization
+        - `manager.update_device_cache`
+        """
+        entry = self._entry
+        hass = self.hass
+
+        # Makes blocking call to load files from disk
+        register_tuya_quirks(str(Path(hass.config.config_dir, "tuya_quirks")))
+
+        token_listener = _TokenListener(hass, entry)
+
+        # Makes blocking call to import_module
+        # with args ('.system', 'urllib3.contrib.resolver')
+        manager = Manager(
+            TUYA_CLIENT_ID,
+            entry.data[CONF_USER_CODE],
+            entry.data[CONF_TERMINAL_ID],
+            entry.data[CONF_ENDPOINT],
+            entry.data[CONF_TOKEN_INFO],
+            token_listener,
+        )
+
+        manager.add_device_listener(self)
+
+        # Get all devices from Tuya, makes blocking web calls
+        try:
+            manager.update_device_cache()
+        except Exception as exc:
+            # While in general, we should avoid catching broad exceptions,
+            # we have no other way of detecting this case.
+            if "sign invalid" in str(exc):
+                msg = "Authentication failed. Please re-authenticate"
+                raise ConfigEntryAuthFailed(msg) from exc
+            raise
+
         self.manager = manager
 
     def update_device(
@@ -66,7 +94,7 @@ class DeviceListener(SharingDeviceListener):
         updated_status_properties: list[str] | None = None,
         dp_timestamps: dict[str, int] | None = None,
     ) -> None:
-        """Update device status with optional DP timestamps."""
+        """Handle device update event."""
         LOGGER.debug(
             "Received update for device %s (online: %s): %s"
             " (updated properties: %s, dp_timestamps: %s)",
@@ -84,10 +112,7 @@ class DeviceListener(SharingDeviceListener):
         )
 
     def add_device(self, device: CustomerDevice) -> None:
-        """Add device added listener."""
-        # Ensure the device isn't present stale
-        self.hass.add_job(self.async_remove_device, device.id)
-
+        """Handle device added event."""
         LOGGER.debug(
             "Add device %s (online: %s): %s (function: %s, status range: %s)",
             device.id,
@@ -96,17 +121,24 @@ class DeviceListener(SharingDeviceListener):
             device.function,
             device.status_range,
         )
+        self.hass.add_job(self.async_add_device, device.id)
 
-        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+    @callback
+    def async_add_device(self, device_id: str) -> None:
+        """Add device to Home Assistant."""
+        # Ensure the (stale) device isn't present in the device registry
+        self.async_remove_device(device_id)
+
+        async_dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device_id])
 
     def remove_device(self, device_id: str) -> None:
-        """Add device removed listener."""
+        """Handle device removal event."""
+        LOGGER.debug("Remove device: %s", device_id)
         self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
-        LOGGER.debug("Remove device: %s", device_id)
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}
@@ -115,7 +147,7 @@ class DeviceListener(SharingDeviceListener):
             device_registry.async_remove_device(device_entry.id)
 
 
-class TokenListener(SharingTokenListener):
+class _TokenListener(SharingTokenListener):
     """Token listener for upstream token updates."""
 
     def __init__(

@@ -21,7 +21,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Python Syntax Notes
 
-- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses.
+- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses. Never flag this as an issue since Home Assistant officially supports Python 3.14.
 
 ## Testing
 
@@ -38,4 +38,4 @@ When validation guarantees a dict key exists, prefer direct key access (`data["k
 
 # Skills
 
-- Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
+- ha-integration-knowledge: .claude/skills/ha-integration-knowledge/SKILL.md

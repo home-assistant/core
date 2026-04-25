@@ -1,6 +1,6 @@
 {
   "domain": "iaqualink",
-  "name": "Jandy iAqualink",
+  "name": "Jandy iAquaLink",
   "codeowners": ["@flz"],
   "config_flow": true,
   "dhcp": [{ "hostname": "iaqualink-*" }],

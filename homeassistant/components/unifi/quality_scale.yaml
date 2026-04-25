@@ -47,15 +47,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: |
-      Multiple entities still use name_fn to set the entity name instead of
-      translation_key: button.py (Restart, Power Cycle, Regenerate Password),
-      image.py (QR Code), sensor.py (RX, TX, Link speed, PoE Power, temperature,
-      latency, Uptime), switch.py (firewall policy, outlet, port forward, traffic
-      rule, traffic route, PoE, port, DPI restriction). Requires migration with
-      breaking change support.
+  entity-translations: done
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
