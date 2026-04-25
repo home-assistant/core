@@ -16,7 +16,7 @@ from .hap import HomematicipAuth
 class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for the HomematicIP Cloud component."""
 
-    VERSION = 1
+    VERSION = 2
 
     auth: HomematicipAuth
 

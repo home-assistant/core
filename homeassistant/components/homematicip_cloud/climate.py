@@ -83,7 +83,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="climate")
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = self._first_radiator_thermostat
