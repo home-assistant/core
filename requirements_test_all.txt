@@ -798,7 +798,7 @@ elkoep-aio-mqtt==0.1.0b4
 elmax-api==0.0.6.4rc0
 
 # homeassistant.components.eltako_series14
-eltako14bus==0.0.75
+eltako14bus==0.0.79
 
 # homeassistant.components.elvia
 elvia==0.1.0
