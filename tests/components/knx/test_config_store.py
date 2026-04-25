@@ -468,13 +468,13 @@ async def test_update_expose_error(
         {
             "type": "knx/update_expose",
             "entity_id": "switch.test",
-            "options": [{"ga": {"dpt": "1.001"}}],
+            "data": {"options": [{"ga": {"dpt": "1.001"}}]},
         }
     )
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["success"] is False
-    assert res["result"]["errors"][0]["path"] == ["options", "0", "ga", "write"]
+    assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "write"]
     assert res["result"]["errors"][0]["error_message"] == "required key not provided"
 
 
@@ -491,7 +491,7 @@ async def test_validate_expose(
         {
             "type": "knx/validate_expose",
             "entity_id": "switch.test",
-            "options": [{"ga": {"write": "1/2/3", "dpt": "1.001"}}],
+            "data": {"options": [{"ga": {"write": "1/2/3", "dpt": "1.001"}}]},
         }
     )
     res = await client.receive_json()
@@ -502,13 +502,13 @@ async def test_validate_expose(
         {
             "type": "knx/validate_expose",
             "entity_id": "switch.test",
-            "options": [{"ga": {"write": "1/2/3", "dpt": "invalid"}}],
+            "data": {"options": [{"ga": {"write": "1/2/3", "dpt": "invalid"}}]},
         }
     )
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["success"] is False
-    assert res["result"]["errors"][0]["path"] == ["options", "0", "ga", "dpt"]
+    assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "dpt"]
 
 
 async def test_delete_expose(
@@ -523,13 +523,13 @@ async def test_delete_expose(
     await knx.setup_integration()
     client = await hass_ws_client(hass)
 
-    expose_options = [{"ga": {"write": "2/2/2", "dpt": "1.001"}}]
+    expose_options = {"options": [{"ga": {"write": "2/2/2", "dpt": "1.001"}}]}
 
     await client.send_json_auto_id(
         {
             "type": "knx/update_expose",
             "entity_id": ENTITY_ID,
-            "options": expose_options,
+            "data": expose_options,
         }
     )
     res = await client.receive_json()

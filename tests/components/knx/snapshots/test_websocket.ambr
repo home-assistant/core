@@ -1,4 +1,44 @@
 # serializer version: 1
+# name: test_knx_get_expose_config
+  dict({
+    'id': 1,
+    'result': dict({
+      'notes': 'Invert cover position for KNX uses 0: open',
+      'options': list([
+        dict({
+          'ga': dict({
+            'dpt': '1.001',
+            'write': '1/1/1',
+          }),
+        }),
+        dict({
+          'attribute': 'current_position',
+          'cooldown': 5.0,
+          'ga': dict({
+            'dpt': '5.001',
+            'write': '2/2/2',
+          }),
+          'value_template': '{{ 100 - value }}',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_expose_groups
+  dict({
+    'id': 1,
+    'result': dict({
+      'cover.test': list([
+        '1/1/1',
+        '2/2/2',
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[binary_sensor]
   dict({
     'id': 1,

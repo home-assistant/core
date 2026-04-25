@@ -978,6 +978,10 @@
         "ga": {
           "label": "[%key:component::knx::config_panel::common::group_address%]"
         },
+        "notes": {
+          "label": "Notes",
+          "placeholder": "Add your notes here..."
+        },
         "periodic_send": {
           "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
           "label": "Periodic send interval"
