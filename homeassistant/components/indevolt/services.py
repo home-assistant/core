@@ -159,7 +159,7 @@ async def _execute_realtime_action(
 
     for coordinator, result in zip(coordinators, results, strict=True):
         if isinstance(result, BaseException):
-            if len(coordinators) == 1:
+            if len(coordinators) == 1 or not isinstance(result, Exception):
                 raise result
 
             errors.append(f"{coordinator.friendly_name}: {result}")
