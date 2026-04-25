@@ -338,7 +338,7 @@ async def test_pw3_restricted_entities(
     reg_device = device_registry.async_get_device(
         identifiers={("powerwall", "aa:bb:cc:dd:ee:ff")},
     )
-    assert reg_device.model == "Powerwall 3"
+    assert reg_device.model is None
     assert reg_device.sw_version is None
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "Powerwall 1.2.3.4"

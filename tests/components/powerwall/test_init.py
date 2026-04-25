@@ -5,7 +5,7 @@ from http.cookies import Morsel
 from unittest.mock import MagicMock, patch
 
 from aiohttp import CookieJar
-from tesla_powerwall import AccessDeniedError, LoginResponse
+from tesla_powerwall import AccessDeniedError, ApiError, LoginResponse
 
 from homeassistant.components.powerwall.const import (
     AUTH_COOKIE_KEY,
@@ -354,3 +354,25 @@ async def test_setup_pw3_restricted(hass: HomeAssistant) -> None:
     # Restricted devices must not call the dead endpoints during updates.
     mock_powerwall.get_sitemaster.assert_not_called()
     mock_powerwall.get_backup_reserve_percentage.assert_not_called()
+
+
+async def test_setup_non_404_api_error_propagates(hass: HomeAssistant) -> None:
+    """Non-404 ApiError from get_gateway_din should surface as ConfigEntryNotReady."""
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    mock_powerwall.get_gateway_din.side_effect = ApiError(
+        "GET request to /api/gateway returned error 500"
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "somepassword"},
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
