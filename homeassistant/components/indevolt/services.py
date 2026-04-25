@@ -28,7 +28,7 @@ RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Required("target_soc"): vol.All(
             vol.Coerce(int),
-            vol.Range(min=0, max=100),
+            vol.Range(min=5, max=100),
         ),
         vol.Required("power"): vol.All(
             vol.Coerce(int),
