@@ -114,10 +114,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             },
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_API_KEY,
-                        default=reconfigure_entry.data[CONF_API_KEY],
-                    ): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
