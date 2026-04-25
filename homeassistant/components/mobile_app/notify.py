@@ -237,7 +237,7 @@ async def _send_message(
     session: ClientSession,
     entry: ConfigEntry,
     data: dict[str, Any],
-):
+) -> None:
     reg_info = {
         ATTR_APP_ID: entry.data[ATTR_APP_ID],
         ATTR_APP_VERSION: entry.data[ATTR_APP_VERSION],
