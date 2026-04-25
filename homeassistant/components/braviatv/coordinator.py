@@ -241,7 +241,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source = None
         if start_datetime := playing_info.get("startDateTime"):
             start_datetime = datetime.fromisoformat(start_datetime)
-            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)
+            current_datetime = datetime.now(tz=start_datetime.tzinfo)
             self.media_position = int(
                 (current_datetime - start_datetime).total_seconds()
             )
