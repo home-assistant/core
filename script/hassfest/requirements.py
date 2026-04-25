@@ -796,6 +796,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         args = ["uv", "pip", "install", "--quiet"]
         if install_args:
             args.append(install_args)
+        args.append("--")
         args.append(requirement_arg)
         try:
             result = subprocess.run(args, check=True, capture_output=True, text=True)

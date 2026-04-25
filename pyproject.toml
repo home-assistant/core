@@ -907,7 +907,7 @@ split-on-trailing-comma = false
 # Allow for main entry & scripts to write to stdout
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
-"script/*" = ["T20"]
+"script/*" = ["T20", "S404"]
 
 # Allow relative imports within auth and within components
 "homeassistant/auth/*/*" = ["TID252"]
