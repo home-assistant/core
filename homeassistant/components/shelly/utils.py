@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
@@ -51,7 +50,6 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.util.dt import utcnow
 
 from .const import (
     API_WS_URL,
@@ -78,7 +76,6 @@ from .const import (
     SHELLY_EMIT_EVENT_PATTERN,
     SHELLY_WALL_DISPLAY_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
-    UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
     WALL_DISPLAY_RELEASE_URL,
@@ -122,7 +119,7 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get custom name from device settings."""
-    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+    if block and (key := block.type + "s") and key in device.settings:
         assert block.channel
 
         if name := device.settings[key][int(block.channel)].get("name"):
@@ -194,29 +191,6 @@ def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
     return is_block_channel_type_light(settings, block)
 
 
-def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
-    """Return device uptime string, tolerate up to 5 seconds deviation."""
-    delta_uptime = utcnow() - timedelta(seconds=uptime)
-
-    if (
-        not last_uptime
-        or (diff := abs((delta_uptime - last_uptime).total_seconds()))
-        > UPTIME_DEVIATION
-    ):
-        if last_uptime:
-            LOGGER.debug(
-                "Time deviation %s > %s: uptime=%s, last_uptime=%s, delta_uptime=%s",
-                diff,
-                UPTIME_DEVIATION,
-                uptime,
-                last_uptime,
-                delta_uptime,
-            )
-        return delta_uptime
-
-    return last_uptime
-
-
 def get_block_input_triggers(
     device: BlockDevice, block: Block
 ) -> list[tuple[str, str]]:
@@ -251,6 +225,8 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
 def get_coiot_port(hass: HomeAssistant) -> int:
     """Get CoIoT port from config."""
     if DOMAIN in hass.data:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
     return DEFAULT_COAP_PORT
 
