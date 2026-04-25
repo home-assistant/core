@@ -278,7 +278,7 @@ async def test_keep_alive_clears_api_and_reschedules_when_setup_raises_after_par
 
     def setup_sets_api_then_raises():
         account.api = MagicMock()
-        raise Exception("Service unavailable")
+        raise ConfigEntryNotReady("Service unavailable")
 
     with (
         patch.object(account, "setup", side_effect=setup_sets_api_then_raises),
