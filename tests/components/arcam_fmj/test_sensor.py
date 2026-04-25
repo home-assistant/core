@@ -100,7 +100,15 @@ async def test_sensor_enum_unknown(
     state_1: State,
     client: Mock,
 ) -> None:
-    """Test audio parameter sensors with actual data."""
+    """Test parameter sensors with unknown data."""
+    video_params = Mock()
+    video_params.horizontal_resolution = 0
+    video_params.vertical_resolution = 0
+    video_params.refresh_rate = 0
+    video_params.aspect_ratio = IncomingVideoAspectRatio.from_int(0x99)
+    video_params.colorspace = IncomingVideoColorspace.from_int(0x99)
+
+    state_1.get_incoming_video_parameters.return_value = video_params
     state_1.get_incoming_audio_format.return_value = (
         None,
         IncomingAudioConfig.from_int(0x99),
@@ -109,11 +117,12 @@ async def test_sensor_enum_unknown(
     client.notify_data_updated()
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.arcam_fmj_127_0_0_1_incoming_audio_format").state
-        == "unknown"
-    )
-    assert (
-        hass.states.get("sensor.arcam_fmj_127_0_0_1_incoming_audio_configuration").state
-        == "unknown"
-    )
+    def _get(key: str) -> str:
+        state = hass.states.get(f"sensor.arcam_fmj_127_0_0_1_{key}")
+        assert state
+        return state.state
+
+    assert _get("incoming_audio_format") == "unknown"
+    assert _get("incoming_audio_configuration") == "unknown"
+    assert _get("incoming_video_aspect_ratio") == "unknown"
+    assert _get("incoming_video_colorspace") == "unknown"

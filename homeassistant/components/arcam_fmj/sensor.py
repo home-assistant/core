@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from arcam.fmj import IncomingVideoAspectRatio, IncomingVideoColorspace, IntOrTypeEnum
 from arcam.fmj.state import IncomingAudioConfig, IncomingAudioFormat, State
@@ -18,9 +19,10 @@ from homeassistant.const import EntityCategory, UnitOfFrequency
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import _LOGGER
 from .coordinator import ArcamFmjConfigEntry
 from .entity import ArcamFmjEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _enum_options(value: type[IntOrTypeEnum]) -> list[str]:
