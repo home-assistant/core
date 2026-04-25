@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -242,7 +243,7 @@ def async_setup_non_entity_entry_helper(
 
 
 @callback
-def async_setup_entity_entry_helper(
+def async_setup_entity_entry_helper(  # noqa: C901
     hass: HomeAssistant,
     entry: ConfigEntry,
     entity_class: type[MqttEntity] | None,
@@ -391,6 +392,8 @@ def async_setup_entity_entry_helper(
                     and component_config[CONF_ENTITY_CATEGORY] is None
                 ):
                     component_config.pop(CONF_ENTITY_CATEGORY)
+                if component_config.get(CONF_UNIT_OF_MEASUREMENT) == "None":
+                    component_config.pop(CONF_UNIT_OF_MEASUREMENT)
 
                 try:
                     config = platform_schema_modern(component_config)

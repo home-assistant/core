@@ -477,7 +477,7 @@ _CODE_VALIDATION_MODE = {
     "remote_code": REMOTE_CODE,
     "remote_code_text": REMOTE_CODE_TEXT,
 }
-EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
+EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY, CONF_UNIT_OF_MEASUREMENT}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
@@ -1133,11 +1133,13 @@ def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
         errors[CONF_MIN] = "max_below_min"
         errors[CONF_MAX] = "max_below_min"
 
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
+        unit_of_measurement = None
+
     if (
         (device_class := config.get(CONF_DEVICE_CLASS)) is not None
         and device_class in NUMBER_DEVICE_CLASS_UNITS
-        and config.get(CONF_UNIT_OF_MEASUREMENT)
-        not in NUMBER_DEVICE_CLASS_UNITS[device_class]
+        and unit_of_measurement not in NUMBER_DEVICE_CLASS_UNITS[device_class]
     ):
         errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
 
@@ -1166,6 +1168,7 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
+    unit_of_measurement: str | None = None
     if (
         device_class in DEVICE_CLASS_UNITS
         and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
@@ -1174,6 +1177,10 @@ def validate_sensor_platform_config(
         # Do not allow an empty unit of measurement in a subentry data flow
         errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
         return errors
+
+    if unit_of_measurement == "None":
+        unit_of_measurement = None
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
 
     if (
         device_class is not None
@@ -4984,7 +4991,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
             for field in EXCLUDE_FROM_CONFIG_IF_NONE:
-                if field in component_config and component_config[field] is None:
+                if field in component_config and (
+                    component_config[field] is None or component_config[field] == "None"
+                ):
                     component_config.pop(field)
             mqtt_yaml_config.append({platform: component_config})
 
@@ -5033,7 +5042,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
             for field in EXCLUDE_FROM_CONFIG_IF_NONE:
-                if field in component_config and component_config[field] is None:
+                if field in component_config and (
+                    component_config[field] is None or component_config[field] == "None"
+                ):
                     component_config.pop(field)
             discovery_payload["cmps"][component_id] = component_config
 
