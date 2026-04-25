@@ -51,6 +51,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     Event,
@@ -684,6 +686,21 @@ class IrrigationSystem(HomeAccessory):
         for zone in self._zones:
             if state := self.hass.states.get(zone["entity_id"]):
                 self._update_zone_state(zone, state)
+
+    @callback
+    def async_update_state_callback(self, new_state: State | None) -> None:
+        """Handle primary zone state change, including unavailable/unknown/removed.
+
+        Overrides the base class to clear the primary zone characteristics when
+        the entity is unavailable or unknown, matching the behaviour of the linked
+        zone subscription, so HomeKit never shows a stale active/in-use state.
+        """
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            zone = self._zones[0]
+            zone["char_active"].set_value(0)
+            zone["char_in_use"].set_value(0)
+            return
+        super().async_update_state_callback(new_state)
 
     @callback
     def run(self) -> None:
