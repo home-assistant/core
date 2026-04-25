@@ -1987,8 +1987,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/wled/ @frenck @mik-laj
 /homeassistant/components/wmspro/ @mback2k
 /tests/components/wmspro/ @mback2k
-/homeassistant/components/wolflink/ @adamkrol93 @mtielen
-/tests/components/wolflink/ @adamkrol93 @mtielen
+/homeassistant/components/wolflink/ @adamkrol93 @EnjoyingM
+/tests/components/wolflink/ @adamkrol93 @EnjoyingM
 /homeassistant/components/workday/ @fabaff @gjohansson-ST
 /tests/components/workday/ @fabaff @gjohansson-ST
 /homeassistant/components/worldclock/ @fabaff
