@@ -414,7 +414,7 @@ async def webhook_render_template(
             {
                 vol.Optional(ATTR_LOCATION_NAME): cv.string,
                 vol.Optional(ATTR_GPS): cv.gps,
-                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
+                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
                 vol.Optional(ATTR_BATTERY): cv.positive_int,
                 vol.Optional(ATTR_SPEED): cv.positive_int,
                 vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
