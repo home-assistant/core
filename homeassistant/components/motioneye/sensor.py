@@ -9,24 +9,23 @@ from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ACTIONS
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import get_camera_from_cameras, listen_for_new_cameras
-from .const import DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
-from .coordinator import MotionEyeUpdateCoordinator
+from .const import TYPE_MOTIONEYE_ACTION_SENSOR
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:

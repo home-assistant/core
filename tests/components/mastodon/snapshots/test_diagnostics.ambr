@@ -4,6 +4,7 @@
     'account': dict({
       'acct': 'trwnh',
       'avatar': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
+      'avatar_description': None,
       'avatar_static': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
       'bot': True,
       'created_at': '2016-11-24T00:00:00+00:00',
@@ -37,6 +38,7 @@
       'following_count': 328,
       'group': False,
       'header': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
+      'header_description': None,
       'header_static': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
       'hide_collections': True,
       'id': '14715',
@@ -53,6 +55,9 @@
       'role': None,
       'roles': list([
       ]),
+      'show_featured': None,
+      'show_media': None,
+      'show_media_replies': None,
       'source': None,
       'statuses_count': 69523,
       'suspended': None,
@@ -80,6 +85,7 @@
         }),
       }),
       'version': '4.4.0-nightly.2025-02-07',
+      'wrapstodon': None,
     }),
   })
 # ---
@@ -88,6 +94,7 @@
     'account': dict({
       'acct': 'trwnh',
       'avatar': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
+      'avatar_description': None,
       'avatar_static': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
       'bot': True,
       'created_at': '2016-11-24T00:00:00+00:00',
@@ -121,6 +128,7 @@
       'following_count': 328,
       'group': False,
       'header': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
+      'header_description': None,
       'header_static': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
       'hide_collections': True,
       'id': '14715',
@@ -137,6 +145,9 @@
       'role': None,
       'roles': list([
       ]),
+      'show_featured': None,
+      'show_media': None,
+      'show_media_replies': None,
       'source': None,
       'statuses_count': 69523,
       'suspended': None,
@@ -164,6 +175,7 @@
         }),
       }),
       'version': '4.4.0-nightly.2025-02-07',
+      'wrapstodon': None,
     }),
   })
 # ---

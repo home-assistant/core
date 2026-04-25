@@ -12,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from .const import DOMAIN
 from .entity import AnthropicBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -60,7 +61,7 @@ class AnthropicTaskEntity(
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
-                "Last content in chat log is not an AssistantContent"
+                translation_domain=DOMAIN, translation_key="response_not_found"
             )
 
         text = chat_log.content[-1].content or ""
@@ -78,7 +79,9 @@ class AnthropicTaskEntity(
                 err,
                 text,
             )
-            raise HomeAssistantError("Error with Claude structured response") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="json_parse_error"
+            ) from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,

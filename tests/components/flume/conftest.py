@@ -41,6 +41,7 @@ SENSOR_DEVICE = {
     "type": 2,  # Sensor
     "location": {
         "name": "Sensor Location",
+        "tz": "America/New_York",
     },
     "name": "Flume Sensor",
     "connected": True,

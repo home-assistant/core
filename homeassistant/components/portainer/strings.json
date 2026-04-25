@@ -66,14 +66,23 @@
       "images_prune": {
         "name": "Prune unused images"
       },
+      "kill_container": {
+        "name": "Kill container"
+      },
       "pause_container": {
         "name": "Pause container"
+      },
+      "recreate_container": {
+        "name": "Recreate container"
       },
       "restart_container": {
         "name": "Restart container"
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "volumes_prune": {
+        "name": "Prune unused volumes"
       }
     },
     "sensor": {
@@ -168,6 +177,12 @@
       },
       "volume_disk_usage_total_size": {
         "name": "Volume disk usage total size"
+      },
+      "volume_driver": {
+        "name": "Volume driver"
+      },
+      "volume_size": {
+        "name": "Volume size"
       }
     },
     "switch": {

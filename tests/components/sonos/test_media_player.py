@@ -137,6 +137,9 @@ async def test_device_registry_not_portable(
     assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
 
 
+@pytest.mark.skip(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_entity_basic(
     hass: HomeAssistant,
     async_autosetup_sonos,
@@ -165,7 +168,7 @@ async def test_entity_basic(
                 "clear_queue": 1,
                 "position": None,
                 "play": 1,
-                "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
         (
@@ -178,7 +181,6 @@ async def test_entity_basic(
                 "clear_queue": 0,
                 "position": None,
                 "play": 0,
-                "play_pos": 0,
             },
         ),
         (
@@ -191,7 +193,6 @@ async def test_entity_basic(
                 "clear_queue": 0,
                 "position": 1,
                 "play": 0,
-                "play_pos": 0,
             },
         ),
         (
@@ -204,7 +205,7 @@ async def test_entity_basic(
                 "clear_queue": 0,
                 "position": 1,
                 "play": 1,
-                "play_pos": 9,
+                "expected_play_args": [9],
             },
         ),
         (
@@ -217,7 +218,7 @@ async def test_entity_basic(
                 "clear_queue": 1,
                 "position": None,
                 "play": 1,
-                "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
         (
@@ -230,7 +231,7 @@ async def test_entity_basic(
                 "clear_queue": 1,
                 "position": None,
                 "play": 1,
-                "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
     ],
@@ -266,23 +267,20 @@ async def test_play_media_library(
         sock_mock.add_to_queue.call_args_list[0].args[0].item_id
         == test_result["item_id"]
     )
-    if test_result["position"] is not None:
-        assert (
-            sock_mock.add_to_queue.call_args_list[0].kwargs["position"]
-            == test_result["position"]
-        )
-    else:
-        assert "position" not in sock_mock.add_to_queue.call_args_list[0].kwargs
+    assert (
+        sock_mock.add_to_queue.call_args_list[0].kwargs.get("position")
+        == test_result["position"]
+    )
+
     assert (
         sock_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
     )
     assert sock_mock.play_from_queue.call_count == test_result["play"]
-    if test_result["play"] != 0:
-        assert (
-            sock_mock.play_from_queue.call_args_list[0].args[0]
-            == test_result["play_pos"]
-        )
+    actual_play_args = [
+        call.args[0] for call in sock_mock.play_from_queue.call_args_list
+    ]
+    assert actual_play_args == test_result.get("expected_play_args", [])
 
 
 @pytest.mark.parametrize(
@@ -1173,6 +1171,46 @@ async def test_media_transport(
         blocking=True,
     )
     assert getattr(soco, client_call).call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("transport_state", "title", "expected_state"),
+    [
+        ("PAUSED_PLAYBACK", "Something", "paused"),
+        ("PAUSED_PLAYBACK", None, "idle"),
+        ("PAUSED_PLAYBACK", " ", "idle"),
+        ("STOPPED", "Something", "paused"),
+        ("STOPPED", None, "idle"),
+        ("STOPPED", " ", "idle"),
+    ],
+)
+async def test_state_paused_idle(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    no_media_event: SonosMockEvent,
+    transport_state: str,
+    title: str | None,
+    expected_state: str,
+) -> None:
+    """Test that idle is returned when title is None or whitespace, paused otherwise."""
+    soco.get_current_track_info.return_value = {
+        "title": title,
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "NOT_IMPLEMENTED",
+        "playlist_position": "1",
+        "duration": "NOT_IMPLEMENTED",
+        "uri": "x-file-cifs://192.168.42.10/music/track.mp3",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+    no_media_event.variables["transport_state"] = transport_state
+    soco.avTransport.subscribe.return_value.callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.state == expected_state
 
 
 async def test_play_media_announce(

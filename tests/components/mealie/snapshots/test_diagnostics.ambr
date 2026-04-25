@@ -34,7 +34,9 @@
             'prep_time': '15 Minutes',
             'rating': 5.0,
             'recipe_id': '5b055066-d57d-4fd0-8dfd-a2c2f07b36f1',
+            'recipe_servings': None,
             'recipe_yield': '6 servings',
+            'recipe_yield_quantity': None,
             'slug': 'roast-chicken',
             'tags': list([
             ]),
@@ -74,7 +76,9 @@
             'prep_time': '40 Minutes',
             'rating': None,
             'recipe_id': '47595e4c-52bc-441d-b273-3edf4258806d',
+            'recipe_servings': None,
             'recipe_yield': '4 servings',
+            'recipe_yield_quantity': None,
             'slug': 'greek-turkey-meatballs-with-lemon-orzo-creamy-feta-yogurt-sauce',
             'tags': list([
             ]),
@@ -114,7 +118,9 @@
             'prep_time': None,
             'rating': None,
             'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+            'recipe_servings': None,
             'recipe_yield': '2 servings',
+            'recipe_yield_quantity': None,
             'slug': 'zoete-aardappel-curry-traybake',
             'tags': list([
             ]),
@@ -152,7 +158,9 @@
             'prep_time': '15 Minutes',
             'rating': None,
             'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
+            'recipe_servings': None,
             'recipe_yield': '6 servings',
+            'recipe_yield_quantity': None,
             'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
             'tags': list([
             ]),
@@ -190,7 +198,9 @@
             'prep_time': '15 Minutes',
             'rating': 3.0,
             'recipe_id': '92635fd0-f2dc-4e78-a6e4-ecd556ad361f',
+            'recipe_servings': None,
             'recipe_yield': '12 servings',
+            'recipe_yield_quantity': None,
             'slug': 'pampered-chef-double-chocolate-mocha-trifle',
             'tags': list([
               dict({
@@ -238,7 +248,9 @@
             'prep_time': '8 Minutes',
             'rating': 5.0,
             'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
+            'recipe_servings': None,
             'recipe_yield': '24 servings',
+            'recipe_yield_quantity': None,
             'slug': 'cheeseburger-sliders-easy-30-min-recipe',
             'tags': list([
               dict({
@@ -286,7 +298,9 @@
             'prep_time': '5 Minutes',
             'rating': None,
             'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
+            'recipe_servings': None,
             'recipe_yield': '6 servings',
+            'recipe_yield_quantity': None,
             'slug': 'all-american-beef-stew-recipe',
             'tags': list([
               dict({
@@ -329,7 +343,9 @@
             'prep_time': '10 Minutes',
             'rating': None,
             'recipe_id': '25b814f2-d9bf-4df0-b40d-d2f2457b4317',
+            'recipe_servings': None,
             'recipe_yield': '2 servings',
+            'recipe_yield_quantity': None,
             'slug': 'miso-udon-noodles-with-spinach-and-tofu',
             'tags': list([
             ]),
@@ -383,7 +399,9 @@
             'prep_time': '15 Minutes',
             'rating': None,
             'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
+            'recipe_servings': None,
             'recipe_yield': '4 servings',
+            'recipe_yield_quantity': None,
             'slug': 'einfacher-nudelauflauf-mit-brokkoli',
             'tags': list([
               dict({
@@ -428,7 +446,9 @@
             'prep_time': '3 Minutes',
             'rating': None,
             'recipe_id': 'e360a0cc-18b0-4a84-a91b-8aa59e2451c9',
+            'recipe_servings': None,
             'recipe_yield': '2 servings',
+            'recipe_yield_quantity': None,
             'slug': 'receta-de-pollo-al-curry-en-10-minutos-con-video-incluido',
             'tags': list([
             ]),
@@ -466,7 +486,9 @@
             'prep_time': '1 Hour',
             'rating': None,
             'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
+            'recipe_servings': 4.0,
             'recipe_yield': '4 servings',
+            'recipe_yield_quantity': 4.0,
             'slug': 'boeuf-bourguignon-la-vraie-recette-2',
             'tags': list([
               dict({
@@ -564,7 +586,9 @@
             'prep_time': '5 Minutes',
             'rating': None,
             'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
+            'recipe_servings': None,
             'recipe_yield': '6 servings',
+            'recipe_yield_quantity': None,
             'slug': 'all-american-beef-stew-recipe',
             'tags': list([
               dict({
@@ -609,7 +633,9 @@
             'prep_time': '15 Minutes',
             'rating': None,
             'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
+            'recipe_servings': None,
             'recipe_yield': '4 servings',
+            'recipe_yield_quantity': None,
             'slug': 'einfacher-nudelauflauf-mit-brokkoli',
             'tags': list([
               dict({
@@ -654,7 +680,9 @@
             'prep_time': '15 Minutes',
             'rating': None,
             'recipe_id': '55c88810-4cf1-4d86-ae50-63b15fd173fb',
+            'recipe_servings': None,
             'recipe_yield': '12 servings',
+            'recipe_yield_quantity': None,
             'slug': 'mousse-de-saumon',
             'tags': list([
             ]),

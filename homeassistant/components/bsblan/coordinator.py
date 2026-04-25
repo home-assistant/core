@@ -10,6 +10,7 @@ from bsblan import (
     BSBLAN,
     BSBLANAuthError,
     BSBLANConnectionError,
+    BSBLANError,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -48,9 +49,9 @@ DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
 class BSBLanFastData:
     """BSBLan fast-polling data."""
 
-    state: State
+    states: dict[int, State]
     sensor: Sensor
-    dhw: HotWaterState
+    dhw: HotWaterState | None = None
 
 
 @dataclass
@@ -93,6 +94,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         hass: HomeAssistant,
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
+        circuits: list[int],
     ) -> None:
         """Initialize the BSB-LAN fast coordinator."""
         super().__init__(
@@ -102,16 +104,20 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             name=f"{DOMAIN}_fast_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_FAST,
         )
+        self.circuits: list[int] = circuits
 
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
+        states: dict[int, State] = {}
         try:
-            # Client is already initialized in async_setup_entry
-            # Use include filtering to only fetch parameters we actually use
-            # This reduces response time significantly (~0.2s per parameter)
-            state = await self.client.state(include=STATE_INCLUDE)
+            # Use include filtering to only fetch parameters we actually use.
+            # BSB-LAN is a serial bus — it processes one parameter at a time,
+            # so concurrent requests offer no speed benefit over sequential.
+            for circuit in self.circuits:
+                states[circuit] = await self.client.state(
+                    include=STATE_INCLUDE, circuit=circuit
+                )
             sensor = await self.client.sensor(include=SENSOR_INCLUDE)
-            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
@@ -126,8 +132,21 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                 translation_placeholders={"host": host},
             ) from err
 
+        # Fetch DHW state separately - device may not support hot water
+        dhw: HotWaterState | None = None
+        try:
+            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
+        except BSBLANError:
+            # Preserve last known DHW state if available (entity may depend on it)
+            if self.data:
+                dhw = self.data.dhw
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) state not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+
         return BSBLanFastData(
-            state=state,
+            states=states,
             sensor=sensor,
             dhw=dhw,
         )
@@ -159,13 +178,6 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
             dhw_schedule = await self.client.hot_water_schedule()
 
-        except AttributeError:
-            # Device does not support DHW functionality
-            LOGGER.debug(
-                "DHW (Domestic Hot Water) not available on device at %s",
-                self.config_entry.data[CONF_HOST],
-            )
-            return BSBLanSlowData()
         except (BSBLANConnectionError, BSBLANAuthError) as err:
             # If config update fails, keep existing data
             LOGGER.debug(
@@ -176,6 +188,13 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             if self.data:
                 return self.data
             # First fetch failed, return empty data
+            return BSBLanSlowData()
+        except BSBLANError, AttributeError:
+            # Device does not support DHW functionality
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
             return BSBLanSlowData()
 
         return BSBLanSlowData(

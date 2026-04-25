@@ -743,3 +743,16 @@ async def test_preset_mode_with_unnamed_preset(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_mode"] == PRESET_NONE
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+@pytest.mark.parametrize("attributes", [{"1/513/0": None}])
+async def test_thermostat_with_null_local_temperature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat is created when LocalTemperature is null."""
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["current_temperature"] is None
