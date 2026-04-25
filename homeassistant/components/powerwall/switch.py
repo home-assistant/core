@@ -25,6 +25,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Powerwall switch platform from Powerwall resources."""
+    # Off-grid switch requires writing to /api/operation, which 404s on the
+    # restricted PW3-style surface. Skip when no writes are available.
+    if entry.runtime_data["base_info"].restricted:
+        return
     async_add_entities([PowerwallOffGridEnabledEntity(entry.runtime_data)])
 
 
