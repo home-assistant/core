@@ -129,4 +129,3 @@ class FreeSMSNotifyEntity(NotifyEntity):
             _LOGGER.error("Server error, try later")
         elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.error("Too many SMS sent in a short time")
-

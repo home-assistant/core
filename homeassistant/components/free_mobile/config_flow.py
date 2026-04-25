@@ -109,9 +109,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         # Validate credentials without sending a test SMS to avoid spamming
         # the user on every Home Assistant restart
         try:
-            FreeClient(
-                import_data[CONF_USERNAME], import_data[CONF_ACCESS_TOKEN]
-            )
+            FreeClient(import_data[CONF_USERNAME], import_data[CONF_ACCESS_TOKEN])
         except AssertionError:
             if not (import_data[CONF_USERNAME] and import_data[CONF_ACCESS_TOKEN]):
                 _LOGGER.error("Failed to initialize FreeClient")
