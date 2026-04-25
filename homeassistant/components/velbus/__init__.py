@@ -122,16 +122,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     ) -> None:
         if event.data["action"] != "update":
             return
-        old_via_device_id: str | None = event.data["changes"].get("via_device_id")
-        if old_via_device_id is None:
+        changes = event.data["changes"]
+        if "via_device_id" not in changes or changes["via_device_id"] is None:
             return
         dev_reg = dr.async_get(hass)
-        if dev_reg.async_get(old_via_device_id) is not None:
+        sub_device = dev_reg.async_get(event.data["device_id"])
+        if (
+            sub_device is None
+            or entry.entry_id not in sub_device.config_entries
+            or sub_device.via_device_id is not None
+        ):
             return
-        device = dev_reg.async_get(event.data["device_id"])
-        if device is None or entry.entry_id not in device.config_entries:
+        previous_parent_id: str = changes["via_device_id"]
+        if dev_reg.async_get(previous_parent_id) is not None:
             return
-        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+        dev_reg.async_update_device(
+            sub_device.id, remove_config_entry_id=entry.entry_id
+        )
 
     entry.async_on_unload(
         hass.bus.async_listen(
@@ -166,8 +173,9 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Allow removing this config entry from a Velbus device.
 
-    Sub-devices are detached via the device registry listener registered in
-    async_setup_entry when the parent device is removed.
+    When the config entry is removed from a device, its sub-devices are detached
+    from this config entry as well. If the device is still on the bus, it may be
+    recreated when the integration is reloaded or started again.
     """
     return True
 

@@ -279,8 +279,10 @@ async def test_remove_config_entry_device_removes_subdevices(
     result = await async_remove_config_entry_device(hass, config_entry, stale_device)
     assert result is True
 
-    # Simulate HA removing the device after the permission check
-    device_registry.async_remove_device(stale_device.id)
+    # Simulate HA removing the config entry from the device (the real UI path)
+    device_registry.async_update_device(
+        stale_device.id, remove_config_entry_id=config_entry.entry_id
+    )
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, "999-1")}) is None
