@@ -28,9 +28,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
 from .const import CONFIG_ENTRY_COOKIE, DOMAIN
+from .helpers import is_api_404
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +58,29 @@ async def _login_and_fetch_site_info(
     try:
         gateway_din = await power_wall.get_gateway_din()
     except ApiError as err:
-        if "returned error 404" not in str(err):
+        if not is_api_404(err):
             raise
         return None, None
     try:
         site_info = await power_wall.get_site_info()
     except ApiError as err:
-        if "returned error 404" not in str(err):
+        if not is_api_404(err):
             raise
         return f"Powerwall {gateway_din[-5:]}", gateway_din
     return site_info.site_name, gateway_din
+
+
+def _is_synthetic_unique_id(unique_id: str) -> bool:
+    """Return True if the unique_id was synthesized by us.
+
+    Real Powerwall DINs are short alphanumeric strings; the synthetic forms we
+    produce are dotted IPs (legacy) or 64-character hex digests (restricted
+    PW3 gateways). Anything else is treated as a real DIN and must not be
+    silently overwritten by DHCP discovery.
+    """
+    if is_ip_address(unique_id):
+        return True
+    return len(unique_id) == 64 and all(c in "0123456789abcdef" for c in unique_id)
 
 
 async def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
@@ -149,7 +164,11 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(gateway_din)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_IP_ADDRESS] == discovery_info.ip:
-                if entry.unique_id is not None and entry.unique_id != gateway_din:
+                if (
+                    entry.unique_id is not None
+                    and entry.unique_id != gateway_din
+                    and _is_synthetic_unique_id(entry.unique_id)
+                ):
                     if self.hass.config_entries.async_update_entry(
                         entry, unique_id=gateway_din
                     ):

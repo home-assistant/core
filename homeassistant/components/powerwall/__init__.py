@@ -39,6 +39,7 @@ from .coordinator import (
     PowerwallRuntimeData,
     PowerwallUpdateCoordinator,
 )
+from .helpers import is_api_404
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
@@ -282,11 +283,6 @@ async def _login_and_fetch_base_info(
     return await _call_base_info(power_wall, host, fallback_din)
 
 
-def _is_404_api_error(err: ApiError) -> bool:
-    """Return True if an ApiError represents an HTTP 404 from the gateway."""
-    return "returned error 404" in str(err)
-
-
 async def _call_base_info(
     power_wall: Powerwall, host: str, fallback_din: str | None = None
 ) -> PowerwallBaseInfo:
@@ -303,7 +299,7 @@ async def _call_base_info(
     try:
         gateway_din = await power_wall.get_gateway_din()
     except ApiError as err:
-        if not _is_404_api_error(err):
+        if not is_api_404(err):
             raise
         # No DIN available — fall back to the caller-supplied identifier
         # (typically the MAC saved as the config-entry unique_id) so the device

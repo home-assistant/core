@@ -14,6 +14,7 @@ from tesla_powerwall import (
 
 from homeassistant import config_entries
 from homeassistant.components.powerwall.const import DOMAIN
+from homeassistant.components.powerwall.helpers import is_api_404
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -733,3 +734,87 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
+
+
+def test_is_api_404() -> None:
+    """The 404 helper matches the upstream message format and nothing else."""
+    not_found = ApiError("The url https://1.2.3.4/api/powerwalls returned error 404")
+    server_error = ApiError(
+        "API returned status code '500: Internal Server Error' with body: boom"
+    )
+    assert is_api_404(not_found) is True
+    assert is_api_404(server_error) is False
+
+
+async def test_dhcp_discovery_upgrades_hash_unique_id(hass: HomeAssistant) -> None:
+    """A SHA-256 hash unique_id (PW3 restricted) is upgraded to a real DIN."""
+    hash_unique_id = hashlib.sha256(b"00GGX").hexdigest()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=hash_unique_id,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.2.3.4",
+                macaddress="aabbcceeddff",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == MOCK_GATEWAY_DIN
+
+
+async def test_dhcp_discovery_does_not_overwrite_real_din(
+    hass: HomeAssistant,
+) -> None:
+    """DHCP must not stomp an existing real-DIN unique_id with a different DIN."""
+    existing_din = "111-0----2-000000000AAA"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=existing_din,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.2.3.4",
+                macaddress="aabbcceeddff",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == existing_din
