@@ -22,6 +22,7 @@ SERVICE_DELETE_SMS = "delete_sms"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_CONNECT_LTE = "connect_lte"
 SERVICE_DISCONNECT_LTE = "disconnect_lte"
+SERVICE_RESTART_MODEM = "restart_modem"
 
 DELETE_SMS_SCHEMA = vol.Schema(
     {
@@ -44,6 +45,8 @@ SET_OPTION_SCHEMA = vol.Schema(
 CONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
 
 DISCONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
+
+RESTART_MODEM_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
 
 
 async def _service_handler(call: ServiceCall) -> None:
@@ -74,6 +77,8 @@ async def _service_handler(call: ServiceCall) -> None:
         await modem.connect_lte()
     elif call.service == SERVICE_DISCONNECT_LTE:
         await modem.disconnect_lte()
+    elif call.service == SERVICE_RESTART_MODEM:
+        await modem.router_restart()
 
 
 @callback
@@ -85,6 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_OPTION: SET_OPTION_SCHEMA,
         SERVICE_CONNECT_LTE: CONNECT_LTE_SCHEMA,
         SERVICE_DISCONNECT_LTE: DISCONNECT_LTE_SCHEMA,
+        SERVICE_RESTART_MODEM: RESTART_MODEM_SCHEMA
     }
 
     for service, schema in service_schemas.items():
