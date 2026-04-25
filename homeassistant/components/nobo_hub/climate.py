@@ -134,8 +134,6 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_LOW in kwargs:
             low = round(kwargs[ATTR_TARGET_TEMP_LOW])
             high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
-            low = min(low, high)
-            high = max(low, high)
             await self._nobo.async_update_zone(
                 self._id, temp_comfort_c=high, temp_eco_c=low
             )

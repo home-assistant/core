@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.20.4
 
 # homeassistant.components.switchbot
-PySwitchbot==2.1.0
+PySwitchbot==2.2.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -324,7 +324,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.2.3
+aiomealie==1.2.4
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1038,7 +1038,7 @@ fressnapftracker==0.2.2
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fumis
-fumis==0.3.0
+fumis==0.4.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -1402,7 +1402,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.4.22.141111
+knx-frontend==2026.4.25.155016
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -3192,7 +3192,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.3.1
+uiprotect==10.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
