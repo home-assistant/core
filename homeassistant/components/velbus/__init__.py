@@ -186,7 +186,6 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
             )
 
 
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
     async_setup_services(hass)
