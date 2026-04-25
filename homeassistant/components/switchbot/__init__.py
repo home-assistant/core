@@ -107,6 +107,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.LOCK_ULTRA.value: [
         Platform.BINARY_SENSOR,
+        Platform.BUTTON,
         Platform.LOCK,
         Platform.SENSOR,
     ],

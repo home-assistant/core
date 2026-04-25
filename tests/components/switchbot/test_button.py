@@ -19,6 +19,7 @@ from . import (
     AIR_PURIFIER_US_SERVICE_INFO,
     ART_FRAME_INFO,
     DOMAIN,
+    LOCK_ULTRA_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
 )
 
@@ -217,4 +218,40 @@ async def test_air_purifier_buttons(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+        mock_instance.assert_awaited_once()
+
+
+async def test_lock_ultra_half_lock_button(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test pressing the half lock button on Lock Ultra."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    mock_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.button.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+        is_night_latch_enabled=lambda self: True,
+        half_lock=mock_instance,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_ids = [
+            entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
+        ]
+        assert "button.test_name_half_lock" in entity_ids
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_name_half_lock"},
+            blocking=True,
+        )
+
         mock_instance.assert_awaited_once()

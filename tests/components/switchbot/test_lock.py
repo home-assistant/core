@@ -8,17 +8,14 @@ from switchbot import LockStatus, SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     LOCK_LITE_SERVICE_INFO,
@@ -178,70 +175,6 @@ async def test_exception_handling_lock_service(
             )
 
 
-async def test_lock_ultra_half_lock_service(
-    hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-) -> None:
-    """Test half_lock service calls half_lock() on Lock Ultra."""
-    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
-
-    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra")
-    entry.add_to_hass(hass)
-    mocked_half_lock = AsyncMock(return_value=True)
-
-    with patch.multiple(
-        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
-        update=AsyncMock(return_value=None),
-        is_night_latch_enabled=MagicMock(return_value=True),
-        half_lock=mocked_half_lock,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        device_id = devices[0].id
-
-        await hass.services.async_call(
-            DOMAIN,
-            "half_lock",
-            {ATTR_DEVICE_ID: device_id},
-            blocking=True,
-        )
-
-        mocked_half_lock.assert_awaited_once()
-
-
-async def test_lock_ultra_half_lock_service_wrong_device(
-    hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-) -> None:
-    """Test half_lock service raises error for non-Lock-Ultra devices."""
-    inject_bluetooth_service_info(hass, LOCK_SERVICE_INFO)
-
-    entry = mock_entry_encrypted_factory(sensor_type="lock")
-    entry.add_to_hass(hass)
-
-    with patch.multiple(
-        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
-        update=AsyncMock(return_value=None),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        device_id = devices[0].id
-
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                DOMAIN,
-                "half_lock",
-                {ATTR_DEVICE_ID: device_id},
-                blocking=True,
-            )
-
-
 async def test_lock_ultra_half_lock_state_shows_locked(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
@@ -309,71 +242,3 @@ async def test_non_lock_ultra_no_half_locked_attr(
         lock_state = hass.states.get("lock.test_name")
         assert lock_state is not None
         assert "half_locked" not in lock_state.attributes
-
-
-async def test_lock_ultra_half_lock_service_not_calibrated(
-    hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-) -> None:
-    """Test half_lock service raises HomeAssistantError when not calibrated."""
-    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
-
-    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra")
-    entry.add_to_hass(hass)
-
-    with patch.multiple(
-        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
-        update=AsyncMock(return_value=None),
-        is_night_latch_enabled=MagicMock(return_value=True),
-        half_lock=AsyncMock(
-            side_effect=SwitchbotOperationError("Half lock is not calibrated")
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        device_id = devices[0].id
-
-        with pytest.raises(
-            HomeAssistantError,
-            match="An error occurred while performing the action: Half lock is not calibrated",
-        ):
-            await hass.services.async_call(
-                DOMAIN,
-                "half_lock",
-                {ATTR_DEVICE_ID: device_id},
-                blocking=True,
-            )
-
-
-async def test_lock_ultra_half_lock_service_not_eu(
-    hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-) -> None:
-    """Test half_lock service raises ServiceValidationError for non-EU Lock Ultra."""
-    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
-
-    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra")
-    entry.add_to_hass(hass)
-
-    with patch.multiple(
-        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
-        update=AsyncMock(return_value=None),
-        is_night_latch_enabled=MagicMock(return_value=False),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        device_id = devices[0].id
-
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                DOMAIN,
-                "half_lock",
-                {ATTR_DEVICE_ID: device_id},
-                blocking=True,
-            )

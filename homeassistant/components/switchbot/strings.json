@@ -105,6 +105,9 @@
       }
     },
     "button": {
+      "half_lock": {
+        "name": "Half lock"
+      },
       "light_sensor": {
         "name": "Light sensor"
       },
@@ -378,14 +381,8 @@
     "invalid_device_id": {
       "message": "The device ID {device_id} is not a valid device ID."
     },
-    "not_eu_lock_device": {
-      "message": "This service is only supported for SwitchBot Lock Ultra devices with EU type (Night Latch mode)."
-    },
     "not_keypad_vision_device": {
       "message": "This service is only supported for SwitchBot Keypad Vision devices."
-    },
-    "not_lock_ultra_device": {
-      "message": "This service is only supported for SwitchBot Lock Ultra devices."
     },
     "operation_error": {
       "message": "An error occurred while performing the action: {error}"
@@ -424,16 +421,6 @@
         }
       },
       "name": "Add password"
-    },
-    "half_lock": {
-      "description": "Move Lock Ultra to the half-lock position (EU lock type only).",
-      "fields": {
-        "device_id": {
-          "description": "The device ID of the Lock Ultra device",
-          "name": "Device ID"
-        }
-      },
-      "name": "Half lock"
     }
   }
 }
