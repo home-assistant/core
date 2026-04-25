@@ -90,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_OPTION: SET_OPTION_SCHEMA,
         SERVICE_CONNECT_LTE: CONNECT_LTE_SCHEMA,
         SERVICE_DISCONNECT_LTE: DISCONNECT_LTE_SCHEMA,
-        SERVICE_RESTART_MODEM: RESTART_MODEM_SCHEMA
+        SERVICE_RESTART_MODEM: RESTART_MODEM_SCHEMA,
     }
 
     for service, schema in service_schemas.items():
