@@ -216,7 +216,7 @@ def _make_account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
     )
 
 
-async def test_keep_alive_reschedules_when_setup_fails(
+async def test_keep_alive_reschedules_when_setup_returns_api_none(
     hass: HomeAssistant,
     mock_store: Mock,
 ) -> None:
@@ -233,6 +233,30 @@ async def test_keep_alive_reschedules_when_setup_fails(
         patch.object(
             account, "setup"
         ),  # setup() leaves api as None (simulates any failure)
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
+async def test_keep_alive_reschedules_when_setup_raises(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive reschedules when setup() raises (e.g. transient Apple API outage).
+
+    ConfigEntryNotReady raised by setup() during a keep_alive cycle would propagate
+    uncaught and permanently kill the polling loop. The exception is now caught and
+    the next fetch is still scheduled at max interval.
+    """
+    account = _make_account(hass, mock_store)
+
+    with (
+        patch.object(
+            account, "setup", side_effect=Exception("Apple API unavailable")
+        ),
         patch.object(account, "_schedule_next_fetch") as mock_schedule,
     ):
         account.keep_alive()

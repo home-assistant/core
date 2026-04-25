@@ -321,7 +321,13 @@ class IcloudAccount:
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
         if self.api is None:
-            self.setup()
+            try:
+                self.setup()
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Failed to set up iCloud account in keep_alive, will retry: %s",
+                    err,
+                )
 
         if self.api is None:
             self._fetch_interval = self._max_interval
