@@ -1355,7 +1355,10 @@ async def test_callbacks_does_not_stop_coordinator(
     update_1.side_effect = Exception("Failure in callback")
     caplog.clear()
     await crd.async_refresh()
-    assert "Unexpected error updating listener" in caplog.messages
+    assert any(
+        message.startswith("Unexpected error updating listener ")
+        for message in caplog.messages
+    )
 
     # All callbacks should still have been called
     assert update_1.call_count == 2

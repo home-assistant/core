@@ -202,7 +202,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             try:
                 update_callback()
             except Exception:
-                self.logger.exception("Unexpected error updating listener")
+                self.logger.exception(
+                    "Unexpected error updating listener %s for %s",
+                    id(update_callback),
+                    self.name,
+                )
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
