@@ -18,6 +18,8 @@ ABBREVIATIONS = {
     "bri_stat_t": "brightness_state_topic",
     "bri_tpl": "brightness_template",
     "bri_val_tpl": "brightness_value_template",
+    "cln_segmnts_cmd_t": "clean_segments_command_topic",
+    "cln_segmnts_cmd_tpl": "clean_segments_command_template",
     "clr_temp_cmd_tpl": "color_temp_command_template",
     "clrm_stat_t": "color_mode_state_topic",
     "clrm_val_tpl": "color_mode_value_template",

@@ -165,14 +165,23 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_charge_mode(charge_mode)
 
     @with_error_wrapping
-    async def set_charge_start(self) -> models.KamereonVehicleChargingStartActionData:
+    async def set_charge_start(
+        self, when: datetime | None = None
+    ) -> models.KamereonVehicleChargingStartActionData:
         """Start vehicle charge."""
-        return await self._vehicle.set_charge_start()
+        return await self._vehicle.set_charge_start(when)
 
     @with_error_wrapping
     async def set_charge_stop(self) -> models.KamereonVehicleChargingStartActionData:
         """Stop vehicle charge."""
         return await self._vehicle.set_charge_stop()
+
+    @with_error_wrapping
+    async def set_battery_soc(
+        self, min_soc: int, target_soc: int
+    ) -> models.KamereonVehicleBatterySocActionData:
+        """Set vehicle battery SoC levels."""
+        return await self._vehicle.set_battery_soc(min=min_soc, target=target_soc)
 
     @with_error_wrapping
     async def set_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:
@@ -269,5 +278,11 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         endpoint="pressure",
         key="pressure",
         update_method=lambda x: x.get_tyre_pressure,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="soc-levels",
+        key="battery_soc",
+        requires_electricity=True,
+        update_method=lambda x: x.get_battery_soc,
     ),
 )

@@ -12,6 +12,11 @@
           options:
             - all
             - any
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 is_docked: *condition_common
 is_encountering_an_error: *condition_common

@@ -45,7 +45,6 @@ from homeassistant.helpers.typing import ConfigType
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import STREAM_SOURCE_LIST
 from .const import (
-    CAMERAS,
     COMM_RETRIES,
     COMM_TIMEOUT,
     DATA_AMCREST,
@@ -384,7 +383,7 @@ def _start_event_monitor(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
-    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
+    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
     if DOMAIN not in config:
         return True
@@ -481,7 +480,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Amcrest from a config entry."""
-    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
+    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
     hass.data.setdefault(DOMAIN, {})
 
     config_data = dict(entry.data)

@@ -1,0 +1,25 @@
+is_value:
+  target:
+    entity:
+      - domain: counter
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity:
+            - domain: counter
+            - domain: input_number
+            - domain: number
+          mode: is
+          number:
+            mode: box

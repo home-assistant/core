@@ -15,22 +15,12 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ACTION,
-    ALERTS,
-    ERRORS,
-    MODE,
-    NEATO_LOGIN,
-    NEATO_MAP_DATA,
-    NEATO_PERSISTENT_MAPS,
-    NEATO_ROBOTS,
-    SCAN_INTERVAL_MINUTES,
-)
+from . import NeatoConfigEntry
+from .const import ACTION, ALERTS, ERRORS, MODE, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -52,16 +42,16 @@ ATTR_LAUNCHED_FROM = "launched_from"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NeatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato vacuum with config entry."""
-    neato: NeatoHub = hass.data[NEATO_LOGIN]
-    mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
-    persistent_maps: dict[str, Any] | None = hass.data.get(NEATO_PERSISTENT_MAPS)
+    hub = entry.runtime_data
     dev = [
-        NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps)
-        for robot in hass.data[NEATO_ROBOTS]
+        NeatoConnectedVacuum(
+            hub, robot, hub.map_data or None, hub.persistent_maps or None
+        )
+        for robot in hub.robots
     ]
 
     if not dev:

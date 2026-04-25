@@ -1,0 +1,11 @@
+play_media_shuffle:
+  target:
+    entity:
+      integration: jellyfin
+      domain: media_player
+  fields:
+    media:
+      required: true
+      selector:
+        media:
+      example: '{"media_content_id": "a656b907eb3a73532e40e44b968d0225"}'

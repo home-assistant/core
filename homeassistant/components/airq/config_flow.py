@@ -87,7 +87,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
 
             device_info = await airq.fetch_device_info()
-            await self.async_set_unique_id(device_info["id"])
+            await self.async_set_unique_id(device_info["id"], raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
             _LOGGER.debug("Creating an entry for %s", device_info["name"])

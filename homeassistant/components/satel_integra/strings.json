@@ -1,24 +1,50 @@
 {
   "common": {
     "code": "Access code",
-    "code_input_description": "Code to toggle switchable outputs"
+    "code_input_description": "Code to toggle switchable outputs",
+    "encryption_key": "Integration encryption key",
+    "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here."
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "connection_initialization_failed": "Successfully connected, but failed to read data from the panel. Please check the integration encryption key is correct if your panel requires encryption.",
+      "panel_busy": "Successfully connected, but alarm panel reports it's busy. Please check no other connections are active.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "code": {
         "data": {
-          "code": "[%key:component::satel_integra::common::code%]",
+          "code": "[%key:component::satel_integra::common::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::satel_integra::common::code_input_description%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]",
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key_description%]",
+          "host": "[%key:component::satel_integra::config::step::user::data_description::host%]",
+          "port": "[%key:component::satel_integra::config::step::user::data_description::port%]"
+        }
+      },
+      "user": {
+        "data": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key_description%]",
           "host": "The IP address of the alarm panel",
           "port": "The port of the alarm panel"
         }
@@ -163,8 +189,17 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "connection_initialization_failed": {
+      "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
+    },
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
+    },
+    "panel_busy": {
+      "message": "[%key:component::satel_integra::config::error::panel_busy%]"
     }
   },
   "options": {

@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from opendisplay import (
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
     DitherMode,
     FitMode,
     OpenDisplayDevice,
@@ -38,7 +40,7 @@ from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 if TYPE_CHECKING:
     from . import OpenDisplayConfigEntry
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
 
 ATTR_IMAGE = "image"
 ATTR_ROTATION = "rotation"
@@ -193,10 +195,25 @@ async def _async_upload_image(call: ServiceCall) -> None:
         else:
             pil_image = await _async_download_image(call.hass, media.url)
 
+        raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
+        if raw_key is not None and len(raw_key) != 32:
+            entry.async_start_reauth(call.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="authentication_error"
+            )
+        try:
+            encryption_key = bytes.fromhex(raw_key) if raw_key is not None else None
+        except ValueError as err:
+            entry.async_start_reauth(call.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="authentication_error"
+            ) from err
+
         async with OpenDisplayDevice(
             mac_address=address,
             ble_device=ble_device,
             config=entry.runtime_data.device_config,
+            encryption_key=encryption_key,
         ) as device:
             await device.upload_image(
                 pil_image,
@@ -208,6 +225,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
             )
     except asyncio.CancelledError:
         return
+    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+        entry.async_start_reauth(call.hass)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="authentication_error"
+        ) from err
     except OpenDisplayError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="upload_error"

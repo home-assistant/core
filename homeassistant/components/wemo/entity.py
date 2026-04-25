@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-import contextlib
+from collections.abc import Callable
 import logging
+from typing import Any
 
 from pywemo.exceptions import ActionException
 
@@ -64,23 +64,20 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         """Return the device info."""
         return self._device_info
 
-    @contextlib.contextmanager
-    def _wemo_call_wrapper(self, message: str) -> Generator[None]:
-        """Wrap calls to the device that change its state.
+    async def _async_wemo_call(self, message: str, action: Callable[[], Any]) -> None:
+        """Run a WeMo device action in the executor and update listeners.
 
-        1. Takes care of making available=False when communications with the
-           device fails.
-        2. Ensures all entities sharing the same coordinator are aware of
-           updates to the device state.
+        Handles errors from the device and ensures all entities sharing the
+        same coordinator are aware of updates to the device state.
         """
         try:
-            yield
+            await self.hass.async_add_executor_job(action)
         except ActionException as err:
             _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
             self.coordinator.last_exception = err
-            self.coordinator.last_update_success = False  # Used for self.available.
+            self.coordinator.last_update_success = False
         finally:
-            self.hass.add_job(self.coordinator.async_update_listeners)
+            self.coordinator.async_update_listeners()
 
 
 class WemoBinaryStateEntity(WemoEntity):

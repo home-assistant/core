@@ -8,12 +8,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .controller import ZWaveMeController
 
 
 class ZWaveMeEntity(Entity):
     """Representation of a ZWaveMe device."""
 
-    def __init__(self, controller, device):
+    def __init__(self, controller: ZWaveMeController, device: ZWaveMeData) -> None:
         """Initialize the device."""
         self.controller = controller
         self.device = device

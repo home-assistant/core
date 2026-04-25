@@ -35,6 +35,7 @@ from roborock.data import (
 )
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
+from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
@@ -75,6 +76,7 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO_BY_DEVICE,
     Q7_B01_PROPS,
+    Q10_STATUS,
     ROBOROCK_RRUID,
     ROOM_MAPPING,
     SCENES,
@@ -160,6 +162,28 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
     return b01_trait
+
+
+def create_b01_q10_trait() -> Mock:
+    """Create B01 Q10 trait for Q10 devices.
+
+    Uses a real StatusTrait instance so that add_update_listener and
+    update_from_dps work without manual mocking.
+    """
+    q10_trait = AsyncMock()
+
+    # Use the real StatusTrait so listeners and update_from_dps work natively
+    status = Q10StatusTrait()
+    status_data = deepcopy(Q10_STATUS)
+    for attr_name, value in vars(status_data).items():
+        if not attr_name.startswith("_"):
+            setattr(status, attr_name, value)
+    q10_trait.status = status
+
+    q10_trait.vacuum = AsyncMock()
+    q10_trait.command = AsyncMock()
+    q10_trait.refresh = AsyncMock()
+    return q10_trait
 
 
 @pytest.fixture(name="bypass_api_client_fixture")
@@ -419,17 +443,38 @@ def fake_devices_fixture() -> list[FakeDevice]:
             else:
                 raise ValueError("Unknown A01 category in test HOME_DATA")
         elif device_data.pv == "B01":
-            fake_device.b01_q7_properties = create_b01_q7_trait()
+            if device_product_data.model == "roborock.vacuum.ss07":
+                fake_device.b01_q10_properties = create_b01_q10_trait()
+            else:
+                fake_device.b01_q7_properties = create_b01_q7_trait()
         else:
             raise ValueError("Unknown pv in test HOME_DATA")
         devices.append(fake_device)
     return devices
 
 
+# These fixtures are brittle since they rely on HOME_DATA.device_products ordering,
+# but we can improve this setup in the future by flipping around how
+# fake_devices is built.
+
+
 @pytest.fixture(name="fake_vacuum")
 def fake_vacuum_fixture(fake_devices: list[FakeDevice]) -> FakeDevice:
     """Get the fake vacuum device."""
     return fake_devices[0]
+
+
+@pytest.fixture
+def fake_q7_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q7 vacuum device."""
+    # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
+    return fake_devices[3]
+
+
+@pytest.fixture
+def fake_q10_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q10 vacuum device."""
+    return fake_devices[4]
 
 
 @pytest.fixture(name="send_message_exception")

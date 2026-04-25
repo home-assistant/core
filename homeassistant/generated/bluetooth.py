@@ -86,6 +86,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": True,
+        "domain": "casper_glow",
+        "local_name": "Jar*",
+    },
+    {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897",
     },
@@ -127,6 +132,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "eufylife_ble",
         "local_name": "eufy T9149",
+    },
+    {
+        "connectable": True,
+        "domain": "eurotronic_cometblue",
+        "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67",
     },
     {
         "connectable": False,

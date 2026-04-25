@@ -56,7 +56,7 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
         return await self.coordinator.async_get_events(start_date, end_date)
 
     @callback
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self.coordinator.event:
             self._attr_extra_state_attributes = {
@@ -64,4 +64,4 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
             }
         else:
             self._attr_extra_state_attributes = {}
-        super().async_write_ha_state()
+        super()._async_write_ha_state()

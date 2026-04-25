@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
-from .sensor.sensor_entity_description import GrowattRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +26,10 @@ PARALLEL_UPDATES = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class GrowattNumberEntityDescription(NumberEntityDescription, GrowattRequiredKeysMixin):
+class GrowattNumberEntityDescription(NumberEntityDescription):
     """Describes Growatt number entity."""
 
+    api_key: str
     write_key: str | None = None  # Parameter ID for writing (if different from api_key)
 
 
@@ -130,6 +130,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer="Growatt",
             name=coordinator.device_id,
+            serial_number=coordinator.device_id,
         )
 
     @property
@@ -157,7 +158,11 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
                 int_value,
             )
         except GrowattV1ApiError as e:
-            raise HomeAssistantError(f"Error while setting parameter: {e}") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(e)},
+            ) from e
 
         # If no exception was raised, the write was successful
         _LOGGER.debug(

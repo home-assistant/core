@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -56,14 +58,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        LitterRobotButtonEntity(
-            robot=robot, coordinator=coordinator, description=description
-        )
-        for robot in coordinator.account.robots
-        for robot_type, description in ROBOT_BUTTON_MAP.items()
-        if isinstance(robot, robot_type)
-    )
+    known_robots: set[str] = set()
+
+    def _check_robots() -> None:
+        all_robots = coordinator.account.robots
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            async_add_entities(
+                LitterRobotButtonEntity(
+                    robot=robot, coordinator=coordinator, description=description
+                )
+                for robot in all_robots
+                if robot.serial in new_robots
+                for robot_type, description in ROBOT_BUTTON_MAP.items()
+                if isinstance(robot, robot_type)
+            )
+
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
@@ -71,6 +85,7 @@ class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
 
     entity_description: RobotButtonEntityDescription[_WhiskerEntityT]
 
+    @whisker_command
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)

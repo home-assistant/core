@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate_entities[climate.test_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

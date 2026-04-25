@@ -30,12 +30,12 @@ def _validate_input(data: dict[str, Any]) -> None:
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     nzbget_api = NZBGetAPI(
-        data[CONF_HOST],
-        data.get(CONF_USERNAME),
-        data.get(CONF_PASSWORD),
-        data[CONF_SSL],
-        data[CONF_VERIFY_SSL],
-        data[CONF_PORT],
+        host=data[CONF_HOST],
+        username=data.get(CONF_USERNAME),
+        password=data.get(CONF_PASSWORD),
+        secure=data[CONF_SSL],
+        verify_certificate=data[CONF_VERIFY_SSL],
+        port=data[CONF_PORT],
     )
 
     nzbget_api.version()

@@ -13,6 +13,9 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import api
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
@@ -25,11 +28,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AladdinConnectConfigEntry
 ) -> bool:
     """Set up Aladdin Connect Genie from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
@@ -46,19 +55,10 @@ async def async_setup_entry(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
 
-    try:
-        doors = await client.get_doors()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+    coordinator = AladdinConnectCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = {
-        door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)
-        for door in doors
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -100,7 +100,7 @@ def remove_stale_devices(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    all_device_ids = set(config_entry.runtime_data)
+    all_device_ids = set(config_entry.runtime_data.data)
 
     for device_entry in device_entries:
         device_id: str | None = None
