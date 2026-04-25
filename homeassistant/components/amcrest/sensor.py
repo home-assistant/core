@@ -43,12 +43,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_PTZ_PRESET,
         name="PTZ Preset",
         icon="mdi:camera-iris",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=SENSOR_SDCARD,
         name="SD Used",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:sd",
+        entity_registry_enabled_default=False,
     ),
 )
 
