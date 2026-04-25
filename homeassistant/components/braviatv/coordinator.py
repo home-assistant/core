@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_NICKNAME,
@@ -241,11 +242,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source = None
         if start_datetime := playing_info.get("startDateTime"):
             start_datetime = datetime.fromisoformat(start_datetime)
-            current_datetime = datetime.now(tz=start_datetime.tzinfo)
+            current_datetime = dt_util.utcnow()
             self.media_position = int(
                 (current_datetime - start_datetime).total_seconds()
             )
-            self.media_position_updated_at = datetime.now()
+            self.media_position_updated_at = dt_util.utcnow()
         else:
             self.media_position = None
             self.media_position_updated_at = None
