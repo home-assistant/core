@@ -15,9 +15,8 @@ from .coordinator import DucoConfigEntry, DucoCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool:
     """Set up Duco from a config entry."""
     client = DucoClient(
-        session=async_get_clientsession(hass, verify_ssl=False),
+        session=async_get_clientsession(hass),
         host=entry.data[CONF_HOST],
-        scheme="https",
     )
 
     coordinator = DucoCoordinator(hass, entry, client)
