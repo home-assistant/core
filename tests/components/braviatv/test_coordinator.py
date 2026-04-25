@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-
 FROZEN_UTC = datetime(2024, 1, 1, 10, 0, 0, tzinfo=UTC)
 
 # 09:30+05:00 == 04:30 UTC; frozen at 10:00 UTC → position = 5h30m = 19800 s
