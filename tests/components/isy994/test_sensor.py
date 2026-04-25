@@ -110,6 +110,16 @@ async def test_sensor_snapshots(
     }
     nodes.append(("Sensors/Power Node", node8))
 
+    # Aux FLOW with ISYv4 list-form UOM 142 (gal/s) - guard must clear
+    # device_class without raising TypeError on the unhashable list.
+    node11 = mock_node(mock_isy, "22 22 22 11", "Flow Aux List", "GenericSensor")
+    node11.status = 0
+    node11.uom = "73"
+    node11.aux_properties = {
+        "FLOW": MagicMock(value=1, uom=["142"], prec="1"),
+    }
+    nodes.append(("Sensors/Flow Aux List", node11))
+
     mock_isy.nodes.__iter__.return_value = nodes
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
