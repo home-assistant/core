@@ -32,7 +32,7 @@ class PowerWallEntity(CoordinatorEntity[PowerwallUpdateCoordinator]):
         model = (
             f"{MODEL} ({base_info.device_type.name})"
             if base_info.device_type is not None
-            else "Powerwall 3"
+            else None
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.base_unique_id)},

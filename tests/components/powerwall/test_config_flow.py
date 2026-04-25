@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from tesla_powerwall import (
     AccessDeniedError,
+    ApiError,
     MissingAttributeError,
     PowerwallUnreachableError,
 )
@@ -143,6 +144,62 @@ async def test_form_pw3_restricted(hass: HomeAssistant) -> None:
     assert result2["data"] == VALID_CONFIG
     assert result2["result"].unique_id == expected_unique_id
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_pw3_site_info_404(hass: HomeAssistant) -> None:
+    """Gateway DIN succeeds but site_info 404s — title falls back to DIN suffix."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "MySite")
+    mock_powerwall.get_site_info.side_effect = ApiError(
+        "GET request to /api/site_info returned error 404"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == f"Powerwall {MOCK_GATEWAY_DIN[-5:]}"
+    assert result2["result"].unique_id == MOCK_GATEWAY_DIN.upper()
+
+
+async def test_form_non_404_api_error_propagates(hass: HomeAssistant) -> None:
+    """Non-404 ApiError from get_gateway_din must surface as unknown."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "MySite")
+    mock_powerwall.get_gateway_din.side_effect = ApiError(
+        "GET request to /api/gateway returned error 500"
+    )
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
