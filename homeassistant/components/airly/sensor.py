@@ -45,6 +45,7 @@ from .const import (
     ATTR_LIMIT,
     ATTR_PERCENT,
     ATTRIBUTION,
+    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
     SUFFIX_LIMIT,
@@ -178,7 +179,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airly sensor entities based on a config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME) or DEFAULT_NAME
 
     coordinator = entry.runtime_data
 
