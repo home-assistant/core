@@ -122,9 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     ) -> None:
         if event.data["action"] != "update":
             return
-        old_via_device_id: str | None = event.data["changes"].get(  # type: ignore[typeddict-item]
-            "via_device_id"
-        )
+        old_via_device_id: str | None = event.data["changes"].get("via_device_id")
         if old_via_device_id is None:
             return
         dev_reg = dr.async_get(hass)
