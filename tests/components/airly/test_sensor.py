@@ -49,7 +49,7 @@ async def test_availability(
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass, aioclient_mock)
 
-    state = hass.states.get("sensor.home_humidity")
+    state = hass.states.get("sensor.airly_humidity")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "68.35"
@@ -62,7 +62,7 @@ async def test_availability(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.home_humidity")
+    state = hass.states.get("sensor.airly_humidity")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -74,7 +74,7 @@ async def test_availability(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.home_humidity")
+    state = hass.states.get("sensor.airly_humidity")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "68.35"
@@ -91,7 +91,7 @@ async def test_manual_update_entity(
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ["sensor.home_humidity"]},
+        {ATTR_ENTITY_ID: ["sensor.airly_humidity"]},
         blocking=True,
     )
 
