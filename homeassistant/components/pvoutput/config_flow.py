@@ -81,6 +81,45 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a PVOutput entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                await validate_input(
+                    self.hass,
+                    api_key=user_input[CONF_API_KEY],
+                    system_id=reconfigure_entry.data[CONF_SYSTEM_ID],
+                )
+            except PVOutputAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except PVOutputError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            description_placeholders={
+                "account_url": "https://pvoutput.org/account.jsp"
+            },
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): str,
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
