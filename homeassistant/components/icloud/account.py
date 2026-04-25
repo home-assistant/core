@@ -61,13 +61,13 @@ _LOGGER = logging.getLogger(__name__)
 
 _MSG_PASSWORD_NO_LONGER_WORKING = (
     "Your password for '%s' is no longer working; go to the "
-    "Integrations menu and click on Configure on the Apple "
+    "Integrations menu and click Configure on the Apple "
     "iCloud card to log in again"
 )
 
 _MSG_2FA_REQUIRED = (
     "2FA authentication required for '%s'; go to the "
-    "Integrations menu and click on Configure on the Apple "
+    "Integrations menu and click Configure on the Apple "
     "iCloud card to enter your verification code"
 )
 
