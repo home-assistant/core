@@ -187,6 +187,6 @@ async def test_service_validation_invalid_date(
             return_response=True,
         )
 
-    assert str(err.value) == "Invalid date provided."
+    assert str(err.value) == f"Invalid date provided. Got {date_value}"
     assert err.value.translation_key == "invalid_date"
     assert err.value.translation_placeholders == {"date": date_value}
