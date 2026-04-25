@@ -230,7 +230,9 @@ async def test_keep_alive_reschedules_when_setup_fails(
     # api starts as None, so keep_alive will call setup()
 
     with (
-        patch.object(account, "setup"),  # setup() leaves api as None (simulates any failure)
+        patch.object(
+            account, "setup"
+        ),  # setup() leaves api as None (simulates any failure)
         patch.object(account, "_schedule_next_fetch") as mock_schedule,
     ):
         account.keep_alive()
