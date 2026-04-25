@@ -6,21 +6,19 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry
 
 REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ONVIFConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
+    device = entry.runtime_data
     data: dict[str, Any] = {}
 
     data["config"] = async_redact_data(entry.as_dict(), REDACT_CONFIG)

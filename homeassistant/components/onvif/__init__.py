@@ -1,5 +1,4 @@
 """The ONVIF integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from contextlib import AsyncExitStack, suppress
@@ -13,7 +12,6 @@ from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
@@ -29,18 +27,14 @@ from .const import (
     CONF_SNAPSHOT_AUTH,
     DEFAULT_ARGUMENTS,
     DEFAULT_ENABLE_WEBHOOKS,
-    DOMAIN,
 )
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry, ONVIFDevice
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
     """Set up ONVIF from a config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     if not entry.options:
         await async_populate_options(hass, entry)
 
@@ -97,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # If we get here, setup was successful - prevent cleanup
         stack.pop_all()
 
-    hass.data[DOMAIN][entry.unique_id] = device
+    entry.runtime_data = device
 
     device.platforms = [Platform.BUTTON, Platform.CAMERA]
 
@@ -128,9 +122,9 @@ async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     await device.device.close()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
     """Unload a config entry."""
-    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
+    device = entry.runtime_data
     await _async_stop_device(hass, device)
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
@@ -150,7 +144,7 @@ async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
 
 
 async def async_populate_snapshot_auth(
-    hass: HomeAssistant, device: ONVIFDevice, entry: ConfigEntry
+    hass: HomeAssistant, device: ONVIFDevice, entry: ONVIFConfigEntry
 ) -> None:
     """Check if digest auth for snapshots is possible."""
     if auth := await _get_snapshot_auth(device):
@@ -159,7 +153,7 @@ async def async_populate_snapshot_auth(
         )
 
 
-async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_populate_options(hass: HomeAssistant, entry: ONVIFConfigEntry) -> None:
     """Populate default options for device."""
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
@@ -172,7 +166,7 @@ async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 @callback
 def _async_migrate_camera_entities_unique_ids(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: ONVIFDevice
+    hass: HomeAssistant, config_entry: ONVIFConfigEntry, device: ONVIFDevice
 ) -> None:
     """Migrate unique ids of camera entities from profile index to profile token."""
     entity_reg = er.async_get(hass)

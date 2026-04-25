@@ -17,7 +17,6 @@ from homeassistant.components.stream import (
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     RTSP_TRANSPORTS,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -40,7 +39,6 @@ from .const import (
     DIR_LEFT,
     DIR_RIGHT,
     DIR_UP,
-    DOMAIN,
     GOTOPRESET_MOVE,
     LOGGER,
     RELATIVE_MOVE,
@@ -49,14 +47,14 @@ from .const import (
     ZOOM_IN,
     ZOOM_OUT,
 )
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ONVIFConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ONVIF camera video stream."""
@@ -86,9 +84,7 @@ async def async_setup_entry(
         "async_perform_ptz",
     )
 
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    device = hass.data[DOMAIN][config_entry.unique_id]
+    device = config_entry.runtime_data
     async_add_entities(
         [ONVIFCameraEntity(device, profile) for profile in device.profiles]
     )
