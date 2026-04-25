@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any
 
 from freesms import FreeClient
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
-    BaseNotificationService,
     NotifyEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -41,7 +39,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> FreeSMSNotificationService | None:
+) -> None:
     """Get the Free Mobile SMS notification service."""
 
     result = await hass.config_entries.flow.async_init(
@@ -50,12 +48,7 @@ async def async_get_service(
         data=config,
     )
 
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") == "already_configured"
-    ):
-        # Config entry already exists - create issue and return None to prevent
-        # duplicate notification services (entity via config entry + legacy via YAML)
+    if result.get("type") is FlowResultType.ABORT:
         ir.async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
@@ -135,23 +128,3 @@ class FreeSMSNotifyEntity(NotifyEntity):
         elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.error("Too many SMS sent in a short time")
 
-
-class FreeSMSNotificationService(BaseNotificationService):
-    """Implement a notification service for the Free Mobile SMS service."""
-
-    def __init__(self, username: str, access_token: str) -> None:
-        """Initialize the service."""
-        self._free_client = FreeClient(username, access_token)
-
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to the Free Mobile user cell."""
-        resp = self._free_client.send_sms(message)
-
-        if resp.status_code == HTTPStatus.BAD_REQUEST:
-            _LOGGER.error("At least one parameter is missing")
-        elif resp.status_code == HTTPStatus.FORBIDDEN:
-            _LOGGER.error("Wrong Username/Password")
-        elif resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-            _LOGGER.error("Server error, try later")
-        elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-            _LOGGER.error("Too many SMS sent in a short time")
