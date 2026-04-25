@@ -73,7 +73,7 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     """Test that diagnostic sensor entities are disabled by default."""
     for entity_id in (
         "sensor.living_signal_strength",
-        "sensor.living_temperature",
+        "sensor.living_box_temperature",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
