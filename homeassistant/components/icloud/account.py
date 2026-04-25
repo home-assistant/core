@@ -61,14 +61,14 @@ _LOGGER = logging.getLogger(__name__)
 
 _MSG_PASSWORD_NO_LONGER_WORKING = (
     "Your password for '%s' is no longer working; go to the "
-    "Integrations menu and click on Configure on the discovered Apple "
+    "Integrations menu and click on Configure on the Apple "
     "iCloud card to log in again"
 )
 
 _MSG_2FA_REQUIRED = (
     "2FA authentication required for '%s'; go to the "
-    "Integrations menu and click on Configure on the iCloud "
-    "card to enter your verification code"
+    "Integrations menu and click on Configure on the Apple "
+    "iCloud card to enter your verification code"
 )
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
@@ -100,6 +100,7 @@ class IcloudAccount:
         self._icloud_dir = icloud_dir
 
         self.api: PyiCloudService | None = None
+        self._setup_credential_failure: bool = False
         self._owner_fullname: str | None = None
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
@@ -135,6 +136,7 @@ class IcloudAccount:
                     _MSG_PASSWORD_NO_LONGER_WORKING,
                     self._config_entry.data[CONF_USERNAME],
                 )
+                self._setup_credential_failure = True
             self._require_reauth()
             return
 
@@ -331,6 +333,9 @@ class IcloudAccount:
                 self.api = None  # clear any partially-initialized api
 
         if self.api is None:
+            if self._setup_credential_failure:
+                self._setup_credential_failure = False
+                return  # permanent credential failure — don't retry, wait for reauth
             self._fetch_interval = self._max_interval
             self._schedule_next_fetch()
             return

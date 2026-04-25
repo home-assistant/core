@@ -220,11 +220,10 @@ async def test_keep_alive_reschedules_when_setup_returns_api_none(
     hass: HomeAssistant,
     mock_store: Mock,
 ) -> None:
-    """Test keep_alive reschedules at max interval when setup() returns with api still None.
+    """Test keep_alive reschedules at max interval when setup() returns with api None (2FA path).
 
     Before this fix, keep_alive() would call setup() (because api was None), then return
     early without calling _schedule_next_fetch(), permanently killing the polling loop.
-    This covers the 2FA and bad-password paths in setup() — both leave api as None.
     """
     account = _make_account(hass, mock_store)
     # api starts as None, so keep_alive will call setup()
@@ -232,13 +231,36 @@ async def test_keep_alive_reschedules_when_setup_returns_api_none(
     with (
         patch.object(
             account, "setup"
-        ),  # setup() leaves api as None (simulates any failure)
+        ),  # setup() leaves api as None (simulates 2FA path)
         patch.object(account, "_schedule_next_fetch") as mock_schedule,
     ):
         account.keep_alive()
 
     mock_schedule.assert_called_once()
     assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
+async def test_keep_alive_does_not_reschedule_when_setup_detects_bad_password(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive stops polling when setup() detects a permanent credential failure.
+
+    Rescheduling every max_interval with bad credentials would spam the user with
+    reauth notifications. The _setup_credential_failure flag set by setup() prevents
+    keep_alive from rescheduling in this case.
+    """
+    account = _make_account(hass, mock_store)
+    account._setup_credential_failure = True  # noqa: SLF001
+
+    with (
+        patch.object(account, "setup"),
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    mock_schedule.assert_not_called()
+    assert not account._setup_credential_failure  # noqa: SLF001
 
 
 async def test_keep_alive_reschedules_when_setup_raises(
@@ -254,7 +276,9 @@ async def test_keep_alive_reschedules_when_setup_raises(
     account = _make_account(hass, mock_store)
 
     with (
-        patch.object(account, "setup", side_effect=Exception("Apple API unavailable")),
+        patch.object(
+            account, "setup", side_effect=ConfigEntryNotReady("Apple API unavailable")
+        ),
         patch.object(account, "_schedule_next_fetch") as mock_schedule,
     ):
         account.keep_alive()
