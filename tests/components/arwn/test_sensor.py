@@ -188,9 +188,7 @@ async def test_barometer_sensor_discovery(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "arwn/barometer"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, "arwn/barometer")
     assert entity_id is not None
     assert hass.states.get(entity_id).state not in ("unknown", "unavailable")
 
