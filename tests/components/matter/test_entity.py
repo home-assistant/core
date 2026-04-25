@@ -336,7 +336,7 @@ async def test_bridged_entity_unavailable_when_node_goes_offline(
     # Take the whole node offline.
     matter_node.node_data.available = False
     await trigger_subscription_callback(
-        hass, matter_client, event=EventType.NODE_UPDATED
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -346,7 +346,7 @@ async def test_bridged_entity_unavailable_when_node_goes_offline(
     # Bring the node back online.
     matter_node.node_data.available = True
     await trigger_subscription_callback(
-        hass, matter_client, event=EventType.NODE_UPDATED
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -376,7 +376,7 @@ async def test_non_bridged_entity_availability_tracks_node(
     # Take the node offline.
     matter_node.node_data.available = False
     await trigger_subscription_callback(
-        hass, matter_client, event=EventType.NODE_UPDATED
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
     )
 
     state = hass.states.get(entity_id)
@@ -386,7 +386,7 @@ async def test_non_bridged_entity_availability_tracks_node(
     # Bring the node back online.
     matter_node.node_data.available = True
     await trigger_subscription_callback(
-        hass, matter_client, event=EventType.NODE_UPDATED
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
     )
 
     state = hass.states.get(entity_id)
