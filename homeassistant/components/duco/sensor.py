@@ -69,7 +69,8 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
     ),
     DucoSensorEntityDescription(
-        key="temperature",
+        key="box_temperature",
+        translation_key="box_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
