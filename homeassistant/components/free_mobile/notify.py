@@ -52,7 +52,7 @@ async def async_get_service(
         ir.async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
-            "deprecated_yaml",
+            f"deprecated_yaml_{DOMAIN}",
             breaks_in_ha_version="2026.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
@@ -68,7 +68,7 @@ async def async_get_service(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2026.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
