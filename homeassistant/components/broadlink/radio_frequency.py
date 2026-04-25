@@ -64,7 +64,7 @@ def encode_rf_packet(
     Each pulse is expressed as multiples of 32.84 µs ticks, which is the
     timing resolution of the Broadlink RF front-end.
     """
-    buf = bytearray([type_byte, repeat_count & 0xFF, 0, 0])
+    buf = bytearray([type_byte, repeat_count, 0, 0])
     for duration in timings_us:
         ticks = round(abs(duration) / _TICK_US)
         div, mod = divmod(ticks, 256)
