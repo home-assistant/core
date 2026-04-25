@@ -1,5 +1,13 @@
 {
   "entity": {
+    "select": {
+      "horizontal_swing": {
+        "default": "mdi:arrow-left-right"
+      },
+      "vertical_swing": {
+        "default": "mdi:arrow-up-down"
+      }
+    },
     "switch": {
       "health_mode": {
         "default": "mdi:pine-tree"

@@ -11,6 +11,37 @@
     }
   },
   "entity": {
+    "select": {
+      "horizontal_swing": {
+        "name": "Horizontal swing",
+        "state": {
+          "Default": "Default",
+          "FullSwing": "Full swing",
+          "Left": "Left",
+          "LeftCenter": "Left center",
+          "Center": "Center",
+          "RightCenter": "Right center",
+          "Right": "Right"
+        }
+      },
+      "vertical_swing": {
+        "name": "Vertical swing",
+        "state": {
+          "Default": "Default",
+          "FullSwing": "Full swing",
+          "FixedUpper": "Fixed upper",
+          "FixedUpperMiddle": "Fixed upper middle",
+          "FixedMiddle": "Fixed middle",
+          "FixedLowerMiddle": "Fixed lower middle",
+          "FixedLower": "Fixed lower",
+          "SwingUpper": "Swing upper",
+          "SwingUpperMiddle": "Swing upper middle",
+          "SwingMiddle": "Swing middle",
+          "SwingLowerMiddle": "Swing lower middle",
+          "SwingLower": "Swing lower"
+        }
+      }
+    },
     "switch": {
       "fresh_air": {
         "name": "Fresh air"
