@@ -405,9 +405,7 @@ async def test_bridged_entity_subscribes_to_reachable_attribute(
     ATTRIBUTE_UPDATED subscription for that attribute path so that reachability
     changes trigger _on_matter_event and update _attr_available.
     """
-    await setup_integration_with_node_fixture(
-        hass, "atios_knx_bridge", matter_client
-    )
+    await setup_integration_with_node_fixture(hass, "atios_knx_bridge", matter_client)
 
     subscribe_calls = matter_client.subscribe_events.call_args_list
     assert any(
@@ -439,4 +437,6 @@ async def test_non_bridged_entity_does_not_subscribe_to_reachable(
         isinstance(call.kwargs.get("attr_path_filter"), str)
         and "/57/17" in call.kwargs["attr_path_filter"]
         for call in subscribe_calls
-    ), "Unexpected subscribe_events call for BridgedDeviceBasicInformation.Reachable on a non-bridged entity."
+    ), (
+        "Unexpected subscribe_events call for BridgedDeviceBasicInformation.Reachable on a non-bridged entity."
+    )
