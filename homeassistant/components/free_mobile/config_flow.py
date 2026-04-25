@@ -31,6 +31,10 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Check for duplicate configuration before sending test SMS
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
+
             client: FreeClient | None = None
             # Create a FreeClient to validate credentials
             # The freesms library uses assert statements that raise AssertionError
@@ -80,10 +84,6 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     errors=errors,
                 )
-
-            # If we get here, validation succeeded
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
-            self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
                 title=f"Free Mobile ({user_input[CONF_USERNAME]})",
