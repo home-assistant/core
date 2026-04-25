@@ -324,7 +324,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.2.3
+aiomealie==1.2.4
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1038,7 +1038,7 @@ fressnapftracker==0.2.2
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fumis
-fumis==0.3.0
+fumis==0.4.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -1329,7 +1329,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.4.2
+indevolt-api==1.4.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1368,7 +1368,7 @@ isal==1.8.0
 ismartgate==5.0.2
 
 # homeassistant.components.israel_rail
-israel-rail-api==0.1.4
+israel-rail-api==0.1.5
 
 # homeassistant.components.abode
 jaraco.abode==6.4.0

@@ -131,6 +131,9 @@ async def test_disable_automatic_add(
     assert not hass.states.get("sensor.test2")
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_entity_availability(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -468,7 +468,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -483,7 +483,7 @@
 # name: test_device[cury_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -1379,7 +1379,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -1394,7 +1394,7 @@
 # name: test_device[duo_bulb_gen3][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -3588,7 +3588,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -3603,7 +3603,7 @@
 # name: test_device[power_strip_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -5168,7 +5168,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -5183,7 +5183,7 @@
 # name: test_device[presence_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -6330,7 +6330,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -6345,7 +6345,7 @@
 # name: test_device[wall_display_xl][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -7359,7 +7359,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -7374,7 +7374,7 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -8428,7 +8428,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -8443,7 +8443,7 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -10097,7 +10097,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -10112,7 +10112,7 @@
 # name: test_shelly_pro_3em[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
