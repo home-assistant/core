@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from broadlink.exceptions import BroadlinkException
-from rf_protocols import ModulationType, RadioFrequencyCommand
+from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
 from homeassistant.config_entries import ConfigEntry
@@ -108,13 +108,6 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
 
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Encode an OOK command and transmit it via the Broadlink device."""
-        if command.modulation is not ModulationType.OOK:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="modulation_not_supported",
-                translation_placeholders={"modulation": str(command.modulation)},
-            )
-
         type_byte = _type_byte_for_frequency(command.frequency)
         packet = encode_rf_packet(
             type_byte=type_byte,
