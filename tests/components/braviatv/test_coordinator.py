@@ -24,6 +24,7 @@ PLAYING_INFO = {
 
 @pytest.fixture
 def mock_client() -> MagicMock:
+    """Return a mocked Bravia TV client."""
     client = MagicMock()
     client.get_playing_info = AsyncMock(return_value=PLAYING_INFO)
     return client
@@ -31,6 +32,7 @@ def mock_client() -> MagicMock:
 
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a mocked Bravia TV config entry."""
     entry = MockConfigEntry(
         domain="braviatv",
         data={
