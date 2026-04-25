@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from http import HTTPStatus
 
 from freesms import FreeClient
 import requests.exceptions
@@ -58,7 +59,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                         client.send_sms, "Home Assistant test"
                     )
                     # Check for authentication errors (403 Forbidden indicates invalid credentials)
-                    if response.status_code == 403:
+                    if response.status_code == HTTPStatus.FORBIDDEN:
                         _LOGGER.error("Authentication failed: 403 Forbidden")
                         errors["base"] = "authentication_failed"
                 except requests.exceptions.RequestException:

@@ -1,7 +1,7 @@
 """Test fixtures for Free Mobile."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -19,7 +19,7 @@ CONF_INPUT = {CONF_USERNAME: TEST_USERNAME, CONF_ACCESS_TOKEN: TEST_ACCESS_TOKEN
 
 
 @pytest.fixture
-def mock_freesms() -> Generator[AsyncMock]:
+def mock_freesms() -> Generator[MagicMock]:
     """Mock the freesms library."""
     mock_instance = MagicMock()
     mock_instance.send_sms.return_value.status_code = 200
@@ -54,7 +54,7 @@ def mock_freesms_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture
 async def configure_free_mobile_through_yaml(
-    hass: HomeAssistant, mock_freesms: AsyncMock
+    hass: HomeAssistant, mock_freesms: MagicMock
 ) -> None:
     """Configure the notify domain with YAML for the Free Mobile platform."""
     await async_setup_component(
@@ -77,7 +77,7 @@ async def configure_free_mobile_through_yaml(
 @pytest.fixture
 async def free_mobile_notification_entity(
     hass: HomeAssistant,
-    mock_freesms: AsyncMock,
+    mock_freesms: MagicMock,
     mock_freesms_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Configure a Free Mobile Notification Entity."""

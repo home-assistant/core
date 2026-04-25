@@ -1,6 +1,6 @@
 """Test Free Mobile config flow."""
 
-from unittest.mock import AsyncMock
+
 
 from homeassistant import config_entries
 from homeassistant.components.free_mobile.const import DOMAIN
@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import CONF_INPUT, TEST_USERNAME
 
 
-async def test_flow_user(hass: HomeAssistant, mock_freesms: AsyncMock) -> None:
+async def test_flow_user(hass: HomeAssistant, mock_freesms: MagicMock) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -32,7 +32,7 @@ async def test_flow_user(hass: HomeAssistant, mock_freesms: AsyncMock) -> None:
 
 
 async def test_flow_duplicate_username(
-    hass: HomeAssistant, mock_freesms: AsyncMock
+    hass: HomeAssistant, mock_freesms: MagicMock
 ) -> None:
     """Test user initialized flow with duplicate username."""
     # Create first entry
@@ -60,7 +60,7 @@ async def test_flow_duplicate_username(
 
 
 async def test_flow_user_with_403_response(
-    hass: HomeAssistant, mock_freesms: AsyncMock
+    hass: HomeAssistant, mock_freesms: MagicMock
 ) -> None:
     """Test user flow with 403 response - returns error for invalid credentials."""
     mock_freesms.send_sms.return_value.status_code = 403
@@ -79,7 +79,7 @@ async def test_flow_user_with_403_response(
     assert result.get("errors") == {"base": "authentication_failed"}
 
 
-async def test_flow_import(hass: HomeAssistant, mock_freesms: AsyncMock) -> None:
+async def test_flow_import(hass: HomeAssistant, mock_freesms: MagicMock) -> None:
     """Test import flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -97,7 +97,7 @@ async def test_flow_import(hass: HomeAssistant, mock_freesms: AsyncMock) -> None
 
 
 async def test_flow_import_duplicate(
-    hass: HomeAssistant, mock_freesms: AsyncMock
+    hass: HomeAssistant, mock_freesms: MagicMock
 ) -> None:
     """Test import flow with duplicate entry."""
     # Create first entry via user flow
