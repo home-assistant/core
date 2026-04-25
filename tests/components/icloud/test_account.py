@@ -251,7 +251,7 @@ async def test_keep_alive_does_not_reschedule_when_setup_detects_bad_password(
     keep_alive from rescheduling in this case.
     """
     account = _make_account(hass, mock_store)
-    account._setup_credential_failure = True  # noqa: SLF001
+    account._setup_credential_failure = True
 
     with (
         patch.object(account, "setup"),
@@ -260,7 +260,7 @@ async def test_keep_alive_does_not_reschedule_when_setup_detects_bad_password(
         account.keep_alive()
 
     mock_schedule.assert_not_called()
-    assert not account._setup_credential_failure  # noqa: SLF001
+    assert not account._setup_credential_failure
 
 
 async def test_keep_alive_reschedules_when_setup_raises(
