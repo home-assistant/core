@@ -131,18 +131,20 @@ async def test_disable_automatic_add(
     assert not hass.states.get("sensor.test2")
 
 
-@pytest.mark.xfail(
-    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
-)
 async def test_entity_availability(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
-    config = CONFIG
+    config = {
+        **CONFIG,
+        "rflink": {
+            **CONFIG["rflink"],
+            CONF_RECONNECT_INTERVAL: 60,
+        },
+    }
     failures = [False, True]
-    config[CONF_RECONNECT_INTERVAL] = 60
 
     # Create platform and entities
     _, _, _, disconnect_callback = await mock_rflink(
