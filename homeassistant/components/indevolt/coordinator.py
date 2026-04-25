@@ -7,7 +7,12 @@ import logging
 from typing import Any, Final
 
 from aiohttp import ClientError
-from indevolt_api import IndevoltAPI, TimeOutException
+from indevolt_api import (
+    IndevoltAPI,
+    IndevoltConfig,
+    IndevoltRealtimeAction,
+    TimeOutException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -26,10 +31,7 @@ from .const import (
     PORTABLE_MODE,
     REALTIME_ACTION_MODE,
     SENSOR_KEYS,
-    RealtimeAction,
 )
-
-EMERGENCY_SOC_READ_KEY: Final = "6105"
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL: Final = 30
@@ -150,7 +152,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_realtime_action(
         self,
-        action_code: RealtimeAction,
+        action_code: IndevoltRealtimeAction,
         power: int = 0,
         target_soc: int = 0,
     ) -> None:
@@ -159,11 +161,11 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
 
         match action_code:
-            case RealtimeAction.CHARGE:
+            case IndevoltRealtimeAction.CHARGE:
                 success = await self.api.charge(power, target_soc)
-            case RealtimeAction.DISCHARGE:
+            case IndevoltRealtimeAction.DISCHARGE:
                 success = await self.api.discharge(power, target_soc)
-            case RealtimeAction.STOP:
+            case IndevoltRealtimeAction.STOP:
                 success = await self.api.stop()
             case _:
                 return
@@ -176,12 +178,6 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         await self.async_request_refresh()
 
-    async def async_execute_realtime_action(self, action: list[int]) -> None:
-        """Backward-compatible wrapper around async_realtime_action."""
-        await self.async_realtime_action(
-            RealtimeAction(action[0]), action[1], action[2]
-        )
-
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""
-        return int(self.data[EMERGENCY_SOC_READ_KEY])
+        return int(self.data[str(IndevoltConfig.READ_DISCHARGE_LIMIT)])
