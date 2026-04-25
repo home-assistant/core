@@ -370,7 +370,6 @@ async def test_stale_device_repair_issue(
 async def test_stale_device_issue_cleared_when_found(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that the stale device repair issue is cleared when module is found again."""
