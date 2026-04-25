@@ -64,6 +64,13 @@ async def test_sensor_snapshots(
     node9.prec = "1"
     nodes.append(("Sensors/Flow Rate GPS", node9))
 
+    # Node 10: Gallons per Second (142) in ISYv4 list form - guard must still apply
+    node10 = mock_node(mock_isy, "22 22 22 10", "Flow Rate GPS List", "GenericSensor")
+    node10.status = 2
+    node10.uom = ["142"]
+    node10.prec = "1"
+    nodes.append(("Sensors/Flow Rate GPS List", node10))
+
     # Other UOMs from test_mappings
     # Temperature (4)
     node4 = mock_node(mock_isy, "22 22 22 4", "Temperature", "GenericSensor")
