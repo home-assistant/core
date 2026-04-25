@@ -254,9 +254,7 @@ async def test_keep_alive_reschedules_when_setup_raises(
     account = _make_account(hass, mock_store)
 
     with (
-        patch.object(
-            account, "setup", side_effect=Exception("Apple API unavailable")
-        ),
+        patch.object(account, "setup", side_effect=Exception("Apple API unavailable")),
         patch.object(account, "_schedule_next_fetch") as mock_schedule,
     ):
         account.keep_alive()
