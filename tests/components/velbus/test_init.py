@@ -257,7 +257,7 @@ async def test_remove_config_entry_device_removes_subdevices(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that removing a device also removes its sub-devices."""
+    """Test that removing a device also detaches its sub-devices via the registry listener."""
     await init_integration(hass, config_entry)
 
     stale_device = device_registry.async_get_or_create(
@@ -278,5 +278,10 @@ async def test_remove_config_entry_device_removes_subdevices(
 
     result = await async_remove_config_entry_device(hass, config_entry, stale_device)
     assert result is True
+
+    # Simulate HA removing the device after the permission check
+    device_registry.async_remove_device(stale_device.id)
+    await hass.async_block_till_done()
+
     assert device_registry.async_get_device(identifiers={(DOMAIN, "999-1")}) is None
     assert sub_device.id not in device_registry.devices

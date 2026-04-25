@@ -13,9 +13,10 @@ from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -115,6 +116,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
 
     _migrate_device_identifiers(hass, entry.entry_id)
 
+    @callback
+    def _handle_device_registry_updated(
+        event: Event[EventDeviceRegistryUpdatedData],
+    ) -> None:
+        if event.data["action"] != "remove":
+            return
+        dev_reg = dr.async_get(hass)
+        for sub_device in dr.async_entries_for_config_entry(
+            dev_reg, entry.entry_id
+        ):
+            if sub_device.via_device_id == event.data["device_id"]:
+                dev_reg.async_update_device(
+                    sub_device.id, remove_config_entry_id=entry.entry_id
+                )
+
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED, _handle_device_registry_updated
+        )
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -142,17 +164,9 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Allow removing this config entry from a Velbus device.
 
-    When the config entry is removed from a device, its sub-devices are detached
-    from this config entry as well. If the device is still on the bus, it will be
-    recreated on the next scan.
+    Sub-devices are detached via the device registry listener registered in
+    async_setup_entry when the parent device is removed.
     """
-    # Remove sub-devices that belong to this parent device
-    dev_reg = dr.async_get(hass)
-    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-        if sub_device.via_device_id == device_entry.id:
-            dev_reg.async_update_device(
-                sub_device.id, remove_config_entry_id=config_entry.entry_id
-            )
     return True
 
 
