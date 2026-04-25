@@ -328,6 +328,7 @@ class IcloudAccount:
                     "Failed to set up iCloud account in keep_alive, will retry: %s",
                     err,
                 )
+                self.api = None  # clear any partially-initialized api
 
         if self.api is None:
             self._fetch_interval = self._max_interval

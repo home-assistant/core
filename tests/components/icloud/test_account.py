@@ -263,6 +263,34 @@ async def test_keep_alive_reschedules_when_setup_raises(
     assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
 
 
+async def test_keep_alive_clears_api_and_reschedules_when_setup_raises_after_partial_init(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive clears api and reschedules when setup() sets api then raises.
+
+    setup() can assign self.api (PyiCloudService) and then raise ConfigEntryNotReady
+    (e.g. PyiCloudServiceUnavailable during device fetch). Without clearing api in the
+    except block, keep_alive would proceed to authenticate() with a partially-initialized
+    api instead of taking the reschedule path.
+    """
+    account = _make_account(hass, mock_store)
+
+    def setup_sets_api_then_raises():
+        account.api = MagicMock()
+        raise Exception("Service unavailable")
+
+    with (
+        patch.object(account, "setup", side_effect=setup_sets_api_then_raises),
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    assert account.api is None
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
 async def test_keep_alive_auth_exception_reschedules(
     hass: HomeAssistant,
     mock_store: Mock,
