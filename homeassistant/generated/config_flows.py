@@ -74,6 +74,7 @@ FLOWS = {
         "aranet",
         "arcam_fmj",
         "arve",
+        "arwn",
         "aseko_pool_live",
         "asuswrt",
         "atag",
