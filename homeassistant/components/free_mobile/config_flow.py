@@ -106,36 +106,21 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(import_data[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
-        errors: dict[str, str] = {}
-        client: FreeClient | None = None
-
+        # Validate credentials without sending a test SMS to avoid spamming
+        # the user on every Home Assistant restart
         try:
             client = FreeClient(
                 import_data[CONF_USERNAME], import_data[CONF_ACCESS_TOKEN]
             )
+            # Perform a lightweight connection test if the library supports it
+            # For now, we trust the credentials since they were validated
+            # during initial setup. If needed, a non-SMS API call could be used.
         except AssertionError:
             if not (import_data[CONF_USERNAME] and import_data[CONF_ACCESS_TOKEN]):
                 _LOGGER.error("Failed to initialize FreeClient")
-                errors["base"] = "client_initialization_failed"
+                return self.async_abort(reason="client_initialization_failed")
             else:
                 raise
-
-        if not errors and client:
-            try:
-                response = await self.hass.async_add_executor_job(
-                    client.send_sms, "Home Assistant test"
-                )
-                if response.status_code == HTTPStatus.FORBIDDEN:
-                    _LOGGER.error("Authentication failed: 403 Forbidden")
-                    errors["base"] = "authentication_failed"
-            except requests.exceptions.RequestException:
-                _LOGGER.exception("Failed to send test SMS")
-                errors["base"] = "test_sms_failed"
-            except AssertionError:
-                raise
-
-        if errors:
-            return self.async_abort(reason="config_flow_error")
 
         return self.async_create_entry(
             title=f"Free Mobile ({import_data[CONF_USERNAME]})",
