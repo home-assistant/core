@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/amcrest",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["amcrest"],
   "quality_scale": "legacy",
