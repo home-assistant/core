@@ -54,17 +54,10 @@ class VelbusData:
     scan_task: asyncio.Task
 
 
-async def velbus_scan_task(
-    controller: Velbus, hass: HomeAssistant, entry_id: str
+def _update_devices_and_issues(
+    hass: HomeAssistant, controller: Velbus, entry_id: str
 ) -> None:
-    """Task to offload the long running scan."""
-    try:
-        await controller.start()
-    except ConnectionError as ex:
-        raise PlatformNotReady(
-            f"Connection error while connecting to Velbus {entry_id}: {ex}"
-        ) from ex
-    # create all modules
+    """Sync device registry and stale-device repair issues with the current bus state."""
     dev_reg = dr.async_get(hass)
     found_addresses: set[str] = set()
     for module_address, module in controller.get_modules().items():
@@ -115,6 +108,19 @@ async def velbus_scan_task(
             address = issue_id[len(issue_prefix) :]
             if address not in registered_addresses:
                 ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+async def velbus_scan_task(
+    controller: Velbus, hass: HomeAssistant, entry_id: str
+) -> None:
+    """Task to offload the long running scan."""
+    try:
+        await controller.start()
+    except ConnectionError as ex:
+        raise PlatformNotReady(
+            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+        ) from ex
+    _update_devices_and_issues(hass, controller, entry_id)
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
