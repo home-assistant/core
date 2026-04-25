@@ -73,7 +73,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return extra state attributes."""
-        if last_alarm_pic := self.data.get("last_alarm_pic"):
+        if isinstance(last_alarm_pic := self._attr_image_url, str):
             return {"last_alarm_pic": last_alarm_pic}
         return {}
 
@@ -102,7 +102,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         last_alarm_pic = self.data.get("last_alarm_pic")
-        if last_alarm_pic != self._attr_image_url:
+        if last_alarm_pic and last_alarm_pic != self._attr_image_url:
             _LOGGER.debug("Image url changed to %s", last_alarm_pic)
 
             self._attr_image_url = last_alarm_pic

@@ -146,6 +146,38 @@ async def test_migrated_last_alarm_pic_sensor_is_removed(
     assert entity_registry.async_get(migrated_entry.entity_id) is None
 
 
+async def test_sensor_cleanup_ignores_entries_without_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrated sensor cleanup ignores entries with no unique_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity_without_unique_id = entity_registry.async_get_or_create(
+        "sensor",
+        "ezviz",
+        "C123456789_Camera 1.battery_level",
+        config_entry=mock_config_entry,
+    )
+    entity_registry.async_update_entity(
+        entity_without_unique_id.entity_id,
+        new_unique_id=None,
+    )
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image.jpg",
+        )
+    }
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_without_unique_id.entity_id) is not None
+
+
 async def test_image_entity_created_without_alarm_pic(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -199,3 +231,33 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
     assert state.attributes.get("last_alarm_pic") == "https://example.com/image-2.jpg"
+
+
+async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test the image entity keeps the previous alarm picture when omitted."""
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image-1.jpg",
+        )
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": _mock_camera_data(
+            last_alarm_time="2023-01-01T12:05:00Z",
+        )
+    }
+
+    await coordinator.async_request_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.camera_1_last_motion_image")
+    assert state is not None
+    assert state.attributes.get("last_alarm_pic") == "https://example.com/image-1.jpg"
