@@ -216,6 +216,29 @@ def _make_account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
     )
 
 
+async def test_keep_alive_reschedules_when_setup_fails(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive reschedules at max interval when setup() returns with api still None.
+
+    Before this fix, keep_alive() would call setup() (because api was None), then return
+    early without calling _schedule_next_fetch(), permanently killing the polling loop.
+    This covers the 2FA and bad-password paths in setup() — both leave api as None.
+    """
+    account = _make_account(hass, mock_store)
+    # api starts as None, so keep_alive will call setup()
+
+    with (
+        patch.object(account, "setup"),  # setup() leaves api as None (simulates any failure)
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
 async def test_keep_alive_auth_exception_reschedules(
     hass: HomeAssistant,
     mock_store: Mock,

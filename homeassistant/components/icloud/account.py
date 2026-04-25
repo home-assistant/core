@@ -324,6 +324,8 @@ class IcloudAccount:
             self.setup()
 
         if self.api is None:
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
         try:
