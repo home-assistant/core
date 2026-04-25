@@ -21,7 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
+from .mocks import (
+    MOCK_GATEWAY_DIN,
+    _mock_powerwall_restricted,
+    _mock_powerwall_with_fixtures,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -305,3 +309,46 @@ async def test_unique_id_migrate(
 
     state = hass.states.get("sensor.mysite_load_power")
     assert state.state == "1.971"
+
+
+async def test_pw3_restricted_entities(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Restricted PW3 surface should only expose meter-driven sensors and charge."""
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4"},
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("powerwall", "aa:bb:cc:dd:ee:ff")},
+    )
+    assert reg_device.model == "Powerwall 3"
+    assert reg_device.sw_version is None
+    assert reg_device.manufacturer == "Tesla"
+    assert reg_device.name == "Powerwall 1.2.3.4"
+
+    assert hass.states.get("sensor.powerwall_1_2_3_4_charge") is not None
+    assert hass.states.get("sensor.powerwall_1_2_3_4_load_power") is not None
+    assert hass.states.get("sensor.powerwall_1_2_3_4_battery_power") is not None
+    # Backup reserve and per-battery sensors must not be created.
+    assert hass.states.get("sensor.powerwall_1_2_3_4_backup_reserve") is None
+    assert (
+        hass.states.get("sensor.powerwall_1_2_3_4_tg0123456789ab_battery_capacity")
+        is None
+    )

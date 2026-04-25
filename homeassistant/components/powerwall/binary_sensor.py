@@ -27,17 +27,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the powerwall sensors."""
     powerwall_data = entry.runtime_data
+    base_info = powerwall_data["base_info"]
+    if base_info.restricted:
+        # Running and Connected sensors require /api/sitemaster which 404s on PW3.
+        sensor_classes: tuple[type[PowerWallEntity], ...] = (
+            PowerWallGridServicesActiveSensor,
+            PowerWallGridStatusSensor,
+            PowerWallChargingStatusSensor,
+        )
+    else:
+        sensor_classes = (
+            PowerWallRunningSensor,
+            PowerWallGridServicesActiveSensor,
+            PowerWallGridStatusSensor,
+            PowerWallConnectedSensor,
+            PowerWallChargingStatusSensor,
+        )
     async_add_entities(
-        [
-            sensor_class(powerwall_data)
-            for sensor_class in (
-                PowerWallRunningSensor,
-                PowerWallGridServicesActiveSensor,
-                PowerWallGridStatusSensor,
-                PowerWallConnectedSensor,
-                PowerWallChargingStatusSensor,
-            )
-        ]
+        [sensor_class(powerwall_data) for sensor_class in sensor_classes]
     )
 
 
@@ -55,7 +62,10 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Get the powerwall running state."""
-        return self.data.site_master.is_running
+        site_master = self.data.site_master
+        if TYPE_CHECKING:
+            assert site_master is not None
+        return site_master.is_running
 
 
 class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
@@ -72,7 +82,10 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Get the powerwall connected to tesla state."""
-        return self.data.site_master.is_connected_to_tesla
+        site_master = self.data.site_master
+        if TYPE_CHECKING:
+            assert site_master is not None
+        return site_master.is_connected_to_tesla
 
 
 class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):

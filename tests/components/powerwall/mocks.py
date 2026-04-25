@@ -6,6 +6,7 @@ import os
 from unittest.mock import MagicMock
 
 from tesla_powerwall import (
+    ApiError,
     BatteryResponse,
     DeviceType,
     GridStatus,
@@ -99,6 +100,35 @@ async def _mock_powerwall_site_name(hass: HomeAssistant, site_name: str) -> Magi
     site_info_resp.site_name = site_name
     powerwall_mock.get_site_info.return_value = site_info_resp
     powerwall_mock.get_gateway_din.return_value = MOCK_GATEWAY_DIN
+
+    return powerwall_mock
+
+
+async def _mock_powerwall_restricted(hass: HomeAssistant) -> MagicMock:
+    """Mock a PW3-style restricted gateway.
+
+    Only the three guaranteed endpoints work; everything else raises a 404
+    ``ApiError``.
+    """
+    meters = await _async_load_json_fixture(hass, "meters.json")
+
+    powerwall_mock = MagicMock(Powerwall)
+    powerwall_mock.__aenter__.return_value = powerwall_mock
+    powerwall_mock.get_charge.return_value = 47.34587394586
+    powerwall_mock.get_meters.return_value = MetersAggregatesResponse.from_dict(meters)
+    powerwall_mock.is_grid_services_active.return_value = True
+    powerwall_mock.get_grid_status.return_value = GridStatus.CONNECTED
+
+    not_found = ApiError("GET request to /api/status returned error 404")
+    powerwall_mock.get_gateway_din.side_effect = not_found
+    powerwall_mock.get_status.side_effect = not_found
+    powerwall_mock.get_site_info.side_effect = not_found
+    powerwall_mock.get_device_type.side_effect = not_found
+    powerwall_mock.get_serial_numbers.side_effect = not_found
+    powerwall_mock.get_batteries.side_effect = not_found
+    powerwall_mock.get_sitemaster.side_effect = not_found
+    powerwall_mock.get_backup_reserve_percentage.side_effect = not_found
+    powerwall_mock.set_island_mode.side_effect = not_found
 
     return powerwall_mock
 

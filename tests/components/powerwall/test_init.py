@@ -17,7 +17,11 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
+from .mocks import (
+    MOCK_GATEWAY_DIN,
+    _mock_powerwall_restricted,
+    _mock_powerwall_with_fixtures,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -305,3 +309,48 @@ async def test_init_retries_with_password(hass: HomeAssistant) -> None:
 
         mock_powerwall.login.assert_called_with("somepassword")
         assert mock_powerwall.get_gateway_din.call_count == 2
+
+
+async def test_setup_pw3_restricted(hass: HomeAssistant) -> None:
+    """Test setup completes for a PW3-style restricted gateway."""
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "1.2.3.4",
+            CONF_PASSWORD: "00FFA",
+        },
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    base_info = config_entry.runtime_data["base_info"]
+    assert base_info.restricted is True
+    assert base_info.site_name == "Powerwall 1.2.3.4"
+    assert base_info.gateway_din == "aa:bb:cc:dd:ee:ff"
+    assert base_info.site_info is None
+    assert base_info.status is None
+    assert base_info.serial_numbers == []
+    assert base_info.batteries == {}
+
+    coordinator = config_entry.runtime_data["coordinator"]
+    assert coordinator is not None
+    assert coordinator.data.site_master is None
+    assert coordinator.data.batteries == {}
+    assert coordinator.data.backup_reserve is None
+    # Restricted devices must not call the dead endpoints during updates.
+    mock_powerwall.get_sitemaster.assert_not_called()
+    mock_powerwall.get_backup_reserve_percentage.assert_not_called()

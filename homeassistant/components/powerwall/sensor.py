@@ -217,6 +217,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the powerwall sensors."""
     powerwall_data = entry.runtime_data
+    base_info = powerwall_data["base_info"]
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
     assert coordinator is not None
     data = coordinator.data
@@ -224,7 +225,7 @@ async def async_setup_entry(
         PowerWallChargeSensor(powerwall_data),
     ]
 
-    if data.backup_reserve is not None:
+    if not base_info.restricted and data.backup_reserve is not None:
         entities.append(PowerWallBackupReserveSensor(powerwall_data))
 
     for meter in data.meters.meters:
@@ -235,11 +236,12 @@ async def async_setup_entry(
             for description in POWERWALL_INSTANT_SENSORS
         )
 
-    for battery in data.batteries.values():
-        entities.extend(
-            PowerWallBatterySensor(powerwall_data, battery, description)
-            for description in BATTERY_INSTANT_SENSORS
-        )
+    if not base_info.restricted:
+        for battery in data.batteries.values():
+            entities.extend(
+                PowerWallBatterySensor(powerwall_data, battery, description)
+                for description in BATTERY_INSTANT_SENSORS
+            )
 
     async_add_entities(entities)
 

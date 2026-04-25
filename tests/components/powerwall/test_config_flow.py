@@ -1,6 +1,7 @@
 """Test the Powerwall config flow."""
 
 from datetime import timedelta
+import hashlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -21,6 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from .mocks import (
     MOCK_GATEWAY_DIN,
+    _mock_powerwall_restricted,
     _mock_powerwall_side_effect,
     _mock_powerwall_site_name,
     _mock_powerwall_with_fixtures,
@@ -107,6 +109,40 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+async def test_form_pw3_restricted(hass: HomeAssistant) -> None:
+    """Test config flow succeeds for a PW3-style restricted gateway."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    expected_unique_id = hashlib.sha256(
+        VALID_CONFIG[CONF_PASSWORD].encode()
+    ).hexdigest()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == f"Powerwall {VALID_CONFIG[CONF_IP_ADDRESS]}"
+    assert result2["data"] == VALID_CONFIG
+    assert result2["result"].unique_id == expected_unique_id
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
