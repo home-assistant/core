@@ -120,14 +120,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     def _handle_device_registry_updated(
         event: Event[EventDeviceRegistryUpdatedData],
     ) -> None:
-        if event.data["action"] != "remove":
+        if event.data["action"] != "update":
+            return
+        old_via_device_id: str | None = event.data["changes"].get(  # type: ignore[typeddict-item]
+            "via_device_id"
+        )
+        if old_via_device_id is None:
             return
         dev_reg = dr.async_get(hass)
-        for sub_device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
-            if sub_device.via_device_id == event.data["device_id"]:
-                dev_reg.async_update_device(
-                    sub_device.id, remove_config_entry_id=entry.entry_id
-                )
+        if dev_reg.async_get(old_via_device_id) is not None:
+            return
+        device = dev_reg.async_get(event.data["device_id"])
+        if device is None or entry.entry_id not in device.config_entries:
+            return
+        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
 
     entry.async_on_unload(
         hass.bus.async_listen(
