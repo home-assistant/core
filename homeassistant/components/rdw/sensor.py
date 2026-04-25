@@ -14,12 +14,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_LICENSE_PLATE, DOMAIN
 from .coordinator import RDWConfigEntry, RDWDataUpdateCoordinator
+from .entity import RDWEntity
 
 PARALLEL_UPDATES = 0
 
@@ -53,43 +51,25 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RDW sensors based on a config entry."""
-    coordinator = entry.runtime_data
     async_add_entities(
-        RDWSensorEntity(
-            coordinator=coordinator,
-            license_plate=entry.data[CONF_LICENSE_PLATE],
-            description=description,
-        )
-        for description in SENSORS
+        RDWSensorEntity(entry.runtime_data, description) for description in SENSORS
     )
 
 
-class RDWSensorEntity(CoordinatorEntity[RDWDataUpdateCoordinator], SensorEntity):
+class RDWSensorEntity(RDWEntity, SensorEntity):
     """Defines an RDW sensor."""
 
     entity_description: RDWSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        *,
         coordinator: RDWDataUpdateCoordinator,
-        license_plate: str,
         description: RDWSensorEntityDescription,
     ) -> None:
         """Initialize RDW sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{license_plate}_{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{license_plate}")},
-            manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
-            model=coordinator.data.model,
-            configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
-        )
+        self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
 
     @property
     def native_value(self) -> date | str | float | None:

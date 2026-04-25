@@ -13,12 +13,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import RDWConfigEntry, RDWDataUpdateCoordinator
+from .entity import RDWEntity
 
 PARALLEL_UPDATES = 0
 
@@ -51,44 +49,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RDW binary sensors based on a config entry."""
-    coordinator = entry.runtime_data
     async_add_entities(
-        RDWBinarySensorEntity(
-            coordinator=coordinator,
-            description=description,
-        )
+        RDWBinarySensorEntity(entry.runtime_data, description)
         for description in BINARY_SENSORS
-        if description.is_on_fn(coordinator.data) is not None
+        if description.is_on_fn(entry.runtime_data.data) is not None
     )
 
 
-class RDWBinarySensorEntity(
-    CoordinatorEntity[RDWDataUpdateCoordinator], BinarySensorEntity
-):
+class RDWBinarySensorEntity(RDWEntity, BinarySensorEntity):
     """Defines an RDW binary sensor."""
 
     entity_description: RDWBinarySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        *,
         coordinator: RDWDataUpdateCoordinator,
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.data.license_plate)},
-            manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
-            model=coordinator.data.model,
-            configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
-        )
 
     @property
     def is_on(self) -> bool:
