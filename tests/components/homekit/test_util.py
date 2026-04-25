@@ -17,6 +17,7 @@ from homeassistant.components.homekit.const import (
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
+    CONF_LINKED_VALVE_ENTITIES,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -47,6 +48,7 @@ from homeassistant.components.homekit.const import (
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -130,6 +132,23 @@ def test_validate_entity_config() -> None:
             }
         },
         {"switch.test": {CONF_TYPE: "invalid_type"}},
+        {
+            "switch.test": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_VALVE_ENTITIES: [{"entity_id": "not_valid_entity_id!"}],
+            }
+        },
+        {
+            "switch.test": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_VALVE_ENTITIES: [
+                    {
+                        "entity_id": "switch.zone_6",
+                        CONF_LINKED_VALVE_DURATION: "number.not_input_number",  # Must be input_number
+                    }
+                ],
+            }
+        },
         {
             "switch.test": {
                 CONF_TYPE: "sprinkler",
@@ -231,6 +250,48 @@ def test_validate_entity_config() -> None:
     }
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_IRRIGATION_SYSTEM}}) == {
+        "switch.demo": {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_ENTITIES: [],
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
+    # type field is accepted and preserved in the validated config
+    assert (
+        vec({"switch.zone_1": {CONF_TYPE: TYPE_IRRIGATION_SYSTEM}})["switch.zone_1"][
+            CONF_TYPE
+        ]
+        == TYPE_IRRIGATION_SYSTEM
+    )
+    assert vec(
+        {
+            "switch.zone_1": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_VALVE_DURATION: "input_number.zone_1_duration",
+                CONF_LINKED_VALVE_ENTITIES: [
+                    {
+                        "entity_id": "switch.zone_6",
+                        CONF_LINKED_VALVE_DURATION: "input_number.zone_6_duration",
+                        CONF_LINKED_VALVE_END_TIME: "sensor.zone_6_end_time",
+                    }
+                ],
+            }
+        }
+    ) == {
+        "switch.zone_1": {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_DURATION: "input_number.zone_1_duration",
+            CONF_LINKED_VALVE_ENTITIES: [
+                {
+                    "entity_id": "switch.zone_6",
+                    CONF_LINKED_VALVE_DURATION: "input_number.zone_6_duration",
+                    CONF_LINKED_VALVE_END_TIME: "sensor.zone_6_end_time",
+                }
+            ],
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
     }
     config = {
         CONF_TYPE: TYPE_SPRINKLER,

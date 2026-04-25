@@ -8,13 +8,18 @@ import pytest
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
     CHAR_CONFIGURED_NAME,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
+    CONF_LINKED_VALVE_ENTITIES,
     SERV_OUTLET,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.type_switches import (
+    IrrigationSystem,
     LawnMower,
     Outlet,
     SelectSwitch,
@@ -1105,3 +1110,309 @@ async def test_remaining_duration_characteristic_fallback(
         await hass.async_block_till_done()
         assert acc.char_in_use.value == 0
         assert acc.get_remaining_duration() == 0
+
+
+async def test_irrigation_system_state_sync(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test IrrigationSystem syncs HA state to HomeKit for all zones."""
+    primary_entity = "switch.zone_1"
+    linked_entity = "switch.zone_6"
+
+    hass.states.async_set(primary_entity, STATE_OFF)
+    hass.states.async_set(linked_entity, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Rachio Sprinkler",
+        primary_entity,
+        2,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_ENTITIES: [{"entity_id": linked_entity}],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.category == 28  # Sprinkler
+    assert len(acc._zones) == 2
+
+    zone1 = acc._zones[0]
+    zone6 = acc._zones[1]
+    assert zone1["entity_id"] == primary_entity
+    assert zone6["entity_id"] == linked_entity
+
+    # Both zones start off
+    assert zone1["char_active"].value == 0
+    assert zone1["char_in_use"].value == 0
+    assert zone6["char_active"].value == 0
+    assert zone6["char_in_use"].value == 0
+
+    # Turn on primary zone — only zone1 should change
+    hass.states.async_set(primary_entity, STATE_ON)
+    await hass.async_block_till_done()
+    assert zone1["char_active"].value == 1
+    assert zone1["char_in_use"].value == 1
+    assert zone6["char_active"].value == 0
+    assert zone6["char_in_use"].value == 0
+
+    # Turn off primary zone
+    hass.states.async_set(primary_entity, STATE_OFF)
+    await hass.async_block_till_done()
+    assert zone1["char_active"].value == 0
+    assert zone1["char_in_use"].value == 0
+
+    # Turn on linked zone — only zone6 should change
+    hass.states.async_set(linked_entity, STATE_ON)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 1
+    assert zone6["char_in_use"].value == 1
+    assert zone1["char_active"].value == 0
+    assert zone1["char_in_use"].value == 0
+
+    # Turn off linked zone
+    hass.states.async_set(linked_entity, STATE_OFF)
+    await hass.async_block_till_done()
+    assert zone6["char_active"].value == 0
+    assert zone6["char_in_use"].value == 0
+
+
+async def test_irrigation_system_homekit_control(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test controlling IrrigationSystem zones from HomeKit updates HA."""
+    primary_entity = "switch.zone_1"
+    linked_entity = "switch.zone_6"
+
+    hass.states.async_set(primary_entity, STATE_OFF)
+    hass.states.async_set(linked_entity, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Rachio Sprinkler",
+        primary_entity,
+        2,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_ENTITIES: [{"entity_id": linked_entity}],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_ON)
+    call_turn_off = async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_OFF)
+
+    zone1 = acc._zones[0]
+    zone6 = acc._zones[1]
+
+    # Turn on primary zone from HomeKit
+    zone1["char_active"].client_update_value(1)
+    await hass.async_block_till_done()
+    assert zone1["char_in_use"].value == 1
+    assert len(call_turn_on) == 1
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == primary_entity
+
+    # Turn off primary zone from HomeKit
+    zone1["char_active"].client_update_value(0)
+    await hass.async_block_till_done()
+    assert zone1["char_in_use"].value == 0
+    assert len(call_turn_off) == 1
+    assert call_turn_off[0].data[ATTR_ENTITY_ID] == primary_entity
+
+    # Turn on linked zone from HomeKit
+    zone6["char_active"].client_update_value(1)
+    await hass.async_block_till_done()
+    assert zone6["char_in_use"].value == 1
+    assert len(call_turn_on) == 2
+    assert call_turn_on[1].data[ATTR_ENTITY_ID] == linked_entity
+
+    # Turn off linked zone from HomeKit
+    zone6["char_active"].client_update_value(0)
+    await hass.async_block_till_done()
+    assert zone6["char_in_use"].value == 0
+    assert len(call_turn_off) == 2
+    assert call_turn_off[1].data[ATTR_ENTITY_ID] == linked_entity
+
+
+async def test_irrigation_system_with_valve_zone(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test IrrigationSystem supports valve domain entities as zones."""
+    primary_entity = "switch.zone_1"
+    valve_entity = "valve.zone_2"
+
+    hass.states.async_set(primary_entity, STATE_OFF)
+    hass.states.async_set(valve_entity, STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Sprinkler",
+        primary_entity,
+        2,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_ENTITIES: [{"entity_id": valve_entity}],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    zone1 = acc._zones[0]
+    zone2 = acc._zones[1]
+
+    # Valve open state maps to active=1
+    hass.states.async_set(valve_entity, STATE_OPEN)
+    await hass.async_block_till_done()
+    assert zone2["char_active"].value == 1
+    assert zone2["char_in_use"].value == 1
+    assert zone1["char_active"].value == 0
+
+    # Valve closed state maps to active=0
+    hass.states.async_set(valve_entity, STATE_CLOSED)
+    await hass.async_block_till_done()
+    assert zone2["char_active"].value == 0
+    assert zone2["char_in_use"].value == 0
+
+    # Control valve zone from HomeKit
+    call_open = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
+    call_close = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+
+    zone2["char_active"].client_update_value(1)
+    await hass.async_block_till_done()
+    assert len(call_open) == 1
+    assert call_open[0].data[ATTR_ENTITY_ID] == valve_entity
+
+    zone2["char_active"].client_update_value(0)
+    await hass.async_block_till_done()
+    assert len(call_close) == 1
+    assert call_close[0].data[ATTR_ENTITY_ID] == valve_entity
+
+
+async def test_irrigation_system_with_duration_characteristics(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test IrrigationSystem per-zone duration characteristics."""
+    primary_entity = "switch.zone_1"
+    linked_entity = "switch.zone_6"
+    duration_1 = "input_number.zone_1_duration"
+    duration_6 = "input_number.zone_6_duration"
+
+    hass.states.async_set(primary_entity, STATE_OFF)
+    hass.states.async_set(linked_entity, STATE_OFF)
+    hass.states.async_set(duration_1, "300")
+    hass.states.async_set(duration_6, "600")
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Rachio Sprinkler",
+        primary_entity,
+        2,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_DURATION: duration_1,
+            CONF_LINKED_VALVE_ENTITIES: [
+                {"entity_id": linked_entity, CONF_LINKED_VALVE_DURATION: duration_6}
+            ],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    zone1 = acc._zones[0]
+    zone6 = acc._zones[1]
+
+    # Each zone has its own duration characteristic
+    assert "char_set_duration" in zone1
+    assert "char_set_duration" in zone6
+    assert zone1["char_set_duration"].value == 300
+    assert zone6["char_set_duration"].value == 600
+
+    # Setting duration from HomeKit writes to the correct input_number entity
+    call_set_value = async_mock_service(
+        hass, INPUT_NUMBER_DOMAIN, INPUT_NUMBER_SERVICE_SET_VALUE
+    )
+
+    zone1["char_set_duration"].client_update_value(120)
+    await hass.async_block_till_done()
+    assert len(call_set_value) == 1
+    assert call_set_value[0].data == {"entity_id": duration_1, "value": 120}
+
+    zone6["char_set_duration"].client_update_value(900)
+    await hass.async_block_till_done()
+    assert len(call_set_value) == 2
+    assert call_set_value[1].data == {"entity_id": duration_6, "value": 900}
+
+    # HA state change propagates back to HomeKit duration char
+    hass.states.async_set(duration_1, "180")
+    hass.states.async_set(primary_entity, STATE_OFF)
+    await hass.async_block_till_done()
+    assert zone1["char_set_duration"].value == 180
+
+
+async def test_irrigation_system_with_remaining_duration(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test IrrigationSystem per-zone remaining duration from linked end-time sensor."""
+    primary_entity = "switch.zone_1"
+    linked_entity = "switch.zone_6"
+    end_time_1 = "sensor.zone_1_end_time"
+    end_time_6 = "sensor.zone_6_end_time"
+
+    hass.states.async_set(primary_entity, STATE_OFF)
+    hass.states.async_set(linked_entity, STATE_OFF)
+    hass.states.async_set(end_time_1, dt_util.utcnow().isoformat())
+    hass.states.async_set(end_time_6, dt_util.utcnow().isoformat())
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Rachio Sprinkler",
+        primary_entity,
+        2,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_VALVE_END_TIME: end_time_1,
+            CONF_LINKED_VALVE_ENTITIES: [
+                {"entity_id": linked_entity, CONF_LINKED_VALVE_END_TIME: end_time_6}
+            ],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    zone1 = acc._zones[0]
+    zone6 = acc._zones[1]
+
+    assert "char_remaining_duration" in zone1
+    assert "char_remaining_duration" in zone6
+
+    # Remaining duration is computed from the zone's own end-time sensor
+    with freeze_time(dt_util.utcnow()):
+        future_60 = (dt_util.utcnow() + timedelta(seconds=60)).isoformat()
+        future_120 = (dt_util.utcnow() + timedelta(seconds=120)).isoformat()
+
+        hass.states.async_set(end_time_1, future_60)
+        hass.states.async_set(end_time_6, future_120)
+        # Trigger state update via primary entity change
+        hass.states.async_set(primary_entity, STATE_ON)
+        hass.states.async_set(linked_entity, STATE_ON)
+        await hass.async_block_till_done()
+
+        assert acc._get_zone_remaining_duration(zone1) == 60
+        assert acc._get_zone_remaining_duration(zone6) == 120
+
+    # Each zone's remaining duration falls back to 0 when end-time is removed
+    hass.states.async_remove(end_time_1)
+    await hass.async_block_till_done()
+    assert acc._get_zone_remaining_duration(zone1) == 0
