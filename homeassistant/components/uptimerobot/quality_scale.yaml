@@ -30,9 +30,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: todo
-    comment: Change the type of the coordinator data to be a dict[str, UptimeRobotMonitor] so we can just do a dict look up instead of iterating over the whole list
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

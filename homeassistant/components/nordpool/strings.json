@@ -102,12 +102,6 @@
     "could_not_fetch_data": {
       "message": "Data could not be retrieved: {error}"
     },
-    "entry_not_found": {
-      "message": "The Nord Pool integration is not configured in Home Assistant."
-    },
-    "entry_not_loaded": {
-      "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
-    },
     "initial_update_failed": {
       "message": "Initial update failed on startup with error {error}"
     },

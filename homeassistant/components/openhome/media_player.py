@@ -9,7 +9,6 @@ from typing import Any, Concatenate
 
 import aiohttp
 from async_upnp_client.client import UpnpError
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -20,13 +19,12 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
+from . import OpenhomeConfigEntry
+from .const import DOMAIN
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -39,26 +37,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenhomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Openhome config entry."""
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device = config_entry.runtime_data
 
     entity = OpenhomeDevice(device)
 
     async_add_entities([entity])
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_INVOKE_PIN,
-        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
-        "async_invoke_pin",
-    )
 
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
@@ -84,7 +74,7 @@ def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callab
             """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
             try:
                 return await func(self, *args, **kwargs)
-            except (TimeoutError, aiohttp.ClientError, UpnpError):
+            except TimeoutError, aiohttp.ClientError, UpnpError:
                 _LOGGER.error("Error during call %s", func.__name__)
             return None
 
@@ -179,7 +169,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except (TimeoutError, aiohttp.ClientError, UpnpError):
+        except TimeoutError, aiohttp.ClientError, UpnpError:
             self._attr_available = False
 
     @catch_request_errors()

@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
-    DOMAIN as DOMAIN_CLIMATE,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -49,14 +49,21 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.water_heater import (
-    DOMAIN as DOMAIN_WATER_HEATER,
+    ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE,
+    DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_WATER_HEATER,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PERCENTAGE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -388,13 +395,13 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set swing mode to %s", self.entity_id, swing_on)
         mode = self.swing_on_mode if swing_on else SWING_OFF
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SWING_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_SWING_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE, params)
 
     def _set_fan_speed(self, speed: int) -> None:
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
         mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _get_on_mode(self) -> str:
         if self.ordered_fan_speeds:
@@ -412,13 +419,13 @@ class Thermostat(HomeAccessory):
             return
         mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _set_fan_auto(self, auto: int) -> None:
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _temperature_to_homekit(self, temp: float) -> float:
         return temperature_to_homekit(temp, self._unit)
@@ -480,7 +487,7 @@ class Thermostat(HomeAccessory):
             # `SERVICE_SET_HVAC_MODE_THERMOSTAT` before calling `SERVICE_SET_TEMPERATURE_THERMOSTAT`
             # to ensure the device is in the right mode before setting the temp.
             self.async_call_service(
-                DOMAIN_CLIMATE,
+                CLIMATE_DOMAIN,
                 SERVICE_SET_HVAC_MODE_THERMOSTAT,
                 params.copy(),
                 ", ".join(events),
@@ -557,7 +564,7 @@ class Thermostat(HomeAccessory):
 
         if service:
             self.async_call_service(
-                DOMAIN_CLIMATE,
+                CLIMATE_DOMAIN,
                 service,
                 params,
                 ", ".join(events),
@@ -608,7 +615,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
         self.async_call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
+            CLIMATE_DOMAIN, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
     @callback
@@ -745,12 +752,27 @@ class WaterHeater(HomeAccessory):
             (
                 ATTR_MAX_TEMP,
                 ATTR_MIN_TEMP,
+                ATTR_OPERATION_LIST,
             )
         )
         self._unit = self.hass.config.units.temperature_unit
         state = self.hass.states.get(self.entity_id)
         assert state
         min_temp, max_temp = self.get_temperature_range(state)
+
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        operation_list = state.attributes.get(ATTR_OPERATION_LIST) or []
+        self._supports_on_off = bool(features & WaterHeaterEntityFeature.ON_OFF)
+        self._supports_operation_mode = bool(
+            features & WaterHeaterEntityFeature.OPERATION_MODE
+        )
+        self._off_mode_available = self._supports_on_off or (
+            self._supports_operation_mode and STATE_OFF in operation_list
+        )
+
+        valid_modes = dict(HC_HOMEKIT_VALID_MODES_WATER_HEATER)
+        if self._off_mode_available:
+            valid_modes["Off"] = HC_HEAT_COOL_OFF
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT)
 
@@ -761,7 +783,7 @@ class WaterHeater(HomeAccessory):
             CHAR_TARGET_HEATING_COOLING,
             value=1,
             setter_callback=self.set_heat_cool,
-            valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER,
+            valid_values=valid_modes,
         )
 
         self.char_current_temp = serv_thermostat.configure_char(
@@ -795,8 +817,48 @@ class WaterHeater(HomeAccessory):
     def set_heat_cool(self, value: int) -> None:
         """Change operation mode to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heat-cool to %d", self.entity_id, value)
-        if HC_HOMEKIT_TO_HASS[value] != HVACMode.HEAT:
-            self.char_target_heat_cool.set_value(1)  # Heat
+        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        if value == HC_HEAT_COOL_OFF:
+            if self._supports_on_off:
+                self.async_call_service(
+                    WATER_HEATER_DOMAIN, SERVICE_TURN_OFF, params, "off"
+                )
+            elif self._off_mode_available and self._supports_operation_mode:
+                params[ATTR_OPERATION_MODE] = STATE_OFF
+                self.async_call_service(
+                    WATER_HEATER_DOMAIN,
+                    SERVICE_SET_OPERATION_MODE,
+                    params,
+                    STATE_OFF,
+                )
+            else:
+                self.char_target_heat_cool.set_value(HC_HEAT_COOL_HEAT)
+        elif value == HC_HEAT_COOL_HEAT:
+            if self._supports_on_off:
+                self.async_call_service(
+                    WATER_HEATER_DOMAIN, SERVICE_TURN_ON, params, "on"
+                )
+            elif self._off_mode_available and self._supports_operation_mode:
+                state = self.hass.states.get(self.entity_id)
+                if not state:
+                    return
+                current_operation_mode = state.attributes.get(ATTR_OPERATION_MODE)
+                if current_operation_mode and current_operation_mode != STATE_OFF:
+                    # Already in a non-off operation mode; do not change it.
+                    return
+                operation_list = state.attributes.get(ATTR_OPERATION_LIST) or []
+                for mode in operation_list:
+                    if mode != STATE_OFF:
+                        params[ATTR_OPERATION_MODE] = mode
+                        self.async_call_service(
+                            WATER_HEATER_DOMAIN,
+                            SERVICE_SET_OPERATION_MODE,
+                            params,
+                            mode,
+                        )
+                        break
+        else:
+            self.char_target_heat_cool.set_value(HC_HEAT_COOL_HEAT)
 
     def set_target_temperature(self, value: float) -> None:
         """Set target temperature to value if call came from HomeKit."""
@@ -804,7 +866,7 @@ class WaterHeater(HomeAccessory):
         temperature = temperature_to_states(value, self._unit)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TEMPERATURE: temperature}
         self.async_call_service(
-            DOMAIN_WATER_HEATER,
+            WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE_WATER_HEATER,
             params,
             f"{temperature}{self._unit}",
@@ -829,7 +891,12 @@ class WaterHeater(HomeAccessory):
 
         # Update target operation mode
         if new_state.state:
-            self.char_target_heat_cool.set_value(1)  # Heat
+            if new_state.state == STATE_OFF and self._off_mode_available:
+                self.char_target_heat_cool.set_value(HC_HEAT_COOL_OFF)
+                self.char_current_heat_cool.set_value(HC_HEAT_COOL_OFF)
+            else:
+                self.char_target_heat_cool.set_value(HC_HEAT_COOL_HEAT)
+                self.char_current_heat_cool.set_value(HC_HEAT_COOL_HEAT)
 
 
 def _get_temperature_range_from_state(

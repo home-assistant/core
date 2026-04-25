@@ -26,8 +26,8 @@ from .entity import MySensorsChildEntity
 class MySensorsBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a MySensors binary sensor entity."""
 
-    is_on: Callable[[int, dict[int, str]], bool] = (
-        lambda value_type, values: values[value_type] == "1"
+    is_on: Callable[[int, dict[int, str]], bool] = lambda value_type, values: (
+        values[value_type] == "1"
     )
 
 

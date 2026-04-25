@@ -26,7 +26,7 @@ from homeassistant.helpers.selector import (
 
 from . import AnalyticsInsightsConfigEntry
 from .const import (
-    CONF_TRACKED_ADDONS,
+    CONF_TRACKED_APPS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
@@ -42,6 +42,8 @@ INTEGRATION_TYPES_WITHOUT_ANALYTICS = (
 
 class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Homeassistant Analytics."""
+
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -59,7 +61,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if all(
                 [
-                    not user_input.get(CONF_TRACKED_ADDONS),
+                    not user_input.get(CONF_TRACKED_APPS),
                     not user_input.get(CONF_TRACKED_INTEGRATIONS),
                     not user_input.get(CONF_TRACKED_CUSTOM_INTEGRATIONS),
                 ]
@@ -70,7 +72,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Home Assistant Analytics Insights",
                     data={},
                     options={
-                        CONF_TRACKED_ADDONS: user_input.get(CONF_TRACKED_ADDONS, []),
+                        CONF_TRACKED_APPS: user_input.get(CONF_TRACKED_APPS, []),
                         CONF_TRACKED_INTEGRATIONS: user_input.get(
                             CONF_TRACKED_INTEGRATIONS, []
                         ),
@@ -84,7 +86,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass)
         )
         try:
-            addons = await client.get_addons()
+            apps = await client.get_addons()
             integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
@@ -107,9 +109,9 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_TRACKED_ADDONS): SelectSelector(
+                    vol.Optional(CONF_TRACKED_APPS): SelectSelector(
                         SelectSelectorConfig(
-                            options=list(addons),
+                            options=list(apps),
                             multiple=True,
                             sort=True,
                         )
@@ -144,7 +146,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             if all(
                 [
-                    not user_input.get(CONF_TRACKED_ADDONS),
+                    not user_input.get(CONF_TRACKED_APPS),
                     not user_input.get(CONF_TRACKED_INTEGRATIONS),
                     not user_input.get(CONF_TRACKED_CUSTOM_INTEGRATIONS),
                 ]
@@ -154,7 +156,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_TRACKED_ADDONS: user_input.get(CONF_TRACKED_ADDONS, []),
+                        CONF_TRACKED_APPS: user_input.get(CONF_TRACKED_APPS, []),
                         CONF_TRACKED_INTEGRATIONS: user_input.get(
                             CONF_TRACKED_INTEGRATIONS, []
                         ),
@@ -168,7 +170,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
             session=async_get_clientsession(self.hass)
         )
         try:
-            addons = await client.get_addons()
+            apps = await client.get_addons()
             integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
@@ -189,9 +191,9 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Optional(CONF_TRACKED_ADDONS): SelectSelector(
+                        vol.Optional(CONF_TRACKED_APPS): SelectSelector(
                             SelectSelectorConfig(
-                                options=list(addons),
+                                options=list(apps),
                                 multiple=True,
                                 sort=True,
                             )

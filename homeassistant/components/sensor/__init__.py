@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, Undef
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.variance import ignore_variance
 
 from .const import (  # noqa: F401
     AMBIGUOUS_UNITS,
@@ -63,6 +64,8 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
+UPTIME_DEFAULT_TOLERANCE_SECONDS: Final = 60
+UPTIME_MIN_TOLERANCE_SECONDS: Final = 5
 
 __all__ = [
     "ATTR_LAST_RESET",
@@ -112,7 +115,7 @@ class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     options: list[str] | None = None
-    state_class: SensorStateClass | str | None = None
+    state_class: SensorStateClass | None = None
     suggested_display_precision: int | None = None
     suggested_unit_of_measurement: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
@@ -120,7 +123,7 @@ class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 def _numeric_state_expected(
     device_class: SensorDeviceClass | None,
-    state_class: SensorStateClass | str | None,
+    state_class: SensorStateClass | None,
     native_unit_of_measurement: str | None,
     suggested_display_precision: int | None,
 ) -> bool:
@@ -180,6 +183,9 @@ TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
 class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
 
+    # Allow per-entity override of drift tolerance
+    _attr_uptime_drift_tolerance: int = UPTIME_DEFAULT_TOLERANCE_SECONDS
+
     _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
 
     entity_description: SensorEntityDescription
@@ -188,7 +194,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_options: list[str] | None
-    _attr_state_class: SensorStateClass | str | None
+    _attr_state_class: SensorStateClass | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_suggested_display_precision: int | None
     _attr_suggested_unit_of_measurement: str | None
@@ -201,6 +207,19 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
+    _get_uptime: Callable[[datetime], datetime] | None = None
+
+    def _normalize_uptime(self, current_uptime: datetime) -> datetime:
+        """Normalize uptime to suppress small drift between updates."""
+        if self._get_uptime is None:
+            drift_tolerance = max(
+                self._attr_uptime_drift_tolerance, UPTIME_MIN_TOLERANCE_SECONDS
+            )
+            self._get_uptime = ignore_variance(
+                func=lambda value: value,
+                ignored_variance=timedelta(seconds=drift_tolerance),
+            )
+        return self._get_uptime(current_uptime)
 
     @callback
     def add_to_platform_start(
@@ -329,7 +348,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
-    def state_class(self) -> SensorStateClass | str | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
             return self._attr_state_class
@@ -610,10 +629,14 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Checks below only apply if there is a value
         if value is None:
+            if device_class is SensorDeviceClass.UPTIME:
+                # Reset baseline so the first uptime after unavailable is not
+                # compared against a stale value.
+                self._get_uptime = None
             return None
 
         # Received a datetime
-        if device_class is SensorDeviceClass.TIMESTAMP:
+        if device_class in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -627,10 +650,13 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 if value.tzinfo != UTC:
                     value = value.astimezone(UTC)
 
+                if device_class is SensorDeviceClass.UPTIME:
+                    value = self._normalize_uptime(value)
+
                 return value.isoformat(timespec="seconds")
             except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"Invalid datetime: {self.entity_id} has {device_class.value} device class "
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 

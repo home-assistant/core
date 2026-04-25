@@ -50,7 +50,7 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
                     hydrological_details=False,
                 )
                 hydrological_data = await imgwpib.get_hydrological_data()
-            except (ClientError, TimeoutError, ApiError):
+            except ClientError, TimeoutError, ApiError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -62,7 +62,7 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             imgwpib = await ImgwPib.create(client_session)
             await imgwpib.update_hydrological_stations()
-        except (ClientError, TimeoutError, ApiError):
+        except ClientError, TimeoutError, ApiError:
             return self.async_abort(reason="cannot_connect")
 
         options: list[SelectOptionDict] = [

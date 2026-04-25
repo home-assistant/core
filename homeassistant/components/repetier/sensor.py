@@ -75,17 +75,12 @@ class RepetierSensor(SensorEntity):
         """Init new sensor."""
         self.entity_description = description
         self._api = api
-        self._attributes: dict = {}
+        self._attr_extra_state_attributes = {}
         self._temp_id = temp_id
         self._printer_id = printer_id
 
         self._attr_name = name
         self._attr_available = False
-
-    @property
-    def extra_state_attributes(self):
-        """Return sensor attributes."""
-        return self._attributes
 
     @callback
     def update_callback(self):
@@ -115,7 +110,7 @@ class RepetierSensor(SensorEntity):
             return
         state = data.pop("state")
         _LOGGER.debug("Printer %s State %s", self.name, state)
-        self._attributes.update(data)
+        self._attr_extra_state_attributes.update(data)
         self._attr_native_value = state
 
 
@@ -136,7 +131,7 @@ class RepetierTempSensor(RepetierSensor):
         state = data.pop("state")
         temp_set = data["temp_set"]
         _LOGGER.debug("Printer %s Setpoint: %s, Temp: %s", self.name, temp_set, state)
-        self._attributes.update(data)
+        self._attr_extra_state_attributes.update(data)
         self._attr_native_value = state
 
 

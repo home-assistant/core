@@ -25,7 +25,13 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
-_PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.LIGHT, Platform.SCENE]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -78,7 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         await gateway.connect()
     except DaliGatewayError as exc:
         raise ConfigEntryNotReady(
-            "You can try to delete the gateway and add it again"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from exc
 
     try:
@@ -88,7 +96,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         )
     except DaliGatewayError as exc:
         raise ConfigEntryNotReady(
-            "Unable to discover devices from the gateway"
+            translation_domain=DOMAIN,
+            translation_key="cannot_discover_devices",
         ) from exc
 
     _LOGGER.debug("Discovered %d devices on gateway %s", len(devices), gw_sn)

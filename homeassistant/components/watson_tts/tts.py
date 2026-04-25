@@ -1,6 +1,7 @@
 """Support for IBM Watson TTS integration."""
 
 import logging
+from typing import Any
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import TextToSpeechV1
@@ -9,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.tts import (
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TtsAudioType,
 )
 from homeassistant.helpers import config_validation as cv
 
@@ -163,26 +165,28 @@ class WatsonTTSProvider(Provider):
         self.name = "Watson TTS"
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return self.supported_langs
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self.default_lang
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any]:
         """Return dict include default options."""
         return {CONF_VOICE: self.default_voice}
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return [CONF_VOICE]
 
-    def get_tts_audio(self, message, language, options):
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
             text=message, accept=self.output_format, voice=options[CONF_VOICE]

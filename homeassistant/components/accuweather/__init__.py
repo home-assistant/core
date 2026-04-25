@@ -7,7 +7,7 @@ import logging
 
 from accuweather import AccuWeather
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
     ent_reg = er.async_get(hass)
     for day in range(5):
         unique_id = f"{location_key}-ozone-{day}"
-        if entity_id := ent_reg.async_get_entity_id(SENSOR_PLATFORM, DOMAIN, unique_id):
+        if entity_id := ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id):
             _LOGGER.debug("Removing ozone sensor entity %s", entity_id)
             ent_reg.async_remove(entity_id)
 

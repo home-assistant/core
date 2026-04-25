@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -31,9 +30,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import Router
+from . import HuaweiLteConfigEntry, Router
 from .const import (
-    DOMAIN,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
@@ -276,13 +274,11 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                     {"0": "2G", "2": "3G", "7": "4G"}.get(x),
                     None,
                 ),
-                icon_fn=lambda x: (
-                    {
-                        "2G": "mdi:signal-2g",
-                        "3G": "mdi:signal-3g",
-                        "4G": "mdi:signal-4g",
-                    }.get(str(x), "mdi:signal")
-                ),
+                icon_fn=lambda x: {
+                    "2G": "mdi:signal-2g",
+                    "3G": "mdi:signal-3g",
+                    "4G": "mdi:signal-4g",
+                }.get(str(x), "mdi:signal"),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nei_cellid": HuaweiSensorEntityDescription(
@@ -797,11 +793,11 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HuaweiLteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.entry_id]
+    router = config_entry.runtime_data
     sensors: list[Entity] = []
     for key in SENSOR_KEYS:
         if not (items := router.data.get(key)):

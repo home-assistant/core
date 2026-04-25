@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from itertools import chain
+from typing import Any
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
@@ -49,7 +50,7 @@ class DoorSensorEntity(GoGoGate2Entity, SensorEntity):
     """Base class for door sensor entities."""
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         door = self.door

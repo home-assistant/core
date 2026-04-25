@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from functools import partial
 import logging
 from typing import Any
 
@@ -13,7 +12,10 @@ from homeassistant.components.automation import (
     DOMAIN as AUTOMATION_DOMAIN,
     NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
 )
-from homeassistant.components.labs import async_listen as async_labs_listen
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_subscribe_preview_feature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -22,7 +24,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import discovery, issue_registry as ir
 from homeassistant.helpers.device import (
@@ -99,18 +101,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def _handle_new_triggers_conditions(
+        _event_data: EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         hass.async_create_task(
             _reload_config(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
         )
 
-    async_labs_listen(
+    async_subscribe_preview_feature(
         hass,
         AUTOMATION_DOMAIN,
         NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
+        _handle_new_triggers_conditions,
     )
 
     return True
@@ -139,12 +142,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, (entry.options["template_type"],)
     )
 
+    async def _handle_entry_reload(_event_data: EventLabsUpdatedData) -> None:
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
     entry.async_on_unload(
-        async_labs_listen(
+        async_subscribe_preview_feature(
             hass,
             AUTOMATION_DOMAIN,
             NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-            partial(hass.config_entries.async_schedule_reload, entry.entry_id),
+            _handle_entry_reload,
         )
     )
 

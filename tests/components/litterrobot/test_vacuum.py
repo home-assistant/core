@@ -5,28 +5,30 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pylitterbot import Robot
+from pylitterbot.exceptions import LitterRobotException
 import pytest
 
-from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
+from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
+from homeassistant.components.litterrobot.services import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
-VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
+from tests.common import async_fire_time_changed
 
-COMPONENT_SERVICE_DOMAIN = {
-    SERVICE_SET_SLEEP_MODE: DOMAIN,
-}
+VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
 
 
 async def test_vacuum(
@@ -106,23 +108,35 @@ async def test_activities(
 
 
 @pytest.mark.parametrize(
-    ("service", "command", "extra"),
+    ("service_domain", "service", "command", "extra"),
     [
-        (SERVICE_START, "start_cleaning", None),
-        (SERVICE_STOP, "set_power_status", None),
+        (VACUUM_DOMAIN, SERVICE_START, "start_cleaning", None),
+        (VACUUM_DOMAIN, SERVICE_STOP, "set_power_status", None),
         (
+            DOMAIN,
             SERVICE_SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True, "start_time": "22:30"}},
         ),
-        (SERVICE_SET_SLEEP_MODE, "set_sleep_mode", {"data": {"enabled": True}}),
-        (SERVICE_SET_SLEEP_MODE, "set_sleep_mode", {"data": {"enabled": False}}),
+        (
+            DOMAIN,
+            SERVICE_SET_SLEEP_MODE,
+            "set_sleep_mode",
+            {"data": {"enabled": True}},
+        ),
+        (
+            DOMAIN,
+            SERVICE_SET_SLEEP_MODE,
+            "set_sleep_mode",
+            {"data": {"enabled": False}},
+        ),
     ],
 )
 async def test_commands(
     hass: HomeAssistant,
     mock_account: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    service_domain: str,
     service: str,
     command: str,
     extra: dict[str, Any],
@@ -140,7 +154,7 @@ async def test_commands(
     issues = extra.get("issues", set())
 
     await hass.services.async_call(
-        COMPONENT_SERVICE_DOMAIN.get(service, VACUUM_DOMAIN),
+        service_domain,
         service,
         data,
         blocking=True,
@@ -148,3 +162,48 @@ async def test_commands(
     getattr(mock_account.robots[0], command).assert_called_once()
 
     assert set(issue_registry.issues.keys()) == issues
+
+
+async def test_vacuum_command_exception(
+    hass: HomeAssistant, mock_account_with_side_effects: MagicMock
+) -> None:
+    """Test that LitterRobotException is wrapped in HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_side_effects, VACUUM_DOMAIN)
+
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_START,
+            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            blocking=True,
+        )
+
+
+async def test_vacuum_unavailable_on_update_error(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test vacuum becomes unavailable when coordinator update fails."""
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate an API error during update
+    mock_account.load_robots.side_effect = LitterRobotException("Unable to connect")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    # Recover
+    mock_account.load_robots.side_effect = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE

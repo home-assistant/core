@@ -1582,7 +1582,10 @@ async def test_homekit_finds_linked_batteries(
         original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_registry.async_get_or_create(
-        "light", "powerwall", "demo", device_id=device_entry.id
+        "light",
+        "powerwall",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -1614,8 +1617,8 @@ async def test_homekit_finds_linked_batteries(
             "sw_version": "0.16.0",
             "hw_version": "2.34",
             "platform": "test",
-            "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
-            "linked_battery_sensor": "sensor.powerwall_battery",
+            "linked_battery_charging_sensor": binary_charging_sensor.entity_id,
+            "linked_battery_sensor": battery_sensor.entity_id,
         },
     )
 
@@ -1658,7 +1661,10 @@ async def test_homekit_async_get_integration_fails(
         original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_registry.async_get_or_create(
-        "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
+        "light",
+        "invalid_integration_does_not_exist",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -1689,8 +1695,8 @@ async def test_homekit_async_get_integration_fails(
             "model": "Powerwall 2",
             "sw_version": "0.16.0",
             "platform": "invalid_integration_does_not_exist",
-            "linked_battery_charging_sensor": "binary_sensor.invalid_integration_does_not_exist_battery_charging",
-            "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
+            "linked_battery_charging_sensor": binary_charging_sensor.entity_id,
+            "linked_battery_sensor": battery_sensor.entity_id,
         },
     )
 
@@ -1903,7 +1909,10 @@ async def test_homekit_ignored_missing_devices(
         original_device_class=SensorDeviceClass.BATTERY,
     )
     light_entity = light = entity_registry.async_get_or_create(
-        "light", "powerwall", "demo", device_id=device_entry.id
+        "light",
+        "powerwall",
+        "demo",
+        device_id=device_entry.id,
     )
     # Delete the device to make sure we fallback
     # to using the platform
@@ -1938,8 +1947,8 @@ async def test_homekit_ignored_missing_devices(
         ANY,
         {
             "platform": "Tesla Powerwall",
-            "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
-            "linked_battery_sensor": "sensor.powerwall_battery",
+            "linked_battery_charging_sensor": binary_sensor_entity.entity_id,
+            "linked_battery_sensor": sensor_entity.entity_id,
         },
     )
 
@@ -2128,7 +2137,10 @@ async def test_homekit_finds_linked_humidity_sensors(
         original_device_class=SensorDeviceClass.HUMIDITY,
     )
     humidifier = entity_registry.async_get_or_create(
-        "humidifier", "humidifier", "demo", device_id=device_entry.id
+        "humidifier",
+        "humidifier",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -2160,7 +2172,7 @@ async def test_homekit_finds_linked_humidity_sensors(
             "model": "Smart Brainy Clever Humidifier",
             "platform": "test",
             "sw_version": "0.16.1",
-            "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
+            "linked_humidity_sensor": humidity_sensor.entity_id,
         },
     )
 
@@ -2212,7 +2224,10 @@ async def test_homekit_finds_linked_air_purifier_sensors(
         original_device_class=SensorDeviceClass.TEMPERATURE,
     )
     air_purifier = entity_registry.async_get_or_create(
-        "fan", "air_purifier", "demo", device_id=device_entry.id
+        "fan",
+        "air_purifier",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -2261,9 +2276,9 @@ async def test_homekit_finds_linked_air_purifier_sensors(
             "platform": "air_purifier",
             "sw_version": "0.16.1",
             "type": TYPE_AIR_PURIFIER,
-            "linked_humidity_sensor": "sensor.air_purifier_humidity_sensor",
-            "linked_pm25_sensor": "sensor.air_purifier_pm25_sensor",
-            "linked_temperature_sensor": "sensor.air_purifier_temperature_sensor",
+            "linked_humidity_sensor": humidity_sensor.entity_id,
+            "linked_pm25_sensor": pm25_sensor.entity_id,
+            "linked_temperature_sensor": temperature_sensor.entity_id,
         },
     )
 

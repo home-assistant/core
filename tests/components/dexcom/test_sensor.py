@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pydexcom import SessionError
+from pydexcom.errors import SessionError
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant

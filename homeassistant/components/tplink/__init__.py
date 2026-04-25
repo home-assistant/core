@@ -1,4 +1,5 @@
 """Component to embed TP-Link smart home devices."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -145,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     if conn_params_dict := entry.data.get(CONF_CONNECTION_PARAMETERS):
         try:
             conn_params = Device.ConnectionParameters.from_dict(conn_params_dict)
-        except (KasaException, TypeError, ValueError, LookupError):
+        except KasaException, TypeError, ValueError, LookupError:
             _LOGGER.warning(
                 "Invalid connection parameters dict for %s: %s", host, conn_params_dict
             )

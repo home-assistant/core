@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from universal_silabs_flasher.flasher import Zbt1Flasher
+
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -23,7 +25,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeAssistantSkyConnectConfigEntry
-from .config_flow import SkyConnectFirmwareMixin
 from .const import (
     DOMAIN,
     FIRMWARE,
@@ -109,7 +110,7 @@ def _async_create_update_entity(
         entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
             ApplicationType(firmware_type)
         ]
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         _LOGGER.debug(
             "Unknown firmware type %r, using default entity description", firmware_type
         )
@@ -152,8 +153,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
-    BOOTLOADER_RESET_METHODS = SkyConnectFirmwareMixin.BOOTLOADER_RESET_METHODS
-    APPLICATION_PROBE_METHODS = SkyConnectFirmwareMixin.APPLICATION_PROBE_METHODS
+    _flasher_cls = Zbt1Flasher
 
     def __init__(
         self,

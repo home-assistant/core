@@ -90,8 +90,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except InvalidEventListenerIdException as exception:
             raise UpdateFailed(exception) from exception
         except (TimeoutError, ClientConnectorError) as exception:
+            LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
-        except (ServerDisconnectedError, NotAuthenticatedException):
+        except ServerDisconnectedError:
             self.executions = {}
 
             # During the relogin, similar exceptions can be thrown.

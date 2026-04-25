@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from functools import wraps
 import logging
 from typing import Any
 
@@ -13,6 +14,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -75,6 +77,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -82,8 +85,22 @@ class GoogleDriveBackupAgent(BackupAgent):
         :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
         """
+
+        @wraps(open_stream)
+        async def wrapped_open_stream() -> AsyncIterator[bytes]:
+            stream = await open_stream()
+
+            async def _progress_stream() -> AsyncIterator[bytes]:
+                bytes_uploaded = 0
+                async for chunk in stream:
+                    yield chunk
+                    bytes_uploaded += len(chunk)
+                    on_progress(bytes_uploaded=bytes_uploaded)
+
+            return _progress_stream()
+
         try:
-            await self._client.async_upload_backup(open_stream, backup)
+            await self._client.async_upload_backup(wrapped_open_stream, backup)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
             raise BackupAgentError(f"Failed to upload backup: {err}") from err
 

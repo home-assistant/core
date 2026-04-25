@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any
@@ -18,7 +19,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -34,9 +35,11 @@ from .trace import (
 
 _LOGGER = logging.getLogger(__name__)
 
+TRIGGER_INTENT_NAME_PREFIX = "HassSentenceTrigger"
+
 if TYPE_CHECKING:
     from .default_agent import DefaultAgent
-    from .trigger import TriggerDetails
+    from .trigger import TRIGGER_CALLBACK_TYPE
 
 
 @singleton.singleton("conversation_agent")
@@ -139,6 +142,10 @@ async def async_converse(
         return result
 
 
+type IntentSourceConfig = dict[str, dict[str, Any]]
+type IntentsCallback = Callable[[dict[IntentSource, IntentSourceConfig]], None]
+
+
 class AgentManager:
     """Class to manage conversation agents."""
 
@@ -147,8 +154,13 @@ class AgentManager:
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
         self.default_agent: DefaultAgent | None = None
-        self.config_intents: dict[str, Any] = {}
-        self.triggers_details: list[TriggerDetails] = []
+        self._intents: dict[IntentSource, IntentSourceConfig] = {
+            IntentSource.CONFIG: {"intents": {}},
+            IntentSource.TRIGGER: {"intents": {}},
+        }
+        self._intents_subscribers: list[IntentsCallback] = []
+        self._trigger_callbacks: dict[int, TRIGGER_CALLBACK_TYPE] = {}
+        self._trigger_callback_counter: int = 0
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -200,27 +212,75 @@ class AgentManager:
 
     async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
         """Set up the default agent."""
-        agent.update_config_intents(self.config_intents)
-        agent.update_triggers(self.triggers_details)
         self.default_agent = agent
+
+    @callback
+    def subscribe_intents(self, subscriber: IntentsCallback) -> CALLBACK_TYPE:
+        """Subscribe to intents updates.
+
+        The subscriber callback is called immediately with all intent sources
+        and whenever intents are updated (only with the changed source).
+        """
+        subscriber(self._intents)
+        self._intents_subscribers.append(subscriber)
+
+        @callback
+        def unsubscribe() -> None:
+            """Unsubscribe from intents updates."""
+            self._intents_subscribers.remove(subscriber)
+
+        return unsubscribe
+
+    def _notify_intents_subscribers(self, source: IntentSource) -> None:
+        """Notify all intents subscribers of a change to a specific source."""
+        update = {source: self._intents[source]}
+        for subscriber in self._intents_subscribers:
+            subscriber(update)
 
     def update_config_intents(self, intents: dict[str, Any]) -> None:
         """Update config intents."""
-        self.config_intents = intents
-        if self.default_agent is not None:
-            self.default_agent.update_config_intents(intents)
+        self._intents[IntentSource.CONFIG]["intents"] = intents
+        self._notify_intents_subscribers(IntentSource.CONFIG)
 
-    def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
+    def register_trigger(
+        self, sentences: list[str], trigger_callback: TRIGGER_CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
         """Register a trigger."""
-        self.triggers_details.append(trigger_details)
-        if self.default_agent is not None:
-            self.default_agent.update_triggers(self.triggers_details)
+        trigger_id = self._trigger_callback_counter
+        self._trigger_callback_counter += 1
+        trigger_intent_name = f"{TRIGGER_INTENT_NAME_PREFIX}{trigger_id}"
+
+        trigger_intents = self._intents[IntentSource.TRIGGER]
+        trigger_intents["intents"][trigger_intent_name] = {
+            "data": [{"sentences": sentences}]
+        }
+        self._trigger_callbacks[trigger_id] = trigger_callback
+        self._notify_intents_subscribers(IntentSource.TRIGGER)
 
         @callback
         def unregister_trigger() -> None:
             """Unregister the trigger."""
-            self.triggers_details.remove(trigger_details)
-            if self.default_agent is not None:
-                self.default_agent.update_triggers(self.triggers_details)
+            del trigger_intents["intents"][trigger_intent_name]
+            del self._trigger_callbacks[trigger_id]
+            self._notify_intents_subscribers(IntentSource.TRIGGER)
 
         return unregister_trigger
+
+    @property
+    def trigger_sentences(self) -> list[str]:
+        """Get all trigger sentences."""
+        sentences: list[str] = []
+        trigger_intents = self._intents[IntentSource.TRIGGER]
+        for trigger_intent in trigger_intents.get("intents", {}).values():
+            for data in trigger_intent.get("data", []):
+                sentences.extend(data.get("sentences", []))
+        return sentences
+
+    def get_trigger_callback(
+        self, trigger_intent_name: str
+    ) -> TRIGGER_CALLBACK_TYPE | None:
+        """Get the callback for a trigger from its intent name."""
+        if not trigger_intent_name.startswith(TRIGGER_INTENT_NAME_PREFIX):
+            return None
+        trigger_id = int(trigger_intent_name[len(TRIGGER_INTENT_NAME_PREFIX) :])
+        return self._trigger_callbacks.get(trigger_id)

@@ -1,8 +1,5 @@
 """Actions for Bring! integration."""
 
-import logging
-from typing import TYPE_CHECKING
-
 from bring_api import (
     ActivityType,
     BringAuthException,
@@ -13,22 +10,27 @@ from bring_api import (
 import voluptuous as vol
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-
-from .const import (
-    ATTR_ACTIVITY,
-    ATTR_REACTION,
-    ATTR_RECEIVER,
-    DOMAIN,
-    SERVICE_ACTIVITY_STREAM_REACTION,
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    service,
 )
+
+from .const import DOMAIN
 from .coordinator import BringConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
+ATTR_ACTIVITY = "uuid"
+ATTR_ITEM_NAME = "item"
+ATTR_NOTIFICATION_TYPE = "message"
+ATTR_REACTION = "reaction"
+ATTR_RECEIVER = "publicUserUuid"
+
+SERVICE_PUSH_NOTIFICATION = "send_message"
+SERVICE_ACTIVITY_STREAM_REACTION = "send_reaction"
 
 SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
     {
@@ -41,19 +43,7 @@ SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
 )
 
 
-def get_config_entry(hass: HomeAssistant, entry_id: str) -> BringConfigEntry:
-    """Return config entry or raise if not found or not loaded."""
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if TYPE_CHECKING:
-        assert entry
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-        )
-    return entry
-
-
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Bring! integration."""
 
@@ -72,7 +62,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     ATTR_ENTITY_ID: call.data[ATTR_ENTITY_ID],
                 },
             )
-        config_entry = get_config_entry(hass, entity.config_entry_id)
+        config_entry: BringConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, entity.config_entry_id
+        )
 
         coordinator = config_entry.runtime_data.data
 
@@ -107,4 +99,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ACTIVITY_STREAM_REACTION,
         async_send_activity_stream_reaction,
         SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_PUSH_NOTIFICATION,
+        entity_domain=TODO_DOMAIN,
+        schema={
+            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
+                vol.Upper, vol.Coerce(BringNotificationType)
+            ),
+            vol.Optional(ATTR_ITEM_NAME): cv.string,
+        },
+        func="async_send_message",
     )

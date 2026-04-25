@@ -8,6 +8,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ZONE_NAME_UNCONFIGURED
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .entity import DaikinEntity
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
         switches.extend(
             DaikinZoneSwitch(daikin_api, zone_id)
             for zone_id, zone in enumerate(zones)
-            if zone[0] != "-"
+            if zone[0] != ZONE_NAME_UNCONFIGURED
         )
     if daikin_api.device.support_advanced_modes:
         # It isn't possible to find out from the API responses if a specific

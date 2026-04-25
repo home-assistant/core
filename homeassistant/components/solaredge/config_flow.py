@@ -61,7 +61,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             if response["details"]["status"].lower() != "active":
                 self._errors[CONF_SITE_ID] = "site_not_active"
                 return False
-        except (TimeoutError, ClientError, socket.gaierror):
+        except TimeoutError, ClientError, socket.gaierror:
             self._errors[CONF_SITE_ID] = "cannot_connect"
             return False
         except KeyError:
@@ -87,7 +87,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._errors["base"] = "cannot_connect"
             return False
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             self._errors["base"] = "cannot_connect"
             return False
         return True

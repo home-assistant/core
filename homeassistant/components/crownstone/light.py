@@ -90,14 +90,14 @@ class CrownstoneLightEntity(CrownstoneEntity, LightEntity):
         return crownstone_state_to_hass(self.device.state) > 0
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.device.abilities.get(DIMMING_ABILITY).is_enabled:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 

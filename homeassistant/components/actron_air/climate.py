@@ -15,10 +15,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
-from .entity import ActronAirAcEntity, ActronAirZoneEntity
+from .entity import ActronAirAcEntity, ActronAirZoneEntity, actron_air_command
 
 PARALLEL_UPDATES = 0
 
@@ -136,20 +138,27 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
         """Return the target temperature."""
         return self._status.user_aircon_settings.temperature_setpoint_cool_c
 
+    @actron_air_command
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new fan mode."""
-        api_fan_mode = FAN_MODE_MAPPING_HA_TO_ACTRONAIR.get(fan_mode)
+        api_fan_mode = FAN_MODE_MAPPING_HA_TO_ACTRONAIR[fan_mode]
         await self._status.user_aircon_settings.set_fan_mode(api_fan_mode)
 
+    @actron_air_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        ac_mode = HVAC_MODE_MAPPING_HA_TO_ACTRONAIR.get(hvac_mode)
+        ac_mode = HVAC_MODE_MAPPING_HA_TO_ACTRONAIR[hvac_mode]
         await self._status.ac_system.set_system_mode(ac_mode)
 
+    @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        await self._status.user_aircon_settings.set_temperature(temperature=temp)
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_missing",
+            )
+        await self._status.user_aircon_settings.set_temperature(temperature=temperature)
 
 
 class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
@@ -209,11 +218,18 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
         """Return the target temperature."""
         return self._zone.temperature_setpoint_cool_c
 
+    @actron_air_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         is_enabled = hvac_mode != HVACMode.OFF
         await self._zone.enable(is_enabled)
 
+    @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        await self._zone.set_temperature(temperature=kwargs.get(ATTR_TEMPERATURE))
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_missing",
+            )
+        await self._zone.set_temperature(temperature=temperature)

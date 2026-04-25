@@ -18,7 +18,6 @@ from homeassistant.components.scrape.const import (
 )
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -73,6 +72,116 @@ async def test_scrape_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
+
+
+async def test_scrape_xml_content_type(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test Scrape sensor with XML Content-Type header uses XML parser."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {"select": "title", "name": "RSS Title"},
+                    # Test <link> tag - HTML parser treats this as self-closing,
+                    # but XML parser correctly parses the content
+                    {"select": "item link", "name": "RSS Link"},
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_xml")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    # Verify XML Content-Type header is set
+    assert mocker.headers.get("Content-Type") == "application/rss+xml"
+
+    state = hass.states.get("sensor.rss_title")
+    assert state.state == "Test RSS Feed"
+
+    # Verify <link> content is correctly parsed with XML parser
+    link_state = hass.states.get("sensor.rss_link")
+    assert link_state.state == "https://example.com/item"
+
+    assert "XMLParsedAsHTMLWarning" not in caplog.text
+
+
+async def test_scrape_xml_declaration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test Scrape sensor with XML declaration (no XML Content-Type) uses XML parser."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[{"select": "title", "name": "RSS Title"}]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_xml_fallback")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    # Verify non-XML Content-Type but XML parser used due to <?xml declaration
+    assert mocker.headers.get("Content-Type") == "text/html"
+
+    state = hass.states.get("sensor.rss_title")
+    assert state.state == "Test RSS Feed"
+    assert "XMLParsedAsHTMLWarning" not in caplog.text
+
+
+async def test_scrape_html5_with_xml_declaration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test HTML5 with XML declaration strips XML prefix and uses HTML parser.
+
+    This test verifies backward compatibility by testing:
+    - No Content-Type header (relies on content detection)
+    - Uppercase HTML tags with lowercase selectors (case-insensitive matching)
+    - Class selectors work correctly
+    - No XMLParsedAsHTMLWarning is logged
+    """
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    # Lowercase selector matches uppercase <H1> tag
+                    {"select": ".current-version h1", "name": "HA version"},
+                    # Lowercase selector matches uppercase <TITLE> tag
+                    {"select": "title", "name": "Page Title"},
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_html5_with_xml_declaration")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    # Verify no Content-Type header is set (tests content-based detection)
+    assert "Content-Type" not in mocker.headers
+
+    state = hass.states.get("sensor.ha_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    title_state = hass.states.get("sensor.page_title")
+    assert title_state.state == "Test Page"
+
+    assert "XMLParsedAsHTMLWarning" not in caplog.text
 
 
 async def test_scrape_sensor_value_template(hass: HomeAssistant) -> None:
@@ -494,7 +603,7 @@ async def test_setup_config_entry(
 
     entity = entity_registry.async_get("sensor.current_version")
 
-    assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"
+    assert entity.unique_id == "01JZN07D8D23994A49YKS649S7"
 
 
 async def test_templates_with_yaml(hass: HomeAssistant) -> None:
@@ -578,27 +687,38 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "get_config",
+    ("get_resource_config", "get_sensor_config"),
     [
-        {
-            CONF_RESOURCE: "https://www.home-assistant.io",
-            CONF_METHOD: "GET",
-            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            CONF_TIMEOUT: 10,
-            CONF_ENCODING: DEFAULT_ENCODING,
-            SENSOR_DOMAIN: [
+        (
+            {
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_METHOD: "GET",
+                "auth": {},
+                "advanced": {
+                    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+                    CONF_TIMEOUT: 10,
+                    CONF_ENCODING: DEFAULT_ENCODING,
+                },
+            },
+            (
                 {
-                    CONF_SELECT: ".current-version h1",
-                    CONF_NAME: "Current version",
-                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-                    CONF_INDEX: 0,
-                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                    CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
-                    CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
-                    CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
-                }
-            ],
-        }
+                    "data": {
+                        CONF_SELECT: ".current-version h1",
+                        CONF_INDEX: 0,
+                        "advanced": {
+                            CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                            CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                            CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
+                            CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
+                        },
+                    },
+                    # "subentry_id": "01JZN07D8D23994A49YKS649S7",
+                    "subentry_type": "entity",
+                    "title": "Current version",
+                    "unique_id": None,
+                },
+            ),
+        )
     ],
 )
 async def test_availability(

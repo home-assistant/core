@@ -21,15 +21,16 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
+from .const import DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
 from .helpers import WebOsTvConfigEntry, update_client_key
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG webOS TV platform."""
-    hass.data.setdefault(DOMAIN, {DATA_HASS_CONFIG: config})
+    async_setup_services(hass)
 
     return True
 
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
                 CONF_NAME: entry.title,
                 ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             },
-            hass.data[DOMAIN][DATA_HASS_CONFIG],
+            {},
         )
     )
 

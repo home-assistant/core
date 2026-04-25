@@ -4,16 +4,12 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 
 from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import IssConfigEntry
 
 
 class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -24,7 +20,7 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: IssConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

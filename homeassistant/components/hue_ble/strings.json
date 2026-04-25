@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_implemented": "This integration can only be set up via discovery."
+      "discovery_unsupported": "Discovery flow is not supported by the Hue BLE integration.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,7 +15,16 @@
     },
     "step": {
       "confirm": {
-        "description": "Do you want to set up {name} ({mac})?. Make sure the light is [made discoverable to voice assistants]({url_pairing_mode}) or has been [factory reset]({url_factory_reset})."
+        "description": "Do you want to set up {name} ({mac})?\nMake sure the light is [made discoverable to voice assistants]({url_pairing_mode}) or has been [factory reset]({url_factory_reset})."
+      },
+      "user": {
+        "data": {
+          "mac": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "mac": "Select the Hue device you want to set up"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
     }
   }

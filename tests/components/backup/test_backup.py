@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.backup import DOMAIN, AgentBackup
+from homeassistant.components.backup import DOMAIN, backup
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -25,30 +25,23 @@ from .common import (
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-
-def mock_read_backup(backup_path: Path) -> AgentBackup:
-    """Mock read backup."""
-    mock_backups = {
-        "abc123": TEST_BACKUP_ABC123,
-        "custom_def456": TEST_BACKUP_DEF456,
-    }
-    return mock_backups[backup_path.stem]
+real_read_backup = backup.read_backup
 
 
 @pytest.fixture(name="read_backup")
-def read_backup_fixture(path_glob: MagicMock) -> Generator[MagicMock]:
+def read_backup_fixture() -> Generator[MagicMock]:
     """Mock read backup."""
-    with patch(
-        "homeassistant.components.backup.backup.read_backup",
-        side_effect=mock_read_backup,
-    ) as read_backup:
+    with patch("homeassistant.components.backup.backup.read_backup") as read_backup:
         yield read_backup
 
 
 @pytest.mark.parametrize(
+    "available_backups", [[TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456]]
+)
+@pytest.mark.parametrize(
     "side_effect",
     [
-        mock_read_backup,
+        real_read_backup,
         OSError("Boom"),
         TarError("Boom"),
         json.JSONDecodeError("Boom", "test", 1),
@@ -74,7 +67,11 @@ async def test_load_backups(
 
     # load and list backups
     await client.send_json_auto_id({"type": "backup/info"})
-    assert await client.receive_json() == snapshot
+    response = await client.receive_json()
+    response["result"]["backups"] = sorted(
+        response["result"]["backups"], key=lambda b: b["backup_id"]
+    )
+    assert response == snapshot
 
 
 async def test_upload(
@@ -106,9 +103,8 @@ async def test_upload(
     assert move_mock.mock_calls[0].args[1].name == "Test_1970-01-01_00.00_00000000.tar"
 
 
-@pytest.mark.usefixtures("read_backup")
 @pytest.mark.parametrize(
-    ("found_backups", "backup_id", "unlink_calls", "unlink_path"),
+    ("available_backups", "backup_id", "unlink_calls", "unlink_path"),
     [
         (
             [TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456],
@@ -122,7 +118,7 @@ async def test_upload(
             1,
             TEST_BACKUP_PATH_DEF456,
         ),
-        (([], TEST_BACKUP_ABC123.backup_id, 0, None)),
+        ([], TEST_BACKUP_ABC123.backup_id, 0, None),
     ],
 )
 async def test_delete_backup(
@@ -130,8 +126,6 @@ async def test_delete_backup(
     caplog: pytest.LogCaptureFixture,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
-    path_glob: MagicMock,
-    found_backups: list[Path],
     backup_id: str,
     unlink_calls: int,
     unlink_path: Path | None,
@@ -140,7 +134,6 @@ async def test_delete_backup(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_ws_client(hass)
-    path_glob.return_value = found_backups
 
     with (
         patch("pathlib.Path.unlink", autospec=True) as unlink,
@@ -152,4 +145,4 @@ async def test_delete_backup(
 
     assert unlink.call_count == unlink_calls
     for call in unlink.mock_calls:
-        assert call.args[0] == unlink_path
+        assert Path(call.args[0].name) == unlink_path

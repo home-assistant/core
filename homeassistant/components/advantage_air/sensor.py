@@ -5,8 +5,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,17 +12,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_OPEN
+from .coordinator import AdvantageAirCoordinator
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
-from .models import AdvantageAirData
 
 ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
-ADVANTAGE_AIR_SERVICE_SET_TIME_TO = "set_time_to"
 
 PARALLEL_UPDATES = 0
 
@@ -36,29 +32,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir sensor platform."""
 
-    instance = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     entities: list[SensorEntity] = []
-    if aircons := instance.coordinator.data.get("aircons"):
+    if aircons := coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
-            entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
-            entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))
+            entities.append(AdvantageAirTimeTo(coordinator, ac_key, "On"))
+            entities.append(AdvantageAirTimeTo(coordinator, ac_key, "Off"))
             for zone_key, zone in ac_device["zones"].items():
                 # Only show damper and temp sensors when zone is in temperature control
                 if zone["type"] != 0:
-                    entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
-                    entities.append(AdvantageAirZoneTemp(instance, ac_key, zone_key))
+                    entities.append(AdvantageAirZoneVent(coordinator, ac_key, zone_key))
+                    entities.append(AdvantageAirZoneTemp(coordinator, ac_key, zone_key))
                 # Only show wireless signal strength sensors when using wireless sensors
                 if zone["rssi"] > 0:
-                    entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
+                    entities.append(
+                        AdvantageAirZoneSignal(coordinator, ac_key, zone_key)
+                    )
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
-        {vol.Required("minutes"): cv.positive_int},
-        "set_time_to",
-    )
 
 
 class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
@@ -67,9 +58,11 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, action: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, action: str
+    ) -> None:
         """Initialize the Advantage Air timer control."""
-        super().__init__(instance, ac_key)
+        super().__init__(coordinator, ac_key)
         self.action = action
         self._time_key = f"countDownTo{action}"
         self._attr_name = f"Time to {action}"
@@ -100,9 +93,11 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an Advantage Air Zone Vent Sensor."""
-        super().__init__(instance, ac_key, zone_key=zone_key)
+        super().__init__(coordinator, ac_key, zone_key=zone_key)
         self._attr_name = f"{self._zone['name']} vent"
         self._attr_unique_id += "-vent"
 
@@ -128,9 +123,11 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an Advantage Air Zone wireless signal sensor."""
-        super().__init__(instance, ac_key, zone_key)
+        super().__init__(coordinator, ac_key, zone_key)
         self._attr_name = f"{self._zone['name']} signal"
         self._attr_unique_id += "-signal"
 
@@ -162,9 +159,11 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an Advantage Air Zone Temp Sensor."""
-        super().__init__(instance, ac_key, zone_key)
+        super().__init__(coordinator, ac_key, zone_key)
         self._attr_name = f"{self._zone['name']} temperature"
         self._attr_unique_id += "-temp"
 

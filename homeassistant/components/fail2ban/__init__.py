@@ -1,1 +1,1 @@
-"""The fail2ban component."""
+"""The Fail2Ban integration."""

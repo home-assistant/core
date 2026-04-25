@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from plexapi.exceptions import NotFound
 import requests.exceptions
@@ -110,7 +111,7 @@ class PlexSensor(SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._server.sensor_attributes
 

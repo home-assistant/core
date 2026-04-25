@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
-from typing import Any
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from functools import wraps
+from http import HTTPStatus
+import logging
+from typing import Any, Concatenate
 
+from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.smartglass import SmartglassProvider
 from pythonxbox.api.provider.smartglass.models import InputKeyType, PowerState
 
@@ -16,10 +20,14 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import XboxConfigEntry
 from .entity import XboxConsoleBaseEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -72,6 +80,35 @@ async def async_setup_entry(
     add_entities()
 
 
+def exception_handler[**_P, _R](
+    func: Callable[Concatenate[XboxRemote, _P], Awaitable[_R]],
+) -> Callable[Concatenate[XboxRemote, _P], Coroutine[Any, Any, _R]]:
+    """Catch Xbox errors."""
+
+    @wraps(func)
+    async def wrapper(
+        self: XboxRemote,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
+        """Catch Xbox errors and raise HomeAssistantError."""
+        try:
+            return await func(self, *args, **kwargs)
+        except TimeoutException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+    return wrapper
+
+
 class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
     """Representation of an Xbox remote."""
 
@@ -80,14 +117,25 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
         """Return True if device is on."""
         return self.data.status.power_state == PowerState.On
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Xbox on."""
-        await self.client.smartglass.wake_up(self._console.id)
+        try:
+            await self.client.smartglass.wake_up(self._console.id)
+        except HTTPStatusError as e:
+            if e.response.status_code == HTTPStatus.NOT_FOUND:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="turn_on_failed",
+                ) from e
+            raise
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Xbox off."""
         await self.client.smartglass.turn_off(self._console.id)
 
+    @exception_handler
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send controller or text input to the Xbox."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]

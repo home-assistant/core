@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -22,7 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DEVICE_TIMEOUT, DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +81,6 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         super().__init__(coordinator)
         self._device = device
-        device.set_update_callback(self._update_callback)
 
         self._attr_unique_id = device.fingerprint
 
@@ -120,6 +120,19 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return if the device is reachable.
+
+        The underlying library updates ``lastseen`` whenever the device
+        replies to a status request. The coordinator polls every
+        ``SCAN_INTERVAL``, so if we have not heard back within
+        ``DEVICE_TIMEOUT`` we consider the device offline.
+        """
+        if not super().available:
+            return False
+        return datetime.now() - self._device.lastseen < DEVICE_TIMEOUT
+
+    @property
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self._device.on
@@ -140,7 +153,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         return self._device.rgb_color
 
     @property
-    def color_mode(self) -> ColorMode | str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode."""
         if self._fixed_color_mode:
             # The light supports only a single color mode, return it
@@ -194,8 +207,19 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         await self.coordinator.turn_off(self._device)
         self.async_write_ha_state()
 
+    async def async_added_to_hass(self) -> None:
+        """Register update callback when entity is added."""
+        await super().async_added_to_hass()
+        self._device.set_update_callback(self._update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister update callback when entity is removed."""
+        self._device.set_update_callback(None)
+        await super().async_will_remove_from_hass()
+
     @callback
     def _update_callback(self, device: GoveeDevice) -> None:
+        """Handle device state updates pushed by the library."""
         self.async_write_ha_state()
 
     def _save_last_color_state(self) -> None:

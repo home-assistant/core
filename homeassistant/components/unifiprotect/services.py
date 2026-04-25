@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, cast
 
@@ -54,6 +55,9 @@ SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
+SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
+
+ATTR_PRESET = "preset"
 
 ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
@@ -61,6 +65,7 @@ ALL_GLOBAL_SERVICES = [
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_GET_USER_KEYRING_INFO,
+    SERVICE_PTZ_GOTO_PRESET,
 ]
 
 DOORBELL_TEXT_SCHEMA = vol.Schema(
@@ -87,6 +92,13 @@ REMOVE_PRIVACY_ZONE_SCHEMA = vol.Schema(
 GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
+    },
+)
+
+PTZ_GOTO_PRESET_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_PRESET): cv.string,
     },
 )
 
@@ -202,7 +214,7 @@ async def remove_privacy_zone(call: ServiceCall) -> None:
 @callback
 def _async_unique_id_to_mac(unique_id: str) -> str:
     """Extract the MAC address from the registry entry unique id."""
-    return unique_id.split("_")[0]
+    return unique_id.split("_", maxsplit=1)[0]
 
 
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
@@ -243,6 +255,59 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     data_before_changed = chime.dict_with_excludes()
     chime.camera_ids = sorted(doorbell_ids)
     await chime.save_device(data_before_changed)
+
+
+@callback
+def _async_get_ptz_camera(call: ServiceCall) -> Camera:
+    """Get a PTZ camera from a service call, validating PTZ support."""
+    camera = _async_get_ufp_camera(call)
+    if not camera.feature_flags.is_ptz:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_ptz_camera",
+            translation_placeholders={"camera_name": camera.display_name},
+        )
+    return camera
+
+
+async def _async_ptz_command(
+    func: Callable[..., Coroutine[Any, Any, Any]], **kwargs: Any
+) -> Any:
+    """Execute a PTZ command with error handling."""
+    try:
+        return await func(**kwargs)
+    except (ClientError, ValidationError) as err:
+        _LOGGER.debug("Error calling UniFi Protect PTZ command: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
+
+
+async def ptz_goto_preset(call: ServiceCall) -> None:
+    """Move a PTZ camera to a preset position."""
+    camera = _async_get_ptz_camera(call)
+    preset_name: str = call.data[ATTR_PRESET]
+
+    if preset_name.lower() == "home":
+        await _async_ptz_command(camera.ptz_goto_preset_public, slot=-1)
+        return
+
+    presets = await _async_ptz_command(camera.get_ptz_presets)
+
+    for preset in presets:
+        if preset.name == preset_name:
+            await _async_ptz_command(camera.ptz_goto_preset_public, slot=preset.slot)
+            return
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="ptz_preset_not_found",
+        translation_placeholders={
+            "preset_name": preset_name,
+            "camera_name": camera.display_name,
+        },
+    )
 
 
 async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
@@ -315,6 +380,12 @@ SERVICES = [
         get_user_keyring_info,
         GET_USER_KEYRING_INFO_SCHEMA,
         SupportsResponse.ONLY,
+    ),
+    (
+        SERVICE_PTZ_GOTO_PRESET,
+        ptz_goto_preset,
+        PTZ_GOTO_PRESET_SCHEMA,
+        SupportsResponse.NONE,
     ),
 ]
 

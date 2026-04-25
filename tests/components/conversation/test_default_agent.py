@@ -24,7 +24,6 @@ from homeassistant.components.conversation.chat_log import (
 )
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
-from homeassistant.components.conversation.trigger import TriggerDetails
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
@@ -373,7 +372,7 @@ async def test_duplicated_names_resolved_with_device_area(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="top light",
-            aliases={"overhead light"},
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -429,7 +428,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     manager = get_agent_manager(hass)
 
     callback = AsyncMock(return_value=trigger_response)
-    unregister = manager.register_trigger(TriggerDetails(trigger_sentences, callback))
+    unregister = manager.register_trigger(trigger_sentences, callback)
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -485,7 +484,7 @@ async def test_trigger_sentence_response_translation(
         return_value=translations.get(language),
     ):
         unregister = manager.register_trigger(
-            TriggerDetails(["test sentence"], AsyncMock(return_value=None))
+            ["test sentence"], AsyncMock(return_value=None)
         )
         result = await conversation.async_converse(
             hass, "test sentence", None, Context()
@@ -1301,7 +1300,7 @@ async def test_error_duplicate_names(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="kitchen light",
-            aliases={"overhead light"},
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1353,7 +1352,7 @@ async def test_duplicate_names_but_one_is_exposed(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="kitchen light",
-            aliases={"overhead light"},
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1395,7 +1394,7 @@ async def test_error_duplicate_names_same_area(
             light.entity_id,
             name="kitchen light",
             area_id=area_kitchen.id,
-            aliases={"overhead light"},
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1453,7 +1452,7 @@ async def test_duplicate_names_same_area_but_one_is_exposed(
             light.entity_id,
             name="kitchen light",
             area_id=area_kitchen.id,
-            aliases={"overhead light"},
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1504,7 +1503,7 @@ async def test_duplicate_names_different_areas(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="test light",
-            aliases={"overhead light"},
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1764,7 +1763,7 @@ async def test_empty_aliases(
         kitchen_light.entity_id,
         device_id=kitchen_device.id,
         name="kitchen light",
-        aliases={" "},
+        aliases=[er.COMPUTED_NAME, " "],
     )
     hass.states.async_set(
         kitchen_light.entity_id,
@@ -1934,7 +1933,7 @@ async def test_same_aliased_entities_in_different_areas(
         kitchen_light.entity_id,
         area_id=area_kitchen.id,
         name="kitchen overhead light",
-        aliases={"overhead light"},
+        aliases=[er.COMPUTED_NAME, "overhead light"],
     )
     hass.states.async_set(
         kitchen_light.entity_id,
@@ -1947,7 +1946,7 @@ async def test_same_aliased_entities_in_different_areas(
         bedroom_light.entity_id,
         area_id=area_bedroom.id,
         name="bedroom overhead light",
-        aliases={"overhead light"},
+        aliases=[er.COMPUTED_NAME, "overhead light"],
     )
     hass.states.async_set(
         bedroom_light.entity_id,
@@ -2107,7 +2106,9 @@ async def test_intent_entity_added_removed(
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
     )
-    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    entity_registry.async_update_entity(
+        "light.kitchen", aliases=[er.COMPUTED_NAME, "my cool light"]
+    )
     await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "off")
 
@@ -2124,7 +2125,11 @@ async def test_intent_entity_added_removed(
 
     # Add an entity
     entity_registry.async_get_or_create(
-        "light", "demo", "5678", suggested_object_id="late"
+        "light",
+        "demo",
+        "5678",
+        suggested_object_id="late",
+        original_name="friendly light",
     )
     hass.states.async_set("light.late", "off", {"friendly_name": "friendly light"})
 
@@ -2137,7 +2142,9 @@ async def test_intent_entity_added_removed(
     assert data["response"]["response_type"] == "action_done"
 
     # Now add an alias
-    entity_registry.async_update_entity("light.late", aliases={"late added light"})
+    entity_registry.async_update_entity(
+        "light.late", aliases=[er.COMPUTED_NAME, "late added light"]
+    )
 
     result = await conversation.async_converse(
         hass, "turn on late added light", None, context
@@ -2172,7 +2179,11 @@ async def test_intent_alias_added_removed(
     """
     context = Context()
     entity_registry.async_get_or_create(
-        "light", "demo", "1234", suggested_object_id="kitchen"
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen light",
     )
     hass.states.async_set("light.kitchen", "off", {"friendly_name": "kitchen light"})
 
@@ -2187,7 +2198,9 @@ async def test_intent_alias_added_removed(
     assert data["response"]["response_type"] == "action_done"
 
     # Add an alias
-    entity_registry.async_update_entity("light.kitchen", aliases={"late added alias"})
+    entity_registry.async_update_entity(
+        "light.kitchen", aliases=[er.COMPUTED_NAME, "late added alias"]
+    )
 
     result = await conversation.async_converse(
         hass, "turn on late added alias", None, context
@@ -2198,8 +2211,8 @@ async def test_intent_alias_added_removed(
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
 
-    # Now remove the alieas
-    entity_registry.async_update_entity("light.kitchen", aliases={})
+    # Now remove the alias
+    entity_registry.async_update_entity("light.kitchen", aliases=[er.COMPUTED_NAME])
 
     result = await conversation.async_converse(
         hass, "turn on late added alias", None, context
@@ -2574,7 +2587,9 @@ async def test_turn_on_area(
         "light", "demo", "1234", suggested_object_id="stove"
     )
     entity_registry.async_update_entity(
-        "light.stove", aliases={"my stove light"}, area_id=kitchen_area.id
+        "light.stove",
+        aliases=[er.COMPUTED_NAME, "my stove light"],
+        area_id=kitchen_area.id,
     )
     hass.states.async_set("light.stove", "off")
 
@@ -2832,6 +2847,7 @@ async def test_query_same_name_different_areas(
         "light",
         "demo",
         "1234",
+        original_name="overhead light",
     )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, area_id=kitchen_area.id
@@ -2847,6 +2863,7 @@ async def test_query_same_name_different_areas(
         "light",
         "demo",
         "5678",
+        original_name="overhead light",
     )
     entity_registry.async_update_entity(
         bedroom_light.entity_id, area_id=bedroom_area.id
@@ -3201,6 +3218,70 @@ async def test_handle_intents_with_response_errors(
         assert response is None
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error_code", "return_response"),
+    [
+        (
+            intent.MatchFailedError(
+                result=intent.MatchTargetsResult(is_match=False),
+                constraints=intent.MatchTargetsConstraints(),
+            ),
+            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+            False,
+        ),
+        (
+            intent.IntentHandleError(),
+            intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+            True,
+        ),
+        (intent.IntentUnexpectedError(), intent.IntentResponseErrorCode.UNKNOWN, True),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_handle_failed_intents(
+    hass: HomeAssistant,
+    init_components: None,
+    area_registry: ar.AreaRegistry,
+    side_effect: intent.IntentError,
+    error_code: intent.IntentResponseErrorCode,
+    return_response: bool,
+) -> None:
+    """Test that error results from intent handler are saved to chat_log."""
+    assert await async_setup_component(hass, "climate", {})
+    area_registry.async_create("living room")
+
+    agent = async_get_agent(hass)
+
+    user_input = ConversationInput(
+        text="What is the temperature in the living room?",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.conversation.default_agent.intent.async_handle",
+            side_effect=side_effect,
+        ) as mock_handle,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        response = await agent.async_handle_intents(user_input, chat_log)
+        assert len(chat_log.content) == 4  # System + user + tool call + tool results
+        assert chat_log.content[-1].role == "tool_result"
+
+    assert len(mock_handle.mock_calls) == 1
+
+    if return_response:
+        assert response is not None and response.error_code == error_code
+    else:
+        assert response is None
+
+
 @pytest.mark.usefixtures("init_components")
 async def test_handle_intents_filters_results(
     hass: HomeAssistant,
@@ -3393,7 +3474,9 @@ async def test_fuzzy_matching(
     )
     device_registry.async_update_device(office_satellite.id, area_id=area_office.id)
 
-    office_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    office_light = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="office light"
+    )
     office_light = entity_registry.async_update_entity(
         office_light.entity_id, area_id=area_office.id
     )
@@ -3496,7 +3579,7 @@ async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
 
     manager = get_agent_manager(hass)
     callback = AsyncMock(return_value=trigger_response)
-    manager.register_trigger(TriggerDetails([trigger_sentence], callback))
+    manager.register_trigger([trigger_sentence], callback)
 
     result = await conversation.async_converse(
         hass, trigger_sentence, None, Context(), None

@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, Final, cast
 
-from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
+from aionanoleaf2 import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
 from homeassistant.config_entries import (

@@ -11,13 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -50,9 +48,11 @@ MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="moveDetected",
     device_class=BinarySensorDeviceClass.MOTION,
     value_fn=(
-        lambda data: data.get("moveDetected") is True
-        or data.get("detectionState") == "DETECTED"
-        or data.get("detected") is True
+        lambda data: (
+            data.get("moveDetected") is True
+            or data.get("detectionState") == "DETECTED"
+            or data.get("detected") is True
+        )
     ),
 )
 
@@ -92,6 +92,26 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Smart Lock Vision": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Smart Lock Vision Pro": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Lock Vision": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Lock Vision Pro": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Smart Lock Pro Wifi": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
     "Curtain": (CALIBRATION_DESCRIPTION,),
     "Curtain3": (CALIBRATION_DESCRIPTION,),
     "Roller Shade": (CALIBRATION_DESCRIPTION,),
@@ -115,11 +135,11 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
 
     async_add_entities(
         SwitchBotCloudBinarySensor(data.api, device, coordinator, description)

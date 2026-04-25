@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile@sha256:2780b5c3bab67f1f76c781860de469442999ed1a0d7992a5efdf2cffc0e3d769
 FROM mcr.microsoft.com/vscode/devcontainers/base:debian
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -51,6 +52,9 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     --mount=type=bind,source=requirements_test.txt,target=requirements_test.txt \
     --mount=type=bind,source=requirements_test_pre_commit.txt,target=requirements_test_pre_commit.txt \
     uv pip install -r requirements.txt -r requirements_test.txt
+
+# Claude Code native install
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 WORKDIR /workspaces
 

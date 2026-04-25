@@ -5,7 +5,7 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aionanoleaf import InvalidToken, Unauthorized, Unavailable
+from aionanoleaf2 import InvalidToken, Unauthorized, Unavailable
 import pytest
 
 from homeassistant import config_entries

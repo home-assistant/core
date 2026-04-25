@@ -500,7 +500,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             ) from exc
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the scene state attributes."""
         attributes = {}
         for attr in (

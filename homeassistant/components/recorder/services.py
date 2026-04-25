@@ -77,7 +77,9 @@ SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
         vol.Required("start_time"): cv.datetime,
         vol.Optional("end_time"): cv.datetime,
         vol.Required("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required("period"): vol.In(["5minute", "hour", "day", "week", "month"]),
+        vol.Required("period"): vol.In(
+            ["5minute", "hour", "day", "week", "month", "year"]
+        ),
         vol.Required("types"): vol.All(
             cv.ensure_list,
             [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],

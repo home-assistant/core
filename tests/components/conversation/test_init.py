@@ -156,7 +156,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # Confirm intents are loaded
     assert agent._lang_intents.get(language)
     # Confirm config intents are empty
-    assert not agent._config_intents["intents"]
+    assert not agent._config_intents_config["intents"]
 
     # Try to clear for a different language
     await hass.services.async_call(
@@ -166,7 +166,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # Confirm intents are still loaded
     assert agent._lang_intents.get(language)
     # Confirm config intents are still empty
-    assert not agent._config_intents["intents"]
+    assert not agent._config_intents_config["intents"]
 
     # Reload from a changed configuration file
     hass_config_new = {
@@ -187,7 +187,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # Confirm intent cache is cleared
     assert not agent._lang_intents.get(language)
     # Confirm new config intents are loaded
-    assert agent._config_intents["intents"]
+    assert agent._config_intents_config["intents"]
 
 
 @pytest.mark.usefixtures("init_components")

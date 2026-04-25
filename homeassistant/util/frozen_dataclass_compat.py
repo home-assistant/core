@@ -4,16 +4,10 @@ This module enabled a non-breaking transition from mutable to frozen dataclasses
 derived from EntityDescription and sub classes thereof.
 """
 
-from __future__ import annotations
-
+from annotationlib import Format, get_annotations
 import dataclasses
 import sys
 from typing import TYPE_CHECKING, Any, cast, dataclass_transform
-
-if sys.version_info >= (3, 14):
-    from annotationlib import Format, get_annotations
-else:
-    from typing_extensions import Format, get_annotations
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -97,17 +91,18 @@ class FrozenOrThawed(type):
                 # All direct parents are dataclasses, rely on dataclass inheritance
                 return
             # Parent is not a dataclass, inject all parents' annotations
-            annotations: dict = {}
+            annotations: dict[str, Any] = {}
             for parent in cls.__mro__[::-1]:
                 if parent is object:
                     continue
                 annotations |= get_annotations(parent, format=Format.FORWARDREF)
 
-            if "__annotations__" in cls.__dict__ or sys.version_info < (3, 14):
+            if "__annotations__" in cls.__dict__:
                 cls.__annotations__ = annotations
             else:
 
-                def wrapped_annotate(format: Format) -> dict:
+                def wrapped_annotate(format: Format) -> dict[str, Any]:
+                    # Note: to avoid complicating things, we only support FORWARDREF
                     return annotations
 
                 cls.__annotate__ = wrapped_annotate

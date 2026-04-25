@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["pyatv", "srptools"],
-  "requirements": ["pyatv==0.16.1;python_version<'3.14'"],
+  "requirements": ["pyatv==0.17.0"],
   "zeroconf": [
     "_mediaremotetv._tcp.local.",
     "_companion-link._tcp.local.",

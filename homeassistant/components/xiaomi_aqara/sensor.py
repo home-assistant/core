@@ -92,6 +92,8 @@ async def async_setup_entry(
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities: list[XiaomiSensor | XiaomiBatterySensor] = []
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["sensor"]:
         if device["model"] == "sensor_ht":
@@ -125,7 +127,7 @@ async def async_setup_entry(
                     device, "Illumination", "illumination", gateway, config_entry
                 )
             )
-        elif device["model"] in ("vibration",):
+        elif device["model"] == "vibration":
             entities.append(
                 XiaomiSensor(
                     device, "Bed Activity", "bed_activity", gateway, config_entry
@@ -190,7 +192,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         value = float(value)
         if self._data_key in ("temperature", "humidity", "pressure"):
             value /= 100
-        elif self._data_key in ("illumination",):
+        elif self._data_key == "illumination":
             value = max(value - 300, 0)
         if self._data_key == "temperature" and (value < -50 or value > 60):
             return False

@@ -72,6 +72,39 @@ async def test_binary_sensor_states(
     assert "engineOilPressureOk" in caplog.text
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_loadshed_binary_sensor_states(
+    hass: HomeAssistant,
+    generator: dict[str, Any],
+    mock_rehlko: AsyncMock,
+    load_rehlko_config_entry: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Rehlko loadshed binary sensor state logic."""
+    # Initial state - HVAC A should be off (false)
+    hvac_a_param = generator["loadShed"]["parameters"][0]
+    assert hvac_a_param["displayName"] == "HVAC A"
+    assert hvac_a_param["value"] is False
+    state = hass.states.get("binary_sensor.generator_1_load_shed_hvac_a")
+    assert state.state == STATE_OFF
+
+    # Change HVAC A to on (true)
+    hvac_a_param["value"] = True
+    freezer.tick(SCAN_INTERVAL_MINUTES)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.generator_1_load_shed_hvac_a")
+    assert state.state == STATE_ON
+
+    # Remove loadShed data to test unavailable state
+    del generator["loadShed"]
+    freezer.tick(SCAN_INTERVAL_MINUTES)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.generator_1_load_shed_hvac_a")
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_binary_sensor_connectivity_availability(
     hass: HomeAssistant,
     generator: dict[str, Any],

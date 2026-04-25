@@ -68,6 +68,10 @@ play_announcement:
       example: "true"
       selector:
         boolean:
+    pre_announce_url:
+      example: "http://someremotesite.com/chime.mp3"
+      selector:
+        text:
     announce_volume:
       example: 75
       selector:

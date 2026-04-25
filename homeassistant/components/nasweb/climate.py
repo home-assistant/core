@@ -106,7 +106,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._attr_target_temperature_high = self._thermostat.temp_target_max
         self._attr_hvac_mode = self._get_current_hvac_mode()
         self._attr_hvac_action = self._get_current_action()
-        self._attr_name = self._thermostat.name if self._thermostat.name else None
+        self._attr_name = self._thermostat.name or None
         self._set_attr_available(
             self._thermostat.last_update, self._thermostat.available
         )

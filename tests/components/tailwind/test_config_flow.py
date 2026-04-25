@@ -393,6 +393,108 @@ async def test_reauth_flow_errors(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_tailwind")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfiguration flow updates an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.42",
+            CONF_TOKEN: "987654",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.42"
+    assert mock_config_entry.data[CONF_TOKEN] == "987654"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (TailwindConnectionError, {CONF_HOST: "cannot_connect"}),
+        (TailwindAuthenticationError, {CONF_TOKEN: "invalid_auth"}),
+        (Exception, {"base": "unknown"}),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tailwind: MagicMock,
+    side_effect: Exception,
+    expected_error: dict[str, str],
+) -> None:
+    """Test the reconfiguration flow recovers from errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_tailwind.status.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.42",
+            CONF_TOKEN: "987654",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == expected_error
+
+    mock_tailwind.status.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.42",
+            CONF_TOKEN: "987654",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_different_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tailwind: MagicMock,
+) -> None:
+    """Test reconfigure aborts when the new device has a different MAC."""
+    mock_config_entry.add_to_hass(hass)
+    mock_tailwind.status.return_value = MagicMock(
+        mac_address="aa:bb:cc:dd:ee:ff",
+        product="iQ3",
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.42",
+            CONF_TOKEN: "987654",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_device"
+
+
 async def test_dhcp_discovery_updates_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

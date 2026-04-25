@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
-from .sensor.sensor_entity_description import GrowattRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +26,10 @@ PARALLEL_UPDATES = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class GrowattNumberEntityDescription(NumberEntityDescription, GrowattRequiredKeysMixin):
+class GrowattNumberEntityDescription(NumberEntityDescription):
     """Describes Growatt number entity."""
 
+    api_key: str
     write_key: str | None = None  # Parameter ID for writing (if different from api_key)
 
 
@@ -68,10 +68,20 @@ MIN_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
     ),
     GrowattNumberEntityDescription(
-        key="battery_discharge_soc_limit",
-        translation_key="battery_discharge_soc_limit",
-        api_key="wdisChargeSOCLowLimit",  # Key returned by V1 API
+        key="battery_discharge_soc_limit",  # Keep original key to preserve unique_id
+        translation_key="battery_discharge_soc_limit_off_grid",
+        api_key="wdisChargeSOCLowLimit",  # Key returned by V1 API (off-grid)
         write_key="discharge_stop_soc",  # Key used to write parameter
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    GrowattNumberEntityDescription(
+        key="battery_discharge_soc_limit_on_grid",
+        translation_key="battery_discharge_soc_limit_on_grid",
+        api_key="onGridDischargeStopSOC",  # Key returned by V1 API (on-grid)
+        write_key="on_grid_discharge_stop_soc",  # Key used to write parameter
         native_step=1,
         native_min_value=0,
         native_max_value=100,
@@ -120,6 +130,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer="Growatt",
             name=coordinator.device_id,
+            serial_number=coordinator.device_id,
         )
 
     @property
@@ -147,7 +158,11 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
                 int_value,
             )
         except GrowattV1ApiError as e:
-            raise HomeAssistantError(f"Error while setting parameter: {e}") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(e)},
+            ) from e
 
         # If no exception was raised, the write was successful
         _LOGGER.debug(

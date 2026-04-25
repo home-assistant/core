@@ -1,4 +1,4 @@
-"""Tests for the dnsip integration."""
+"""Tests for the DNS IP integration."""
 
 from __future__ import annotations
 

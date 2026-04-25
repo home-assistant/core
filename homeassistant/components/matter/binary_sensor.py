@@ -15,23 +15,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter binary sensor from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
@@ -105,8 +104,9 @@ DISCOVERY_SCHEMAS = [
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: x
-            != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
+            device_to_ha=lambda x: (
+                x != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
@@ -174,6 +174,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="LockActuatorEnabledSensor",
+            translation_key="actuator",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.ActuatorEnabled,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -249,6 +259,18 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmCOStateSensor",
+            device_class=BinarySensorDeviceClass.CO,
+            device_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.COState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -489,11 +511,12 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="WindowCoveringConfigStatusOperational",
+            translation_key="config_status_operational",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # unset Operational bit from ConfigStatus bitmap means problem
-            device_to_ha=lambda x: not bool(
-                x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
+            device_to_ha=lambda x: (
+                not bool(x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational)
             ),
         ),
         entity_class=MatterBinarySensor,

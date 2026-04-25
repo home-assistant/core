@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -21,8 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
+from . import StarlineConfigEntry
 from .account import StarlineAccount, StarlineDevice
-from .const import DOMAIN
 from .entity import StarlineEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -89,11 +90,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StarlineConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine sensors."""
-    account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
+    account = entry.runtime_data
     entities = [
         sensor
         for device in account.api.devices.values()
@@ -118,7 +119,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self._key == "battery":
             return icon_for_battery_level(
@@ -166,7 +167,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         return self.entity_description.native_unit_of_measurement
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)

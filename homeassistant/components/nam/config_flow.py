@@ -61,7 +61,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 nam = await async_get_nam(self.hass, self.host, {})
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except CannotGetMacError:
                 return self.async_abort(reason="device_unsupported")
@@ -96,7 +96,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 nam = await async_get_nam(self.hass, self.host, user_input)
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -126,7 +126,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             nam = await async_get_nam(self.hass, self.host, {})
-        except (ApiError, ClientConnectorError, TimeoutError):
+        except ApiError, ClientConnectorError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
         except CannotGetMacError:
             return self.async_abort(reason="device_unsupported")
@@ -208,7 +208,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 nam = await async_get_nam(self.hass, user_input[CONF_HOST], {})
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(format_mac(nam.mac))

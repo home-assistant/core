@@ -15,7 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DISCOVERY_TIMEOUT
+from .const import DISCOVERY_TIMEOUT, DOMAIN
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -52,7 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             _LOGGER.error("Start failed, errno: %d", ex.errno)
             return False
         _LOGGER.error("Port %s already in use", LISTENING_PORT)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="port_in_use",
+            translation_placeholders={"port": LISTENING_PORT},
+        ) from ex
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -61,7 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             while not coordinator.devices:
                 await asyncio.sleep(delay=1)
     except TimeoutError as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="no_devices_found"
+        ) from ex
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

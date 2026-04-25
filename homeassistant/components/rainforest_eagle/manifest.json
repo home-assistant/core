@@ -9,6 +9,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aioeagle", "eagle100"],
   "requirements": ["aioeagle==1.1.0", "eagle100==0.1.1"]

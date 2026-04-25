@@ -36,6 +36,7 @@ from yalexs.manager.ratelimit import _RateLimitChecker
 from yalexs.manager.socketio import SocketIORunner
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -120,7 +121,7 @@ def mock_config_entry(jwt: str | None = None) -> MockConfigEntry:
 
 async def mock_client_credentials(hass: HomeAssistant) -> ClientCredential:
     """Mock client credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

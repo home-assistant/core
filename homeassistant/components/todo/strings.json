@@ -1,4 +1,35 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "condition_threshold_name": "Threshold type"
+  },
+  "conditions": {
+    "all_completed": {
+      "description": "Tests if all to-do items are completed in one or more to-do lists.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::todo::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::todo::common::condition_for_name%]"
+        }
+      },
+      "name": "All to-do items completed"
+    },
+    "incomplete": {
+      "description": "Tests the number of incomplete to-do items in one or more to-do lists.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::todo::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::todo::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Incomplete to-do items"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::todo::title%]"
@@ -13,6 +44,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "status": {
       "options": {
         "completed": "Completed",
@@ -41,7 +78,7 @@
           "name": "Item name"
         }
       },
-      "name": "Add item"
+      "name": "Add to-do list item"
     },
     "get_items": {
       "description": "Gets items on a to-do list.",
@@ -51,11 +88,11 @@
           "name": "Status"
         }
       },
-      "name": "Get items"
+      "name": "Get to-do list items"
     },
     "remove_completed_items": {
       "description": "Removes all to-do list items that have been completed.",
-      "name": "Remove completed items"
+      "name": "Remove completed to-do list items"
     },
     "remove_item": {
       "description": "Removes an existing to-do list item by its name or UID.",
@@ -65,7 +102,7 @@
           "name": "[%key:component::todo::services::update_item::fields::item::name%]"
         }
       },
-      "name": "Remove item"
+      "name": "Remove to-do list item"
     },
     "update_item": {
       "description": "Updates an existing to-do list item based on its name or UID.",
@@ -95,8 +132,22 @@
           "name": "Set status"
         }
       },
-      "name": "Update item"
+      "name": "Update to-do list item"
     }
   },
-  "title": "To-do list"
+  "title": "To-do list",
+  "triggers": {
+    "item_added": {
+      "description": "Triggers when a to-do item is added to a list.",
+      "name": "To-do item added"
+    },
+    "item_completed": {
+      "description": "Triggers when a to-do item is marked as done.",
+      "name": "To-do item completed"
+    },
+    "item_removed": {
+      "description": "Triggers when a to-do item is removed from a list.",
+      "name": "To-do item removed"
+    }
+  }
 }

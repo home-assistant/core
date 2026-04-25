@@ -5,8 +5,6 @@ from typing import Any
 
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.switch_base import VeSyncSwitch
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -40,7 +38,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices: list[VeSyncBaseDevice]) -> None:
+    def discover(devices: list[VeSyncBulb | VeSyncSwitch]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -49,13 +47,16 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices.bulbs
+        + config_entry.runtime_data.manager.devices.switches,
+        async_add_entities,
+        coordinator,
     )
 
 
 @callback
 def _setup_entities(
-    devices: DeviceContainer | list[VeSyncBaseDevice],
+    devices: list[VeSyncBulb | VeSyncSwitch],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
@@ -73,9 +74,10 @@ def _setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
+class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
+    device: VeSyncBulb | VeSyncSwitch
     _attr_name = None
 
     @property
@@ -86,26 +88,24 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Get light brightness."""
-        # get value from pyvesync library api,
-        result = self.device.state.brightness
-        try:
-            # check for validity of brightness value received
-            brightness_value = int(result)
-        except ValueError:
-            # deal if any unexpected/non numeric value
+        if self.device.state.brightness is None:
             _LOGGER.debug(
-                "VeSync - received unexpected 'brightness' value from pyvesync api: %s",
-                result,
+                "VeSync - received unexpected 'brightness' value from pyvesync api of None"
             )
             return 0
+
         # convert percent brightness to ha expected range
-        return round((max(1, brightness_value) / 100) * 255)
+        return round((max(1, self.device.state.brightness) / 100) * 255)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if (
+            self.color_mode == ColorMode.COLOR_TEMP
+            and ATTR_COLOR_TEMP_KELVIN in kwargs
+            and hasattr(self.device, "set_color_temp")
+        ):
             # get white temperature from HA data
             color_temp = color_util.color_temperature_kelvin_to_mired(
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
@@ -165,6 +165,7 @@ class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
 class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
+    device: VeSyncBulb
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_min_color_temp_kelvin = 2700  # 370 Mireds
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
@@ -173,24 +174,18 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        # get value from pyvesync library api
-        # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
-        result = self.device.state.color_temp
-        try:
-            # check for validity of brightness value received
-            color_temp_value = int(result)
-        except ValueError:
-            # deal if any unexpected/non numeric value
-            _LOGGER.debug(
-                (
-                    "VeSync - received unexpected 'color_temp_pct' value from pyvesync"
-                    " api: %s"
-                ),
-                result,
-            )
+        if hasattr(self.device.state, "color_temp") is False:
             return None
+
+        # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
+        if self.device.state.color_temp is None:
+            _LOGGER.debug(
+                "VeSync - received unexpected 'color_temp' value from pyvesync api of None"
+            )
+            return 0
+
         # flip cold/warm
-        color_temp_value = 100 - color_temp_value
+        color_temp_value = 100 - self.device.state.color_temp
         # ensure value between 0-100
         color_temp_value = max(0, min(color_temp_value, 100))
         # convert percent value to Mireds

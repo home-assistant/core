@@ -165,9 +165,9 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[item.name.lower() for item in OperatingMode],
         value_fn=(
-            lambda data, _: data.operating_mode.name.lower()
-            if data.operating_mode
-            else None
+            lambda data, _: (
+                data.operating_mode.name.lower() if data.operating_mode else None
+            )
         ),
     ),
     IronOSSensorEntityDescription(

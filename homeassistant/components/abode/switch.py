@@ -7,13 +7,11 @@ from typing import Any, cast
 from jaraco.abode.devices.switch import Switch
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN
+from . import AbodeConfigEntry
 from .entity import AbodeAutomation, AbodeDevice
 
 DEVICE_TYPES = ["switch", "valve"]
@@ -21,11 +19,11 @@ DEVICE_TYPES = ["switch", "valve"]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode switch devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = entry.runtime_data
 
     entities: list[SwitchEntity] = [
         AbodeSwitch(data, device)

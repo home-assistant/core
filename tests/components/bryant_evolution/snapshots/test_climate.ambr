@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_integration_success[climate.system_1_zone_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([

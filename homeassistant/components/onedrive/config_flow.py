@@ -102,7 +102,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 entry=reauth_entry,
-                data=data,
+                data_updates=data,
             )
 
         if self.source != SOURCE_RECONFIGURE:
@@ -129,9 +129,6 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except OneDriveException:
                 self.logger.debug("Failed to create folder", exc_info=True)
                 errors["base"] = "folder_creation_error"
-            else:
-                if folder.description and folder.description != instance_id:
-                    errors[CONF_FOLDER_NAME] = "folder_already_in_use"
             if not errors:
                 title = (
                     f"{self.approot.created_by.user.display_name}'s OneDrive"

@@ -9,6 +9,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -21,9 +22,11 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "error": {
-      "folder_already_in_use": "Folder already used for backups from another Home Assistant instance",
       "folder_creation_error": "Failed to create folder",
       "folder_rename_error": "Failed to rename folder"
+    },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
       "folder_name": {
@@ -102,9 +105,6 @@
     "filename_does_not_exist": {
       "message": "`{filename}` does not exist"
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },
@@ -143,24 +143,24 @@
   },
   "services": {
     "upload": {
-      "description": "Uploads files to OneDrive.",
+      "description": "Uploads one or more files to OneDrive.",
       "fields": {
         "config_entry_id": {
           "description": "The config entry representing the OneDrive you want to upload to.",
           "name": "Config entry ID"
         },
         "destination_folder": {
-          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the files to. Will be created if it does not exist.",
           "example": "photos/snapshots",
           "name": "Destination folder"
         },
         "filename": {
-          "description": "Path to the file to upload.",
+          "description": "One or more paths to files to upload.",
           "example": "{example_image_path}",
-          "name": "Filename"
+          "name": "Filenames"
         }
       },
-      "name": "Upload file"
+      "name": "Upload files"
     }
   }
 }

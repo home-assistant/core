@@ -60,7 +60,7 @@ async def test_player_sensor_next_alarm(
     player = (await lms.async_get_players())[0]
 
     # test alarm time is set from player
-    state = hass.states.get("sensor.none_next_alarm")
+    state = hass.states.get("sensor.next_alarm")
     assert state is not None
     assert state.state == TEST_ALARM_NEXT_TIME.isoformat()
 
@@ -70,6 +70,6 @@ async def test_player_sensor_next_alarm(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.none_next_alarm")
+    state = hass.states.get("sensor.next_alarm")
     assert state is not None
     assert state.state == STATE_UNKNOWN

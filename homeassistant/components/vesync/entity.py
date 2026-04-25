@@ -9,14 +9,12 @@ from .const import DOMAIN
 from .coordinator import VeSyncDataCoordinator
 
 
-class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
+class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, device: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
-    ) -> None:
+    def __init__(self, device: T, coordinator: VeSyncDataCoordinator) -> None:
         """Initialize the VeSync device."""
         super().__init__(coordinator)
         self.device = device

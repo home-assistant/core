@@ -8,11 +8,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE_TIME
@@ -41,21 +40,10 @@ SET_DATE_TIME_SCHEMA = vol.Schema(
 
 async def async_set_panel_date(call: ServiceCall) -> None:
     """Set the date and time on a bosch alarm panel."""
-    config_entry: BoschAlarmConfigEntry | None
     value: dt.datetime = call.data.get(ATTR_DATETIME, dt_util.now())
-    entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
-    if not (config_entry := call.hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": entry_id},
-        )
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": config_entry.title},
-        )
+    config_entry: BoschAlarmConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     panel = config_entry.runtime_data
     try:
         await panel.set_panel_date(value)

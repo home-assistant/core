@@ -115,13 +115,19 @@
       },
       "gas_usage_to_date": {
         "name": "Current bill gas usage to date"
+      },
+      "last_changed": {
+        "name": "Last changed"
+      },
+      "last_updated": {
+        "name": "Last updated"
       }
     }
   },
   "issues": {
     "return_to_grid_migration": {
-      "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue.",
-      "title": "Return to grid statistics for account: {utility_account_id}"
+      "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those into separate export statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Energy exported to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue.",
+      "title": "Export to grid statistics for account: {utility_account_id}"
     },
     "unsupported_utility": {
       "fix_flow": {

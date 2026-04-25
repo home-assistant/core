@@ -1,5 +1,9 @@
 """Common stuff for Fritz!Tools tests."""
 
+from typing import Any
+
+from fritzconnection.lib.fritzstatus import DefaultConnectionService
+
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
@@ -44,22 +48,35 @@ MOCK_FIRMWARE_AVAILABLE = "7.50"
 MOCK_FIRMWARE_RELEASE_URL = (
     "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
 )
-MOCK_SERIAL_NUMBER = "fake_serial_number"
+
+# The serial number needs to be in sync with the MAC address of the router
+# because the second is computed from the first one in the code.
+MOCK_SERIAL_NUMBER = "1CED6F123411"
+MOCK_MESH_MASTER_MAC = "1C:ED:6F:12:34:11"
+
 MOCK_FIRMWARE_INFO = [True, "1.1.1", "some-release-url"]
 MOCK_MESH_SSID = "TestSSID"
-MOCK_MESH_MASTER_MAC = "1C:ED:6F:12:34:11"
+
 MOCK_MESH_MASTER_WIFI1_MAC = "1C:ED:6F:12:34:12"
 MOCK_MESH_SLAVE_MAC = "1C:ED:6F:12:34:21"
 MOCK_MESH_SLAVE_WIFI1_MAC = "1C:ED:6F:12:34:22"
 
-MOCK_FB_SERVICES: dict[str, dict] = {
+MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
     "DeviceInfo1": {
         "GetInfo": {
-            "NewSerialNumber": MOCK_MESH_MASTER_MAC,
+            "NewSerialNumber": MOCK_SERIAL_NUMBER,
             "NewName": "TheName",
+            "NewManufacturerName": "AVM",
+            "NewManufacturerOUI": "00040E",
             "NewModelName": MOCK_MODELNAME,
+            "NewDescription": f"{MOCK_MODELNAME} {MOCK_FIRMWARE}",
+            "NewProductClass": "AVMFB7590AX",
             "NewSoftwareVersion": MOCK_FIRMWARE,
+            "NewHardwareVersion": MOCK_MODELNAME,
+            "NewSpecVersion": "1.0",
+            "NewDeviceLog": "long string here ...",
             "NewUpTime": 2518179,
+            "NewProvisioningCode": "000.044.004.000",
         },
     },
     "Hosts1": {
@@ -147,7 +164,27 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewDownstreamMaxBitRate": 43430530,
             "NewExternalIPAddress": "1.2.3.4",
         },
-        "GetPortMappingNumberOfEntries": {},
+        "GetPortMappingNumberOfEntries": {
+            "NewPortMappingNumberOfEntries": 2,
+        },
+        "GetGenericPortMappingEntry": {
+            0: {
+                "NewInternalClient": "10.10.10.10",
+                "NewPortMappingDescription": "Test Port Mapping",
+                "NewInternalPort": 8080,
+                "NewExternalPort": 80,
+                "NewProtocol": "TCP",
+                "NewEnabled": True,
+            },
+            1: {
+                "NewInternalClient": "10.10.10.10",
+                "NewPortMappingDescription": "Test Port Mapping",
+                "NewInternalPort": 8081,
+                "NewExternalPort": 81,
+                "NewProtocol": "UDP",
+                "NewEnabled": True,
+            },
+        },
     },
     "WLANConfiguration1": {
         "GetInfo": {
@@ -158,11 +195,34 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
             "NewStandard": "ax",
             "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewMACAddressControlEnabled": True,
         },
         "GetSSID": {
             "NewSSID": "MyWifi",
         },
         "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+        "GetBeaconAdvertisement": {
+            "NewBeaconAdvertisementEnabled": True,
+        },
+    },
+    "WLANConfiguration2": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewSSID": "GuestWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewMACAddressControlEnabled": True,
+        },
+        "GetSSID": {
+            "NewSSID": "GuestWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+        "GetBeaconAdvertisement": {
+            "NewBeaconAdvertisementEnabled": True,
+        },
     },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [
@@ -933,10 +993,16 @@ MOCK_HOST_ATTRIBUTES_DATA = [
 MOCK_CALL_DEFLECTION_DATA = {
     "X_AVM-DE_OnTel1": {
         "GetDeflections": {
-            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>0</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>1</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
         }
     }
 }
+
+MOCK_STATUS_CONNECTION_DATA = DefaultConnectionService("1", "WANPPPConnection", "1")
+MOCK_STATUS_DEVICE_INFO_DATA = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"]
+MOCK_STATUS_AVM_DEVICE_LOG_DATA = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"][
+    "NewDeviceLog"
+]
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA

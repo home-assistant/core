@@ -98,7 +98,7 @@ def async_register_webhook(hass: HomeAssistant, entry: RachioConfigEntry) -> Non
                 data.get(KEY_EXTERNAL_ID, "").split(":")[1]
                 == person.rachio.webhook_auth
             )
-        except (AssertionError, IndexError):
+        except AssertionError, IndexError:
             return web.Response(status=web.HTTPForbidden.status_code)
 
         update_type = data[KEY_TYPE]

@@ -20,6 +20,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
@@ -48,6 +50,6 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
         return f"{self._unique_id}-nightlight_sensor"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if nightlight mode is on."""
         return self._device.is_nightlight_enabled

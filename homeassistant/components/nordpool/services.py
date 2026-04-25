@@ -20,7 +20,6 @@ from pynordpool import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
@@ -30,7 +29,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
@@ -65,21 +64,6 @@ SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
 )
 
 
-def get_config_entry(hass: HomeAssistant, entry_id: str) -> NordPoolConfigEntry:
-    """Return config entry."""
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-        )
-    return entry
-
-
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Nord Pool integration."""
@@ -88,7 +72,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         call: ServiceCall,
     ) -> tuple[NordPoolClient, date, str, list[str], int]:
         """Return the parameters for the service."""
-        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        entry: NordPoolConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        )
         client = entry.runtime_data.client
         asked_date: date = call.data[ATTR_DATE]
 

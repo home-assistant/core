@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import (
-    DOMAIN as SWITCH_PLATFORM,
+    DOMAIN as SWITCH_DOMAIN,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -100,8 +100,8 @@ RPC_SWITCHES = {
     "boolean_generic": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SWITCH_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SWITCH_DOMAIN)
         ),
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -264,8 +264,10 @@ RPC_SWITCHES = {
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "left", value),
         entity_registry_enabled_default=True,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_left_boost": RpcSwitchDescription(
         key="cury",
@@ -276,8 +278,10 @@ RPC_SWITCHES = {
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "left"),
         entity_registry_enabled_default=True,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right": RpcSwitchDescription(
         key="cury",
@@ -288,8 +292,10 @@ RPC_SWITCHES = {
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "right", value),
         entity_registry_enabled_default=True,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_boost": RpcSwitchDescription(
         key="cury",
@@ -300,8 +306,10 @@ RPC_SWITCHES = {
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "right"),
         entity_registry_enabled_default=True,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_away_mode": RpcSwitchDescription(
         key="cury",
@@ -371,13 +379,13 @@ def _async_setup_rpc_entry(
     # the user can remove virtual components from the device configuration, so we need
     # to remove orphaned entities
     virtual_switch_ids = get_virtual_component_ids(
-        coordinator.device.config, SWITCH_PLATFORM
+        coordinator.device.config, SWITCH_DOMAIN
     )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        SWITCH_PLATFORM,
+        SWITCH_DOMAIN,
         virtual_switch_ids,
         "boolean",
     )
@@ -388,7 +396,7 @@ def _async_setup_rpc_entry(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        SWITCH_PLATFORM,
+        SWITCH_DOMAIN,
         coordinator.device.status,
         "script",
     )
@@ -399,7 +407,7 @@ def _async_setup_rpc_entry(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        CLIMATE_PLATFORM,
+        CLIMATE_DOMAIN,
         coordinator.device.status,
         "thermostat",
     )

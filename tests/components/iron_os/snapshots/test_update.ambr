@@ -4,8 +4,9 @@
 # ---
 # name: test_update[update.pinecil_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14,7 +15,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'update.pinecil_firmware',
     'has_entity_name': True,
     'hidden_by': None,
@@ -44,7 +45,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/iron_os/icon.png',
+      'entity_picture': '/api/brands/integration/iron_os/icon.png',
       'friendly_name': 'Pinecil Firmware',
       'in_progress': False,
       'installed_version': 'v2.23',

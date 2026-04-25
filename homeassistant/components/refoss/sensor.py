@@ -146,6 +146,8 @@ async def async_setup_entry(
         )
         _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 

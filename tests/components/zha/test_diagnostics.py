@@ -104,8 +104,8 @@ async def test_diagnostics_for_device(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                SIG_EP_INPUT: [security.IasAce.cluster_id, security.IasZone.cluster_id],
-                SIG_EP_OUTPUT: [],
+                SIG_EP_INPUT: [security.IasZone.cluster_id],
+                SIG_EP_OUTPUT: [security.IasAce.cluster_id],
                 SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
                 SIG_EP_PROFILE: zha.PROFILE_ID,
             }
@@ -120,19 +120,13 @@ async def test_diagnostics_for_device(
 
     zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
 
-    # add unknown unsupported attribute with id and name
-    zha_device_proxy.device.device.endpoints[1].in_clusters[
-        security.IasAce.cluster_id
-    ].unsupported_attributes.update({0x1000, "unknown_attribute_name"})
-
     # add known unsupported attributes with id and name
-    zha_device_proxy.device.device.endpoints[1].in_clusters[
-        security.IasZone.cluster_id
-    ].unsupported_attributes.update(
-        {
-            security.IasZone.AttributeDefs.num_zone_sensitivity_levels_supported.id,
-            security.IasZone.AttributeDefs.current_zone_sensitivity_level.name,
-        }
+    zha_device_proxy.device.device.endpoints[1].ias_zone.add_unsupported_attribute(
+        security.IasZone.AttributeDefs.num_zone_sensitivity_levels_supported
+    )
+
+    zha_device_proxy.device.device.endpoints[1].ias_zone.add_unsupported_attribute(
+        security.IasZone.AttributeDefs.current_zone_sensitivity_level
     )
 
     device = device_registry.async_get_device(

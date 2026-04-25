@@ -11,7 +11,7 @@ from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 from .const import FLUX_COLOR_MODE_TO_HASS, MIN_RGB_BRIGHTNESS
 
 
-def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
+def _hass_color_modes(device: AIOWifiLedBulb) -> set[ColorMode]:
     color_modes = device.color_modes
     if not color_modes:
         return {ColorMode.ONOFF}

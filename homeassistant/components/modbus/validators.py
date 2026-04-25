@@ -226,7 +226,7 @@ def nan_validator(value: Any) -> int:
         return value
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         pass
     try:
         return int(value, 16)

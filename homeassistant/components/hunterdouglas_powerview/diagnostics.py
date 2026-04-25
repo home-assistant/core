@@ -7,7 +7,7 @@ from typing import Any
 
 import attr
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -94,7 +94,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
             state_dict = dict(state.as_dict())
             state_dict.pop("context", None)
 
-        entity = attr.asdict(entity_entry)
+        entity = entity_entry_as_dict(entity_entry)
         entity["state"] = state_dict
         entities.append(entity)
 

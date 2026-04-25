@@ -52,7 +52,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
 
-AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
+AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f", "e8:27:25"}
 DEFAULT_PORT = 443
 DEFAULT_PROTOCOL = "https"
 PROTOCOL_CHOICES = ["https", "http"]

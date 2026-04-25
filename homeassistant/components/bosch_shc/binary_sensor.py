@@ -77,7 +77,7 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self._device.state == SHCShutterContact.ShutterContactService.State.OPEN
 
@@ -93,7 +93,7 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.serial}_battery"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
             self._device.batterylevel != SHCBatteryDevice.BatteryLevelService.State.OK

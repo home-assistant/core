@@ -891,8 +891,16 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
+
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
     device = _mocked_device(
-        modules=[Module.Light, Module.LightEffect], alias="my_light"
+        modules=[Module.Light, Module.LightEffect], alias="my_light", features=features
     )
     light = device.modules[Module.Light]
     light_effect = device.modules[Module.LightEffect]
@@ -1075,8 +1083,15 @@ async def test_smart_strip_effect_service_error(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
     device = _mocked_device(
-        modules=[Module.Light, Module.LightEffect], alias="my_light"
+        modules=[Module.Light, Module.LightEffect], alias="my_light", features=features
     )
     light_effect = device.modules[Module.LightEffect]
 
@@ -1154,8 +1169,15 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
     device = _mocked_device(
-        modules=[Module.Light, Module.LightEffect], alias="my_light"
+        modules=[Module.Light, Module.LightEffect], alias="my_light", features=features
     )
     light_effect = device.modules[Module.LightEffect]
 

@@ -1,4 +1,5 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -234,7 +235,7 @@ class DmsDeviceSource:
         try:
             bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             bootid = None
 
         if change == ssdp.SsdpChange.UPDATE:
@@ -245,7 +246,7 @@ class DmsDeviceSource:
                 try:
                     next_bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_NEXTBOOTID]
                     self._bootid = int(next_bootid_str, 10)
-                except (KeyError, ValueError):
+                except KeyError, ValueError:
                     pass
             # Nothing left to do until ssdp:alive comes through
             return
@@ -567,7 +568,7 @@ class DmsDeviceSource:
         # can_play is False).
         try:
             child_count = int(item.child_count)
-        except (AttributeError, TypeError, ValueError):
+        except AttributeError, TypeError, ValueError:
             child_count = 0
         can_expand = (
             bool(children) or child_count > 0 or isinstance(item, didl_lite.Container)

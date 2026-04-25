@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import (
@@ -71,6 +70,7 @@ from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPE_LABEL,
     ATTR_HOME_ID,
+    ATTR_HOME_ID_HEX,
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_PARAMETERS,
@@ -93,7 +93,6 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
@@ -109,6 +108,8 @@ from .const import (
     DOMAIN,
     ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_METADATA_UPDATED,
+    EVENT_VALUE_ADDED,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
@@ -123,6 +124,7 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
     get_network_identifier_for_notification,
@@ -136,16 +138,8 @@ from .services import async_setup_services
 CONNECT_TIMEOUT = 10
 DRIVER_READY_TIMEOUT = 60
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_INSTALLER_MODE, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
 PLATFORMS = [
@@ -169,7 +163,6 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    hass.data[DOMAIN] = config.get(DOMAIN, {})
     for entry in hass.config_entries.async_entries(DOMAIN):
         if not isinstance(entry.unique_id, str):
             hass.config_entries.async_update_entry(
@@ -608,6 +601,7 @@ class ControllerEvents:
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
 
+        self.node_events.value_updates_disc_info.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
@@ -735,7 +729,7 @@ class ControllerEvents:
             name=node.name or node.device_config.description or f"Node {node.node_id}",
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location if node.location else UNDEFINED,
+            suggested_area=node.location or UNDEFINED,
             via_device=via_identifier,
         )
 
@@ -765,6 +759,9 @@ class NodeEvents:
         self.dev_reg = controller_events.dev_reg
         self.ent_reg = er.async_get(hass)
         self.hass = hass
+        self.value_updates_disc_info: dict[
+            int, dict[str, PlatformZwaveDiscoveryInfo]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -775,29 +772,23 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
+        # Store the discovery info so it can be reused when re-discovering entities
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
+        self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_node_values(
-                    node, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_node_values(
+            node, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # add listeners to handle new values that get added later
-        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
+        for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
-                    lambda event: self.hass.async_create_task(
-                        self.async_on_value_added(
-                            value_updates_disc_info, event["value"]
-                        )
+                    lambda event: self.async_on_value_added(
+                        value_updates_disc_info, event["value"]
                     ),
                 )
             )
@@ -840,21 +831,29 @@ class NodeEvents:
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
-        if not node.is_controller_node and await node.async_has_device_config_changed():
-            device_name = device.name_by_user or device.name or "Unnamed device"
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"device_config_file_changed.{device.id}",
-                data={"device_id": device.id, "device_name": device_name},
-                is_fixable=True,
-                is_persistent=False,
-                translation_key="device_config_file_changed",
-                translation_placeholders={"device_name": device_name},
-                severity=IssueSeverity.WARNING,
-            )
+        if not node.is_controller_node:
+            issue_id = f"device_config_file_changed.{device.id}"
+            if await node.async_has_device_config_changed():
+                device_name = device.name_by_user or device.name or "Unnamed device"
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    data={"device_id": device.id, "device_name": device_name},
+                    is_fixable=True,
+                    is_persistent=False,
+                    translation_key="device_config_file_changed",
+                    translation_placeholders={"device_name": device_name},
+                    severity=IssueSeverity.WARNING,
+                )
+            else:
+                # Clear any existing repair issue if the device config is not considered
+                # changed. This can happen when the original issue was created by
+                # an upstream bug, or the change has been reverted.
+                async_delete_issue(self.hass, DOMAIN, issue_id)
 
-    async def async_handle_discovery_info(
+    @callback
+    def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
         disc_info: PlatformZwaveDiscoveryInfo,
@@ -899,15 +898,17 @@ class NodeEvents:
             )
         )
 
-    async def async_on_value_added(
+    @callback
+    def async_on_value_added(
         self,
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
         value: Value,
     ) -> None:
-        """Fire value updated event."""
-        # If node isn't ready or a device for this node doesn't already exist, we can
-        # let the node ready event handler perform discovery. If a value has already
-        # been processed, we don't need to do it again
+        """Run discovery when a value is added, updated or its metadata is changed."""
+        # If node isn't ready or a device for this node doesn't already
+        # exist, we can let the node ready event handler perform discovery.
+        # If a value has already been processed, we don't need to do it
+        # again
         device_id = get_device_id(
             self.controller_events.driver_events.driver, value.node
         )
@@ -919,16 +920,10 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_single_value(
-                    value, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_single_value(
+            value, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
     def async_on_value_notification(self, notification: ValueNotification) -> None:
@@ -948,6 +943,7 @@ class NodeEvents:
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_ENDPOINT: notification.endpoint,
                 ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
@@ -985,6 +981,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
             ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
@@ -1070,6 +1067,7 @@ class NodeEvents:
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,

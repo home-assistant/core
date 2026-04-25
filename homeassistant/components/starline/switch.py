@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import StarlineConfigEntry
 from .account import StarlineAccount, StarlineDevice
-from .const import DOMAIN
 from .entity import StarlineEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -35,11 +34,11 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StarlineConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine switch."""
-    account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
+    account = entry.runtime_data
     entities = [
         switch
         for device in account.api.devices.values()
@@ -71,15 +70,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         return super().available and self._device.online
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the switch."""
-        if self._key == "ign":
-            # Deprecated and should be removed in 2025.8
-            return self._account.engine_attrs(self._device)
-        return None
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._device.car_state.get(self._key)
 

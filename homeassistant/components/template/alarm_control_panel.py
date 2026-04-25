@@ -80,6 +80,16 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+SCRIPT_FIELDS = (
+    CONF_ARM_AWAY_ACTION,
+    CONF_ARM_CUSTOM_BYPASS_ACTION,
+    CONF_ARM_HOME_ACTION,
+    CONF_ARM_NIGHT_ACTION,
+    CONF_ARM_VACATION_ACTION,
+    CONF_DISARM_ACTION,
+    CONF_TRIGGER_ACTION,
+)
+
 DEFAULT_NAME = "Template Alarm Control Panel"
 
 ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
@@ -152,6 +162,7 @@ async def async_setup_entry(
         StateAlarmControlPanelEntity,
         ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -172,6 +183,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_ALARM_CONTROL_PANELS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -197,6 +209,7 @@ class AbstractTemplateAlarmControlPanel(
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
     def __init__(self, name: str) -> None:  # pylint: disable=super-init-not-called
@@ -206,7 +219,6 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_code_format = self._config[CONF_CODE_FORMAT].value
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_alarm_state",
             validator=tcv.strenum(self, CONF_STATE, AlarmControlPanelState),
         )
@@ -355,16 +367,3 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         """Restore last state."""
         await super().async_added_to_hass()
         await self._async_handle_restored_state()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            self.async_write_ha_state()
-            return
-
-        if self.handle_rendered_result(CONF_STATE):
-            self.async_set_context(self.coordinator.data["context"])
-            self.async_write_ha_state()

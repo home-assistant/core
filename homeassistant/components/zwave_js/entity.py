@@ -14,7 +14,6 @@ from zwave_js_server.model.value import (
     get_value_id_str,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,12 +21,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
+from .const import (
+    DOMAIN,
+    EVENT_METADATA_UPDATED,
+    EVENT_VALUE_ADDED,
+    EVENT_VALUE_REMOVED,
+    EVENT_VALUE_UPDATED,
+    LOGGER,
+)
 from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
-from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
-
-EVENT_VALUE_REMOVED = "value removed"
+from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 
 @dataclass(kw_only=True)
@@ -51,10 +55,11 @@ class ZWaveBaseEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
+    info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
     ) -> None:
@@ -62,6 +67,7 @@ class ZWaveBaseEntity(Entity):
         self.config_entry = config_entry
         self.driver = driver
         self.info = info
+        self._primary_value_removed = False
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -135,8 +141,12 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+        self.async_on_remove(self.info.node.on(EVENT_VALUE_ADDED, self._value_added))
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_REMOVED, self._value_removed)
+        )
+        self.async_on_remove(
+            self.info.node.on(EVENT_METADATA_UPDATED, self._metadata_updated)
         )
         self.async_on_remove(
             async_dispatcher_connect(
@@ -226,7 +236,11 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.driver.client.connected and bool(self.info.node.ready)
+        return (
+            self.driver.client.connected
+            and bool(self.info.node.ready)
+            and not self._primary_value_removed
+        )
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
@@ -269,7 +283,81 @@ class ZWaveBaseEntity(Entity):
             value_id,
         )
 
-        self.hass.async_create_task(self.async_remove())
+        self._primary_value_removed = True
+        self.async_write_ha_state()
+
+    @callback
+    def _value_added(self, event_data: dict) -> None:
+        """Call when a value associated with our node is added.
+
+        Should not be overridden by subclasses.
+        """
+        value = event_data["value"]
+
+        if value.value_id != self.info.primary_value.value_id:
+            return
+
+        LOGGER.debug(
+            "[%s] Primary value %s was added",
+            self.entity_id,
+            value.value_id,
+        )
+
+        self.info.primary_value = value
+        self._primary_value_removed = False
+        self.on_value_update()
+        self.async_write_ha_state()
+
+    @callback
+    def should_rediscover_on_metadata_update(self) -> bool:
+        """Check if a metadata update requires entity rediscovery.
+
+        To be overridden by subclasses that need to detect metadata changes.
+        Return True if the entity needs to be removed and re-discovered.
+        """
+        return False
+
+    @callback
+    def _metadata_updated(self, event_data: dict) -> None:
+        """Handle metadata update requiring entity rediscovery.
+
+        Should not be overridden by subclasses.
+        """
+        value = event_data["value"]
+        if value.value_id != self.info.primary_value.value_id:
+            return
+
+        if not self.should_rediscover_on_metadata_update():
+            return
+
+        LOGGER.debug(
+            "[%s] Metadata options changed for %s, removing for rediscovery",
+            self.entity_id,
+            value.value_id,
+        )
+
+        self.hass.async_create_task(self._async_remove_and_rediscover(value))
+
+    async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
+        """Remove entity and trigger re-discovery with updated metadata."""
+        assert self.device_entry is not None
+        controller_events = (
+            self.config_entry.runtime_data.driver_events.controller_events
+        )
+
+        # Remove entity first so the unique_id is freed up
+        await self.async_remove()
+
+        # Now clear from discovered_value_ids and trigger re-discovery
+        # using the existing discovery info dict
+        controller_events.discovered_value_ids[self.device_entry.id].discard(
+            value.value_id
+        )
+        node_events = controller_events.node_events
+        value_updates_disc_info = node_events.value_updates_disc_info[
+            value.node.node_id
+        ]
+        node_events.async_on_value_added(value_updates_disc_info, value)
 
     @callback
     def get_zwave_value(

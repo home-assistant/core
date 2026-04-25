@@ -6,7 +6,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from solarlog_cli.solarlog_models import BatteryData, InverterData, SolarlogData
+from solarlog_cli.solarlog_models import (
+    BatteryData,
+    EnergyData,
+    InverterData,
+    SolarlogData,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,7 +30,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import SolarlogConfigEntry
-from .entity import SolarLogCoordinatorEntity, SolarLogInverterEntity
+from .entity import (
+    SolarLogBasicCoordinatorEntity,
+    SolarLogInverterEntity,
+    SolarLogLongtimeCoordinatorEntity,
+)
+from .models import SolarlogIntegrationData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,6 +43,13 @@ class SolarLogCoordinatorSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog coordinator sensor entity."""
 
     value_fn: Callable[[SolarlogData], StateType | datetime | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SolarLogLongtimeSensorEntityDescription(SensorEntityDescription):
+    """Describes Solarlog longtime sensor entity."""
+
+    value_fn: Callable[[EnergyData], float | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,7 +66,7 @@ class SolarLogInverterSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[InverterData], float | None]
 
 
-SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = (
+SOLARLOG_BASIC_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = (
     SolarLogCoordinatorSensorEntityDescription(
         key="last_updated",
         translation_key="last_update",
@@ -194,14 +211,6 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         value_fn=lambda data: data.consumption_total,
     ),
     SolarLogCoordinatorSensorEntityDescription(
-        key="self_consumption_year",
-        translation_key="self_consumption_year",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.self_consumption_year,
-    ),
-    SolarLogCoordinatorSensorEntityDescription(
         key="total_power",
         translation_key="total_power",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -254,7 +263,20 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
     ),
 )
 
-BATTERY_SENSOR_TYPES: tuple[SolarLogBatterySensorEntityDescription, ...] = (
+"""SOLARLOG_LONGTIME_SENSOR_TYPES represent data points that may require longer timeout and
+therefore are retrieved with different DataUpdateCoordinator."""
+SOLARLOG_LONGTIME_SENSOR_TYPES: tuple[SolarLogLongtimeSensorEntityDescription, ...] = (
+    SolarLogLongtimeSensorEntityDescription(
+        key="self_consumption_year",
+        translation_key="self_consumption_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.self_consumption,
+    ),
+)
+
+SOLARLOG_BATTERY_SENSOR_TYPES: tuple[SolarLogBatterySensorEntityDescription, ...] = (
     SolarLogBatterySensorEntityDescription(
         key="charging_power",
         translation_key="charging_power",
@@ -281,7 +303,7 @@ BATTERY_SENSOR_TYPES: tuple[SolarLogBatterySensorEntityDescription, ...] = (
     ),
 )
 
-INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
+SOLARLOG_INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
     SolarLogInverterSensorEntityDescription(
         key="current_power",
         translation_key="current_power",
@@ -313,41 +335,66 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add solarlog entry."""
-    coordinator = entry.runtime_data
+
+    solarLogIntegrationData: SolarlogIntegrationData = entry.runtime_data
 
     entities: list[SensorEntity] = [
-        SolarLogCoordinatorSensor(coordinator, sensor)
-        for sensor in SOLARLOG_SENSOR_TYPES
+        SolarLogBasicCoordinatorSensor(
+            solarLogIntegrationData.basic_data_coordinator, sensor
+        )
+        for sensor in SOLARLOG_BASIC_SENSOR_TYPES
     ]
 
-    # add battery sensors only if respective data is available (otherwise no battery attached to solarlog)
-    if coordinator.data.battery_data is not None:
+    if solarLogIntegrationData.longtime_data_coordinator is not None:
         entities.extend(
-            SolarLogBatterySensor(coordinator, sensor)
-            for sensor in BATTERY_SENSOR_TYPES
+            SolarLogLongtimeCoordinatorSensor(
+                solarLogIntegrationData.longtime_data_coordinator, sensor
+            )
+            for sensor in SOLARLOG_LONGTIME_SENSOR_TYPES
         )
 
-    device_data = coordinator.data.inverter_data
+        # add battery sensors only if respective data is available (otherwise no battery attached to solarlog)
+        if solarLogIntegrationData.basic_data_coordinator.data.battery_data is not None:
+            entities.extend(
+                SolarLogBatterySensor(
+                    solarLogIntegrationData.basic_data_coordinator, sensor
+                )
+                for sensor in SOLARLOG_BATTERY_SENSOR_TYPES
+            )
 
-    if device_data:
-        entities.extend(
-            SolarLogInverterSensor(coordinator, sensor, device_id)
-            for device_id in device_data
-            for sensor in INVERTER_SENSOR_TYPES
-        )
+        if solarLogIntegrationData.device_data_coordinator is not None:
+            device_data = solarLogIntegrationData.device_data_coordinator.data
+
+            if device_data:
+                entities.extend(
+                    SolarLogInverterSensor(
+                        solarLogIntegrationData.device_data_coordinator,
+                        sensor,
+                        device_id,
+                    )
+                    for device_id in device_data
+                    for sensor in SOLARLOG_INVERTER_SENSOR_TYPES
+                )
+
+            def _async_add_new_device(device_id: int) -> None:
+                async_add_entities(
+                    SolarLogInverterSensor(
+                        solarLogIntegrationData.device_data_coordinator,
+                        sensor,
+                        device_id,
+                    )
+                    for sensor in SOLARLOG_INVERTER_SENSOR_TYPES
+                    if solarLogIntegrationData.device_data_coordinator is not None
+                )
+
+            solarLogIntegrationData.device_data_coordinator.new_device_callbacks.append(
+                _async_add_new_device
+            )
 
     async_add_entities(entities)
 
-    def _async_add_new_device(device_id: int) -> None:
-        async_add_entities(
-            SolarLogInverterSensor(coordinator, sensor, device_id)
-            for sensor in INVERTER_SENSOR_TYPES
-        )
 
-    coordinator.new_device_callbacks.append(_async_add_new_device)
-
-
-class SolarLogCoordinatorSensor(SolarLogCoordinatorEntity, SensorEntity):
+class SolarLogBasicCoordinatorSensor(SolarLogBasicCoordinatorEntity, SensorEntity):
     """Represents a SolarLog sensor."""
 
     entity_description: SolarLogCoordinatorSensorEntityDescription
@@ -359,7 +406,21 @@ class SolarLogCoordinatorSensor(SolarLogCoordinatorEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class SolarLogBatterySensor(SolarLogCoordinatorEntity, SensorEntity):
+class SolarLogLongtimeCoordinatorSensor(
+    SolarLogLongtimeCoordinatorEntity, SensorEntity
+):
+    """Represents a SolarLog longtime energy sensor."""
+
+    entity_description: SolarLogLongtimeSensorEntityDescription
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state for this sensor."""
+
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class SolarLogBatterySensor(SolarLogBasicCoordinatorEntity, SensorEntity):
     """Represents a SolarLog battery sensor."""
 
     entity_description: SolarLogBatterySensorEntityDescription
@@ -367,7 +428,10 @@ class SolarLogBatterySensor(SolarLogCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
-        if (battery_data := self.coordinator.data.battery_data) is None:
+        if (
+            battery_data
+            := self.coordinator.config_entry.runtime_data.basic_data_coordinator.data.battery_data
+        ) is None:
             return None
         return self.entity_description.value_fn(battery_data)
 
@@ -381,6 +445,4 @@ class SolarLogInverterSensor(SolarLogInverterEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
 
-        return self.entity_description.value_fn(
-            self.coordinator.data.inverter_data[self.device_id]
-        )
+        return self.entity_description.value_fn(self.coordinator.data[self.device_id])

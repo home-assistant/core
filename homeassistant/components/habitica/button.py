@@ -68,8 +68,9 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.BUY_HEALTH_POTION,
         press_fn=lambda habitica: habitica.buy_health_potion(),
         available_fn=(
-            lambda data: (data.user.stats.gp or 0) >= 25
-            and (data.user.stats.hp or 0) < 50
+            lambda data: (
+                (data.user.stats.gp or 0) >= 25 and (data.user.stats.hp or 0) < 50
+            )
         ),
         entity_picture="shop_potion.png",
     ),
@@ -78,8 +79,10 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS,
         press_fn=lambda habitica: habitica.allocate_stat_points(),
         available_fn=(
-            lambda data: data.user.preferences.automaticAllocation is True
-            and (data.user.stats.points or 0) > 0
+            lambda data: (
+                data.user.preferences.automaticAllocation is True
+                and (data.user.stats.points or 0) > 0
+            )
         ),
     ),
     HabiticaButtonEntityDescription(
@@ -97,8 +100,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.MPHEAL,
         press_fn=lambda habitica: habitica.cast_skill(Skill.ETHEREAL_SURGE),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 12
-            and (data.user.stats.mp or 0) >= 30
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 12 and (data.user.stats.mp or 0) >= 30
+            )
         ),
         class_needed=HabiticaClass.MAGE,
         entity_picture="shop_mpheal.png",
@@ -108,8 +112,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.EARTH,
         press_fn=lambda habitica: habitica.cast_skill(Skill.EARTHQUAKE),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 13
-            and (data.user.stats.mp or 0) >= 35
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 13 and (data.user.stats.mp or 0) >= 35
+            )
         ),
         class_needed=HabiticaClass.MAGE,
         entity_picture="shop_earth.png",
@@ -120,9 +125,11 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         press_fn=lambda habitica: habitica.cast_skill(Skill.CHILLING_FROST),
         # chilling frost can only be cast once per day (streaks buff is false)
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 14
-            and (data.user.stats.mp or 0) >= 40
-            and not data.user.stats.buffs.streaks
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 14
+                and (data.user.stats.mp or 0) >= 40
+                and not data.user.stats.buffs.streaks
+            )
         ),
         class_needed=HabiticaClass.MAGE,
         entity_picture="shop_frost.png",
@@ -132,8 +139,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.DEFENSIVE_STANCE,
         press_fn=lambda habitica: habitica.cast_skill(Skill.DEFENSIVE_STANCE),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 12
-            and (data.user.stats.mp or 0) >= 25
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 12 and (data.user.stats.mp or 0) >= 25
+            )
         ),
         class_needed=HabiticaClass.WARRIOR,
         entity_picture="shop_defensiveStance.png",
@@ -143,8 +151,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.VALOROUS_PRESENCE,
         press_fn=lambda habitica: habitica.cast_skill(Skill.VALOROUS_PRESENCE),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 13
-            and (data.user.stats.mp or 0) >= 20
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 13 and (data.user.stats.mp or 0) >= 20
+            )
         ),
         class_needed=HabiticaClass.WARRIOR,
         entity_picture="shop_valorousPresence.png",
@@ -154,8 +163,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.INTIMIDATE,
         press_fn=lambda habitica: habitica.cast_skill(Skill.INTIMIDATING_GAZE),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 14
-            and (data.user.stats.mp or 0) >= 15
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 14 and (data.user.stats.mp or 0) >= 15
+            )
         ),
         class_needed=HabiticaClass.WARRIOR,
         entity_picture="shop_intimidate.png",
@@ -165,8 +175,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.TOOLS_OF_TRADE,
         press_fn=lambda habitica: habitica.cast_skill(Skill.TOOLS_OF_THE_TRADE),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 13
-            and (data.user.stats.mp or 0) >= 25
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 13 and (data.user.stats.mp or 0) >= 25
+            )
         ),
         class_needed=HabiticaClass.ROGUE,
         entity_picture="shop_toolsOfTrade.png",
@@ -178,17 +189,19 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         # Stealth buffs stack and it can only be cast if the amount of
         # buffs is smaller than the amount of unfinished dailies
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 14
-            and (data.user.stats.mp or 0) >= 45
-            and (data.user.stats.buffs.stealth or 0)
-            < len(
-                [
-                    r
-                    for r in data.tasks
-                    if r.Type is TaskType.DAILY
-                    and r.isDue is True
-                    and r.completed is False
-                ]
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 14
+                and (data.user.stats.mp or 0) >= 45
+                and (data.user.stats.buffs.stealth or 0)
+                < len(
+                    [
+                        r
+                        for r in data.tasks
+                        if r.Type is TaskType.DAILY
+                        and r.isDue is True
+                        and r.completed is False
+                    ]
+                )
             )
         ),
         class_needed=HabiticaClass.ROGUE,
@@ -199,9 +212,11 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.HEAL,
         press_fn=lambda habitica: habitica.cast_skill(Skill.HEALING_LIGHT),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 11
-            and (data.user.stats.mp or 0) >= 15
-            and (data.user.stats.hp or 0) < 50
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 11
+                and (data.user.stats.mp or 0) >= 15
+                and (data.user.stats.hp or 0) < 50
+            )
         ),
         class_needed=HabiticaClass.HEALER,
         entity_picture="shop_heal.png",
@@ -211,8 +226,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.BRIGHTNESS,
         press_fn=lambda habitica: habitica.cast_skill(Skill.SEARING_BRIGHTNESS),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 12
-            and (data.user.stats.mp or 0) >= 15
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 12 and (data.user.stats.mp or 0) >= 15
+            )
         ),
         class_needed=HabiticaClass.HEALER,
         entity_picture="shop_brightness.png",
@@ -222,8 +238,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.PROTECT_AURA,
         press_fn=lambda habitica: habitica.cast_skill(Skill.PROTECTIVE_AURA),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 13
-            and (data.user.stats.mp or 0) >= 30
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 13 and (data.user.stats.mp or 0) >= 30
+            )
         ),
         class_needed=HabiticaClass.HEALER,
         entity_picture="shop_protectAura.png",
@@ -233,8 +250,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         translation_key=HabiticaButtonEntity.HEAL_ALL,
         press_fn=lambda habitica: habitica.cast_skill(Skill.BLESSING),
         available_fn=(
-            lambda data: (data.user.stats.lvl or 0) >= 14
-            and (data.user.stats.mp or 0) >= 25
+            lambda data: (
+                (data.user.stats.lvl or 0) >= 14 and (data.user.stats.mp or 0) >= 25
+            )
         ),
         class_needed=HabiticaClass.HEALER,
         entity_picture="shop_healAll.png",

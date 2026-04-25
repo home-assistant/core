@@ -9,7 +9,7 @@ import pypck
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as DOMAIN_COVER,
+    DOMAIN as COVER_DOMAIN,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -60,14 +60,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_COVER: add_entities}
+        {COVER_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_COVER
+            if entity_config[CONF_DOMAIN] == COVER_DOMAIN
         ),
     )
 

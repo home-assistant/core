@@ -4,16 +4,19 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.knx.const import KNX_ADDRESS, FanConf
+from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS, FanConf
 from homeassistant.components.knx.schema import FanSchema
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 
-async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_fan_percent(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
     """Test KNX fan with percentage speed."""
     await knx.setup_integration(
         {
@@ -23,6 +26,9 @@ async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
+    entry = entity_registry.async_get("fan.test")
+    assert entry
+    assert entry.unique_id == "1/2/3"
 
     # turn on fan with default speed (50%)
     await hass.services.async_call(
@@ -109,7 +115,9 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_telegram_count(0)
 
 
-async def test_fan_switch(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_fan_switch(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
     """Test KNX fan with switch only."""
     await knx.setup_integration(
         {
@@ -119,6 +127,9 @@ async def test_fan_switch(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
+    entry = entity_registry.async_get("fan.test")
+    assert entry
+    assert entry.unique_id == "1/2/3"
 
     # turn on fan
     await hass.services.async_call(
@@ -133,7 +144,9 @@ async def test_fan_switch(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_write("1/2/3", False)
 
 
-async def test_fan_switch_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_fan_switch_step(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
     """Test KNX fan with speed steps and switch address."""
     await knx.setup_integration(
         {
@@ -145,6 +158,9 @@ async def test_fan_switch_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
+    entry = entity_registry.async_get("fan.test")
+    assert entry
+    assert entry.unique_id == "1/1/1"
 
     # turn on fan without percentage - actuator sets default speed
     await hass.services.async_call(
@@ -214,6 +230,53 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.receive_write("2/2/2", False)
     state = hass.states.get("fan.test")
     assert state.attributes.get("oscillating") is False
+
+
+@pytest.mark.parametrize(
+    "fan_config",
+    [
+        {
+            # before fix: unique_id is 'None', after fix: from switch address
+            CONF_NAME: "test",
+            FanSchema.CONF_SWITCH_ADDRESS: "1/2/3",
+        },
+        {
+            # no change in unique_id here, but since no YAML to update from, the
+            # invalid registry entry will be removed - it wouldn't be loaded anyway
+            # this YAML will create a new entry (same unique_id as above for tests)
+            CONF_NAME: "test",
+            KNX_ADDRESS: "1/2/3",
+        },
+    ],
+)
+async def test_fan_unique_id_fix(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    fan_config: dict[str, Any],
+) -> None:
+    """Test KNX fan unique_id migration fix."""
+    invalid_unique_id = "None"
+    knx.mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        object_id_base="test",
+        disabled_by=None,
+        domain=Platform.FAN,
+        platform=DOMAIN,
+        unique_id=invalid_unique_id,
+        config_entry=knx.mock_config_entry,
+    )
+    await knx.setup_integration(
+        {FanSchema.PLATFORM: fan_config},
+        add_entry_to_hass=False,
+    )
+    entry = entity_registry.async_get("fan.test")
+    assert entry
+    assert entry.unique_id == "1/2/3"
+    # Verify the old entity with invalid unique_id has been updated or removed
+    assert not entity_registry.async_get_entity_id(
+        Platform.FAN, DOMAIN, invalid_unique_id
+    )
 
 
 @pytest.mark.parametrize(

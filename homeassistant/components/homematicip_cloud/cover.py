@@ -313,6 +313,17 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         super().__init__(hap, device, post, is_multi_channel=False)
 
     @property
+    def available(self) -> bool:
+        """Cover shutter group available.
+
+        A cover shutter group must be available, and should not be affected by
+        the individual availability of group members.
+        This allows controlling the shutters even when individual group
+        members are not available.
+        """
+        return True
+
+    @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.shutterLevel is not None:

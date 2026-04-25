@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -26,11 +22,6 @@ from .const import (
     SIGNAL_PANEL_MESSAGE,
 )
 from .entity import AlarmDecoderEntity
-
-SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
-
-SERVICE_ALARM_KEYPRESS = "alarm_keypress"
-ATTR_KEYPRESS = "keypress"
 
 
 async def async_setup_entry(
@@ -49,23 +40,6 @@ async def async_setup_entry(
         alt_night_mode=arm_options[CONF_ALT_NIGHT_MODE],
     )
     async_add_entities([entity])
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ALARM_TOGGLE_CHIME,
-        {
-            vol.Required(ATTR_CODE): cv.string,
-        },
-        "alarm_toggle_chime",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_KEYPRESS,
-        {
-            vol.Required(ATTR_KEYPRESS): cv.string,
-        },
-        "alarm_keypress",
-    )
 
 
 class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):

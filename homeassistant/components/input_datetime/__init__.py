@@ -158,8 +158,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            conf = {DOMAIN: {}}
         await yaml_collection.async_load(
             [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
@@ -312,7 +310,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_HAS_TIME]
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
@@ -339,9 +337,9 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         }
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
+        attrs: dict[str, Any] = {
             ATTR_EDITABLE: self.editable,
         }
 

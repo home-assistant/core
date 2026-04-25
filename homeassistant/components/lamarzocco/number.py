@@ -60,9 +60,11 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_max_value=104,
         set_value_fn=lambda machine, temp: machine.set_coffee_target_temperature(temp),
         native_value_fn=(
-            lambda machine: cast(
-                CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
-            ).target_temperature
+            lambda machine: (
+                cast(
+                    CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
+                ).target_temperature
+            )
         ),
         bt_offline_mode=True,
     ),
@@ -76,14 +78,18 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_max_value=134,
         set_value_fn=lambda machine, temp: machine.set_steam_target_temperature(temp),
         native_value_fn=(
-            lambda machine: cast(
-                SteamBoilerTemperature,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
-            ).target_temperature
+            lambda machine: (
+                cast(
+                    SteamBoilerTemperature,
+                    machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
+                ).target_temperature
+            )
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.GS3_AV, ModelName.GS3_MP)
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.GS3_AV, ModelName.GS3_MP)
+            )
         ),
         bt_offline_mode=True,
     ),
@@ -103,7 +109,9 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
                 minutes=int(value),
             )
         ),
-        native_value_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
+        native_value_fn=lambda machine: (
+            machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes
+        ),
         bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
@@ -122,25 +130,29 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=(
-            lambda machine: cast(
-                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            lambda machine: (
+                cast(PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING])
+                .times.pre_infusion[0]
+                .seconds.seconds_out
             )
-            .times.pre_infusion[0]
-            .seconds.seconds_out
         ),
         available_fn=(
-            lambda coordinator: cast(
-                PreBrewing,
-                coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
-            ).mode
-            is PreExtractionMode.PREINFUSION
+            lambda coordinator: (
+                cast(
+                    PreBrewing,
+                    coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
+                ).mode
+                is PreExtractionMode.PREINFUSION
+            )
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (
-                ModelName.LINEA_MICRA,
-                ModelName.LINEA_MINI,
-                ModelName.LINEA_MINI_R,
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (
+                    ModelName.LINEA_MICRA,
+                    ModelName.LINEA_MINI,
+                    ModelName.LINEA_MINI_R,
+                )
             )
         ),
     ),
@@ -164,22 +176,27 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=(
-            lambda machine: cast(
-                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            lambda machine: (
+                cast(PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING])
+                .times.pre_brewing[0]
+                .seconds.seconds_in
             )
-            .times.pre_brewing[0]
-            .seconds.seconds_in
         ),
-        available_fn=lambda coordinator: cast(
-            PreBrewing, coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING]
-        ).mode
-        is PreExtractionMode.PREBREWING,
+        available_fn=lambda coordinator: (
+            cast(
+                PreBrewing,
+                coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
+            ).mode
+            is PreExtractionMode.PREBREWING
+        ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (
-                ModelName.LINEA_MICRA,
-                ModelName.LINEA_MINI,
-                ModelName.LINEA_MINI_R,
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (
+                    ModelName.LINEA_MICRA,
+                    ModelName.LINEA_MINI,
+                    ModelName.LINEA_MINI_R,
+                )
             )
         ),
     ),
@@ -203,25 +220,29 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=(
-            lambda machine: cast(
-                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            lambda machine: (
+                cast(PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING])
+                .times.pre_brewing[0]
+                .seconds.seconds_out
             )
-            .times.pre_brewing[0]
-            .seconds.seconds_out
         ),
         available_fn=(
-            lambda coordinator: cast(
-                PreBrewing,
-                coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
-            ).mode
-            is PreExtractionMode.PREBREWING
+            lambda coordinator: (
+                cast(
+                    PreBrewing,
+                    coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
+                ).mode
+                is PreExtractionMode.PREBREWING
+            )
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (
-                ModelName.LINEA_MICRA,
-                ModelName.LINEA_MINI,
-                ModelName.LINEA_MINI_R,
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (
+                    ModelName.LINEA_MICRA,
+                    ModelName.LINEA_MINI,
+                    ModelName.LINEA_MINI_R,
+                )
             )
         ),
     ),
@@ -242,10 +263,12 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=(
-            lambda machine: cast(
-                BrewByWeightDoses,
-                machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
-            ).doses.dose_1.dose
+            lambda machine: (
+                cast(
+                    BrewByWeightDoses,
+                    machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+                ).doses.dose_1.dose
+            )
         ),
         available_fn=lambda coordinator: (
             cast(
@@ -254,10 +277,12 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             ).scale_connected
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
-            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
-            in coordinator.device.dashboard.config
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+                and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+                in coordinator.device.dashboard.config
+            )
         ),
     ),
     LaMarzoccoNumberEntityDescription(
@@ -277,10 +302,12 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=(
-            lambda machine: cast(
-                BrewByWeightDoses,
-                machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
-            ).doses.dose_2.dose
+            lambda machine: (
+                cast(
+                    BrewByWeightDoses,
+                    machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+                ).doses.dose_2.dose
+            )
         ),
         available_fn=lambda coordinator: (
             cast(
@@ -289,10 +316,12 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             ).scale_connected
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
-            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
-            in coordinator.device.dashboard.config
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+                and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+                in coordinator.device.dashboard.config
+            )
         ),
     ),
 )

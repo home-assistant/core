@@ -205,20 +205,8 @@
           "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
       },
-      "nitrogen_dioxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "nitrogen_monoxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]"
-      },
       "non_methane_hydrocarbons": {
         "name": "Non-methane hydrocarbons"
-      },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
-      "sulphur_dioxide": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
       },
       "uaqi": {
         "name": "Universal Air Quality Index"

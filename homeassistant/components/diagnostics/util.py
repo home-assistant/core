@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any, cast, overload
 
+import attr
+
 from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import REDACTED
 
@@ -42,3 +45,20 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
             redacted[key] = [async_redact_data(item, to_redact) for item in value]
 
     return cast(_T, redacted)
+
+
+def _entity_entry_filter(a: attr.Attribute, _: Any) -> bool:
+    return a.name not in (
+        "_cache",
+        "compat_aliases",
+        "original_name_unprefixed",
+    )
+
+
+@callback
+def entity_entry_as_dict(entry: RegistryEntry) -> dict[str, Any]:
+    """Convert an entity registry entry to a dict for diagnostics.
+
+    This excludes internal fields that should not be exposed in diagnostics.
+    """
+    return attr.asdict(entry, filter=_entity_entry_filter)

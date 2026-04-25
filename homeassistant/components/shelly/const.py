@@ -26,6 +26,7 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_X2I,
     MODEL_WALL_DISPLAY_XL,
 )
 
@@ -218,8 +219,6 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 BLOCK_WRONG_SLEEP_PERIOD = 21600
 BLOCK_EXPECTED_SLEEP_PERIOD = 43200
 
-UPTIME_DEVIATION: Final = 60
-
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
 
@@ -227,6 +226,7 @@ SHELLY_GAS_MODELS = [MODEL_GAS]
 SHELLY_WALL_DISPLAY_MODELS = (
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_X2I,
     MODEL_WALL_DISPLAY_XL,
 )
 
@@ -256,6 +256,7 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
 )
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
+COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
 class DeprecatedFirmwareInfo(TypedDict):
@@ -288,10 +289,8 @@ OTA_SUCCESS = "ota_success"
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
+WALL_DISPLAY_RELEASE_URL = "https://github.com/ShellyGroup/Wall-Display-Changelog"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
-    MODEL_WALL_DISPLAY,
-    MODEL_WALL_DISPLAY_X2,
-    MODEL_WALL_DISPLAY_XL,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,

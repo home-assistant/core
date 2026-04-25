@@ -1,7 +1,6 @@
 """Test for the SmartThings media player platform."""
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus
@@ -10,19 +9,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    MediaType,
     RepeatMode,
 )
-from homeassistant.components.smartthings.audio import SmartThingsAudioError
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -45,7 +39,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -203,176 +196,6 @@ async def test_volume_down(
         Command.VOLUME_DOWN,
         MAIN,
     )
-
-
-@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
-async def test_play_media_notification(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test playing media via SmartThings audio notification."""
-
-    await setup_integration(hass, mock_config_entry)
-
-    manager = AsyncMock()
-    manager.async_prepare_notification.return_value = "https://example.com/audio.pcm"
-
-    with (
-        patch(
-            "homeassistant.components.smartthings.media_player.async_get_audio_manager",
-            AsyncMock(return_value=manager),
-        ),
-        patch(
-            "homeassistant.components.smartthings.media_player.async_process_play_media_url",
-            return_value="https://example.com/source.mp3",
-        ),
-    ):
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: "media_player.soundbar",
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: "https://example.com/source.mp3",
-            },
-            blocking=True,
-        )
-
-    expected_command = Command("playTrackAndResume")
-    devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577",
-        Capability.AUDIO_NOTIFICATION,
-        expected_command,
-        MAIN,
-        argument=["https://example.com/audio.pcm"],
-    )
-
-
-@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
-async def test_play_media_requires_audio_notification_capability(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Expect an error if the device lacks audio notification support."""
-
-    devices.get_device_status.return_value[MAIN].pop(
-        Capability.AUDIO_NOTIFICATION, None
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    entity = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN].get_entity(
-        "media_player.soundbar"
-    )
-    assert entity is not None
-
-    with pytest.raises(
-        HomeAssistantError, match="Device does not support audio notifications"
-    ):
-        await entity.async_play_media(MediaType.MUSIC, "https://example.com/source.mp3")
-
-
-@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
-async def test_play_media_rejects_unsupported_media_type(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Unsupported media types should raise an error."""
-
-    await setup_integration(hass, mock_config_entry)
-
-    entity = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN].get_entity(
-        "media_player.soundbar"
-    )
-    assert entity is not None
-
-    with pytest.raises(
-        HomeAssistantError, match="Unsupported media type for SmartThings audio"
-    ):
-        await entity.async_play_media(
-            MediaType.TVSHOW, "https://example.com/source.mp3"
-        )
-
-
-@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
-async def test_play_media_uses_media_source_resolution(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Media source IDs are resolved and processed before playback."""
-
-    await setup_integration(hass, mock_config_entry)
-
-    manager = AsyncMock()
-    manager.async_prepare_notification.return_value = "https://example.com/audio.pcm"
-
-    with (
-        patch(
-            "homeassistant.components.smartthings.media_player.async_get_audio_manager",
-            AsyncMock(return_value=manager),
-        ),
-        patch(
-            "homeassistant.components.smartthings.media_player.async_process_play_media_url",
-            return_value="https://example.com/processed.mp3",
-        ) as mock_process,
-        patch(
-            "homeassistant.components.smartthings.media_player.media_source.is_media_source_id",
-            return_value=True,
-        ) as mock_is_media,
-        patch(
-            "homeassistant.components.smartthings.media_player.media_source.async_resolve_media",
-            AsyncMock(
-                return_value=SimpleNamespace(url="https://example.com/from_source")
-            ),
-        ) as mock_resolve,
-    ):
-        entity = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN].get_entity(
-            "media_player.soundbar"
-        )
-        assert entity is not None
-
-        await entity.async_play_media(MediaType.MUSIC, "media-source://foo")
-
-    mock_is_media.assert_called_once()
-    mock_resolve.assert_called_once()
-    mock_process.assert_called_with(hass, "https://example.com/from_source")
-    devices.execute_device_command.assert_called_once()
-
-
-@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
-async def test_play_media_wraps_audio_errors(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """SmartThings audio errors propagate as HomeAssistantError."""
-
-    await setup_integration(hass, mock_config_entry)
-
-    manager = AsyncMock()
-    manager.async_prepare_notification.side_effect = SmartThingsAudioError("boom")
-
-    entity = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN].get_entity(
-        "media_player.soundbar"
-    )
-    assert entity is not None
-
-    with (
-        patch(
-            "homeassistant.components.smartthings.media_player.async_get_audio_manager",
-            AsyncMock(return_value=manager),
-        ),
-        patch(
-            "homeassistant.components.smartthings.media_player.async_process_play_media_url",
-            return_value="https://example.com/source.mp3",
-        ),
-        pytest.raises(HomeAssistantError, match="boom"),
-    ):
-        await entity.async_play_media(MediaType.MUSIC, "https://example.com/source.mp3")
 
 
 @pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])

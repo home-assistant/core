@@ -51,7 +51,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities: list[SensorEntity] = []
 
-    for account in coordinator.data.accounts:
+    for account in coordinator.data.accounts.values():
         entities.append(
             FireflyAccountBalanceSensor(coordinator, account, ACCOUNT_BALANCE)
         )
@@ -61,14 +61,14 @@ async def async_setup_entry(
     entities.extend(
         [
             FireflyCategorySensor(coordinator, category, CATEGORY)
-            for category in coordinator.data.category_details
+            for category in coordinator.data.category_details.values()
         ]
     )
 
     entities.extend(
         [
             FireflyBudgetSensor(coordinator, budget, BUDGET)
-            for budget in coordinator.data.budgets
+            for budget in coordinator.data.budgets.values()
         ]
     )
 
@@ -90,7 +90,6 @@ class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the account balance sensor."""
         super().__init__(coordinator, account, key)
-        self._account = account
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
         )
@@ -107,16 +106,6 @@ class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
     _attr_translation_key = "account_role"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = True
-
-    def __init__(
-        self,
-        coordinator: FireflyDataUpdateCoordinator,
-        account: Account,
-        key: str,
-    ) -> None:
-        """Initialize the account role sensor."""
-        super().__init__(coordinator, account, key)
-        self._account = account
 
     @property
     def native_value(self) -> StateType:
@@ -173,7 +162,6 @@ class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the category sensor."""
         super().__init__(coordinator, category, key)
-        self._category = category
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
         )
@@ -205,7 +193,6 @@ class FireflyBudgetSensor(FireflyBudgetBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the budget sensor."""
         super().__init__(coordinator, budget, key)
-        self._budget = budget
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
         )

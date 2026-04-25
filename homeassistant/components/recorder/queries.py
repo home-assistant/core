@@ -102,21 +102,23 @@ def attributes_ids_exist_in_states(
     This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
-        lambda: select(StateAttributes.attributes_id)
-        .select_from(StateAttributes)
-        .join(
-            States,
-            and_(
-                States.attributes_id == StateAttributes.attributes_id,
-                States.last_updated_ts
-                == select(States.last_updated_ts)
-                .where(States.attributes_id == StateAttributes.attributes_id)
-                .limit(1)
-                .scalar_subquery()
-                .correlate(StateAttributes),
-            ),
+        lambda: (
+            select(StateAttributes.attributes_id)
+            .select_from(StateAttributes)
+            .join(
+                States,
+                and_(
+                    States.attributes_id == StateAttributes.attributes_id,
+                    States.last_updated_ts
+                    == select(States.last_updated_ts)
+                    .where(States.attributes_id == StateAttributes.attributes_id)
+                    .limit(1)
+                    .scalar_subquery()
+                    .correlate(StateAttributes),
+                ),
+            )
+            .where(StateAttributes.attributes_id.in_(attributes_ids))
         )
-        .where(StateAttributes.attributes_id.in_(attributes_ids))
     )
 
 
@@ -144,49 +146,57 @@ def data_ids_exist_in_events(
     This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
-        lambda: select(EventData.data_id)
-        .select_from(EventData)
-        .join(
-            Events,
-            and_(
-                Events.data_id == EventData.data_id,
-                Events.time_fired_ts
-                == select(Events.time_fired_ts)
-                .where(Events.data_id == EventData.data_id)
-                .limit(1)
-                .scalar_subquery()
-                .correlate(EventData),
-            ),
+        lambda: (
+            select(EventData.data_id)
+            .select_from(EventData)
+            .join(
+                Events,
+                and_(
+                    Events.data_id == EventData.data_id,
+                    Events.time_fired_ts
+                    == select(Events.time_fired_ts)
+                    .where(Events.data_id == EventData.data_id)
+                    .limit(1)
+                    .scalar_subquery()
+                    .correlate(EventData),
+                ),
+            )
+            .where(EventData.data_id.in_(data_ids))
         )
-        .where(EventData.data_id.in_(data_ids))
     )
 
 
 def disconnect_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Disconnect states rows."""
     return lambda_stmt(
-        lambda: update(States)
-        .where(States.old_state_id.in_(state_ids))
-        .values(old_state_id=None)
-        .execution_options(synchronize_session=False)
+        lambda: (
+            update(States)
+            .where(States.old_state_id.in_(state_ids))
+            .values(old_state_id=None)
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
 def delete_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete states rows."""
     return lambda_stmt(
-        lambda: delete(States)
-        .where(States.state_id.in_(state_ids))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(States)
+            .where(States.state_id.in_(state_ids))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
 def delete_event_data_rows(data_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete event_data rows."""
     return lambda_stmt(
-        lambda: delete(EventData)
-        .where(EventData.data_id.in_(data_ids))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(EventData)
+            .where(EventData.data_id.in_(data_ids))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -195,9 +205,11 @@ def delete_states_attributes_rows(
 ) -> StatementLambdaElement:
     """Delete states_attributes rows."""
     return lambda_stmt(
-        lambda: delete(StateAttributes)
-        .where(StateAttributes.attributes_id.in_(attributes_ids))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(StateAttributes)
+            .where(StateAttributes.attributes_id.in_(attributes_ids))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -206,9 +218,11 @@ def delete_statistics_runs_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_runs rows."""
     return lambda_stmt(
-        lambda: delete(StatisticsRuns)
-        .where(StatisticsRuns.run_id.in_(statistics_runs))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(StatisticsRuns)
+            .where(StatisticsRuns.run_id.in_(statistics_runs))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -217,9 +231,11 @@ def delete_statistics_short_term_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_short_term rows."""
     return lambda_stmt(
-        lambda: delete(StatisticsShortTerm)
-        .where(StatisticsShortTerm.id.in_(short_term_statistics))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(StatisticsShortTerm)
+            .where(StatisticsShortTerm.id.in_(short_term_statistics))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -228,9 +244,11 @@ def delete_event_rows(
 ) -> StatementLambdaElement:
     """Delete event rows."""
     return lambda_stmt(
-        lambda: delete(Events)
-        .where(Events.event_id.in_(event_ids))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(Events)
+            .where(Events.event_id.in_(event_ids))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -239,11 +257,13 @@ def delete_recorder_runs_rows(
 ) -> StatementLambdaElement:
     """Delete recorder_runs rows."""
     return lambda_stmt(
-        lambda: delete(RecorderRuns)
-        .filter(RecorderRuns.end.is_not(None))
-        .filter(RecorderRuns.end < purge_before)
-        .filter(RecorderRuns.run_id != current_run_id)
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(RecorderRuns)
+            .filter(RecorderRuns.end.is_not(None))
+            .filter(RecorderRuns.end < purge_before)
+            .filter(RecorderRuns.run_id != current_run_id)
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -252,9 +272,11 @@ def find_events_to_purge(
 ) -> StatementLambdaElement:
     """Find events to purge."""
     return lambda_stmt(
-        lambda: select(Events.event_id, Events.data_id)
-        .filter(Events.time_fired_ts < purge_before)
-        .limit(max_bind_vars)
+        lambda: (
+            select(Events.event_id, Events.data_id)
+            .filter(Events.time_fired_ts < purge_before)
+            .limit(max_bind_vars)
+        )
     )
 
 
@@ -263,18 +285,22 @@ def find_states_to_purge(
 ) -> StatementLambdaElement:
     """Find states to purge."""
     return lambda_stmt(
-        lambda: select(States.state_id, States.attributes_id)
-        .filter(States.last_updated_ts < purge_before)
-        .limit(max_bind_vars)
+        lambda: (
+            select(States.state_id, States.attributes_id)
+            .filter(States.last_updated_ts < purge_before)
+            .limit(max_bind_vars)
+        )
     )
 
 
 def find_oldest_state() -> StatementLambdaElement:
     """Find the last_updated_ts of the oldest state."""
     return lambda_stmt(
-        lambda: select(States.last_updated_ts)
-        .order_by(States.last_updated_ts.asc())
-        .limit(1)
+        lambda: (
+            select(States.last_updated_ts)
+            .order_by(States.last_updated_ts.asc())
+            .limit(1)
+        )
     )
 
 
@@ -284,9 +310,11 @@ def find_short_term_statistics_to_purge(
     """Find short term statistics to purge."""
     purge_before_ts = purge_before.timestamp()
     return lambda_stmt(
-        lambda: select(StatisticsShortTerm.id)
-        .filter(StatisticsShortTerm.start_ts < purge_before_ts)
-        .limit(max_bind_vars)
+        lambda: (
+            select(StatisticsShortTerm.id)
+            .filter(StatisticsShortTerm.start_ts < purge_before_ts)
+            .limit(max_bind_vars)
+        )
     )
 
 
@@ -295,9 +323,11 @@ def find_statistics_runs_to_purge(
 ) -> StatementLambdaElement:
     """Find statistics_runs to purge."""
     return lambda_stmt(
-        lambda: select(StatisticsRuns.run_id)
-        .filter(StatisticsRuns.start < purge_before)
-        .limit(max_bind_vars)
+        lambda: (
+            select(StatisticsRuns.run_id)
+            .filter(StatisticsRuns.start < purge_before)
+            .limit(max_bind_vars)
+        )
     )
 
 
@@ -311,12 +341,14 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
 ) -> StatementLambdaElement:
     """Find the latest row in the legacy format to purge."""
     return lambda_stmt(
-        lambda: select(
-            Events.event_id, Events.data_id, States.state_id, States.attributes_id
+        lambda: (
+            select(
+                Events.event_id, Events.data_id, States.state_id, States.attributes_id
+            )
+            .outerjoin(States, Events.event_id == States.event_id)
+            .filter(Events.time_fired_ts < purge_before)
+            .limit(max_bind_vars)
         )
-        .outerjoin(States, Events.event_id == States.event_id)
-        .filter(Events.time_fired_ts < purge_before)
-        .limit(max_bind_vars)
     )
 
 
@@ -325,14 +357,17 @@ def find_legacy_detached_states_and_attributes_to_purge(
 ) -> StatementLambdaElement:
     """Find states rows with event_id set but not linked event_id in Events."""
     return lambda_stmt(
-        lambda: select(States.state_id, States.attributes_id)
-        .outerjoin(Events, States.event_id == Events.event_id)
-        .filter(States.event_id.isnot(None))
-        .filter(
-            (States.last_updated_ts < purge_before) | States.last_updated_ts.is_(None)
+        lambda: (
+            select(States.state_id, States.attributes_id)
+            .outerjoin(Events, States.event_id == Events.event_id)
+            .filter(States.event_id.isnot(None))
+            .filter(
+                (States.last_updated_ts < purge_before)
+                | States.last_updated_ts.is_(None)
+            )
+            .filter(Events.event_id.is_(None))
+            .limit(max_bind_vars)
         )
-        .filter(Events.event_id.is_(None))
-        .limit(max_bind_vars)
     )
 
 
@@ -344,39 +379,45 @@ def find_legacy_row() -> StatementLambdaElement:
 def find_events_context_ids_to_migrate(max_bind_vars: int) -> StatementLambdaElement:
     """Find events context_ids to migrate."""
     return lambda_stmt(
-        lambda: select(
-            Events.event_id,
-            Events.time_fired_ts,
-            Events.context_id,
-            Events.context_user_id,
-            Events.context_parent_id,
+        lambda: (
+            select(
+                Events.event_id,
+                Events.time_fired_ts,
+                Events.context_id,
+                Events.context_user_id,
+                Events.context_parent_id,
+            )
+            .filter(Events.context_id_bin.is_(None))
+            .limit(max_bind_vars)
         )
-        .filter(Events.context_id_bin.is_(None))
-        .limit(max_bind_vars)
     )
 
 
 def find_event_type_to_migrate(max_bind_vars: int) -> StatementLambdaElement:
     """Find events event_type to migrate."""
     return lambda_stmt(
-        lambda: select(
-            Events.event_id,
-            Events.event_type,
+        lambda: (
+            select(
+                Events.event_id,
+                Events.event_type,
+            )
+            .filter(Events.event_type_id.is_(None))
+            .limit(max_bind_vars)
         )
-        .filter(Events.event_type_id.is_(None))
-        .limit(max_bind_vars)
     )
 
 
 def find_entity_ids_to_migrate(max_bind_vars: int) -> StatementLambdaElement:
     """Find entity_id to migrate."""
     return lambda_stmt(
-        lambda: select(
-            States.state_id,
-            States.entity_id,
+        lambda: (
+            select(
+                States.state_id,
+                States.entity_id,
+            )
+            .filter(States.metadata_id.is_(None))
+            .limit(max_bind_vars)
         )
-        .filter(States.metadata_id.is_(None))
-        .limit(max_bind_vars)
     )
 
 
@@ -384,24 +425,27 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
     """Find entity_id to cleanup."""
     # Self join because This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
     return lambda_stmt(
-        lambda: update(States)
-        .where(
-            States.state_id.in_(
-                select(States.state_id)
-                .join(
-                    states_with_entity_ids := select(
-                        States.state_id.label("state_id_with_entity_id")
+        lambda: (
+            update(States)
+            .where(
+                States.state_id.in_(
+                    select(States.state_id)
+                    .join(
+                        states_with_entity_ids := select(
+                            States.state_id.label("state_id_with_entity_id")
+                        )
+                        .filter(States.entity_id.is_not(None))
+                        .limit(5000)
+                        .subquery(),
+                        States.state_id
+                        == states_with_entity_ids.c.state_id_with_entity_id,
                     )
-                    .filter(States.entity_id.is_not(None))
-                    .limit(5000)
-                    .subquery(),
-                    States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
+                    .alias("states_with_entity_ids")
+                    .select()
                 )
-                .alias("states_with_entity_ids")
-                .select()
             )
+            .values(entity_id=None)
         )
-        .values(entity_id=None)
     )
 
 
@@ -450,15 +494,17 @@ def has_entity_ids_to_migrate() -> StatementLambdaElement:
 def find_states_context_ids_to_migrate(max_bind_vars: int) -> StatementLambdaElement:
     """Find events context_ids to migrate."""
     return lambda_stmt(
-        lambda: select(
-            States.state_id,
-            States.last_updated_ts,
-            States.context_id,
-            States.context_user_id,
-            States.context_parent_id,
+        lambda: (
+            select(
+                States.state_id,
+                States.last_updated_ts,
+                States.context_id,
+                States.context_user_id,
+                States.context_parent_id,
+            )
+            .filter(States.context_id_bin.is_(None))
+            .limit(max_bind_vars)
         )
-        .filter(States.context_id_bin.is_(None))
-        .limit(max_bind_vars)
     )
 
 
@@ -540,18 +586,22 @@ def find_entity_ids_to_purge() -> StatementLambdaElement:
 def delete_event_types_rows(event_type_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete EventTypes rows."""
     return lambda_stmt(
-        lambda: delete(EventTypes)
-        .where(EventTypes.event_type_id.in_(event_type_ids))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(EventTypes)
+            .where(EventTypes.event_type_id.in_(event_type_ids))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
 def delete_states_meta_rows(metadata_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete StatesMeta rows."""
     return lambda_stmt(
-        lambda: delete(StatesMeta)
-        .where(StatesMeta.metadata_id.in_(metadata_ids))
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(StatesMeta)
+            .where(StatesMeta.metadata_id.in_(metadata_ids))
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
@@ -560,27 +610,34 @@ def find_unmigrated_short_term_statistics_rows(
 ) -> StatementLambdaElement:
     """Find unmigrated short term statistics rows."""
     return lambda_stmt(
-        lambda: select(
-            StatisticsShortTerm.id,
-            StatisticsShortTerm.start,
-            StatisticsShortTerm.created,
-            StatisticsShortTerm.last_reset,
+        lambda: (
+            select(
+                StatisticsShortTerm.id,
+                StatisticsShortTerm.start,
+                StatisticsShortTerm.created,
+                StatisticsShortTerm.last_reset,
+            )
+            .filter(StatisticsShortTerm.start_ts.is_(None))
+            .filter(StatisticsShortTerm.start.isnot(None))
+            .limit(max_bind_vars)
         )
-        .filter(StatisticsShortTerm.start_ts.is_(None))
-        .filter(StatisticsShortTerm.start.isnot(None))
-        .limit(max_bind_vars)
     )
 
 
 def find_unmigrated_statistics_rows(max_bind_vars: int) -> StatementLambdaElement:
     """Find unmigrated statistics rows."""
     return lambda_stmt(
-        lambda: select(
-            Statistics.id, Statistics.start, Statistics.created, Statistics.last_reset
+        lambda: (
+            select(
+                Statistics.id,
+                Statistics.start,
+                Statistics.created,
+                Statistics.last_reset,
+            )
+            .filter(Statistics.start_ts.is_(None))
+            .filter(Statistics.start.isnot(None))
+            .limit(max_bind_vars)
         )
-        .filter(Statistics.start_ts.is_(None))
-        .filter(Statistics.start.isnot(None))
-        .limit(max_bind_vars)
     )
 
 
@@ -592,17 +649,19 @@ def migrate_single_short_term_statistics_row_to_timestamp(
 ) -> StatementLambdaElement:
     """Migrate a single short term statistics row to timestamp."""
     return lambda_stmt(
-        lambda: update(StatisticsShortTerm)
-        .where(StatisticsShortTerm.id == statistic_id)
-        .values(
-            start_ts=start_ts,
-            start=None,
-            created_ts=created_ts,
-            created=None,
-            last_reset_ts=last_reset_ts,
-            last_reset=None,
+        lambda: (
+            update(StatisticsShortTerm)
+            .where(StatisticsShortTerm.id == statistic_id)
+            .values(
+                start_ts=start_ts,
+                start=None,
+                created_ts=created_ts,
+                created=None,
+                last_reset_ts=last_reset_ts,
+                last_reset=None,
+            )
+            .execution_options(synchronize_session=False)
         )
-        .execution_options(synchronize_session=False)
     )
 
 
@@ -614,17 +673,19 @@ def migrate_single_statistics_row_to_timestamp(
 ) -> StatementLambdaElement:
     """Migrate a single statistics row to timestamp."""
     return lambda_stmt(
-        lambda: update(Statistics)
-        .where(Statistics.id == statistic_id)
-        .values(
-            start_ts=start_ts,
-            start=None,
-            created_ts=created_ts,
-            created=None,
-            last_reset_ts=last_reset_ts,
-            last_reset=None,
+        lambda: (
+            update(Statistics)
+            .where(Statistics.id == statistic_id)
+            .values(
+                start_ts=start_ts,
+                start=None,
+                created_ts=created_ts,
+                created=None,
+                last_reset_ts=last_reset_ts,
+                last_reset=None,
+            )
+            .execution_options(synchronize_session=False)
         )
-        .execution_options(synchronize_session=False)
     )
 
 
@@ -633,16 +694,20 @@ def delete_duplicate_short_term_statistics_row(
 ) -> StatementLambdaElement:
     """Delete a single duplicate short term statistics row."""
     return lambda_stmt(
-        lambda: delete(StatisticsShortTerm)
-        .where(StatisticsShortTerm.id == statistic_id)
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(StatisticsShortTerm)
+            .where(StatisticsShortTerm.id == statistic_id)
+            .execution_options(synchronize_session=False)
+        )
     )
 
 
 def delete_duplicate_statistics_row(statistic_id: int) -> StatementLambdaElement:
     """Delete a single duplicate statistics row."""
     return lambda_stmt(
-        lambda: delete(Statistics)
-        .where(Statistics.id == statistic_id)
-        .execution_options(synchronize_session=False)
+        lambda: (
+            delete(Statistics)
+            .where(Statistics.id == statistic_id)
+            .execution_options(synchronize_session=False)
+        )
     )

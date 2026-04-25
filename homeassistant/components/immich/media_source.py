@@ -64,7 +64,9 @@ class ImmichMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
-            raise BrowseError("Immich is not configured")
+            raise BrowseError(
+                translation_domain=DOMAIN, translation_key="not_configured"
+            )
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -122,11 +124,11 @@ class ImmichMediaSource(MediaSource):
                     identifier=f"{identifier.unique_id}|{collection}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
-                    title=collection,
+                    title=collection.split("|", maxsplit=1)[0],
                     can_play=False,
                     can_expand=True,
                 )
-                for collection in ("albums", "people", "tags")
+                for collection in ("albums", "favorites|favorites", "people", "tags")
             ]
 
         # --------------------------------------------------------
@@ -237,6 +239,12 @@ class ImmichMediaSource(MediaSource):
                 )
             except ImmichError:
                 return []
+        elif identifier.collection == "favorites":
+            LOGGER.debug("Render all assets for favorites collection")
+            try:
+                assets = await immich_api.search.async_get_all_favorites()
+            except ImmichError:
+                return []
 
         ret: list[BrowseMediaSource] = []
         for asset in assets:
@@ -282,12 +290,16 @@ class ImmichMediaSource(MediaSource):
             identifier = ImmichMediaSourceIdentifier(item.identifier)
         except IndexError as err:
             raise Unresolvable(
-                f"Could not parse identifier: {item.identifier}"
+                translation_domain=DOMAIN,
+                translation_key="identifier_unresolvable",
+                translation_placeholders={"identifier": item.identifier},
             ) from err
 
         if identifier.mime_type is None:
             raise Unresolvable(
-                f"Could not resolve identifier that has no mime-type: {item.identifier}"
+                translation_domain=DOMAIN,
+                translation_key="identifier_no_mime_type_unresolvable",
+                translation_placeholders={"identifier": item.identifier},
             )
 
         return PlayMedia(

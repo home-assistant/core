@@ -59,13 +59,15 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    # Replace unique id for "DND" switch and remove from Speaker Group
-    await async_update_unique_id(
-        hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd"
-    )
+    # DND keys
+    old_key = "do_not_disturb"
+    new_key = "dnd"
 
-    # Remove DND switch from virtual groups
-    await async_remove_dnd_from_virtual_group(hass, coordinator)
+    # Remove old DND switch from virtual groups
+    await async_remove_dnd_from_virtual_group(hass, coordinator, old_key)
+
+    # Replace unique id for DND switch
+    await async_update_unique_id(hass, coordinator, SWITCH_DOMAIN, old_key, new_key)
 
     known_devices: set[str] = set()
 
@@ -99,7 +101,10 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
             assert method is not None
 
         await method(self.device, state)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.device.serial_number].sensors[
+            self.entity_description.key
+        ].value = state
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

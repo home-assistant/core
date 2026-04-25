@@ -34,6 +34,8 @@ RETRY_INTERVAL_SECONDS = 30
 # Number of consecutive failures before marking device unavailable
 MAX_CONSECUTIVE_FAILURES = 3
 
+type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]
+
 
 class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
     """Per-device coordinator for MELCloud data updates."""
@@ -188,6 +190,3 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             self.device_available = False
 
         await self.async_request_refresh()
-
-
-type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]

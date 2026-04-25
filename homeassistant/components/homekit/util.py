@@ -455,7 +455,7 @@ def convert_to_float(state: Any) -> float | None:
     """Return float of state, catch errors."""
     try:
         return float(state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -463,7 +463,7 @@ def coerce_int(state: str) -> int:
     """Return int."""
     try:
         return int(state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return 0
 
 
@@ -625,10 +625,13 @@ def _get_test_socket() -> socket.socket:
 @callback
 def async_port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
+    test_socket = _get_test_socket()
     try:
-        _get_test_socket().bind(("", port))
+        test_socket.bind(("", port))
     except OSError:
         return False
+    finally:
+        test_socket.close()
     return True
 
 

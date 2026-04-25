@@ -28,8 +28,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
+from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.hass_dict import HassKey
@@ -49,7 +48,6 @@ STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 MANAGER_CLEANUP_DELAY = 60
 
 
-@bind_hass
 async def async_migrator[_T: Mapping[str, Any] | Sequence[Any]](
     hass: HomeAssistant,
     old_path: str,
@@ -226,7 +224,6 @@ class _StoreManager:
             self._files = set(os.listdir(self._storage_path))
 
 
-@bind_hass
 class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     """Class to help storing data."""
 
@@ -239,6 +236,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         *,
         atomic_writes: bool = False,
         encoder: type[JSONEncoder] | None = None,
+        max_readable_version: int | None = None,
         minor_version: int = 1,
         read_only: bool = False,
         serialize_in_event_loop: bool = True,
@@ -246,6 +244,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         """Initialize storage class.
 
         Args:
+            max_readable_version: Maximum major version that can be read. Defaults
+            to version. Set higher than version to support forward compatibility,
+            allowing reading data written by newer versions (e.g., after downgrade).
+
             serialize_in_event_loop: Whether to serialize data in the event loop.
             Set to True (default) if data passed to async_save and data produced by
             data_func passed to async_delay_save needs to be serialized in the event
@@ -273,6 +275,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._encoder = encoder
         self._atomic_writes = atomic_writes
         self._read_only = read_only
+        self._load_empty = False
+        self._max_readable_version = (
+            max_readable_version if max_readable_version is not None else version
+        )
         self._next_write_time = 0.0
         self._manager = get_internal_store_manager(hass)
         self._serialize_in_event_loop = serialize_in_event_loop
@@ -288,6 +294,14 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         This method is irreversible.
         """
         self._read_only = True
+
+    def set_load_empty(self) -> None:
+        """Set the store to load empty data and become read-only.
+
+        When set, the store will skip loading data from disk and return None,
+        while also becoming read-only to preserve on-disk data untouched.
+        """
+        self._load_empty = True
 
     async def async_load(self) -> _T | None:
         """Load data.
@@ -328,6 +342,12 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def _async_load_data(self):
         """Load the data."""
+        # When load_empty is set, skip loading storage files and use empty
+        # data while preserving the on-disk files untouched.
+        if self._load_empty:
+            self.make_read_only()
+            return None
+
         # Check if we have a pending write
         if self._data is not None:
             data = self._data
@@ -415,6 +435,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         ):
             stored = data["data"]
         else:
+            if data["version"] > self._max_readable_version:
+                raise UnsupportedStorageVersionError(
+                    self.key, data["version"], self._max_readable_version
+                )
             _LOGGER.info(
                 "Migrating %s storage from %s.%s to %s.%s",
                 self.key,

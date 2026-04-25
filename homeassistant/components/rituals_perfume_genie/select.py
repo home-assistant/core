@@ -8,14 +8,14 @@ from dataclasses import dataclass
 from pyrituals import Diffuser
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfArea
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RitualsDataUpdateCoordinator
+from .coordinator import RitualsConfigEntry, RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,8 +34,8 @@ ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         options=["15", "30", "60", "100"],
         current_fn=lambda diffuser: str(diffuser.room_size_square_meter),
-        select_fn=lambda diffuser, value: (
-            diffuser.set_room_size_square_meter(int(value))
+        select_fn=lambda diffuser, value: diffuser.set_room_size_square_meter(
+            int(value)
         ),
     ),
 )
@@ -43,13 +43,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RitualsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser select entities."""
-    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators = config_entry.runtime_data
 
     async_add_entities(
         RitualsSelectEntity(coordinator, description)

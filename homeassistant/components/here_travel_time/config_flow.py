@@ -130,7 +130,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await async_validate_api_key(user_input[CONF_API_KEY])
             except HERERoutingUnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except (HERERoutingError, HERETransitError):
+            except HERERoutingError, HERETransitError:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:

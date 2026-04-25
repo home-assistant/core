@@ -12,6 +12,9 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started_cleaning": make_entity_target_state_trigger(
         DOMAIN, VacuumActivity.CLEANING
     ),
+    "started_returning": make_entity_target_state_trigger(
+        DOMAIN, VacuumActivity.RETURNING
+    ),
 }
 
 

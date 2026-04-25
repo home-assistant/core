@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from fnmatch import translate
-from functools import lru_cache, partial
+from functools import lru_cache
 from ipaddress import IPv4Address
 import itertools
 import logging
@@ -50,12 +50,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery_flow,
 )
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -78,13 +72,6 @@ SCAN_INTERVAL = timedelta(minutes=60)
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-_DEPRECATED_DhcpServiceInfo = DeprecatedConstant(
-    _DhcpServiceInfo,
-    "homeassistant.helpers.service_info.dhcp.DhcpServiceInfo",
-    "2026.2",
-)
 
 
 def async_index_integration_matchers(
@@ -503,11 +490,3 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     since the devices will not change frequently
     """
     return bool(_compile_fnmatch(pattern).match(name))
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

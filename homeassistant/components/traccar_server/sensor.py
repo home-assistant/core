@@ -14,7 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfSpeed
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfSpeed,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -44,6 +50,26 @@ TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda x: x["attributes"].get("batteryLevel"),
+    ),
+    TraccarServerSensorEntityDescription[PositionModel](
+        key="attributes.power",
+        data_key="position",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda x: x["attributes"].get("power"),
+        translation_key="power",
+    ),
+    TraccarServerSensorEntityDescription[PositionModel](
+        key="attributes.battery",
+        data_key="position",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda x: x["attributes"].get("battery"),
+        translation_key="battery",
     ),
     TraccarServerSensorEntityDescription[PositionModel](
         key="speed",

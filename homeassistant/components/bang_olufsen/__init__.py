@@ -17,10 +17,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, BeoModel
+from .services import async_setup_services
+from .util import get_remotes
 from .websocket import BeoWebsocket
 
 
@@ -41,21 +44,20 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     """Set up from a config entry."""
 
     # Remove casts to str
     assert entry.unique_id
-
-    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=entry.title,
-        model=entry.data[CONF_MODEL],
-    )
 
     client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
 
@@ -72,6 +74,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     ) as error:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
+
+    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        model=entry.data[CONF_MODEL],
+    )
+
+    # Create devices for paired Beoremote One remotes
+    for remote in await get_remotes(client):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{remote.serial_number}_{entry.unique_id}")},
+            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{entry.unique_id}",
+            model=BeoModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, entry.unique_id),
+        )
 
     websocket = BeoWebsocket(hass, entry, client)
 

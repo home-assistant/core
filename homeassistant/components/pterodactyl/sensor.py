@@ -136,9 +136,11 @@ SENSOR_DESCRIPTIONS = [
         key=KEY_UPTIME,
         translation_key=KEY_UPTIME,
         value_fn=(
-            lambda data: dt_util.utcnow() - timedelta(milliseconds=data.uptime)
-            if data.uptime > 0
-            else None
+            lambda data: (
+                dt_util.utcnow() - timedelta(milliseconds=data.uptime)
+                if data.uptime > 0
+                else None
+            )
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),

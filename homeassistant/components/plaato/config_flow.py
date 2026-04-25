@@ -127,7 +127,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         device_name = self._init_info[CONF_DEVICE_NAME]
         device_type = self._init_info[CONF_DEVICE_TYPE]
 
-        unique_id = auth_token if auth_token else webhook_id
+        unique_id = auth_token or webhook_id
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -210,6 +210,8 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Polling interval is user-configurable, which is no longer allowed
+                    # pylint: disable-next=hass-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

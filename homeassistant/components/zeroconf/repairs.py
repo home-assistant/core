@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from homeassistant import data_entry_flow
 from homeassistant.components.homeassistant import (
-    DOMAIN as DOMAIN_HOMEASSISTANT,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_HOMEASSISTANT_RESTART,
 )
 from homeassistant.components.repairs import RepairsFlow
@@ -35,7 +35,7 @@ class DuplicateInstanceIDRepairFlow(RepairsFlow):
         if user_input is not None:
             await instance_id.async_recreate(self.hass)
             await self.hass.services.async_call(
-                DOMAIN_HOMEASSISTANT, SERVICE_HOMEASSISTANT_RESTART
+                HOMEASSISTANT_DOMAIN, SERVICE_HOMEASSISTANT_RESTART
             )
 
             return self.async_create_entry(title="", data={})
