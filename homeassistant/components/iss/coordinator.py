@@ -14,7 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, MAX_CONSECUTIVE_FAILURES
+from .const import (
+    CONF_MAX_CONSECUTIVE_FAILURES,
+    DEFAULT_MAX_CONSECUTIVE_FAILURES,
+    DOMAIN,
+)
 
 type IssConfigEntry = ConfigEntry[IssDataUpdateCoordinator]
 
@@ -44,6 +48,9 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             update_interval=timedelta(seconds=60),
         )
         self._consecutive_failures = 0
+        self._max_consecutive_failures = entry.options.get(
+            CONF_MAX_CONSECUTIVE_FAILURES, DEFAULT_MAX_CONSECUTIVE_FAILURES
+        )
         self.iss = pyiss.ISS()
 
     def _fetch_iss_data(self) -> IssData:
@@ -61,14 +68,15 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             self._consecutive_failures += 1
             if self.data is None:
                 raise UpdateFailed("Unable to retrieve data") from err
-            if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            if self._consecutive_failures >= self._max_consecutive_failures:
                 raise UpdateFailed(
-                    f"Unable to retrieve data after {self._consecutive_failures} consecutive update failures"
+                    f"Unable to retrieve data after {self._consecutive_failures} "
+                    "consecutive update failures"
                 ) from err
             _LOGGER.debug(
                 "Transient API error (%s/%s), using cached data: %s",
                 self._consecutive_failures,
-                MAX_CONSECUTIVE_FAILURES,
+                self._max_consecutive_failures,
                 err,
             )
             return self.data

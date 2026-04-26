@@ -7,8 +7,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
+from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_MAX_CONSECUTIVE_FAILURES,
+    DEFAULT_MAX_CONSECUTIVE_FAILURES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from .coordinator import IssConfigEntry
 
 
@@ -31,7 +37,10 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data={},
-                options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
+                options={
+                    CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
+                    CONF_MAX_CONSECUTIVE_FAILURES: DEFAULT_MAX_CONSECUTIVE_FAILURES,
+                },
             )
 
         return self.async_show_form(step_id="user")
@@ -53,6 +62,13 @@ class OptionsFlowHandler(OptionsFlow):
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                     ): bool,
+                    vol.Required(
+                        CONF_MAX_CONSECUTIVE_FAILURES,
+                        default=self.config_entry.options.get(
+                            CONF_MAX_CONSECUTIVE_FAILURES,
+                            DEFAULT_MAX_CONSECUTIVE_FAILURES,
+                        ),
+                    ): NumberSelector(NumberSelectorConfig(min=5, max=30, step=1)),
                 }
             ),
         )

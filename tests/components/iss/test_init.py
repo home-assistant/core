@@ -4,7 +4,10 @@ from unittest.mock import MagicMock
 
 from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
-from homeassistant.components.iss.const import MAX_CONSECUTIVE_FAILURES
+from homeassistant.components.iss.const import (
+    CONF_MAX_CONSECUTIVE_FAILURES,
+    DEFAULT_MAX_CONSECUTIVE_FAILURES,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
@@ -89,12 +92,15 @@ async def test_coordinator_multiple_failures_uses_cached_data(
     coordinator = init_integration.runtime_data
     original_data = coordinator.data
 
-    # Simulate multiple API failures (below MAX_CONSECUTIVE_FAILURES)
+    # Simulate multiple API failures (below max_consecutive_failures threshold)
     mock_pyiss.number_of_people_in_space.side_effect = RequestsConnectionError(
         "Connection failed"
     )
 
-    for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
+    max_failures = init_integration.options.get(
+        CONF_MAX_CONSECUTIVE_FAILURES, DEFAULT_MAX_CONSECUTIVE_FAILURES
+    )
+    for _ in range(max_failures - 1):
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -106,17 +112,20 @@ async def test_coordinator_multiple_failures_uses_cached_data(
 async def test_coordinator_max_failures_marks_unavailable(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
-    """Test coordinator marks update failed after MAX_CONSECUTIVE_FAILURES."""
+    """Test coordinator marks update failed after max_consecutive_failures threshold."""
     coordinator = init_integration.runtime_data
 
     # Simulate consecutive API failures reaching the threshold
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
 
-    for _ in range(MAX_CONSECUTIVE_FAILURES):
+    max_failures = init_integration.options.get(
+        CONF_MAX_CONSECUTIVE_FAILURES, DEFAULT_MAX_CONSECUTIVE_FAILURES
+    )
+    for _ in range(max_failures):
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
-    # After MAX_CONSECUTIVE_FAILURES, update should be marked as failed
+    # After reaching the threshold, update should be marked as failed
     assert coordinator.last_update_success is False
     assert isinstance(coordinator.last_exception, UpdateFailed)
 
@@ -143,10 +152,13 @@ async def test_coordinator_failure_counter_resets_on_success(
     assert coordinator.data.number_of_people_in_space == 8
 
     # Failure counter should be reset, so we can tolerate failures again
+    max_failures = init_integration.options.get(
+        CONF_MAX_CONSECUTIVE_FAILURES, DEFAULT_MAX_CONSECUTIVE_FAILURES
+    )
     mock_pyiss.number_of_people_in_space.side_effect = RequestsConnectionError(
         "Connection failed"
     )
-    for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
+    for _ in range(max_failures - 1):
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 

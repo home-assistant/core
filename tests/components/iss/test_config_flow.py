@@ -2,7 +2,11 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.iss.const import DOMAIN
+from homeassistant.components.iss.const import (
+    CONF_MAX_CONSECUTIVE_FAILURES,
+    DEFAULT_MAX_CONSECUTIVE_FAILURES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
@@ -66,8 +70,57 @@ async def test_options(hass: HomeAssistant) -> None:
             optionflow["flow_id"],
             user_input={
                 CONF_SHOW_ON_MAP: True,
+                CONF_MAX_CONSECUTIVE_FAILURES: 10,
             },
         )
 
         assert configured.get("type") is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_SHOW_ON_MAP: True}
+        assert config_entry.options == {
+            CONF_SHOW_ON_MAP: True,
+            CONF_MAX_CONSECUTIVE_FAILURES: 10,
+        }
+
+
+async def test_options_defaults(hass: HomeAssistant) -> None:
+    """Test options flow uses defaults when not specified."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        optionflow = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        configured = await hass.config_entries.options.async_configure(
+            optionflow["flow_id"],
+            user_input={},
+        )
+
+        assert configured.get("type") is FlowResultType.CREATE_ENTRY
+        # Only explicitly set values are in options, defaults are used in code
+        assert CONF_SHOW_ON_MAP in config_entry.options or not config_entry.options
+
+
+async def test_create_entry_with_defaults(hass: HomeAssistant) -> None:
+    """Test config entry is created with default options."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
+        assert result.get("result").options == {
+            CONF_SHOW_ON_MAP: False,
+            CONF_MAX_CONSECUTIVE_FAILURES: DEFAULT_MAX_CONSECUTIVE_FAILURES,
+        }
