@@ -2,8 +2,9 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solaredge_web import EnergyData
@@ -18,16 +19,19 @@ from homeassistant.components.solaredge.const import (
     OVERVIEW_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -417,3 +421,203 @@ async def test_modules_coordinator_no_energy_data(
         {"state", "sum"},
     )
     assert not stats
+
+
+@pytest.mark.parametrize(
+    ("api_method", "sensor_id"),
+    [
+        ("get_overview", "sensor.solaredge_lifetime_energy"),
+        ("get_inventory", "sensor.solaredge_inverters"),
+        ("get_current_power_flow", "sensor.solaredge_grid_power"),
+        ("get_energy_details", "sensor.solaredge_produced_energy"),
+    ],
+)
+async def test_sensor_unavailable_on_data_service_keyerror(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+    api_method: str,
+    sensor_id: str,
+) -> None:
+    """Test sensors become unavailable when a data service refresh raises UpdateFailed."""
+    getattr(solaredge_api, api_method).return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(sensor_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_details_sensor_unavailable_on_data_service_keyerror(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test the details sensor becomes unavailable when its refresh fails.
+
+    `get_details` is also called during setup validation, so the first call
+    must succeed; subsequent calls (the data service refresh) return data
+    without the 'details' key to trigger UpdateFailed.
+    """
+    solaredge_api.get_details.side_effect = [
+        {"details": {"status": "Active"}},
+        {},
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_site_details")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_energy_details_sensor_unknown_when_no_meters(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test energy detail sensors stay unknown when the API reports no meters."""
+    solaredge_api.get_energy_details.return_value = {"energyDetails": {"unit": "Wh"}}
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_produced_energy")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_energy_details_filters_meters(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test energy details data service skips meters without type/values and unsupported types."""
+    solaredge_api.get_energy_details.return_value = {
+        "energyDetails": {
+            "unit": "Wh",
+            "meters": [
+                {"type": "Production"},  # missing values, skipped
+                {"values": [{"date": "2025-01-01", "value": 1.0}]},  # missing type
+                {
+                    "type": "SomethingElse",  # unsupported type, skipped
+                    "values": [{"date": "2025-01-01", "value": 2.0}],
+                },
+                {
+                    "type": "Production",
+                    "values": [{"date": "2025-01-01", "value": 100.0}],
+                },
+            ],
+        }
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    produced = hass.states.get("sensor.solaredge_produced_energy")
+    assert produced is not None
+    assert produced.state == "100.0"
+    assert produced.attributes["date"] == "2025-01-01"
+
+    consumed = hass.states.get("sensor.solaredge_consumed_energy")
+    assert consumed is not None
+    assert consumed.state == STATE_UNKNOWN
+
+
+async def test_power_flow_sensor_unknown_when_no_connections(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test power flow sensors stay unknown when the API reports no connections."""
+    solaredge_api.get_current_power_flow.return_value = {
+        "siteCurrentPowerFlow": {"unit": "W"}
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_grid_power")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_power_flow_grid_export_storage_discharge(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test power flow sign flipping for grid export and reports for storage discharge."""
+    solaredge_api.get_current_power_flow.return_value = {
+        "siteCurrentPowerFlow": {
+            "unit": "W",
+            "connections": [
+                {"from": "PV", "to": "GRID"},
+                {"from": "STORAGE", "to": "Load"},
+            ],
+            "GRID": {"status": "Active", "currentPower": 100.0},
+            "LOAD": {"status": "Active", "currentPower": 500.0},
+            "PV": {"status": "Active", "currentPower": 600.0},
+            "STORAGE": {
+                "status": "Discharging",
+                "currentPower": 400.0,
+                "chargeLevel": 60,
+            },
+        }
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    grid = hass.states.get("sensor.solaredge_grid_power")
+    assert grid is not None
+    assert grid.state == "-100.0"
+    assert grid.attributes["flow"] == "export"
+
+    storage = hass.states.get("sensor.solaredge_storage_power")
+    assert storage is not None
+    assert storage.state == "400.0"
+    assert storage.attributes["flow"] == "discharge"
+    assert storage.attributes["soc"] == 60
+
+
+async def test_power_flow_zero_current_power_keeps_zero(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test power flow leaves zero values untouched (no -0 in the state)."""
+    solaredge_api.get_current_power_flow.return_value = {
+        "siteCurrentPowerFlow": {
+            "unit": "W",
+            "connections": [{"from": "PV", "to": "GRID"}],
+            "GRID": {"status": "Idle", "currentPower": 0},
+            "STORAGE": {"status": "Idle", "currentPower": 0, "chargeLevel": 50},
+        }
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.solaredge_grid_power").state == "0"
+    assert hass.states.get("sensor.solaredge_storage_power").state == "0"
+
+
+async def test_modules_coordinator_api_failure(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_web_api: AsyncMock,
+) -> None:
+    """Test the modules coordinator surfaces API failures via the config entry state."""
+    solaredge_web_api.async_get_equipment.side_effect = ClientError("boom")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

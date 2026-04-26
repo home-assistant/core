@@ -1,100 +1,23 @@
-"""Tests for the SolarEdge sensors."""
+"""Tests for the SolarEdge sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timedelta
+from unittest.mock import Mock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.solaredge.const import (
-    CONF_SITE_ID,
-    DEFAULT_NAME,
-    DOMAIN,
-    INVENTORY_UPDATE_DELAY,
-)
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.components.solaredge.const import DOMAIN, INVENTORY_UPDATE_DELAY
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import API_KEY, SITE_ID
+from . import setup_integration
+from .conftest import SITE_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-@pytest.fixture(autouse=True)
-def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
-    """Make sure all entities are enabled."""
-
-
-@pytest.fixture
-def mock_solaredge_api() -> AsyncMock:
-    """Return a mocked SolarEdge API with common defaults."""
-    api = AsyncMock()
-    api.get_details = AsyncMock(return_value={"details": {"status": "active"}})
-    api.get_overview = AsyncMock(
-        return_value={
-            "overview": {
-                "lifeTimeData": {"energy": 100000},
-                "lastYearData": {"energy": 50000},
-                "lastMonthData": {"energy": 10000},
-                "lastDayData": {"energy": 0.0},
-                "currentPower": {"power": 0.0},
-            }
-        }
-    )
-    api.get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": [{"SN": "BAT001"}]}}
-    )
-    api.get_current_power_flow = AsyncMock(
-        return_value={
-            "siteCurrentPowerFlow": {
-                "unit": "W",
-                "connections": [],
-            }
-        }
-    )
-    api.get_energy_details = AsyncMock(
-        return_value={"energyDetails": {"unit": "Wh", "meters": []}}
-    )
-    api.get_storage_data = AsyncMock(return_value=STORAGE_DATA_SINGLE_BATTERY)
-    return api
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a default mocked config entry for storage tests."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_NAME,
-        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
-    )
-
-
-STORAGE_DATA_SINGLE_BATTERY = {
-    "storageData": {
-        "batteries": [
-            {
-                "serialNumber": "BAT001",
-                "telemetries": [
-                    {
-                        "timeStamp": "2025-01-01 00:00:00",
-                        "lifeTimeEnergyCharged": 1000.0,
-                        "lifeTimeEnergyDischarged": 500.0,
-                        "batteryPercentageState": 50.0,
-                        "power": 100.0,
-                    },
-                    {
-                        "timeStamp": "2025-01-01 12:00:00",
-                        "lifeTimeEnergyCharged": 1500.0,
-                        "lifeTimeEnergyDischarged": 800.0,
-                        "batteryPercentageState": 75.0,
-                        "power": 200.0,
-                    },
-                ],
-            }
-        ]
-    }
-}
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 STORAGE_DATA_MULTI_BATTERY = {
     "storageData": {
@@ -142,22 +65,87 @@ STORAGE_DATA_MULTI_BATTERY = {
 }
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
-async def test_storage_data_service(
-    mock_solaredge: MagicMock,
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test all sensor entities are created with the correct state and registry entry."""
+    with patch("homeassistant.components.solaredge.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_overview_sensors_unavailable_on_api_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test overview-based sensors are unavailable when overview API fails."""
+    solaredge_api.get_overview.side_effect = ClientError()
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_storage_level_unknown_when_storage_missing(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test storage_level returns None (unknown) when site has no storage in flow data."""
+    power_flow = solaredge_api.get_current_power_flow.return_value
+    power_flow["siteCurrentPowerFlow"].pop("STORAGE")
+    # Drop STORAGE from connections too so the data service does not reference it.
+    power_flow["siteCurrentPowerFlow"]["connections"] = [
+        {"from": "GRID", "to": "Load"},
+        {"from": "PV", "to": "Load"},
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_storage_level")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_no_sensors_without_api_key(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry_web_login: MockConfigEntry,
+    solaredge_web_api: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no sensors are created when only web login auth is configured."""
+    await setup_integration(hass, mock_config_entry_web_login)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry_web_login.entry_id
+    )
+    assert entries == []
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_storage_data_service(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage data service fetches battery charge/discharge energy."""
-    mock_solaredge.return_value = mock_solaredge_api
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     # Aggregate sensors
     charge_entry = entity_registry.async_get_entity_id(
@@ -177,7 +165,7 @@ async def test_storage_data_service(
     assert state is not None
     assert float(state.state) == 300.0  # 800 - 500
 
-    # Per-battery entities
+    # Per-battery entities for BAT001
     bat_charge = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_charge_energy"
     )
@@ -212,28 +200,20 @@ async def test_storage_data_service(
     assert float(state.state) == 200.0
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_storage_data_service_multi_battery(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage data service aggregates data across multiple batteries."""
-    mock_solaredge_api.get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": [{"SN": "BAT001"}, {"SN": "BAT002"}]}}
-    )
-    mock_solaredge_api.get_storage_data = AsyncMock(
-        return_value=STORAGE_DATA_MULTI_BATTERY
-    )
-    mock_solaredge.return_value = mock_solaredge_api
+    inventory = solaredge_api.get_inventory.return_value
+    inventory["Inventory"]["batteries"] = [{"SN": "BAT001"}, {"SN": "BAT002"}]
+    solaredge_api.get_storage_data.return_value = STORAGE_DATA_MULTI_BATTERY
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
@@ -246,24 +226,15 @@ async def test_storage_data_service_multi_battery(
 
     # BAT001: charge=500 (1500-1000), discharge=300 (800-500)
     # BAT002: charge=700 (2700-2000), discharge=400 (1400-1000)
-    state = hass.states.get(charge_entry)
-    assert state is not None
-    assert float(state.state) == 1200.0  # 500 + 700
+    assert float(hass.states.get(charge_entry).state) == 1200.0
+    assert float(hass.states.get(discharge_entry).state) == 700.0
 
-    state = hass.states.get(discharge_entry)
-    assert state is not None
-    assert float(state.state) == 700.0  # 300 + 400
-
-    # Per-battery entities for BAT001
     bat1_soc = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_state_of_charge"
     )
     assert bat1_soc is not None
-    state = hass.states.get(bat1_soc)
-    assert state is not None
-    assert float(state.state) == 75.0
+    assert float(hass.states.get(bat1_soc).state) == 75.0
 
-    # Per-battery entities for BAT002
     bat2_charge = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_BAT002_battery_charge_energy"
     )
@@ -272,37 +243,23 @@ async def test_storage_data_service_multi_battery(
     )
     assert bat2_charge is not None
     assert bat2_soc is not None
-
-    state = hass.states.get(bat2_charge)
-    assert state is not None
-    assert float(state.state) == 700.0
-
-    state = hass.states.get(bat2_soc)
-    assert state is not None
-    assert float(state.state) == 80.0
+    assert float(hass.states.get(bat2_charge).state) == 700.0
+    assert float(hass.states.get(bat2_soc).state) == 80.0
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
-async def test_storage_data_service_no_batteries(
-    mock_solaredge: MagicMock,
+async def test_storage_service_not_created_when_inventory_has_no_batteries(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage service is not created when no batteries in inventory."""
-    mock_solaredge_api.get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": []}}
-    )
-    mock_solaredge.return_value = mock_solaredge_api
+    inventory = solaredge_api.get_inventory.return_value
+    inventory["Inventory"]["batteries"] = []
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    # Sensors should not exist when inventory reports no batteries
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
@@ -313,23 +270,18 @@ async def test_storage_data_service_no_batteries(
     assert discharge_entry is None
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_storage_data_service_api_error(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test storage data service handles API errors gracefully."""
-    mock_solaredge_api.get_storage_data = AsyncMock(side_effect=Exception("API error"))
-    mock_solaredge.return_value = mock_solaredge_api
+    """Test storage sensors are unavailable when the storage API errors out."""
+    solaredge_api.get_storage_data.side_effect = Exception("API error")
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
@@ -340,124 +292,64 @@ async def test_storage_data_service_api_error(
     assert charge_entry is not None
     assert discharge_entry is not None
 
-    # Sensors should be unavailable when the API returns an error
-    state = hass.states.get(charge_entry)
-    assert state is not None
-    assert state.state == "unavailable"
-
-    state = hass.states.get(discharge_entry)
-    assert state is not None
-    assert state.state == "unavailable"
+    assert hass.states.get(charge_entry).state == STATE_UNAVAILABLE
+    assert hass.states.get(discharge_entry).state == STATE_UNAVAILABLE
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
+@pytest.mark.parametrize(
+    "bad_response",
+    [{"unexpected": {}}, {"storageData": {"otherField": "value"}}],
+    ids=["missing_storageData", "missing_batteries"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_storage_data_missing_keys_in_response(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
+    bad_response: dict,
 ) -> None:
-    """Test storage service raises UpdateFailed when response is missing required keys."""
-    # API returns a response but without the storageData key
-    mock_solaredge_api.get_storage_data = AsyncMock(return_value={"unexpected": {}})
-    mock_solaredge.return_value = mock_solaredge_api
+    """Test storage sensors are unavailable when the response is missing required keys."""
+    solaredge_api.get_storage_data.return_value = bad_response
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
-    )
-    discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
-    )
-    assert charge_entry is not None
-    assert discharge_entry is not None
-
-    # Sensors should be unavailable due to UpdateFailed from missing key
-    state = hass.states.get(charge_entry)
-    assert state is not None
-    assert state.state == "unavailable"
-
-    state = hass.states.get(discharge_entry)
-    assert state is not None
-    assert state.state == "unavailable"
-
-
-@patch("homeassistant.components.solaredge.SolarEdge")
-async def test_storage_data_missing_batteries_key(
-    mock_solaredge: MagicMock,
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test storage service raises UpdateFailed when batteries key is missing."""
-    # API returns storageData but without batteries key
-    mock_solaredge_api.get_storage_data = AsyncMock(
-        return_value={"storageData": {"otherField": "value"}}
-    )
-    mock_solaredge.return_value = mock_solaredge_api
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is not None
-
-    state = hass.states.get(charge_entry)
-    assert state is not None
-    assert state.state == "unavailable"
+    assert hass.states.get(charge_entry).state == STATE_UNAVAILABLE
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_storage_service_deferred_after_inventory_failure(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test storage service is created after inventory recovers from failure."""
-    # Initial inventory fetch fails
-    mock_solaredge_api.get_inventory = AsyncMock(side_effect=KeyError("Inventory"))
-    mock_solaredge.return_value = mock_solaredge_api
+    """Test storage service is created after inventory recovers from a failure."""
+    valid_inventory = solaredge_api.get_inventory.return_value
+    solaredge_api.get_inventory.side_effect = KeyError("Inventory")
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    # Storage sensors should not exist yet
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is None
 
-    # Now inventory recovers and reports batteries
-    mock_solaredge_api.get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": [{"SN": "BAT001"}]}}
-    )
-    mock_solaredge_api.get_storage_data = AsyncMock(
-        return_value=STORAGE_DATA_SINGLE_BATTERY
-    )
+    # Inventory recovers and reports a battery → storage sensors get created.
+    solaredge_api.get_inventory.side_effect = None
+    solaredge_api.get_inventory.return_value = valid_inventory
 
-    # Trigger inventory coordinator refresh
-    freezer.tick(INVENTORY_UPDATE_DELAY)
+    freezer.tick(INVENTORY_UPDATE_DELAY + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Storage sensors should now exist
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
@@ -468,35 +360,120 @@ async def test_storage_service_deferred_after_inventory_failure(
     assert discharge_entry is not None
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
-async def test_storage_service_not_created_when_inventory_has_no_batteries(
-    mock_solaredge: MagicMock,
+@pytest.mark.parametrize(
+    "storage_response",
+    [
+        # Empty batteries list inside the storage data
+        {"storageData": {"batteries": []}},
+        # Battery missing the serialNumber key — skipped by the data service
+        {"storageData": {"batteries": [{"telemetries": []}]}},
+        # Battery with no telemetries — skipped after the serial check
+        {"storageData": {"batteries": [{"serialNumber": "BAT001", "telemetries": []}]}},
+        # Battery with a single telemetry — falls into the len < 2 branch
+        {
+            "storageData": {
+                "batteries": [
+                    {
+                        "serialNumber": "BAT001",
+                        "telemetries": [
+                            {
+                                "timeStamp": "2025-01-01 00:00:00",
+                                "lifeTimeEnergyCharged": 1000.0,
+                                "lifeTimeEnergyDischarged": 500.0,
+                                "batteryPercentageState": 50.0,
+                                "power": 100.0,
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    ],
+    ids=[
+        "empty_batteries",
+        "battery_without_serial",
+        "battery_without_telemetries",
+        "battery_with_single_telemetry",
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_storage_data_service_handles_malformed_responses(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+    entity_registry: er.EntityRegistry,
+    storage_response: dict,
+) -> None:
+    """Test storage data service tolerates batteries without serial / telemetries / single telemetry."""
+    solaredge_api.get_storage_data.return_value = storage_response
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Aggregate sensors are still created (inventory has a battery), but their
+    # state should be 0.0 (no charge/discharge delta calculated).
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
+    )
+    assert charge_entry is not None
+    state = hass.states.get(charge_entry)
+    assert state is not None
+    assert state.state in {"0.0", STATE_UNKNOWN}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_inventory_battery_without_serial_skipped(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test inventory batteries without a serial number are skipped for per-battery sensors."""
+    inventory = solaredge_api.get_inventory.return_value
+    inventory["Inventory"]["batteries"] = [{"name": "Battery without serial"}]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Aggregate sensors are still created (battery exists in inventory)
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
+    )
+    assert charge_entry is not None
+
+    # No per-battery sensors because the battery has no serial.
+    bat_entries = [
+        e
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if "battery" in e.unique_id and e.unique_id != charge_entry
+    ]
+    assert all("BAT" not in entry.unique_id for entry in bat_entries)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_storage_service_not_retried_after_recovery_with_no_batteries(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test storage service is not retried when inventory succeeds with no batteries."""
-    # Initial inventory fails
-    mock_solaredge_api.get_inventory = AsyncMock(side_effect=KeyError("Inventory"))
-    mock_solaredge.return_value = mock_solaredge_api
+    """Test storage service stays idle when inventory recovers but reports no batteries."""
+    solaredge_api.get_inventory.side_effect = KeyError("Inventory")
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    # Inventory recovers but reports zero batteries
-    mock_solaredge_api.get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": []}}
-    )
+    # Inventory recovers but reports zero batteries.
+    solaredge_api.get_inventory.side_effect = None
+    solaredge_api.get_inventory.return_value = {"Inventory": {"batteries": []}}
 
-    freezer.tick(INVENTORY_UPDATE_DELAY)
+    freezer.tick(INVENTORY_UPDATE_DELAY + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Storage sensors should still not exist
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )

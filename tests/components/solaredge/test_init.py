@@ -156,3 +156,37 @@ async def test_web_login_config_not_ready(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_missing_details_key(
+    recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
+) -> None:
+    """Test setup raises ConfigEntryNotReady when API response has no 'details' key."""
+    solaredge_api.get_details.return_value = {}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_site_not_active(
+    recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
+) -> None:
+    """Test setup fails when the site status is not 'active'."""
+    solaredge_api.get_details.return_value = {"details": {"status": "Disabled"}}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
