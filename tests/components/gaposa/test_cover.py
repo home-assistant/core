@@ -78,7 +78,7 @@ async def test_open_cover_calls_motor_up(
         {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
         blocking=True,
     )
-    living_room_motor.up.assert_called_once()
+    living_room_motor.up.assert_called_once_with(False)
 
 
 async def test_close_cover_calls_motor_down(
@@ -95,7 +95,7 @@ async def test_close_cover_calls_motor_down(
         {ATTR_ENTITY_ID: BEDROOM_ENTITY},
         blocking=True,
     )
-    bedroom_motor.down.assert_called_once()
+    bedroom_motor.down.assert_called_once_with(False)
 
 
 async def test_stop_cover_calls_motor_stop(
@@ -112,7 +112,7 @@ async def test_stop_cover_calls_motor_stop(
         {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
         blocking=True,
     )
-    living_room_motor.stop.assert_called_once()
+    living_room_motor.stop.assert_called_once_with(True)
 
 
 async def test_stop_cancels_pending_motion_refresh(
