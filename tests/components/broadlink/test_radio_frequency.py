@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 from broadlink.exceptions import BroadlinkException
@@ -20,8 +21,11 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import get_device
+
+from tests.common import async_fire_time_changed
 
 _FREQ_433 = 433_920_000
 _FREQ_315 = 315_000_000
@@ -122,13 +126,12 @@ async def test_send_command_transmit_failure(hass: HomeAssistant) -> None:
 
 
 async def test_entity_availability(hass: HomeAssistant) -> None:
-    """Entity becomes unavailable when the device is unavailable."""
-    _, entity_id = await _setup_rf_device(hass)
+    """Entity becomes unavailable when the device stops responding."""
+    api, entity_id = await _setup_rf_device(hass)
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    broadlink_device = next(iter(hass.data[DOMAIN].devices.values()))
-    broadlink_device.update_manager.available = False
-    broadlink_device.update_manager.coordinator.async_update_listeners()
+    api.check_sensors.side_effect = OSError("disconnected")
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
