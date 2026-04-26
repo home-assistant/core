@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components.gaposa.const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
 from homeassistant.components.gaposa.coordinator import DataUpdateCoordinatorGaposa
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -30,7 +29,6 @@ async def test_coordinator_populates_data(
     """After setup the coordinator should expose a dict of motors keyed by id."""
     coordinator = _get_coordinator(init_integration)
 
-    # Two mock motors under one device (see conftest).
     assert coordinator.data is not None
     assert len(coordinator.data) == 2
     keys = set(coordinator.data.keys())
@@ -82,29 +80,27 @@ async def test_recovery_restores_normal_interval(
     "exc",
     [GaposaAuthException, FirebaseAuthException],
 )
-async def test_auth_errors_raise_config_entry_auth_failed(
+async def test_auth_errors_raise_update_failed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_gaposa_instance: MagicMock,
     exc: type[Exception],
 ) -> None:
-    """A Gaposa/Firebase auth error on refresh surfaces as ConfigEntryAuthFailed."""
+    """Auth errors on refresh surface as UpdateFailed (no reauth flow yet)."""
     coordinator = _get_coordinator(init_integration)
     mock_gaposa_instance.update.side_effect = exc("credentials rejected")
 
-    with pytest.raises(ConfigEntryAuthFailed):
+    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
 
-async def test_on_document_updated_pushes_data(
+async def test_device_polled_pushes_data(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
-    """on_document_updated should synchronously push new data to subscribers."""
+    """_on_device_polled should synchronously push new data to subscribers."""
     coordinator = _get_coordinator(init_integration)
 
     initial = coordinator.data.copy()
-    coordinator.on_document_updated()
-    # Same content shape, but a fresh dict instance (async_set_updated_data
-    # notifies listeners and publishes new data).
+    coordinator._on_device_polled()
     assert coordinator.data == initial

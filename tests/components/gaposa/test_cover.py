@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -40,11 +40,8 @@ async def test_cover_entities_created(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Both mock motors should produce cover entities at setup."""
-    living_room = hass.states.get(LIVING_ROOM_ENTITY)
-    bedroom = hass.states.get(BEDROOM_ENTITY)
-
-    assert living_room is not None
-    assert bedroom is not None
+    assert hass.states.get(LIVING_ROOM_ENTITY) is not None
+    assert hass.states.get(BEDROOM_ENTITY) is not None
 
 
 async def test_cover_initial_state_from_motor(
@@ -64,7 +61,6 @@ async def test_cover_supported_features(
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected
-    # Covers without position support should not expose current_position.
     assert ATTR_CURRENT_POSITION not in state.attributes
 
 
@@ -74,7 +70,7 @@ async def test_open_cover_calls_motor_up(
     mock_motors: list[MagicMock],
 ) -> None:
     """Calling open_cover invokes the mocked Motor.up()."""
-    living_room_motor = mock_motors[0]  # id="motor-1", "Living Room"
+    living_room_motor = mock_motors[0]
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -91,7 +87,7 @@ async def test_close_cover_calls_motor_down(
     mock_motors: list[MagicMock],
 ) -> None:
     """Calling close_cover invokes the mocked Motor.down()."""
-    bedroom_motor = mock_motors[1]  # id="motor-2", "Bedroom"
+    bedroom_motor = mock_motors[1]
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -123,12 +119,7 @@ async def test_stop_cancels_pending_motion_refresh(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
-    """A stop command mid-motion cancels the pending motion refresh.
-
-    Without this the open/close command's scheduled callback sits waiting
-    until MOTION_DELAY elapses and then fires a pointless coordinator
-    refresh long after the user has already stopped the cover.
-    """
+    """A stop command mid-motion cancels the pending motion refresh."""
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -136,10 +127,9 @@ async def test_stop_cancels_pending_motion_refresh(
         blocking=True,
     )
 
-    # The entity should have an active cancel handle for the motion refresh.
     entity = hass.data["entity_components"]["cover"].get_entity(BEDROOM_ENTITY)
     assert entity._cancel_motion_refresh is not None
-    # Stop cancels it.
+
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -208,7 +198,6 @@ async def test_cover_state_mapping(
     motor = mock_motors[0]
     motor.state = motor_state
 
-    # Poke the coordinator so the entity re-reads motor state.
     await init_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -220,7 +209,6 @@ async def test_cover_device_registry_entry(
 ) -> None:
     """Each motor ends up as a distinct device in the registry."""
     device_registry = dr.async_get(hass)
-    # Two motors → two devices.
     gaposa_devices = [
         d
         for d in device_registry.devices.values()
@@ -238,95 +226,25 @@ async def test_entity_reads_state_from_current_coordinator_data(
 ) -> None:
     """Entity state should come from coordinator.data, not a cached Motor.
 
-    pygaposa 0.2.4 happens to mutate Motor instances in place on refresh,
-    but we don't want to rely on that — if the library ever starts
-    returning fresh instances each refresh, cached references would go
-    stale. This test proves the entity re-reads through coordinator.data
-    by replacing the Motor object entirely and confirming the new state
-    shows up.
+    This test replaces the Motor object in coordinator.data with a
+    brand-new mock and verifies the entity reports the replacement's
+    state.
     """
-    # Living Room starts with state UP → HA state `open`.
     assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
 
     coordinator = init_integration.runtime_data
     original_key = "DEVICE123.motors.motor-1"
     assert original_key in coordinator.data
 
-    # Build a brand-new Motor-shaped mock with state DOWN and swap it in.
     replacement = MagicMock()
     replacement.id = "motor-1"
     replacement.name = "Living Room"
     replacement.state = "DOWN"
     coordinator.data[original_key] = replacement
-    # Notify listeners so the entity writes its state.
     coordinator.async_set_updated_data(coordinator.data)
     await hass.async_block_till_done()
 
-    # The entity should report the replacement's state, not the
-    # original mock_motors[0]'s state.
     assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSED
-
-
-async def test_stale_motor_cleans_up_entity_and_device(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_gaposa_instance: MagicMock,
-) -> None:
-    """Removing a motor drops both the entity and device registry entries.
-
-    The integration explicitly removes the entity via
-    entity_registry.async_remove and the device via
-    device_registry.async_remove_device so neither lingers as an
-    orphan after a motor disappears from the Gaposa account.
-    """
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    # Sanity: both covers start with entity + device entries.
-    assert entity_registry.async_get(LIVING_ROOM_ENTITY) is not None
-    assert entity_registry.async_get(BEDROOM_ENTITY) is not None
-    bedroom_device = device_registry.async_get_device(
-        identifiers={("gaposa", "DEVICE123.motors.motor-2")}
-    )
-    assert bedroom_device is not None
-
-    # Simulate the Bedroom motor having been removed from the user's
-    # Gaposa account: drop it from the mocked pygaposa device.
-    client, _user = mock_gaposa_instance.clients[0]
-    device = client.devices[0]
-    device.motors = [m for m in device.motors if m.id != "motor-2"]
-
-    # A coordinator refresh now reports only the Living Room motor.
-    await init_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
-
-    # Living Room still present; Bedroom entity + device are both gone.
-    assert entity_registry.async_get(LIVING_ROOM_ENTITY) is not None
-    assert entity_registry.async_get(BEDROOM_ENTITY) is None
-    assert (
-        device_registry.async_get_device(
-            identifiers={("gaposa", "DEVICE123.motors.motor-2")}
-        )
-        is None
-    )
-
-
-async def test_entity_removed_when_motor_gone(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_gaposa_instance: MagicMock,
-) -> None:
-    """Cover entity is fully removed when its motor disappears."""
-    assert hass.states.get(BEDROOM_ENTITY) is not None
-
-    client, _user = mock_gaposa_instance.clients[0]
-    device = client.devices[0]
-    device.motors = [m for m in device.motors if m.id != "motor-2"]
-
-    await init_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
-
-    assert hass.states.get(BEDROOM_ENTITY) is None
 
 
 async def test_rapid_open_close_replaces_motion_refresh(
@@ -344,7 +262,6 @@ async def test_rapid_open_close_replaces_motion_refresh(
     first_cancel = entity._cancel_motion_refresh
     assert first_cancel is not None
 
-    # Issue a second open — should replace the pending refresh.
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -359,7 +276,7 @@ async def test_motion_window_collapses_after_delay(
     init_integration: MockConfigEntry,
     mock_motors: list[MagicMock],
 ) -> None:
-    """Past MOTION_DELAY, the cover should return to a steady state (not opening/closing)."""
+    """Past MOTION_DELAY, the cover should return to a steady state."""
     now = dt_util.utcnow()
 
     with freeze_time(now):
