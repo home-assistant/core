@@ -442,14 +442,15 @@ async def test_inventory_battery_without_serial_skipped(
     assert charge_entry is not None
 
     # No per-battery sensors because the battery has no serial.
-    bat_entries = [
+    # Per-battery unique_ids follow `{site_id}_{serial}_battery_{key}`.
+    per_battery_entries = [
         e
         for e in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-        if "battery" in e.unique_id and e.unique_id != charge_entry
+        if "_battery_" in e.unique_id
     ]
-    assert all("BAT" not in entry.unique_id for entry in bat_entries)
+    assert per_battery_entries == []
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
