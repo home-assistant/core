@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PajGpsCoordinator
+from .coordinator import Device, PajGpsCoordinator
 
 
 class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):
@@ -19,25 +19,29 @@ class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: PajGpsCoordinator, device_id: int) -> None:
-        """Initialise the entity and eagerly build DeviceInfo."""
+        """Initialise the entity and build DeviceInfo."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._attr_device_info = self._build_device_info()
 
-    def _build_device_info(self) -> DeviceInfo | None:
-        """Build a DeviceInfo from current coordinator data."""
-        device = self.coordinator.data.devices.get(self._device_id)
-        if device is None:
-            return None
-
+        device = coordinator.data.devices.get(device_id)
         model = None
-        device_models = getattr(device, "device_models", None)
-        if device_models and isinstance(device_models[0], dict):
-            model = device_models[0].get("model") or None
+        if device is not None:
+            device_models = getattr(device, "device_models", None)
+            if device_models and isinstance(device_models[0], dict):
+                model = device_models[0].get("model") or None
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{coordinator.user_id}_{device_id}")},
+                name=device.name or f"PAJ GPS {device_id}",
+                manufacturer="PAJ GPS",
+                model=model,
+            )
 
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self.coordinator.user_id}_{self._device_id}")},
-            name=device.name or f"PAJ GPS {self._device_id}",
-            manufacturer="PAJ GPS",
-            model=model,
-        )
+    @property
+    def available(self) -> bool:
+        """Return False when the device has been removed from the account."""
+        return super().available and self._device_id in self.coordinator.data.devices
+
+    @property
+    def device(self) -> Device:
+        """Return the device from coordinator data."""
+        return self.coordinator.data.devices[self._device_id]

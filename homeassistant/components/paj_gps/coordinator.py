@@ -100,10 +100,10 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         if device_ids:
             try:
                 track_points = await self.api.get_all_last_positions(device_ids)
-                positions = {
-                    tp.iddevice: tp for tp in track_points if tp.iddevice is not None
-                }
             except PajGpsApiError as exc:
                 raise UpdateFailed(f"Failed to fetch positions: {exc}") from exc
+            positions = {
+                tp.iddevice: tp for tp in track_points if tp.iddevice is not None
+            }
 
         return PajGpsData(devices=devices, positions=positions)
