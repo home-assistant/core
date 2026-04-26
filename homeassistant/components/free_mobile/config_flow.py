@@ -62,10 +62,18 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                     response = await self.hass.async_add_executor_job(
                         client.send_sms, "Home Assistant test"
                     )
-                    # Check for authentication errors (403 Forbidden indicates invalid credentials)
-                    if response.status_code == HTTPStatus.FORBIDDEN:
-                        _LOGGER.error("Authentication failed: 403 Forbidden")
-                        errors["base"] = "authentication_failed"
+                    # Treat any non-success response as a validation failure so
+                    # we do not create an entry when the API rejected the test SMS.
+                    if response.status_code != HTTPStatus.OK:
+                        if response.status_code == HTTPStatus.FORBIDDEN:
+                            _LOGGER.error("Authentication failed: 403 Forbidden")
+                            errors["base"] = "authentication_failed"
+                        else:
+                            _LOGGER.error(
+                                "Test SMS failed with unexpected status: %s",
+                                response.status_code,
+                            )
+                            errors["base"] = "test_sms_failed"
                 except requests.exceptions.RequestException:
                     _LOGGER.exception("Failed to send test SMS")
                     errors["base"] = "test_sms_failed"
