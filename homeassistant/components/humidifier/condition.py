@@ -70,8 +70,8 @@ class IsModeCondition(EntityStateConditionBase):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF),
-    "is_on": make_entity_state_condition(DOMAIN, STATE_ON),
+    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF, support_duration=True),
+    "is_on": make_entity_state_condition(DOMAIN, STATE_ON, support_duration=True),
     "is_drying": make_entity_state_condition(
         {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.DRYING
     ),

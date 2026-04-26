@@ -95,6 +95,7 @@ async def test_config_entry_not_ready_devices_api_fail(
 async def test_config_entry_not_ready_no_info_data(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry not ready due to missing info data."""
@@ -125,6 +126,7 @@ async def test_config_entry_not_ready_no_devices_data(
 async def test_config_entry_not_ready_no_serial_number(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry not ready due to a missing serial number."""

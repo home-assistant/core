@@ -379,6 +379,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Return device Mac address."""
         if not self._unique_id:
             raise ClassSetupMissing
+        # Unique ID is the serial number of the device
+        # which is the MAC of the device without the colons
         return dr.format_mac(self._unique_id)
 
     @property
@@ -451,10 +453,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 if not attributes.get("MACAddress"):
                     continue
 
+                wan_access_result = None
                 if (wan_access := attributes.get("X_AVM-DE_WANAccess")) is not None:
-                    wan_access_result = "granted" in wan_access
-                else:
-                    wan_access_result = None
+                    # wan_access can be "granted", "denied", "unknown" or "error"
+                    if "granted" in wan_access:
+                        wan_access_result = True
+                    elif "denied" in wan_access:
+                        wan_access_result = False
 
                 hosts[attributes["MACAddress"]] = Device(
                     name=attributes["HostName"],

@@ -64,6 +64,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "anomaly": {
+        "name": "Anomaly"
+      },
+      "faulty": {
+        "name": "Faulty"
+      },
+      "motion": {
+        "name": "Motion"
+      }
+    },
     "climate": {
       "thermostat": {
         "state_attributes": {

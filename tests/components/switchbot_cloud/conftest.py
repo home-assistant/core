@@ -32,6 +32,29 @@ def mock_get_status():
         yield mock_get_status
 
 
+@pytest.fixture
+def mock_setup_webhook():
+    """Mock setup_webhook."""
+    with patch.object(SwitchBotAPI, "setup_webhook") as mock_setup_webhook:
+        yield mock_setup_webhook
+
+
+@pytest.fixture
+def mock_delete_webhook():
+    """Mock delete_webhook."""
+    with patch.object(SwitchBotAPI, "delete_webhook") as mock_delete_webhook:
+        yield mock_delete_webhook
+
+
+@pytest.fixture
+def mock_get_webook_configuration():
+    """Mock get_webook_configuration."""
+    with patch.object(
+        SwitchBotAPI, "get_webook_configuration"
+    ) as mock_get_webook_configuration:
+        yield mock_get_webook_configuration
+
+
 @pytest.fixture(scope="package", autouse=True)
 def mock_after_command_refresh():
     """Mock after command refresh."""

@@ -6,14 +6,17 @@ import logging
 
 from aioqsw.localapi import ConnectionOptions, QnapQswApi
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN, QSW_COORD_DATA, QSW_COORD_FW
-from .coordinator import QswDataCoordinator, QswFirmwareCoordinator
+from .coordinator import (
+    QnapQswConfigEntry,
+    QnapQswData,
+    QswDataCoordinator,
+    QswFirmwareCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> bool:
     """Set up QNAP QSW from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_URL],
@@ -44,19 +47,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConfigEntryNotReady as error:
         _LOGGER.warning(error)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        QSW_COORD_DATA: coord_data,
-        QSW_COORD_FW: coord_fw,
-    }
+    entry.runtime_data = QnapQswData(
+        data_coordinator=coord_data,
+        firmware_coordinator=coord_fw,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

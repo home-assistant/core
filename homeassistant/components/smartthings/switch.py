@@ -80,6 +80,13 @@ SWITCH = SmartThingsSwitchEntityDescription(
 CAPABILITY_TO_COMMAND_SWITCHES: dict[
     Capability | str, SmartThingsCommandSwitchEntityDescription
 ] = {
+    Capability.CUSTOM_SPI_MODE: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.CUSTOM_SPI_MODE,
+        translation_key="purify",
+        status_attribute=Attribute.SPI_MODE,
+        command=Command.SET_SPI_MODE,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
         translation_key="display_lighting",

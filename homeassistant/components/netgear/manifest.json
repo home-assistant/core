@@ -1,7 +1,7 @@
 {
   "domain": "netgear",
   "name": "NETGEAR",
-  "codeowners": ["@hacf-fr", "@Quentame", "@starkillerOG"],
+  "codeowners": ["@Quentame", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/netgear",
   "integration_type": "hub",

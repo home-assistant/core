@@ -32,8 +32,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
     async_get_flow_preview_state,
     async_trigger,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -60,14 +62,7 @@ TEST_NUMBER = TemplatePlatformSetup(
         TEST_STEP_ENTITY_ID,
     ),
 )
-TEST_SET_VALUE_ACTION = {
-    "action": "test.automation",
-    "data": {
-        "action": "set_value",
-        "caller": "{{ this.entity_id }}",
-        "value": "{{ value }}",
-    },
-}
+TEST_SET_VALUE_ACTION = make_test_action("set_value", {"value": "{{ value }}"})
 TEST_REQUIRED = {"state": "0", "step": "1", "set_value": []}
 
 
@@ -198,7 +193,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
                 "step": f"{{{{ states('{TEST_STEP_ENTITY_ID}') | float(5.0) }}}}",
                 "min": f"{{{{ states('{TEST_MINIMUM_ENTITY_ID}') | float(0.0) }}}}",
                 "max": f"{{{{ states('{TEST_MAXIMUM_ENTITY_ID}') | float(100.0) }}}}",
-                "set_value": [TEST_SET_VALUE_ACTION],
+                **TEST_SET_VALUE_ACTION,
             },
         )
     ],
@@ -237,11 +232,7 @@ async def test_template_number(
         blocking=True,
     )
 
-    # Check this variable can be used in set_value script
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_value"
-    assert calls[-1].data["caller"] == TEST_NUMBER.entity_id
-    assert calls[-1].data["value"] == 2
+    assert_action(TEST_NUMBER, calls, 1, "set_value", value=2)
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, 2)
     _verify(hass, 2, 2, 2, 6, None)
@@ -465,6 +456,33 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 2
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "set_value": [],
+                "state": "{{ states('number.test_state') }}",
+                "availability": "{{ x - 12 }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog_setup_text: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that an invalid availability keeps the device available."""
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "anything")
+    assert hass.states.get(TEST_NUMBER.entity_id).state != STATE_UNAVAILABLE
+    error = "UndefinedError: 'x' is undefined"
+    assert error in caplog_setup_text or error in caplog.text
 
 
 @pytest.mark.parametrize(

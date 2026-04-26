@@ -5,20 +5,24 @@ import logging
 from smart_meter_texas import Account
 from smart_meter_texas.exceptions import SmartMeterTexasAuthError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
-from .coordinator import SmartMeterTexasCoordinator, SmartMeterTexasData
+from .coordinator import (
+    SmartMeterTexasConfigEntry,
+    SmartMeterTexasCoordinator,
+    SmartMeterTexasData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: SmartMeterTexasConfigEntry
+) -> bool:
     """Set up Smart Meter Texas from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -43,11 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # too long to update.
     coordinator = SmartMeterTexasCoordinator(hass, entry, smart_meter_texas_data)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_SMART_METER: smart_meter_texas_data,
-    }
+    entry.runtime_data = coordinator
 
     entry.async_create_background_task(
         hass, coordinator.async_refresh(), "smart_meter_texas-coordinator-refresh"
@@ -58,10 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SmartMeterTexasConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
