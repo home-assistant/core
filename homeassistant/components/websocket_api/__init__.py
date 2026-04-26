@@ -53,12 +53,7 @@ def async_register_command(
     handler: const.WebSocketCommandHandler | None = None,
     schema: VolSchemaType | None = None,
 ) -> None:
-    """Register a websocket command.
-
-    The four-argument form is kept for backwards compatibility with custom
-    integrations. New code should use the decorator-based form by passing a
-    handler decorated with ``@websocket_command``.
-    """
+    """Register a websocket command."""
     if handler is None:
         handler = cast(const.WebSocketCommandHandler, command_or_handler)
         command = handler._ws_command  # type: ignore[attr-defined]  # noqa: SLF001
