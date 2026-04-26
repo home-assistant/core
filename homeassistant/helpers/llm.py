@@ -1174,7 +1174,7 @@ class GetLiveContextTool(Tool):
         "Use this tool for: "
         "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
         "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first). "
-        "You may filter for devices by any combination of arguments from the static context. "
+        "You may filter for devices by name, domain, and area, including combining those filters. "
         "Prefer filtering by domain when searching for multiple devices of the same type."
     )
     parameters = vol.Schema(
