@@ -41,7 +41,7 @@ def _type_byte_for_frequency(frequency: int) -> int:
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="frequency_not_supported",
-        translation_placeholders={"frequency": str(frequency)},
+        translation_placeholders={"frequency": f"{frequency / 1_000_000:g}"},
     )
 
 

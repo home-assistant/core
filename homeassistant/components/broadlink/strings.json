@@ -80,7 +80,7 @@
   },
   "exceptions": {
     "frequency_not_supported": {
-      "message": "Broadlink devices cannot transmit on {frequency} Hz"
+      "message": "Broadlink devices cannot transmit on {frequency} MHz"
     },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
