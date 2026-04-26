@@ -341,6 +341,7 @@ async def handle_integration_list(
         vol.Required("config_entry_id"): str,
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_config_entry(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
