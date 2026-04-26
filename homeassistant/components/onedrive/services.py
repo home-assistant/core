@@ -42,6 +42,7 @@ def _read_file_contents(
     hass: HomeAssistant, filenames: list[str]
 ) -> list[tuple[str, bytes]]:
     """Return the mime types and file contents for each file."""
+    missing: list[str] = []
     results = []
     for filename in filenames:
         if not hass.config.is_allowed_path(filename):
@@ -52,11 +53,8 @@ def _read_file_contents(
             )
         filename_path = Path(filename)
         if not filename_path.exists():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="filename_does_not_exist",
-                translation_placeholders={"filename": filename},
-            )
+            missing.append(filename)
+            continue
         if filename_path.stat().st_size > CONTENT_SIZE_LIMIT:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -68,6 +66,14 @@ def _read_file_contents(
                 },
             )
         results.append((filename_path.name, filename_path.read_bytes()))
+    if missing:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="filenames_do_not_exist",
+            translation_placeholders={
+                "filenames": ", ".join(f"`{f}`" for f in missing)
+            },
+        )
     return results
 
 
