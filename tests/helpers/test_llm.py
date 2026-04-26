@@ -930,7 +930,7 @@ async def test_get_live_context_tool_filter(
     )
     assert result == {
         "success": False,
-        "error": "No entities matched the provided filter",
+        "error": "No exposed entities matched name 'Does Not Exist'",
     }
 
     # Name filter strips surrounding whitespace
@@ -1002,7 +1002,7 @@ async def test_get_live_context_tool_filter(
     assert "Office Light" in result["result"]
     assert "Office Switch" not in result["result"]
 
-    # Combining name + area returns nothing when they do not intersect
+    # Combining name + area returns the failing constraint in the error
     result = await api.async_call_tool(
         llm.ToolInput(
             tool_name="GetLiveContext",
@@ -1011,10 +1011,10 @@ async def test_get_live_context_tool_filter(
     )
     assert result == {
         "success": False,
-        "error": "No entities matched the provided filter",
+        "error": "No exposed entities found in area 'Kitchen'",
     }
 
-    # Unknown area returns the descriptive error rather than ignoring the filter
+    # Unknown area distinguishes "invalid area" from "no entities in area"
     result = await api.async_call_tool(
         llm.ToolInput(
             tool_name="GetLiveContext",
@@ -1023,7 +1023,19 @@ async def test_get_live_context_tool_filter(
     )
     assert result == {
         "success": False,
-        "error": "No entities matched the provided filter",
+        "error": "Area 'Garage' does not exist",
+    }
+
+    # Unknown domain reports which domain(s) failed
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": "climate"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities found in domain(s): climate",
     }
 
 

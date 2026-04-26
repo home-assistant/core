@@ -1160,6 +1160,26 @@ class TodoGetItemsTool(Tool):
         return {"success": True, "result": items}
 
 
+def _live_context_match_error(
+    match_result: intent.MatchTargetsResult,
+    name_filter: str | None,
+    area_filter: str | None,
+    domain_filter: list[str] | None,
+) -> str:
+    """Build an actionable error message for a failed GetLiveContext match."""
+    reason = match_result.no_match_reason
+    if reason is intent.MatchFailedReason.INVALID_AREA:
+        return f"Area '{match_result.no_match_name}' does not exist"
+    if reason is intent.MatchFailedReason.NAME:
+        return f"No exposed entities matched name '{name_filter}'"
+    if reason is intent.MatchFailedReason.AREA:
+        return f"No exposed entities found in area '{area_filter}'"
+    if reason is intent.MatchFailedReason.DOMAIN:
+        domains = ", ".join(domain_filter) if domain_filter else ""
+        return f"No exposed entities found in domain(s): {domains}"
+    return "No entities matched the provided filter"
+
+
 class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
@@ -1241,7 +1261,9 @@ class GetLiveContextTool(Tool):
             if not match_result.is_match:
                 return {
                     "success": False,
-                    "error": "No entities matched the provided filter",
+                    "error": _live_context_match_error(
+                        match_result, name_filter, area_filter, domain_filter
+                    ),
                 }
 
             matched_ids = {state.entity_id for state in match_result.states}
