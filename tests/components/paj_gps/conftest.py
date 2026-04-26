@@ -32,6 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="test@example.com",
+        unique_id="42",
         data={
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "secret",

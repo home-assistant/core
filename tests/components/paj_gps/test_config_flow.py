@@ -47,17 +47,14 @@ async def test_duplicate_email_aborts(
     mock_config_entry: MockConfigEntry,
     mock_paj_gps_api: AsyncMock,
 ) -> None:
-    """A flow with an already-configured email must abort with already_configured."""
+    """A flow for an already-configured account must abort with already_configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_EMAIL: "test@example.com",  # same as mock_config_entry
-            CONF_PASSWORD: "secret",
-        },
+        user_input=VALID_USER_INPUT,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

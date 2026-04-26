@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from pajgps_api import PajGpsApi
+from pajgps_api.models.auth import AuthResponse
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import voluptuous as vol
 
@@ -29,23 +30,22 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def _validate_credentials(
     email: str, password: str, hass: HomeAssistant
-) -> str | None:
+) -> tuple[str | None, AuthResponse | None]:
     """Attempt a real login with the given credentials.
 
-    Returns an error key string on failure, or None on success.
+    Returns (None, auth) on success, or (error_key, None) on failure.
     """
-    api: PajGpsApi
     websession = async_get_clientsession(hass)
     try:
         api = PajGpsApi(email=email, password=password, websession=websession)
-        await api.login()
+        auth = await api.login()
     except AuthenticationError, TokenRefreshError:
-        return "invalid_auth"
+        return "invalid_auth", None
     except Exception:
         _LOGGER.exception("Unexpected error validating PAJ GPS credentials")
-        return "unknown"
+        return "unknown", None
 
-    return None
+    return None, auth
 
 
 class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -58,16 +58,16 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
 
-        # Normalize email for duplicate protection and storage
         normalized_email = user_input[CONF_EMAIL].strip().lower()
         user_input[CONF_EMAIL] = normalized_email
-        self._async_abort_entries_match({CONF_EMAIL: normalized_email})
-        # Validate credentials by attempting a real login
-        error = await _validate_credentials(
+        error, auth = await _validate_credentials(
             user_input[CONF_EMAIL], user_input[CONF_PASSWORD], self.hass
         )
         if error is not None:
             return self.async_show_form(
                 step_id="user", data_schema=CONFIG_SCHEMA, errors={"base": error}
             )
+        assert auth is not None
+        await self.async_set_unique_id(str(auth.userID))
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=normalized_email, data=user_input)
