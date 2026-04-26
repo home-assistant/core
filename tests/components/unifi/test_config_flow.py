@@ -460,14 +460,17 @@ async def test_simple_option_flow(
     assert result["step_id"] == "simple_options"
     assert result["last_step"]
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_DEVICES: False,
-            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-        },
-    )
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_TRACK_CLIENTS: False,
+                CONF_TRACK_DEVICES: False,
+                CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+            },
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -475,6 +478,8 @@ async def test_simple_option_flow(
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
+    # Check there is no reload on updating these options
+    assert mock_reload.call_count == 0
 
 
 async def test_form_ssdp(hass: HomeAssistant) -> None:
