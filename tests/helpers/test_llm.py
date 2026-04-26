@@ -772,7 +772,7 @@ async def test_get_live_context_tool_filter(
     entry.add_to_hass(hass)
 
     office = area_registry.async_create("Office")
-    area_registry.async_update(office.id, aliases=["Workspace"])
+    area_registry.async_update(office.id, aliases={"Workspace"})
     area_registry.async_create("Kitchen")
 
     office_device = device_registry.async_get_or_create(
