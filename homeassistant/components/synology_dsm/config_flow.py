@@ -414,7 +414,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self.saved_user_input:
             self.saved_user_input = user_input
 
-        if CONF_BACKUP_PATH not in user_input and CONF_BACKUP_SHARE not in user_input:
+        if user_input is None or (CONF_BACKUP_PATH not in user_input and CONF_BACKUP_SHARE not in user_input):
             return self.async_show_form(
                 step_id="backup_share",
                 data_schema=vol.Schema(

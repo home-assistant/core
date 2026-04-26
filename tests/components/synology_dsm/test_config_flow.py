@@ -366,6 +366,42 @@ async def test_user_with_filestation(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_backup_share_none_user_input(
+    hass: HomeAssistant,
+    service_with_filestation: MagicMock,
+) -> None:
+    """Test that backup_share step handles None user_input without crashing."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        # Simulate reopening the dialog (user_input=None) — previously caused TypeError
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            None,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "backup_share"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(hass: HomeAssistant, service: MagicMock) -> None:
     """Test reauthentication."""
     entry = MockConfigEntry(
