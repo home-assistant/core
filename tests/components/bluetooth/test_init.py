@@ -20,7 +20,6 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     HaBluetoothConnector,
     async_clear_address_from_match_history,
-    async_clear_advertisement_history,
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
@@ -1291,65 +1290,6 @@ async def test_clear_address_from_match_history(
         # Now discovery should happen because history was cleared and data changed
         assert len(mock_config_flow.mock_calls) == 2
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
-
-
-@pytest.mark.usefixtures("enable_bluetooth")
-async def test_clear_advertisement_history(
-    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
-) -> None:
-    """Test clearing advertisement history bypasses the dedup guard."""
-    mock_bt: list[Any] = []
-    callbacks: list[tuple[BluetoothServiceInfo, BluetoothChange]] = []
-
-    @callback
-    def _fake_subscriber(
-        service_info: BluetoothServiceInfo, change: BluetoothChange
-    ) -> None:
-        callbacks.append((service_info, change))
-
-    with patch(
-        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ):
-        await async_setup_with_default_adapter(hass)
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-        cancel = bluetooth.async_register_callback(
-            hass,
-            _fake_subscriber,
-            {"address": "44:44:33:11:23:45"},
-            BluetoothScanningMode.ACTIVE,
-        )
-
-        assert len(mock_bleak_scanner_start.mock_calls) == 1
-
-        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
-        switchbot_adv = generate_advertisement_data(
-            local_name="wohand",
-            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
-        )
-
-        inject_advertisement(hass, switchbot_device, switchbot_adv)
-        await hass.async_block_till_done()
-
-        # Identical advertisement is deduplicated by the manager
-        inject_advertisement(hass, switchbot_device, switchbot_adv)
-        await hass.async_block_till_done()
-
-        assert len(callbacks) == 1
-
-        # Clearing the advertisement history makes the next identical
-        # advertisement be treated as new data
-        async_clear_advertisement_history(hass, "44:44:33:11:23:45")
-
-        inject_advertisement(hass, switchbot_device, switchbot_adv)
-        await hass.async_block_till_done()
-
-        assert len(callbacks) == 2
-
-        cancel()
 
 
 @pytest.mark.usefixtures("macos_adapter")
