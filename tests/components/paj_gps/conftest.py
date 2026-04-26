@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 from pajgps_api.models.auth import AuthResponse
@@ -14,7 +13,7 @@ import pytest
 from homeassistant.components.paj_gps.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -54,11 +53,13 @@ def mock_paj_gps_api() -> Generator[AsyncMock]:
         ),
     ):
         api = mock_api_cls.return_value
-        device_data = json.loads(load_fixture("device.json", DOMAIN))
-        trackpoint_data = json.loads(load_fixture("trackpoint.json", DOMAIN))
         api.login.return_value = AuthResponse(
             userID=42, token="test_token", refresh_token="test_refresh"
         )
-        api.get_devices.return_value = [Device(**device_data)]
-        api.get_all_last_positions.return_value = [TrackPoint(**trackpoint_data)]
+        api.get_devices.return_value = [
+            Device(**load_json_object_fixture("device.json", DOMAIN))
+        ]
+        api.get_all_last_positions.return_value = [
+            TrackPoint(**load_json_object_fixture("trackpoint.json", DOMAIN))
+        ]
         yield api
