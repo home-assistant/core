@@ -646,20 +646,19 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             self._attr_is_on = None
 
     @callback
-    def _async_updated(self, device: ProtectDeviceType) -> None:
-        """Handle a public devices WS update for this relay."""
-        # data.py dispatches only Relay objects to mac-keyed subscriptions.
+    def _async_updated(self, relay: Relay) -> None:
+        """Handle a public relay WS update for this relay."""
         prev_state = (self._attr_available, self._attr_is_on)
-        self._update_from_relay(device)  # type: ignore[arg-type]
+        self._update_from_relay(relay)
         if (self._attr_available, self._attr_is_on) != prev_state:
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to public WS updates dispatched by ProtectData."""
+        """Subscribe to public relay WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
         if (relay := self._relay) is not None:
             self.async_on_remove(
-                self.data.async_subscribe(relay.mac, self._async_updated)
+                self.data.async_subscribe_relay(relay.mac, self._async_updated)
             )
 
     async def _async_set_output_state(self, state: Literal["on", "off"]) -> None:

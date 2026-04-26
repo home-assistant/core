@@ -84,6 +84,9 @@ class ProtectData:
         self._subscriptions: defaultdict[
             str, set[Callable[[ProtectDeviceType], None]]
         ] = defaultdict(set)
+        self._relay_subscriptions: defaultdict[str, set[Callable[[Relay], None]]] = (
+            defaultdict(set)
+        )
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
@@ -194,10 +197,10 @@ class ProtectData:
         if new_obj.model is ModelType.RELAY:
             relay = cast(Relay, new_obj)
             mac = relay.mac
-            if subscriptions := self._subscriptions.get(mac):
+            if subscriptions := self._relay_subscriptions.get(mac):
                 _LOGGER.debug("Updating relay: %s (%s)", relay.name, mac)
                 for update_callback in subscriptions:
-                    update_callback(relay)  # type: ignore[arg-type]
+                    update_callback(relay)
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
@@ -397,6 +400,23 @@ class ProtectData:
         self._subscriptions[mac].remove(update_callback)
         if not self._subscriptions[mac]:
             del self._subscriptions[mac]
+
+    @callback
+    def async_subscribe_relay(
+        self, mac: str, update_callback: Callable[[Relay], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for relay updates."""
+        self._relay_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_relay, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_relay(
+        self, mac: str, update_callback: Callable[[Relay], None]
+    ) -> None:
+        """Remove a relay callback subscriber."""
+        self._relay_subscriptions[mac].remove(update_callback)
+        if not self._relay_subscriptions[mac]:
+            del self._relay_subscriptions[mac]
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
