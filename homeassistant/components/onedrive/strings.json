@@ -94,10 +94,13 @@
       "message": "Failed to create folder: {message}"
     },
     "delete_approot_error": {
-      "message": "Failed to connect to OneDrive to delete file(s)"
+      "message": "Failed to connect to OneDrive to delete files"
     },
     "delete_error": {
-      "message": "Failed to delete the following file(s) from OneDrive: {paths}"
+      "message": "Failed to delete the following files from OneDrive: {paths}"
+    },
+    "delete_path_error": {
+      "message": "`{path}` could not be deleted from OneDrive"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"

@@ -427,8 +427,8 @@ async def test_delete_service_fails(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "delete_error"
-    assert TEST_DESTINATION_PATH in exc_info.value.translation_placeholders["paths"]
+    assert exc_info.value.translation_key == "delete_path_error"
+    assert exc_info.value.translation_placeholders["path"] == TEST_DESTINATION_PATH
 
 
 async def test_delete_service_multiple_files_all_fail(
@@ -494,8 +494,8 @@ async def test_delete_service_multiple_files_partial_failure(
         f"id:/{TEST_DESTINATION_PATH}:",
         f"id:/{second_path}:",
     }
-    assert second_path in exc_info.value.translation_placeholders["paths"]
-    assert TEST_DESTINATION_PATH not in exc_info.value.translation_placeholders["paths"]
+    assert exc_info.value.translation_key == "delete_path_error"
+    assert exc_info.value.translation_placeholders["path"] == second_path
 
 
 async def test_delete_service_get_approot_fails(
