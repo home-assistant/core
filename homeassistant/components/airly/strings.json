@@ -23,9 +23,6 @@
     "sensor": {
       "caqi": {
         "name": "Common air quality index"
-      },
-      "co": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       }
     }
   },
