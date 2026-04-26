@@ -12,10 +12,7 @@ from pydreo.cloud.client import DreoClient
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DOMAIN,
-    FIELD_CONNECTED,
-)
+from .const import DOMAIN, FIELD_CONNECTED
 
 if TYPE_CHECKING:
     from . import DreoConfigEntry
@@ -23,40 +20,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
-
-
-def get_fan_model_config(model_config: dict[str, Any]) -> dict[str, Any]:
-    """Return the fan-specific model config section."""
-    if isinstance(model_config.get("fan_entity_config"), dict):
-        return model_config["fan_entity_config"]
-
-    return model_config
-
-
-def get_speed_values(model_config: dict[str, Any]) -> list[int] | None:
-    """Return normalized supported fan speed values."""
-    raw_speed_values = get_fan_model_config(model_config).get("speed_range")
-
-    if not isinstance(raw_speed_values, (list, tuple)) or len(raw_speed_values) < 2:
-        return None
-
-    try:
-        speed_values = [int(value) for value in raw_speed_values]
-    except TypeError, ValueError:
-        return None
-
-    if len(speed_values) == 2:
-        low, high = speed_values
-        if low < 1 or high < low:
-            return None
-
-        return list(range(low, high + 1))
-
-    normalized_speed_values = sorted(set(speed_values))
-    if normalized_speed_values[0] < 1:
-        return None
-
-    return normalized_speed_values
 
 
 class DreoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

@@ -25,11 +25,7 @@ from .const import (
     FIELD_POWER_ON,
     FIELD_SPEED,
 )
-from .coordinator import (
-    DreoDataUpdateCoordinator,
-    get_fan_model_config,
-    get_speed_values,
-)
+from .coordinator import DreoDataUpdateCoordinator
 from .entity import DreoEntity
 
 PARALLEL_UPDATES = 0
@@ -43,6 +39,40 @@ class DreoFanStateData:
     mode: str | None = None
     oscillate: bool | None = None
     speed_percentage: int | None = None
+
+
+def _get_fan_model_config(model_config: dict[str, Any]) -> dict[str, Any]:
+    """Return the fan-specific model config section."""
+    if isinstance(model_config.get("fan_entity_config"), dict):
+        return model_config["fan_entity_config"]
+
+    return model_config
+
+
+def _get_speed_values(model_config: dict[str, Any]) -> list[int] | None:
+    """Return normalized supported fan speed values."""
+    raw_speed_values = _get_fan_model_config(model_config).get("speed_range")
+
+    if not isinstance(raw_speed_values, (list, tuple)) or len(raw_speed_values) < 2:
+        return None
+
+    try:
+        speed_values = [int(value) for value in raw_speed_values]
+    except TypeError, ValueError:
+        return None
+
+    if len(speed_values) == 2:
+        low, high = speed_values
+        if low < 1 or high < low:
+            return None
+
+        return list(range(low, high + 1))
+
+    normalized_speed_values = sorted(set(speed_values))
+    if normalized_speed_values[0] < 1:
+        return None
+
+    return normalized_speed_values
 
 
 def process_fan_data(
@@ -67,7 +97,7 @@ def process_fan_data(
             fan_state.speed_percentage = 0
         elif (
             speed_value is not None
-            and (speed_values := get_speed_values(model_config))
+            and (speed_values := _get_speed_values(model_config))
             and speed_value in speed_values
         ):
             fan_state.speed_percentage = ordered_list_item_to_percentage(
@@ -104,8 +134,8 @@ class DreoFan(DreoEntity, FanEntity):
         )
 
         model_config = coordinator.model_config
-        fan_model_config = get_fan_model_config(model_config)
-        self._speed_values = get_speed_values(model_config) or []
+        fan_model_config = _get_fan_model_config(model_config)
+        self._speed_values = _get_speed_values(model_config) or []
         if self._speed_values:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._attr_speed_count = len(self._speed_values)

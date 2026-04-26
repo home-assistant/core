@@ -1,8 +1,4 @@
-"""Test dreo coordinator core logic.
-
-Only tests for core logic that cannot be tested through platforms should be here.
-Most coordinator functionality should be tested through platform tests (test_fan.py).
-"""
+"""Test Dreo fan state conversion helpers."""
 
 from homeassistant.components.dreo.const import (
     FIELD_CONNECTED,
