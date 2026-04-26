@@ -264,6 +264,19 @@ def validate_segments(
                     f"expected dictionary with keys {Segment.__slots__}",
                 )
                 return None
+
+            if (
+                not isinstance(item.get("id"), str)
+                or not isinstance(item.get("name"), str)
+                or ("group" in item and not isinstance(item["group"], str))
+            ):
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    item,
+                    "expected dictionary with string values",
+                )
+                return None
             try:
                 segments.append(Segment(**item))
             except TypeError:
