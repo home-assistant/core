@@ -63,11 +63,6 @@ class PajGPSDeviceTracker(PajGpsEntity, TrackerEntity):
         self._attr_unique_id = f"{pajgps_coordinator.user_id}_{device_id}"
 
     @property
-    def available(self) -> bool:
-        """Return False when the device has been removed from the account."""
-        return super().available and self._device_id in self.coordinator.data.devices
-
-    @property
     def latitude(self) -> float | None:
         """Return the latitude of the device."""
         tp = self.coordinator.data.positions.get(self._device_id)

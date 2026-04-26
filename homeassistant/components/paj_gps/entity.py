@@ -10,25 +10,21 @@ from .coordinator import Device, PajGpsCoordinator
 
 
 class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):
-    """Base class for all PAJ GPS entities.
-
-    Populates and caches DeviceInfo eagerly in __init__ so it is ready
-    before the entity is registered with Home Assistant.
-    """
+    """Base class for all PAJ GPS entities."""
 
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: PajGpsCoordinator, device_id: int) -> None:
-        """Initialise the entity and build DeviceInfo."""
+        """Initialize the entity and build DeviceInfo."""
         super().__init__(coordinator)
         self._device_id = device_id
 
         device = coordinator.data.devices.get(device_id)
         model = None
         if device is not None:
-            device_models = getattr(device, "device_models", None)
+            device_models = device.device_models
             if device_models and isinstance(device_models[0], dict):
-                model = device_models[0].get("model") or None
+                model = device_models[0].get("model")
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{coordinator.user_id}_{device_id}")},
                 name=device.name or f"PAJ GPS {device_id}",
