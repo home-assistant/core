@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_BRAND, DOMAIN
+from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, UFPConfigEntry
 from .utils import async_ufp_instance_command
 
@@ -55,6 +55,7 @@ class ProtectSiren(SirenEntity):
     """Siren entity for a UniFi Protect siren device (Public API)."""
 
     _attr_has_entity_name = True
+    _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_name = None  # device name is the entity name
     _attr_should_poll = False
     _attr_supported_features = (

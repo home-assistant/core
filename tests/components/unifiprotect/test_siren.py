@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -387,8 +387,14 @@ async def test_siren_ws_update_no_state_change(
     mock_msg.old_obj = siren
     mock_msg.new_obj = siren
     assert ufp.devices_ws_subscription is not None
-    ufp.devices_ws_subscription(mock_msg)
-    await hass.async_block_till_done()
+
+    # Patch at the platform level to verify the guard prevents redundant writes.
+    with patch(
+        "homeassistant.components.unifiprotect.siren.ProtectSiren.async_write_ha_state"
+    ) as mock_write:
+        ufp.devices_ws_subscription(mock_msg)
+        await hass.async_block_till_done()
+        mock_write.assert_not_called()
 
     assert hass.states.get(SIREN_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
 
