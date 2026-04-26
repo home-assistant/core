@@ -165,12 +165,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Home Assistant Core 2025.1
         for command in ("lovelace/resources", "lovelace/resources/list"):
             websocket_api.async_register_command(
-                hass,
-                command,
-                websocket.websocket_lovelace_resources,
-                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                    {"type": command},
-                ),
+                hass, _make_yaml_resources_handler(command)
             )
 
     else:
@@ -312,6 +307,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         onboarding.async_add_listener(hass, create_map_dashboard)
 
     return True
+
+
+def _make_yaml_resources_handler(
+    command: str,
+) -> websocket_api.WebSocketCommandHandler:
+    """Build a websocket handler for the legacy YAML lovelace resources command."""
+
+    @websocket_api.websocket_command({vol.Required("type"): command})
+    @websocket_api.async_response
+    async def ws_resources(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        await websocket.websocket_lovelace_resources_impl(hass, connection, msg)
+
+    return ws_resources
 
 
 async def create_yaml_resource_col(

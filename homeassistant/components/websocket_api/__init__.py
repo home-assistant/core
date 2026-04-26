@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Final, cast
+from typing import Final
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType, VolSchemaType
+from homeassistant.helpers.typing import ConfigType
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
 from .connection import ActiveConnection, current_connection  # noqa: F401
@@ -49,17 +49,11 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 @callback
 def async_register_command(
     hass: HomeAssistant,
-    command_or_handler: str | const.WebSocketCommandHandler,
-    handler: const.WebSocketCommandHandler | None = None,
-    schema: VolSchemaType | None = None,
+    handler: const.WebSocketCommandHandler,
 ) -> None:
     """Register a websocket command."""
-    if handler is None:
-        handler = cast(const.WebSocketCommandHandler, command_or_handler)
-        command = handler._ws_command  # type: ignore[attr-defined]  # noqa: SLF001
-        schema = handler._ws_schema  # type: ignore[attr-defined]  # noqa: SLF001
-    else:
-        command = command_or_handler
+    command = handler._ws_command  # type: ignore[attr-defined]  # noqa: SLF001
+    schema = handler._ws_schema  # type: ignore[attr-defined]  # noqa: SLF001
     if (handlers := hass.data.get(DOMAIN)) is None:
         handlers = hass.data[DOMAIN] = {}
     handlers[command] = (handler, schema)

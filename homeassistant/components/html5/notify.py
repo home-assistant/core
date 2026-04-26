@@ -86,11 +86,6 @@ DEFAULT_ICON = "/static/icons/favicon-192x192.png"
 
 ATTR_JWT = "jwt"
 
-WS_TYPE_APPKEY = "notify/html5/appkey"
-SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_APPKEY}
-)
-
 # The number of days after the moment a notification is sent that a JWT
 # is valid.
 JWT_VALID_DAYS = 7
@@ -178,15 +173,14 @@ async def async_get_service(
     vapid_prv_key: str = discovery_info[ATTR_VAPID_PRV_KEY]
     vapid_email: str = discovery_info[ATTR_VAPID_EMAIL]
 
+    @websocket_api.websocket_command({vol.Required("type"): "notify/html5/appkey"})
     @callback
     def websocket_appkey(
         _hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
 
-    websocket_api.async_register_command(
-        hass, WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
-    )
+    websocket_api.async_register_command(hass, websocket_appkey)
 
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
