@@ -220,5 +220,3 @@ def test_active_demand_window_sensor(hass: HomeAssistant) -> None:
     sensor = hass.states.get("binary_sensor.mock_title_demand_window")
     assert sensor
     assert sensor.state == "on"
-
-
