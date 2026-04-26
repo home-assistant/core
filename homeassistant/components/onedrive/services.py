@@ -43,7 +43,6 @@ def _read_file_contents(
 ) -> list[tuple[str, bytes]]:
     """Return the mime types and file contents for each file."""
     missing: list[str] = []
-    results = []
     for filename in filenames:
         if not hass.config.is_allowed_path(filename):
             raise HomeAssistantError(
@@ -51,21 +50,14 @@ def _read_file_contents(
                 translation_key="no_access_to_path",
                 translation_placeholders={"filename": filename},
             )
-        filename_path = Path(filename)
-        if not filename_path.exists():
+        if not Path(filename).exists():
             missing.append(filename)
-            continue
-        if filename_path.stat().st_size > CONTENT_SIZE_LIMIT:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="file_too_large",
-                translation_placeholders={
-                    "filename": filename,
-                    "size": str(filename_path.stat().st_size),
-                    "limit": str(CONTENT_SIZE_LIMIT),
-                },
-            )
-        results.append((filename_path.name, filename_path.read_bytes()))
+    if len(missing) == 1:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="filename_does_not_exist",
+            translation_placeholders={"filename": missing[0]},
+        )
     if missing:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -74,6 +66,21 @@ def _read_file_contents(
                 "filenames": ", ".join(f"`{f}`" for f in missing)
             },
         )
+    results = []
+    for filename in filenames:
+        filename_path = Path(filename)
+        file_size = filename_path.stat().st_size
+        if file_size > CONTENT_SIZE_LIMIT:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="file_too_large",
+                translation_placeholders={
+                    "filename": filename,
+                    "size": str(file_size),
+                    "limit": str(CONTENT_SIZE_LIMIT),
+                },
+            )
+        results.append((filename_path.name, filename_path.read_bytes()))
     return results
 
 

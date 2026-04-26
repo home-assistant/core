@@ -206,8 +206,8 @@ async def test_filename_does_not_exist(
             blocking=True,
             return_response=True,
         )
-    assert exc_info.value.translation_key == "filenames_do_not_exist"
-    assert TEST_FILENAME in exc_info.value.translation_placeholders["filenames"]
+    assert exc_info.value.translation_key == "filename_does_not_exist"
+    assert exc_info.value.translation_placeholders["filename"] == TEST_FILENAME
 
 
 @pytest.mark.parametrize("upload_file", [MockUploadFile(exists=False)])
