@@ -345,13 +345,11 @@ async def test_relay_switch_becomes_unavailable_when_relay_removed(
     # Drop the relay from the public bootstrap.
     ufp.api.public_bootstrap.relays = {}
 
-    # Build an update message with a relay object whose output is gone and
-    # whose relay can no longer be resolved from bootstrap, so the entity
-    # becomes unavailable.
+    # Send a WS update whose output list is still valid; the entity must still
+    # become unavailable because _relay now resolves to None.
     relay2 = _make_relay()
     relay2.id = relay.id
     relay2.mac = relay.mac
-    relay2.outputs = []  # output is gone
 
     mock_msg = Mock()
     mock_msg.changed_data = {}

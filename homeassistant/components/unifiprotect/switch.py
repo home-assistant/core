@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DEFAULT_BRAND, DOMAIN
+from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -593,6 +593,7 @@ class ProtectRelayOutputSwitch(SwitchEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_should_poll = False
     _attr_translation_key = "relay_output"
 
@@ -649,6 +650,10 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         """Handle a public relay WS update for this relay."""
         prev_state = (self._attr_available, self._attr_is_on)
         self._update_from_relay(relay)
+        # If the relay was removed from the bootstrap while the WS update
+        # was in flight, mark unavailable so commands cannot succeed.
+        if self._relay is None:
+            self._attr_available = False
         if (self._attr_available, self._attr_is_on) != prev_state:
             self.async_write_ha_state()
 
