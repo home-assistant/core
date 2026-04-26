@@ -817,6 +817,9 @@ async def test_get_live_context_tool_filter(
         original_name="Front Door",
         suggested_object_id="front_door",
     )
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, aliases={"Cooking Lamp"}
+    )
 
     for entity_id in (
         office_light.entity_id,
@@ -923,6 +926,99 @@ async def test_get_live_context_tool_filter(
         llm.ToolInput(
             tool_name="GetLiveContext",
             tool_args={"name": "Does Not Exist"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No entities matched the provided filter",
+    }
+
+    # Name filter strips surrounding whitespace
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "  Front Door  "},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+
+    # Area filter strips surrounding whitespace
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "  Office  "},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+
+    # Name filter accepts entity_id
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": office_light.entity_id},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Area filter accepts area_id
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": office.id},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Name filter matches entity aliases
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "cooking lamp"},
+        )
+    )
+    assert result["success"] is True
+    assert "Kitchen Light" in result["result"]
+    assert "Office Light" not in result["result"]
+
+    # Combining name + area narrows the result
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Office Light", "area": "Office"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Combining name + area returns nothing when they do not intersect
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Office Light", "area": "Kitchen"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No entities matched the provided filter",
+    }
+
+    # Unknown area returns the descriptive error rather than ignoring the filter
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "Garage"},
         )
     )
     assert result == {

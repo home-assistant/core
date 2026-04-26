@@ -1212,44 +1212,41 @@ class GetLiveContextTool(Tool):
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
 
-        entities = list(exposed_entities["entities"].values())
-
         name_filter = args.get("name")
         area_filter = args.get("area")
         domain_filter = args.get("domain")
 
         if isinstance(domain_filter, str):
             domain_filter = [domain_filter]
-        if domain_filter is not None:
-            domain_filter = [domain.casefold() for domain in domain_filter]
-
-        if name_filter is not None:
-            name_filter_norm = name_filter.casefold()
-            entities = [
-                info
-                for info in entities
-                if any(
-                    name_filter_norm == alias.casefold()
-                    for alias in info["names"].split(", ")
-                )
-            ]
-
-        if area_filter is not None:
-            area_filter_norm = area_filter.casefold()
-            entities = [
-                info
-                for info in entities
-                if "areas" in info
-                and any(
-                    area_filter_norm == area.casefold()
-                    for area in info["areas"].split(", ")
-                )
-            ]
 
         if domain_filter is not None:
+            domain_filter = [domain.lower() for domain in domain_filter]
+
+        if name_filter or area_filter or domain_filter:
+            match_result = intent.async_match_targets(
+                hass,
+                intent.MatchTargetsConstraints(
+                    name=name_filter,
+                    area_name=area_filter,
+                    domains=domain_filter,
+                    assistant=llm_context.assistant,
+                ),
+            )
+
+            if not match_result.is_match:
+                return {
+                    "success": False,
+                    "error": "No entities matched the provided filter",
+                }
+
+            matched_ids = {state.entity_id for state in match_result.states}
             entities = [
-                info for info in entities if info["domain"].casefold() in domain_filter
+                info
+                for entity_id, info in exposed_entities["entities"].items()
+                if entity_id in matched_ids
             ]
+        else:
+            entities = list(exposed_entities["entities"].values())
 
         if not entities:
             return {
