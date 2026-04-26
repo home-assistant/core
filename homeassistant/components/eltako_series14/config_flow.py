@@ -52,19 +52,6 @@ def _validate_sender(user_input: dict[str, Any]) -> None:
         raise InvalidSenderIdFormat from e
 
 
-def _validate_gateway_path(user_input: dict[str, Any]) -> None:
-    """Return True if the provided path points to a valid serial port, False otherwise."""
-
-    try:
-        serial.serial_for_url(
-            url=user_input[CONF_SERIAL_PORT],
-            baudrate=GATEWAY_MODELS[user_input[CONF_MODEL]].baud_rate,
-            timeout=_SERIAL_VALIDATE_TIMEOUT,
-        )
-    except serial.SerialException as e:
-        raise InvalidGatewayPath from e
-
-
 def _get_model_options(models: Mapping[str, ModelDefinition]) -> dict[str, str]:
     return {key: model.name for key, model in models.items()}
 
@@ -108,11 +95,10 @@ class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             try:
                 _validate_enocean_id(user_input, CONF_ID)
-                _validate_gateway_path(user_input)
                 await self._async_validate_gateway(user_input)
             except InvalidIdFormat:
                 errors[CONF_ID] = "invalid_id"
-            except InvalidGatewayPath:
+            except serial.SerialException:
                 errors[CONF_SERIAL_PORT] = "invalid_gateway_path"
             except RuntimeError:
                 errors[CONF_SERIAL_PORT] = "cannot_connect"
@@ -270,10 +256,6 @@ class DeviceSubentryFlowHandler(ConfigSubentryFlow):
         if model_key in SWITCH_MODELS:
             return await self.async_step_switch()
         return self.async_abort(reason="model_not_found")
-
-
-class InvalidGatewayPath(SchemaFlowError):
-    """Error to indicate there is invalid gateway path."""
 
 
 class AlreadyConfigured(SchemaFlowError):

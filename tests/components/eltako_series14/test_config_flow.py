@@ -148,7 +148,7 @@ class TestEltakoFlowHandler:
         )
 
         with patch(
-            "homeassistant.components.eltako_series14.config_flow.serial.serial_for_url",
+            "homeassistant.components.eltako_series14.config_flow.EltakoFlowHandler._async_validate_gateway",
             side_effect=SerialException,
         ):
             result = await hass.config_entries.flow.async_configure(
