@@ -10,22 +10,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry
 from .entity import AbodeDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode binary sensor devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     device_types = [
         "connectivity",

@@ -6,15 +6,13 @@ from tailscale import Device as TailscaleDevice
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import TailscaleDataUpdateCoordinator
 
 
-class TailscaleEntity(CoordinatorEntity):
+class TailscaleEntity(CoordinatorEntity[TailscaleDataUpdateCoordinator]):
     """Defines a Tailscale base entity."""
 
     _attr_has_entity_name = True
@@ -22,7 +20,7 @@ class TailscaleEntity(CoordinatorEntity):
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TailscaleDataUpdateCoordinator,
         device: TailscaleDevice,
         description: EntityDescription,
     ) -> None:

@@ -21,8 +21,10 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
+type WeatherFlowConfigEntry = ConfigEntry[WeatherFlowListener]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) -> bool:
     """Set up WeatherFlow from a config entry."""
 
     client = WeatherFlowListener()
@@ -56,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ListenerError as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    entry.runtime_data = client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_handle_ha_shutdown(event: Event) -> None:
@@ -70,21 +72,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: WeatherFlowConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        client: WeatherFlowListener = hass.data[DOMAIN].pop(entry.entry_id, None)
-        if client:
-            await client.stop_listening()
+        await entry.runtime_data.stop_listening()
 
     return unload_ok
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant,
+    config_entry: WeatherFlowConfigEntry,
+    device_entry: DeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    client: WeatherFlowListener = hass.data[DOMAIN][config_entry.entry_id]
+    client = config_entry.runtime_data
     return not any(
         identifier
         for identifier in device_entry.identifiers

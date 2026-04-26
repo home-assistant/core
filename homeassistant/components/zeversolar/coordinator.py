@@ -16,13 +16,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type ZeversolarConfigEntry = ConfigEntry[ZeversolarCoordinator]
+
 
 class ZeversolarCoordinator(DataUpdateCoordinator[zeversolar.ZeverSolarData]):
     """Data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: ZeversolarConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ZeversolarConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
