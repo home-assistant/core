@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from eurotronic_cometblue_ha import AsyncCometBlue
@@ -21,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .climate import MAX_TEMP, MIN_TEMP
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
-
-LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
