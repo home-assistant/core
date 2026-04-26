@@ -474,11 +474,6 @@ async def test_user_flow_builds_ssl_context_in_executor(
             "homeassistant.components.duco.config_flow.DucoClient",
             autospec=True,
         ) as mock_client_class,
-        patch.object(
-            hass,
-            "async_add_executor_job",
-            wraps=hass.async_add_executor_job,
-        ) as mock_executor,
     ):
         mock_client_class.return_value.async_get_board_info.return_value = (
             mock_board_info
@@ -492,7 +487,7 @@ async def test_user_flow_builds_ssl_context_in_executor(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    mock_executor.assert_any_call(mock_build)
+    mock_build.assert_called_once()
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,
