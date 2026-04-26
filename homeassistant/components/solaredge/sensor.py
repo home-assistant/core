@@ -275,6 +275,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
+    # Add sensor entities only if API key is configured
+    if DATA_API_CLIENT not in entry.runtime_data:
+        return
+
     api = entry.runtime_data[DATA_API_CLIENT]
     sensor_factory = SolarEdgeSensorFactory(hass, entry, entry.data[CONF_SITE_ID], api)
 
@@ -476,15 +480,6 @@ class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
 class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
-    def __init__(
-        self,
-        description: SolarEdgeSensorEntityDescription,
-        data_service: SolarEdgeDataService,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(description, data_service)
-        self._attr_unique_id = str(data_service.site_id)
-
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
@@ -494,6 +489,13 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return str(self.data_service.site_id)
 
 
 class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
