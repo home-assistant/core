@@ -56,11 +56,13 @@ async def test_number_disabled_by_default_entities(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "value", "default_value"),
     [
         ("number.comet_blue_aa_bb_cc_dd_ee_ff_eco_setpoint", 18.5, 17.0),
         ("number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint", 23.0, 21.0),
+        ("number.comet_blue_aa_bb_cc_dd_ee_ff_setpoint_offset", -1.5, 0.0),
     ],
 )
 async def test_set_number_value(
