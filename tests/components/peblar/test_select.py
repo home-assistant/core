@@ -177,6 +177,14 @@ async def test_select_option_authentication_error(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_buzzer_volume(
