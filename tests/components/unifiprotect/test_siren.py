@@ -472,8 +472,7 @@ async def test_siren_auto_off_when_already_expired_at_update(
 
     On reconnect, the public bootstrap may still report is_active=True with an
     activated_at+duration that is already in the past.  The entity must treat
-    delay<=0 as immediately expired and schedule an OFF transition on the next
-    event loop tick.
+    delay<=0 as immediately expired and set its state to OFF immediately.
     """
     ufp, siren = ufp_with_siren
     siren.is_active = False
@@ -502,6 +501,38 @@ async def test_siren_auto_off_when_already_expired_at_update(
     ufp.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
-    # Entity momentarily goes ON (from the WS payload), then the zero-delay
-    # timer fires and flips it back to OFF.
+    # Entity stays OFF: delay<=0 overrides is_active=True inline, so the state
+    # machine never sees ON.
     assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+
+
+async def test_siren_unavailable_on_delete_event(
+    hass: HomeAssistant,
+    ufp_with_siren: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Entity becomes UNAVAILABLE when the siren is removed via a WS delete event.
+
+    When the public bootstrap sends new_obj=None (device deleted), data.py
+    dispatches the last-known Siren object (old_obj) to subscriptions.
+    The entity then checks self._siren; if it is no longer in the bootstrap
+    it must override _attr_available to False.
+    """
+    ufp, siren = ufp_with_siren
+    siren.is_active = False
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+
+    # Remove the siren from the public bootstrap so _siren returns None.
+    del ufp.api.public_bootstrap.sirens[SIREN_ID]
+
+    # Simulate a WS delete event: new_obj=None, old_obj=last-known siren.
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = None
+    mock_msg.old_obj = siren
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE  # type: ignore[union-attr]

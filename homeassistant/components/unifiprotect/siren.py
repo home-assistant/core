@@ -103,6 +103,14 @@ class ProtectSiren(SirenEntity):
         prev_state = (self._attr_available, self._attr_is_on)
         self._update_from_siren(siren)
 
+        # If the siren is no longer in the public bootstrap (delete event),
+        # mark it unavailable and skip timer scheduling.
+        if self._siren is None:
+            self._attr_available = False
+            if (self._attr_available, self._attr_is_on) != prev_state:
+                self.async_write_ha_state()
+            return
+
         # The server never emits a WS message when a timed run expires, so we
         # must schedule our own callback.  Both activated_at and duration are
         # in milliseconds in the WS payload.

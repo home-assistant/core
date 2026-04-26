@@ -189,6 +189,14 @@ class ProtectData:
         """
         new_obj = message.new_obj
         if new_obj is None:
+            # Delete event: notify subscribers so entities can be marked unavailable.
+            old_obj = message.old_obj
+            if old_obj is not None and old_obj.model is ModelType.SIREN:
+                siren = cast(Siren, old_obj)
+                if subscriptions := self._siren_subscriptions.get(siren.mac):
+                    _LOGGER.debug("Siren removed: %s (%s)", siren.name, siren.mac)
+                    for update_callback in subscriptions:
+                        update_callback(siren)
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_device_update(self.api.bootstrap.nvr)
