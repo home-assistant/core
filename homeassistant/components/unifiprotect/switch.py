@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal
+from typing import Any
 
 from uiprotect.data import (
     Camera,
@@ -17,7 +17,6 @@ from uiprotect.data import (
     RelayOutputState,
     VideoMode,
 )
-from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -661,31 +660,22 @@ class ProtectRelayOutputSwitch(SwitchEntity):
                 self.data.async_subscribe_relay(relay.mac, self._async_updated)
             )
 
-    async def _async_set_output_state(self, state: Literal["on", "off"]) -> None:
-        """Send a state change to the relay output."""
+    @async_ufp_instance_command
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the relay output on."""
         if (relay := self._relay) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="relay_not_available",
             )
-        try:
-            await relay.activate_output(self._output_id, state=state)
-        except NotAuthorized as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="not_authorized",
-            ) from err
-        except ClientError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await relay.activate_output(self._output_id, state="on")
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the relay output on."""
-        await self._async_set_output_state("on")
-
+    @async_ufp_instance_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the relay output off."""
-        await self._async_set_output_state("off")
+        if (relay := self._relay) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="relay_not_available",
+            )
+        await relay.activate_output(self._output_id, state="off")

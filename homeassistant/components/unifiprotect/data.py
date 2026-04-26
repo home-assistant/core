@@ -373,6 +373,11 @@ class ProtectData:
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
+        if self.api.has_public_bootstrap:
+            for relay in self.api.public_bootstrap.relays.values():
+                if subscriptions := self._relay_subscriptions.get(relay.mac):
+                    for subscription_callback in subscriptions:
+                        subscription_callback(relay)
 
     @callback
     def _async_poll(self, now: datetime) -> None:

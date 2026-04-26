@@ -13,6 +13,7 @@ from uiprotect.data import (
     RelayOutputState,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -139,11 +140,11 @@ async def test_relay_switch_off_otp_is_off(
     assert state.state == STATE_OFF
 
 
-async def test_relay_switch_unknown_state_is_unavailable(
+async def test_relay_switch_unknown_state_is_unknown(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
 ) -> None:
-    """Unknown relay state should leave the switch as unavailable."""
+    """Unknown relay state should leave the switch state as ``unknown``."""
     ufp, relay = ufp_with_relay
     relay.outputs[0].state = RelayOutputState.UNKNOWN
 
@@ -344,9 +345,9 @@ async def test_relay_switch_becomes_unavailable_when_relay_removed(
     # Drop the relay from the public bootstrap.
     ufp.api.public_bootstrap.relays = {}
 
-    # Build an update message that carries a None new_obj to cover that branch
-    # indirectly; directly call the subscribed callback with the relay whose
-    # output is now gone from bootstrap so _relay returns None.
+    # Build an update message with a relay object whose output is gone and
+    # whose relay can no longer be resolved from bootstrap, so the entity
+    # becomes unavailable.
     relay2 = _make_relay()
     relay2.id = relay.id
     relay2.mac = relay.mac
@@ -363,3 +364,30 @@ async def test_relay_switch_becomes_unavailable_when_relay_removed(
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_relay_switch_availability_follows_websocket_state(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Relay switch becomes unavailable on WS disconnect and recovers on reconnect."""
+    ufp, relay = ufp_with_relay
+    relay.outputs[0].state = RelayOutputState.ON
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
