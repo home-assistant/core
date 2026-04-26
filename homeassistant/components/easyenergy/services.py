@@ -5,7 +5,13 @@ from enum import StrEnum
 from functools import partial
 from typing import Final
 
-from easyenergy import Electricity, Gas, PriceInterval, VatOption
+from easyenergy import (
+    Electricity,
+    ElectricityGranularity,
+    Gas,
+    PriceInterval,
+    VatOption,
+)
 from easyenergy.const import MARKET_TIMEZONE
 import voluptuous as vol
 
@@ -27,20 +33,12 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
+ATTR_GRANULARITY: Final = "granularity"
 ATTR_PRICE_TYPE: Final = "price_type"
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
 ENERGY_RETURN_SERVICE_NAME: Final = "get_energy_return_prices"
-BASE_SERVICE_SCHEMA: Final = {
-    vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
-        {
-            "integration": DOMAIN,
-        }
-    ),
-    vol.Optional(ATTR_START): str,
-    vol.Optional(ATTR_END): str,
-}
 
 
 class PriceType(StrEnum):
@@ -58,16 +56,57 @@ class UsagePriceType(StrEnum):
     ALL_IN = "all_in"
 
 
-USAGE_SERVICE_SCHEMA: Final = vol.Schema(
+class Granularity(StrEnum):
+    """Price granularity."""
+
+    HOUR = "hour"
+    QUARTER = "quarter"
+
+
+GRANULARITY_MAP: Final = {
+    Granularity.HOUR.value: ElectricityGranularity.HOUR,
+    Granularity.QUARTER.value: ElectricityGranularity.QUARTER,
+}
+GRANULARITY_OPTIONS: Final = (Granularity.HOUR.value, Granularity.QUARTER.value)
+PRICE_TYPE_OPTIONS: Final = (UsagePriceType.MARKET.value, UsagePriceType.ALL_IN.value)
+
+BASE_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        **BASE_SERVICE_SCHEMA,
+        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        vol.Optional(ATTR_START): str,
+        vol.Optional(ATTR_END): str,
+    }
+)
+GAS_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
+    {
         vol.Required(ATTR_INCL_VAT): bool,
         vol.Optional(ATTR_PRICE_TYPE, default=UsagePriceType.MARKET.value): vol.In(
-            (UsagePriceType.MARKET.value, UsagePriceType.ALL_IN.value)
+            PRICE_TYPE_OPTIONS
         ),
     }
 )
-RETURN_SERVICE_SCHEMA: Final = vol.Schema(BASE_SERVICE_SCHEMA)
+ENERGY_USAGE_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_INCL_VAT): bool,
+        vol.Optional(ATTR_GRANULARITY, default=Granularity.HOUR.value): vol.In(
+            GRANULARITY_OPTIONS
+        ),
+        vol.Optional(ATTR_PRICE_TYPE, default=UsagePriceType.MARKET.value): vol.In(
+            PRICE_TYPE_OPTIONS
+        ),
+    }
+)
+ENERGY_RETURN_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_GRANULARITY, default=Granularity.HOUR.value): vol.In(
+            GRANULARITY_OPTIONS
+        ),
+    }
+)
 
 
 def __get_date(
@@ -169,6 +208,7 @@ async def __get_prices(
         data = await coordinator.easyenergy.energy_prices(
             start_date=start_date,
             end_date=end_date,
+            granularity=GRANULARITY_MAP[call.data[ATTR_GRANULARITY]],
             vat=vat,
         )
 
@@ -208,20 +248,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         GAS_SERVICE_NAME,
         partial(__get_prices, price_type=PriceType.GAS),
-        schema=USAGE_SERVICE_SCHEMA,
+        schema=GAS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_USAGE_SERVICE_NAME,
         partial(__get_prices, price_type=PriceType.ENERGY_USAGE),
-        schema=USAGE_SERVICE_SCHEMA,
+        schema=ENERGY_USAGE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_RETURN_SERVICE_NAME,
         partial(__get_prices, price_type=PriceType.ENERGY_RETURN),
-        schema=RETURN_SERVICE_SCHEMA,
+        schema=ENERGY_RETURN_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

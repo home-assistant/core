@@ -42,6 +42,16 @@ get_energy_usage_prices:
       default: true
       selector:
         boolean:
+    granularity:
+      required: false
+      default: hour
+      selector:
+        select:
+          options:
+            - label: Hour
+              value: hour
+            - label: Quarter
+              value: quarter
     price_type:
       required: false
       default: market
@@ -69,6 +79,16 @@ get_energy_return_prices:
       selector:
         config_entry:
           integration: easyenergy
+    granularity:
+      required: false
+      default: hour
+      selector:
+        select:
+          options:
+            - label: Hour
+              value: hour
+            - label: Quarter
+              value: quarter
     start:
       required: false
       example: "2024-01-01 00:00:00"

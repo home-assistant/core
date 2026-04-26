@@ -66,6 +66,10 @@
           "description": "[%key:component::easyenergy::services::get_gas_prices::fields::end::description%]",
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::end::name%]"
         },
+        "granularity": {
+          "description": "[%key:component::easyenergy::services::get_energy_usage_prices::fields::granularity::description%]",
+          "name": "[%key:component::easyenergy::services::get_energy_usage_prices::fields::granularity::name%]"
+        },
         "start": {
           "description": "[%key:component::easyenergy::services::get_gas_prices::fields::start::description%]",
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::start::name%]"
@@ -83,6 +87,10 @@
         "end": {
           "description": "[%key:component::easyenergy::services::get_gas_prices::fields::end::description%]",
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::end::name%]"
+        },
+        "granularity": {
+          "description": "The interval size for the electricity prices.",
+          "name": "Granularity"
         },
         "incl_vat": {
           "description": "[%key:component::easyenergy::services::get_gas_prices::fields::incl_vat::description%]",
