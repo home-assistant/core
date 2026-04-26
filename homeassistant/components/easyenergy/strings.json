@@ -88,6 +88,10 @@
           "description": "[%key:component::easyenergy::services::get_gas_prices::fields::incl_vat::description%]",
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::incl_vat::name%]"
         },
+        "price_type": {
+          "description": "[%key:component::easyenergy::services::get_gas_prices::fields::price_type::description%]",
+          "name": "[%key:component::easyenergy::services::get_gas_prices::fields::price_type::name%]"
+        },
         "start": {
           "description": "[%key:component::easyenergy::services::get_gas_prices::fields::start::description%]",
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::start::name%]"
@@ -109,6 +113,10 @@
         "incl_vat": {
           "description": "Whether the prices should include VAT.",
           "name": "VAT included"
+        },
+        "price_type": {
+          "description": "The type of usage prices to retrieve.",
+          "name": "Price type"
         },
         "start": {
           "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",

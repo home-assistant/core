@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.easyenergy.services import (
     ATTR_CONFIG_ENTRY,
+    ATTR_PRICE_TYPE,
     ENERGY_RETURN_SERVICE_NAME,
     ENERGY_USAGE_SERVICE_NAME,
     GAS_SERVICE_NAME,
@@ -137,6 +138,65 @@ async def test_service_filters_datetime_range(
         mock_easyenergy.gas_prices.assert_not_called()
 
 
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "expected_prices"),
+    [
+        (
+            GAS_SERVICE_NAME,
+            [
+                {"timestamp": "2026-04-18 22:00:00+00:00", "price": 1.4227},
+            ],
+        ),
+        (
+            ENERGY_USAGE_SERVICE_NAME,
+            [
+                {"timestamp": "2026-04-19 00:00:00+00:00", "price": 0.26476},
+                {"timestamp": "2026-04-19 01:00:00+00:00", "price": 0.25756},
+                {"timestamp": "2026-04-19 02:00:00+00:00", "price": 0.25782},
+            ],
+        ),
+    ],
+)
+async def test_usage_services_all_in_price_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_easyenergy: MagicMock,
+    service: str,
+    expected_prices: list[dict[str, str | float]],
+) -> None:
+    """Test usage services can return all-in prices."""
+    mock_easyenergy.reset_mock()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            ATTR_PRICE_TYPE: "all_in",
+            "incl_vat": True,
+            "start": "2026-04-19 02:00:00+02:00",
+            "end": "2026-04-19 05:00:00+02:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {"prices": expected_prices}
+
+    expected_call = {
+        "start_date": date(2026, 4, 19),
+        "end_date": date(2026, 4, 19),
+        "vat": VatOption.INCLUDE,
+    }
+    if service == GAS_SERVICE_NAME:
+        mock_easyenergy.gas_prices.assert_called_once_with(**expected_call)
+        mock_easyenergy.energy_prices.assert_not_called()
+    else:
+        mock_easyenergy.energy_prices.assert_called_once_with(**expected_call)
+        mock_easyenergy.gas_prices.assert_not_called()
+
+
 @pytest.fixture
 def config_entry_data(
     mock_config_entry: MockConfigEntry, request: pytest.FixtureRequest
@@ -200,6 +260,40 @@ async def test_service_schema_validation_vat(
     error_message: str,
 ) -> None:
     """Test easyEnergy service schema validation for VAT."""
+
+    with pytest.raises(vol.er.Error, match=error_message):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_USAGE_SERVICE_NAME])
+@pytest.mark.parametrize(
+    ("service_data", "error_message"),
+    [
+        (
+            {"incl_vat": True, ATTR_PRICE_TYPE: "incorrect price type"},
+            "value must be one of .+",
+        ),
+        (
+            {"incl_vat": True, ATTR_PRICE_TYPE: True},
+            "value must be one of .+",
+        ),
+    ],
+)
+async def test_service_schema_validation_usage_price_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, str | bool],
+    error_message: str,
+) -> None:
+    """Test usage service schema validation for price type."""
 
     with pytest.raises(vol.er.Error, match=error_message):
         await hass.services.async_call(

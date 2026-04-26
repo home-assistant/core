@@ -27,6 +27,7 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
+ATTR_PRICE_TYPE: Final = "price_type"
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
@@ -40,13 +41,6 @@ BASE_SERVICE_SCHEMA: Final = {
     vol.Optional(ATTR_START): str,
     vol.Optional(ATTR_END): str,
 }
-SERVICE_SCHEMA: Final = vol.Schema(
-    {
-        **BASE_SERVICE_SCHEMA,
-        vol.Required(ATTR_INCL_VAT): bool,
-    }
-)
-RETURN_SERVICE_SCHEMA: Final = vol.Schema(BASE_SERVICE_SCHEMA)
 
 
 class PriceType(StrEnum):
@@ -55,6 +49,25 @@ class PriceType(StrEnum):
     ENERGY_USAGE = "energy_usage"
     ENERGY_RETURN = "energy_return"
     GAS = "gas"
+
+
+class UsagePriceType(StrEnum):
+    """Type of usage price."""
+
+    MARKET = "market"
+    ALL_IN = "all_in"
+
+
+USAGE_SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        **BASE_SERVICE_SCHEMA,
+        vol.Required(ATTR_INCL_VAT): bool,
+        vol.Optional(ATTR_PRICE_TYPE, default=UsagePriceType.MARKET.value): vol.In(
+            (UsagePriceType.MARKET.value, UsagePriceType.ALL_IN.value)
+        ),
+    }
+)
+RETURN_SERVICE_SCHEMA: Final = vol.Schema(BASE_SERVICE_SCHEMA)
 
 
 def __get_date(
@@ -137,6 +150,7 @@ async def __get_prices(
         vat = VatOption.EXCLUDE
 
     data: Electricity | Gas
+    prices: list[dict[str, float | datetime]]
 
     if price_type == PriceType.GAS:
         data = await coordinator.easyenergy.gas_prices(
@@ -144,7 +158,13 @@ async def __get_prices(
             end_date=end_date,
             vat=vat,
         )
-        prices = data.timestamp_prices
+        if call.data[ATTR_PRICE_TYPE] == UsagePriceType.ALL_IN.value:
+            prices = [
+                {"timestamp": interval.starts_at, "price": interval.invoice_price}
+                for interval in data.intervals
+            ]
+        else:
+            prices = data.timestamp_prices
     else:
         data = await coordinator.easyenergy.energy_prices(
             start_date=start_date,
@@ -153,7 +173,13 @@ async def __get_prices(
         )
 
         if price_type == PriceType.ENERGY_USAGE:
-            prices = data.timestamp_prices
+            if call.data[ATTR_PRICE_TYPE] == UsagePriceType.ALL_IN.value:
+                prices = [
+                    {"timestamp": timestamp, "price": price}
+                    for timestamp, price in data.invoice_prices.items()
+                ]
+            else:
+                prices = data.timestamp_prices
         else:
             prices = data.timestamp_return_prices
 
@@ -182,14 +208,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         GAS_SERVICE_NAME,
         partial(__get_prices, price_type=PriceType.GAS),
-        schema=SERVICE_SCHEMA,
+        schema=USAGE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_USAGE_SERVICE_NAME,
         partial(__get_prices, price_type=PriceType.ENERGY_USAGE),
-        schema=SERVICE_SCHEMA,
+        schema=USAGE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
