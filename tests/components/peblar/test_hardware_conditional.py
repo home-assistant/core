@@ -36,8 +36,8 @@ async def test_lock_state_binary_sensor(
     assert entity_entry is not None
     assert entity_entry.domain == BINARY_SENSOR_DOMAIN
 
-    # LockState=false in fixture → not locked → is_on=True (unlocked)
-    assert hass.states.get(entity_id).state == STATE_ON
+    # LockState=false in fixture → unlocked → STATE_OFF
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 @pytest.mark.parametrize(

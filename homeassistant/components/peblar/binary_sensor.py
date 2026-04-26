@@ -50,7 +50,7 @@ DESCRIPTIONS = [
         translation_key="lock_state",
         device_class=BinarySensorDeviceClass.LOCK,
         has_fn=lambda x: x.system_information.hardware_has_socket,
-        is_on_fn=lambda x: not x.ev.lock_state,
+        is_on_fn=lambda x: x.ev.lock_state,
     ),
 ]
 
