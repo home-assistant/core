@@ -27,24 +27,12 @@ from .entity import unique_zone_id
 type EvoDevice = evo.Gateway | evo.ControlSystem | evo.HotWater | evo.Zone
 
 
-# BoilerCommunicationLost and ChValveCommunicationLost are TCS-level faults meaning the
-# controller device cannot see its RF components; a PROBLEM, not a connectivity issue
-_FAULT_TYPE_TO_CATEGORY: dict[str, BinarySensorDeviceClass] = {
-    "BoilerCommunicationLost": BinarySensorDeviceClass.PROBLEM,
-    "ChValveCommunicationLost": BinarySensorDeviceClass.PROBLEM,
-}
-
-# Fallback: match by suffix; anything else (including "Failure") is PROBLEM
-_FAULT_TYPE_SUFFIX_TO_CATEGORY: dict[str, BinarySensorDeviceClass] = {
-    "CommunicationLost": BinarySensorDeviceClass.CONNECTIVITY,
-    "LowBattery": BinarySensorDeviceClass.BATTERY,
-}
-
-# The category state when a fault is present (connectivity is inverted)
-_CATEGORY_TRUE_WHEN_FAULT: dict[BinarySensorDeviceClass, bool] = {
-    BinarySensorDeviceClass.BATTERY: True,
-    BinarySensorDeviceClass.CONNECTIVITY: False,
-    BinarySensorDeviceClass.PROBLEM: True,
+# Evohome has four device types: gateway -> controller (TCS) -> DHW (optional), zones
+_DEVICE_LABEL: dict[type[EvoDevice], str] = {
+    evo.Gateway: "gateway",  # is stateless, except for fault sensors
+    evo.ControlSystem: "system",
+    evo.HotWater: "DHW",
+    evo.Zone: "zone",
 }
 
 # Fault categories exposed per evohome device type (gateways have no battery)
@@ -70,18 +58,30 @@ _SUPPORTED_CATEGORIES: dict[type[EvoDevice], tuple[BinarySensorDeviceClass, ...]
     ),
 }
 
+# Generally, we match by StrEnum suffix; otherwise (incl. "Failure" suffix) is PROBLEM
+_FAULT_TYPE_SUFFIX_TO_CATEGORY: dict[str, BinarySensorDeviceClass] = {
+    "CommunicationLost": BinarySensorDeviceClass.CONNECTIVITY,
+    "LowBattery": BinarySensorDeviceClass.BATTERY,
+}
+
+# These are exceptions to above: here, the TCS cannot see its components
+_FAULT_TYPE_TO_CATEGORY: dict[str, BinarySensorDeviceClass] = {
+    "BoilerCommunicationLost": BinarySensorDeviceClass.PROBLEM,
+    "ChValveCommunicationLost": BinarySensorDeviceClass.PROBLEM,
+}
+
+# The sensor state when a fault is present (connectivity is inverted)
+_CATEGORY_TRUE_WHEN_FAULT: dict[BinarySensorDeviceClass, bool] = {
+    BinarySensorDeviceClass.BATTERY: True,
+    BinarySensorDeviceClass.CONNECTIVITY: False,
+    BinarySensorDeviceClass.PROBLEM: True,
+}
+
 # Name fragments used to build entity names (zones can change their name)
 _CATEGORY_LABEL: dict[BinarySensorDeviceClass, str] = {
     BinarySensorDeviceClass.CONNECTIVITY: "connection",
     BinarySensorDeviceClass.BATTERY: "battery",
     BinarySensorDeviceClass.PROBLEM: "fault",
-}
-
-_DEVICE_LABEL: dict[type[EvoDevice], str] = {
-    evo.Gateway: "gateway",
-    evo.ControlSystem: "system",
-    evo.HotWater: "DHW",
-    evo.Zone: "zone",
 }
 
 
