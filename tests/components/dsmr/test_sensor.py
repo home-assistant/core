@@ -51,6 +51,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, patch
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_default_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

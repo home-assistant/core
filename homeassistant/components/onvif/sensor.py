@@ -6,28 +6,24 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DOMAIN
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .util import build_event_entity_names
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ONVIFConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ONVIF sensor platform."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    device: ONVIFDevice = hass.data[DOMAIN][config_entry.unique_id]
+    device: ONVIFDevice = config_entry.runtime_data
 
     events = device.events.get_platform("sensor")
     entity_names = build_event_entity_names(events)
