@@ -1,18 +1,30 @@
 """The tests for the Template vacuum platform."""
 
+from dataclasses import asdict
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
+from homeassistant.components.template.vacuum import (
+    CONF_SEGMENTS_TEMPLATE,
+    SERVICE_CLEAN_AREA,
+)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
+    Segment,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_UNIQUE_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -60,6 +72,7 @@ SET_FAN_SPEED_ACTION = make_test_action(
 )
 START_ACTION = make_test_action("start")
 STOP_ACTION = make_test_action("stop")
+CLEAN_AREA_ACTION = make_test_action("clean_area", {"segment_ids": "{{ segment_ids }}"})
 
 TEMPLATE_VACUUM_ACTIONS = {
     **START_ACTION,
@@ -1025,6 +1038,311 @@ async def test_not_optimistic(
 
     state = hass.states.get(TEST_VACUUM.entity_id)
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                **CLEAN_AREA_ACTION,
+                "segments_template": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_clean_area(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test clean area passes segment IDs to action."""
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"area_1": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+
+    await common.async_clean_area(hass, ["area_1"], TEST_VACUUM.entity_id)
+    await hass.async_block_till_done()
+    assert_action(TEST_VACUUM, calls, 1, "clean_area", segment_ids=["1", "2"])
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "start": [],
+                **CLEAN_AREA_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "expected_segments"),
+    [
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ ["
+                "{'id': '1', 'name': 'Kitchen'}, "
+                "{'id': '2', 'name': 'Bedroom', 'group': 'Upstairs'}"
+                "] }}",
+            },
+            [
+                Segment(id="1", name="Kitchen"),
+                Segment(id="2", name="Bedroom", group="Upstairs"),
+            ],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_get_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    expected_segments: list[Segment],
+) -> None:
+    """Test get_segments returns segments from template."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, VacuumActivity.DOCKED)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "segments": [asdict(segment) for segment in expected_segments]
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "start": [],
+                **CLEAN_AREA_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "err_msg"),
+    [
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {'id': '1'} ] }}",
+            },
+            "expected dictionary with keys id, name and optional group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {'name': 'kitchen'} ] }}",
+            },
+            "expected dictionary with keys id, name and optional group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {} ] }}",
+            },
+            "expected dictionary with keys id, name and optional group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
+            },
+            "expected dictionary with keys id, name and optional group and string values",
+        ),
+        (
+            {"unique_id": TEST_VACUUM.entity_id, "segments_template": "{{ [[]] }}"},
+            "expected dictionary with keys id, name and optional group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
+            },
+            "expected dictionary with keys id, name and optional group and string values",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_invalid_segments_template(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    err_msg: str,
+) -> None:
+    """Test that errors are logged if parsing segment template fails."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "Works")
+    await hass.async_block_till_done()
+
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["result"] == {"segments": []}
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                **CLEAN_AREA_ACTION,
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_raise_segments_changed_issue(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that issue is raised on segments change."""
+    hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bedroom")
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "1", "name": "Kitchen"},
+                {"id": "2", "name": "Bedroom"},
+            ],
+        },
+    )
+    hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bathroom")
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) != 0
+
+
+@pytest.mark.parametrize(
+    ("vacuum_config", "err_msg"),
+    [
+        (
+            {**START_ACTION},
+            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "extra_config"),
+    [
+        (
+            0,
+            {
+                "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+        ),
+        (
+            0,
+            {**CLEAN_AREA_ACTION},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_segments_part_config(
+    hass: HomeAssistant,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    count: int,
+    err_msg: str,
+) -> None:
+    """Test creating vacuum with segments, missing required options."""
+    assert len(hass.states.async_all(vacuum.DOMAIN)) == count
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("vacuum_config"),
+    [
+        {
+            **START_ACTION,
+            **CLEAN_AREA_ACTION,
+            "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "extra_config", "err_msg"),
+    [
+        (
+            0,
+            {},
+            f'key "{CONF_SEGMENTS_TEMPLATE}" requires key "{CONF_UNIQUE_ID}" to exist',
+        ),
+        (1, {"unique_id": TEST_VACUUM.entity_id}, ""),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_segments_unique_id(
+    hass: HomeAssistant,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    count: int,
+    err_msg: str,
+) -> None:
+    """Test creating vacuum with segments, missing required options."""
+    assert len(hass.states.async_all(vacuum.DOMAIN)) == count
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
 
 
 async def test_setup_config_entry(
