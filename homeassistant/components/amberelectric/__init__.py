@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> boo
         entry.runtime_data = coordinator
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
-        await hass.async_add_executor_job(api_client.close)
+        await hass.async_add_executor_job(coordinator.close)
         raise
     return True
 

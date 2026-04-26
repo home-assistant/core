@@ -12,9 +12,11 @@ from . import setup_integration
 from .conftest import create_amber_config_entry
 from .helpers import GENERAL_CHANNEL, GENERAL_ONLY_SITE_ID
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
-def config_entry(hass: HomeAssistant) -> Mock:
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a config entry pre-added to hass."""
     entry = create_amber_config_entry(
         GENERAL_ONLY_SITE_ID, GENERAL_ONLY_SITE_ID, "home"
@@ -24,7 +26,7 @@ def config_entry(hass: HomeAssistant) -> Mock:
 
 
 async def test_api_client_closed_on_first_refresh_failure(
-    hass: HomeAssistant, config_entry: Mock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that the ApiClient is closed when the first refresh fails."""
     mock_api_client = Mock()
@@ -49,7 +51,7 @@ async def test_api_client_closed_on_first_refresh_failure(
 
 
 async def test_api_client_closed_on_forward_entry_setups_failure(
-    hass: HomeAssistant, config_entry: Mock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that the ApiClient is closed when async_forward_entry_setups fails."""
     mock_api_client = Mock()
@@ -77,7 +79,7 @@ async def test_api_client_closed_on_forward_entry_setups_failure(
 
 
 async def test_api_client_closed_on_unload(
-    hass: HomeAssistant, config_entry: Mock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that the ApiClient is closed on normal entry unload."""
     mock_api_client = Mock()
