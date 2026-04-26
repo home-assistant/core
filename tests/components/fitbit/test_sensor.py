@@ -141,7 +141,7 @@ async def test_sensors(
     """Test sensors."""
 
     _register_all_timeseries(register_timeseries)
-    await integration_setup()
+    assert await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -266,7 +266,7 @@ async def test_profile_local(
     """Test the fitbit profile locale impact on unit of measure."""
 
     register_timeseries("body/weight", timeseries_response("body-weight", "175"))
-    await integration_setup()
+    assert await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
