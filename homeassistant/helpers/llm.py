@@ -1240,7 +1240,11 @@ class GetLiveContextTool(Tool):
             domain_filter = [domain_filter]
 
         if domain_filter is not None:
-            domain_filter = [domain.lower() for domain in domain_filter]
+            domain_filter = [
+                normalized_domain
+                for domain in domain_filter
+                if (normalized_domain := domain.strip().lower())
+            ]
 
         if name_filter or area_filter or domain_filter:
             exposed_states = [
