@@ -30,7 +30,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: DEFAULT_NAME,
             CONF_TIME_ZONE: "America/New_York",
         },
     )
@@ -38,8 +37,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
+    assert result["title"] == DEFAULT_NAME
     assert result["options"] == {
-        CONF_NAME: DEFAULT_NAME,
         CONF_TIME_ZONE: "America/New_York",
         CONF_TIME_FORMAT: DEFAULT_TIME_STR_FORMAT,
     }
@@ -93,7 +92,6 @@ async def test_entry_already_exist(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: DEFAULT_NAME,
             CONF_TIME_ZONE: "America/New_York",
             CONF_TIME_FORMAT: DEFAULT_TIME_STR_FORMAT,
         },
