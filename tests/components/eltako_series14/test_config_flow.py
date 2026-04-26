@@ -483,9 +483,10 @@ class TestDeviceSubentryFlowHandler:
 
         subentry = next(iter(setup_default_entry.subentries.values()))
 
-        with patch(
+        with patch.dict(
             "homeassistant.components.eltako_series14.config_flow.SWITCH_MODELS",
-            return_value={},
+            {},
+            clear=True,
         ):
             result = await hass.config_entries.subentries.async_init(
                 (setup_default_entry.entry_id, "device"),
