@@ -37,6 +37,7 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
+    DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
     ModelType,
 )
@@ -126,6 +127,7 @@ def async_create_api_client(
         session=session,
         public_api_session=public_api_session,
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
+        devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,

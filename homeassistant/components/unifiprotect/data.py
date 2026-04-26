@@ -164,7 +164,26 @@ class ProtectData:
             async_track_time_interval(
                 self._hass, self._async_poll, self._update_interval
             ),
+            # Subscribe to the public devices websocket unconditionally so that
+            # it is active before update_public() primes the cache.
+            # Per library docs: subscribe first, then call update_public().
+            api.subscribe_devices_websocket(
+                self._async_process_public_devices_ws_message
+            ),
         ]
+
+    @callback
+    def _async_process_public_devices_ws_message(
+        self, message: WSSubscriptionMessage
+    ) -> None:
+        """Process a message from the public devices websocket.
+
+        The API client pre-filters messages to ModelType.NVR via
+        DEVICES_WS_SUBSCRIBED_MODELS, so every message here is an NVR update.
+        The library has already merged the arm_mode into the PublicNVR cache;
+        signal the private NVR so alarm entities pick up the new state.
+        """
+        self._async_signal_device_update(self.api.bootstrap.nvr)
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:

@@ -185,8 +185,17 @@ def mock_entry(
             ufp.ws_state_subscription = ws_state_subscription
             return Mock()
 
+        def subscribe_devices_websocket(
+            ws_callback: Callable[[WSSubscriptionMessage], None],
+        ) -> Any:
+            ufp.devices_ws_subscription = ws_callback
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
+        ufp_client.subscribe_devices_websocket = subscribe_devices_websocket
+        ufp_client.update_public = AsyncMock()
+        ufp_client.has_public_bootstrap = False
         yield ufp
 
 
