@@ -174,13 +174,13 @@ async def _handle_push_request(
     # Validate device is registered
     listener = receiver.get_listener(mac_addr)
     if listener is None:
-        _LOGGER.warning("Push from unknown device rejected: %s", mac_addr)
+        _LOGGER.debug("Push from unknown device rejected: %s", mac_addr)
         return Response(status=403, text="unknown device")
 
     # Validate source IP to reduce spoofing risk
     remote_ip = request.remote
     if not receiver.validate_ip(mac_addr, remote_ip):
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Push for %s from unauthorized IP rejected: %s (expected registered IP)",
             mac_addr,
             remote_ip,

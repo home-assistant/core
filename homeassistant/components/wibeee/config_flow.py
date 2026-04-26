@@ -96,13 +96,17 @@ async def validate_input(
 
 
 def _is_routable_ip(ip: str) -> bool:
-    """Check if IP is a valid routable address (not loopback)."""
+    """Check if IP is a valid routable address (not loopback/multicast/link-local)."""
     try:
         addr = ipaddress.ip_address(ip)
     except ValueError:
         return False
-    else:
-        return not addr.is_loopback
+    return not (
+        addr.is_loopback
+        or addr.is_multicast
+        or addr.is_link_local
+        or addr.is_unspecified
+    )
 
 
 def _get_local_ip_sync() -> str:
