@@ -1,5 +1,4 @@
 """Refoss integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -11,15 +10,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import _LOGGER, COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
+from .const import _LOGGER, DISPATCH_DEVICE_DISCOVERED
 from .coordinator import RefossDataUpdateCoordinator
+
+type RefossConfigEntry = ConfigEntry[DiscoveryService]
 
 
 class DiscoveryService(Listener):
     """Discovery event handler for refoss devices."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, discovery: Discovery
+        self, hass: HomeAssistant, config_entry: RefossConfigEntry, discovery: Discovery
     ) -> None:
         """Init discovery service."""
         self.hass = hass
@@ -28,7 +29,7 @@ class DiscoveryService(Listener):
         self.discovery = discovery
         self.discovery.add_listener(self)
 
-        hass.data[DOMAIN].setdefault(COORDINATORS, [])
+        self.coordinators: list[RefossDataUpdateCoordinator] = []
 
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
@@ -38,7 +39,7 @@ class DiscoveryService(Listener):
             return
 
         coordo = RefossDataUpdateCoordinator(self.hass, self.config_entry, device)
-        self.hass.data[DOMAIN][COORDINATORS].append(coordo)
+        self.coordinators.append(coordo)
         await coordo.async_refresh()
 
         _LOGGER.debug(
@@ -50,7 +51,7 @@ class DiscoveryService(Listener):
 
     async def device_update(self, device_info: DeviceInfo) -> None:
         """Handle updates in device information, update if ip has changed."""
-        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
+        for coordinator in self.coordinators:
             if coordinator.device.device_info.mac == device_info.mac:
                 _LOGGER.debug(
                     "Update device %s ip to %s",
