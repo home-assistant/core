@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -29,14 +30,11 @@ class CannotConnect(Exception):
 def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
     """Validate the device is reachable and return a title for it."""
     bulb = avea.Bulb(discovery_info.device)
-    validation_error: Exception | None = None
 
     try:
-        try:
-            if not bulb.connect():
-                raise CannotConnect
-        except NAME_EXCEPTIONS as err:
-            raise CannotConnect from err
+        if not bulb.connect():
+            raise CannotConnect
+
         try:
             name = bulb.get_name()
         except NAME_EXCEPTIONS:
@@ -46,22 +44,12 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
                 exc_info=True,
             )
             name = None
-        try:
-            brightness = bulb.get_brightness()
-        except NAME_EXCEPTIONS as err:
-            raise CannotConnect from err
-    except CannotConnect as err:
-        validation_error = err
-        raise
-    except Exception as err:
-        validation_error = err
-        raise
+        brightness = bulb.get_brightness()
+    except NAME_EXCEPTIONS as err:
+        raise CannotConnect from err
     finally:
-        try:
+        with suppress(*NAME_EXCEPTIONS):
             bulb.close()
-        except NAME_EXCEPTIONS as err:
-            if validation_error is None:
-                raise CannotConnect from err
 
     if brightness is None:
         raise CannotConnect
@@ -121,7 +109,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         self.context["title_placeholders"] = {
-            CONF_NAME: self._discovery_info.name or self._discovery_info.address
+            "name": self._discovery_info.name or self._discovery_info.address
         }
         self._set_confirm_only()
         return self.async_show_form(
