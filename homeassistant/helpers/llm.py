@@ -1223,14 +1223,19 @@ class GetLiveContextTool(Tool):
             domain_filter = [domain.lower() for domain in domain_filter]
 
         if name_filter or area_filter or domain_filter:
+            exposed_states = [
+                state
+                for entity_id in exposed_entities["entities"]
+                if (state := hass.states.get(entity_id)) is not None
+            ]
             match_result = intent.async_match_targets(
                 hass,
                 intent.MatchTargetsConstraints(
                     name=name_filter,
                     area_name=area_filter,
                     domains=domain_filter,
-                    assistant=llm_context.assistant,
                 ),
+                states=exposed_states,
             )
 
             if not match_result.is_match:
