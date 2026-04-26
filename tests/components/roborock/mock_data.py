@@ -5,8 +5,8 @@ from __future__ import annotations
 from PIL import Image
 from roborock.data import (
     B01Props,
-    CleanRecord,
     CleanPathPreferenceMapping,
+    CleanRecord,
     CleanSummary,
     Consumable,
     DnDTimer,
