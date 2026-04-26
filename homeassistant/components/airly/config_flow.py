@@ -45,14 +45,14 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 location_point_valid = await check_location(
                     websession,
-                    user_input["api_key"],
+                    user_input[CONF_API_KEY],
                     user_input[CONF_LATITUDE],
                     user_input[CONF_LONGITUDE],
                 )
                 if not location_point_valid:
                     location_nearest_valid = await check_location(
                         websession,
-                        user_input["api_key"],
+                        user_input[CONF_API_KEY],
                         user_input[CONF_LATITUDE],
                         user_input[CONF_LONGITUDE],
                         use_nearest=True,
