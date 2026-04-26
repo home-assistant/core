@@ -7,32 +7,23 @@ from typing import Any
 from subarulink.const import LATITUDE, LONGITUDE, TIMESTAMP
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
-from .const import (
-    DOMAIN,
-    ENTRY_COORDINATOR,
-    ENTRY_VEHICLES,
-    VEHICLE_HAS_REMOTE_SERVICE,
-    VEHICLE_STATUS,
-    VEHICLE_VIN,
-)
-from .coordinator import SubaruDataUpdateCoordinator
+from .const import VEHICLE_HAS_REMOTE_SERVICE, VEHICLE_STATUS, VEHICLE_VIN
+from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SubaruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru device tracker by config_entry."""
-    entry: dict = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: SubaruDataUpdateCoordinator = entry[ENTRY_COORDINATOR]
-    vehicle_info: dict = entry[ENTRY_VEHICLES]
+    coordinator = config_entry.runtime_data.coordinator
+    vehicle_info = config_entry.runtime_data.vehicles
     async_add_entities(
         SubaruDeviceTracker(vehicle, coordinator)
         for vehicle in vehicle_info.values()

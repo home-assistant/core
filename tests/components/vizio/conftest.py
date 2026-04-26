@@ -7,6 +7,9 @@ import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
+from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
 from .const import (
     ACCESS_TOKEN,
     APP_LIST,
@@ -17,6 +20,8 @@ from .const import (
     EQ_LIST,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
+    MOCK_SPEAKER_CONFIG,
+    MOCK_USER_VALID_TV_CONFIG,
     MODEL,
     RESPONSE_TOKEN,
     UNIQUE_ID,
@@ -25,6 +30,8 @@ from .const import (
     MockCompletePairingResponse,
     MockStartPairingResponse,
 )
+
+from tests.common import MockConfigEntry
 
 
 class MockInput:
@@ -39,6 +46,33 @@ class MockInput:
 def get_mock_inputs(input_list) -> list[MockInput]:
     """Return list of MockInput."""
     return [MockInput(device_input) for device_input in input_list]
+
+
+@pytest.fixture
+def mock_tv_config_entry() -> MockConfigEntry:
+    """Return a mock TV config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
+
+
+@pytest.fixture
+def mock_speaker_config_entry() -> MockConfigEntry:
+    """Return a mock speaker config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Add config entry to hass and set up the integration."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
@@ -57,6 +91,16 @@ def vizio_data_coordinator_update_fixture() -> Generator[None]:
     with patch(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=APP_LIST,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def no_delay_secs() -> Generator[None]:
+    """Patch default delay between remote command repeats to 0."""
+    with patch(
+        "homeassistant.components.vizio.remote.DEFAULT_DELAY_SECS",
+        0,
     ):
         yield
 

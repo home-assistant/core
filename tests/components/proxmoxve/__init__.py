@@ -25,15 +25,32 @@ AUDIT_PERMISSIONS = {
 }
 
 POWER_PERMISSIONS = {
-    "/": {"VM.PowerMgmt": 1},
-    "/nodes": {"VM.PowerMgmt": 1},
+    "/": {
+        "Sys.PowerMgmt": 1,
+        "VM.PowerMgmt": 1,
+    },
+    "/nodes": {
+        "Sys.PowerMgmt": 1,
+        "VM.PowerMgmt": 1,
+    },
     "/vms": {"VM.PowerMgmt": 1},
     "/vms/101": {"VM.PowerMgmt": 0},
 }
 
+SNAPSHOT_PERMISSIONS = {
+    "/vms": {"VM.Snapshot": 1},
+    "/vms/101": {"VM.Snapshot": 0},
+}
+
 MERGED_PERMISSIONS = {
-    key: {**AUDIT_PERMISSIONS.get(key, {}), **POWER_PERMISSIONS.get(key, {})}
-    for key in set(AUDIT_PERMISSIONS) | set(POWER_PERMISSIONS)
+    key: {
+        **AUDIT_PERMISSIONS.get(key, {}),
+        **POWER_PERMISSIONS.get(key, {}),
+        **SNAPSHOT_PERMISSIONS.get(key, {}),
+    }
+    for key in set(AUDIT_PERMISSIONS)
+    | set(POWER_PERMISSIONS)
+    | set(SNAPSHOT_PERMISSIONS)
 }
 
 

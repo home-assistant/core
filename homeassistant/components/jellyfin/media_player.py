@@ -168,7 +168,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self._attr_media_duration = media_duration
         self._attr_media_position = media_position
         self._attr_media_position_updated_at = media_position_updated
-        self._attr_media_image_remotely_accessible = True
 
     @property
     def media_image_url(self) -> str | None:

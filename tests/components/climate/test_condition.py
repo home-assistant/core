@@ -22,6 +22,7 @@ from tests.components.common import (
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     other_states,
     parametrize_condition_states_all,
@@ -47,6 +48,7 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
         "climate.is_cooling",
         "climate.is_drying",
         "climate.is_heating",
+        "climate.is_hvac_mode",
         "climate.target_humidity",
         "climate.target_temperature",
     ],
@@ -56,6 +58,34 @@ async def test_climate_conditions_gated_by_labs_flag(
 ) -> None:
     """Test the climate conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("climate.is_off", {}, True, True),
+        ("climate.is_on", {}, True, False),
+        ("climate.is_cooling", {}, True, False),
+        ("climate.is_drying", {}, True, False),
+        ("climate.is_heating", {}, True, False),
+    ],
+)
+async def test_climate_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that climate conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -82,6 +112,24 @@ async def test_climate_conditions_gated_by_labs_flag(
                 HVACMode.HEAT_COOL,
             ],
             other_states=[HVACMode.OFF],
+        ),
+        *(
+            param
+            for mode in HVACMode
+            for param in parametrize_condition_states_any(
+                condition="climate.is_hvac_mode",
+                condition_options={"hvac_mode": [mode]},
+                target_states=[mode],
+                other_states=[m for m in HVACMode if m != mode],
+            )
+        ),
+        *parametrize_condition_states_any(
+            condition="climate.is_hvac_mode",
+            condition_options={"hvac_mode": [HVACMode.HEAT, HVACMode.COOL]},
+            target_states=[HVACMode.HEAT, HVACMode.COOL],
+            other_states=[
+                m for m in HVACMode if m not in (HVACMode.HEAT, HVACMode.COOL)
+            ],
         ),
     ],
 )
@@ -132,6 +180,24 @@ async def test_climate_state_condition_behavior_any(
                 HVACMode.HEAT_COOL,
             ],
             other_states=[HVACMode.OFF],
+        ),
+        *(
+            param
+            for mode in HVACMode
+            for param in parametrize_condition_states_all(
+                condition="climate.is_hvac_mode",
+                condition_options={"hvac_mode": [mode]},
+                target_states=[mode],
+                other_states=[m for m in HVACMode if m != mode],
+            )
+        ),
+        *parametrize_condition_states_all(
+            condition="climate.is_hvac_mode",
+            condition_options={"hvac_mode": [HVACMode.HEAT, HVACMode.COOL]},
+            target_states=[HVACMode.HEAT, HVACMode.COOL],
+            other_states=[
+                m for m in HVACMode if m not in (HVACMode.HEAT, HVACMode.COOL)
+            ],
         ),
     ],
 )

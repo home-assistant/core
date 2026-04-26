@@ -293,7 +293,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 
     elk_temp_unit = elk.panel.temperature_units
     if elk_temp_unit == "C":
-        temperature_unit = UnitOfTemperature.CELSIUS
+        temperature_unit = UnitOfTemperature.CELSIUS  # type: ignore[unreachable]
     else:
         temperature_unit = UnitOfTemperature.FAHRENHEIT
     config["temperature_unit"] = temperature_unit

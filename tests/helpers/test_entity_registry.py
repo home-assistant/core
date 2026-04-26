@@ -1,5 +1,6 @@
 """Tests for the Entity Registry."""
 
+import asyncio
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
@@ -504,6 +505,49 @@ async def test_loading_saving_data(
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_entity_registry_loading_waits_for_device_registry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test entity registry waits for device registry when loaded concurrently.
+
+    Both registries are loaded in parallel during bootstrap via asyncio.gather.
+    The entity registry accesses device registry during loading. This test delays
+    the device registry store load so entity registry attempts to load first.
+    """
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "entity_id": "test.my_entity",
+                    "device_id": "some-device",
+                    "platform": "test_platform",
+                    "unique_id": "unique-1",
+                },
+            ]
+        },
+    }
+
+    original_load = dr.DeviceRegistryStore.async_load
+
+    async def delayed_load(self: dr.DeviceRegistryStore) -> Any:
+        await asyncio.sleep(0)
+        return await original_load(self)
+
+    dr.async_setup(hass)
+
+    with patch.object(dr.DeviceRegistryStore, "async_load", delayed_load):
+        await asyncio.gather(
+            er.async_load(hass),
+            dr.async_load(hass),
+        )
+
+    registry = er.async_get(hass)
+    assert registry.async_get("test.my_entity") is not None
+
+
 def test_get_available_entity_id_considers_registered_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -525,6 +569,94 @@ def test_get_available_entity_id_considers_existing_entities(
         entity_registry.async_get_available_entity_id("light", "kitchen")
         == "light.kitchen_2"
     )
+
+
+@pytest.mark.parametrize(
+    (
+        "device_name",
+        "object_id_base",
+        "suggested_object_id",
+        "user_name",
+        "expected_entity_id",
+    ),
+    [
+        (
+            None,
+            "My Sensor",
+            None,
+            None,
+            "sensor.my_sensor",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            None,
+            None,
+            "sensor.living_room_temperature",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            "custom_id",
+            None,
+            "sensor.custom_id",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            "custom_id",
+            "Humidity",
+            "sensor.living_room_humidity",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            None,
+            "Living Room Sensor",
+            "sensor.living_room_sensor",
+        ),
+    ],
+)
+def test_regenerate_entity_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_name: str | None,
+    object_id_base: str | None,
+    suggested_object_id: str | None,
+    user_name: str | None,
+    expected_entity_id: str,
+) -> None:
+    """Test regenerating entity IDs."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    device_id: str | None = None
+    if device_name is not None:
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name=device_name,
+        )
+        device_id = device_entry.id
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_id,
+        has_entity_name=True,
+        object_id_base=object_id_base,
+        original_name=object_id_base,
+        suggested_object_id=suggested_object_id,
+    )
+
+    if user_name is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, name=user_name)
+
+    new_entity_id = entity_registry.async_regenerate_entity_id(entry)
+    assert new_entity_id == expected_entity_id
 
 
 def test_is_registered(entity_registry: er.EntityRegistry) -> None:
@@ -640,7 +772,6 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
-                    "name_v2": None,
                     "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
@@ -675,7 +806,6 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
-                    "name_v2": None,
                     "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
@@ -710,7 +840,6 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
-                    "name_v2": None,
                     "options": None,
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -736,7 +865,6 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
-                    "name_v2": None,
                     "options": None,
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -1091,7 +1219,6 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "name_v2": None,
                     "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
@@ -1287,7 +1414,6 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "name_v2": None,
                     "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
@@ -1323,7 +1449,6 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "name_v2": None,
                     "options": {},
                     "options_undefined": True,
                     "orphaned_timestamp": None,
@@ -1456,7 +1581,6 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "name_v2": None,
                     "object_id_base": "Test Entity",
                     "options": {},
                     "original_device_class": "best_class",
@@ -1492,7 +1616,6 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "name_v2": None,
                     "options": {},
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -1510,10 +1633,14 @@ async def test_migration_1_18(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_20(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+async def test_migration_1_21(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> None:
-    """Test migration from version 1.20."""
+    """Test migration from version 1.21.
+
+    Version 1.21 stored entity names in a new format, but was reverted.
+    """
     hass_storage[dr.STORAGE_KEY] = {
         "version": dr.STORAGE_VERSION_MAJOR,
         "minor_version": dr.STORAGE_VERSION_MINOR,
@@ -1521,24 +1648,25 @@ async def test_migration_1_20(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": ["mock-config-entry"],
-                    "config_entries_subentries": {"mock-config-entry": [None]},
+                    "config_entries": ["mock_entry"],
+                    "config_entries_subentries": {"mock_entry": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
+                    "disabled_by_undefined": False,
                     "entry_type": None,
                     "hw_version": None,
-                    "id": "device-1",
-                    "identifiers": [["test", "device-1"]],
+                    "id": "device_1234",
+                    "identifiers": [["test", "device_1"]],
                     "labels": [],
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "My Device",
                     "name_by_user": None,
-                    "primary_config_entry": "mock-config-entry",
+                    "name": "My Device",
+                    "primary_config_entry": "mock_entry",
                     "serial_number": None,
                     "sw_version": None,
                     "via_device_id": None,
@@ -1547,237 +1675,121 @@ async def test_migration_1_20(
             "deleted_devices": [],
         },
     }
+
+    dr.async_setup(hass)
     await dr.async_load(hass)
 
-    # Entity registry data at version 1.20
+    entity_base = {
+        "aliases": [],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_id": "device_1234",
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "object_id_base": "Temperature",
+        "options": {},
+        "original_device_class": "temperature",
+        "original_icon": None,
+        "original_name": "Temperature",
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unit_of_measurement": None,
+        "device_class": None,
+    }
     hass_storage[er.STORAGE_KEY] = {
         "version": 1,
-        "minor_version": 20,
+        "minor_version": 21,
         "data": {
             "entities": [
                 {
-                    # Entity with name=None
-                    # name should be preserved
-                    # should add None to aliases
-                    "aliases": [],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.entity_name_no_custom",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-1",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": None,
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-1",
-                    "unit_of_measurement": None,
-                    "device_class": None,
-                },
-                {
-                    # Entity with no device_id
-                    # name should be preserved
-                    # should add None to aliases
-                    "aliases": [],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": None,
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.no_device",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-2",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Standalone Sensor",
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-2",
-                    "unit_of_measurement": None,
-                    "device_class": None,
-                },
-                {
-                    # Entity with name starting with device name
-                    # name should be stripped to remove device name prefix
-                    # should add None to aliases
-                    "aliases": [],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.name_with_device_prefix",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-3",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "My device temperature",
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-3",
-                    "unit_of_measurement": None,
-                    "device_class": None,
-                },
-                {
-                    # Entity with custom name not starting with device name
-                    # not exposed to any voice assistant
-                    # name should be preserved
-                    # should add None to aliases
-                    "aliases": [],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
+                    **entity_base,
                     "entity_id": "test.custom_name",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-4",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Living Room Light",
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-4",
-                    "unit_of_measurement": None,
-                    "device_class": None,
+                    "id": "entity_custom_name",
+                    "unique_id": "custom_name",
+                    "name": "My Custom Name",
+                    "name_v2": "My Custom Name",
                 },
                 {
-                    # Entity with custom name not starting with device name
-                    # exposed to conversation assistant
-                    # name should be preserved
-                    # should add name to aliases
-                    "aliases": [],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.custom_name_exposed",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-5",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Living Room Light",
-                    "object_id_base": "Test entity",
-                    "options": {
-                        "conversation": {"should_expose": True},
-                    },
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-5",
-                    "unit_of_measurement": None,
-                    "device_class": None,
+                    **entity_base,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "My Device Temperature",
+                    "name_v2": "Temperature",
+                },
+                {
+                    **entity_base,
+                    "entity_id": "test.stripped_and_renamed",
+                    "id": "entity_stripped_and_renamed",
+                    "unique_id": "stripped_and_renamed",
+                    "name": "My Device Temperature",
+                    "name_v2": "Heat",
                 },
             ],
-            "deleted_entities": [
-                {
-                    # Deleted entity
-                    # name should be reset to None
-                    # should add None to aliases
-                    "aliases": ["deleted_alias"],
-                    "area_id": None,
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_class": None,
-                    "disabled_by": None,
-                    "disabled_by_undefined": False,
-                    "entity_id": "test.deleted_entity",
-                    "hidden_by": None,
-                    "hidden_by_undefined": False,
-                    "icon": None,
-                    "id": "deleted-1",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Deleted Name",
-                    "options": {},
-                    "options_undefined": False,
-                    "orphaned_timestamp": None,
-                    "platform": "test_platform",
-                    "unique_id": "deleted-unique",
-                }
-            ],
+            "deleted_entities": [],
         },
     }
 
     await er.async_load(hass)
     registry = er.async_get(hass)
 
+    entry = registry.async_get_or_create("test", "super_platform", "custom_name")
+    assert entry.name == "My Custom Name"
+
+    entry = registry.async_get_or_create("test", "super_platform", "stripped")
+    assert entry.name == "My Device Temperature"
+
+    entry = registry.async_get_or_create(
+        "test", "super_platform", "stripped_and_renamed"
+    )
+    assert entry.name == "My Device Heat"
+
     # Check migrated data
     await flush_store(registry._store)
     migrated_data = hass_storage[er.STORAGE_KEY]
+
+    migrated_entity_base = {
+        "aliases": [],
+        "aliases_v2": [None],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_id": "device_1234",
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "object_id_base": "Temperature",
+        "options": {},
+        "original_device_class": "temperature",
+        "original_icon": None,
+        "original_name": "Temperature",
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unit_of_measurement": None,
+        "device_class": None,
+    }
     assert migrated_data == {
         "version": er.STORAGE_VERSION_MAJOR,
         "minor_version": er.STORAGE_VERSION_MINOR,
@@ -1785,211 +1797,28 @@ async def test_migration_1_20(
         "data": {
             "entities": [
                 {
-                    "aliases": [],
-                    "aliases_v2": [None],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.entity_name_no_custom",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-1",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": None,
-                    "name_v2": None,
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-1",
-                    "unit_of_measurement": None,
-                    "device_class": None,
-                },
-                {
-                    "aliases": [],
-                    "aliases_v2": [None],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": None,
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.no_device",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-2",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Standalone Sensor",
-                    "name_v2": "Standalone Sensor",
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-2",
-                    "unit_of_measurement": None,
-                    "device_class": None,
-                },
-                {
-                    "aliases": [],
-                    "aliases_v2": [None],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.name_with_device_prefix",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-3",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "My device temperature",
-                    "name_v2": "Temperature",
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-3",
-                    "unit_of_measurement": None,
-                    "device_class": None,
-                },
-                {
-                    "aliases": [],
-                    "aliases_v2": [None],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
+                    **migrated_entity_base,
                     "entity_id": "test.custom_name",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-4",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Living Room Light",
-                    "name_v2": "Living Room Light",
-                    "object_id_base": "Test entity",
-                    "options": {},
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-4",
-                    "unit_of_measurement": None,
-                    "device_class": None,
+                    "id": "entity_custom_name",
+                    "unique_id": "custom_name",
+                    "name": "My Custom Name",
                 },
                 {
-                    "aliases": [],
-                    "aliases_v2": ["Living Room Light"],
-                    "area_id": None,
-                    "capabilities": {},
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_id": "device-1",
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "entity_id": "test.custom_name_exposed",
-                    "has_entity_name": True,
-                    "hidden_by": None,
-                    "icon": None,
-                    "id": "entity-5",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Living Room Light",
-                    "name_v2": "Living Room Light",
-                    "object_id_base": "Test entity",
-                    "options": {
-                        "conversation": {"should_expose": True},
-                    },
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Test entity",
-                    "platform": "test_platform",
-                    "previous_unique_id": None,
-                    "suggested_object_id": None,
-                    "supported_features": 0,
-                    "translation_key": None,
-                    "unique_id": "unique-5",
-                    "unit_of_measurement": None,
-                    "device_class": None,
+                    **migrated_entity_base,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "My Device Temperature",
                 },
-            ],
-            "deleted_entities": [
                 {
-                    "aliases": ["deleted_alias"],
-                    "aliases_v2": [None, "deleted_alias"],
-                    "area_id": None,
-                    "categories": {},
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
-                    "device_class": None,
-                    "disabled_by": None,
-                    "disabled_by_undefined": False,
-                    "entity_id": "test.deleted_entity",
-                    "hidden_by": None,
-                    "hidden_by_undefined": False,
-                    "icon": None,
-                    "id": "deleted-1",
-                    "labels": [],
-                    "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Deleted Name",
-                    "name_v2": None,
-                    "options": {},
-                    "options_undefined": False,
-                    "orphaned_timestamp": None,
-                    "platform": "test_platform",
-                    "unique_id": "deleted-unique",
+                    **migrated_entity_base,
+                    "entity_id": "test.stripped_and_renamed",
+                    "id": "entity_stripped_and_renamed",
+                    "unique_id": "stripped_and_renamed",
+                    "name": "My Device Heat",
                 },
             ],
+            "deleted_entities": [],
         },
     }
 
@@ -3308,7 +3137,7 @@ async def test_has_entity_name_false_device_name_changes(
     assert updated.original_name_unprefixed == "Light Temperature"
 
     updated2 = entity_registry.async_get(entry2.entity_id)
-    assert updated2.name == "Brightness"
+    assert updated2.name == "Hue Brightness"
     assert updated2.original_name_unprefixed is None
 
     updated3 = entity_registry.async_get(entry3.entity_id)

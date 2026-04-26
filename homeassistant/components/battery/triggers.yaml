@@ -9,10 +9,17 @@
           - first
           - last
           - any
+  for: &trigger_for
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
 
 .battery_threshold_entity: &battery_threshold_entity
   - domain: input_number
     unit_of_measurement: "%"
+  - domain: number
+    device_class: battery
   - domain: sensor
     device_class: battery
 
@@ -40,21 +47,25 @@
 low:
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
   target: *trigger_target_battery
 
 not_low:
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
   target: *trigger_target_battery
 
 started_charging:
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
   target: *trigger_target_charging
 
 stopped_charging:
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
   target: *trigger_target_charging
 
 level_changed:
@@ -72,6 +83,7 @@ level_crossed_threshold:
   target: *trigger_target_percentage
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
     threshold:
       required: true
       selector:

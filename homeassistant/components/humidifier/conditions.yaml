@@ -13,6 +13,16 @@
             - all
             - any
 
+.condition_common_for: &condition_common_for
+  target: *condition_humidifier_target
+  fields:
+    behavior: *condition_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
 .humidity_threshold_entity: &humidity_threshold_entity
   - domain: input_number
     unit_of_measurement: "%"
@@ -27,10 +37,23 @@
   mode: box
   unit_of_measurement: "%"
 
-is_off: *condition_common
-is_on: *condition_common
+is_off: *condition_common_for
+is_on: *condition_common_for
 is_drying: *condition_common
 is_humidifying: *condition_common
+
+is_mode:
+  target: *condition_humidifier_target
+  fields:
+    behavior: *condition_behavior
+    mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: available_modes
+          multiple: true
 
 is_target_humidity:
   target: *condition_humidifier_target
