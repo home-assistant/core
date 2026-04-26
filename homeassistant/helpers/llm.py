@@ -1279,11 +1279,6 @@ class GetLiveContextTool(Tool):
         else:
             entities = list(exposed_entities["entities"].values())
 
-        if not entities:
-            return {
-                "success": False,
-                "error": "No entities matched the provided filter",
-            }
         prompt = [
             "Live Context: An overview of the areas and the devices in this smart home:",
             yaml_util.dump(entities),
