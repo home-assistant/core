@@ -1,6 +1,6 @@
 """Tests for the SolarEdge sensor platform."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -123,7 +123,7 @@ async def test_no_sensors_without_api_key(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry_web_login: MockConfigEntry,
-    solaredge_web_api: Mock,
+    solaredge_web_api: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no sensors are created when only web login auth is configured."""
