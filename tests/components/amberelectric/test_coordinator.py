@@ -148,55 +148,39 @@ async def test_fetch_no_general_site(
     )
 
 
-async def test_fetch_api_error_uses_cached_data(
-    hass: HomeAssistant, current_price_api: Mock
-) -> None:
-    """Test that cached data is returned for transient API failures below the threshold."""
+async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> None:
+    """Test that the old values are maintained if a second call fails."""
 
     current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(
         hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
     result = await data_service._async_update_data()
-    # Seed the coordinator's internal data cache so grace period logic can access it
-    data_service.data = result
 
-    current_price_api.get_current_prices.side_effect = ApiException(status=500)
+    current_price_api.get_current_prices.assert_called_with(
+        GENERAL_ONLY_SITE_ID,
+        next=288,
+        _request_timeout=REQUEST_TIMEOUT,
+    )
 
-    # First and second failures should return cached data without raising
-    for _ in range(2):
-        cached = await data_service._async_update_data()
-        assert cached["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
-        assert cached["grid"]["price_spike"] == "none"
+    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
+    assert result["forecasts"].get("general") == [
+        GENERAL_CHANNEL[1].actual_instance,
+        GENERAL_CHANNEL[2].actual_instance,
+        GENERAL_CHANNEL[3].actual_instance,
+    ]
+    assert result["current"].get("controlled_load") is None
+    assert result["forecasts"].get("controlled_load") is None
+    assert result["current"].get("feed_in") is None
+    assert result["forecasts"].get("feed_in") is None
+    assert result["grid"]["renewables"] == round(
+        GENERAL_CHANNEL[0].actual_instance.renewables
+    )
+    assert result["grid"]["price_spike"] == "none"
 
-    # Third consecutive failure exceeds threshold and should raise
+    current_price_api.get_current_prices.side_effect = ApiException(status=403)
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
-
-
-async def test_fetch_api_error_counter_resets_on_success(
-    hass: HomeAssistant, current_price_api: Mock
-) -> None:
-    """Test that the consecutive failure counter resets after a successful fetch."""
-
-    current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
-    data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
-    )
-    result = await data_service._async_update_data()
-    data_service.data = result
-
-    # Trigger two failures (below threshold — returns cached data)
-    current_price_api.get_current_prices.side_effect = ApiException(status=500)
-    for _ in range(2):
-        await data_service._async_update_data()
-    assert data_service._consecutive_failures == 2
-
-    # Successful fetch resets the counter
-    current_price_api.get_current_prices.side_effect = None
-    current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
-    await data_service._async_update_data()
-    assert data_service._consecutive_failures == 0
 
 
 async def test_fetch_general_and_controlled_load_site(

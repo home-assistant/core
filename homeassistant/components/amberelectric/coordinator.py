@@ -21,12 +21,6 @@ from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
-CONSECUTIVE_FAILURE_THRESHOLD = 3
-
-
-class AmberApiError(UpdateFailed):
-    """Raised when a transient API or network error occurs fetching Amber data."""
-
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a CurrentInterval."""
@@ -79,12 +73,6 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         self._api_client = api_client
         self._api = api
         self.site_id = site_id
-        self._consecutive_failures = 0
-
-    @property
-    def data_is_stale(self) -> bool:
-        """Return true if the coordinator is serving cached data due to API failures."""
-        return self._consecutive_failures > 0
 
     def close(self) -> None:
         """Close the underlying API client connection pool."""
@@ -106,11 +94,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
                 _request_timeout=REQUEST_TIMEOUT,
             )
         except ApiException as api_exception:
-            raise AmberApiError(
+            raise UpdateFailed(
                 f"Amber API error: {api_exception.status} {api_exception.reason}"
             ) from api_exception
         except (OSError, TimeoutError) as err:
-            raise AmberApiError(f"Error communicating with Amber API: {err}") from err
+            raise UpdateFailed(f"Error communicating with Amber API: {err}") from err
 
         intervals = [interval.actual_instance for interval in data]
 
@@ -159,17 +147,4 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
-        try:
-            data = await self.hass.async_add_executor_job(self.update_price_data)
-        except AmberApiError:
-            self._consecutive_failures += 1
-            if self._consecutive_failures < CONSECUTIVE_FAILURE_THRESHOLD and self.data:
-                LOGGER.debug(
-                    "Amber API call failed (attempt %d/%d), using cached data",
-                    self._consecutive_failures,
-                    CONSECUTIVE_FAILURE_THRESHOLD,
-                )
-                return self.data
-            raise
-        self._consecutive_failures = 0
-        return data
+        return await self.hass.async_add_executor_job(self.update_price_data)
