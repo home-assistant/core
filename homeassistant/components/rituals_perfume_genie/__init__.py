@@ -13,8 +13,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, DOMAIN, UPDATE_INTERVAL
-from .coordinator import RitualsDataUpdateCoordinator
+from .const import ACCOUNT_HASH, UPDATE_INTERVAL
+from .coordinator import RitualsConfigEntry, RitualsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     # Initiate reauth for old config entries which don't have username / password in the entry data
     if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
@@ -87,19 +87,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback

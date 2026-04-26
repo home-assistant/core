@@ -33,7 +33,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_energy_usage_today(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -51,7 +51,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_current_hour_price"
-    assert state.state == "0.22541"
+    assert state.state == "-0.00226"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Current hour"
@@ -72,7 +72,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_average_price"
-    assert state.state == "0.17665"
+    assert state.state == "0.09516"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Average - today"
@@ -90,7 +90,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_max_price"
-    assert state.state == "0.24677"
+    assert state.state == "0.15082"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Highest price - today"
@@ -110,7 +110,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_highest_price_time"
-    assert state.state == "2023-01-19T16:00:00+00:00"
+    assert state.state == "2026-04-19T18:00:00+00:00"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Time of highest price - today"
@@ -140,7 +140,7 @@ async def test_energy_usage_today(
     assert (
         entry.unique_id == f"{entry_id}_today_energy_usage_hours_priced_equal_or_lower"
     )
-    assert state.state == "21"
+    assert state.state == "2"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Hours priced equal or lower than current - today"
@@ -148,7 +148,7 @@ async def test_energy_usage_today(
     assert ATTR_DEVICE_CLASS not in state.attributes
 
 
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_energy_return_today(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -166,7 +166,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_current_hour_price"
-    assert state.state == "0.18629"
+    assert state.state == "-0.00226"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Current hour"
@@ -187,7 +187,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_average_price"
-    assert state.state == "0.14599"
+    assert state.state == "0.09516"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Average - today"
@@ -205,7 +205,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_max_price"
-    assert state.state == "0.20394"
+    assert state.state == "0.15082"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Highest price - today"
@@ -225,7 +225,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_highest_price_time"
-    assert state.state == "2023-01-19T16:00:00+00:00"
+    assert state.state == "2026-04-19T18:00:00+00:00"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Time of highest price - today"
@@ -256,7 +256,7 @@ async def test_energy_return_today(
         entry.unique_id
         == f"{entry_id}_today_energy_return_hours_priced_equal_or_higher"
     )
-    assert state.state == "3"
+    assert state.state == "23"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Hours priced equal or higher than current - today"
@@ -264,7 +264,7 @@ async def test_energy_return_today(
     assert ATTR_DEVICE_CLASS not in state.attributes
 
 
-@pytest.mark.freeze_time("2023-01-19 10:00:00")
+@pytest.mark.freeze_time("2026-04-19 10:00:00+00:00")
 async def test_gas_today(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -280,7 +280,7 @@ async def test_gas_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_gas_current_hour_price"
-    assert state.state == "0.7253"
+    assert state.state == "0.6169"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Gas market price Current hour"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -301,7 +301,7 @@ async def test_gas_today(
     assert not device_entry.sw_version
 
 
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_no_gas_today(
     hass: HomeAssistant, mock_easyenergy: MagicMock, init_integration: MockConfigEntry
 ) -> None:
