@@ -3500,11 +3500,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
             options=options,
         )
         if reload_even_if_entry_is_unchanged or result:
-            report_usage(
-                "has an update listener and will reload twice",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.11.0",
-            )
+            if entry.update_listeners:
+                report_usage(
+                    "has an update listener and will reload twice",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2026.11.0",
+                )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         if reason is UNDEFINED:
             reason = "reauth_successful"
