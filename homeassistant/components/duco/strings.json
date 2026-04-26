@@ -56,6 +56,12 @@
       "iaq_rh": {
         "name": "Humidity air quality index"
       },
+      "target_flow_level": {
+        "name": "Target flow level"
+      },
+      "time_state_remain": {
+        "name": "Mode time remaining"
+      },
       "ventilation_state": {
         "name": "Ventilation state",
         "state": {

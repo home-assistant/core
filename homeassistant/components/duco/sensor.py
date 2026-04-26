@@ -20,6 +20,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -67,6 +68,28 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda node: node.sensor.temp if node.sensor else None,
         node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
+    ),
+    DucoSensorEntityDescription(
+        key="target_flow_level",
+        translation_key="target_flow_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda node: (
+            node.ventilation.flow_lvl_tgt if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="time_state_remain",
+        translation_key="time_state_remain",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        value_fn=lambda node: (
+            node.ventilation.time_state_remain if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
         key="box_temperature",
