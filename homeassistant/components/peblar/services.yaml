@@ -1,0 +1,35 @@
+list_rfid_tokens:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+
+add_rfid_token:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    uid:
+      required: true
+      selector:
+        text:
+    description:
+      required: true
+      selector:
+        text:
+
+remove_rfid_token:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    uid:
+      required: true
+      selector:
+        text:

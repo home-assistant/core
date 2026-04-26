@@ -146,6 +146,38 @@ async def test_remove_rfid_token(
     mock_peblar.delete_rfid_token.assert_called_once_with(uid="AA:BB:CC:DD")
 
 
+async def test_unloaded_config_entry_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test service raises ServiceValidationError for an unloaded entry."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id="second-charger",
+    )
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "list_rfid_tokens",
+            {"config_entry_id": init_integration.entry_id},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_config_entry"
+
+
 async def test_invalid_config_entry_raises(
     hass: HomeAssistant,
     mock_peblar: MagicMock,

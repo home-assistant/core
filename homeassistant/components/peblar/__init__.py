@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import cast
 
 import voluptuous as vol
 from aiohttp import CookieJar
@@ -14,6 +15,7 @@ from peblar import (
     PeblarError,
 )
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import (
@@ -99,14 +101,14 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     def _get_peblar(call: ServiceCall) -> Peblar:
         entry_id: str = call.data["config_entry_id"]
-        entry: PeblarConfigEntry | None = hass.config_entries.async_get_entry(entry_id)  # type: ignore[assignment]
-        if entry is None or entry.domain != DOMAIN:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_config_entry",
                 translation_placeholders={"config_entry_id": entry_id},
             )
-        return entry.runtime_data.user_configuration_coordinator.peblar
+        return cast(PeblarConfigEntry, entry).runtime_data.user_configuration_coordinator.peblar
 
     async def _handle_list_rfid_tokens(call: ServiceCall) -> ServiceResponse:
         peblar = _get_peblar(call)

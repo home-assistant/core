@@ -1,4 +1,15 @@
 {
+  "services": {
+    "list_rfid_tokens": {
+      "service": "mdi:card-account-details"
+    },
+    "add_rfid_token": {
+      "service": "mdi:card-plus"
+    },
+    "remove_rfid_token": {
+      "service": "mdi:card-remove"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "active_error_codes": {
