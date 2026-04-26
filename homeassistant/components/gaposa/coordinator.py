@@ -6,17 +6,21 @@ from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
 from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException, Motor
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
+
+if TYPE_CHECKING:
+    from . import GaposaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,14 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     """Fetch state for every Gaposa motor on the account."""
 
+    config_entry: GaposaConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: GaposaConfigEntry,
         *,
-        api_key: str,
-        username: str,
-        password: str,
         name: str,
         update_interval: timedelta,
     ) -> None:
@@ -43,31 +46,23 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
             name=name,
             update_interval=update_interval,
         )
-        self._api_key = api_key
-        self._username = username
-        self._password = password
         self.gaposa: Gaposa | None = None
         self.devices: list[Device] = []
         self._listener: Callable[[], None] | None = None
 
     async def _async_setup(self) -> None:
-        """Log in to the Gaposa API once, before the first refresh.
-
-        ``DataUpdateCoordinator`` calls this method exactly once as part
-        of ``async_config_entry_first_refresh``, so it's the right place
-        to do any one-time connection / authentication work. If login
-        fails, the freshly-constructed Gaposa client is closed so nothing
-        is left hanging; ``self.gaposa`` is only assigned on success so
-        async_shutdown never sees a half-initialized client.
-        """
+        """Log in to the Gaposa API once, before the first refresh."""
         websession = async_get_clientsession(self.hass)
-        gaposa = Gaposa(self._api_key, websession=websession)
+        gaposa = Gaposa(self.config_entry.data[CONF_API_KEY], websession=websession)
         try:
             async with timeout(10):
-                await gaposa.login(self._username, self._password)
+                await gaposa.login(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
+                )
         except (GaposaAuthException, FirebaseAuthException) as exc:
             await gaposa.close()
-            raise ConfigEntryAuthFailed("Gaposa authentication failed") from exc
+            raise ConfigEntryNotReady("Gaposa authentication failed") from exc
         except (ClientError, TimeoutError, OSError) as exc:
             await gaposa.close()
             raise ConfigEntryNotReady(f"Error connecting to Gaposa: {exc}") from exc
@@ -80,16 +75,23 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         try:
             async with timeout(10):
                 await self.gaposa.update()
-        except (GaposaAuthException, FirebaseAuthException) as exc:
-            raise ConfigEntryAuthFailed("Gaposa authentication failed") from exc
-        except (ClientError, TimeoutError, OSError) as exc:
+        except (
+            GaposaAuthException,
+            FirebaseAuthException,
+            ClientError,
+            TimeoutError,
+            OSError,
+        ) as exc:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
 
-        # Attach a listener to every new device so document-level pushes
-        # from pygaposa trigger async_set_updated_data.
+        # pygaposa polls the Firestore REST API internally after commands
+        # (every 2 s for ~20 s). Register a listener on each device so
+        # those rapid post-command polls push fresh data to our entities
+        # via async_set_updated_data, rather than waiting for the next
+        # coordinator poll (600 s).
         if self._listener is None:
-            self._listener = self.on_document_updated
+            self._listener = self._on_device_polled
 
         current_devices: list[Device] = []
         for client, _user in self.gaposa.clients:
@@ -104,7 +106,6 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
 
         self.devices = current_devices
 
-        # Recovered from a transient failure — restore the normal interval.
         self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         return self._get_data_from_devices()
@@ -124,20 +125,18 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
                     data[f"{device.serial}.motors.{motor.id}"] = motor
         return data
 
-    def on_document_updated(self) -> None:
-        """Push fresh data to subscribers when pygaposa notifies us."""
-        _LOGGER.debug("Gaposa document updated, pushing new data")
+    def _on_device_polled(self) -> None:
+        """Called by pygaposa after each internal poll of a device document.
+
+        This fires during pygaposa's rapid post-command polling (every ~2 s)
+        and pushes the latest motor state to all coordinator subscribers
+        without waiting for the next scheduled coordinator refresh.
+        """
+        _LOGGER.debug("Gaposa device polled, pushing new data")
         self.async_set_updated_data(self._get_data_from_devices())
 
     async def async_shutdown(self) -> None:
-        """Detach push listeners and close the Gaposa session on unload.
-
-        ``DataUpdateCoordinator.async_shutdown`` stops the refresh timer;
-        we override it to also detach every ``on_document_updated`` listener
-        we attached to pygaposa ``Device`` objects and close the aiohttp
-        session pygaposa owns. Without this, push callbacks can fire after
-        the config entry has been unloaded.
-        """
+        """Detach listeners and close the Gaposa session."""
         await super().async_shutdown()
         if self._listener is not None:
             for device in self.devices:

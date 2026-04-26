@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import UPDATE_INTERVAL
@@ -21,16 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bo
     coordinator = DataUpdateCoordinatorGaposa(
         hass,
         entry,
-        api_key=entry.data[CONF_API_KEY],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
         name=entry.title,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
-    # If the first refresh fails (ConfigEntryNotReady, auth error,
-    # etc.), HA enters SETUP_RETRY without calling async_unload_entry.
-    # Shut the coordinator down explicitly so the Gaposa client and
-    # any push-notification listeners don't leak across retries.
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception:
