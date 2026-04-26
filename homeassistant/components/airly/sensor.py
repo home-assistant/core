@@ -178,7 +178,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airly sensor entities based on a config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME) or entry.title
 
     coordinator = entry.runtime_data
 

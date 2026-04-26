@@ -43,7 +43,6 @@ async def test_config_not_ready(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
             "use_nearest": True,
         },
     )
@@ -65,7 +64,6 @@ async def test_config_without_unique_id(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -90,7 +88,6 @@ async def test_config_with_turned_off_station(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -122,7 +119,6 @@ async def test_update_interval(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -157,7 +153,6 @@ async def test_update_interval(
             "api_key": "foo",
             "latitude": 66.66,
             "longitude": 111.11,
-            "name": "Work",
         },
     )
 
@@ -216,7 +211,6 @@ async def test_migrate_device_entry(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
