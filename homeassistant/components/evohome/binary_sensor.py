@@ -27,11 +27,18 @@ from .entity import unique_zone_id
 type EvoDevice = evo.Gateway | evo.ControlSystem | evo.HotWater | evo.Zone
 
 
-# Map a fault_type strEnum suffix to its category (i.e. device class)
+# BoilerCommunicationLost and ChValveCommunicationLost are TCS-level faults meaning the
+# controller device cannot see its RF components; a PROBLEM, not a connectivity issue
+_FAULT_TYPE_TO_CATEGORY: dict[str, BinarySensorDeviceClass] = {
+    "BoilerCommunicationLost": BinarySensorDeviceClass.PROBLEM,
+    "ChValveCommunicationLost": BinarySensorDeviceClass.PROBLEM,
+}
+
+# Fallback: match by suffix; anything else (including "Failure") is PROBLEM
 _FAULT_TYPE_SUFFIX_TO_CATEGORY: dict[str, BinarySensorDeviceClass] = {
     "CommunicationLost": BinarySensorDeviceClass.CONNECTIVITY,
     "LowBattery": BinarySensorDeviceClass.BATTERY,
-}  # "Failure": BinarySensorDeviceClass.PROBLEM, all others, incl. unknown, are PROBLEM
+}
 
 # The category state when a fault is present (connectivity is inverted)
 _CATEGORY_TRUE_WHEN_FAULT: dict[BinarySensorDeviceClass, bool] = {
@@ -124,7 +131,9 @@ def _normalize_fault(fault: EvoActiveFaultResponseT) -> dict[str, datetime | str
 
 
 def _category_of_fault(fault_type: str) -> BinarySensorDeviceClass:
-    """Return the category a fault_type belongs to (suffix match)."""
+    """Return the category a fault_type belongs to."""
+    if category := _FAULT_TYPE_TO_CATEGORY.get(fault_type):
+        return category
     for suffix, category in _FAULT_TYPE_SUFFIX_TO_CATEGORY.items():
         if fault_type.endswith(suffix):
             return category
