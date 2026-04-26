@@ -270,6 +270,7 @@ def validate_segments(
                 not isinstance(item.get("id"), str)
                 or not isinstance(item.get("name"), str)
                 or ("group" in item and not isinstance(item["group"], str))
+                or not set(item).issubset({"id", "name", "group"})
             ):
                 template_validators.log_validation_result_error(
                     entity,
@@ -279,7 +280,7 @@ def validate_segments(
                     " and string values",
                 )
                 return None
-            
+
             segments.append(Segment(**item))
         return segments
 
