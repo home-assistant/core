@@ -107,7 +107,7 @@ class FreeSMSNotifyEntity(NotifyEntity):
         self._attr_unique_id = config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name="Free Mobile",
+            name=config_entry.title,
         )
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
