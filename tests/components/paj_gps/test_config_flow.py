@@ -5,8 +5,8 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
+import pytest
 
-from homeassistant.components.paj_gps.config_flow import _validate_credentials
 from homeassistant.components.paj_gps.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -21,34 +21,24 @@ VALID_USER_INPUT = {
 }
 
 
-async def test_no_input_returns_form(
+async def test_full_user_flow(
     hass: HomeAssistant,
     mock_paj_gps_api: AsyncMock,
 ) -> None:
-    """Calling async_step_user() with no input must return a form with step_id 'user'."""
+    """Full user flow must show a form then create an entry with the correct data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-
-async def test_valid_input_creates_entry(
-    hass: HomeAssistant,
-    mock_paj_gps_api: AsyncMock,
-) -> None:
-    """Valid input must create an entry with the email as title and correct data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=VALID_USER_INPUT,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == VALID_USER_INPUT[CONF_EMAIL]
-    assert result["data"][CONF_EMAIL] == VALID_USER_INPUT[CONF_EMAIL]
-    assert result["data"][CONF_PASSWORD] == VALID_USER_INPUT[CONF_PASSWORD]
+    assert result["data"] == VALID_USER_INPUT
 
 
 async def test_duplicate_email_aborts(
@@ -72,12 +62,22 @@ async def test_duplicate_email_aborts(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (AuthenticationError("bad creds"), "invalid_auth"),
+        (TokenRefreshError("refresh failed"), "invalid_auth"),
+        (ConnectionError("timeout"), "unknown"),
+    ],
+)
 async def test_invalid_credentials_shows_form_error(
     hass: HomeAssistant,
     mock_paj_gps_api: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Authentication failure must re-show the form with an error."""
-    mock_paj_gps_api.login.side_effect = AuthenticationError("bad creds")
+    """Credential errors must re-show the form with the correct error key."""
+    mock_paj_gps_api.login.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -86,48 +86,11 @@ async def test_invalid_credentials_shows_form_error(
         user_input=VALID_USER_INPUT,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_error}
 
-
-# ---------------------------------------------------------------------------
-# _validate_credentials unit tests
-# ---------------------------------------------------------------------------
-
-
-async def test_validate_credentials_returns_none_on_success(
-    hass: HomeAssistant,
-    mock_paj_gps_api: AsyncMock,
-) -> None:
-    """A successful login must return None (no error)."""
-    result = await _validate_credentials("user@example.com", "secret", hass)
-    assert result is None
-
-
-async def test_validate_credentials_returns_invalid_auth_on_authentication_error(
-    hass: HomeAssistant,
-    mock_paj_gps_api: AsyncMock,
-) -> None:
-    """AuthenticationError from login() must map to 'invalid_auth'."""
-    mock_paj_gps_api.login.side_effect = AuthenticationError("bad creds")
-    result = await _validate_credentials("user@example.com", "wrong", hass)
-    assert result == "invalid_auth"
-
-
-async def test_validate_credentials_returns_invalid_auth_on_token_refresh_error(
-    hass: HomeAssistant,
-    mock_paj_gps_api: AsyncMock,
-) -> None:
-    """TokenRefreshError from login() must map to 'invalid_auth'."""
-    mock_paj_gps_api.login.side_effect = TokenRefreshError("refresh failed")
-    result = await _validate_credentials("user@example.com", "secret", hass)
-    assert result == "invalid_auth"
-
-
-async def test_validate_credentials_returns_unknown_on_generic_exception(
-    hass: HomeAssistant,
-    mock_paj_gps_api: AsyncMock,
-) -> None:
-    """Any unexpected exception from login() must map to 'unknown'."""
-    mock_paj_gps_api.login.side_effect = ConnectionError("timeout")
-    result = await _validate_credentials("user@example.com", "secret", hass)
-    assert result == "unknown"
+    mock_paj_gps_api.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=VALID_USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
