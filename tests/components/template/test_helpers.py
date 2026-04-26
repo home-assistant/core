@@ -59,6 +59,7 @@ from homeassistant.components.template.update import (
 from homeassistant.components.template.vacuum import (
     LEGACY_FIELDS as VACUUM_LEGACY_FIELDS,
     SCRIPT_FIELDS as VACUUM_SCRIPT_FIELDS,
+    SERVICE_CLEAN_AREA as VACUUM_SERVICE_CLEAN_AREA,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -578,8 +579,14 @@ async def _setup_and_test_yaml_device_action(
         ),
         (
             "vacuum",
-            VACUUM_SCRIPT_FIELDS,
-            {"fan_speeds": ["low", "medium", "high"]},
+            [
+                service
+                for service in VACUUM_SCRIPT_FIELDS
+                if service != VACUUM_SERVICE_CLEAN_AREA
+            ],
+            {
+                "fan_speeds": ["low", "medium", "high"],
+            },
             (
                 ("start", {}),
                 ("pause", {}),
@@ -773,7 +780,11 @@ async def test_yaml_device_actions_modern_config(
         ),
         (
             "vacuum",
-            VACUUM_SCRIPT_FIELDS,
+            [
+                service
+                for service in VACUUM_SCRIPT_FIELDS
+                if service != VACUUM_SERVICE_CLEAN_AREA
+            ],
             {
                 "fan_speeds": ["low", "medium", "high"],
                 "state": "{{ 'on' }}",
