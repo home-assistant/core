@@ -40,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> bo
     try:
         await gateway.async_setup()
     except Exception as e:
-        raise ConfigEntryError("gateway_setup_failed") from e
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="gateway_setup_failed"
+        ) from e
     entry.runtime_data = gateway
 
     # Register gateway

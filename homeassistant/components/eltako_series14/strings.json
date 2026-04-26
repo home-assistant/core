@@ -18,14 +18,14 @@
           "auto_reconnect": "Automatic reconnection",
           "fast_status_change": "Fast status change",
           "id": "Base ID",
-          "message_delay": "Message delay (ms)",
+          "message_delay": "Message delay (s)",
           "model": "Model",
           "name": "[%key:common::config_flow::data::name%]",
           "serial_port": "[%key:common::config_flow::data::usb_path%]"
         },
         "data_description": {
           "auto_reconnect": "If selected the gateway automatically tries to reconnect after the connection is lost.",
-          "fast_status_change": "It takes some time for the Eltako actuators to send a confirmation once a command has been send. Therefore this option will directly change the state in the UI, to create a more responsive expereince.",
+          "fast_status_change": "It takes some time for the Eltako actuators to send a confirmation once a command has been sent. Therefore this option will directly change the state in the UI, to create a more responsive experience.",
           "id": "This is the base ID of the gateway. The sending IDs will be based on it.\nThis is not the device's ID inside the Eltako BUS.\nFor wired devices it is recommended to use (00-00-B0-00)\nFor wireless devices like the USB300 you need to add its own base ID (FF-XX-XX-XX).",
           "message_delay": "The delay between two sending messages to prevent buffer overflow on the gateway.",
           "model": "The gateway's device model.",

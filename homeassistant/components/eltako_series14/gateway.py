@@ -57,7 +57,7 @@ class EltakoGateway:
         self._bus: RS485SerialInterfaceV2 | None = None
         self._address_subscriptions: dict[Any, list[MessageCallback]] = {}
         self._general_subscriptions: list[Callable[[], None]] = []
-        self._connection_state_subscriptons: list[GwConnectionCallback] = []
+        self._connection_state_subscriptions: list[GwConnectionCallback] = []
 
     def _init_bus(self) -> None:
         """Initialize the serial bus."""
@@ -112,18 +112,18 @@ class EltakoGateway:
         # Return an "unsubscribe" function
         return lambda: self._general_subscriptions.remove(callback)
 
-    def susbcribe_connection_state(
+    def subscribe_connection_state(
         self, callback: GwConnectionCallback
     ) -> Callable[[], None]:
         """Register a callback for the gateway connection state."""
-        self._connection_state_subscriptons.append(callback)
+        self._connection_state_subscriptions.append(callback)
         if self._bus:
             callback(self._bus.is_active())
         # Return an "unsubscribe" function
-        return lambda: self._connection_state_subscriptons.remove(callback)
+        return lambda: self._connection_state_subscriptions.remove(callback)
 
     def _fire_connection_state_changed_event(self, status: bool) -> None:
-        for callback in self._connection_state_subscriptons:
+        for callback in self._connection_state_subscriptions:
             callback(status)
 
     async def async_send_message_to_serial_bus(self, msg: ESP2Message) -> None:

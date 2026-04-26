@@ -58,5 +58,5 @@ class EltakoEntity(Entity, ABC):
         """Update the internal state of the device when a message arrives."""
 
     async def async_send_message(self, msg: ESP2Message) -> None:
-        """Put message on RS485 bus. First the message is put onto HA event bus so that other automations can react on messages."""
+        """Send a message to the RS485 bus through the gateway."""
         await self.gateway.async_send_message_to_serial_bus(msg)
