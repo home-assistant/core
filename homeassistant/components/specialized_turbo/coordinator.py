@@ -16,18 +16,19 @@ from bleak_retry_connector import establish_connection
 from specialized_turbo import (
     CHAR_NOTIFY,
     BLEProfile,
+    ProtocolSession,
+    TCU1Session,
     TelemetrySnapshot,
     detect_generation,
     get_char_notify,
     get_char_request_read,
     get_char_request_write,
     identify_tcx,
+    is_framed_packet,
     parse_notification,
     poll_tcu1,
     poll_tcx,
 )
-from specialized_turbo.framing import is_framed_packet
-from specialized_turbo.session import ProtocolSession, TCU1Session
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
@@ -91,7 +92,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             return True
 
         if self._last_poll_time == 0:
-            return False
+            return True
         return (time.monotonic() - self._last_poll_time) >= _POLL_INTERVAL
 
     async def _do_poll(
@@ -104,6 +105,12 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         except BleakError:
             self._client = None
             raise
+
+        # Derive char UUIDs if generation was detected (from advertisements)
+        # after the initial connection was made without it.
+        if self._generation is not None and self._char_request_write is None:
+            self._char_request_write = get_char_request_write(self._generation)
+            self._char_request_read = get_char_request_read(self._generation)
 
         if (
             self._client is None

@@ -2,76 +2,62 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from specialized_turbo import AssistLevel, TelemetrySnapshot
+from specialized_turbo.session import TCU1Session
+import pytest
 
 from homeassistant.components.specialized_turbo.sensor import (
     PARALLEL_UPDATES,
     SENSOR_DESCRIPTIONS,
-    SpecializedSensorEntityDescription,
-    _assist_level_name,
 )
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
-# --- Value function tests ---
+from .conftest import TCX_SERVICE_INFO
 
+from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info
 
-def test_battery_charge_pct() -> None:
-    """Test battery charge percent value function."""
-    snap = TelemetrySnapshot()
-    snap.battery.charge_pct = 85
-    desc = _get_desc("battery_charge_percent")
-    assert desc.value_fn(snap) == 85
-
-
-def test_speed() -> None:
-    """Test speed value function."""
-    snap = TelemetrySnapshot()
-    snap.motor.speed_kmh = 25.5
-    desc = _get_desc("speed")
-    assert desc.value_fn(snap) == 25.5
+BATTERY_ENTITY_ID = "sensor.mock_title"
+SPEED_ENTITY_ID = "sensor.mock_title_2"
+ASSIST_LEVEL_ENTITY_ID = "sensor.mock_title_assist_level"
 
 
-# --- Assist level name function ---
+@pytest.fixture
+def mock_ble_coordinator() -> Generator[MagicMock]:
+    """Mock BLE coordinator connection dependencies for sensor tests."""
+    mock_client = MagicMock(is_connected=True)
+    mock_client.start_notify = AsyncMock()
+    mock_client.stop_notify = AsyncMock()
+    mock_client.disconnect = AsyncMock()
+    mock_client.pair = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.specialized_turbo.coordinator.establish_connection",
+            new_callable=AsyncMock,
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.specialized_turbo.coordinator.identify_tcx",
+            new_callable=AsyncMock,
+            return_value=TCU1Session(),
+        ),
+    ):
+        yield mock_client
 
 
-def test_assist_level_name_none() -> None:
-    """Test assist level name when None."""
-    snap = TelemetrySnapshot()
-    assert _assist_level_name(snap) is None
-
-
-def test_assist_level_name_off() -> None:
-    """Test assist level name for OFF."""
-    snap = TelemetrySnapshot()
-    snap.motor.assist_level = AssistLevel.OFF
-    assert _assist_level_name(snap) == "off"
-
-
-def test_assist_level_name_eco() -> None:
-    """Test assist level name for ECO."""
-    snap = TelemetrySnapshot()
-    snap.motor.assist_level = AssistLevel.ECO
-    assert _assist_level_name(snap) == "eco"
-
-
-def test_assist_level_name_trail() -> None:
-    """Test assist level name for TRAIL."""
-    snap = TelemetrySnapshot()
-    snap.motor.assist_level = AssistLevel.TRAIL
-    assert _assist_level_name(snap) == "trail"
-
-
-def test_assist_level_name_turbo() -> None:
-    """Test assist level name for TURBO."""
-    snap = TelemetrySnapshot()
-    snap.motor.assist_level = AssistLevel.TURBO
-    assert _assist_level_name(snap) == "turbo"
-
-
-def test_assist_level_name_unknown_int() -> None:
-    """Test assist level name with unknown int value."""
-    snap = TelemetrySnapshot()
-    snap.motor.assist_level = 99
-    assert _assist_level_name(snap) is None
+async def _setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the integration (call inside mock_ble_coordinator fixture scope)."""
+    mock_config_entry.add_to_hass(hass)
+    inject_bluetooth_service_info(hass, TCX_SERVICE_INFO)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 # --- Sensor description metadata ---
@@ -103,12 +89,100 @@ def test_value_fn_returns_none_for_empty_snapshot() -> None:
         assert value is None, f"{desc.key} returned {value} for empty snapshot"
 
 
-# --- Helper ---
+# --- Entity state tests ---
 
 
-def _get_desc(key: str) -> SpecializedSensorEntityDescription:
-    """Get a sensor description by key."""
-    for desc in SENSOR_DESCRIPTIONS:
-        if desc.key == key:
-            return desc
-    raise KeyError(f"No sensor description with key {key}")
+@pytest.mark.usefixtures("mock_ble_coordinator")
+async def test_sensors_unavailable_before_first_message(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that sensors are unavailable before any BLE message is received."""
+    await _setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(BATTERY_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_ble_coordinator")
+async def test_battery_sensor_state(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test battery charge percent sensor reflects snapshot value."""
+    await _setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    coordinator.snapshot.battery.charge_pct = 85
+    coordinator.snapshot.message_count = 1
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(BATTERY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "85"
+
+
+@pytest.mark.usefixtures("mock_ble_coordinator")
+async def test_speed_sensor_state(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test speed sensor reflects snapshot value."""
+    await _setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    coordinator.snapshot.motor.speed_kmh = 25.5
+    coordinator.snapshot.message_count = 1
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SPEED_ENTITY_ID)
+    assert state is not None
+    assert state.state == "25.5"
+
+
+@pytest.mark.parametrize(
+    ("assist_level", "expected_state"),
+    [
+        (AssistLevel.OFF, "off"),
+        (AssistLevel.ECO, "eco"),
+        (AssistLevel.TRAIL, "trail"),
+        (AssistLevel.TURBO, "turbo"),
+    ],
+)
+@pytest.mark.usefixtures("mock_ble_coordinator")
+async def test_assist_level_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    assist_level: AssistLevel,
+    expected_state: str,
+) -> None:
+    """Test assist level sensor maps enum values to lowercase strings."""
+    await _setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    coordinator.snapshot.motor.assist_level = assist_level
+    coordinator.snapshot.message_count = 1
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ASSIST_LEVEL_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("mock_ble_coordinator")
+async def test_assist_level_unknown_int(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test assist level sensor returns unknown for unrecognized int values."""
+    await _setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    coordinator.snapshot.motor.assist_level = 99
+    coordinator.snapshot.message_count = 1
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ASSIST_LEVEL_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

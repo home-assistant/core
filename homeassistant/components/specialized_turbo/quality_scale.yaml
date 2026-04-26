@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: Integration does not register service actions.
-  appropriate-polling:
-    status: exempt
-    comment: Push-based BLE integration using GATT notifications with periodic request-read polling at a fixed interval.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
