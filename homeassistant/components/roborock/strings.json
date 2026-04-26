@@ -129,6 +129,13 @@
           "vacuum": "Vacuum only"
         }
       },
+      "cleaning_route": {
+        "name": "Cleaning route",
+        "state": {
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "deep": "[%key:component::roborock::entity::select::mop_mode::state::deep%]"
+        }
+      },
       "detergent_type": {
         "name": "Detergent type",
         "state": {
