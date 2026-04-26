@@ -1101,9 +1101,11 @@ async def test_update_addon_sets_progress_immediately(
 
 
 async def test_update_addon_resets_progress_on_error(
-    hass: HomeAssistant, supervisor_client: AsyncMock
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
 ) -> None:
-    """Test addon update resets in_progress to False when update fails."""
+    """Test addon update resets in_progress and update_percentage on failure."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -1118,11 +1120,48 @@ async def test_update_addon_resets_progress_on_error(
 
     state = hass.states.get("update.test_update")
     assert state.attributes.get("in_progress") is False
+    assert state.attributes.get("update_percentage") is None
+
+    ws = await hass_ws_client(hass)
+    job_uuid = uuid4().hex
+
+    async def fake_update_addon_error(
+        _hass: HomeAssistant,
+        _addon: str,
+        _backup: bool,
+        _addon_name: str | None,
+        _installed_version: str | None,
+    ) -> None:
+        """Report some progress, then fail - as a mid-pull network error would."""
+        await ws.send_json(
+            {
+                "id": 1,
+                "type": "supervisor/event",
+                "data": {
+                    "event": "job",
+                    "data": {
+                        "uuid": job_uuid,
+                        "created": "2025-09-29T00:00:00.000000+00:00",
+                        "name": "addon_manager_update",
+                        "reference": "test",
+                        "progress": 42,
+                        "done": False,
+                        "stage": None,
+                        "extra": {"total": 1234567890},
+                        "errors": [],
+                    },
+                },
+            }
+        )
+        msg = await ws.receive_json()
+        assert msg["success"]
+        await hass.async_block_till_done()
+        raise HomeAssistantError
 
     with (
         patch(
             "homeassistant.components.hassio.update.update_addon",
-            side_effect=HomeAssistantError,
+            side_effect=fake_update_addon_error,
         ),
         pytest.raises(HomeAssistantError),
     ):
@@ -1137,6 +1176,163 @@ async def test_update_addon_resets_progress_on_error(
     assert state.attributes.get("in_progress") is False, (
         "in_progress should be reset to False after error"
     )
+    assert state.attributes.get("update_percentage") is None, (
+        "update_percentage should be reset to None after error"
+    )
+
+
+def _bump_addon_to(
+    addons_list: AsyncMock,
+    addon_installed: AsyncMock,
+    version: str,
+    version_latest: str,
+) -> None:
+    """Rewrite the addon fixtures to report a post-update version."""
+    current = addons_list.return_value
+    addons_list.return_value = [
+        replace(
+            current[0],
+            version=version,
+            version_latest=version_latest,
+            update_available=version != version_latest,
+        ),
+        *current[1:],
+    ]
+
+    def _updated_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
+        addon.name = "test"
+        addon.slug = "test"
+        addon.version = version
+        addon.version_latest = version_latest
+        addon.update_available = version != version_latest
+        addon.state = AddonState.STARTED
+        addon.url = "https://github.com/home-assistant/addons/test"
+        addon.auto_update = True
+        return addon
+
+    addon_installed.side_effect = _updated_info
+
+
+async def test_update_addon_stays_in_progress_until_refresh(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    update_addon: AsyncMock,
+    addon_installed: AsyncMock,
+    addons_list: AsyncMock,
+) -> None:
+    """Test addon update entity stays in progress until coordinator refresh.
+
+    Supervisor emits the ``addon_manager_update`` job ``done=True`` WS event a
+    few milliseconds before ``/store/addons/<slug>/update`` returns. Without
+    the ``_update_ongoing`` guard, ``_attr_in_progress`` is cleared while the
+    coordinator still holds the pre-update version and the UI briefly flips
+    back to "Update available".
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    entity_id = "update.test_update"
+    assert hass.states.get(entity_id).state == "on"
+
+    ws = await hass_ws_client(hass)
+    job_uuid = uuid4().hex
+    in_progress_after_done: list[bool | None] = []
+
+    async def fake_update_addon(slug: str, _options: StoreAddonUpdate) -> None:
+        """Mimic Supervisor: fire done=True on WS, then return HTTP response."""
+        await ws.send_json(
+            {
+                "id": 1,
+                "type": "supervisor/event",
+                "data": {
+                    "event": "job",
+                    "data": {
+                        "uuid": job_uuid,
+                        "created": "2025-09-29T00:00:00.000000+00:00",
+                        "name": "addon_manager_update",
+                        "reference": "test",
+                        "progress": 100,
+                        "done": True,
+                        "stage": None,
+                        "extra": {"total": 1234567890},
+                        "errors": [],
+                    },
+                },
+            }
+        )
+        msg = await ws.receive_json()
+        assert msg["success"]
+        await hass.async_block_till_done()
+        in_progress_after_done.append(
+            hass.states.get(entity_id).attributes.get("in_progress")
+        )
+        _bump_addon_to(addons_list, addon_installed, "2.0.1", "2.0.1")
+
+    update_addon.side_effect = fake_update_addon
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": entity_id}, blocking=True
+    )
+
+    # The done=True WS event fired mid-install must not drop in_progress; the
+    # coordinator data at that instant still carries the pre-update version.
+    assert in_progress_after_done == [True]
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("in_progress") is False
+    assert state.state == "off"
+
+
+async def test_update_addon_completes_on_any_version_change(
+    hass: HomeAssistant,
+    update_addon: AsyncMock,
+    addon_installed: AsyncMock,
+    addons_list: AsyncMock,
+) -> None:
+    """Test completion when installed version changes from the pre-install one.
+
+    If a newer upstream release appears between install start and the refresh,
+    ``installed_version`` will not equal ``latest_version`` but will differ
+    from the pre-install version. The ongoing flag must still clear.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    entity_id = "update.test_update"
+
+    async def fake_update_addon(slug: str, _options: StoreAddonUpdate) -> None:
+        _bump_addon_to(addons_list, addon_installed, "2.0.1", "2.0.2")
+
+    update_addon.side_effect = fake_update_addon
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": entity_id}, blocking=True
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("in_progress") is False
+    assert state.state == "on"
 
 
 async def test_update_supervisor(
