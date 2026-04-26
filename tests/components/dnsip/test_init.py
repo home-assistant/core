@@ -91,9 +91,49 @@ async def test_port_migration(
         await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.options[CONF_PORT] == DEFAULT_PORT
     assert entry.options[CONF_PORT_IPV6] == DEFAULT_PORT
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_remove_unique_id_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration of the config entry removing the unique_id."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: True,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_PORT_IPV6: DEFAULT_PORT,
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.unique_id is None
     assert entry.state is ConfigEntryState.LOADED
 
 
