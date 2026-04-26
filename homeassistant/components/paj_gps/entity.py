@@ -19,18 +19,16 @@ class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
 
-        device = coordinator.data.devices.get(device_id)
         model = None
-        if device is not None:
-            device_models = device.device_models
-            if device_models and isinstance(device_models[0], dict):
-                model = device_models[0].get("model")
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{coordinator.user_id}_{device_id}")},
-                name=device.name or f"PAJ GPS {device_id}",
-                manufacturer="PAJ GPS",
-                model=model,
-            )
+        device_models = self.device.device_models
+        if device_models and isinstance(device_models[0], dict):
+            model = device_models[0].get("model")
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.user_id}_{device_id}")},
+            name=self.device.name or f"PAJ GPS {device_id}",
+            manufacturer="PAJ GPS",
+            model=model,
+        )
 
     @property
     def available(self) -> bool:
