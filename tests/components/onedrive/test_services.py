@@ -442,6 +442,35 @@ async def test_delete_service_multiple_files_all_fail(
         OneDriveException("error two"),
     ]
 
+    with pytest.raises(HomeAssistantError, match="Failed to delete file") as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+            },
+            blocking=True,
+        )
+
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+    assert isinstance(exc_info.value.__cause__, ExceptionGroup)
+    assert len(exc_info.value.__cause__.exceptions) == 2
+
+
+async def test_delete_service_multiple_files_partial_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service attempts all deletions before raising on partial failure."""
+    await setup_integration(hass, mock_config_entry)
+    second_path = "photos/snapshots/image2.jpg"
+    mock_onedrive_client.delete_drive_item.side_effect = [
+        None,
+        OneDriveException("error two"),
+    ]
+
     with pytest.raises(HomeAssistantError, match="Failed to delete file"):
         await hass.services.async_call(
             DOMAIN,
@@ -454,6 +483,13 @@ async def test_delete_service_multiple_files_all_fail(
         )
 
     assert mock_onedrive_client.delete_drive_item.call_count == 2
+    called_paths = {
+        c.args[0] for c in mock_onedrive_client.delete_drive_item.call_args_list
+    }
+    assert called_paths == {
+        f"id:/{TEST_DESTINATION_PATH}:",
+        f"id:/{second_path}:",
+    }
 
 
 async def test_delete_service_get_approot_fails(

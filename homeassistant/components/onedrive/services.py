@@ -191,7 +191,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="delete_error",
-            ) from errors[0]
+            ) from ExceptionGroup("OneDrive delete errors", errors)
 
     hass.services.async_register(
         DOMAIN,
