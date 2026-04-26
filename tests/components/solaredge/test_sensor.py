@@ -373,33 +373,45 @@ async def test_storage_service_deferred_after_inventory_failure(
 
 
 @pytest.mark.parametrize(
-    "storage_response",
+    ("storage_response", "expected_charge_state"),
     [
-        # Empty batteries list inside the storage data
-        {"storageData": {"batteries": []}},
-        # Battery missing the serialNumber key — skipped by the data service
-        {"storageData": {"batteries": [{"telemetries": []}]}},
-        # Battery with no telemetries — skipped after the serial check
-        {"storageData": {"batteries": [{"serialNumber": "BAT001", "telemetries": []}]}},
-        # Battery with a single telemetry — falls into the len < 2 branch
-        {
-            "storageData": {
-                "batteries": [
-                    {
-                        "serialNumber": "BAT001",
-                        "telemetries": [
-                            {
-                                "timeStamp": "2025-01-01 00:00:00",
-                                "lifeTimeEnergyCharged": 1000.0,
-                                "lifeTimeEnergyDischarged": 500.0,
-                                "batteryPercentageState": 50.0,
-                                "power": 100.0,
-                            }
-                        ],
-                    }
-                ]
-            }
-        },
+        # Empty batteries list → data service returns early, aggregate stays unset.
+        ({"storageData": {"batteries": []}}, STATE_UNKNOWN),
+        # Battery missing the serialNumber key → skipped in the loop, aggregate
+        # falls through with the initial 0.0 totals.
+        ({"storageData": {"batteries": [{"telemetries": []}]}}, "0.0"),
+        # Battery with no telemetries → skipped after the serial check.
+        (
+            {
+                "storageData": {
+                    "batteries": [{"serialNumber": "BAT001", "telemetries": []}]
+                }
+            },
+            "0.0",
+        ),
+        # Battery with a single telemetry → can't compute a delta, contributes
+        # 0.0 to the aggregate via the len < 2 branch.
+        (
+            {
+                "storageData": {
+                    "batteries": [
+                        {
+                            "serialNumber": "BAT001",
+                            "telemetries": [
+                                {
+                                    "timeStamp": "2025-01-01 00:00:00",
+                                    "lifeTimeEnergyCharged": 1000.0,
+                                    "lifeTimeEnergyDischarged": 500.0,
+                                    "batteryPercentageState": 50.0,
+                                    "power": 100.0,
+                                }
+                            ],
+                        }
+                    ]
+                }
+            },
+            "0.0",
+        ),
     ],
     ids=[
         "empty_batteries",
@@ -416,21 +428,20 @@ async def test_storage_data_service_handles_malformed_responses(
     solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
     storage_response: dict,
+    expected_charge_state: str,
 ) -> None:
     """Test storage data service tolerates batteries without serial / telemetries / single telemetry."""
     solaredge_api.get_storage_data.return_value = storage_response
 
     await setup_integration(hass, mock_config_entry)
 
-    # Aggregate sensors are still created (inventory has a battery), but their
-    # state should be 0.0 (no charge/discharge delta calculated).
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is not None
     state = hass.states.get(charge_entry)
     assert state is not None
-    assert state.state in {"0.0", STATE_UNKNOWN}
+    assert state.state == expected_charge_state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
