@@ -117,10 +117,10 @@ DISHWASHER_WASHING_COURSE_TO_HA = {
     "AI": "ai",
     "normal": "normal",
     "daily": "daily",
-    "daily_09": "daily_09",
+    "daily_09": "daily",
     "eco": "eco",
-    "eco_08": "eco_08",
-    "eco_10": "eco_10",
+    "eco_08": "eco",
+    "eco_10": "eco",
     "intensive": "intensive",
     "heavy": "heavy",
     "chef": "chef",
@@ -129,9 +129,9 @@ DISHWASHER_WASHING_COURSE_TO_HA = {
     "glasses": "glasses",
     "drinkware": "drinkware",
     "express": "express",
-    "express_0C": "express_0_c",
+    "express_0C": "express",
     "quick": "quick",
-    "quick_14": "quick_14",
+    "quick_14": "quick",
     "upperExpress": "upper_express",
     "preWash": "pre_wash",
     "preBlast": "pre_blast",
@@ -399,6 +399,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
     """Define a SmartThings select."""
 
     entity_description: SmartThingsSelectDescription
+    _reverse_options: dict[str, str] = {}
 
     def __init__(
         self,
@@ -431,10 +432,12 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             or []
         )
         if self.entity_description.options_map:
-            options = [
+            mapped_options = [
                 self.entity_description.options_map.get(option, option)
                 for option in options
             ]
+            self._reverse_options = dict(zip(mapped_options, options, strict=True))
+            options = mapped_options
         if self.entity_description.value_is_integer:
             options = [str(option) for option in options]
         return options
@@ -480,14 +483,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         self._validate_before_select()
         new_option: str | int = option
         if self.entity_description.options_map:
-            new_option = next(
-                (
-                    key
-                    for key, value in self.entity_description.options_map.items()
-                    if value == option
-                ),
-                new_option,
-            )
+            new_option = self._reverse_options.get(option, option)
         if self.entity_description.value_is_integer:
             new_option = int(option)
         await self.execute_device_command(
