@@ -261,7 +261,8 @@ def validate_segments(
                     entity,
                     option,
                     item,
-                    f"expected dictionary with keys {Segment.__slots__}",
+                    "expected dictionary with keys id, name and optional group"
+                    " and string values",
                 )
                 return None
 
@@ -274,19 +275,12 @@ def validate_segments(
                     entity,
                     option,
                     item,
-                    "expected dictionary with string values",
+                    "expected dictionary with keys id, name and optional group"
+                    " and string values",
                 )
                 return None
-            try:
-                segments.append(Segment(**item))
-            except TypeError:
-                template_validators.log_validation_result_error(
-                    entity,
-                    option,
-                    item,
-                    f"expected dictionary with keys {Segment.__slots__}",
-                )
-                return None
+            
+            segments.append(Segment(**item))
         return segments
 
     return parse

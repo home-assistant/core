@@ -1165,39 +1165,39 @@ async def test_get_segments(
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'id': '1'} ] }}",
             },
-            f"expected dictionary with keys {Segment.__slots__}",
+            "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'name': 'kitchen'} ] }}",
             },
-            f"expected dictionary with keys {Segment.__slots__}",
+            "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {} ] }}",
             },
-            f"expected dictionary with keys {Segment.__slots__}",
+            "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
             },
-            f"expected dictionary with keys {Segment.__slots__}",
+            "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {"unique_id": TEST_VACUUM.entity_id, "segments_template": "{{ [[]] }}"},
-            f"expected dictionary with keys {Segment.__slots__}",
+            "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
             },
-            f"expected dictionary with keys {Segment.__slots__}",
+            "expected dictionary with keys id, name and optional group and string values",
         ),
     ],
 )
