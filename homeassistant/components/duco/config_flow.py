@@ -161,8 +161,9 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns a tuple of (box_name, mac_address).
         """
         client = DucoClient(
-            session=async_get_clientsession(self.hass),
+            session=async_get_clientsession(self.hass, verify_ssl=False),
             host=host,
+            scheme="https",
         )
         board_info = await client.async_get_board_info()
         lan_info = await client.async_get_lan_info()
