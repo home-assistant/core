@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
 
@@ -65,6 +66,7 @@ async def test_duplicate_email_aborts(
     [
         (AuthenticationError("bad creds"), "invalid_auth"),
         (TokenRefreshError("refresh failed"), "invalid_auth"),
+        (ClientError(), "cannot_connect"),
         (ConnectionError("timeout"), "unknown"),
     ],
 )
@@ -93,3 +95,24 @@ async def test_invalid_credentials_shows_form_error(
         user_input=VALID_USER_INPUT,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_email_is_normalized(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_paj_gps_api: AsyncMock,
+) -> None:
+    """Email must be stripped and lowercased before storing in the config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_EMAIL: "  USER@EXAMPLE.COM  ",
+            CONF_PASSWORD: "s3cr3t",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_EMAIL] == "user@example.com"
+    assert result["title"] == "user@example.com"
