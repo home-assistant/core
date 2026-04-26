@@ -51,7 +51,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         logger: logging.Logger,
         *,
         address: str,
-        pin: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -64,7 +63,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             connectable=True,
         )
         self._address = address
-        self._pin = pin
         self.snapshot = TelemetrySnapshot()
         self._client: BleakClient | None = None
         self._was_unavailable = False
@@ -75,6 +73,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         self._char_request_read: str | None = None
         self._last_poll_time: float = 0
         self._uses_tcx_messages: bool | None = None
+        self._logged_unresolved_chars = False
 
     @callback
     def _needs_poll(
@@ -118,7 +117,25 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             or self._char_request_write is None
             or self._char_request_read is None
         ):
+            if (
+                self._client is not None
+                and self._client.is_connected
+                and self._char_request_write is None
+                and not self._logged_unresolved_chars
+            ):
+                _LOGGER.warning(
+                    (
+                        "Connected to Specialized Turbo at %s but could not"
+                        " determine the bike generation from advertisements;"
+                        " no telemetry will be polled until the generation is"
+                        " detected"
+                    ),
+                    self._address,
+                )
+                self._logged_unresolved_chars = True
             return
+
+        self._logged_unresolved_chars = False
 
         if self._uses_tcx_messages is True:
             await poll_tcx(
@@ -175,14 +192,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             self._char_notify = get_char_notify(self._generation)
             self._char_request_write = get_char_request_write(self._generation)
             self._char_request_read = get_char_request_read(self._generation)
-
-        if self._pin is not None:
-            try:
-                await client.pair(protection_level=2)
-            except NotImplementedError:
-                _LOGGER.debug("Backend does not support programmatic pairing")
-            except Exception:  # noqa: BLE001
-                _LOGGER.warning("Pairing failed", exc_info=True)
 
         if (
             self._generation == BLEProfile.TCX

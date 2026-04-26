@@ -8,7 +8,8 @@ from bleak import BleakError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.specialized_turbo.const import CONF_PIN, DOMAIN
+from homeassistant.components.specialized_turbo.const import DOMAIN
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -40,38 +41,22 @@ async def test_bluetooth_discovery(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "1234"},
+        user_input={},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_NAME
-    assert result["data"] == {"address": MOCK_ADDRESS, CONF_PIN: "1234"}
+    assert result["data"] == {CONF_ADDRESS: MOCK_ADDRESS}
     assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("mock_ble_connection")
-async def test_bluetooth_discovery_no_pin(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test bluetooth discovery without a PIN."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=TCX_SERVICE_INFO,
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"address": MOCK_ADDRESS, CONF_PIN: None}
-    assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
 
 
 async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> None:
     """Test bluetooth discovery aborts when device is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"address": MOCK_ADDRESS}, unique_id=MOCK_ADDRESS_FORMATTED
+        domain=DOMAIN,
+        data={CONF_ADDRESS: MOCK_ADDRESS},
+        unique_id=MOCK_ADDRESS_FORMATTED,
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -114,7 +99,7 @@ async def test_bluetooth_confirm_connection_errors(
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PIN: "1234"}
+            result["flow_id"], user_input={}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
@@ -135,13 +120,13 @@ async def test_bluetooth_confirm_recover_from_error(
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PIN: "1234"}
+            result["flow_id"], user_input={}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PIN: "1234"}
+        result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -160,10 +145,10 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"address": MOCK_ADDRESS, CONF_PIN: "5678"}
+        result["flow_id"], user_input={CONF_ADDRESS: MOCK_ADDRESS}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"address": MOCK_ADDRESS, CONF_PIN: "5678"}
+    assert result["data"] == {CONF_ADDRESS: MOCK_ADDRESS}
     assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
 
 
@@ -183,7 +168,9 @@ async def test_user_flow_no_devices(hass: HomeAssistant) -> None:
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test user flow filters out already configured devices."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"address": MOCK_ADDRESS}, unique_id=MOCK_ADDRESS_FORMATTED
+        domain=DOMAIN,
+        data={CONF_ADDRESS: MOCK_ADDRESS},
+        unique_id=MOCK_ADDRESS_FORMATTED,
     )
     entry.add_to_hass(hass)
     with patch(
@@ -224,5 +211,5 @@ async def test_bluetooth_discovery_by_generation(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["address"] == expected_address
+    assert result["data"][CONF_ADDRESS] == expected_address
     assert result["result"].unique_id == expected_unique_id

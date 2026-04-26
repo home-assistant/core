@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.specialized_turbo.const import CONF_PIN, DOMAIN
+from homeassistant.components.specialized_turbo.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 
 from tests.common import MockConfigEntry
@@ -73,7 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: "1234"},
+        data={CONF_ADDRESS: MOCK_ADDRESS},
         unique_id=MOCK_ADDRESS_FORMATTED,
     )
 

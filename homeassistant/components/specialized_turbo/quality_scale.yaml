@@ -45,7 +45,8 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: >-
-      BLE pairing PIN does not expire.
+      No authentication is performed by the integration. Pairing, when
+      required, is handled at the operating system level.
   test-coverage: done
   # Gold
   devices: done

@@ -9,23 +9,15 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "data": {
-          "pin": "[%key:common::config_flow::data::pin%]"
-        },
-        "data_description": {
-          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
-        },
         "description": "A Specialized Turbo bike was found at {address} ({name}).",
         "title": "Discovered Specialized Turbo Bike"
       },
       "user": {
         "data": {
-          "address": "Bike",
-          "pin": "[%key:common::config_flow::data::pin%]"
+          "address": "Bike"
         },
         "data_description": {
-          "address": "Select the Specialized Turbo bike you want to add.",
-          "pin": "[%key:component::specialized_turbo::config::step::bluetooth_confirm::data_description::pin%]"
+          "address": "Select the Specialized Turbo bike you want to add."
         },
         "description": "Select your Specialized Turbo bike from the discovered devices.",
         "title": "Add Specialized Turbo Bike"

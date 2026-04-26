@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from specialized_turbo import BLEProfile
 
 from homeassistant.components.specialized_turbo.coordinator import (
@@ -13,24 +15,18 @@ from homeassistant.components.specialized_turbo.coordinator import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_ADDRESS, MOCK_MANUFACTURER_DATA, TCX_SERVICE_INFO
-
-from tests.common import MockConfigEntry
+from .conftest import MOCK_ADDRESS, TCX_SERVICE_INFO
 
 
 def _create_coordinator(
     hass: HomeAssistant,
     address: str = MOCK_ADDRESS,
-    pin: str | None = None,
 ) -> SpecializedTurboCoordinator:
     """Create a coordinator for testing."""
-    import logging
-
     return SpecializedTurboCoordinator(
         hass,
         logging.getLogger(__name__),
         address=address,
-        pin=pin,
     )
 
 
@@ -172,3 +168,24 @@ async def test_do_poll_derives_chars_for_late_generation(
 
     assert coordinator._char_request_write is not None
     assert coordinator._char_request_read is not None
+
+
+async def test_do_poll_warns_once_when_generation_unresolved(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test _do_poll logs a single warning when chars cannot be resolved."""
+    coordinator = _create_coordinator(hass)
+    coordinator._client = MagicMock(is_connected=True)
+    # Generation never detected — chars stay None.
+    assert coordinator._generation is None
+
+    with (
+        patch.object(coordinator, "_ensure_connected", new_callable=AsyncMock),
+        caplog.at_level("WARNING"),
+    ):
+        await coordinator._do_poll(TCX_SERVICE_INFO)
+        await coordinator._do_poll(TCX_SERVICE_INFO)
+
+    matching = [r for r in caplog.records if "could not determine" in r.message]
+    assert len(matching) == 1

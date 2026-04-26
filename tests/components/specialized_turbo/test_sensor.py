@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from specialized_turbo import AssistLevel, TelemetrySnapshot
 from specialized_turbo.session import TCU1Session
-import pytest
 
 from homeassistant.components.specialized_turbo.sensor import (
     PARALLEL_UPDATES,

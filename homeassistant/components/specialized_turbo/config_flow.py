@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_PIN, DOMAIN
+from .const import DOMAIN
 
 
 class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -61,7 +61,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm Bluetooth discovery and collect PIN."""
+        """Confirm Bluetooth discovery."""
         assert self._discovery_info is not None
         errors: dict[str, str] = {}
 
@@ -73,17 +73,11 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._discovery_info.name or "Specialized Turbo",
                     data={
                         CONF_ADDRESS: self._discovery_info.address,
-                        CONF_PIN: user_input.get(CONF_PIN) or None,
                     },
                 )
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_PIN): str,
-                }
-            ),
             description_placeholders={
                 "name": self._discovery_info.name or "Specialized Turbo",
                 "address": self._discovery_info.address,
@@ -109,7 +103,6 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._discovered_devices[address].name or "Specialized Turbo",
                     data={
                         CONF_ADDRESS: address,
-                        CONF_PIN: user_input.get(CONF_PIN) or None,
                     },
                 )
 
@@ -134,7 +127,6 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(address_options),
-                    vol.Optional(CONF_PIN): str,
                 }
             ),
             errors=errors,
