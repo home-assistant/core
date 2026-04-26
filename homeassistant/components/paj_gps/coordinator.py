@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import dataclasses
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 type PajGpsConfigEntry = ConfigEntry[PajGpsCoordinator]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclass
 class PajGpsData:
     """Snapshot of all PAJ GPS data for one coordinator tick."""
 
@@ -59,7 +59,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         self._email: str = config_entry.data[CONF_EMAIL]
         self._user_id: int | None = None
         self.api = PajGpsApi(
-            email=config_entry.data[CONF_EMAIL],
+            email=self._email,
             password=config_entry.data[CONF_PASSWORD],
             websession=async_get_clientsession(hass),
         )
@@ -85,7 +85,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             raise ConfigEntryNotReady from exc
 
     async def _async_update_data(self) -> PajGpsData:
-        """Fetch device list and positions every UPDATE_INTERVAL seconds."""
+        """Fetch device list and positions."""
         devices: dict[int, Device] = {}
         try:
             device_list = await self.api.get_devices()
