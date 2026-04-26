@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pypjlink import Projector
-from pypjlink.projector import ProjectorError
+from aiopjlink import PJLink, PJLinkNoConnection, PJLinkPassword
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,15 +25,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def validate_projector_connection(
-    host: str, port: int | None, password: str | None
-) -> str:
-    """Validate that we can connect to the projector."""
-    with Projector.from_address(host, port) as projector:
-        projector.authenticate(password)
-        return projector.get_name()
-
-
 class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PJLink."""
 
@@ -50,15 +40,14 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             try:
-                projector_name = await self.hass.async_add_executor_job(
-                    validate_projector_connection,
+                projector_name = await PJLink(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
                     user_input.get(CONF_PASSWORD),
-                )
-            except TimeoutError, OSError:
+                ).info.projector_name()
+            except PJLinkNoConnection:
                 errors["base"] = "cannot_connect"
-            except RuntimeError, ProjectorError:
+            except PJLinkPassword:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -81,12 +70,10 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
         try:
-            projector_name = await self.hass.async_add_executor_job(
-                validate_projector_connection, host, port, password
-            )
-        except TimeoutError, OSError:
+            projector_name = await PJLink(host, port, password).info.projector_name()
+        except PJLinkNoConnection:
             return self.async_abort(reason="cannot_connect")
-        except RuntimeError, ProjectorError:
+        except PJLinkPassword:
             return self.async_abort(reason="invalid_auth")
         except Exception:
             _LOGGER.exception("Unexpected exception")

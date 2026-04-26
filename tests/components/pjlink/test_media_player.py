@@ -1,12 +1,9 @@
 """Test the pjlink media player platform."""
 
 from datetime import timedelta
-import socket
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import MagicMock
 
-import pypjlink
-from pypjlink import MUTE_AUDIO
-from pypjlink.projector import ProjectorError
+from aiopjlink import PJLinkERR3, PJLinkNoConnection, PJLinkPassword, Power, Sources
 import pytest
 
 from homeassistant.components import media_player
@@ -46,45 +43,12 @@ _EXAMPLE_YAML_CONFIG = {
 }
 
 
-@pytest.fixture(name="projector_from_address")
-def projector_from_address():
-    """Create pjlink Projector mock."""
-
-    with patch("pypjlink.Projector.from_address") as from_address:
-        constructor = create_autospec(pypjlink.Projector)
-        constructor.__enter__.return_value = constructor
-        from_address.return_value = constructor
-        yield from_address
-
-
-@pytest.fixture(name="mocked_projector")
-def mocked_projector(projector_from_address: MagicMock) -> MagicMock:
-    """Create pjlink Projector instance mock."""
-
-    instance = projector_from_address.return_value
-
-    instance.get_name.return_value = "Test"
-    instance.get_power.return_value = "on"
-    instance.get_mute.return_value = [0, True]
-    instance.get_input.return_value = [0, 1]
-    instance.get_inputs.return_value = (
-        ("HDMI", 1),
-        ("HDMI", 2),
-        ("VGA", 1),
-    )
-
-    instance.__enter__.return_value = instance
-
-    return instance
-
-
-@pytest.mark.parametrize("side_effect", [socket.timeout, OSError])
 async def test_offline_initialization(
-    projector_from_address: MagicMock, hass: HomeAssistant, side_effect: type[Exception]
+    mock_pjlink: MagicMock, hass: HomeAssistant
 ) -> None:
     """Test initialization of a device that is offline."""
 
-    projector_from_address.side_effect = side_effect
+    mock_pjlink.power.get.side_effect = PJLinkNoConnection
 
     await setup_pjlink_entry(hass)
 
@@ -92,19 +56,9 @@ async def test_offline_initialization(
     assert state.state == "unavailable"
 
 
-async def test_initialization(
-    projector_from_address: MagicMock, hass: HomeAssistant
-) -> None:
+async def test_initialization(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test a device that is available."""
 
-    mocked_instance = projector_from_address.return_value
-
-    mocked_instance.get_name.return_value = "Test"
-    mocked_instance.get_inputs.return_value = (
-        ("HDMI", 1),
-        ("HDMI", 2),
-        ("VGA", 1),
-    )
     await setup_pjlink_entry(hass)
 
     state = hass.states.get("media_player.test")
@@ -113,30 +67,30 @@ async def test_initialization(
     assert "source_list" in state.attributes
     source_list = state.attributes["source_list"]
 
-    assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
+    assert set(source_list) == {"DIGITAL 1", "DIGITAL 2", "VIDEO 1"}
 
 
-@pytest.mark.parametrize("power_state", ["on", "warm-up"])
+@pytest.mark.parametrize("power_state", [Power.State.ON, Power.State.WARMING])
 async def test_on_state_init(
-    mocked_projector: MagicMock, hass: HomeAssistant, power_state: str
+    mock_pjlink: MagicMock, hass: HomeAssistant, power_state: str
 ) -> None:
     """Test a device that is available."""
 
-    mocked_projector.get_power.return_value = power_state
-    mocked_projector.get_input.return_value = ("HDMI", 1)
+    mock_pjlink.power.get.return_value = power_state
 
     await setup_pjlink_entry(hass)
 
     state = hass.states.get("media_player.test")
     assert state.state == "on"
 
-    assert state.attributes["source"] == "HDMI 1"
+    assert state.attributes["source"] == "DIGITAL 1"
 
 
-async def test_api_error(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
+async def test_api_error(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test invalid api responses."""
 
-    mocked_projector.get_power.side_effect = KeyError("OK")
+    mock_pjlink.power.get.return_value = Power.State.ON
+    mock_pjlink.power.get.side_effect = KeyError("OK")
 
     await setup_pjlink_entry(hass)
 
@@ -144,26 +98,22 @@ async def test_api_error(mocked_projector: MagicMock, hass: HomeAssistant) -> No
     assert state.state == "off"
 
 
-async def test_update_unavailable(
-    projector_from_address: MagicMock, hass: HomeAssistant
-) -> None:
+async def test_update_unavailable(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test update to a device that is unavailable."""
 
-    mocked_instance = projector_from_address.return_value
-
-    mocked_instance.get_name.return_value = "Test"
-    mocked_instance.get_inputs.return_value = (
-        ("HDMI", 1),
-        ("HDMI", 2),
-        ("VGA", 1),
-    )
+    mock_pjlink.info.projector_name.return_value = "Test"
+    mock_pjlink.sources.available.return_value = [
+        (Sources.Mode.DIGITAL, 1),
+        (Sources.Mode.DIGITAL, 2),
+        (Sources.Mode.VIDEO, 1),
+    ]
 
     await setup_pjlink_entry(hass)
 
     state = hass.states.get("media_player.test")
     assert state.state == "off"
 
-    projector_from_address.side_effect = socket.timeout
+    mock_pjlink.power.get.side_effect = PJLinkNoConnection
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -171,10 +121,10 @@ async def test_update_unavailable(
     assert state.state == "unavailable"
 
 
-async def test_unavailable_time(
-    mocked_projector: MagicMock, hass: HomeAssistant
-) -> None:
+async def test_unavailable_time(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test unavailable time projector error."""
+
+    mock_pjlink.power.get.return_value = Power.State.ON
 
     await setup_pjlink_entry(hass)
 
@@ -183,7 +133,7 @@ async def test_unavailable_time(
     assert state.attributes["source"] is not None
     assert state.attributes["is_volume_muted"] is not False
 
-    mocked_projector.get_power.side_effect = ProjectorError("unavailable time")
+    mock_pjlink.power.get.side_effect = PJLinkERR3
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -193,7 +143,7 @@ async def test_unavailable_time(
     assert "is_volume_muted" not in state.attributes
 
 
-async def test_turn_off(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
+async def test_turn_off(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test turning off beamer."""
 
     await setup_pjlink_entry(hass)
@@ -205,10 +155,10 @@ async def test_turn_off(mocked_projector: MagicMock, hass: HomeAssistant) -> Non
         blocking=True,
     )
 
-    mocked_projector.set_power.assert_called_with("off")
+    mock_pjlink.power.turn_off.assert_awaited()
 
 
-async def test_turn_on(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
+async def test_turn_on(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test turning on beamer."""
 
     await setup_pjlink_entry(hass)
@@ -220,10 +170,10 @@ async def test_turn_on(mocked_projector: MagicMock, hass: HomeAssistant) -> None
         blocking=True,
     )
 
-    mocked_projector.set_power.assert_called_with("on")
+    mock_pjlink.power.turn_on.assert_awaited()
 
 
-async def test_mute(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
+async def test_mute(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test muting beamer."""
 
     await setup_pjlink_entry(hass)
@@ -235,10 +185,10 @@ async def test_mute(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    mocked_projector.set_mute.assert_called_with(MUTE_AUDIO, True)
+    mock_pjlink.mute.audio.assert_awaited_with(True)
 
 
-async def test_unmute(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
+async def test_unmute(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test unmuting beamer."""
 
     await setup_pjlink_entry(hass)
@@ -250,10 +200,10 @@ async def test_unmute(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    mocked_projector.set_mute.assert_called_with(MUTE_AUDIO, False)
+    mock_pjlink.mute.audio.assert_awaited_with(False)
 
 
-async def test_select_source(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
+async def test_select_source(mock_pjlink: MagicMock, hass: HomeAssistant) -> None:
     """Test selecting source."""
 
     await setup_pjlink_entry(hass)
@@ -261,17 +211,17 @@ async def test_select_source(mocked_projector: MagicMock, hass: HomeAssistant) -
     await hass.services.async_call(
         domain=media_player.DOMAIN,
         service="select_source",
-        service_data={ATTR_ENTITY_ID: "media_player.test", "source": "VGA 1"},
+        service_data={ATTR_ENTITY_ID: "media_player.test", "source": "VIDEO 1"},
         blocking=True,
     )
 
-    mocked_projector.set_input.assert_called_with("VGA", 1)
+    mock_pjlink.sources.set.assert_awaited_with(Sources.Mode.VIDEO, 1)
 
 
 async def test_yaml_import(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mocked_projector: MagicMock,
+    mock_pjlink: MagicMock,
 ) -> None:
     """Test a YAML media player is imported and becomes an operational config entry."""
     assert await async_setup_component(
@@ -291,26 +241,25 @@ async def test_yaml_import(
 @pytest.mark.parametrize(
     ("side_effect", "error_str"),
     [
-        (RuntimeError, "invalid_auth"),
-        (TimeoutError, "cannot_connect"),
+        (PJLinkPassword, "invalid_auth"),
+        (PJLinkNoConnection, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
 async def test_failed_yaml_import(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mocked_projector: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    mock_pjlink: MagicMock,
     side_effect: type[Exception],
     error_str: str,
 ) -> None:
     """Test a YAML media player is imported and becomes an operational config entry."""
 
-    with patch("pypjlink.Projector.from_address", side_effect=side_effect):
-        assert await async_setup_component(
-            hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
-        )
-        await hass.async_block_till_done()
+    mock_pjlink.info.projector_name.side_effect = side_effect
+    assert await async_setup_component(
+        hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
+    )
+    await hass.async_block_till_done()
 
     # Verify the config entry was not created
     entries = hass.config_entries.async_entries(DOMAIN)
