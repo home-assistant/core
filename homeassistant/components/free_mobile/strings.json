@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured": "This account is already configured",
       "client_initialization_failed": "Failed to initialize Free Mobile client. Check your username and access token."
     },
     "error": {

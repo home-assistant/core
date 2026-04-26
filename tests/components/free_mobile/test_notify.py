@@ -27,6 +27,7 @@ async def test_entity_send_message_success(
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
@@ -36,7 +37,7 @@ async def test_entity_send_message_success(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile"},
+        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile_12345678"},
     )
     await hass.async_block_till_done()
 
@@ -53,6 +54,7 @@ async def test_entity_send_message_400_bad_request(
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
@@ -62,7 +64,7 @@ async def test_entity_send_message_400_bad_request(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile"},
+        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile_12345678"},
     )
     await hass.async_block_till_done()
 
@@ -79,6 +81,7 @@ async def test_entity_send_message_403_forbidden(
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
@@ -88,7 +91,7 @@ async def test_entity_send_message_403_forbidden(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile"},
+        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile_12345678"},
     )
     await hass.async_block_till_done()
 
@@ -105,6 +108,7 @@ async def test_entity_send_message_429_rate_limit(
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
@@ -114,7 +118,7 @@ async def test_entity_send_message_429_rate_limit(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile"},
+        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile_12345678"},
     )
     await hass.async_block_till_done()
 
@@ -131,6 +135,7 @@ async def test_entity_send_message_500_server_error(
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
@@ -140,7 +145,7 @@ async def test_entity_send_message_500_server_error(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile"},
+        {ATTR_MESSAGE: "Test message", "entity_id": "notify.free_mobile_12345678"},
     )
     await hass.async_block_till_done()
 
@@ -155,20 +160,21 @@ async def test_entity_unload(hass: HomeAssistant, mock_freesms: MagicMock) -> No
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("notify.free_mobile")
+    state = hass.states.get("notify.free_mobile_12345678")
     assert state is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     # After unload, entity should be unavailable or removed
-    state = hass.states.get("notify.free_mobile")
+    state = hass.states.get("notify.free_mobile_12345678")
     assert state is None or state.state == "unavailable"
 
 
@@ -181,6 +187,7 @@ async def test_entity_with_title(hass: HomeAssistant, mock_freesms: MagicMock) -
         domain=DOMAIN,
         data=CONF_INPUT,
         entry_id="test_entry_id",
+        title="Free Mobile (12345678)",
     )
     entry.add_to_hass(hass)
 
@@ -193,7 +200,7 @@ async def test_entity_with_title(hass: HomeAssistant, mock_freesms: MagicMock) -
         {
             ATTR_MESSAGE: "Hello World",
             "title": "My Title",
-            "entity_id": "notify.free_mobile",
+            "entity_id": "notify.free_mobile_12345678",
         },
     )
     await hass.async_block_till_done()

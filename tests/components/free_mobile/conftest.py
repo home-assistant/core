@@ -44,7 +44,7 @@ def mock_freesms() -> Generator[MagicMock]:
 def mock_freesms_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to create a mocked ConfigEntry."""
     return MockConfigEntry(
-        title=TEST_USERNAME,
+        title=f"Free Mobile ({TEST_USERNAME})",
         domain=DOMAIN,
         data=CONF_INPUT,
     )
