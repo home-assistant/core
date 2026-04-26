@@ -15,6 +15,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 from .conftest import MOCK_HOST
 
 
@@ -98,7 +100,7 @@ async def test_mode_step_creates_entry_push(
     assert result["options"][CONF_UPDATE_MODE] == MODE_LOCAL_PUSH
 
 
-async def test_options_flow(hass: HomeAssistant, loaded_entry) -> None:
+async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
     """Test options flow."""
 
     result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
@@ -110,7 +112,6 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry) -> None:
         result["flow_id"],
         user_input={
             CONF_UPDATE_MODE: MODE_POLLING,
-            "scan_interval": 60,
         },
     )
 

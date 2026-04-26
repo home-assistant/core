@@ -5,8 +5,12 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 
-async def test_sensors_created(hass: HomeAssistant, loaded_entry) -> None:
+
+async def test_sensors_created(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
     """Test that sensor entities are created."""
     states = hass.states.async_all("sensor")
     # Should have sensors for the discovered phases
@@ -15,7 +19,9 @@ async def test_sensors_created(hass: HomeAssistant, loaded_entry) -> None:
     assert "sensor.wibeee_2233_l1_active_power" in entity_ids
 
 
-async def test_sensor_state_class(hass: HomeAssistant, loaded_entry) -> None:
+async def test_sensor_state_class(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
     """Test sensor has correct state class."""
     states = hass.states.async_all("sensor")
     for state in states:
