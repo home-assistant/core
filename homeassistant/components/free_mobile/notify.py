@@ -49,20 +49,21 @@ async def async_get_service(
     )
 
     if result.get("type") is FlowResultType.ABORT:
-        ir.async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2026.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            translation_key="deprecated_yaml",
-            severity=ir.IssueSeverity.WARNING,
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Free Mobile",
-            },
-        )
+        if result.get("reason") != "already_configured":
+            ir.async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"deprecated_yaml_import_failed_{DOMAIN}",
+                breaks_in_ha_version="2026.7.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                translation_key="deprecated_yaml_import_issue_import_failed",
+                severity=ir.IssueSeverity.ERROR,
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Free Mobile",
+                },
+            )
         return
 
     ir.async_create_issue(
@@ -72,7 +73,7 @@ async def async_get_service(
         breaks_in_ha_version="2026.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
-        translation_key="deprecated_yaml",
+        translation_key="deprecated_yaml_import_issue_removed_yaml",
         severity=ir.IssueSeverity.WARNING,
         translation_placeholders={
             "domain": DOMAIN,
