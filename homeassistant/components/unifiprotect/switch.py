@@ -5,22 +5,30 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, Literal
 
 from uiprotect.data import (
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
+    PublicRelayOutput,
     RecordingMode,
+    Relay,
+    RelayOutputState,
     VideoMode,
 )
+from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -562,3 +570,123 @@ async def async_setup_entry(
             for switch in NVR_SWITCHES
         )
     async_add_entities(entities)
+
+    # Public API: relay output switches. Only available when the public
+    # bootstrap has been primed (requires API key + supported NVR firmware).
+    api = data.api
+    if api.has_public_bootstrap:
+        relay_entities: list[ProtectRelayOutputSwitch] = [
+            ProtectRelayOutputSwitch(data, relay, output)
+            for relay in api.public_bootstrap.relays.values()
+            for output in relay.outputs
+        ]
+        if relay_entities:
+            async_add_entities(relay_entities)
+
+
+class ProtectRelayOutputSwitch(SwitchEntity):
+    """Switch entity for a single relay output channel (Public API).
+
+    The relay device and its outputs are exposed through UniFi Protect's
+    public integration API and cached in :attr:`ProtectApiClient.public_bootstrap`.
+    Each output channel is represented as its own switch entity; turning it
+    on/off goes through :meth:`Relay.activate_output`.
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_translation_key = "relay_output"
+
+    def __init__(
+        self,
+        data: ProtectData,
+        relay: Relay,
+        output: PublicRelayOutput,
+    ) -> None:
+        """Initialize the relay output switch."""
+        self.data = data
+        self._relay_id = relay.id
+        self._output_id = output.id
+        self._attr_unique_id = f"{relay.mac}_relay_output_{output.id}"
+        self._attr_translation_placeholders = {
+            "output_name": output.name or str(output.id),
+        }
+        nvr = data.api.bootstrap.nvr
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, relay.mac)},
+            identifiers={(DOMAIN, relay.mac)},
+            manufacturer=DEFAULT_BRAND,
+            name=relay.name,
+            model="Relay",
+            via_device=(DOMAIN, nvr.mac),
+        )
+        self._update_from_relay(relay)
+
+    @property
+    def _relay(self) -> Relay | None:
+        api = self.data.api
+        if not api.has_public_bootstrap:
+            return None
+        return api.public_bootstrap.relays.get(self._relay_id)
+
+    @callback
+    def _update_from_relay(self, relay: Relay) -> None:
+        """Refresh ``_attr_is_on`` and availability from the cached relay."""
+        output = relay.get_output(self._output_id)
+        if output is None:
+            self._attr_available = False
+            self._attr_is_on = None
+            return
+        self._attr_available = self.data.last_update_success
+        if output.state is RelayOutputState.ON:
+            self._attr_is_on = True
+        elif output.state in (RelayOutputState.OFF, RelayOutputState.OFF_OTP):
+            self._attr_is_on = False
+        else:
+            self._attr_is_on = None
+
+    @callback
+    def _async_updated(self, device: ProtectDeviceType) -> None:
+        """Handle a public devices WS update for this relay."""
+        # data.py dispatches only Relay objects to mac-keyed subscriptions.
+        prev_state = (self._attr_available, self._attr_is_on)
+        self._update_from_relay(device)  # type: ignore[arg-type]
+        if (self._attr_available, self._attr_is_on) != prev_state:
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public WS updates dispatched by ProtectData."""
+        await super().async_added_to_hass()
+        if (relay := self._relay) is not None:
+            self.async_on_remove(
+                self.data.async_subscribe(relay.mac, self._async_updated)
+            )
+
+    async def _async_set_output_state(self, state: Literal["on", "off"]) -> None:
+        """Send a state change to the relay output."""
+        if (relay := self._relay) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="relay_not_available",
+            )
+        try:
+            await relay.activate_output(self._output_id, state=state)
+        except NotAuthorized as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_authorized",
+            ) from err
+        except ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the relay output on."""
+        await self._async_set_output_state("on")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the relay output off."""
+        await self._async_set_output_state("off")

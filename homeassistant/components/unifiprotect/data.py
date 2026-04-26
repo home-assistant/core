@@ -19,6 +19,7 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    Relay,
     WSSubscriptionMessage,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
@@ -178,12 +179,25 @@ class ProtectData:
     ) -> None:
         """Process a message from the public devices websocket.
 
-        The API client pre-filters messages to ModelType.NVR via
-        DEVICES_WS_SUBSCRIBED_MODELS, so every message here is an NVR update.
-        The library has already merged the arm_mode into the PublicNVR cache;
-        signal the private NVR so alarm entities pick up the new state.
+        The API client pre-filters messages to the model types listed in
+        DEVICES_WS_SUBSCRIBED_MODELS. NVR messages signal the private NVR so
+        alarm entities pick up the new arm state. Relay messages dispatch
+        the merged Relay object by mac so relay-output entities can refresh.
         """
-        self._async_signal_device_update(self.api.bootstrap.nvr)
+        new_obj = message.new_obj
+        if new_obj is None:
+            # ``update_public`` has not primed the cache yet; nothing to do.
+            return
+        if new_obj.model is ModelType.NVR:
+            self._async_signal_device_update(self.api.bootstrap.nvr)
+            return
+        if new_obj.model is ModelType.RELAY:
+            relay = cast(Relay, new_obj)
+            mac = relay.mac
+            if subscriptions := self._subscriptions.get(mac):
+                _LOGGER.debug("Updating relay: %s (%s)", relay.name, mac)
+                for update_callback in subscriptions:
+                    update_callback(relay)  # type: ignore[arg-type]
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
