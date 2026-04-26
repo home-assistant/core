@@ -18,6 +18,16 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Prevent the PAJ GPS integration from setting up during config flow tests."""
+    with patch(
+        "homeassistant.components.paj_gps.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry for PAJ GPS."""
     return MockConfigEntry(

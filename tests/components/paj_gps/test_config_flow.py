@@ -23,6 +23,7 @@ VALID_USER_INPUT = {
 
 async def test_full_user_flow(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_paj_gps_api: AsyncMock,
 ) -> None:
     """Full user flow must show a form then create an entry with the correct data."""
@@ -72,6 +73,7 @@ async def test_duplicate_email_aborts(
 )
 async def test_invalid_credentials_shows_form_error(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_paj_gps_api: AsyncMock,
     side_effect: Exception,
     expected_error: str,
