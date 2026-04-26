@@ -93,6 +93,12 @@
       "reset_air_filter_consumable": {
         "name": "Reset air filter consumable"
       },
+      "reset_dock_cleaning_brush_consumable": {
+        "name": "Reset cleaning brush consumable"
+      },
+      "reset_dock_strainer_consumable": {
+        "name": "Reset strainer consumable"
+      },
       "reset_main_brush_consumable": {
         "name": "Reset main brush consumable"
       },
