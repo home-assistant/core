@@ -1,6 +1,6 @@
 """Tests for the Amber Electric integration setup and teardown."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
 import pytest
@@ -9,14 +9,16 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import MOCK_API_TOKEN, create_amber_config_entry
+from .conftest import create_amber_config_entry
 from .helpers import GENERAL_CHANNEL, GENERAL_ONLY_SITE_ID
 
 
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> Mock:
     """Return a config entry pre-added to hass."""
-    entry = create_amber_config_entry(GENERAL_ONLY_SITE_ID, GENERAL_ONLY_SITE_ID, "home")
+    entry = create_amber_config_entry(
+        GENERAL_ONLY_SITE_ID, GENERAL_ONLY_SITE_ID, "home"
+    )
     entry.add_to_hass(hass)
     return entry
 
