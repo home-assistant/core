@@ -72,7 +72,7 @@ DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
     DimmableLightingControl_KeypadLinc_8: {
         Platform.LIGHT: [1],
         Platform.SWITCH: range(2, 9),
-        Platform.EVENT: range(2, 9),
+        Platform.EVENT: range(1, 9),
     },
     DimmableLightingControl_LampLinc: {Platform.LIGHT: [1]},
     DimmableLightingControl_OutletLinc: {Platform.LIGHT: [1]},
@@ -84,7 +84,7 @@ DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
         Platform.BINARY_SENSOR: [2],
     },
     GeneralController_MiniRemote_4: {Platform.EVENT: [1, 2, 3, 4]},
-    GeneralController_MiniRemote_8: {Platform.EVENT: range(1, 8)},
+    GeneralController_MiniRemote_8: {Platform.EVENT: range(1, 9)},
     GeneralController_MiniRemote_Switch: {Platform.EVENT: [1, 2]},
     SecurityHealthSafety_DoorSensor: {Platform.BINARY_SENSOR: [1, 3, 4]},
     SecurityHealthSafety_LeakSensor: {Platform.BINARY_SENSOR: [2, 4]},
@@ -104,7 +104,7 @@ DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
     },
     SwitchedLightingControl_KeypadLinc_8: {
         Platform.SWITCH: range(1, 9),
-        Platform.EVENT: range(2, 9),
+        Platform.EVENT: range(1, 9),
     },
     SwitchedLightingControl_OnOffOutlet: {Platform.SWITCH: [1, 2]},
     SwitchedLightingControl_OutletLinc: {Platform.SWITCH: [1]},
