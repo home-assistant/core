@@ -3970,7 +3970,7 @@
         'recipe': dict({
           'categories': list([
           ]),
-          'date_added': HAFakeDate(2024, 1, 21),
+          'date_added': None,
           'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
