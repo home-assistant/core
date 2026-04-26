@@ -169,7 +169,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         except OneDriveException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="delete_error",
+                translation_key="delete_approot_error",
             ) from err
 
         results = await asyncio.gather(
@@ -181,17 +181,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ],
             return_exceptions=True,
         )
-        errors: list[OneDriveException] = []
-        for result in results:
+        failures: list[tuple[str, OneDriveException]] = []
+        for file_path, result in zip(file_paths, results, strict=True):
             if isinstance(result, OneDriveException):
-                errors.append(result)
+                failures.append((file_path, result))
             elif isinstance(result, BaseException):
                 raise result
-        if errors:
+        if failures:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="delete_error",
-            ) from ExceptionGroup("OneDrive delete errors", errors)
+                translation_placeholders={
+                    "paths": ", ".join(f"`{path}`" for path, _ in failures)
+                },
+            ) from ExceptionGroup(
+                "OneDrive delete errors", [err for _, err in failures]
+            )
 
     hass.services.async_register(
         DOMAIN,

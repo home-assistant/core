@@ -417,7 +417,7 @@ async def test_delete_service_fails(
     await setup_integration(hass, mock_config_entry)
     mock_onedrive_client.delete_drive_item.side_effect = OneDriveException("api error")
 
-    with pytest.raises(HomeAssistantError, match="Failed to delete file"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,
@@ -427,6 +427,8 @@ async def test_delete_service_fails(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "delete_error"
+    assert TEST_DESTINATION_PATH in exc_info.value.translation_placeholders["paths"]
 
 
 async def test_delete_service_multiple_files_all_fail(
@@ -442,7 +444,7 @@ async def test_delete_service_multiple_files_all_fail(
         OneDriveException("error two"),
     ]
 
-    with pytest.raises(HomeAssistantError, match="Failed to delete file") as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,
@@ -456,6 +458,8 @@ async def test_delete_service_multiple_files_all_fail(
     assert mock_onedrive_client.delete_drive_item.call_count == 2
     assert isinstance(exc_info.value.__cause__, ExceptionGroup)
     assert len(exc_info.value.__cause__.exceptions) == 2
+    assert TEST_DESTINATION_PATH in exc_info.value.translation_placeholders["paths"]
+    assert second_path in exc_info.value.translation_placeholders["paths"]
 
 
 async def test_delete_service_multiple_files_partial_failure(
@@ -471,7 +475,7 @@ async def test_delete_service_multiple_files_partial_failure(
         OneDriveException("error two"),
     ]
 
-    with pytest.raises(HomeAssistantError, match="Failed to delete file"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,
@@ -490,6 +494,8 @@ async def test_delete_service_multiple_files_partial_failure(
         f"id:/{TEST_DESTINATION_PATH}:",
         f"id:/{second_path}:",
     }
+    assert second_path in exc_info.value.translation_placeholders["paths"]
+    assert TEST_DESTINATION_PATH not in exc_info.value.translation_placeholders["paths"]
 
 
 async def test_delete_service_get_approot_fails(
@@ -501,7 +507,7 @@ async def test_delete_service_get_approot_fails(
     await setup_integration(hass, mock_config_entry)
     mock_onedrive_client.get_approot.side_effect = OneDriveException("network error")
 
-    with pytest.raises(HomeAssistantError, match="Failed to delete file"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,
@@ -511,6 +517,7 @@ async def test_delete_service_get_approot_fails(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "delete_approot_error"
 
 
 async def test_delete_service_unexpected_exception(
