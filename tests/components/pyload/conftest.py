@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -27,15 +28,33 @@ USER_INPUT = {
     CONF_VERIFY_SSL: False,
 }
 
+USER_INPUT_API_KEY = {
+    CONF_URL: "https://pyload.local:8000/prefix",
+    CONF_API_KEY: "pl_xxx",
+    CONF_VERIFY_SSL: False,
+}
+
 REAUTH_INPUT = {
     CONF_PASSWORD: "new-password",
     CONF_USERNAME: "new-username",
+}
+
+REAUTH_INPUT_API_KEY = {
+    CONF_API_KEY: "pl_xxx",
 }
 
 NEW_INPUT = {
     CONF_URL: "https://pyload.local:8000/prefix",
     CONF_PASSWORD: "new-password",
     CONF_USERNAME: "new-username",
+    CONF_VERIFY_SSL: False,
+}
+
+NEW_INPUT_API_KEY = {
+    CONF_URL: "https://pyload.local:8000/prefix",
+    CONF_API_KEY: "pl_xxx",
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
     CONF_VERIFY_SSL: False,
 }
 
