@@ -45,7 +45,7 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize a wall mounted garage door controller."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="garage_button")
         self._attr_icon = "mdi:arrow-up-down"
 
     async def async_press(self) -> None:
@@ -58,7 +58,9 @@ class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonE
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the full flush lock controller opener button."""
-        super().__init__(hap, device, post="Door opener")
+        super().__init__(
+            hap, device, post="Door opener", feature_id="lock_opener_button"
+        )
         self._attr_icon = "mdi:door-open"
 
     async def async_press(self) -> None:

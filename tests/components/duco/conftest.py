@@ -96,6 +96,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=None,
                 rh=None,
                 iaq_rh=None,
+                temp=27.9,
             ),
         ),
         Node(
@@ -121,6 +122,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=80,
                 rh=None,
                 iaq_rh=None,
+                temp=19.8,
             ),
         ),
         Node(
@@ -146,6 +148,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=None,
                 rh=42.0,
                 iaq_rh=85,
+                temp=27.9,
             ),
         ),
         Node(
@@ -171,6 +174,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=None,
                 rh=61.0,
                 iaq_rh=90,
+                temp=22.5,
             ),
         ),
     ]

@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.20.4
 
 # homeassistant.components.switchbot
-PySwitchbot==2.1.0
+PySwitchbot==2.2.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -191,7 +191,7 @@ aioambient==2024.08.0
 aioapcaccess==1.0.0
 
 # homeassistant.components.aquacell
-aioaquacell==0.2.0
+aioaquacell==1.0.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -1245,7 +1245,7 @@ kiosker-python-api==1.2.9
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.4.22.141111
+knx-frontend==2026.4.25.155016
 
 # homeassistant.components.konnected
 konnected==1.2.0
