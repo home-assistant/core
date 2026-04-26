@@ -4,10 +4,12 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import io
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -26,8 +28,11 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_OPTIONS,
     CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -56,6 +61,7 @@ from homeassistant.helpers.condition import (
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
+    make_entity_state_condition,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
@@ -1141,6 +1147,11 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
+        "sensor.uptime_am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+    )
+    hass.states.async_set(
         "sensor.no_device_class",
         "2020-06-01 01:00:00.000000+00:00",
     )
@@ -1162,6 +1173,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.uptime_am", before="sensor.pm")
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
@@ -2145,16 +2157,16 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: True
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: False
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return False
 
     async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
         return {
@@ -2292,8 +2304,9 @@ async def test_get_condition_platform_registers_conditions(
         ) -> ConfigType:
             return config
 
-        async def async_get_checker(self) -> ConditionChecker:
-            return lambda **kwargs: True
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
 
     async def async_get_conditions(
         hass: HomeAssistant,
@@ -3098,7 +3111,7 @@ async def _setup_numerical_condition(
     entity_ids: str | list[str],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
@@ -3427,7 +3440,7 @@ async def _setup_numerical_condition_with_unit(
     domain_specs: Mapping[str, DomainSpec] | None = None,
     base_unit: str = UnitOfTemperature.CELSIUS,
     unit_converter: type = TemperatureConverter,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionChecker:
     """Set up a numerical condition with unit conversion via a mock platform."""
     condition_cls = make_entity_numerical_condition_with_unit(
         domain_specs or _DEFAULT_DOMAIN_SPECS, base_unit, unit_converter
@@ -3939,3 +3952,602 @@ async def test_numerical_condition_with_unit_behavior(
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test(hass) is False
+
+
+async def _setup_state_condition(
+    hass: HomeAssistant,
+    entity_ids: str | list[str],
+    states: str | bool | set[str | bool],
+    condition_options: dict[str, Any] | None = None,
+    domain_specs: Mapping[str, DomainSpec] | None = None,
+    support_duration: bool = False,
+) -> condition.ConditionChecker:
+    """Set up a state condition via a mock platform and return the checker."""
+    condition_cls = make_entity_state_condition(
+        domain_specs or _DEFAULT_DOMAIN_SPECS,
+        states,
+        support_duration=support_duration,
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: condition_options or {},
+    }
+
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+    return test
+
+
+async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
+    """Test state condition with a single entity."""
+    test = await _setup_state_condition(
+        hass, entity_ids="test.entity_1", states=STATE_ON
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    assert test(hass) is False
+
+
+async def test_state_condition_multiple_target_states(hass: HomeAssistant) -> None:
+    """Test state condition matching any of multiple target states."""
+    test = await _setup_state_condition(
+        hass, entity_ids="test.entity_1", states={"on", "heat"}
+    )
+
+    hass.states.async_set("test.entity_1", "on")
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "heat")
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "off")
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+)
+async def test_state_condition_unavailable_unknown(
+    hass: HomeAssistant, state_value: str
+) -> None:
+    """Test state condition with unavailable/unknown entities.
+
+    Uses three entities: entity_1 is on, entity_2 is unavailable/unknown,
+    entity_3 varies. Unavailable/unknown entities are excluded from
+    evaluation, so:
+    - behavior any: passes if at least one *available* entity matches
+    - behavior all: passes if all *available* entities match
+    """
+    # Single entity: unavailable/unknown → False
+    test_single = await _setup_state_condition(
+        hass, entity_ids="test.entity_1", states=STATE_ON
+    )
+    hass.states.async_set("test.entity_1", state_value)
+    assert test_single(hass) is False
+
+    # behavior any: entity_1=on, entity_2=unavailable, entity_3=off
+    # → True (entity_1 matches, entity_2 is skipped)
+    test_any = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY},
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    assert test_any(hass) is True
+
+    # behavior any: entity_1=off, entity_2=unavailable, entity_3=off
+    # → False (no available entity matches)
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    assert test_any(hass) is False
+
+    # behavior all: entity_1=on, entity_2=unavailable, entity_3=on
+    # → True (all *available* entities match, entity_2 is skipped)
+    test_all = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_ON)
+    assert test_all(hass) is True
+
+    # behavior all: entity_1=on, entity_2=unavailable, entity_3=off
+    # → False (entity_3 is available and doesn't match)
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    assert test_all(hass) is False
+
+
+async def test_state_condition_entity_not_found(hass: HomeAssistant) -> None:
+    """Test state condition when entity does not exist."""
+    test = await _setup_state_condition(
+        hass, entity_ids="test.nonexistent", states=STATE_ON
+    )
+
+    # Entity doesn't exist — condition should be false
+    assert test(hass) is False
+
+
+async def test_state_condition_attribute_value_source(hass: HomeAssistant) -> None:
+    """Test state condition reads from attribute when value_source is set."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states="heat",
+        domain_specs={"test": DomainSpec(value_source="hvac_action")},
+    )
+
+    hass.states.async_set("test.entity_1", "on", {"hvac_action": "heat"})
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "on", {"hvac_action": "idle"})
+    assert test(hass) is False
+
+    # Missing attribute
+    hass.states.async_set("test.entity_1", "on", {})
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [(BEHAVIOR_ANY, True), (BEHAVIOR_ALL, False)],
+)
+async def test_state_condition_behavior(
+    hass: HomeAssistant, behavior: str, one_match_expected: bool
+) -> None:
+    """Test state condition with behavior any/all."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: behavior},
+    )
+
+    # Both on → True for any and all
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", STATE_ON)
+    assert test(hass) is True
+
+    # Only one on → depends on behavior
+    hass.states.async_set("test.entity_2", STATE_OFF)
+    assert test(hass) is one_match_expected
+
+    # Neither on → False for any and all
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    assert test(hass) is False
+
+
+async def test_state_condition_duration_not_met(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: entity hasn't been in state long enough."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Just turned on — duration not met
+    assert test(hass) is False
+
+    # Advance 5 seconds — still not enough
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is False
+
+
+async def test_state_condition_duration_met(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: entity has been in state long enough."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Advance past duration
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is True
+
+
+async def test_state_condition_duration_zero_behaves_like_no_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test that for: 0 behaves the same as omitting for.
+
+    The UI defaults to 00:00:00, so a zero duration must not require the
+    entity to have been in the state for any time — it should pass
+    immediately, just like when for is not specified.
+    """
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 0}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Should pass immediately — zero duration is the same as no duration
+    assert test(hass) is True
+
+
+async def test_state_condition_duration_wrong_state(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: entity in wrong state even after duration."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is False
+
+
+async def test_state_condition_duration_reset_on_state_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: timer resets when state changes."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Advance 8 seconds, then toggle off and back on — resets last_changed
+    freezer.tick(timedelta(seconds=8))
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # 5 seconds after retrigger — not enough
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is False
+
+    # 6 more seconds (11 from retrigger) — now met
+    freezer.tick(timedelta(seconds=6))
+    assert test(hass) is True
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [(BEHAVIOR_ANY, True), (BEHAVIOR_ALL, False)],
+)
+async def test_state_condition_duration_behavior(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    one_match_expected: bool,
+) -> None:
+    """Test state condition with duration and behavior any/all."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Both on but duration not met
+    assert test(hass) is False
+
+    # Advance past duration — both on for long enough
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is True
+
+    # Turn entity_2 off — only one on for duration → depends on behavior
+    hass.states.async_set("test.entity_2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert test(hass) is one_match_expected
+
+    # Neither on → False for any and all
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    await hass.async_block_till_done()
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+)
+async def test_state_condition_duration_unavailable_unknown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, state_value: str
+) -> None:
+    """Test state condition with duration: unavailable/unknown entities are skipped.
+
+    Uses three entities: entity_1=on, entity_2=unavailable, entity_3 varies.
+    """
+    # behavior any: entity_1=on (long enough), entity_2=unavailable, entity_3=off
+    # → True (entity_1 matches and meets duration, entity_2 skipped)
+    test_any = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test_any(hass) is True
+
+    # behavior all: entity_1=on, entity_2=unavailable, entity_3=on (all long enough)
+    # → True (all available entities match and meet duration)
+    test_all = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test_all(hass) is True
+
+    # entity_3 off → not all available match
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=11))
+    assert test_all(hass) is False
+
+
+async def test_condition_checker_del_calls_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ calls async_unload if not already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_called_once()
+
+
+async def test_condition_checker_del_skips_if_already_unloaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __del__ does not call async_unload if already called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    unload_mock = Mock(wraps=checker.async_unload)
+    checker.async_unload = unload_mock
+
+    # First call sets the flag
+    checker.async_unload()
+    unload_mock.assert_called_once()
+    unload_mock.reset_mock()
+
+    # __del__ should skip since _unloaded is True
+    # Pylint says we should `del checker`. However, that's not guaranteed
+    # to immediately call __del__.
+    checker.__del__()  # pylint: disable=unnecessary-dunder-call
+    unload_mock.assert_not_called()
+
+
+async def _setup_mock_integration(hass: HomeAssistant) -> None:
+    """Set up a mock integration with conditions."""
+
+    class MockCondition(Condition):
+        def __new__(cls, *args: Any, **kwargs: Any) -> Condition:
+            """Return a mock instance that tracks async_setup and async_unload calls."""
+            mocked = Mock(spec=Condition)
+            mocked.async_setup = AsyncMock()
+            mocked.async_unload = Mock()
+            return mocked
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config  # Return the config unchanged for testing
+
+        def _async_check(self, **kwargs: Any) -> bool | None:
+            """Check the condition."""
+            raise NotImplementedError
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+
+@pytest.mark.parametrize(
+    "compound_type",
+    ["and", "or", "not"],
+)
+async def test_compound_condition_forwards_async_unload(
+    hass: HomeAssistant, compound_type: str
+) -> None:
+    """Test that and/or/not compound conditions forward async_unload to children."""
+    await _setup_mock_integration(hass)
+    config = {
+        "condition": compound_type,
+        "conditions": [
+            {"condition": "test"},
+            {"condition": "test"},
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    # The compound checker should hold child conditions
+    assert hasattr(test, "_conditions")
+    assert len(test._conditions) == 2
+
+    test.async_unload()
+
+    for child in test._conditions:
+        child.async_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("outer_type", "inner_type"),
+    [
+        (outer, inner)
+        for outer in ("and", "or", "not")
+        for inner in ("and", "or", "not")
+    ],
+)
+async def test_nested_compound_condition_forwards_async_unload(
+    hass: HomeAssistant, outer_type: str, inner_type: str
+) -> None:
+    """Test that nested compound conditions forward async_unload recursively."""
+    await _setup_mock_integration(hass)
+    config = {
+        "condition": outer_type,
+        "conditions": [
+            {
+                "condition": inner_type,
+                "conditions": [{"condition": "test"}],
+            },
+            {"condition": "test"},
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    # Outer compound with 2 children: an inner compound and a leaf
+    assert len(test._conditions) == 2
+    inner_checker = test._conditions[0]
+    assert hasattr(inner_checker, "_conditions")
+    assert len(inner_checker._conditions) == 1
+
+    test.async_unload()
+
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
+    test._conditions[1].async_unload.assert_called_once()
+
+
+async def test_conditions_from_config_forwards_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_conditions_from_config forwards async_unload to children."""
+    await _setup_mock_integration(hass)
+    configs = [
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+
+    assert hasattr(test, "_conditions")
+    assert len(test._conditions) == 2
+
+    test.async_unload()
+
+    for child in test._conditions:
+        child.async_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "inner_type",
+    ["and", "or", "not"],
+)
+async def test_conditions_from_config_nested_forwards_async_unload(
+    hass: HomeAssistant, inner_type: str
+) -> None:
+    """Test that async_conditions_from_config forwards async_unload recursively."""
+    await _setup_mock_integration(hass)
+    configs = [
+        await condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": inner_type,
+                "conditions": [{"condition": "test"}],
+            },
+        ),
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+
+    assert len(test._conditions) == 2
+    inner_checker = test._conditions[0]
+    assert hasattr(inner_checker, "_conditions")
+    assert len(inner_checker._conditions) == 1
+
+    test.async_unload()
+
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
+    test._conditions[1].async_unload.assert_called_once()

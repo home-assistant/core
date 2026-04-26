@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from afsapi import AFSAPI, ConnectionError as FSConnectionError
+from afsapi import AFSAPI, FSConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PIN, Platform

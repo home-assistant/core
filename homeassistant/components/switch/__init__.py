@@ -21,7 +21,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -51,7 +50,6 @@ DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the switch is on based on the statemachine.
 

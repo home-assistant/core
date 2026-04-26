@@ -102,13 +102,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
 
     tractive = TractiveClient(hass, client, creds["user_id"], entry)
 
+    trackables = []
     try:
-        trackable_objects = await client.trackable_objects()
-        trackables = await asyncio.gather(
-            *(_generate_trackables(client, item) for item in trackable_objects)
-        )
+        for obj in await client.trackable_objects():
+            # To avoid hitting Tractive API rate limits, we add a small
+            # delay between requests to fetch trackable details.
+            await asyncio.sleep(2)
+            trackables.append(await _generate_trackables(client, obj))
     except aiotractive.exceptions.TractiveError as error:
+        await client.close()
         raise ConfigEntryNotReady from error
+    except ConfigEntryNotReady:
+        await client.close()
+        raise
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
     # So we have to remove None values from trackables list.
@@ -164,12 +170,11 @@ async def _generate_trackables(
     tracker = client.tracker(trackable_data["device_id"])
     trackable_pet = client.trackable_object(trackable_data["_id"])
 
-    tracker_details, hw_info, pos_report, health_overview = await asyncio.gather(
-        tracker.details(),
-        tracker.hw_info(),
-        tracker.pos_report(),
-        trackable_pet.health_overview(),
-    )
+    # Sequential fetching to prevent HTTP 429 Rate Limits
+    tracker_details = await tracker.details()
+    hw_info = await tracker.hw_info()
+    pos_report = await tracker.pos_report()
+    health_overview = await trackable_pet.health_overview()
 
     if not tracker_details.get("_id"):
         raise ConfigEntryNotReady(
