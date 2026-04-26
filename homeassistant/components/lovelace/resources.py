@@ -153,18 +153,14 @@ class ResourceStorageCollectionWebsocket(collection.DictStorageCollectionWebsock
 
         # Register lovelace/resources for backwards compatibility, remove in
         # Home Assistant Core 2025.1
-        @websocket_api.websocket_command(
-            {vol.Required("type"): f"{self.api_prefix}"}
+        websocket_api.async_register_command(
+            hass,
+            self.api_prefix,
+            self.ws_list_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {vol.Required("type"): f"{self.api_prefix}"}
+            ),
         )
-        @websocket_api.async_response
-        async def ws_list(
-            hass: HomeAssistant,
-            connection: websocket_api.ActiveConnection,
-            msg: dict[str, Any],
-        ) -> None:
-            await websocket_lovelace_resources_impl(hass, connection, msg)
-
-        websocket_api.async_register_command(hass, ws_list)
 
     @staticmethod
     @websocket_api.async_response

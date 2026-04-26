@@ -1975,40 +1975,31 @@ class PipelineStorageCollectionWebsocket(
         """Set up the websocket commands."""
         super().async_setup(hass)
 
-        api_prefix = self.api_prefix
-        item_id_key = self.item_id_key
-
-        @websocket_api.websocket_command(
-            {
-                vol.Required("type"): f"{api_prefix}/get",
-                vol.Optional(item_id_key): str,
-            }
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/get",
+            self.ws_get_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    vol.Required("type"): f"{self.api_prefix}/get",
+                    vol.Optional(self.item_id_key): str,
+                }
+            ),
         )
-        @callback
-        def ws_get(
-            hass: HomeAssistant,
-            connection: websocket_api.ActiveConnection,
-            msg: dict,
-        ) -> None:
-            self.ws_get_item(hass, connection, msg)
 
-        @websocket_api.websocket_command(
-            {
-                vol.Required("type"): f"{api_prefix}/set_preferred",
-                vol.Required(item_id_key): str,
-            }
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/set_preferred",
+            websocket_api.require_admin(
+                websocket_api.async_response(self.ws_set_preferred_item)
+            ),
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    vol.Required("type"): f"{self.api_prefix}/set_preferred",
+                    vol.Required(self.item_id_key): str,
+                }
+            ),
         )
-        @websocket_api.require_admin
-        @websocket_api.async_response
-        async def ws_set_preferred(
-            hass: HomeAssistant,
-            connection: websocket_api.ActiveConnection,
-            msg: dict,
-        ) -> None:
-            await self.ws_set_preferred_item(hass, connection, msg)
-
-        websocket_api.async_register_command(hass, ws_get)
-        websocket_api.async_register_command(hass, ws_set_preferred)
 
     async def ws_delete_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict

@@ -55,10 +55,12 @@ async def test_unknown_command(websocket_client) -> None:
 
 async def test_handler_failing(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises."""
-    handler = Mock(side_effect=TypeError)
-    handler._ws_command = "bla"
-    handler._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({"type": "bla"})
-    async_register_command(hass, handler)
+    async_register_command(
+        hass,
+        "bla",
+        Mock(side_effect=TypeError),
+        messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({"type": "bla"}),
+    )
     await websocket_client.send_json({"id": 5, "type": "bla"})
 
     msg = await websocket_client.receive_json()
@@ -70,12 +72,14 @@ async def test_handler_failing(hass: HomeAssistant, websocket_client) -> None:
 
 async def test_invalid_vol(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises invalid vol error."""
-    handler = Mock(side_effect=TypeError)
-    handler._ws_command = "bla"
-    handler._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {"type": "bla", vol.Required("test_config"): str}
+    async_register_command(
+        hass,
+        "bla",
+        Mock(side_effect=TypeError),
+        messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+            {"type": "bla", vol.Required("test_config"): str}
+        ),
     )
-    async_register_command(hass, handler)
 
     await websocket_client.send_json({"id": 5, "type": "bla", "test_config": 5})
 
