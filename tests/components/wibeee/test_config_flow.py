@@ -15,9 +15,9 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 from .conftest import MOCK_HOST
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_step_shows_form(
