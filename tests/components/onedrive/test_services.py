@@ -442,7 +442,7 @@ async def test_delete_service_multiple_files_all_fail(
         OneDriveException("error two"),
     ]
 
-    with pytest.raises(HomeAssistantError, match="error one.*error two"):
+    with pytest.raises(HomeAssistantError, match="Failed to delete file"):
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,

@@ -170,7 +170,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="delete_error",
-                translation_placeholders={"message": str(err)},
             ) from err
 
         results = await asyncio.gather(
@@ -192,7 +191,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="delete_error",
-                translation_placeholders={"message": "; ".join(str(e) for e in errors)},
             ) from errors[0]
 
     hass.services.async_register(
