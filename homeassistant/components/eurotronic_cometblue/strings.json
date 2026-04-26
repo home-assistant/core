@@ -37,17 +37,14 @@
       }
     },
     "number": {
+      "comfort_setpoint": {
+        "name": "Comfort setpoint"
+      },
+      "eco_setpoint": {
+        "name": "Eco setpoint"
+      },
       "offset": {
-        "name": "Temperature offset"
-      },
-      "target_temp_high": {
-        "name": "Target temperature high"
-      },
-      "target_temp_low": {
-        "name": "Target temperature low"
-      },
-      "window_open_delay": {
-        "name": "Window open delay"
+        "name": "Setpoint offset"
       }
     }
   }

@@ -59,8 +59,8 @@ async def test_number_disabled_by_default_entities(
 @pytest.mark.parametrize(
     ("entity_id", "value", "default_value"),
     [
-        ("number.comet_blue_aa_bb_cc_dd_ee_ff_target_temperature_low", 18.5, 17.0),
-        ("number.comet_blue_aa_bb_cc_dd_ee_ff_target_temperature_high", 23.0, 21.0),
+        ("number.comet_blue_aa_bb_cc_dd_ee_ff_eco_setpoint", 18.5, 17.0),
+        ("number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint", 23.0, 21.0),
     ],
 )
 async def test_set_number_value(

@@ -57,9 +57,9 @@ DESCRIPTIONS = [
         entity_registry_enabled_default=False,
     ),
     CometBlueNumberEntityDescription(
-        key="target_temp_low",
+        key="eco_setpoint",
         cometblue_key="targetTempLow",
-        translation_key="target_temp_low",
+        translation_key="eco_setpoint",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -70,9 +70,9 @@ DESCRIPTIONS = [
         entity_registry_enabled_default=True,
     ),
     CometBlueNumberEntityDescription(
-        key="target_temp_high",
+        key="comfort_setpoint",
         cometblue_key="targetTempHigh",
-        translation_key="target_temp_high",
+        translation_key="comfort_setpoint",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
