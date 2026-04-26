@@ -48,8 +48,10 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             update_interval=timedelta(seconds=60),
         )
         self._consecutive_failures = 0
-        self._max_consecutive_failures = entry.options.get(
-            CONF_MAX_CONSECUTIVE_FAILURES, DEFAULT_MAX_CONSECUTIVE_FAILURES
+        self._max_consecutive_failures = int(
+            entry.options.get(
+                CONF_MAX_CONSECUTIVE_FAILURES, DEFAULT_MAX_CONSECUTIVE_FAILURES
+            )
         )
         self.iss = pyiss.ISS()
 
