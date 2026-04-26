@@ -14,12 +14,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import (
-    PRECISION_HALVES,
-    EntityCategory,
-    UnitOfTemperature,
-    UnitOfTime,
-)
+from homeassistant.const import PRECISION_HALVES, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -86,19 +81,6 @@ DESCRIPTIONS = [
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
         entity_registry_enabled_default=True,
-    ),
-    CometBlueNumberEntityDescription(
-        key="window_open_delay",
-        cometblue_key="windowOpenMinutes",
-        translation_key="window_open_delay",
-        device_class=NumberDeviceClass.DURATION,
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        set_fn=lambda x: x.set_temperature_async,
-        native_min_value=5.0,
-        native_max_value=15.0,
-        native_step=5.0,
-        entity_registry_enabled_default=False,
     ),
 ]
 
