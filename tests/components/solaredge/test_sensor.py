@@ -318,8 +318,13 @@ async def test_storage_data_missing_keys_in_response(
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
+    )
     assert charge_entry is not None
+    assert discharge_entry is not None
     assert hass.states.get(charge_entry).state == STATE_UNAVAILABLE
+    assert hass.states.get(discharge_entry).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -337,10 +342,13 @@ async def test_storage_service_deferred_after_inventory_failure(
 
     await setup_integration(hass, mock_config_entry)
 
-    charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
+    # Storage sensors are not created yet — the inventory fetch failed.
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
+        )
+        is None
     )
-    assert charge_entry is None
 
     # Inventory recovers and reports a battery → storage sensors get created.
     solaredge_api.get_inventory.side_effect = None
@@ -350,14 +358,18 @@ async def test_storage_service_deferred_after_inventory_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
+        )
+        is not None
     )
-    discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
+        )
+        is not None
     )
-    assert charge_entry is not None
-    assert discharge_entry is not None
 
 
 @pytest.mark.parametrize(
