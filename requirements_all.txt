@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.3
+actron-neo-api==0.5.5
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -859,7 +859,7 @@ eagle100==0.1.1
 earn-e-p1==0.1.0
 
 # homeassistant.components.easyenergy
-easyenergy==2.2.0
+easyenergy==3.0.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -3195,7 +3195,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.4.0
+uiprotect==10.4.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
