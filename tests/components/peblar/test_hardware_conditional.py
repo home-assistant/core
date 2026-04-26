@@ -6,13 +6,12 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, Platform, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -127,3 +126,36 @@ async def test_socket_lock_absent_without_socket(
 ) -> None:
     """Test socket lock entity absent when HwHasSocket=false (default fixture)."""
     assert hass.states.get("switch.peblar_ev_charger_keep_socket_locked") is None
+
+
+@pytest.mark.parametrize(
+    "init_integration", [Platform.BUTTON], indirect=True
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_socket_unlock_button_absent_without_socket(
+    hass: HomeAssistant,
+) -> None:
+    """Test socket unlock button absent when HwHasSocket=false (default fixture)."""
+    assert hass.states.get("button.peblar_ev_charger_unlock_socket") is None
+
+
+@pytest.mark.parametrize(
+    "init_integration_without_buzzer", [Platform.SELECT], indirect=True
+)
+@pytest.mark.usefixtures("init_integration_without_buzzer")
+async def test_buzzer_volume_absent_without_buzzer(
+    hass: HomeAssistant,
+) -> None:
+    """Test buzzer volume select absent when HwHasBuzzer=false."""
+    assert hass.states.get("select.peblar_ev_charger_buzzer_volume") is None
+
+
+@pytest.mark.parametrize(
+    "init_integration_without_led", [Platform.SELECT], indirect=True
+)
+@pytest.mark.usefixtures("init_integration_without_led")
+async def test_led_brightness_absent_without_led(
+    hass: HomeAssistant,
+) -> None:
+    """Test LED brightness select absent when HwHasLed=false."""
+    assert hass.states.get("select.peblar_ev_charger_led_brightness") is None
