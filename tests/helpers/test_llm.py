@@ -818,7 +818,7 @@ async def test_get_live_context_tool_filter(
         suggested_object_id="front_door",
     )
     entity_registry.async_update_entity(
-        kitchen_light.entity_id, aliases={"Cooking Lamp"}
+        kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
     )
 
     for entity_id in (
