@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from airly.exceptions import AirlyError
 
-from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
+from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -123,7 +123,7 @@ async def test_create_entry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airly (123, 456)"
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
@@ -150,7 +150,7 @@ async def test_create_entry_with_nearest_method(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airly (123, 456)"
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]

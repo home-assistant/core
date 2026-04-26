@@ -38,23 +38,23 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         websession = async_get_clientsession(self.hass)
 
         if user_input is not None:
-            latitude = user_input[CONF_LATITUDE]
-            longitude = user_input[CONF_LONGITUDE]
-            await self.async_set_unique_id(f"{latitude}-{longitude}")
+            await self.async_set_unique_id(
+                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
+            )
             self._abort_if_unique_id_configured()
             try:
                 location_point_valid = await check_location(
                     websession,
                     user_input["api_key"],
-                    latitude,
-                    longitude,
+                    user_input[CONF_LATITUDE],
+                    user_input[CONF_LONGITUDE],
                 )
                 if not location_point_valid:
                     location_nearest_valid = await check_location(
                         websession,
                         user_input["api_key"],
-                        latitude,
-                        longitude,
+                        user_input[CONF_LATITUDE],
+                        user_input[CONF_LONGITUDE],
                         use_nearest=True,
                     )
             except AirlyError as err:
@@ -68,7 +68,7 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="wrong_location")
                     use_nearest = True
                 return self.async_create_entry(
-                    title=f"{DEFAULT_NAME} ({latitude}, {longitude})",
+                    title=DEFAULT_NAME,
                     data={**user_input, CONF_USE_NEAREST: use_nearest},
                 )
 
