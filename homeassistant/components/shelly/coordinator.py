@@ -904,6 +904,7 @@ def get_block_coordinator_by_device_id(
             if (
                 entry
                 and entry.state is ConfigEntryState.LOADED
+                and entry.domain == DOMAIN
                 and (coordinator := entry.runtime_data.block)
             ):
                 return coordinator
@@ -923,6 +924,7 @@ def get_rpc_coordinator_by_device_id(
             if (
                 entry
                 and entry.state is ConfigEntryState.LOADED
+                and entry.domain == DOMAIN
                 and (coordinator := entry.runtime_data.rpc)
             ):
                 return coordinator
