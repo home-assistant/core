@@ -11,6 +11,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions import filter_entity_ids_by_permission
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
@@ -139,15 +140,12 @@ async def ws_get_history_during_period(
             connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
             return
 
-    user = connection.user
-    if not user.is_admin:
-        entity_perm = user.permissions.check_entity
-        entity_ids = [
-            entity_id for entity_id in entity_ids if entity_perm(entity_id, POLICY_READ)
-        ]
-        if not entity_ids:
-            connection.send_result(msg["id"], {})
-            return
+    entity_ids = filter_entity_ids_by_permission(
+        connection.user, entity_ids, POLICY_READ
+    )
+    if not entity_ids:
+        connection.send_result(msg["id"], {})
+        return
 
     include_start_time_state = msg["include_start_time_state"]
     no_attributes = msg["no_attributes"]
@@ -455,15 +453,12 @@ async def ws_stream(
             connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
             return
 
-    user = connection.user
-    if not user.is_admin:
-        entity_perm = user.permissions.check_entity
-        entity_ids = [
-            entity_id for entity_id in entity_ids if entity_perm(entity_id, POLICY_READ)
-        ]
-        if not entity_ids:
-            _async_send_empty_response(connection, msg_id, start_time, end_time)
-            return
+    entity_ids = filter_entity_ids_by_permission(
+        connection.user, entity_ids, POLICY_READ
+    )
+    if not entity_ids:
+        _async_send_empty_response(connection, msg_id, start_time, end_time)
+        return
 
     include_start_time_state = msg["include_start_time_state"]
     significant_changes_only = msg["significant_changes_only"]
