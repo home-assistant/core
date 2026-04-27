@@ -31,7 +31,7 @@
         "name": "Boiler temperature"
       },
       "buffer_bottom_temperature": {
-        "name": "Buffer bottem temperature"
+        "name": "Buffer bottom temperature"
       },
       "buffer_center_temperature": {
         "name": "Buffer center temperature"
