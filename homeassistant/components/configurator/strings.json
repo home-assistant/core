@@ -8,21 +8,5 @@
       }
     }
   },
-  "services": {
-    "configure": {
-      "description": "Submits the configuration for a pending request. Used by integrations that finalize OAuth or other interactive setups.",
-      "fields": {
-        "configure_id": {
-          "description": "The configure request ID, taken from the `configure_id` attribute of the configurator entity.",
-          "name": "Configure ID"
-        },
-        "fields": {
-          "description": "Field values to submit, keyed by field ID.",
-          "name": "Fields"
-        }
-      },
-      "name": "Configure"
-    }
-  },
   "title": "Configurator"
 }

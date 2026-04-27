@@ -1,9 +1,0 @@
-configure:
-  fields:
-    configure_id:
-      required: true
-      selector:
-        text:
-    fields:
-      selector:
-        object:
