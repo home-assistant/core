@@ -217,7 +217,9 @@ def _transitions_config_parser(transitions):
 
 
 @callback
-def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
+def _parse_custom_effects(
+    effects_config: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
