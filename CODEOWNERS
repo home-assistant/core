@@ -2027,6 +2027,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/yolink/ @matrixd2
 /tests/components/yolink/ @matrixd2
+/homeassistant/components/yolink_local/ @matrixd2
+/tests/components/yolink_local/ @matrixd2
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/youtube/ @joostlek
