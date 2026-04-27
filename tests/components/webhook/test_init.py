@@ -288,7 +288,7 @@ async def test_webhook_local_only_mock_request(
     hooks = []
     webhook_id = webhook.async_generate_id()
 
-    async def handle(hass, webhook_id, request):
+    async def handle(hass: HomeAssistant, webhook_id: str, request: web.Request):
         """Handle webhook."""
         hooks.append((hass, webhook_id, await request.text()))
 
