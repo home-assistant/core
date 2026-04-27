@@ -47,7 +47,7 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
+# Endpoints needed for ingress can't require admin because add-ons can set `panel_admin: false`
 RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
 WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
 WS_NO_ADMIN_ENDPOINTS = re.compile(
@@ -152,7 +152,7 @@ async def websocket_supervisor_api(
         )
     else:
         data = result.get(ATTR_DATA, {})
-        # Remove options from addon info for non-admin users, as options can contain
+        # Remove options from add-on info for non-admin users, as options can contain
         # sensitive information and the frontend does not require it for ingress.
         if (
             not connection.user.is_admin
