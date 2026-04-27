@@ -326,7 +326,6 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="uptime",
-        translation_key="uptime",
         device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
