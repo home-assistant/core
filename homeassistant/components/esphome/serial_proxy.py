@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import cast
 
 from aioesphomeapi import APIClient
@@ -24,12 +25,6 @@ from .entry_data import ESPHomeConfigEntry
 # aioesphomeapi client. We cannot make any assumptions here, some packages run separate
 # asyncio event loops in dedicated threads.
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
-
-
-def set_hass_loop(loop: asyncio.AbstractEventLoop) -> None:
-    """Store a reference to the Core event loop."""
-    global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
-    _HASS_LOOP = loop
 
 
 def build_url(entry_id: str, port_name: str) -> URL:
@@ -103,9 +98,23 @@ class HassESPHomeSerialTransport(ESPHomeSerialTransport):
     _serial_cls = HassESPHomeSerial
 
 
-register_uri_handler(
-    scheme="esphome-hass://",
-    unique_scheme="esphome-hass-internal://",  # The unique scheme must differ
-    sync_cls=HassESPHomeSerial,
-    async_transport_cls=HassESPHomeSerialTransport,
-)
+def register_serialx_transport(
+    loop: asyncio.AbstractEventLoop,
+) -> Callable[[], None]:
+    """Register the ESPHome URI handler and return an unregister callable."""
+    global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
+    _HASS_LOOP = loop
+
+    unregister = register_uri_handler(
+        scheme="esphome-hass://",
+        unique_scheme="esphome-hass-internal://",  # The unique scheme must differ
+        sync_cls=HassESPHomeSerial,
+        async_transport_cls=HassESPHomeSerialTransport,
+    )
+
+    def _unregister() -> None:
+        global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
+        unregister()
+        _HASS_LOOP = None
+
+    return _unregister

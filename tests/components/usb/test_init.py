@@ -1758,6 +1758,8 @@ async def test_list_serial_ports_os_error(
 
 async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:
     """Test ESPHome serial proxy stub."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
     serial_cls = serial_for_url("esphome-hass-usb://192.0.2.1")
     assert isinstance(serial_cls, HassESPHomeSerialStub)
 
