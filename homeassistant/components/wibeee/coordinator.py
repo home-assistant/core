@@ -16,6 +16,7 @@ from xml.etree.ElementTree import ParseError as XMLParseError
 import aiohttp
 from pywibeee import WibeeeAPI
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -33,11 +34,14 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
     externally via :meth:`async_push_update`.
     """
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         api: WibeeeAPI,
         *,
+        config_entry: ConfigEntry,
         name: str | None = None,
         update_interval: timedelta | None = None,
     ) -> None:
@@ -47,6 +51,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=name or f"Wibeee {api.host}",
             update_interval=update_interval,
         )
