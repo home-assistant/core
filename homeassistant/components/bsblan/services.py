@@ -187,7 +187,10 @@ def _device_name(device_entry: dr.DeviceEntry) -> str:
 def _circuit_from_device(device_entry: dr.DeviceEntry) -> int:
     """Extract the heating circuit number from a sub-device identifier."""
     for domain, identifier in device_entry.identifiers:
-        if domain == DOMAIN and (circuit := circuit_from_identifier(identifier)):
+        if domain != DOMAIN:
+            continue
+        circuit = circuit_from_identifier(identifier)
+        if circuit is not None:
             return circuit
     raise ServiceValidationError(
         translation_domain=DOMAIN,

@@ -762,6 +762,35 @@ async def test_set_heating_schedule_rejects_main_device(
 
 
 @pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_rejects_zero_circuit_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that circuit zero is rejected as an invalid circuit sub-device."""
+    circuit_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-0")},
+        name="Invalid heating circuit",
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": circuit_device.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "not_a_heating_circuit_device"
+
+
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_heating_schedule_api_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,

@@ -45,7 +45,9 @@ def circuit_from_identifier(identifier: str) -> int | None:
         HEATING_CIRCUIT_IDENTIFIER_SEPARATOR
     )
     if separator and prefix and suffix.isdigit():
-        return int(suffix)
+        circuit = int(suffix)
+        if circuit >= 1:
+            return circuit
     return None
 
 
