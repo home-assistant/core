@@ -50,6 +50,7 @@ async def test_diagnostics_connection_error(
         "Server disconnected"
     )
     assert await async_setup_component(hass, DIAGNOSTICS_DOMAIN, {})
+    await hass.async_block_till_done()
     client = await hass_client()
     response = await client.get(
         f"/api/diagnostics/config_entry/{mock_config_entry.entry_id}"
