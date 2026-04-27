@@ -781,7 +781,7 @@ async def mock_sleepy_rpc_device():
         rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=_event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=_online)
-        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=_initialize)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=_initialized)
         rpc_device_mock.return_value.subscribe_updates = Mock(
             side_effect=_subscribe_updates
         )
