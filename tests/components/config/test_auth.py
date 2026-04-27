@@ -125,9 +125,7 @@ async def test_delete_requires_admin(
     """Test delete command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
-    await client.send_json(
-        {"id": 5, "type": "config/auth/delete", "user_id": "abcd"}
-    )
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": "abcd"})
 
     result = await client.receive_json()
     assert not result["success"], result
@@ -156,9 +154,7 @@ async def test_delete_unknown_user(
     """Test we cannot delete an unknown user."""
     client = await hass_ws_client(hass, hass_access_token)
 
-    await client.send_json(
-        {"id": 5, "type": "config/auth/delete", "user_id": "abcd"}
-    )
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": "abcd"})
 
     result = await client.receive_json()
     assert not result["success"], result
