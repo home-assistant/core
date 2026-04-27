@@ -5,7 +5,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BSBLanData, get_bsblan_device_info
-from .const import DEFAULT_PORT, DOMAIN
+from .const import (
+    DEFAULT_PORT,
+    DOMAIN,
+    heating_circuit_identifier,
+    water_heater_identifier,
+)
 from .coordinator import BSBLanCoordinator, BSBLanFastCoordinator, BSBLanSlowCoordinator
 
 
@@ -48,7 +53,7 @@ class BSBLanCircuitEntity(BSBLanEntity):
         port = coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
         main_info = get_bsblan_device_info(data.device, data.info, host, port)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{mac}-circuit-{circuit}")},
+            identifiers={(DOMAIN, heating_circuit_identifier(mac, circuit))},
             translation_key="heating_circuit",
             translation_placeholders={"circuit": str(circuit)},
             via_device=(DOMAIN, mac),
@@ -96,7 +101,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
         port = fast_coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
         main_info = get_bsblan_device_info(data.device, data.info, host, port)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{mac}-water-heater")},
+            identifiers={(DOMAIN, water_heater_identifier(mac))},
             translation_key="water_heater",
             via_device=(DOMAIN, mac),
             manufacturer=main_info["manufacturer"],
