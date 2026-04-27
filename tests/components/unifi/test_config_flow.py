@@ -3,7 +3,6 @@
 import socket
 from unittest.mock import PropertyMock, patch
 
-import aiounifi
 import pytest
 
 from homeassistant import config_entries
@@ -23,6 +22,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN,
 )
+from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -134,6 +134,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
         CONF_SITE_ID: "site_id",
         CONF_VERIFY_SSL: True,
     }
+    assert result["result"].unique_id == "1"
 
 
 async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
@@ -243,9 +244,20 @@ async def test_flow_aborts_configuration_updated(hass: HomeAssistant) -> None:
     assert result["reason"] == "configuration_updated"
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (AuthenticationRequired, "faulty_credentials"),
+        (CannotConnect, "service_unavailable"),
+    ],
+)
 @pytest.mark.usefixtures("mock_default_requests")
-async def test_flow_fails_user_credentials_faulty(hass: HomeAssistant) -> None:
-    """Test config flow."""
+async def test_flow_fails_and_recovers(
+    hass: HomeAssistant,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test config flow recovers from errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -253,7 +265,10 @@ async def test_flow_fails_user_credentials_faulty(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.Unauthorized):
+    with patch(
+        "homeassistant.components.unifi.config_flow.get_unifi_api",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -266,33 +281,30 @@ async def test_flow_fails_user_credentials_faulty(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "faulty_credentials"}
+    assert result["errors"] == {"base": error}
 
-
-@pytest.mark.usefixtures("mock_default_requests")
-async def test_flow_fails_hub_unavailable(hass: HomeAssistant) -> None:
-    """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_PORT: 1234,
-                CONF_VERIFY_SSL: True,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "service_unavailable"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Site name"
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "username",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 1234,
+        CONF_SITE_ID: "site_id",
+        CONF_VERIFY_SSL: True,
+    }
+    assert result["result"].unique_id == "1"
 
 
 async def test_reauth_flow_update_configuration(
@@ -332,7 +344,10 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
     hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Verify reauth flow can update hub configuration on a not loaded entry."""
-    with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
+    with patch(
+        "homeassistant.components.unifi.get_unifi_api",
+        side_effect=CannotConnect,
+    ):
         config_entry = await config_entry_factory()
 
     result = await config_entry.start_reauth_flow(hass)

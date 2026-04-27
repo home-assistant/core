@@ -13,6 +13,7 @@ from unifi_access_api import (
     DoorPositionStatus,
     EmergencyStatus,
 )
+from unifi_discovery import AIOUnifiScanner
 
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -27,6 +28,19 @@ MOCK_API_TOKEN = "test-api-token-12345"
 
 
 MOCK_ENTRY_ID = "mock-unifi-access-entry-id"
+
+
+@pytest.fixture(autouse=True)
+def mock_discovery() -> Generator[None]:
+    """Prevent real network scanning in all unifi_access tests."""
+    mock_aio_discovery = MagicMock(spec=AIOUnifiScanner)
+    mock_aio_discovery.async_scan = AsyncMock(return_value=[])
+    mock_aio_discovery.found_devices = []
+    with patch(
+        "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
+        return_value=mock_aio_discovery,
+    ):
+        yield
 
 
 @pytest.fixture

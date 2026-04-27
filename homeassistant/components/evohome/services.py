@@ -14,15 +14,29 @@ from evohomeasync2.schemas.const import (
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_MODE
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    service,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
+    DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
+    SERVICE_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
+from .helpers import async_create_deprecation_issue_once
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
@@ -36,6 +50,7 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
         cv.time_period,
         vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
 }
 
 # Zone service schemas (registered as entity services)
@@ -43,6 +58,15 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     vol.Required(ATTR_SETPOINT): vol.All(
         vol.Coerce(float), vol.Range(min=4.0, max=35.0)
     ),
+    vol.Optional(ATTR_DURATION): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+    ),
+}
+
+# DHW service schemas (registered as entity services)
+SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+    vol.Required(ATTR_STATE): cv.boolean,
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
@@ -68,6 +92,63 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         entity_domain=CLIMATE_DOMAIN,
         schema=SET_ZONE_OVERRIDE_SCHEMA,
         func="async_set_zone_override",
+    )
+
+
+def _resolve_ctl_unique_id(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    tcs_id: str,
+) -> str:
+    """Resolve the target controller unique_id from an optional entity_id.
+
+    During the deprecation window, advise users to switch to targeting the controller.
+    """
+
+    if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
+        async_create_deprecation_issue_once(
+            hass,
+            f"deprecated_{call.service}_service",
+            SERVICE_BREAKS_IN_HA_VERSION,
+            translation_key="deprecated_controller_service",
+            translation_placeholders={"service": call.service},
+        )
+        return tcs_id
+
+    entry = er.async_get(hass).async_get(entity_id)
+
+    if entry is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entity_not_found",
+            translation_placeholders={ATTR_ENTITY_ID: entity_id},
+        )
+
+    # currently, evohome supports only 1 controller
+    if (
+        entry.domain != CLIMATE_DOMAIN
+        or entry.platform != DOMAIN
+        or entry.unique_id != tcs_id
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": call.service},
+        )
+
+    return tcs_id
+
+
+def _register_dhw_entity_services(hass: HomeAssistant) -> None:
+    """Register entity-level services for DHW zones."""
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        EvoService.SET_DHW_OVERRIDE,
+        entity_domain=WATER_HEATER_DOMAIN,
+        schema=SET_DHW_OVERRIDE_SCHEMA,
+        func="async_set_dhw_override",
     )
 
 
@@ -131,15 +212,32 @@ def setup_service_functions(
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the Evohome system mode or reset the system."""
 
+        # We can rely upon coordinator.tcs being non-None here, since:
+        # - services are registered only if coordinator.async_first_refresh() succeeds
+        # - without config flow, the controller entity will never be de-registered
+
+        assert coordinator.tcs is not None  # mypy
+
         # No additional validation for RESET_SYSTEM here, as the library method invoked
         # via that service call may be able to emulate the reset even if the system
         # doesn't support AutoWithReset natively
 
+        if call.service == EvoService.RESET_SYSTEM:
+            async_create_deprecation_issue_once(
+                hass,
+                "deprecated_reset_system_service",
+                RESET_BREAKS_IN_HA_VERSION,
+            )
+
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(coordinator.tcs, call.data)
+            unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
+        else:
+            # this service call to be deprecated, so no need to _resolve_ctl_unique_id
+            unique_id = coordinator.tcs.id
 
         payload = {
-            "unique_id": coordinator.tcs.id,
+            "unique_id": unique_id,
             "service": call.service,
             "data": call.data,
         }
@@ -156,3 +254,4 @@ def setup_service_functions(
     )
 
     _register_zone_entity_services(hass)
+    _register_dhw_entity_services(hass)

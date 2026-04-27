@@ -58,6 +58,9 @@
     "setup_connection_error": {
       "message": "Failed to connect to the Actron Air API"
     },
+    "temperature_missing": {
+      "message": "Provide a temperature value when adjusting the climate entity."
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from the Actron Air API: {error}"
     }

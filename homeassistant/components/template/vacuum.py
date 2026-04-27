@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -10,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
+    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -17,6 +19,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
@@ -65,6 +68,7 @@ CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED = "fan_speed"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
+CONF_SEGMENTS_TEMPLATE = "segments_template"
 
 DEFAULT_NAME = "Template Vacuum"
 
@@ -77,6 +81,7 @@ LEGACY_FIELDS = {
 }
 
 SCRIPT_FIELDS = (
+    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -86,12 +91,19 @@ SCRIPT_FIELDS = (
     SERVICE_STOP,
 )
 
+CLEAN_AREA_GROUP = "clean_area_group"
+
 VACUUM_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_BATTERY_LEVEL): cv.template,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
         vol.Optional(CONF_FAN_SPEED): cv.template,
         vol.Optional(CONF_STATE): cv.template,
+        vol.Inclusive(
+            CONF_SEGMENTS_TEMPLATE,
+            CLEAN_AREA_GROUP,
+            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+        ): cv.template,
         vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
@@ -99,15 +111,23 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
         vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
         vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+        vol.Inclusive(
+            SERVICE_CLEAN_AREA,
+            CLEAN_AREA_GROUP,
+            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+        ): cv.SCRIPT_SCHEMA,
     }
 )
 
-VACUUM_YAML_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(
-    make_template_entity_common_modern_attributes_schema(
-        VACUUM_DOMAIN, DEFAULT_NAME
-    ).schema
+
+VACUUM_YAML_SCHEMA = vol.All(
+    VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+        make_template_entity_common_modern_attributes_schema(
+            VACUUM_DOMAIN, DEFAULT_NAME
+        ).schema
+    ),
+    cv.key_dependency(CONF_SEGMENTS_TEMPLATE, CONF_UNIQUE_ID),
+    cv.key_dependency(SERVICE_CLEAN_AREA, CONF_UNIQUE_ID),
 )
 
 VACUUM_LEGACY_YAML_SCHEMA = vol.All(
@@ -214,6 +234,59 @@ def create_issue(
         )
 
 
+def validate_segments(
+    entity: AbstractTemplateVacuum,
+    option: str,
+) -> Callable[[Any], list[Segment] | None]:
+    """Parse segment template to list of segments."""
+
+    def parse(result: Any) -> list[Segment] | None:
+        if template_validators.check_result_for_none(result):
+            return None
+
+        segments: list[Segment] = []
+
+        if not isinstance(result, list):
+            template_validators.log_validation_result_error(
+                entity,
+                option,
+                result,
+                "expected a list of dictionaries",
+            )
+            return None
+
+        for item in result:
+            if not isinstance(item, dict):
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    item,
+                    "expected dictionary with keys id, name and optional group"
+                    " and string values",
+                )
+                return None
+
+            if (
+                not isinstance(item.get("id"), str)
+                or not isinstance(item.get("name"), str)
+                or ("group" in item and not isinstance(item["group"], str))
+                or not set(item).issubset({"id", "name", "group"})
+            ):
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    item,
+                    "expected dictionary with keys id, name and optional group"
+                    " and string values",
+                )
+                return None
+
+            segments.append(Segment(**item))
+        return segments
+
+    return parse
+
+
 class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     """Representation of a template vacuum features."""
 
@@ -228,6 +301,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
 
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
             template_validators.strenum(self, CONF_STATE, VacuumActivity),
@@ -245,6 +319,13 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             template_validators.number(self, CONF_BATTERY_LEVEL, 0.0, 100.0),
         )
 
+        self.setup_template(
+            CONF_SEGMENTS_TEMPLATE,
+            "_segments",
+            validate_segments(self, CONF_SEGMENTS_TEMPLATE),
+            self._update_segments,
+        )
+
         self._attr_supported_features = (
             VacuumEntityFeature.START | VacuumEntityFeature.STATE
         )
@@ -260,10 +341,40 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             (SERVICE_CLEAN_SPOT, VacuumEntityFeature.CLEAN_SPOT),
             (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
             (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
+            (SERVICE_CLEAN_AREA, VacuumEntityFeature.CLEAN_AREA),
         ):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+
+    @callback
+    def _update_segments(self, result: list[Segment] | None) -> None:
+        """Save segment templates and create issue when segments changed."""
+        if result is None:
+            return
+
+        self._segments = result
+
+        if (last_seen := self.last_seen_segments) is not None and {
+            s.id: s for s in last_seen
+        } != {s.id: s for s in self._segments}:
+            self.async_create_segments_issue()
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Return the available segments."""
+        return self._segments
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.CLEANING
+            self.async_write_ha_state()
+        if script := self._action_scripts.get(SERVICE_CLEAN_AREA):
+            await self.async_run_script(
+                script,
+                run_variables={"segment_ids": segment_ids},
+                context=self._context,
+            )
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""

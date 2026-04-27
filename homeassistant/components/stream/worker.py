@@ -15,6 +15,7 @@ from typing import Any, Self, cast
 
 import av
 import av.audio
+from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
 import av.container
 from av.container import InputContainer
 import av.stream
@@ -152,6 +153,23 @@ class StreamMuxer:
         self._stream_state = stream_state
         self._start_time = dt_util.utcnow()
 
+    @staticmethod
+    def _add_stream_from_template(
+        container: av.container.OutputContainer,
+        template: av.stream.Stream,
+    ) -> av.stream.Stream:
+        """Add a stream to the output container from a template.
+
+        Decoder-only codecs (e.g., libdav1d for AV1) have no matching
+        encoder, causing add_stream_from_template to fail. Retrying with
+        opaque=True bypasses the encoder lookup and copies codec parameters
+        directly from the template, which is sufficient for remuxing.
+        """
+        try:
+            return container.add_stream_from_template(template)
+        except UnknownCodecError:
+            return container.add_stream_from_template(template, opaque=True)
+
     def make_new_av(
         self,
         memory_file: BytesIO,
@@ -223,7 +241,10 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options=container_options,
         )
-        output_vstream = container.add_stream_from_template(input_vstream)
+        output_vstream = cast(
+            av.VideoStream,
+            self._add_stream_from_template(container, input_vstream),
+        )
         # Check if audio is requested
         output_astream = None
         if input_astream:
@@ -231,7 +252,10 @@ class StreamMuxer:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = container.add_stream_from_template(input_astream)
+            output_astream = cast(
+                av.audio.AudioStream,
+                self._add_stream_from_template(container, input_astream),
+            )
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:

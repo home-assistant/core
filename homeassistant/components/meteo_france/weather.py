@@ -11,6 +11,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -184,6 +185,9 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind"].get(
+                            "gust"
+                        ),
                         ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
                         if forecast["wind"]["direction"] != -1
                         else None,

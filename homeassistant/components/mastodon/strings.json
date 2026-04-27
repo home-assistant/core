@@ -152,6 +152,13 @@
         "public": "Public - Visible to everyone",
         "unlisted": "Unlisted - Public but not shown in public timelines"
       }
+    },
+    "quote_approval_policy": {
+      "options": {
+        "followers": "Followers - Only accounts that follow you can quote this post",
+        "nobody": "Nobody - No one but you can quote this post",
+        "public": "Public - Anyone can quote this post"
+      }
     }
   },
   "services": {
@@ -221,6 +228,10 @@
         "media_warning": {
           "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning).",
           "name": "Media warning"
+        },
+        "quote_approval_policy": {
+          "description": "Who can quote this post (default: account setting).\nIgnored if visibility is private or direct.",
+          "name": "Who can quote"
         },
         "status": {
           "description": "The status to post.",
