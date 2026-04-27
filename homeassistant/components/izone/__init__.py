@@ -71,7 +71,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok and not any(
-        config_entry.state is config_entries.ConfigEntryState.LOADED
+        config_entry.state
+        in (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+        )
         for config_entry in hass.config_entries.async_entries(IZONE)
     ):
         await async_stop_discovery_service(hass)
