@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -23,8 +23,7 @@ from homeassistant.helpers.data_entry_flow import (
 )
 
 from .const import DOMAIN
-from .issue_handler import RepairsFlowManager
-from .models import RepairsFlowResult
+from .issue_handler import RepairsFlowManager, RepairsFlowResult
 
 
 @callback
@@ -79,6 +78,23 @@ def ws_ignore_issue(
     connection.send_result(msg["id"])
 
 
+def _serialize_issue(issue: ir.IssueEntry) -> dict[str, Any]:
+    return {
+        "breaks_in_ha_version": issue.breaks_in_ha_version,
+        "created": issue.created,
+        "dismissed_version": issue.dismissed_version,
+        "ignored": issue.dismissed_version is not None,
+        "domain": issue.domain,
+        "is_fixable": issue.is_fixable,
+        "issue_domain": issue.issue_domain,
+        "issue_id": issue.issue_id,
+        "learn_more_url": issue.learn_more_url,
+        "severity": issue.severity,
+        "translation_key": issue.translation_key,
+        "translation_placeholders": issue.translation_placeholders,
+    }
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "repairs/list_issues",
@@ -91,20 +107,7 @@ def ws_list_issues(
     """Return a list of issues."""
     issue_registry = ir.async_get(hass)
     issues = [
-        {
-            "breaks_in_ha_version": issue.breaks_in_ha_version,
-            "created": issue.created,
-            "dismissed_version": issue.dismissed_version,
-            "ignored": issue.dismissed_version is not None,
-            "domain": issue.domain,
-            "is_fixable": issue.is_fixable,
-            "issue_domain": issue.issue_domain,
-            "issue_id": issue.issue_id,
-            "learn_more_url": issue.learn_more_url,
-            "severity": issue.severity,
-            "translation_key": issue.translation_key,
-            "translation_placeholders": issue.translation_placeholders,
-        }
+        _serialize_issue(issue)
         for issue in issue_registry.issues.values()
         if issue.active
     ]
@@ -132,24 +135,22 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
-                data={"issue_id": data["issue_id"]},
+                context={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownStep as ex:
-            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
+            return self.json_message(str(ex), HTTPStatus.NOT_FOUND)
+        except data_entry_flow.UnknownFlow:
+            return self.json_message("next_flow is unknown", HTTPStatus.NOT_FOUND)
         except data_entry_flow.FlowError as ex:
             return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
 
         return self.json(
-            self._prepare_result_json(result),
+            _prepare_repairs_flow_result_json(result, self._prepare_result_json)
         )
-
-    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:  # type: ignore[override]
-        """Convert result to JSON serializable dict."""
-        return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
 
 class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
-    """View to interact with the option flow manager."""
+    """View to interact with the repairs flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
@@ -164,6 +165,7 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
+    @override
     def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:  # type: ignore[override]
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
@@ -174,12 +176,13 @@ def _prepare_repairs_flow_result_json(
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
-    if (
-        result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY
-        or "next_flow" not in result
-    ):
-        return prepare_result_json(result)
+    if ["next_flow", "result"] not in result:
+        return prepare_result_json(result)  # type: ignore[arg-type]
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
-    entry: ConfigEntry = result["result"]
-    data["result"] = entry.as_json_fragment
+    if isinstance(result["result"], ConfigEntry):
+        entry: ConfigEntry = result["result"]
+        data["result"] = entry.as_json_fragment
+        return data
+    issue: ir.IssueEntry = result["result"]
+    data["result"] = _serialize_issue(issue)
     return data

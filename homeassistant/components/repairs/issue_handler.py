@@ -2,20 +2,149 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlowResult,
+    SubentryFlowResult,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 
-from .const import DOMAIN
-from .models import RepairsFlow, RepairsFlowResult, RepairsProtocol
+from .const import DOMAIN, FlowType
+from .models import RepairsProtocol
+
+
+class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
+    """Typed context dict for repair flow."""
+
+    issue_id: str
+
+
+class RepairsFlowResult(
+    data_entry_flow.FlowResult[RepairsFlowContext, str],
+    total=False,
+):
+    """Typed context dict for repairs flow."""
+
+    next_flow: tuple[FlowType, str]
+    # Frontend needs these to render the dialog:
+    result: ConfigEntry | ir.IssueEntry
+
+
+class RepairsFlow(
+    data_entry_flow.FlowHandler[RepairsFlowContext, RepairsFlowResult, str]
+):
+    """Handle a flow for fixing an issue."""
+
+    data: dict[str, str | int | float | None] | None
+
+    @property
+    def issue_id(self) -> str:
+        """Return the issue ID."""
+        return self.context["issue_id"]
+
+    @callback
+    def async_create_entry(
+        self,
+        *,
+        title: str | None = None,
+        data: Mapping[str, Any],
+        description: str | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
+    ) -> RepairsFlowResult:
+        """Finish a repair flow."""
+        result: RepairsFlowResult = super().async_create_entry(
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+        )
+
+        self._async_set_next_flow_if_valid(result, next_flow)
+
+        return result
+
+    @callback
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
+    ) -> RepairsFlowResult:
+        """Abort the flow."""
+        result: RepairsFlowResult = super().async_abort(
+            reason=reason, description_placeholders=description_placeholders
+        )
+
+        self._async_set_next_flow_if_valid(result, next_flow)
+
+        return result
+
+    def _async_set_next_flow_if_valid(
+        self,
+        result: RepairsFlowResult,
+        next_flow: tuple[FlowType, str] | None,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if next_flow is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type not in FlowType:
+            raise data_entry_flow.FlowError("Invalid next_flow type")
+        flow: ConfigFlowResult | SubentryFlowResult | RepairsFlowResult
+        entry_id: str | None = None
+        if flow_type == FlowType.CONFIG_FLOW:
+            flow = self.hass.config_entries.flow.async_get(flow_id)
+            entry_id = flow["context"]["entry_id"]
+        elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
+            flow = self.hass.config_entries.subentries.async_get(flow_id)
+            entry_id, _ = flow["handler"]
+        elif flow_type == FlowType.OPTIONS_FLOW:
+            flow = self.hass.config_entries.options.async_get(flow_id)
+            entry_id = flow["handler"]
+        else:  # FlowType.REPAIRS_FLOW
+            flow = async_get(self.hass).async_get(flow_id)
+            issue_registry: ir.IssueRegistry = ir.async_get(self.hass)
+            if issue := issue_registry.async_get_issue(
+                flow["handler"], flow["context"]["issue_id"]
+            ):
+                result["result"] = issue
+                result["next_flow"] = next_flow
+            return
+        if entry_id is not None:
+            result["result"] = self.hass.config_entries.async_get_known_entry(entry_id)
+            result["next_flow"] = next_flow
+
+
+def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
+    """Get the repairs flow manager."""
+    if (domain_data := hass.data.get(DOMAIN)) is None:
+        return None
+    flow_manager: RepairsFlowManager | None = domain_data.get("flow_manager")
+    return flow_manager
+
+
+def async_get(hass: HomeAssistant) -> RepairsFlowManager:
+    """Get the repairs flow manager.
+
+    Preferred over repairs_flow_manager.
+    """
+    if (flow_manager := repairs_flow_manager(hass)) is None:
+        raise PlatformNotReady("Repairs platform not loaded")
+    return flow_manager
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -47,23 +176,33 @@ class ConfirmRepairFlow(RepairsFlow):
 
 
 class RepairsFlowManager(
-    data_entry_flow.FlowManager[data_entry_flow.FlowContext, RepairsFlowResult, str]
+    data_entry_flow.FlowManager[RepairsFlowContext, RepairsFlowResult, str]
 ):
     """Manage repairs flows."""
+
+    _flow_result = RepairsFlowResult
 
     async def async_create_flow(
         self,
         handler_key: str,
         *,
-        context: data_entry_flow.FlowContext | None = None,
+        context: RepairsFlowContext | None = None,
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
-        assert data and "issue_id" in data
-        issue_id = data["issue_id"]
+        context = context or {}
+        if "issue_id" not in context:
+            assert data and "issue_id" in data
+            context["issue_id"] = data["issue_id"]
+            report_usage(
+                'Created a repair flow using data={"issue_id": issue_id} '
+                'instead of context={"issue_id": issue_id}',
+                integration_domain=handler_key,
+            )
+        assert context["issue_id"]
 
         issue_registry = ir.async_get(self.hass)
-        issue = issue_registry.async_get_issue(handler_key, issue_id)
+        issue = issue_registry.async_get_issue(handler_key, context["issue_id"])
         if issue is None or not issue.is_fixable:
             raise data_entry_flow.UnknownStep("Issue not found in registry")
 
@@ -75,26 +214,27 @@ class RepairsFlowManager(
             flow: RepairsFlow = ConfirmRepairFlow()
         else:
             platform = platforms[handler_key]
-            flow = await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
+            flow = await platform.async_create_fix_flow(
+                self.hass, context["issue_id"], issue.data
+            )
 
-        flow.issue_id = issue_id
+        flow.context = context
+        flow.handler = handler_key
         flow.data = issue.data
         return flow
 
-    async def async_finish_flow(  # type: ignore[override]
-        self, flow: RepairsFlow, result: RepairsFlowResult
+    async def async_finish_flow(
+        self,
+        flow: data_entry_flow.FlowHandler[RepairsFlowContext, RepairsFlowResult, str],
+        result: RepairsFlowResult,
     ) -> RepairsFlowResult:
         """Complete a fix flow.
 
         This method is called when a flow step returns FlowResultType.ABORT or
-        FlowResultType.CREATE_ENTRY. When next flow is set in result, leave the issue active as the integration needs to resolve the issue
-        not the active flow.
+        FlowResultType.CREATE_ENTRY.
         """
-        if (
-            result.get("type") != data_entry_flow.FlowResultType.ABORT
-            and result.get("next_flow") is None
-        ):
-            ir.async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
+        if result.get("type") != data_entry_flow.FlowResultType.ABORT:
+            ir.async_delete_issue(self.hass, flow.handler, flow.context["issue_id"])
         return result
 
 

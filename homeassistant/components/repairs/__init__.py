@@ -6,37 +6,36 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import issue_handler, websocket_api
-from .const import DOMAIN, NextFlowType
-from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
-from .models import RepairsFlow, RepairsFlowResult
+from . import websocket_api
+from .const import DOMAIN, FlowType
+from .issue_handler import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowManager,
+    RepairsFlowResult,
+    async_get,
+    async_setup as async_setup_issue_handler,
+    repairs_flow_manager,
+)
 
 __all__ = [
     "DOMAIN",
     "ConfirmRepairFlow",
-    "NextFlowType",
+    "FlowType",
     "RepairsFlow",
     "RepairsFlowManager",
     "RepairsFlowResult",
+    "async_get",
     "repairs_flow_manager",
 ]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
-    """Return the repairs flow manager."""
-    if (domain_data := hass.data.get(DOMAIN)) is None:
-        return None
-
-    flow_manager: RepairsFlowManager | None = domain_data.get("flow_manager")
-    return flow_manager
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Repairs."""
     hass.data[DOMAIN] = {}
 
-    issue_handler.async_setup(hass)
+    async_setup_issue_handler(hass)
     websocket_api.async_setup(hass)
 
     return True
