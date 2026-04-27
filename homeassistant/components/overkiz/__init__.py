@@ -30,8 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import config_validation as cv, device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_TYPE,
@@ -44,6 +45,9 @@ from .const import (
     UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -56,6 +60,12 @@ class HomeAssistantOverkizData:
 
 
 type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Overkiz component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:

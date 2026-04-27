@@ -24,10 +24,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
@@ -507,6 +508,36 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         if command := self.entity_description.set_tilt_position_command:
             await self.executor.async_execute_command(command, position)
+
+    async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
+        """Move the cover and tilt to a specific position simultaneously.
+
+        This is exposed as the ``overkiz.set_cover_position_and_tilt`` service
+        action and uses the Overkiz ``setClosureAndOrientation`` command, which
+        moves the slats and the closure in a single instruction. Calling the
+        regular ``set_cover_position`` and ``set_cover_tilt_position`` services
+        sequentially causes the motor on devices like the Somfy
+        DynamicExteriorVenetianBlind to stop between commands.
+        """
+        if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_set_position_and_tilt",
+            )
+
+        position = kwargs[ATTR_POSITION]
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+
+        if self.entity_description.invert_position:
+            position = 100 - position
+        if self.entity_description.invert_tilt_position:
+            tilt_position = 100 - tilt_position
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
+            position,
+            tilt_position,
+        )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
