@@ -9,13 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, GATEWAYS_KEY
+from . import XiaomiAqaraConfigEntry
 from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,14 +33,12 @@ ATTR_DENSITY = "Density"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities: list[XiaomiBinarySensor] = []
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]
         if model in ("motion", "sensor_motion", "sensor_motion.aq2"):
@@ -149,7 +146,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         xiaomi_hub: XiaomiGateway,
         data_key: str,
         device_class: BinarySensorDeviceClass | None,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
@@ -169,7 +166,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._density = None
@@ -226,7 +223,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         device: dict[str, Any],
         hass: HomeAssistant,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
@@ -335,7 +332,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
@@ -402,7 +399,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiWaterLeakSensor."""
         if "proto" not in device or int(device["proto"][0:1]) == 1:
@@ -453,7 +450,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._density = 0
@@ -510,7 +507,7 @@ class XiaomiVibration(XiaomiBinarySensor):
         name: str,
         data_key: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiVibration."""
         self._last_action = None
@@ -558,7 +555,7 @@ class XiaomiButton(XiaomiBinarySensor):
         data_key: str,
         hass: HomeAssistant,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiButton."""
         self._hass = hass
@@ -625,7 +622,7 @@ class XiaomiCube(XiaomiBinarySensor):
         device: dict[str, Any],
         hass: HomeAssistant,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the Xiaomi Cube."""
         self._hass = hass
