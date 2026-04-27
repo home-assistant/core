@@ -166,115 +166,26 @@ async def test_forward_request_onboarded_noauth_unallowed_paths(
     assert len(aioclient_mock.mock_calls) == 0
 
 
-@pytest.mark.parametrize(
-    ("path", "authenticated"),
-    [
-        ("addons/bl_b392/logo", False),
-        ("addons/bl_b392/icon", False),
-        ("backups/1234abcd/info", True),
-    ],
-)
-async def test_forward_request_not_onboarded_get(
-    hassio_noauth_client: TestClient,
-    aioclient_mock: AiohttpClientMocker,
-    path: str,
-    authenticated: bool,
-    mock_not_onboarded,
-) -> None:
-    """Test fetching normal path."""
-    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
-
-    resp = await hassio_noauth_client.get(f"/api/hassio/{path}")
-
-    # Check we got right response
-    assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == "response"
-
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
-    expected_headers = {
-        "X-Hass-Source": "core.http",
-    }
-    if authenticated:
-        expected_headers["Authorization"] = "Bearer 123456"
-
-    assert aioclient_mock.mock_calls[0][3] == expected_headers
-
-
+@pytest.mark.usefixtures("mock_not_onboarded")
 @pytest.mark.parametrize(
     "path",
     [
-        "backups/new/upload",
+        "backups/1234abcd/info",
+        "backups/1234abcd/download",
         "backups/1234abcd/restore/full",
         "backups/1234abcd/restore/partial",
+        "backups/new/upload",
     ],
 )
-async def test_forward_request_not_onboarded_post(
+async def test_forward_request_not_onboarded_backup_unauthorized(
     hassio_noauth_client: TestClient,
     aioclient_mock: AiohttpClientMocker,
     path: str,
-    mock_not_onboarded,
 ) -> None:
-    """Test fetching normal path."""
-    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
-
+    """Test backup endpoints reject unauthenticated requests during onboarding."""
     resp = await hassio_noauth_client.get(f"/api/hassio/{path}")
 
-    # Check we got right response
-    assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == "response"
-
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
-    # We only expect a single header.
-    assert aioclient_mock.mock_calls[0][3] == {
-        "X-Hass-Source": "core.http",
-        "Authorization": "Bearer 123456",
-    }
-
-
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
-async def test_forward_request_not_onboarded_unallowed_methods(
-    hassio_noauth_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
-) -> None:
-    """Test fetching normal path."""
-    resp = await hassio_noauth_client.request(method, "/api/hassio/addons/bl_b392/icon")
-
-    # Check we got right response
-    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
-
-    # Check we did not forward command
-    assert len(aioclient_mock.mock_calls) == 0
-
-
-@pytest.mark.parametrize(
-    ("bad_path", "expected_status"),
-    [
-        # Caught by bullshit filter
-        ("addons/bl_b392/%252E./icon", HTTPStatus.BAD_REQUEST),
-        # Unauthenticated path
-        ("supervisor/info", HTTPStatus.UNAUTHORIZED),
-        ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
-        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
-        ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
-        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
-    ],
-)
-async def test_forward_request_not_onboarded_unallowed_paths(
-    hassio_noauth_client: TestClient,
-    aioclient_mock: AiohttpClientMocker,
-    bad_path: str,
-    expected_status: int,
-    mock_not_onboarded,
-) -> None:
-    """Test fetching normal path."""
-    resp = await hassio_noauth_client.get(f"/api/hassio/{bad_path}")
-
-    # Check we got right response
-    assert resp.status == expected_status
-    # Check we didn't forward command
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(aioclient_mock.mock_calls) == 0
 
 
@@ -402,7 +313,6 @@ async def test_bad_gateway_when_cannot_find_supervisor(
 async def test_backup_upload_headers(
     hassio_client: TestClient,
     aioclient_mock: AiohttpClientMocker,
-    mock_not_onboarded,
 ) -> None:
     """Test that we forward the full header for backup upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
@@ -422,7 +332,7 @@ async def test_backup_upload_headers(
 
 
 async def test_backup_download_headers(
-    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker, mock_not_onboarded
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that we forward the full header for backup download."""
     content_disposition = "attachment; filename=test.tar"

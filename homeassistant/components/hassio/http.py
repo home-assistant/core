@@ -24,11 +24,9 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from homeassistant.components.http import (
     KEY_AUTHENTICATED,
-    KEY_HASS,
     KEY_HASS_USER,
     HomeAssistantView,
 )
-from homeassistant.components.onboarding import async_is_onboarded
 
 from .const import X_HASS_SOURCE
 
@@ -50,15 +48,6 @@ NO_TIMEOUT = re.compile(
     r"|observer/logs/(follow|boots/-?\d+(/follow)?)"
     r"|supervisor/logs/(follow|boots/-?\d+(/follow)?)"
     r"|addons/[^/]+/logs/(follow|boots/-?\d+(/follow)?)"
-    r")$"
-)
-
-# fmt: off
-# Onboarding can upload backups and restore it
-PATHS_NOT_ONBOARDED = re.compile(
-    r"^(?:"
-    r"|backups/[a-f0-9]{8}(/info|/new/upload|/download|/restore/full|/restore/partial)?"
-    r"|backups/new/upload"
     r")$"
 )
 
@@ -150,18 +139,11 @@ class HassIOView(HomeAssistantView):
         if path != unquote(path):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        hass = request.app[KEY_HASS]
         is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
         authorized = is_admin
 
         if is_admin:
             allowed_paths = PATHS_ADMIN
-
-        elif not async_is_onboarded(hass):
-            allowed_paths = PATHS_NOT_ONBOARDED
-
-            # During onboarding we need the user to manage backups
-            authorized = True
 
         else:
             # Either unauthenticated or not an admin
