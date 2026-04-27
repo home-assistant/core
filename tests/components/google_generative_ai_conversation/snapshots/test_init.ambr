@@ -73,15 +73,15 @@
       'identifiers': set({
         tuple(
           'google_generative_ai_conversation',
-          'ulid-ai-task',
+          'ulid-tts',
         ),
       }),
       'labels': set({
       }),
       'manufacturer': 'Google',
-      'model': 'gemini-2.5-flash',
+      'model': 'gemini-2.5-flash-preview-tts',
       'model_id': None,
-      'name': 'Google AI Task',
+      'name': 'Google AI TTS',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -102,15 +102,15 @@
       'identifiers': set({
         tuple(
           'google_generative_ai_conversation',
-          'ulid-tts',
+          'ulid-ai-task',
         ),
       }),
       'labels': set({
       }),
       'manufacturer': 'Google',
-      'model': 'gemini-2.5-flash-preview-tts',
+      'model': 'gemini-2.5-flash',
       'model_id': None,
-      'name': 'Google AI TTS',
+      'name': 'Google AI Task',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,

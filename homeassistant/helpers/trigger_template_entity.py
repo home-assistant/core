@@ -403,12 +403,13 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
         """Set native value with possible timestamp.
 
-        If self.device_class is `date` or `timestamp`,
+        If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
         if self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             self._attr_native_value = value
         elif value is not None:
