@@ -22,12 +22,6 @@
       }
     },
     "select": {
-      "buzzer_volume": {
-        "default": "mdi:volume-high"
-      },
-      "led_brightness": {
-        "default": "mdi:brightness-6"
-      },
       "smart_charging": {
         "default": "mdi:lightning-bolt",
         "state": {

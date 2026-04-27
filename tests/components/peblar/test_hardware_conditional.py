@@ -138,24 +138,3 @@ async def test_socket_unlock_button_absent_without_socket(
     """Test socket unlock button absent when HwHasSocket=false (default fixture)."""
     assert hass.states.get("button.peblar_ev_charger_unlock_socket") is None
 
-
-@pytest.mark.parametrize(
-    "init_integration_without_buzzer", [Platform.SELECT], indirect=True
-)
-@pytest.mark.usefixtures("init_integration_without_buzzer")
-async def test_buzzer_volume_absent_without_buzzer(
-    hass: HomeAssistant,
-) -> None:
-    """Test buzzer volume select absent when HwHasBuzzer=false."""
-    assert hass.states.get("select.peblar_ev_charger_buzzer_volume") is None
-
-
-@pytest.mark.parametrize(
-    "init_integration_without_led", [Platform.SELECT], indirect=True
-)
-@pytest.mark.usefixtures("init_integration_without_led")
-async def test_led_brightness_absent_without_led(
-    hass: HomeAssistant,
-) -> None:
-    """Test LED brightness select absent when HwHasLed=false."""
-    assert hass.states.get("select.peblar_ev_charger_led_brightness") is None
