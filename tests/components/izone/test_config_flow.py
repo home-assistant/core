@@ -9,8 +9,9 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import izone as izone_component
-from homeassistant.components.izone import config_flow
-from homeassistant.components.izone.const import IZONE
+from homeassistant.components.izone import config_flow, discovery as izone_discovery
+from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, IZONE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -699,6 +700,33 @@ async def test_async_setup_entry_stops_discovery_on_forward_failure(
 
     mock_start.assert_awaited_once()
     mock_stop.assert_awaited_once()
+
+
+async def test_async_start_discovery_service_stops_on_home_assistant_stop(
+    hass: HomeAssistant,
+    mock_pizone_discovery_service: Mock,
+) -> None:
+    """Test discovery service is stopped on Home Assistant shutdown."""
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.discovery",
+            return_value=mock_pizone_discovery_service,
+        ),
+    ):
+        await izone_discovery.async_start_discovery_service(hass)
+
+        assert DATA_DISCOVERY_SERVICE in hass.data
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    mock_pizone_discovery_service.start_discovery.assert_awaited_once()
+    mock_pizone_discovery_service.close.assert_awaited_once()
+    assert DATA_DISCOVERY_SERVICE not in hass.data
 
 
 # ---------------------------------------------------------------------------
