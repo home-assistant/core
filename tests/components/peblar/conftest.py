@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Generator
 from contextlib import nullcontext
+import json
 from unittest.mock import MagicMock, patch
 
 from peblar import (

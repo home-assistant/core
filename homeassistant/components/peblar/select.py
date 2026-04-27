@@ -19,7 +19,11 @@ from .const import (
     PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT,
     PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT,
 )
-from .coordinator import PeblarConfigEntry, PeblarRuntimeData, PeblarUserConfigurationDataUpdateCoordinator
+from .coordinator import (
+    PeblarConfigEntry,
+    PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
+)
 from .entity import PeblarEntity
 from .helpers import peblar_exception_handler
 
@@ -57,7 +61,9 @@ DESCRIPTIONS = [
         has_fn=lambda x: x.system_information.hardware_has_buzzer,
         options=list(PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.values()),
         current_fn=lambda x: PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.get(x.buzzer_volume),
-        select_fn=lambda x, option: x.set_buzzer_volume(volume=HOME_ASSISTANT_TO_SOUND_VOLUME[option]),
+        select_fn=lambda x, option: x.set_buzzer_volume(
+            volume=HOME_ASSISTANT_TO_SOUND_VOLUME[option]
+        ),
     ),
     PeblarSelectEntityDescription(
         key="led_brightness",
@@ -65,8 +71,14 @@ DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_led,
         options=list(PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.values()),
-        current_fn=lambda x: PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.get(x.led_brightness) if x.led_brightness is not None else None,
-        select_fn=lambda x, option: x.set_led_brightness(brightness=HOME_ASSISTANT_TO_LED_BRIGHTNESS[option]),
+        current_fn=lambda x: (
+            PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.get(x.led_brightness)
+            if x.led_brightness is not None
+            else None
+        ),
+        select_fn=lambda x, option: x.set_led_brightness(
+            brightness=HOME_ASSISTANT_TO_LED_BRIGHTNESS[option]
+        ),
     ),
 ]
 
