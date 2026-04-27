@@ -9,34 +9,34 @@
   },
   "conditions": {
     "is_cooling": {
-      "description": "Tests if one or more climate-control devices are cooling.",
+      "description": "Tests if one or more thermostats are cooling.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "Climate-control device is cooling"
+      "name": "Thermostat is cooling"
     },
     "is_drying": {
-      "description": "Tests if one or more climate-control devices are drying.",
+      "description": "Tests if one or more thermostats are drying.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "Climate-control device is drying"
+      "name": "Thermostat is drying"
     },
     "is_heating": {
-      "description": "Tests if one or more climate-control devices are heating.",
+      "description": "Tests if one or more thermostats are heating.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "Climate-control device is heating"
+      "name": "Thermostat is heating"
     },
     "is_hvac_mode": {
-      "description": "Tests if one or more climate-control devices are set to a specific HVAC mode.",
+      "description": "Tests if one or more thermostats are set to a specific HVAC mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
@@ -46,10 +46,10 @@
           "name": "Modes"
         }
       },
-      "name": "Climate-control device HVAC mode"
+      "name": "Thermostat HVAC mode"
     },
     "is_off": {
-      "description": "Tests if one or more climate-control devices are off.",
+      "description": "Tests if one or more thermostats are off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
@@ -58,19 +58,19 @@
           "name": "[%key:component::climate::common::condition_for_name%]"
         }
       },
-      "name": "Climate-control device is off"
+      "name": "Thermostat is off"
     },
     "is_on": {
-      "description": "Tests if one or more climate-control devices are on.",
+      "description": "Tests if one or more thermostats are on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "Climate-control device is on"
+      "name": "Thermostat is on"
     },
     "target_humidity": {
-      "description": "Tests the humidity setpoint of one or more climate-control devices.",
+      "description": "Tests the humidity setpoint of one or more thermostats.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
@@ -79,10 +79,10 @@
           "name": "[%key:component::climate::common::condition_threshold_name%]"
         }
       },
-      "name": "Climate-control device target humidity"
+      "name": "Thermostat target humidity"
     },
     "target_temperature": {
-      "description": "Tests the temperature setpoint of one or more climate-control devices.",
+      "description": "Tests the temperature setpoint of one or more thermostats.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::condition_behavior_name%]"
@@ -91,7 +91,7 @@
           "name": "[%key:component::climate::common::condition_threshold_name%]"
         }
       },
-      "name": "Climate-control device target temperature"
+      "name": "Thermostat target temperature"
     }
   },
   "device_automation": {
@@ -288,67 +288,67 @@
   },
   "services": {
     "set_fan_mode": {
-      "description": "Sets the fan mode of a climate-control device.",
+      "description": "Sets the fan mode of a thermostat.",
       "fields": {
         "fan_mode": {
           "description": "Fan operation mode.",
           "name": "Fan mode"
         }
       },
-      "name": "Set climate-control device fan mode"
+      "name": "Set thermostat fan mode"
     },
     "set_humidity": {
-      "description": "Sets the target humidity of a climate-control device.",
+      "description": "Sets the target humidity of a thermostat.",
       "fields": {
         "humidity": {
           "description": "Target humidity.",
           "name": "Humidity"
         }
       },
-      "name": "Set climate-control device target humidity"
+      "name": "Set thermostat target humidity"
     },
     "set_hvac_mode": {
-      "description": "Sets the HVAC mode of a climate-control device.",
+      "description": "Sets the HVAC mode of a thermostat.",
       "fields": {
         "hvac_mode": {
           "description": "HVAC operation mode.",
           "name": "HVAC mode"
         }
       },
-      "name": "Set climate-control device HVAC mode"
+      "name": "Set thermostat HVAC mode"
     },
     "set_preset_mode": {
-      "description": "Sets the preset mode of a climate-control device.",
+      "description": "Sets the preset mode of a thermostat.",
       "fields": {
         "preset_mode": {
           "description": "Preset mode.",
           "name": "Preset mode"
         }
       },
-      "name": "Set climate-control device preset mode"
+      "name": "Set thermostat preset mode"
     },
     "set_swing_horizontal_mode": {
-      "description": "Sets the horizontal swing mode of a climate-control device.",
+      "description": "Sets the horizontal swing mode of a thermostat.",
       "fields": {
         "swing_horizontal_mode": {
           "description": "Horizontal swing operation mode.",
           "name": "Horizontal swing mode"
         }
       },
-      "name": "Set climate-control device horizontal swing mode"
+      "name": "Set thermostat horizontal swing mode"
     },
     "set_swing_mode": {
-      "description": "Sets the swing mode of a climate-control device.",
+      "description": "Sets the swing mode of a thermostat.",
       "fields": {
         "swing_mode": {
           "description": "Swing operation mode.",
           "name": "Swing mode"
         }
       },
-      "name": "Set climate-control device swing mode"
+      "name": "Set thermostat swing mode"
     },
     "set_temperature": {
-      "description": "Sets the target temperature of a climate-control device.",
+      "description": "Sets the target temperature of a thermostat.",
       "fields": {
         "hvac_mode": {
           "description": "HVAC operation mode.",
@@ -367,25 +367,25 @@
           "name": "Target temperature"
         }
       },
-      "name": "Set climate-control device target temperature"
+      "name": "Set thermostat target temperature"
     },
     "toggle": {
-      "description": "Toggles a climate-control device on/off.",
-      "name": "Toggle climate-control device"
+      "description": "Toggles a thermostat on/off.",
+      "name": "Toggle thermostat"
     },
     "turn_off": {
-      "description": "Turns off a climate-control device.",
-      "name": "Turn off climate-control device"
+      "description": "Turns off a thermostat.",
+      "name": "Turn off thermostat"
     },
     "turn_on": {
-      "description": "Turns on a climate-control device.",
-      "name": "Turn on climate-control device"
+      "description": "Turns on a thermostat.",
+      "name": "Turn on thermostat"
     }
   },
   "title": "Climate",
   "triggers": {
     "hvac_mode_changed": {
-      "description": "Triggers after the mode of one or more climate-control devices changes.",
+      "description": "Triggers after the mode of one or more thermostats changes.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -398,10 +398,10 @@
           "name": "Modes"
         }
       },
-      "name": "Climate-control device mode changed"
+      "name": "Thermostat mode changed"
     },
     "started_cooling": {
-      "description": "Triggers after one or more climate-control devices start cooling.",
+      "description": "Triggers after one or more thermostats start cooling.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -410,10 +410,10 @@
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
       },
-      "name": "Climate-control device started cooling"
+      "name": "Thermostat started cooling"
     },
     "started_drying": {
-      "description": "Triggers after one or more climate-control devices start drying.",
+      "description": "Triggers after one or more thermostats start drying.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -422,10 +422,10 @@
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
       },
-      "name": "Climate-control device started drying"
+      "name": "Thermostat started drying"
     },
     "started_heating": {
-      "description": "Triggers after one or more climate-control devices start heating.",
+      "description": "Triggers after one or more thermostats start heating.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -434,19 +434,19 @@
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
       },
-      "name": "Climate-control device started heating"
+      "name": "Thermostat started heating"
     },
     "target_humidity_changed": {
-      "description": "Triggers after the humidity setpoint of one or more climate-control devices changes.",
+      "description": "Triggers after the humidity setpoint of one or more thermostats changes.",
       "fields": {
         "threshold": {
           "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
-      "name": "Climate-control device target humidity changed"
+      "name": "Thermostat target humidity changed"
     },
     "target_humidity_crossed_threshold": {
-      "description": "Triggers after the humidity setpoint of one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the humidity setpoint of one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -458,19 +458,19 @@
           "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
-      "name": "Climate-control device target humidity crossed threshold"
+      "name": "Thermostat target humidity crossed threshold"
     },
     "target_temperature_changed": {
-      "description": "Triggers after the temperature setpoint of one or more climate-control devices changes.",
+      "description": "Triggers after the temperature setpoint of one or more thermostats changes.",
       "fields": {
         "threshold": {
           "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
-      "name": "Climate-control device target temperature changed"
+      "name": "Thermostat target temperature changed"
     },
     "target_temperature_crossed_threshold": {
-      "description": "Triggers after the temperature setpoint of one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the temperature setpoint of one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -482,10 +482,10 @@
           "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
-      "name": "Climate-control device target temperature crossed threshold"
+      "name": "Thermostat target temperature crossed threshold"
     },
     "turned_off": {
-      "description": "Triggers after one or more climate-control devices turn off.",
+      "description": "Triggers after one or more thermostats turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -494,10 +494,10 @@
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
       },
-      "name": "Climate-control device turned off"
+      "name": "Thermostat turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more climate-control devices turn on, regardless of the mode.",
+      "description": "Triggers after one or more thermostats turn on, regardless of the mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -506,7 +506,7 @@
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
       },
-      "name": "Climate-control device turned on"
+      "name": "Thermostat turned on"
     }
   }
 }

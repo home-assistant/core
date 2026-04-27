@@ -87,6 +87,9 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.fetch_data.return_value = fixture_data
         client.set_data.return_value = True
+        client.stop.return_value = True
+        client.charge.return_value = True
+        client.discharge.return_value = True
         client.get_config.return_value = {
             "device": {
                 "sn": device_info["sn"],

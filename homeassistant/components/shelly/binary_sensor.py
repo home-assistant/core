@@ -350,6 +350,28 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
     ),
+    "cury_tilt": RpcBinarySensorDescription(
+        key="cury",
+        sub_key="errors",
+        translation_key="tilt",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda status, _: (
+            False if status is None else "orientation_tilt" in status
+        ),
+        supported=lambda status: status.get("slots") is not None,
+    ),
+    "cury_rotation": RpcBinarySensorDescription(
+        key="cury",
+        sub_key="errors",
+        translation_key="rotation",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda status, _: (
+            False if status is None else "orientation_plug_rotated" in status
+        ),
+        supported=lambda status: status.get("slots") is not None,
+    ),
 }
 
 
