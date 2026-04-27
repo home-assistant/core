@@ -3,7 +3,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bitvis_protobuf import powerhub_pb2
@@ -190,66 +189,6 @@ async def test_coordinator_async_setup_runtime_error_raises_entry_error(
 
 
 # ---------------------------------------------------------------------------
-# _async_resolve_host tests
-# ---------------------------------------------------------------------------
-
-
-async def test_resolve_host_ipv6_literal(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test resolving an IPv6 host literal returns that address."""
-    coordinator = BitvisDataUpdateCoordinator(hass, config_entry, "2001:db8::10", 5000)
-    assert await coordinator._async_resolve_host() == {"2001:db8::10"}
-
-
-async def test_resolve_host_raises_update_failed_on_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test unresolved non-IP host raises UpdateFailed."""
-    coordinator = BitvisDataUpdateCoordinator(
-        hass, config_entry, "powerhub.local", 5000
-    )
-
-    with (
-        patch.object(
-            asyncio.get_running_loop(), "getaddrinfo", side_effect=socket.gaierror
-        ),
-        pytest.raises(UpdateFailed),
-    ):
-        await coordinator._async_resolve_host()
-
-
-async def test_resolve_host_ip_literal_with_dns(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test resolving an IP literal also present in DNS."""
-    coordinator = BitvisDataUpdateCoordinator(hass, config_entry, "192.168.1.100", 5000)
-    ips = await coordinator._async_resolve_host()
-    assert "192.168.1.100" in ips
-
-
-async def test_resolve_host_hostname_with_dns(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test resolving a hostname that DNS resolves to IP addresses."""
-    coordinator = BitvisDataUpdateCoordinator(
-        hass, config_entry, "powerhub.local", 5000
-    )
-
-    with patch.object(
-        asyncio.get_running_loop(),
-        "getaddrinfo",
-        new_callable=AsyncMock,
-        return_value=[
-            (socket.AF_INET, socket.SOCK_STREAM, 0, "", ("192.168.1.50", 0)),
-        ],
-    ):
-        ips = await coordinator._async_resolve_host()
-
-    assert "192.168.1.50" in ips
-
-
-# ---------------------------------------------------------------------------
 # _async_update_data
 # ---------------------------------------------------------------------------
 
@@ -282,7 +221,7 @@ async def test_coordinator_handle_sample(
     await hass.async_block_till_done()
 
     assert coordinator.data.sample is parsed
-    assert coordinator.data.timestamp is not None
+    assert coordinator.data.last_sample_timestamp is not None
     assert coordinator.last_update_success is True
     ha_listener.assert_called()
 
@@ -323,8 +262,7 @@ async def test_coordinator_handle_diagnostic(
     await hass.async_block_till_done()
 
     assert coordinator.data.diagnostic is parsed
-    assert coordinator.data.timestamp is not None
-    assert coordinator.last_update_success is True
+    assert coordinator.data.boot_time is not None
     ha_listener.assert_called()
 
 
@@ -367,22 +305,6 @@ async def test_coordinator_handle_diagnostic_clears_device_info(
     assert coordinator.data.sw_version is None
 
 
-async def test_coordinator_handle_diagnostic_recovery_log(
-    hass: HomeAssistant,
-    coordinator: BitvisDataUpdateCoordinator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test recovery log is emitted for the diagnostic path too."""
-    coordinator._unavailable_logged = True
-    parsed = PayloadDiagnostic(diagnostic=powerhub_pb2.Payload().diagnostic)
-
-    with caplog.at_level(logging.INFO, logger="homeassistant.components.bitvis"):
-        coordinator._handle_diagnostic(parsed)
-
-    assert "back online" in caplog.text
-    assert coordinator._unavailable_logged is False
-
-
 # ---------------------------------------------------------------------------
 # Watchdog tests
 # ---------------------------------------------------------------------------
@@ -415,7 +337,7 @@ async def test_watchdog_recent_data_does_nothing(
     coordinator: BitvisDataUpdateCoordinator,
 ) -> None:
     """Test that watchdog does nothing when data is recent."""
-    coordinator.data.timestamp = dt_util.utcnow()
+    coordinator.data.last_sample_timestamp = dt_util.utcnow()
     coordinator.last_update_success = True
 
     with (
@@ -437,7 +359,7 @@ async def test_watchdog_stale_data_marks_unavailable(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that watchdog marks coordinator unavailable on stale data."""
-    coordinator.data.timestamp = (
+    coordinator.data.last_sample_timestamp = (
         dt_util.utcnow() - WATCHDOG_INTERVAL - timedelta(seconds=1)
     )
     coordinator.last_update_success = True

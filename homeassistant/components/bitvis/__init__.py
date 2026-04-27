@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import BitvisDataUpdateCoordinator
+from .coordinator import BitvisConfigEntry, BitvisDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type BitvisConfigEntry = ConfigEntry[BitvisDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bool:

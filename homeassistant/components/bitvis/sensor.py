@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from bitvis_protobuf.han_port_pb2 import HanPortSample
 from bitvis_protobuf.powerhub_pb2 import Diagnostic
@@ -29,8 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utcnow
-from homeassistant.util.variance import ignore_variance
 
 from . import BitvisConfigEntry
 from .const import DOMAIN, MANUFACTURER, MODEL_NAME
@@ -39,18 +37,9 @@ from .coordinator import BitvisDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 
-def _uptime_to_datetime(value: int) -> datetime:
-    """Convert uptime in seconds to a start datetime timestamp."""
-    return utcnow().replace(microsecond=0) - timedelta(seconds=value)
-
-
-uptime_to_stable_datetime = ignore_variance(_uptime_to_datetime, timedelta(minutes=5))
-
-
 def _build_device_info(
     coordinator: BitvisDataUpdateCoordinator,
     device_identifier: str,
-    title: str,
 ) -> DeviceInfo:
     """Build DeviceInfo shared by all Bitvis entities."""
     payload = coordinator.data.diagnostic
@@ -64,7 +53,6 @@ def _build_device_info(
     return DeviceInfo(
         identifiers={(DOMAIN, device_identifier)},
         connections={(CONNECTION_NETWORK_MAC, mac_address)} if mac_address else set(),
-        name=title,
         manufacturer=MANUFACTURER,
         model=model_name or MODEL_NAME,
         sw_version=sw_version,
@@ -76,7 +64,6 @@ class BitvisSensorEntityDescription(SensorEntityDescription):
     """Describes Bitvis sensor entity."""
 
     value_fn: Callable[[HanPortSample], float | None]
-    exists_fn: Callable[[HanPortSample], bool] = lambda x: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,7 +71,6 @@ class BitvisDiagnosticSensorEntityDescription(SensorEntityDescription):
     """Describes Bitvis diagnostic sensor entity."""
 
     value_fn: Callable[[Diagnostic], float | int | str | datetime | None]
-    exists_fn: Callable[[Diagnostic], bool] = lambda x: True
 
 
 SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
@@ -99,7 +85,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             data.phase_voltage_l1_v if data.HasField("phase_voltage_l1_v") else None
         ),
-        exists_fn=lambda data: data.HasField("phase_voltage_l1_v"),
     ),
     BitvisSensorEntityDescription(
         key="phase_voltage_l2",
@@ -111,7 +96,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             data.phase_voltage_l2_v if data.HasField("phase_voltage_l2_v") else None
         ),
-        exists_fn=lambda data: data.HasField("phase_voltage_l2_v"),
     ),
     BitvisSensorEntityDescription(
         key="phase_voltage_l3",
@@ -123,7 +107,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             data.phase_voltage_l3_v if data.HasField("phase_voltage_l3_v") else None
         ),
-        exists_fn=lambda data: data.HasField("phase_voltage_l3_v"),
     ),
     # Phase currents
     BitvisSensorEntityDescription(
@@ -136,7 +119,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             data.phase_current_l1_a if data.HasField("phase_current_l1_a") else None
         ),
-        exists_fn=lambda data: data.HasField("phase_current_l1_a"),
     ),
     BitvisSensorEntityDescription(
         key="phase_current_l2",
@@ -148,7 +130,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             data.phase_current_l2_a if data.HasField("phase_current_l2_a") else None
         ),
-        exists_fn=lambda data: data.HasField("phase_current_l2_a"),
     ),
     BitvisSensorEntityDescription(
         key="phase_current_l3",
@@ -160,7 +141,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             data.phase_current_l3_a if data.HasField("phase_current_l3_a") else None
         ),
-        exists_fn=lambda data: data.HasField("phase_current_l3_a"),
     ),
     # Total active power
     BitvisSensorEntityDescription(
@@ -175,7 +155,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_delivered_to_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_delivered_to_client_kw"),
     ),
     BitvisSensorEntityDescription(
         key="power_active_delivered_by_client",
@@ -189,7 +168,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_delivered_by_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_delivered_by_client_kw"),
     ),
     # Total reactive power
     BitvisSensorEntityDescription(
@@ -204,7 +182,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_reactive_delivered_to_client_kvar")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_reactive_delivered_to_client_kvar"),
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_delivered_by_client",
@@ -218,7 +195,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_reactive_delivered_by_client_kvar")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_reactive_delivered_by_client_kvar"),
     ),
     # Per-phase active power (to client)
     BitvisSensorEntityDescription(
@@ -233,7 +209,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_l1_delivered_to_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_l1_delivered_to_client_kw"),
     ),
     BitvisSensorEntityDescription(
         key="power_active_l2_delivered_to_client",
@@ -247,7 +222,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_l2_delivered_to_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_l2_delivered_to_client_kw"),
     ),
     BitvisSensorEntityDescription(
         key="power_active_l3_delivered_to_client",
@@ -261,7 +235,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_l3_delivered_to_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_l3_delivered_to_client_kw"),
     ),
     # Per-phase active power (by client)
     BitvisSensorEntityDescription(
@@ -276,7 +249,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_l1_delivered_by_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_l1_delivered_by_client_kw"),
     ),
     BitvisSensorEntityDescription(
         key="power_active_l2_delivered_by_client",
@@ -290,7 +262,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_l2_delivered_by_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_l2_delivered_by_client_kw"),
     ),
     BitvisSensorEntityDescription(
         key="power_active_l3_delivered_by_client",
@@ -304,7 +275,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_active_l3_delivered_by_client_kw")
             else None
         ),
-        exists_fn=lambda data: data.HasField("power_active_l3_delivered_by_client_kw"),
     ),
     # Per-phase reactive power (to client)
     BitvisSensorEntityDescription(
@@ -319,9 +289,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_reactive_l1_delivered_to_client_kvar")
             else None
         ),
-        exists_fn=lambda data: data.HasField(
-            "power_reactive_l1_delivered_to_client_kvar"
-        ),
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l2_delivered_to_client",
@@ -335,9 +302,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_reactive_l2_delivered_to_client_kvar")
             else None
         ),
-        exists_fn=lambda data: data.HasField(
-            "power_reactive_l2_delivered_to_client_kvar"
-        ),
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l3_delivered_to_client",
@@ -350,9 +314,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             data.power_reactive_l3_delivered_to_client_kvar
             if data.HasField("power_reactive_l3_delivered_to_client_kvar")
             else None
-        ),
-        exists_fn=lambda data: data.HasField(
-            "power_reactive_l3_delivered_to_client_kvar"
         ),
     ),
     # Per-phase reactive power (by client)
@@ -368,9 +329,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_reactive_l1_delivered_by_client_kvar")
             else None
         ),
-        exists_fn=lambda data: data.HasField(
-            "power_reactive_l1_delivered_by_client_kvar"
-        ),
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l2_delivered_by_client",
@@ -384,9 +342,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("power_reactive_l2_delivered_by_client_kvar")
             else None
         ),
-        exists_fn=lambda data: data.HasField(
-            "power_reactive_l2_delivered_by_client_kvar"
-        ),
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l3_delivered_by_client",
@@ -399,9 +354,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             data.power_reactive_l3_delivered_by_client_kvar
             if data.HasField("power_reactive_l3_delivered_by_client_kvar")
             else None
-        ),
-        exists_fn=lambda data: data.HasField(
-            "power_reactive_l3_delivered_by_client_kvar"
         ),
     ),
     # Energy - active
@@ -417,7 +369,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("energy_active_delivered_to_client_kwh")
             else None
         ),
-        exists_fn=lambda data: data.HasField("energy_active_delivered_to_client_kwh"),
     ),
     BitvisSensorEntityDescription(
         key="energy_active_delivered_by_client",
@@ -431,7 +382,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("energy_active_delivered_by_client_kwh")
             else None
         ),
-        exists_fn=lambda data: data.HasField("energy_active_delivered_by_client_kwh"),
     ),
     # Energy - reactive
     BitvisSensorEntityDescription(
@@ -446,9 +396,6 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("energy_reactive_delivered_to_client_kvarh")
             else None
         ),
-        exists_fn=lambda data: data.HasField(
-            "energy_reactive_delivered_to_client_kvarh"
-        ),
     ),
     BitvisSensorEntityDescription(
         key="energy_reactive_delivered_by_client",
@@ -462,22 +409,18 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
             if data.HasField("energy_reactive_delivered_by_client_kvarh")
             else None
         ),
-        exists_fn=lambda data: data.HasField(
-            "energy_reactive_delivered_by_client_kvarh"
-        ),
     ),
 )
 
+UPTIME_DESCRIPTION = SensorEntityDescription(
+    key="uptime",
+    translation_key="uptime",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
 DIAGNOSTIC_SENSOR_DESCRIPTIONS: tuple[BitvisDiagnosticSensorEntityDescription, ...] = (
-    BitvisDiagnosticSensorEntityDescription(
-        key="uptime",
-        translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: uptime_to_stable_datetime(data.uptime_s),
-        exists_fn=lambda data: True,
-    ),
     BitvisDiagnosticSensorEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_rssi",
@@ -487,7 +430,6 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: tuple[BitvisDiagnosticSensorEntityDescription, .
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.wifi_rssi_dbm,
-        exists_fn=lambda data: True,
     ),
     BitvisDiagnosticSensorEntityDescription(
         key="han_msg_successfully_parsed",
@@ -496,7 +438,6 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: tuple[BitvisDiagnosticSensorEntityDescription, .
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.han_msg_successfully_parsed,
-        exists_fn=lambda data: True,
     ),
     BitvisDiagnosticSensorEntityDescription(
         key="han_msg_buffer_overflow",
@@ -505,7 +446,6 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: tuple[BitvisDiagnosticSensorEntityDescription, .
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.han_msg_buffer_overflow,
-        exists_fn=lambda data: True,
     ),
 )
 
@@ -523,6 +463,7 @@ async def async_setup_entry(
         for description in SENSOR_DESCRIPTIONS
     ]
 
+    entities.append(BitvisUptimeSensorEntity(coordinator, UPTIME_DESCRIPTION, entry))
     entities.extend(
         BitvisDiagnosticSensorEntity(coordinator, description, entry)
         for description in DIAGNOSTIC_SENSOR_DESCRIPTIONS
@@ -531,31 +472,36 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BitvisSensorEntity(CoordinatorEntity[BitvisDataUpdateCoordinator], SensorEntity):
-    """Representation of a Bitvis sensor."""
+class BitvisBaseSensorEntity(
+    CoordinatorEntity[BitvisDataUpdateCoordinator], SensorEntity
+):
+    """Base class for Bitvis sensor entities."""
 
-    entity_description: BitvisSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: BitvisDataUpdateCoordinator,
-        description: BitvisSensorEntityDescription,
+        description: SensorEntityDescription,
         entry: BitvisConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._device_identifier = entry.unique_id or entry.entry_id
-        self._entry_title = entry.title
+        assert entry.unique_id is not None
+        self._device_identifier = entry.unique_id
         self._attr_unique_id = f"{self._device_identifier}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return _build_device_info(
-            self.coordinator, self._device_identifier, self._entry_title
-        )
+        return _build_device_info(self.coordinator, self._device_identifier)
+
+
+class BitvisSensorEntity(BitvisBaseSensorEntity):
+    """Representation of a Bitvis sensor."""
+
+    entity_description: BitvisSensorEntityDescription
 
     @property
     def native_value(self) -> float | None:
@@ -567,40 +513,13 @@ class BitvisSensorEntity(CoordinatorEntity[BitvisDataUpdateCoordinator], SensorE
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data.sample is not None
-            and self.entity_description.exists_fn(self.coordinator.data.sample.sample)
-        )
+        return super().available and self.coordinator.data.sample is not None
 
 
-class BitvisDiagnosticSensorEntity(
-    CoordinatorEntity[BitvisDataUpdateCoordinator], SensorEntity
-):
+class BitvisDiagnosticSensorEntity(BitvisBaseSensorEntity):
     """Representation of a Bitvis diagnostic sensor."""
 
     entity_description: BitvisDiagnosticSensorEntityDescription
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: BitvisDataUpdateCoordinator,
-        description: BitvisDiagnosticSensorEntityDescription,
-        entry: BitvisConfigEntry,
-    ) -> None:
-        """Initialize the diagnostic sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._device_identifier = entry.unique_id or entry.entry_id
-        self._entry_title = entry.title
-        self._attr_unique_id = f"{self._device_identifier}_{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return _build_device_info(
-            self.coordinator, self._device_identifier, self._entry_title
-        )
 
     @property
     def native_value(self) -> float | int | str | datetime | None:
@@ -614,10 +533,20 @@ class BitvisDiagnosticSensorEntity(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data.diagnostic is not None
-            and self.entity_description.exists_fn(
-                self.coordinator.data.diagnostic.diagnostic
-            )
-        )
+        return super().available and self.coordinator.data.diagnostic is not None
+
+
+class BitvisUptimeSensorEntity(BitvisBaseSensorEntity):
+    """Sensor entity for device uptime (boot time)."""
+
+    entity_description: SensorEntityDescription
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the stable boot time computed by the coordinator."""
+        return self.coordinator.data.boot_time
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.data.boot_time is not None
