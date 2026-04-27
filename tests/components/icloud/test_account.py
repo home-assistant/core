@@ -1,6 +1,6 @@
 """Tests for the iCloud account."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from pyicloud.exceptions import PyiCloudAuthRequiredException
 import pytest
@@ -233,6 +233,39 @@ async def test_setup_auth_required_exception_calls_reauth(
         patch(
             "homeassistant.components.icloud.account.PyiCloudService",
             side_effect=PyiCloudAuthRequiredException("test@example.com", MagicMock()),
+        ),
+        patch.object(account, "_require_reauth") as mock_reauth,
+    ):
+        account.setup()
+
+    mock_reauth.assert_called_once()
+    assert account.api is None
+
+
+async def test_setup_auth_required_exception_from_devices_calls_reauth(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test setup handles PyiCloudAuthRequiredException raised when reading devices.
+
+    This covers the case where auth is required when accessing device data
+    (e.g. api.devices.user_info) after service construction succeeded.
+    Before this fix, the exception was unhandled and crashed setup.
+    """
+    account = _make_account(hass, mock_store)
+
+    service_instance = MagicMock()
+    service_instance.requires_2fa = False
+    devices_mock = MagicMock()
+    type(devices_mock).user_info = PropertyMock(
+        side_effect=PyiCloudAuthRequiredException("test@example.com", MagicMock())
+    )
+    service_instance.devices = devices_mock
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            return_value=service_instance,
         ),
         patch.object(account, "_require_reauth") as mock_reauth,
     ):

@@ -114,7 +114,8 @@ class IcloudAccount:
         except PyiCloudFailedLoginException:
             requires_2fa = self.api is not None and self.api.requires_2fa
             self.api = None
-            # Login failed which means credentials need to be updated.
+            # Login failed, which can mean 2FA reauthentication is required or
+            # that credentials need to be updated.
             if requires_2fa:
                 _LOGGER.warning(
                     (
@@ -164,6 +165,18 @@ class IcloudAccount:
         try:
             # Gets device owners infos
             user_info = self.api.devices.user_info
+        except PyiCloudAuthRequiredException:
+            self.api = None
+            _LOGGER.warning(
+                (
+                    "Re-authentication required for '%s'; Go to the "
+                    "Integrations menu and click on Configure on the iCloud "
+                    "card to enter your verification code"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+            self._require_reauth()
+            return
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
