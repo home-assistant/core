@@ -14,7 +14,7 @@ The device must be configured to point to the HA instance IP and port
 This module uses HomeAssistantView with ``requires_auth = False`` because
 the WiBeee device has no ability to send authentication tokens.
 
-The PushReceiver is a singleton stored in ``hass.data[DOMAIN]``.  Each
+The PushReceiver is a singleton stored in ``hass.data[DATA_PUSH_RECEIVER]``.  Each
 config entry registers its MAC address so incoming push data is routed
 to the correct sensor entities.
 

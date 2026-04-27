@@ -68,7 +68,8 @@ async def async_setup_entry(
         )
         return
 
-    discovered_phases = list(data.keys())
+    # Filter to known phases only
+    discovered_phases = [p for p in data if p in PHASE_NAMES]
     if not discovered_phases:
         _LOGGER.warning(
             "No phases found for Wibeee %s (%s)",
@@ -194,11 +195,18 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
         """Return True if the coordinator has data for this sensor.
 
         Extends CoordinatorEntity.available (which checks coordinator
-        connectivity) with phase/key-level granularity.
+        connectivity) with phase/key-level granularity and value validation.
         """
         if not super().available:
             return False
         phase_data = (self.coordinator.data or {}).get(self._phase_key)
         if phase_data is None:
             return False
-        return self.entity_description.key in phase_data
+        value = phase_data.get(self.entity_description.key)
+        if value is None:
+            return False
+        try:
+            float(value)
+        except ValueError, TypeError:
+            return False
+        return True
