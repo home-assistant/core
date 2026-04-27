@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import cache
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
+from .const import ESPHOME_DATA
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
 
 STORAGE_VERSION = 1
@@ -32,3 +34,10 @@ class DomainData:
                 hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
             ),
         )
+
+    @staticmethod
+    @cache
+    def get(hass: HomeAssistant) -> DomainData:
+        """Get the global DomainData instance stored in hass.data."""
+        ret = hass.data[ESPHOME_DATA] = DomainData()
+        return ret

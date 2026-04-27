@@ -86,7 +86,6 @@ from .const import (
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
     DOMAIN,
-    ESPHOME_DATA,
     PROJECT_URLS,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
@@ -1406,7 +1405,7 @@ async def async_replace_device(
         ):
             ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
-    domain_data = hass.data.get(ESPHOME_DATA) or DomainData()
+    domain_data = DomainData.get(hass)
     store = domain_data.get_or_create_store(hass, entry)
     if data := await store.async_load():
         data["device_info"]["mac_address"] = upper_mac

@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from . import assist_satellite, dashboard, ffmpeg_proxy, serial_proxy
-from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN, ESPHOME_DATA
+from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -73,7 +73,6 @@ def _async_scan_serial_ports(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
-    hass.data[ESPHOME_DATA] = DomainData()
     ffmpeg_proxy.async_setup(hass)
     await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
@@ -105,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
         timezone=hass.config.time_zone,
     )
 
-    domain_data = hass.data[ESPHOME_DATA]
+    domain_data = DomainData.get(hass)
     entry_data = RuntimeEntryData(
         client=cli,
         entry_id=entry.entry_id,
@@ -140,9 +139,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
     async_delete_issue(
         hass, DOMAIN, DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
     )
-
-    domain_data = hass.data.get(ESPHOME_DATA) or DomainData()
-    await domain_data.get_or_create_store(hass, entry).async_remove()
+    await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()
 
     await _async_clear_dynamic_encryption_key(hass, entry)
 
