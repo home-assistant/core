@@ -13,7 +13,6 @@ from aiocentriconnect.exceptions import CentriConnectConnectionError, CentriConn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -67,16 +66,16 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
     async def _async_setup(self) -> None:
         try:
             tank_data = await self.api_client.async_get_tank_data()
-            self.device_info = CentriConnectDeviceInfo(
-                device_id=tank_data.device_id,
-                device_name=tank_data.device_name,
-                hardware_version=tank_data.hardware_version,
-                lte_version=tank_data.lte_version,
-                tank_size=tank_data.tank_size,
-                tank_size_unit=tank_data.tank_size_unit,
-            )
         except CentriConnectError as err:
-            raise ConfigEntryNotReady("Could not fetch device info") from err
+            raise UpdateFailed("Could not fetch device info") from err
+        self.device_info = CentriConnectDeviceInfo(
+            device_id=tank_data.device_id,
+            device_name=tank_data.device_name,
+            hardware_version=tank_data.hardware_version,
+            lte_version=tank_data.lte_version,
+            tank_size=tank_data.tank_size,
+            tank_size_unit=tank_data.tank_size_unit,
+        )
 
     async def _async_update_data(self) -> Tank:
         """Fetch device state."""
