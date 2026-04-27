@@ -79,6 +79,7 @@ class ProtectSiren(SirenEntity):
             model="Siren",
             via_device=(DOMAIN, nvr.mac),
         )
+        self._siren_mac = siren.mac
         self._cancel_scheduled_off: CALLBACK_TYPE | None = None
         self._update_from_siren(siren)
 
@@ -102,15 +103,17 @@ class ProtectSiren(SirenEntity):
         self._cancel_off_timer()
 
         prev_state = (self._attr_available, self._attr_is_on)
-        self._update_from_siren(siren)
 
         # If the siren is no longer in the public bootstrap (delete event),
-        # mark it unavailable and skip timer scheduling.
+        # mark it unavailable and off, then bail out.
         if self._siren is None:
             self._attr_available = False
+            self._attr_is_on = False
             if (self._attr_available, self._attr_is_on) != prev_state:
                 self.async_write_ha_state()
             return
+
+        self._update_from_siren(siren)
 
         # The server never emits a WS message when a timed run expires, so we
         # must schedule our own callback.  Both activated_at and duration are
@@ -147,10 +150,9 @@ class ProtectSiren(SirenEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to public WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
-        if (siren := self._siren) is not None:
-            self.async_on_remove(
-                self.data.async_subscribe_siren(siren.mac, self._async_updated)
-            )
+        self.async_on_remove(
+            self.data.async_subscribe_siren(self._siren_mac, self._async_updated)
+        )
         self.async_on_remove(self._cancel_off_timer)
 
     @callback

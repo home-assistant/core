@@ -192,22 +192,13 @@ class ProtectData:
             # Delete event: notify subscribers so entities can be marked unavailable.
             old_obj = message.old_obj
             if old_obj is not None and old_obj.model is ModelType.SIREN:
-                siren = cast(Siren, old_obj)
-                if subscriptions := self._siren_subscriptions.get(siren.mac):
-                    _LOGGER.debug("Siren removed: %s (%s)", siren.name, siren.mac)
-                    for update_callback in subscriptions:
-                        update_callback(siren)
+                self._async_signal_siren_update(cast(Siren, old_obj))
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if new_obj.model is ModelType.SIREN:
-            siren = cast(Siren, new_obj)
-            mac = siren.mac
-            if subscriptions := self._siren_subscriptions.get(mac):
-                _LOGGER.debug("Updating siren: %s (%s)", siren.name, mac)
-                for update_callback in subscriptions:
-                    update_callback(siren)
+            self._async_signal_siren_update(cast(Siren, new_obj))
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
@@ -382,9 +373,7 @@ class ProtectData:
             self._async_signal_device_update(device)
         if self.api.has_public_bootstrap:
             for siren in self.api.public_bootstrap.sirens.values():
-                if subscriptions := self._siren_subscriptions.get(siren.mac):
-                    for update_callback in subscriptions:
-                        update_callback(siren)
+                self._async_signal_siren_update(siren)
 
     @callback
     def _async_poll(self, now: datetime) -> None:
@@ -439,6 +428,16 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
+
+    @callback
+    def _async_signal_siren_update(self, siren: Siren) -> None:
+        """Call the callbacks for a siren mac."""
+        mac = siren.mac
+        if not (subscriptions := self._siren_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating siren: %s (%s)", siren.name, mac)
+        for update_callback in subscriptions:
+            update_callback(siren)
 
 
 @callback
