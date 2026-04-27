@@ -2,7 +2,7 @@
 
 import argparse
 from pathlib import Path
-import subprocess
+import asyncio
 import sys
 
 from script.util import valid_integration
@@ -42,15 +42,19 @@ def run_process(name: str, cmd: list[str], info: Info) -> None:
     """
     print(f"Command: {' '.join(cmd)}")
     print()
-    result: subprocess.CompletedProcess = subprocess.run(cmd, check=False)
-    if result.returncode == 0:
+    async def _run_cmd() -> int:
+        proc = await asyncio.create_subprocess_exec(*cmd)
+        return await proc.wait()
+
+    returncode = asyncio.run(_run_cmd())
+    if returncode == 0:
         print()
         print(f"Completed {name} successfully.")
         print()
         return
 
     print()
-    print(f"Fatal Error: {name} failed with exit code {result.returncode}")
+    print(f"Fatal Error: {name} failed with exit code {returncode}")
     print()
     if info.is_new:
         print("This is a bug, please report an issue!")
@@ -60,7 +64,7 @@ def run_process(name: str, cmd: list[str], info: Info) -> None:
             "if so fix and run `script.scaffold` again,",
             "otherwise please report an issue.",
         )
-    result.check_returncode()
+    raise SystemExit(returncode)
 
 
 def main() -> int:
@@ -159,8 +163,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except subprocess.CalledProcessError as err:
-        sys.exit(err.returncode)
     except error.ExitApp as err:
         print()
         print(f"Fatal Error: {err.reason}")
