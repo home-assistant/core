@@ -25,7 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
+from . import XiaomiAqaraConfigEntry
+from .const import BATTERY_MODELS, POWER_MODELS
 from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,14 +88,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities: list[XiaomiSensor | XiaomiBatterySensor] = []
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for device in gateway.devices["sensor"]:
         if device["model"] == "sensor_ht":
             entities.append(
