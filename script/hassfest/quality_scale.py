@@ -1293,7 +1293,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "eliqonline",
     "elkm1",
     "elmax",
-    "elgato",
     "elv",
     "elvia",
     "emby",
