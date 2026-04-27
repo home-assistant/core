@@ -1,7 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
 import logging
 import os
 from unittest.mock import AsyncMock, Mock, mock_open, patch
@@ -166,6 +166,60 @@ async def test_access_from_banned_ip_with_invalid_ip_entry(
             logging.ERROR,
             f"Failed to load IP ban: invalid IP address {ip}",
         ) in caplog.record_tuples
+
+
+async def test_whitelisted_ip_ignores_banned_ip(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test that whitelisted IPs bypass existing bans."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    set_real_ip = mock_real_ip(app)
+
+    setup_bans(hass, app, 5, [ip_network("200.201.202.203")])
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={"200.201.202.203": {"banned_at": "2016-11-16T19:20:03"}},
+    ):
+        client = await aiohttp_client(app)
+
+    set_real_ip("200.201.202.203")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_whitelisted_ip_does_not_accumulate_failed_login_attempts(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test that whitelisted IPs do not count toward failed login bans."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 1, [ip_network("200.201.202.204")])
+    mock_real_ip(app)("200.201.202.204")
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={},
+    ):
+        client = await aiohttp_client(app)
+
+    m_open = mock_open()
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        assert not app[KEY_FAILED_LOGIN_ATTEMPTS]
+        assert m_open.call_count == 0
+
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        assert not app[KEY_FAILED_LOGIN_ATTEMPTS]
+        assert m_open.call_count == 0
 
 
 async def test_no_ip_bans_file(

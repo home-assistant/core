@@ -7,7 +7,14 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Concatenate, Final
@@ -53,12 +60,18 @@ SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    ip_ban_whitelist: list[IPv4Address | IPv6Address | IPv4Network | IPv6Network]
+    | None = None,
+) -> None:
     """Create IP Ban middleware for the app."""
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
-    app[KEY_BAN_MANAGER] = IpBanManager(hass)
+    app[KEY_BAN_MANAGER] = IpBanManager(hass, ip_ban_whitelist or [])
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -80,9 +93,12 @@ async def ban_middleware(
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
+    ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+    if ban_manager.is_whitelisted(ip_address_):
+        return await handler(request)
+
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
         # Verify if IP is not banned
-        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
         if ip_address_ in ip_bans_lookup:
             raise HTTPForbidden
 
@@ -150,6 +166,10 @@ async def process_wrong_login(request: Request) -> None:
     if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
         return
 
+    ban_manager = request.app[KEY_BAN_MANAGER]
+    if ban_manager.is_whitelisted(remote_addr):
+        return
+
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
     # Supervisor IP should never be banned
@@ -210,11 +230,22 @@ class IpBan:
 class IpBanManager:
     """Manage IP bans."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        ip_ban_whitelist: list[IPv4Address | IPv6Address | IPv4Network | IPv6Network],
+    ) -> None:
         """Init the ban manager."""
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        self.ip_ban_whitelist: list[IPv4Network | IPv6Network] = [
+            ip_network(str(item), strict=False) for item in ip_ban_whitelist
+        ]
+
+    def is_whitelisted(self, remote_addr: IPv4Address | IPv6Address) -> bool:
+        """Return whether the remote address is whitelisted."""
+        return any(remote_addr in network for network in self.ip_ban_whitelist)
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
@@ -254,6 +285,9 @@ class IpBanManager:
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
+        if self.is_whitelisted(remote_addr):
+            return
+
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
             await self.hass.async_add_executor_job(self._add_ban, new_ban)
