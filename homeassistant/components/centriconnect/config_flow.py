@@ -68,15 +68,11 @@ class CentriConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except CentriConnectConnectionError:
-                errors["base"] = "cannot_connect"
-            except CentriConnectTooManyRequestsError:
+            except CentriConnectConnectionError, CentriConnectTooManyRequestsError:
                 errors["base"] = "cannot_connect"
             except CentriConnectNotFoundError:
                 errors["base"] = "invalid_auth"
-            except CentriConnectEmptyResponseError:
-                errors["base"] = "unknown"
-            except CentriConnectDecodeError:
+            except CentriConnectEmptyResponseError, CentriConnectDecodeError:
                 errors["base"] = "unknown"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
