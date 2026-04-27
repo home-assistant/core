@@ -92,7 +92,7 @@ async def _async_setup_local_entry(
     except CannotConnectError as error:
         raise ConfigEntryNotReady from error
     except UnauthorizedError:
-        _LOGGER.exception("Failed to login to Risco cloud")
+        _LOGGER.exception("Failed to authenticate with local Risco panel")
         return False
 
     async def _error(error: Exception) -> None:
