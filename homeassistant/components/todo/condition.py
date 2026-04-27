@@ -10,7 +10,7 @@ from homeassistant.helpers.condition import (
 from .const import DOMAIN
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "all_completed": make_entity_state_condition(DOMAIN, "0"),
+    "all_completed": make_entity_state_condition(DOMAIN, "0", support_duration=True),
     "incomplete": make_entity_numerical_condition(DOMAIN),
 }
 

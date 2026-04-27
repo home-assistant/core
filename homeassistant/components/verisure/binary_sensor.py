@@ -8,7 +8,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LAST_TRIP_TIME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -18,16 +17,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_GIID, DOMAIN
-from .coordinator import VerisureDataUpdateCoordinator
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VerisureConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure binary sensors based on a config entry."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     sensors: list[Entity] = [VerisureEthernetStatus(coordinator)]
 

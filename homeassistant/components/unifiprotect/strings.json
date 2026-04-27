@@ -90,6 +90,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "nvr_alarm": {
+        "name": "Alarm Manager"
+      }
+    },
     "binary_sensor": {
       "alarm_sound_detection": {
         "name": "Alarm sound detection"
@@ -667,6 +672,9 @@
     },
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
+    },
+    "global_alarm_manager": {
+      "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"

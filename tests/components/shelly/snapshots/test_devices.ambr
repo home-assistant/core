@@ -101,6 +101,108 @@
     'state': 'off',
   })
 # ---
+# name: test_device[cury_gen4][binary_sensor.test_name_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rotation',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Rotation',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rotation',
+    'unique_id': '123456789ABC-cury:0-cury_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[cury_gen4][binary_sensor.test_name_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test name Rotation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_device[cury_gen4][binary_sensor.test_name_tilt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_tilt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tilt',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Tilt',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tilt',
+    'unique_id': '123456789ABC-cury:0-cury_tilt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[cury_gen4][binary_sensor.test_name_tilt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test name Tilt',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_tilt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_device[cury_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -366,7 +468,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -381,7 +483,7 @@
 # name: test_device[cury_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -1277,7 +1379,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -1292,7 +1394,7 @@
 # name: test_device[duo_bulb_gen3][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -3486,7 +3588,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -3501,7 +3603,7 @@
 # name: test_device[power_strip_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -5066,7 +5168,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -5081,7 +5183,7 @@
 # name: test_device[presence_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -5973,6 +6075,61 @@
     'state': 'unknown',
   })
 # ---
+# name: test_device[wall_display_xl][media_player.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 152117>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-media-media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][media_player.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test name',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'supported_features': <MediaPlayerEntityFeature: 152117>,
+      'volume_level': 0.7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
 # name: test_device[wall_display_xl][sensor.test_name_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6173,7 +6330,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -6188,7 +6345,7 @@
 # name: test_device[wall_display_xl][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -6411,7 +6568,7 @@
       'installed_version': '2.4.4',
       'latest_version': '2.4.4',
       'release_summary': None,
-      'release_url': None,
+      'release_url': 'https://github.com/ShellyGroup/Wall-Display-Changelog',
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
@@ -6474,7 +6631,7 @@
       'installed_version': '2.4.4',
       'latest_version': '2.4.4',
       'release_summary': None,
-      'release_url': None,
+      'release_url': 'https://github.com/ShellyGroup/Wall-Display-Changelog',
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
@@ -7202,7 +7359,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -7217,7 +7374,7 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -8271,7 +8428,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -8286,7 +8443,7 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
@@ -9940,7 +10097,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'shelly',
@@ -9955,7 +10112,7 @@
 # name: test_shelly_pro_3em[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,

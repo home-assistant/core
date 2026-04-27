@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 from yolink.client_request import ClientRequest
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.home_manager import YoLinkHome
 from yolink.model import BRDP
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,15 +24,26 @@ from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIM
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class YoLinkHomeStore:
+    """YoLink home store."""
+
+    home_instance: YoLinkHome
+    device_coordinators: dict[str, YoLinkCoordinator]
+
+
+type YoLinkConfigEntry = ConfigEntry[YoLinkHomeStore]
+
+
 class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     """YoLink DataUpdateCoordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: YoLinkConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         device: YoLinkDevice,
         paired_device: YoLinkDevice | None = None,
     ) -> None:

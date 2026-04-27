@@ -9,6 +9,7 @@ from datetime import timedelta
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -303,29 +304,19 @@ async def test_entity_availability(
     # Make sure Rflink mock does not 'recover' too quickly from the
     # disconnect or else the unavailability cannot be measured
     config = {
+        **CONFIG,
         "rflink": {
-            "port": "/dev/ttyABC0",
-            "reconnect_interval": 60,
-            DOMAIN: {
-                "devices": {
-                    "test": {"name": "test", "device_class": "door"},
-                    "test2": {
-                        "name": "test2",
-                        "device_class": "motion",
-                        "off_delay": 30,
-                        "force_update": True,
-                    },
-                },
-            },
+            **CONFIG["rflink"],
+            CONF_RECONNECT_INTERVAL: 60,
         },
     }
-
-    failures = [True, True]
+    failures = [False, True, False]
 
     # Create platform and entities
     event_callback, _, _, disconnect_callback = await mock_rflink(
         hass, config, DOMAIN, monkeypatch, failures=failures
     )
+    await hass.async_block_till_done()
 
     # Entities are unknown by default
     assert hass.states.get("binary_sensor.test").state == STATE_UNKNOWN

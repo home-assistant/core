@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -14,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevice
-from .models import DomainDataItem
+from .models import DomainDataItem, WyomingConfigEntry
 from .websocket_api import async_register_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> bool:
     """Load Wyoming."""
     service = await WyomingService.create(entry.data["host"], entry.data["port"])
 
@@ -50,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Unable to connect")
 
     item = DomainDataItem(service=service)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = item
+    entry.runtime_data = item
 
     await hass.config_entries.async_forward_entry_setups(entry, service.platforms)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -79,21 +78,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: WyomingConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> bool:
     """Unload Wyoming."""
-    item: DomainDataItem = hass.data[DOMAIN][entry.entry_id]
+    item = entry.runtime_data
 
     platforms = list(item.service.platforms)
     if item.device is not None:
         platforms += SATELLITE_PLATFORMS
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, platforms)
