@@ -51,7 +51,7 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
-# Authenticated users manage backups + download logs, changelog and documentation
+# Admin users manage backups + download logs, changelog and documentation
 PATHS_ADMIN = re.compile(
     r"^(?:"
     r"|backups/[a-f0-9]{8}(/info|/download|/restore/full|/restore/partial)?"
@@ -131,9 +131,8 @@ class HassIOView(HomeAssistantView):
         """Return a client request with proxy origin for Hass.io supervisor.
 
         Use cases:
-        - Onboarding allows restoring backups
         - Load Supervisor panel and add-on logo unauthenticated
-        - User upload/restore backups
+        - Admin users upload/restore backups and access logs
         """
         # No bullshit
         if path != unquote(path):
