@@ -18,8 +18,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 from .const import (
     MOCK_EMAIL,
     MOCK_PASSWORD,
@@ -27,6 +25,8 @@ from .const import (
     MOCK_TOKEN,
     MOCK_USER_ID,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(

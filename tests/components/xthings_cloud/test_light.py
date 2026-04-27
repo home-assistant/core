@@ -5,8 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -25,13 +23,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 from .const import (
     MOCK_DEVICE_LIGHT_BRIGHTNESS_ONLY,
     MOCK_DEVICE_LIGHT_FULL,
     MOCK_DEVICE_LIGHT_ONOFF,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def _setup_integration(
@@ -41,16 +39,13 @@ async def _setup_integration(
 ) -> AsyncMock:
     """Set up the integration with mock devices."""
     mock_config_entry.add_to_hass(hass)
-    coordinator_data = {d["id"]: d for d in devices}
 
     with patch(
         "homeassistant.components.xthings_cloud.XthingsCloudApiClient",
         autospec=True,
     ) as mock_cls:
         client = mock_cls.return_value
-        client.async_get_devices = AsyncMock(
-            return_value=devices
-        )
+        client.async_get_devices = AsyncMock(return_value=devices)
         client.is_token_expired = lambda: False
         client.async_brite_on = AsyncMock()
         client.async_brite_off = AsyncMock()
@@ -58,16 +53,13 @@ async def _setup_integration(
         client.async_brite_color = AsyncMock()
 
         with patch(
-            "homeassistant.components.xthings_cloud.coordinator"
-            ".XthingsCloudWebSocket",
+            "homeassistant.components.xthings_cloud.coordinator.XthingsCloudWebSocket",
             autospec=True,
         ) as mock_ws_cls:
             mock_ws_cls.return_value.async_start = AsyncMock()
             mock_ws_cls.return_value.async_stop = AsyncMock()
 
-            await hass.config_entries.async_setup(
-                mock_config_entry.entry_id
-            )
+            await hass.config_entries.async_setup(mock_config_entry.entry_id)
             await hass.async_block_till_done()
 
     return client
@@ -78,9 +70,7 @@ async def test_light_full_color_setup(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test full color light entity is created correctly."""
-    await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     state = hass.states.get("light.bedroom_light")
     assert state is not None
@@ -89,10 +79,7 @@ async def test_light_full_color_setup(
     assert state.attributes[ATTR_HS_COLOR] == (150, 80)
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
     assert ColorMode.HS in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert (
-        ColorMode.COLOR_TEMP
-        in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    )
+    assert ColorMode.COLOR_TEMP in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
 
 
 async def test_light_brightness_only_setup(
@@ -110,9 +97,7 @@ async def test_light_brightness_only_setup(
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == {
-        ColorMode.BRIGHTNESS
-    }
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == {ColorMode.BRIGHTNESS}
 
 
 async def test_light_onoff_only_setup(
@@ -120,17 +105,13 @@ async def test_light_onoff_only_setup(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on/off only light entity."""
-    await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_ONOFF]
-    )
+    await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_ONOFF])
 
     state = hass.states.get("light.porch_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == {
-        ColorMode.ONOFF
-    }
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == {ColorMode.ONOFF}
 
 
 async def test_light_turn_on(
@@ -138,9 +119,7 @@ async def test_light_turn_on(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on a light."""
-    client = await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    client = await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -156,9 +135,7 @@ async def test_light_turn_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning off a light."""
-    client = await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    client = await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -200,9 +177,7 @@ async def test_light_turn_on_hs_color(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on with HS color."""
-    client = await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    client = await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -231,9 +206,7 @@ async def test_light_turn_on_color_temp(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on with color temperature."""
-    client = await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    client = await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -259,9 +232,7 @@ async def test_light_turn_on_hs_color_with_brightness(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on with HS color and brightness."""
-    client = await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    client = await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -291,9 +262,7 @@ async def test_light_color_temp_with_brightness(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test color temp with brightness override."""
-    client = await _setup_integration(
-        hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL]
-    )
+    client = await _setup_integration(hass, mock_config_entry, [MOCK_DEVICE_LIGHT_FULL])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

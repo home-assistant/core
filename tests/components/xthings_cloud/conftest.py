@@ -14,14 +14,9 @@ from homeassistant.components.xthings_cloud.const import (
     DOMAIN,
 )
 
-from tests.common import MockConfigEntry
+from .const import MOCK_EMAIL, MOCK_REFRESH_TOKEN, MOCK_TOKEN, MOCK_USER_ID
 
-from .const import (
-    MOCK_EMAIL,
-    MOCK_REFRESH_TOKEN,
-    MOCK_TOKEN,
-    MOCK_USER_ID,
-)
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
