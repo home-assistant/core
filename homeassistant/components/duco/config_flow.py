@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from duco import DucoClient
+from duco import DucoClient, build_ssl_context
 from duco.exceptions import DucoConnectionError, DucoError
 import voluptuous as vol
 
@@ -160,10 +160,11 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns a tuple of (box_name, mac_address).
         """
+        ssl_context = await self.hass.async_add_executor_job(build_ssl_context)
         client = DucoClient(
-            session=async_get_clientsession(self.hass, verify_ssl=False),
+            session=async_get_clientsession(self.hass),
             host=host,
-            scheme="https",
+            ssl_context=ssl_context,
         )
         board_info = await client.async_get_board_info()
         lan_info = await client.async_get_lan_info()

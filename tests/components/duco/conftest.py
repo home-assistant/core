@@ -189,6 +189,12 @@ def mock_duco_client(
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
         patch(
+            "homeassistant.components.duco.build_ssl_context",
+        ),
+        patch(
+            "homeassistant.components.duco.config_flow.build_ssl_context",
+        ),
+        patch(
             "homeassistant.components.duco.DucoClient",
             autospec=True,
         ) as mock_class,
