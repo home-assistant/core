@@ -13,8 +13,6 @@ class SerialDevice:
     serial_number: str | None
     manufacturer: str | None
     description: str | None
-
-    bcd_device: int | None = None
     interface_description: str | None = None
     interface_num: int | None = None
 
@@ -25,3 +23,6 @@ class USBDevice(SerialDevice):
 
     vid: str
     pid: str
+
+    # bcdDevice descriptor, often the firmware revision
+    bcd_device: int | None = None

@@ -1730,7 +1730,6 @@ async def test_list_serial_ports(
         "serial_number": None,
         "manufacturer": None,
         "description": "ttyS0",
-        "bcd_device": None,
         "interface_description": None,
         "interface_num": None,
     }
