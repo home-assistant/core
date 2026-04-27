@@ -441,3 +441,23 @@ async def test_relay_switch_output_removed_from_relay_update(
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_relay_switch_command_when_output_gone(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Command raises HomeAssistantError when the relay output channel is no longer present."""
+    ufp, relay = ufp_with_relay
+    await init_entry(hass, ufp, [])
+
+    # Remove all outputs from the relay so get_output returns None.
+    relay.outputs = []
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            Platform.SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            blocking=True,
+        )

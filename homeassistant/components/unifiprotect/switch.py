@@ -675,6 +675,11 @@ class ProtectRelayOutputSwitch(SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="relay_not_available",
             )
+        if relay.get_output(self._output_id) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="relay_not_available",
+            )
         await relay.activate_output(self._output_id, state=state)
 
     @async_ufp_instance_command
