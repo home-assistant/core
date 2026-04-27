@@ -215,14 +215,6 @@
     }
   },
   "issues": {
-    "deprecated_generate_content": {
-      "description": "Action 'openai_conversation.generate_content' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_data' action instead",
-      "title": "Deprecated 'generate_content' action"
-    },
-    "deprecated_generate_image": {
-      "description": "Action 'openai_conversation.generate_image' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_image' action instead",
-      "title": "Deprecated 'generate_image' action"
-    },
     "organization_verification_required": {
       "description": "Your organization must be verified to use this model. Please go to {platform_settings} and select Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
       "title": "Organization verification required"
@@ -268,53 +260,6 @@
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]"
       }
-    }
-  },
-  "services": {
-    "generate_content": {
-      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files (deprecated)",
-      "fields": {
-        "config_entry": {
-          "description": "The config entry to use for this action",
-          "name": "Config entry"
-        },
-        "filenames": {
-          "description": "List of files to upload",
-          "name": "Files"
-        },
-        "prompt": {
-          "description": "The prompt to send",
-          "name": "Prompt"
-        }
-      },
-      "name": "Generate content (deprecated)"
-    },
-    "generate_image": {
-      "description": "Turns a prompt into an image (deprecated)",
-      "fields": {
-        "config_entry": {
-          "description": "The config entry to use for this action",
-          "name": "Config entry"
-        },
-        "prompt": {
-          "description": "The text to turn into an image",
-          "example": "A photo of a dog",
-          "name": "Prompt"
-        },
-        "quality": {
-          "description": "The quality of the image that will be generated",
-          "name": "Quality"
-        },
-        "size": {
-          "description": "The size of the image to generate",
-          "name": "Size"
-        },
-        "style": {
-          "description": "The style of the generated image",
-          "name": "Style"
-        }
-      },
-      "name": "Generate image (deprecated)"
     }
   }
 }
