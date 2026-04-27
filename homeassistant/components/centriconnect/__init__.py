@@ -29,5 +29,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: CentriConnectConfigEntry
 ) -> bool:
     """Unload CentriConnect/MyPropane API integration platforms and coordinator."""
-    _LOGGER.info("Unloading CentriConnect/MyPropane API integration")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
