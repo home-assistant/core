@@ -33,6 +33,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
+from . import serial_proxy_stub  # noqa: F401
 from .const import DOMAIN
 from .models import SerialDevice, USBDevice
 from .utils import (
