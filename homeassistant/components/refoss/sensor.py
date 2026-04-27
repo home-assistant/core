@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -25,15 +24,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .bridge import RefossDataUpdateCoordinator
-from .const import (
-    _LOGGER,
-    CHANNEL_DISPLAY_NAME,
-    COORDINATORS,
-    DISPATCH_DEVICE_DISCOVERED,
-    DOMAIN,
-    SENSOR_EM,
-)
+from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
+from .const import _LOGGER, CHANNEL_DISPLAY_NAME, DISPATCH_DEVICE_DISCOVERED, SENSOR_EM
 from .entity import RefossEntity
 
 
@@ -116,7 +108,7 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RefossConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Refoss device from a config entry."""
@@ -146,9 +138,7 @@ async def async_setup_entry(
         )
         _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    for coordinator in hass.data[DOMAIN][COORDINATORS]:
+    for coordinator in config_entry.runtime_data.coordinators:
         init_device(coordinator)
 
     config_entry.async_on_unload(

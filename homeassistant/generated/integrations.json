@@ -3004,7 +3004,7 @@
     },
     "html5": {
       "name": "HTML5 Push Notifications",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
