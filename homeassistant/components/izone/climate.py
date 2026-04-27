@@ -77,10 +77,14 @@ async def async_setup_entry(
 ) -> None:
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
+    entry_unique_id = config.unique_id
 
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
+        if entry_unique_id and ctrl.device_uid != entry_unique_id:
+            return
+
         conf: ConfigType | None = hass.data.get(DATA_CONFIG)
 
         # Filter out any entities excluded in the config file

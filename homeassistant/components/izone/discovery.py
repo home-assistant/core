@@ -1,10 +1,12 @@
 """Internal discovery service for  iZone AC."""
 
+from collections.abc import Callable
 import logging
 
 import pizone
 
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -28,6 +30,7 @@ class DiscoveryService(pizone.Listener):
         super().__init__()
         self.hass = hass
         self.pi_disco: pizone.DiscoveryService | None = None
+        self.remove_stop_listener: Callable[[], None] | None = None
 
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
@@ -67,6 +70,14 @@ async def async_start_discovery_service(hass: HomeAssistant):
     disco.pi_disco = pizone.discovery(disco, session=session)
     await disco.pi_disco.start_discovery()
 
+    async def async_stop_discovery_on_shutdown(event: Event) -> None:
+        """Stop discovery on Home Assistant shutdown."""
+        await async_stop_discovery_service(hass)
+
+    disco.remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_stop_discovery_on_shutdown
+    )
+
     return disco
 
 
@@ -74,6 +85,10 @@ async def async_stop_discovery_service(hass: HomeAssistant):
     """Stop the discovery service."""
     if not (disco := hass.data.get(DATA_DISCOVERY_SERVICE)):
         return
+
+    if disco.remove_stop_listener is not None:
+        disco.remove_stop_listener()
+        disco.remove_stop_listener = None
 
     await disco.pi_disco.close()
     del hass.data[DATA_DISCOVERY_SERVICE]
