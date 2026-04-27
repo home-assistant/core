@@ -180,6 +180,7 @@ async def test_dhcp_discovery_confirm(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result["result"].unique_id == MOCK_DATA["Serial"][0]
 
 
 async def test_dhcp_updates_ip(
@@ -207,3 +208,4 @@ async def test_dhcp_updates_ip(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
+    assert mock_config_entry.unique_id == MOCK_DATA["Serial"][0]
