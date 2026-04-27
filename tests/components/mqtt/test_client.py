@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util.dt import utcnow
 
 from .common import help_all_subscribe_calls
@@ -133,7 +133,18 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.parametrize("mqtt_config_entry_options", [ENTRY_DEFAULT_BIRTH_MESSAGE])
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_options", "mqtt_config_entry_data"),
+    [
+        (
+            ENTRY_DEFAULT_BIRTH_MESSAGE,
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "5",
+            },
+        ),
+    ],
+)
 async def test_publish(
     hass: HomeAssistant, setup_with_birth_msg_client_mock: MqttMockPahoClient
 ) -> None:
@@ -219,6 +230,73 @@ async def test_publish(
     )
 
     publish_mock.reset_mock()
+
+    # test with message expiry interval
+    await mqtt.async_publish(
+        hass, "test-topic", "test-payload", 2, True, message_expiry_interval=60
+    )
+    await hass.async_block_till_done()
+    assert publish_mock.called
+    assert publish_mock.call_args[0][0] == "test-topic"
+    assert publish_mock.call_args[0][1] == "test-payload"
+    assert publish_mock.call_args[0][2] == 2
+    assert publish_mock.call_args[0][3] is True
+    properties = publish_mock.call_args[0][4]
+    assert properties.MessageExpiryInterval == 60
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_options", "mqtt_config_entry_data", "protocol"),
+    [
+        (
+            ENTRY_DEFAULT_BIRTH_MESSAGE,
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+            },
+            "3.1.1",
+        ),
+        (
+            ENTRY_DEFAULT_BIRTH_MESSAGE,
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+            },
+            "3.1",
+        ),
+    ],
+)
+async def test_message_expiry_interval_fails_for_legacy_protocols(
+    hass: HomeAssistant,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    protocol: str,
+) -> None:
+    """Test publishing with Message Expiry Interval fails if protocol != 5."""
+    publish_mock: MagicMock = setup_with_birth_msg_client_mock.publish
+    await mqtt.async_publish(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
+        "test-topic",
+        "test-payload",
+        0,
+        False,
+    )
+    publish_mock.reset_mock()
+
+    # test with message expiry interval
+    with pytest.raises(ServiceValidationError) as exc:
+        await mqtt.async_publish(
+            hass, "test-topic", "test-payload", 2, True, message_expiry_interval=60
+        )
+    assert exc.value.translation_domain == mqtt.DOMAIN
+    assert exc.value.translation_key == "mqtt_message_expiry_interval_not_supported"
+    assert exc.value.translation_placeholders == {
+        "topic": "test-topic",
+        "protocol": protocol,
+    }
+
+    publish_mock.assert_not_called()
 
 
 async def test_convert_outgoing_payload(hass: HomeAssistant) -> None:

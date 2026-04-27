@@ -37,7 +37,7 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -124,8 +124,8 @@ def publish(
     hass: HomeAssistant,
     topic: str,
     payload: PublishPayloadType,
-    qos: int | None = 0,
-    retain: bool | None = False,
+    qos: int = 0,
+    retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
@@ -136,9 +136,11 @@ async def async_publish(
     hass: HomeAssistant,
     topic: str,
     payload: PublishPayloadType,
-    qos: int | None = 0,
-    retain: bool | None = False,
+    qos: int = 0,
+    retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
+    *,
+    message_expiry_interval: int | None = None,
 ) -> None:
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
@@ -177,9 +179,18 @@ async def async_publish(
                 )
                 return
 
-    await mqtt_data.client.async_publish(
-        topic, outgoing_payload, qos or 0, retain or False
-    )
+    # We only pass kwargs if they are set
+    # to not break CI tests that are asserting calls
+    if message_expiry_interval is not None:
+        await mqtt_data.client.async_publish(
+            topic,
+            outgoing_payload,
+            qos,
+            retain,
+            message_expiry_interval=message_expiry_interval,
+        )
+        return
+    await mqtt_data.client.async_publish(topic, outgoing_payload, qos, retain)
 
 
 @callback
@@ -678,18 +689,48 @@ class MQTT:
         return topic in self._pending_subscriptions
 
     async def async_publish(
-        self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
+        self,
+        topic: str,
+        payload: PublishPayloadType,
+        qos: int,
+        retain: bool,
+        *,
+        message_expiry_interval: int | None = None,
     ) -> None:
         """Publish a MQTT message."""
-        msg_info = self._mqttc.publish(topic, payload, qos, retain)
-        _LOGGER.debug(
-            "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
-            " retained" if retain else "",
-            topic,
-            payload,
-            msg_info.mid,
-            qos,
-        )
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
+
+        if message_expiry_interval is not None:
+            if (
+                protocol := self.conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
+            ) != PROTOCOL_5:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mqtt_message_expiry_interval_not_supported",
+                    translation_placeholders={"topic": topic, "protocol": protocol},
+                )
+            properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)  # type: ignore[no-untyped-call]
+            properties.MessageExpiryInterval = message_expiry_interval
+            msg_info = self._mqttc.publish(topic, payload, qos, retain, properties)
+            _LOGGER.debug(
+                "Transmitting%s message on %s: '%s', mid: %s, qos: %s, message_expiry_interval: %s",
+                " retained" if retain else "",
+                topic,
+                payload,
+                msg_info.mid,
+                qos,
+                message_expiry_interval,
+            )
+        else:
+            msg_info = self._mqttc.publish(topic, payload, qos, retain)
+            _LOGGER.debug(
+                "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
+                " retained" if retain else "",
+                topic,
+                payload,
+                msg_info.mid,
+                qos,
+            )
         await self._async_wait_for_mid_or_raise(msg_info.mid, msg_info.rc)
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
