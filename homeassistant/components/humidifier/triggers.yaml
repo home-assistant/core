@@ -20,7 +20,6 @@ mode_changed:
   target: *trigger_humidifier_target
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     mode:
       context:
         filter_target: target

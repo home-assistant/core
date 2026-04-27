@@ -52,7 +52,6 @@ crossed_threshold:
   target: *trigger_numerical_target
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:

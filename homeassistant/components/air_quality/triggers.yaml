@@ -160,7 +160,6 @@
 # Binary sensor detected/cleared trigger fields
 .trigger_binary_fields: &trigger_binary_fields
   behavior: *trigger_behavior
-  for: *trigger_for
 
 # --- Binary sensor targets ---
 
@@ -292,7 +291,6 @@ co_crossed_threshold:
   target: *target_co_sensor
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -319,7 +317,6 @@ co2_crossed_threshold:
   target: *target_co2
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -344,7 +341,6 @@ pm1_crossed_threshold:
   target: *target_pm1
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -369,7 +365,6 @@ pm25_crossed_threshold:
   target: *target_pm25
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -394,7 +389,6 @@ pm4_crossed_threshold:
   target: *target_pm4
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -419,7 +413,6 @@ pm10_crossed_threshold:
   target: *target_pm10
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -446,7 +439,6 @@ ozone_crossed_threshold:
   target: *target_ozone
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -475,7 +467,6 @@ voc_crossed_threshold:
   target: *target_voc
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -504,7 +495,6 @@ voc_ratio_crossed_threshold:
   target: *target_voc_ratio
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -533,7 +523,6 @@ no_crossed_threshold:
   target: *target_no
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -562,7 +551,6 @@ no2_crossed_threshold:
   target: *target_no2
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -589,7 +577,6 @@ n2o_crossed_threshold:
   target: *target_n2o
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
@@ -616,7 +603,6 @@ so2_crossed_threshold:
   target: *target_so2
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:

@@ -7,11 +7,9 @@ is_value:
       required: true
       default: any
       selector:
-        select:
+        automation_behavior:
           translation_key: condition_behavior
-          options:
-            - all
-            - any
+          mode: condition
     threshold:
       required: true
       selector:

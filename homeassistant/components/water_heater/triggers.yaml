@@ -27,7 +27,6 @@ operation_mode_changed:
   target: *trigger_water_heater_target
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     operation_mode:
       context:
         filter_target: target
@@ -60,7 +59,6 @@ target_temperature_crossed_threshold:
   target: *trigger_water_heater_target
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     threshold:
       required: true
       selector:
