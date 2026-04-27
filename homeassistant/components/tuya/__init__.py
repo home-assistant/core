@@ -59,17 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             device.function,
             device.status_range,
         )
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Tuya",
-            name=device.name,
-            # Note: the model is overridden via entity.device_info property
-            # when the entity is created. If no entities are generated, it will
-            # stay as unsupported
-            model=f"{device.product_name} (unsupported)",
-            model_id=device.product_id,
-        )
+        # Register quirk, and add device to the device registry
+        listener.async_register_device(device_registry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # If the device does not register any entities, the device does not need to subscribe
