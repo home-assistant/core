@@ -94,6 +94,18 @@
       "progress": {
         "name": "Progress"
       },
+      "location": {
+        "name": "Location"
+      },
+      "min_extrusion_temp": {
+        "name": "Minimum extrusion temperature"
+      },
+      "x_position": {
+        "name": "X"
+      },
+      "y_position": {
+        "name": "Y"
+      },
       "z_height": {
         "name": "Z-Height"
       }

@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNAVAILABLE,
     Platform,
     UnitOfLength,
     UnitOfTemperature,
@@ -291,3 +292,57 @@ async def test_sensors_active_job(
     assert state is not None
     assert state.state == "2500"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_axis_x_y_sensors(
+    hass: HomeAssistant, mock_config_entry, mock_api
+) -> None:
+    """Test X and Y axis position sensors."""
+    assert await async_setup_component(hass, "prusalink", {})
+
+    state = hass.states.get("sensor.mock_title_x")
+    assert state is not None
+    assert state.state == "7.9"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.mock_title_y")
+    assert state is not None
+    assert state.state == "8.4"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_axis_x_y_unavailable_when_absent(
+    hass: HomeAssistant, mock_config_entry, mock_api, mock_get_status_idle
+) -> None:
+    """X and Y sensors are unavailable when axis fields are absent from the response."""
+    del mock_get_status_idle["printer"]["axis_x"]
+    del mock_get_status_idle["printer"]["axis_y"]
+    assert await async_setup_component(hass, "prusalink", {})
+
+    assert hass.states.get("sensor.mock_title_x").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.mock_title_y").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_location_and_min_extrusion_temp_sensors(
+    hass: HomeAssistant, mock_config_entry, mock_api
+) -> None:
+    """Test location and minimum extrusion temperature sensors from info endpoint."""
+    assert await async_setup_component(hass, "prusalink", {})
+
+    state = hass.states.get("sensor.mock_title_location")
+    assert state is not None
+    assert state.state == "Workshop"
+
+    state = hass.states.get("sensor.mock_title_minimum_extrusion_temperature")
+    assert state is not None
+    assert state.state == "170"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
