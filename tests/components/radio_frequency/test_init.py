@@ -19,7 +19,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import ENTITY_ID
-from .conftest import MockRadioFrequencyCommand, MockRadioFrequencyEntity
+from .common import MockRadioFrequencyCommand, MockRadioFrequencyEntity
 
 from tests.common import mock_restore_cache
 
@@ -30,7 +30,7 @@ async def test_get_transmitters_component_not_loaded(hass: HomeAssistant) -> Non
         async_get_transmitters(hass, 433_920_000, ModulationType.OOK)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_radio_frequency")
 async def test_get_transmitters_no_entities(hass: HomeAssistant) -> None:
     """Test getting transmitters raises when none are registered."""
     with pytest.raises(
@@ -110,7 +110,7 @@ async def test_async_send_command_error_does_not_update_state(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_radio_frequency")
 async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
     """Test async_send_command raises error when entity not found."""
     command = MockRadioFrequencyCommand(frequency=433_920_000)

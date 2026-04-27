@@ -12,11 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-from tests.components.radio_frequency.conftest import (
-    MockRadioFrequencyEntity,
-    init_integration,  # noqa: F401
-    mock_rf_entity,  # noqa: F401
-)
+from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 
@@ -24,7 +20,7 @@ TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 @pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant,
-    mock_rf_entity: MockRadioFrequencyEntity,  # noqa: F811
+    mock_rf_entity: MockRadioFrequencyEntity,
 ) -> MockConfigEntry:
     """Return a mock config entry for Honeywell String Lights."""
     entity_registry = er.async_get(hass)
