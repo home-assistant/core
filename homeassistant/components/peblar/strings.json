@@ -73,10 +73,10 @@
       "buzzer_volume": {
         "name": "Buzzer volume",
         "state": {
-          "off": "Off",
+          "high": "High",
           "low": "Low",
           "medium": "Medium",
-          "high": "High"
+          "off": "Off"
         }
       },
       "led_brightness": {
