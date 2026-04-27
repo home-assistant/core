@@ -10,6 +10,11 @@
       selector:
         automation_behavior:
           mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .number_or_entity: &number_or_entity
   required: false
