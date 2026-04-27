@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     selector,
 )
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.dt import now
 
 from .const import (
@@ -196,8 +197,8 @@ def async_register_app_services(
             ) from err
 
     for service in simple_app_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_app_service_handler, schema=SCHEMA_APP
+        async_register_admin_service(
+            hass, DOMAIN, service, async_simple_app_service_handler, schema=SCHEMA_APP
         )
 
     async def async_app_stdin_service_handler(service: ServiceCall) -> None:
@@ -220,7 +221,8 @@ def async_register_app_services(
                 f"Failed to write stdin to app {app_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_APP_STDIN,
         async_app_stdin_service_handler,
@@ -247,8 +249,12 @@ def async_register_app_services(
             ) from err
 
     for service in simple_addon_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_addon_service_handler, schema=SCHEMA_ADDON
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            async_simple_addon_service_handler,
+            schema=SCHEMA_ADDON,
         )
 
     async def async_addon_stdin_service_handler(service: ServiceCall) -> None:
@@ -267,7 +273,8 @@ def async_register_app_services(
                 f"Failed to write stdin to app {addon_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_ADDON_STDIN,
         async_addon_stdin_service_handler,
@@ -294,8 +301,12 @@ def async_register_host_services(
             raise HomeAssistantError(f"Failed to {action} the host: {err}") from err
 
     for service in simple_host_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_host_service_handler, schema=SCHEMA_NO_DATA
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            async_simple_host_service_handler,
+            schema=SCHEMA_NO_DATA,
         )
 
 
@@ -319,7 +330,8 @@ def async_register_backup_restore_services(
 
         return {"backup": backup.slug}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_BACKUP_FULL,
         async_full_backup_service_handler,
@@ -345,7 +357,8 @@ def async_register_backup_restore_services(
 
         return {"backup": backup.slug}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_BACKUP_PARTIAL,
         async_partial_backup_service_handler,
@@ -367,7 +380,8 @@ def async_register_backup_restore_services(
                 f"Failed to full restore from backup {backup_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RESTORE_FULL,
         async_full_restore_service_handler,
@@ -389,7 +403,8 @@ def async_register_backup_restore_services(
                 f"Failed to partial restore from backup {backup_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RESTORE_PARTIAL,
         async_partial_restore_service_handler,
@@ -434,6 +449,6 @@ def async_register_network_storage_services(
                 translation_placeholders={"name": device.name, "error": str(error)},
             ) from error
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
     )

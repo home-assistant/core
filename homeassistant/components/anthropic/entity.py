@@ -1,7 +1,8 @@
 """Base entity for Anthropic."""
 
 import base64
-from collections.abc import AsyncGenerator, Callable, Iterable
+from collections import deque
+from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 import json
@@ -20,18 +21,22 @@ from anthropic.types import (
     CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
     CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockContent,
     CodeExecutionToolResultBlockParamContentParam,
     Container,
+    ContentBlock,
     ContentBlockParam,
     DocumentBlockParam,
     ImageBlockParam,
     InputJSONDelta,
     JSONOutputFormatParam,
+    Message,
     MessageDeltaUsage,
     MessageParam,
     MessageStreamEvent,
     ModelInfo,
     OutputConfigParam,
+    RawContentBlockDelta,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
@@ -68,18 +73,30 @@ from anthropic.types import (
     WebSearchTool20250305Param,
     WebSearchTool20260209Param,
     WebSearchToolResultBlock,
+    WebSearchToolResultBlockContent,
     WebSearchToolResultBlockParamContentParam,
+)
+from anthropic.types.bash_code_execution_tool_result_block import (
+    Content as BashCodeExecutionToolResultBlockContent,
 )
 from anthropic.types.bash_code_execution_tool_result_block_param import (
     Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
+from anthropic.types.raw_message_delta_event import Delta
+from anthropic.types.text_editor_code_execution_tool_result_block import (
+    Content as TextEditorCodeExecutionToolResultBlockContent,
+)
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
     Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
+)
+from anthropic.types.tool_search_tool_result_block import (
+    Content as ToolSearchToolResultBlockContent,
 )
 from anthropic.types.tool_search_tool_result_block_param import (
     Content as ToolSearchToolResultBlockParamContentParam,
 )
+from anthropic.types.tool_use_block import Caller
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -91,7 +108,7 @@ from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -445,13 +462,7 @@ def _convert_content(  # noqa: C901
     return messages, container_id
 
 
-async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
-    chat_log: conversation.ChatLog,
-    stream: AsyncStream[MessageStreamEvent],
-    output_tool: str | None = None,
-) -> AsyncGenerator[
-    conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
-]:
+class AnthropicDeltaStream:
     """Transform the response stream into HA format.
 
     A typical stream of responses might look something like the following:
@@ -481,201 +492,376 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
     Each message could contain multiple blocks of the same type.
     """
-    if stream is None or not hasattr(stream, "__aiter__"):
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="unexpected_stream_object"
+
+    def __init__(
+        self,
+        chat_log: conversation.ChatLog,
+        stream: AsyncStream[MessageStreamEvent],
+        output_tool: str | None = None,
+    ) -> None:
+        """Initialize the delta stream."""
+        self._chat_log: conversation.ChatLog = chat_log
+        self._stream: AsyncStream[MessageStreamEvent] = stream
+        self._output_tool: str | None = output_tool
+
+        self._buffer: deque[
+            conversation.AssistantContentDeltaDict
+            | conversation.ToolResultContentDeltaDict
+        ] = deque()
+        self._stream_iterator: AsyncIterator[MessageStreamEvent] | None = None
+
+        self._current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = (
+            None
         )
+        self._current_tool_args: str = ""
+        self._content_details = ContentDetails()
+        self._content_details.add_citation_detail()
+        self._input_usage: Usage | None = None
+        self._first_block: bool = True
 
-    current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
-    current_tool_args: str
-    content_details = ContentDetails()
-    content_details.add_citation_detail()
-    input_usage: Usage | None = None
-    first_block: bool = True
+    def __aiter__(
+        self,
+    ) -> AsyncIterator[
+        conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+    ]:
+        """Initialize the stream and return the async iterator."""
+        if self._stream is None or not hasattr(self._stream, "__aiter__"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unexpected_stream_object"
+            )
+        if self._stream_iterator is None:
+            self._stream_iterator = self._stream.__aiter__()
+        return self
 
-    async for response in stream:
-        LOGGER.debug("Received response: %s", response)
+    async def __anext__(
+        self,
+    ) -> (
+        conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+    ):
+        """Get the next item from the stream."""
+        while True:
+            if self._buffer:
+                return self._buffer.popleft()
 
-        if isinstance(response, RawMessageStartEvent):
-            input_usage = response.message.usage
-            first_block = True
-        elif isinstance(response, RawContentBlockStartEvent):
-            if isinstance(response.content_block, ToolUseBlock):
-                current_tool_block = ToolUseBlockParam(
-                    type="tool_use",
-                    id=response.content_block.id,
-                    name=response.content_block.name,
-                    input=response.content_block.input or {},
-                )
-                current_tool_args = ""
-                if response.content_block.name == output_tool:
-                    if first_block or content_details.has_content():
-                        if content_details:
-                            content_details.delete_empty()
-                            yield {"native": content_details}
-                        content_details = ContentDetails()
-                        content_details.add_citation_detail()
-                        yield {"role": "assistant"}
-                        first_block = False
-            elif isinstance(response.content_block, TextBlock):
-                if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
-                    first_block
-                    or (
-                        not content_details.has_citations()
-                        and response.content_block.citations is None
-                        and content_details.has_content()
-                    )
-                ):
-                    if content_details:
-                        content_details.delete_empty()
-                        yield {"native": content_details}
-                    content_details = ContentDetails()
-                    yield {"role": "assistant"}
-                    first_block = False
-                content_details.add_citation_detail()
-                if response.content_block.text:
-                    content_details.citation_details[-1].length += len(
-                        response.content_block.text
-                    )
-                    yield {"content": response.content_block.text}
-            elif isinstance(response.content_block, ThinkingBlock):
-                if first_block or content_details.thinking_signature:
-                    if content_details:
-                        content_details.delete_empty()
-                        yield {"native": content_details}
-                    content_details = ContentDetails()
-                    content_details.add_citation_detail()
-                    yield {"role": "assistant"}
-                    first_block = False
-            elif isinstance(response.content_block, RedactedThinkingBlock):
-                LOGGER.debug(
-                    "Some of Claude’s internal reasoning has been automatically "
-                    "encrypted for safety reasons. This doesn’t affect the quality of "
-                    "responses"
-                )
-                if first_block or content_details.redacted_thinking:
-                    if content_details:
-                        content_details.delete_empty()
-                        yield {"native": content_details}
-                    content_details = ContentDetails()
-                    content_details.add_citation_detail()
-                    yield {"role": "assistant"}
-                    first_block = False
-                content_details.redacted_thinking = response.content_block.data
-            elif isinstance(response.content_block, ServerToolUseBlock):
-                current_tool_block = ServerToolUseBlockParam(
-                    type="server_tool_use",
-                    id=response.content_block.id,
-                    name=response.content_block.name,
-                    input=response.content_block.input or {},
-                )
-                current_tool_args = ""
-            elif isinstance(
-                response.content_block,
-                (
-                    WebSearchToolResultBlock,
-                    CodeExecutionToolResultBlock,
-                    BashCodeExecutionToolResultBlock,
-                    TextEditorCodeExecutionToolResultBlock,
-                    ToolSearchToolResultBlock,
-                ),
-            ):
-                if content_details:
-                    content_details.delete_empty()
-                    yield {"native": content_details}
-                content_details = ContentDetails()
-                content_details.add_citation_detail()
-                yield {
-                    "role": "tool_result",
-                    "tool_call_id": response.content_block.tool_use_id,
-                    "tool_name": response.content_block.type.removesuffix(
-                        "_tool_result"
-                    ),
-                    "tool_result": {
-                        "content": cast(
-                            JsonObjectType, response.content_block.to_dict()["content"]
-                        )
-                    }
-                    if isinstance(response.content_block.content, list)
-                    else cast(JsonObjectType, response.content_block.content.to_dict()),
+            response = await self._stream_iterator.__anext__()  # type: ignore[union-attr]
+
+            LOGGER.debug("Received response: %s", response)
+            self.on_message_stream_event(response)
+
+    def on_message_stream_event(self, event: MessageStreamEvent) -> None:
+        """Handle MessageStreamEvent."""
+        if isinstance(event, RawMessageStartEvent):
+            self.on_message_start_event(event.message)
+            return
+        if isinstance(event, RawContentBlockStartEvent):
+            self.on_content_block_start_event(event.content_block, event.index)
+            return
+        if isinstance(event, RawContentBlockDeltaEvent):
+            self.on_content_block_delta_event(event.delta)
+            return
+        if isinstance(event, RawContentBlockStopEvent):
+            self.on_content_block_stop_event(event.index)
+            return
+        if isinstance(event, RawMessageDeltaEvent):
+            self.on_message_delta_event(event.delta, event.usage)
+            return
+        if isinstance(event, RawMessageStopEvent):
+            self.on_message_stop_event()
+            return
+        LOGGER.debug("Unhandled event type: %s", event.type)  # type: ignore[unreachable]  # pragma: no cover - All types are handled but we want to verify that
+
+    def on_message_start_event(self, message: Message) -> None:
+        """Handle RawMessageStartEvent."""
+        self._input_usage = message.usage
+        self._first_block = True
+
+    def on_content_block_start_event(
+        self, content_block: ContentBlock, index: int
+    ) -> None:
+        """Handle RawContentBlockStartEvent."""
+        if isinstance(content_block, ToolUseBlock):
+            self.on_tool_use_block(
+                content_block.id,
+                content_block.input,
+                content_block.name,
+                content_block.caller,
+            )
+            return
+        if isinstance(content_block, TextBlock):
+            self.on_text_block(content_block.text, content_block.citations)
+            return
+        if isinstance(content_block, ThinkingBlock):
+            self.on_thinking_block(content_block.thinking, content_block.signature)
+            return
+        if isinstance(content_block, RedactedThinkingBlock):
+            self.on_redacted_thinking_block(content_block.data)
+            return
+        if isinstance(content_block, ServerToolUseBlock):
+            self.on_server_tool_use_block(
+                content_block.id,
+                content_block.name,
+                content_block.input,
+                content_block.caller,
+            )
+            return
+        if isinstance(
+            content_block,
+            (
+                WebSearchToolResultBlock,
+                CodeExecutionToolResultBlock,
+                BashCodeExecutionToolResultBlock,
+                TextEditorCodeExecutionToolResultBlock,
+                ToolSearchToolResultBlock,
+            ),
+        ):
+            self.on_server_tool_result_block(
+                content_block.tool_use_id,
+                content_block.type,
+                content_block.content,
+                content_block.caller if hasattr(content_block, "caller") else None,
+            )
+            return
+        LOGGER.debug("Unhandled content block type: %s", content_block.type)
+
+    def on_tool_use_block(
+        self, id: str, input: dict[str, Any], name: str, caller: Caller | None
+    ) -> None:
+        """Handle ToolUseBlock."""
+        self._current_tool_block = ToolUseBlockParam(
+            type="tool_use",
+            id=id,
+            name=name,
+            input=input,
+        )
+        self._current_tool_args = ""
+        if name == self._output_tool:
+            if self._first_block or self._content_details.has_content():
+                if self._content_details:
+                    self._content_details.delete_empty()
+                    self._buffer.append({"native": self._content_details})
+                self._content_details = ContentDetails()
+                self._content_details.add_citation_detail()
+                self._buffer.append({"role": "assistant"})
+                self._first_block = False
+
+    def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
+        """Handle TextBlock."""
+        if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
+            self._first_block
+            or (
+                not self._content_details.has_citations()
+                and citations is None
+                and self._content_details.has_content()
+            )
+        ):
+            if self._content_details:
+                self._content_details.delete_empty()
+                self._buffer.append({"native": self._content_details})
+            self._content_details = ContentDetails()
+            self._buffer.append({"role": "assistant"})
+            self._first_block = False
+        self._content_details.add_citation_detail()
+        if text:
+            self._content_details.citation_details[-1].length += len(text)
+            self._buffer.append({"content": text})
+
+    def on_thinking_block(self, thinking: str, signature: str) -> None:
+        """Handle ThinkingBlock."""
+        if self._first_block or self._content_details.thinking_signature:
+            if self._content_details:
+                self._content_details.delete_empty()
+                self._buffer.append({"native": self._content_details})
+            self._content_details = ContentDetails()
+            self._content_details.add_citation_detail()
+            self._buffer.append({"role": "assistant"})
+            self._first_block = False
+
+    def on_redacted_thinking_block(self, data: str) -> None:
+        """Handle RedactedThinkingBlock."""
+        LOGGER.debug(
+            "Some of Claude’s internal reasoning has been automatically "
+            "encrypted for safety reasons. This doesn’t affect the quality of "
+            "responses"
+        )
+        if self._first_block or self._content_details.redacted_thinking:
+            if self._content_details:
+                self._content_details.delete_empty()
+                self._buffer.append({"native": self._content_details})
+            self._content_details = ContentDetails()
+            self._content_details.add_citation_detail()
+            self._buffer.append({"role": "assistant"})
+            self._first_block = False
+        self._content_details.redacted_thinking = data
+
+    def on_server_tool_use_block(
+        self,
+        id: str,
+        name: Literal[
+            "web_search",
+            "web_fetch",
+            "code_execution",
+            "bash_code_execution",
+            "text_editor_code_execution",
+            "tool_search_tool_regex",
+            "tool_search_tool_bm25",
+        ],
+        input: dict[str, Any],
+        caller: Caller | None,
+    ) -> None:
+        """Handle ServerToolUseBlock."""
+        self._current_tool_block = ServerToolUseBlockParam(
+            type="server_tool_use",
+            id=id,
+            name=name,
+            input=input,
+        )
+        self._current_tool_args = ""
+
+    def on_server_tool_result_block(
+        self,
+        tool_use_id: str,
+        tool_name: Literal[
+            "web_search_tool_result",
+            "code_execution_tool_result",
+            "bash_code_execution_tool_result",
+            "text_editor_code_execution_tool_result",
+            "tool_search_tool_result",
+        ],
+        content: WebSearchToolResultBlockContent
+        | CodeExecutionToolResultBlockContent
+        | BashCodeExecutionToolResultBlockContent
+        | TextEditorCodeExecutionToolResultBlockContent
+        | ToolSearchToolResultBlockContent,
+        caller: Caller | None,
+    ) -> None:
+        """Handle various server tool result blocks."""
+        if self._content_details:
+            self._content_details.delete_empty()
+            self._buffer.append({"native": self._content_details})
+        self._content_details = ContentDetails()
+        self._content_details.add_citation_detail()
+        self._buffer.append(
+            {
+                "role": "tool_result",
+                "tool_call_id": tool_use_id,
+                "tool_name": tool_name.removesuffix("_tool_result"),
+                "tool_result": {
+                    "content": cast(JsonArrayType, [x.to_dict() for x in content])
                 }
-                first_block = True
-        elif isinstance(response, RawContentBlockDeltaEvent):
-            if isinstance(response.delta, InputJSONDelta):
-                if (
-                    current_tool_block is not None
-                    and current_tool_block["name"] == output_tool
-                ):
-                    content_details.citation_details[-1].length += len(
-                        response.delta.partial_json
-                    )
-                    yield {"content": response.delta.partial_json}
-                else:
-                    current_tool_args += response.delta.partial_json
-            elif isinstance(response.delta, TextDelta):
-                if response.delta.text:
-                    content_details.citation_details[-1].length += len(
-                        response.delta.text
-                    )
-                    yield {"content": response.delta.text}
-            elif isinstance(response.delta, ThinkingDelta):
-                if response.delta.thinking:
-                    yield {"thinking_content": response.delta.thinking}
-            elif isinstance(response.delta, SignatureDelta):
-                content_details.thinking_signature = response.delta.signature
-            elif isinstance(response.delta, CitationsDelta):
-                content_details.add_citation(response.delta.citation)
-        elif isinstance(response, RawContentBlockStopEvent):
-            if current_tool_block is not None:
-                if current_tool_block["name"] == output_tool:
-                    current_tool_block = None
-                    continue
-                tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                current_tool_block["input"] |= tool_args
-                yield {
+                if isinstance(content, list)
+                else cast(JsonObjectType, content.to_dict()),
+            }
+        )
+        self._first_block = True
+
+    def on_content_block_delta_event(self, delta: RawContentBlockDelta) -> None:
+        """Handle RawContentBlockDeltaEvent."""
+        if isinstance(delta, InputJSONDelta):
+            self.on_input_json_delta(delta.partial_json)
+            return
+        if isinstance(delta, TextDelta):
+            self.on_text_delta(delta.text)
+            return
+        if isinstance(delta, ThinkingDelta):
+            self.on_thinking_delta(delta.thinking)
+            return
+        if isinstance(delta, SignatureDelta):
+            self.on_signature_delta(delta.signature)
+            return
+        if isinstance(delta, CitationsDelta):
+            self.on_citations_delta(delta.citation)
+            return
+        LOGGER.debug("Unhandled content delta type: %s", delta.type)  # type: ignore[unreachable]  # pragma: no cover - All types are handled but we want to verify that
+
+    def on_input_json_delta(self, partial_json: str) -> None:
+        """Handle InputJSONDelta."""
+        if (
+            self._current_tool_block is not None
+            and self._current_tool_block["name"] == self._output_tool
+        ):
+            self._content_details.citation_details[-1].length += len(partial_json)
+            self._buffer.append({"content": partial_json})
+        else:
+            self._current_tool_args += partial_json
+
+    def on_text_delta(self, text: str) -> None:
+        """Handle TextDelta."""
+        if text:
+            self._content_details.citation_details[-1].length += len(text)
+            self._buffer.append({"content": text})
+
+    def on_thinking_delta(self, thinking: str) -> None:
+        """Handle ThinkingDelta."""
+        if thinking:
+            self._buffer.append({"thinking_content": thinking})
+
+    def on_signature_delta(self, signature: str) -> None:
+        """Handle SignatureDelta."""
+        self._content_details.thinking_signature = signature
+
+    def on_citations_delta(self, citation: TextCitation) -> None:
+        """Handle CitationsDelta."""
+        self._content_details.add_citation(citation)
+
+    def on_content_block_stop_event(self, index: int) -> None:
+        """Handle RawContentBlockStopEvent."""
+        if self._current_tool_block is not None:
+            if self._current_tool_block["name"] == self._output_tool:
+                self._current_tool_block = None
+                return
+            tool_args = (
+                json.loads(self._current_tool_args) if self._current_tool_args else {}
+            )
+            self._current_tool_block["input"] |= tool_args
+            self._buffer.append(
+                {
                     "tool_calls": [
                         llm.ToolInput(
-                            id=current_tool_block["id"],
-                            tool_name=current_tool_block["name"],
-                            tool_args=current_tool_block["input"],
-                            external=current_tool_block["type"] == "server_tool_use",
+                            id=self._current_tool_block["id"],
+                            tool_name=self._current_tool_block["name"],
+                            tool_args=self._current_tool_block["input"],
+                            external=self._current_tool_block["type"]
+                            == "server_tool_use",
                         )
                     ]
                 }
-                current_tool_block = None
-        elif isinstance(response, RawMessageDeltaEvent):
-            if (usage := response.usage) is not None:
-                chat_log.async_trace(_create_token_stats(input_usage, usage))
-            content_details.container = response.delta.container
-            if response.delta.stop_reason == "refusal":
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="api_refusal"
-                )
-        elif isinstance(response, RawMessageStopEvent):
-            if content_details:
-                content_details.delete_empty()
-                yield {"native": content_details}
-            content_details = ContentDetails()
-            content_details.add_citation_detail()
+            )
+            self._current_tool_block = None
 
+    def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
+        """Handle RawMessageDeltaEvent."""
+        self._chat_log.async_trace(self._create_token_stats(self._input_usage, usage))
+        self._content_details.container = delta.container
+        if delta.stop_reason == "refusal":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_refusal"
+            )
 
-def _create_token_stats(
-    input_usage: Usage | None, response_usage: MessageDeltaUsage
-) -> dict[str, Any]:
-    """Create token stats for conversation agent tracing."""
-    input_tokens = 0
-    cached_input_tokens = 0
-    if input_usage:
-        input_tokens = input_usage.input_tokens
-        cached_input_tokens = input_usage.cache_creation_input_tokens or 0
-    output_tokens = response_usage.output_tokens
-    return {
-        "stats": {
-            "input_tokens": input_tokens,
-            "cached_input_tokens": cached_input_tokens,
-            "output_tokens": output_tokens,
+    def on_message_stop_event(self) -> None:
+        """Handle RawMessageStopEvent."""
+        if self._content_details:
+            self._content_details.delete_empty()
+            self._buffer.append({"native": self._content_details})
+        self._content_details = ContentDetails()
+        self._content_details.add_citation_detail()
+
+    def _create_token_stats(
+        self, input_usage: Usage | None, response_usage: MessageDeltaUsage
+    ) -> dict[str, Any]:
+        """Create token stats for conversation agent tracing."""
+        input_tokens = 0
+        cached_input_tokens = 0
+        if input_usage:
+            input_tokens = input_usage.input_tokens
+            cached_input_tokens = input_usage.cache_creation_input_tokens or 0
+        output_tokens = response_usage.output_tokens
+        return {
+            "stats": {
+                "input_tokens": input_tokens,
+                "cached_input_tokens": cached_input_tokens,
+                "output_tokens": output_tokens,
+            }
         }
-    }
 
 
 class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
@@ -963,7 +1149,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            _transform_stream(
+                            AnthropicDeltaStream(
                                 chat_log,
                                 stream,
                                 output_tool=structure_name or None,
