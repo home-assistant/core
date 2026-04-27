@@ -29,9 +29,9 @@
       "alert_status": {
         "name": "Alert status",
         "state": {
-          "critical_level": "Critical Level",
-          "low_level": "Low Level",
-          "no_alert": "No Alert"
+          "critical_level": "Critical level",
+          "low_level": "Low level",
+          "no_alert": "No alert"
         }
       },
       "altitude": {
