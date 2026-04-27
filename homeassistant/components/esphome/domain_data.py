@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Self
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import DOMAIN
+from .const import ESPHOME_DATA
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
 
 STORAGE_VERSION = 1
@@ -36,11 +35,9 @@ class DomainData:
             ),
         )
 
-    @classmethod
+    @staticmethod
     @cache
-    def get(cls, hass: HomeAssistant) -> Self:
+    def get(hass: HomeAssistant) -> DomainData:
         """Get the global DomainData instance stored in hass.data."""
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
-        ret = hass.data[DOMAIN] = cls()
+        ret = hass.data[ESPHOME_DATA] = DomainData()
         return ret
