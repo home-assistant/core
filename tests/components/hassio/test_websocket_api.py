@@ -336,8 +336,8 @@ async def test_websocket_non_admin_user(
         "slug": "test_addon",
         "version": "2.0.0",
         "ingress_url": "http://127.0.0.1/ingress/test_addon",
-        "options": {},
     }
+    assert "options" not in msg["result"]
 
     await websocket_client.send_json(
         {
