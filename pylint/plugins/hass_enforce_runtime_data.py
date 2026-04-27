@@ -81,39 +81,31 @@ class HassEnforceRuntimeDataChecker(BaseChecker):
             return
 
         # Don't flag deletion: del hass.data[DOMAIN] or hass.data[DOMAIN].pop(...)
-        parent = node.parent
-        if isinstance(parent, nodes.Delete):
-            return
-        if (
-            isinstance(parent, nodes.Attribute)
-            and parent.attrname == "pop"
-            and isinstance(parent.parent, nodes.Call)
-        ):
-            return
+        match node.parent:
+            case nodes.Delete():
+                return
+            case nodes.Attribute(attrname="pop", parent=nodes.Call()):
+                return
 
         self.add_message("hass-use-runtime-data", node=node)
 
 
 def _is_hass_data_domain_access(node: nodes.Subscript) -> bool:
     """Return True if node is hass.data[DOMAIN] or self.hass.data[DOMAIN]."""
-    if not isinstance(node.value, nodes.Attribute):
-        return False
-    if node.value.attrname != "data":
-        return False
-
-    slice_node = node.slice
-    if not isinstance(slice_node, nodes.Name) or slice_node.name != "DOMAIN":
-        return False
-
-    expr = node.value.expr
-    if isinstance(expr, nodes.Name) and expr.name == "hass":
-        return True
-    return (
-        isinstance(expr, nodes.Attribute)
-        and expr.attrname == "hass"
-        and isinstance(expr.expr, nodes.Name)
-        and expr.expr.name == "self"
-    )
+    match node:
+        case nodes.Subscript(
+            value=nodes.Attribute(
+                expr=(
+                    nodes.Name(name="hass")
+                    | nodes.Attribute(expr=nodes.Name(name="self"), attrname="hass")
+                ),
+                attrname="data",
+            ),
+            slice=nodes.Name(name="DOMAIN"),
+        ):
+            return True
+        case _:
+            return False
 
 
 def _has_config_flow(integration: str, module: nodes.Module) -> bool:
