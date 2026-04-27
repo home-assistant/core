@@ -137,3 +137,28 @@ async def test_binary_handler_registration() -> None:
     # Verify we reuse an unsubscribed prefix
     prefix, unsub = connection.async_register_binary_handler(None)
     assert prefix == 15
+
+
+async def test_credential_redaction(hass: HomeAssistant) -> None:
+    send_messages = []
+    user = MockUser()
+    refresh_token = Mock()
+    hass.data[DOMAIN] = {}
+
+    connection = websocket_api.ActiveConnection(
+        logging.getLogger(__name__),
+        hass,
+        send_messages.append,
+        user,
+        refresh_token,
+        remote=None,
+    )
+
+    msg = {"id": 5, "detail": "bad input", "password": "secretpassword", "token": "api-token-12345"}
+    connection.async_handle_exception(msg, vol.Invalid("bad input"))
+
+    assert len(send_messages) == 1
+    error_message = send_messages[0]["error"]["message"]
+    assert "supersecret" not in error_message
+    assert "my-api-token" not in error_message
+    assert "bad input" in error_message
