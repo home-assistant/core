@@ -710,6 +710,7 @@ def _require_cloud_login(
     return with_cloud_auth
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response

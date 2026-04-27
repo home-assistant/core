@@ -1818,6 +1818,7 @@ async def test_support_package_requires_admin(
 @pytest.mark.parametrize(
     "msg",
     [
+        {"type": "cloud/subscription"},
         {"type": "cloud/update_prefs", "alexa_report_state": True},
         {"type": "cloud/cloudhook/create", "webhook_id": "mock-webhook-id"},
         {"type": "cloud/cloudhook/delete", "webhook_id": "mock-webhook-id"},
