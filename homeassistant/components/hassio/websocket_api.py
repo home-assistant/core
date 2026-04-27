@@ -154,10 +154,7 @@ async def websocket_supervisor_api(
         data = result.get(ATTR_DATA, {})
         # Remove options from add-on info for non-admin users, as options can contain
         # sensitive information and the frontend does not require it for ingress.
-        if (
-            not connection.user.is_admin
-            and WS_ADDONS_INFO_ENDPOINT.match(command)
-        ):
+        if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
         connection.send_result(msg[WS_ID], data)
 
