@@ -310,6 +310,59 @@
     },
     "failed_to_switch_energy_mode": {
       "message": "Failed to switch to requested energy mode"
+    },
+    "multi_device_errors": {
+      "message": "One or more devices reported errors: {errors}"
+    },
+    "no_matching_target_entries": {
+      "message": "No matching Indevolt devices found in the selected targets"
+    },
+    "power_exceeds_max": {
+      "message": "Power ({power}W) exceeds maximum ({max_power}W) for generation ({generation}) devices"
+    },
+    "soc_below_emergency": {
+      "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
+    },
+    "soc_below_minimum": {
+      "message": "Target SOC ({target}%) is below the device minimum ({minimum_soc}%)"
+    }
+  },
+  "services": {
+    "charge": {
+      "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
+      "fields": {
+        "device_id": {
+          "description": "The Indevolt device(s) to start charging.",
+          "name": "Device(s)"
+        },
+        "power": {
+          "description": "Maximum charging power in watts.",
+          "name": "Max. power"
+        },
+        "target_soc": {
+          "description": "Target state of charge percentage.",
+          "name": "Target SOC"
+        }
+      },
+      "name": "Charge"
+    },
+    "discharge": {
+      "description": "Real-time control: Starts discharging with configured power until the target SOC is reached.",
+      "fields": {
+        "device_id": {
+          "description": "The Indevolt device(s) to start discharging.",
+          "name": "[%key:component::indevolt::services::charge::fields::device_id::name%]"
+        },
+        "power": {
+          "description": "Maximum discharging power in watts.",
+          "name": "Max. power"
+        },
+        "target_soc": {
+          "description": "[%key:component::indevolt::services::charge::fields::target_soc::description%]",
+          "name": "[%key:component::indevolt::services::charge::fields::target_soc::name%]"
+        }
+      },
+      "name": "Discharge"
     }
   }
 }
