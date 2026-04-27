@@ -238,6 +238,25 @@ async def test_websocket_list_empty(ws_client: ClientFixture) -> None:
     assert await client.cmd_result("list") == []
 
 
+async def test_websocket_config_entry_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config_entry websocket command requires admin."""
+    ws_client = await hass_ws_client(hass, hass_read_only_access_token)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "application_credentials/config_entry",
+            "config_entry_id": "some_id",
+        }
+    )
+    resp = await ws_client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unauthorized"
+
+
 async def test_websocket_create(ws_client: ClientFixture) -> None:
     """Test websocket create command."""
     client = await ws_client()
