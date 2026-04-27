@@ -10,10 +10,15 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import izone as izone_component
 from homeassistant.components.izone import config_flow, discovery as izone_discovery
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, IZONE
+from homeassistant.components.izone.const import (
+    DATA_CONFIG,
+    DATA_DISCOVERY_SERVICE,
+    IZONE,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -285,6 +290,32 @@ async def test_select_controller_aborts_when_choices_missing(
     flow._user_discovered_controllers = None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_select_controller_aborts_when_selected_host_is_stale(
+    hass: HomeAssistant,
+) -> None:
+    """Test controller selection aborts if a submitted host is not in the choices."""
+    first_controller = _make_controller("000000001", "192.0.2.1")
+    second_controller = _make_controller("000000002", "192.0.2.2")
+
+    with patch(
+        "homeassistant.components.izone.config_flow._async_discover_controllers",
+        return_value={
+            first_controller.device_uid: first_controller,
+            second_controller.device_uid: second_controller,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    result = await flow.async_step_select_controller({"host": "192.0.2.99"})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -727,6 +758,110 @@ async def test_async_start_discovery_service_stops_on_home_assistant_stop(
     mock_pizone_discovery_service.start_discovery.assert_awaited_once()
     mock_pizone_discovery_service.close.assert_awaited_once()
     assert DATA_DISCOVERY_SERVICE not in hass.data
+
+
+async def test_async_setup_entry_migrates_legacy_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy config entries are migrated to the discovered controller UID."""
+    entry = MockConfigEntry(domain=IZONE, unique_id=IZONE, data={})
+    entry.add_to_hass(hass)
+    controller = _make_controller("000000001", "192.0.2.1")
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow._async_discover_controllers",
+            return_value={controller.device_uid: controller},
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ) as mock_start,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            return_value=None,
+        ) as mock_forward,
+    ):
+        await izone_component.async_setup_entry(hass, entry)
+
+    assert entry.unique_id == controller.device_uid
+    assert entry.data == {"host": controller.device_ip}
+    mock_start.assert_awaited_once()
+    mock_forward.assert_awaited_once()
+
+
+async def test_async_setup_entry_migrates_legacy_entry_ignoring_excluded_controllers(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy config entry migration ignores controllers excluded in YAML."""
+    entry = MockConfigEntry(domain=IZONE, unique_id=IZONE, data={})
+    entry.add_to_hass(hass)
+    excluded_controller = _make_controller("000000001", "192.0.2.1")
+    remaining_controller = _make_controller("000000002", "192.0.2.2")
+    hass.data[DATA_CONFIG] = {"exclude": [excluded_controller.device_uid]}
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow._async_discover_controllers",
+            return_value={
+                excluded_controller.device_uid: excluded_controller,
+                remaining_controller.device_uid: remaining_controller,
+            },
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            return_value=None,
+        ),
+    ):
+        await izone_component.async_setup_entry(hass, entry)
+
+    assert entry.unique_id == remaining_controller.device_uid
+    assert entry.data == {"host": remaining_controller.device_ip}
+
+
+async def test_async_setup_entry_legacy_entry_not_ready_when_no_eligible_controller(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy config entry migration waits when no eligible controllers are found."""
+    entry = MockConfigEntry(domain=IZONE, unique_id=IZONE, data={})
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow._async_discover_controllers",
+            return_value={},
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await izone_component.async_setup_entry(hass, entry)
+
+
+async def test_async_setup_entry_legacy_entry_errors_when_multiple_eligible_controllers(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy config entry migration errors when multiple eligible controllers are found."""
+    entry = MockConfigEntry(domain=IZONE, unique_id=IZONE, data={})
+    entry.add_to_hass(hass)
+    first_controller = _make_controller("000000001", "192.0.2.1")
+    second_controller = _make_controller("000000002", "192.0.2.2")
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow._async_discover_controllers",
+            return_value={
+                first_controller.device_uid: first_controller,
+                second_controller.device_uid: second_controller,
+            },
+        ),
+        pytest.raises(ConfigEntryError),
+    ):
+        await izone_component.async_setup_entry(hass, entry)
 
 
 # ---------------------------------------------------------------------------
