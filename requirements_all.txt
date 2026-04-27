@@ -3233,7 +3233,7 @@ vallox-websocket-api==6.0.0
 vegehub==0.1.26
 
 # homeassistant.components.rdw
-vehicle==2.2.2
+vehicle==3.0.0
 
 # homeassistant.components.velbus
 velbus-aio==2026.4.1
