@@ -187,9 +187,6 @@
   "services": {
     "add_password": {
       "service": "mdi:key-plus"
-    },
-    "half_lock": {
-      "service": "mdi:lock-open-variant"
     }
   }
 }
