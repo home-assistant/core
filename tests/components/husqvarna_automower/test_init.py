@@ -16,6 +16,7 @@ from aioautomower.exceptions import (
 )
 from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
 from aioautomower.model.model_work_areas import Type
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
