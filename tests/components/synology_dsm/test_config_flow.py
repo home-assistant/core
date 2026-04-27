@@ -397,8 +397,15 @@ async def test_backup_share_none_user_input(
             None,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "backup_share"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BACKUP_SHARE: "/ha_backup", CONF_BACKUP_PATH: "automatic_ha_backups"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
