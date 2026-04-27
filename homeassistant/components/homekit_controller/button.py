@@ -25,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .ecobee import HomeKitEcobeeClearHoldButton
 from .entity import CharacteristicEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,35 +138,6 @@ class HomeKitButton(BaseHomeKitButton):
         key = self.entity_description.key
         val = self.entity_description.write_value
         await self.async_put_characteristics({key: val})
-
-
-class HomeKitEcobeeClearHoldButton(BaseHomeKitButton):
-    """Representation of a Button control for Ecobee clear hold request."""
-
-    def get_characteristic_types(self) -> list[str]:
-        """Define the homekit characteristics the entity is tracking."""
-        return []
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        prefix = ""
-        if name := super().name:
-            prefix = name
-        return f"{prefix} Clear Hold"
-
-    async def async_press(self) -> None:
-        """Press the button."""
-        key = self._char.type
-
-        # If we just send true, the request doesn't always get executed by ecobee.
-        # Sending false value then true value will ensure that the hold gets cleared
-        # and schedule resumed.
-        # Ecobee seems to cache the state and not update it correctly, which
-        # causes the request to be ignored if it thinks it has no effect.
-
-        for val in (False, True):
-            await self.async_put_characteristics({key: val})
 
 
 class HomeKitProvisionPreferredThreadCredentials(BaseHomeKitButton):

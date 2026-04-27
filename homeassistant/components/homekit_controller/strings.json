@@ -147,6 +147,60 @@
       },
       "water_level": {
         "name": "Water level"
+      },
+      "ecobee_fan_speed": {
+        "name": "Fan speed"
+      },
+      "ecobee_fan_speed_state": {
+        "name": "Fan speed state"
+      },
+      "ecobee_alert": {
+        "name": "Alert"
+      },
+      "ecobee_equipment_running": {
+        "name": "Equipment running"
+      },
+      "ecobee_status_code": {
+        "name": "Status code"
+      },
+      "ecobee_aux_heat_active": {
+        "name": "Aux heat active"
+      },
+      "ecobee_motion_last_activation": {
+        "name": "Motion last activation"
+      },
+      "ecobee_occupancy_last_activation": {
+        "name": "Occupancy last activation"
+      }
+    },
+    "fan": {
+      "ecobee_fan": {
+        "name": "Fan"
+      }
+    },
+    "number": {
+      "ecobee_home_target_heat": {
+        "name": "Home heating target"
+      },
+      "ecobee_home_target_cool": {
+        "name": "Home cooling target"
+      },
+      "ecobee_sleep_target_heat": {
+        "name": "Sleep heating target"
+      },
+      "ecobee_sleep_target_cool": {
+        "name": "Sleep cooling target"
+      },
+      "ecobee_away_target_heat": {
+        "name": "Away heating target"
+      },
+      "ecobee_away_target_cool": {
+        "name": "Away cooling target"
+      }
+    },
+    "datetime": {
+      "ecobee_hold_until": {
+        "name": "Hold Expiration"
       }
     }
   },
