@@ -14,6 +14,10 @@ class SerialDevice:
     manufacturer: str | None
     description: str | None
 
+    bcd_device: int | None = None
+    interface_description: str | None = None
+    interface_num: int | None = None
+
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class USBDevice(SerialDevice):
