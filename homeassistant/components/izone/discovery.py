@@ -63,12 +63,12 @@ async def async_start_discovery_service(hass: HomeAssistant):
 
     # discovery local services
     disco = DiscoveryService(hass)
-    hass.data[DATA_DISCOVERY_SERVICE] = disco
 
     # Start the pizone discovery service, disco is the listener
     session = aiohttp_client.async_get_clientsession(hass)
     disco.pi_disco = pizone.discovery(disco, session=session)
     await disco.pi_disco.start_discovery()
+    hass.data[DATA_DISCOVERY_SERVICE] = disco
 
     async def async_stop_discovery_on_shutdown(event: Event) -> None:
         """Stop discovery on Home Assistant shutdown."""
