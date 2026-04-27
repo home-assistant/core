@@ -785,13 +785,10 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
     def _update_attributes(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
-        if not data or (home_data := data.get(self._tibber_home.home_id)) is None:
-            self._price_data_available = False
-            self._attr_native_value = None
-            return
-
-        current_price = home_data["current_price"]
-        if current_price is None:
+        if not data or (
+            (home_data := data.get(self._tibber_home.home_id)) is None
+            or (current_price := home_data.get("current_price")) is None
+        ):
             self._price_data_available = False
             self._attr_native_value = None
             return
