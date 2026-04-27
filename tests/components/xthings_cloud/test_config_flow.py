@@ -110,10 +110,14 @@ async def test_user_flow_already_configured(
     mock_instance_id: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test user flow aborts if already configured."""
+    """Test user flow aborts if same account already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
+    )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"

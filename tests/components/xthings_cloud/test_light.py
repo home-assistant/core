@@ -96,8 +96,8 @@ async def test_light_brightness_only_setup(
     state = hass.states.get("light.hallway_light")
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == {ColorMode.BRIGHTNESS}
+    assert state.attributes[ATTR_COLOR_MODE] is None
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
 
 
 async def test_light_onoff_only_setup(
@@ -111,7 +111,7 @@ async def test_light_onoff_only_setup(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == {ColorMode.ONOFF}
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
 
 async def test_light_turn_on(
