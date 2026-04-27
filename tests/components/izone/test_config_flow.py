@@ -71,6 +71,10 @@ async def test_manual_host_success(hass: HomeAssistant) -> None:
     """Test successful manual host validation."""
     with (
         patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
             "homeassistant.components.izone.config_flow._async_get_controller_uid",
             return_value="000013170",
         ),
@@ -88,6 +92,8 @@ async def test_manual_host_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "izone.local"}
         )
+
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000013170"
@@ -114,6 +120,39 @@ async def test_manual_host_failed_validation(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_import_discovers_and_creates_entry(hass: HomeAssistant) -> None:
+    """Test YAML import discovers a controller and creates an entry."""
+    controller = Mock()
+    controller.device_uid = "000013170"
+    controller.device_ip = "192.168.1.20"
+
+    with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.izone.config_flow._async_discover_controllers",
+            return_value={controller.device_uid: controller},
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={},
+        )
+
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "iZone 000013170"
+    assert result["data"] == {"host": "192.168.1.20"}
+
+
 async def test_homekit_confirm_uses_discovered_host(hass: HomeAssistant) -> None:
     """Test HomeKit flow confirms and uses the discovered host when valid."""
     controller = Mock()
@@ -121,6 +160,10 @@ async def test_homekit_confirm_uses_discovered_host(hass: HomeAssistant) -> None
     controller.device_ip = "10.0.0.90"
 
     with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
         patch(
             "homeassistant.components.izone.async_start_discovery_service",
             return_value=None,
@@ -154,6 +197,8 @@ async def test_homekit_confirm_uses_discovered_host(hass: HomeAssistant) -> None
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+        await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000013170"
     assert result["data"] == {"host": "10.0.0.90"}
@@ -162,6 +207,10 @@ async def test_homekit_confirm_uses_discovered_host(hass: HomeAssistant) -> None
 async def test_multiple_entries_allowed(hass: HomeAssistant) -> None:
     """Test multiple iZone controllers can be configured."""
     with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
         patch(
             "homeassistant.components.izone.config_flow._async_get_controller_uid",
             side_effect=["000013170", "000025841"],
@@ -181,6 +230,8 @@ async def test_multiple_entries_allowed(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "iZone 000013170"
 
+        await hass.async_block_till_done()
+
         result = await hass.config_entries.flow.async_init(
             IZONE, context={"source": config_entries.SOURCE_USER}
         )
@@ -189,6 +240,8 @@ async def test_multiple_entries_allowed(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "izone-2.local"}
         )
+
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000025841"
@@ -204,9 +257,15 @@ async def test_reuses_existing_discovery_service(hass: HomeAssistant) -> None:
     discovery_service.pi_disco.controllers = {controller.device_uid: controller}
     hass.data["izone_discovery"] = discovery_service
 
-    with patch(
-        "homeassistant.components.izone.config_flow.pizone.discovery",
-    ) as mock_pizone_discovery:
+    with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.izone.config_flow.pizone.discovery",
+        ) as mock_pizone_discovery,
+    ):
         result = await hass.config_entries.flow.async_init(
             IZONE, context={"source": config_entries.SOURCE_USER}
         )
@@ -214,6 +273,8 @@ async def test_reuses_existing_discovery_service(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000025841"
@@ -230,9 +291,15 @@ async def test_manual_host_uses_shared_discovery_service(hass: HomeAssistant) ->
     discovery_service.pi_disco.controllers = {controller.device_uid: controller}
     hass.data["izone_discovery"] = discovery_service
 
-    with patch(
-        "homeassistant.components.izone.config_flow.pizone.discovery",
-    ) as mock_pizone_discovery:
+    with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.izone.config_flow.pizone.discovery",
+        ) as mock_pizone_discovery,
+    ):
         result = await hass.config_entries.flow.async_init(
             IZONE, context={"source": config_entries.SOURCE_USER}
         )
@@ -240,6 +307,8 @@ async def test_manual_host_uses_shared_discovery_service(hass: HomeAssistant) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "192.168.1.21"}
         )
+
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000025841"
