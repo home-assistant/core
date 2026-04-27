@@ -140,7 +140,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     await app.startup()
 
     DescriptionXmlView(config).register(hass, app, app.router)
-    HueUsernameView().register(hass, app, app.router)
+    HueUsernameView(config).register(hass, app, app.router)
     HueConfigView(config).register(hass, app, app.router)
     HueUnauthorizedUser().register(hass, app, app.router)
     HueAllLightsStateView(config).register(hass, app, app.router)

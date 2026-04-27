@@ -154,6 +154,10 @@ class Config:
         # for compatibility with older installations.
         self.lights_all_dimmable: bool = conf.get(CONF_LIGHTS_ALL_DIMMABLE) or False
 
+        # Tracks whether the link button has been pressed to allow new device
+        # registration (mirrors real Hue bridge behavior).
+        self.link_button_pressed: bool = False
+
         if self.expose_by_default:
             self.track_domains = set(self.exposed_domains) or SUPPORTED_DOMAINS
         else:
