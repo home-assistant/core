@@ -65,9 +65,10 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     @staticmethod
     def _transition_to_duration(transition: float) -> int:
-        if transition <= 127:
-            return round(transition)
-        return min(127, round((transition) / 60)) + 127
+        rounded_transition = round(transition)
+        if rounded_transition <= 127:
+            return rounded_transition
+        return min(127, round(rounded_transition / 60)) + 127
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
