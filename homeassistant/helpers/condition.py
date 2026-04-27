@@ -16,6 +16,7 @@ import sys
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Final,
     Literal,
     Never,
@@ -443,6 +444,9 @@ class EntityConditionBase(Condition):
 
     _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    # When True, indirect target expansion (via device/area/floor) skips
+    # entities with an entity_category.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -506,7 +510,10 @@ class EntityConditionBase(Condition):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
-            self._hass, self._target_selection, expand_group=False
+            self._hass,
+            self._target_selection,
+            expand_group=False,
+            primary_entities_only=self._primary_entities_only,
         )
         referenced_entity_ids = targeted_entities.referenced.union(
             targeted_entities.indirectly_referenced
@@ -545,6 +552,7 @@ def make_entity_state_condition(
     states: str | bool | set[str | bool],
     *,
     support_duration: bool = False,
+    primary_entities_only: bool = True,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -568,6 +576,7 @@ def make_entity_state_condition(
             else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
         )
         _states = states_set
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
@@ -675,6 +684,8 @@ class EntityNumericalConditionBase(EntityConditionBase):
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
     """Create a condition for numerical state comparisons."""
     specs = _normalize_domain_specs(domain_specs)
@@ -684,6 +695,7 @@ def make_entity_numerical_condition(
 
         _domain_specs = specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
