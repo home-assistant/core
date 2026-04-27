@@ -42,12 +42,12 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
@@ -57,19 +57,21 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |
       Not relevant.
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
-
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration has no user-actionable repair issues to raise.
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession:
     status: exempt
     comment: |
       Not relevant.
-  strict-typing: todo
+  strict-typing: done

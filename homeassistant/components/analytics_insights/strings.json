@@ -11,12 +11,12 @@
       "user": {
         "data": {
           "tracked_apps": "Apps",
-          "tracked_custom_integrations": "Community integrations",
+          "tracked_custom_integrations": "Custom integrations",
           "tracked_integrations": "Integrations"
         },
         "data_description": {
           "tracked_apps": "Select the apps you want to track",
-          "tracked_custom_integrations": "Select the community integrations you want to track",
+          "tracked_custom_integrations": "Select the custom integrations you want to track",
           "tracked_integrations": "Select the integrations you want to track"
         }
       }
@@ -31,7 +31,7 @@
         "unit_of_measurement": "[%key:component::analytics_insights::entity::sensor::apps::unit_of_measurement%]"
       },
       "custom_integrations": {
-        "name": "{custom_integration_domain} (community)",
+        "name": "{custom_integration_domain} (custom)",
         "unit_of_measurement": "[%key:component::analytics_insights::entity::sensor::apps::unit_of_measurement%]"
       },
       "total_active_installations": {

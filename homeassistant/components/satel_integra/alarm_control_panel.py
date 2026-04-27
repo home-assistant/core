@@ -105,13 +105,8 @@ class SatelIntegraAlarmPanel(
         self._attr_alarm_state = self._read_alarm_state()
         self.async_write_ha_state()
 
-    def _read_alarm_state(self) -> AlarmControlPanelState | None:
+    def _read_alarm_state(self) -> AlarmControlPanelState:
         """Read current status of the alarm and translate it into HA status."""
-
-        if not self._controller.connected:
-            _LOGGER.debug("Alarm panel not connected")
-            return None
-
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
                 satel_state in self.coordinator.data

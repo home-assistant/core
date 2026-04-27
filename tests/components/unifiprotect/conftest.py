@@ -60,6 +60,13 @@ DEFAULT_PASSWORD = "test-password"
 DEFAULT_API_KEY = "test-api-key"
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery():
+    """Prevent real network scanning in all unifiprotect tests."""
+    with _patch_discovery(no_device=True):
+        yield
+
+
 @pytest.fixture(name="nvr")
 def mock_nvr():
     """Mock UniFi Protect Camera device."""
@@ -158,7 +165,6 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with (
-        _patch_discovery(no_device=True),
         patch(
             "homeassistant.components.unifiprotect.utils.ProtectApiClient"
         ) as mock_api,
@@ -179,8 +185,17 @@ def mock_entry(
             ufp.ws_state_subscription = ws_state_subscription
             return Mock()
 
+        def subscribe_devices_websocket(
+            ws_callback: Callable[[WSSubscriptionMessage], None],
+        ) -> Any:
+            ufp.devices_ws_subscription = ws_callback
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
+        ufp_client.subscribe_devices_websocket = subscribe_devices_websocket
+        ufp_client.update_public = AsyncMock()
+        ufp_client.has_public_bootstrap = False
         yield ufp
 
 

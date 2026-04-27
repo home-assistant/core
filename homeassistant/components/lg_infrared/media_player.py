@@ -57,11 +57,11 @@ class LgIrTvMediaPlayer(LgIrEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
-        await self._send_command(LGTVCode.POWER)
+        await self._send_command(LGTVCode.POWER_ON)
 
     async def async_turn_off(self) -> None:
         """Turn off the TV."""
-        await self._send_command(LGTVCode.POWER)
+        await self._send_command(LGTVCode.POWER_OFF)
 
     async def async_volume_up(self) -> None:
         """Send volume up command."""

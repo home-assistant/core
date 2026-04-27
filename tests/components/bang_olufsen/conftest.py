@@ -41,6 +41,7 @@ from .const import (
     TEST_DATA_CREATE_ENTRY_3,
     TEST_DATA_CREATE_ENTRY_4,
     TEST_FRIENDLY_NAME,
+    TEST_FRIENDLY_NAME_2,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
     TEST_HOST_3,
@@ -48,10 +49,6 @@ from .const import (
     TEST_JID_1,
     TEST_JID_3,
     TEST_JID_4,
-    TEST_NAME,
-    TEST_NAME_2,
-    TEST_NAME_3,
-    TEST_NAME_4,
     TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
@@ -72,7 +69,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER,
         data=TEST_DATA_CREATE_ENTRY,
-        title=TEST_NAME,
+        title=TEST_FRIENDLY_NAME,
     )
 
 
@@ -83,7 +80,7 @@ def mock_config_entry_core() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER_2,
         data=TEST_DATA_CREATE_ENTRY_2,
-        title=TEST_NAME_2,
+        title=TEST_FRIENDLY_NAME_2,
     )
 
 
@@ -94,7 +91,7 @@ def mock_config_entry_premiere() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER_3,
         data=TEST_DATA_CREATE_ENTRY_3,
-        title=TEST_NAME_3,
+        title=TEST_FRIENDLY_NAME_3,
     )
 
 
@@ -105,7 +102,7 @@ def mock_config_entry_a5() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER_4,
         data=TEST_DATA_CREATE_ENTRY_4,
-        title=TEST_NAME_4,
+        title=TEST_FRIENDLY_NAME_4,
     )
 
 

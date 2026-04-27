@@ -14143,7 +14143,7 @@
     'object_id_base': 'Export to grid',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -14155,7 +14155,7 @@
     'supported_features': 0,
     'translation_key': 'mix_export_to_grid',
     'unique_id': 'SPH123456-mix_export_to_grid',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_export_to_grid-state]
@@ -14164,7 +14164,7 @@
       'device_class': 'power',
       'friendly_name': 'SPH123456 Export to grid',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sph123456_export_to_grid',
@@ -14314,7 +14314,7 @@
     'object_id_base': 'Import from grid',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -14326,7 +14326,7 @@
     'supported_features': 0,
     'translation_key': 'mix_import_from_grid',
     'unique_id': 'SPH123456-mix_import_from_grid',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_import_from_grid-state]
@@ -14335,7 +14335,7 @@
       'device_class': 'power',
       'friendly_name': 'SPH123456 Import from grid',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sph123456_import_from_grid',

@@ -75,9 +75,12 @@ class SwitchbotCloudData:
     devices: SwitchbotDevices
 
 
+type SwitchbotCloudConfigEntry = ConfigEntry[SwitchbotCloudData]
+
+
 async def coordinator_for_device(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
@@ -97,7 +100,7 @@ async def coordinator_for_device(
 
 async def make_switchbot_devices(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     devices: list[Device | Remote],
     coordinators_by_id: dict[str, SwitchBotCoordinator],
@@ -115,7 +118,7 @@ async def make_switchbot_devices(
 
 async def make_device_data(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     device: Device | Remote,
     devices_data: SwitchbotDevices,
@@ -330,7 +333,9 @@ async def make_device_data(
         devices_data.sensors.append((device, coordinator))
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
+) -> bool:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
@@ -353,10 +358,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     switchbot_devices = await make_switchbot_devices(
         hass, entry, api, devices, coordinators_by_id
     )
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = SwitchbotCloudData(
-        api=api, devices=switchbot_devices
-    )
+    entry.runtime_data = SwitchbotCloudData(api=api, devices=switchbot_devices)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -365,17 +367,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _initialize_webhook(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
 ) -> None:
