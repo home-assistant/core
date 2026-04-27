@@ -262,5 +262,92 @@
       'sw_version': None,
       'via_device_id': <ANY>,
     }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/myvolume',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_volume_myvolume',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Volume',
+      'model_id': None,
+      'name': 'myvolume',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/db_data',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_volume_db_data',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Volume',
+      'model_id': None,
+      'name': 'db_data',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/dashy_config',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_volume_dashy_config',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Volume',
+      'model_id': None,
+      'name': 'dashy_config',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
   ])
 # ---

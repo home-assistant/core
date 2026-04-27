@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from infrared_protocols import Command, Timing
+from infrared_protocols import Command
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest
@@ -24,9 +24,9 @@ class MockCommand(Command):
         """Initialize with fixed 38kHz modulation."""
         super().__init__(modulation=38000)
 
-    def get_raw_timings(self) -> list[Timing]:
+    def get_raw_timings(self) -> list[int]:
         """Return some fake timings."""
-        return [Timing(high_us=9000, low_us=4500), Timing(high_us=560, low_us=1690)]
+        return [9000, -4500, 560, -1690]
 
 
 @pytest.fixture

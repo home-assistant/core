@@ -7,7 +7,12 @@ import logging
 from typing import Any, Final
 
 from aiohttp import ClientError
-from indevolt_api import IndevoltAPI, TimeOutException
+from indevolt_api import (
+    IndevoltAPI,
+    IndevoltConfig,
+    IndevoltRealtimeAction,
+    TimeOutException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -24,7 +29,6 @@ from .const import (
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     PORTABLE_MODE,
-    REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
     SENSOR_KEYS,
 )
@@ -70,10 +74,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
-        self.friendly_name = entry.title
-        self.serial_number = entry.data[CONF_SERIAL_NUMBER]
-        self.device_model = entry.data[CONF_MODEL]
-        self.generation = entry.data[CONF_GENERATION]
+        self.friendly_name: str = entry.title
+        self.serial_number: str = entry.data[CONF_SERIAL_NUMBER]
+        self.device_model: str = entry.data[CONF_MODEL]
+        self.generation: int = entry.data[CONF_GENERATION]
 
     async def _async_setup(self) -> None:
         """Fetch device info once on boot."""
@@ -146,19 +150,25 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if refresh:
                 await self.async_request_refresh()
 
-    async def async_execute_realtime_action(self, action: list[int]) -> None:
+    async def async_realtime_action(
+        self,
+        action: IndevoltRealtimeAction,
+        power: int = 0,
+        target_soc: int = 0,
+    ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
 
-        try:
-            success = await self.async_push_data(REALTIME_ACTION_KEY, action)
+        success = False
 
-        except (DeviceTimeoutError, DeviceConnectionError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_execute_realtime_action",
-            ) from err
+        match action:
+            case IndevoltRealtimeAction.CHARGE:
+                success = await self.api.charge(power, target_soc)
+            case IndevoltRealtimeAction.DISCHARGE:
+                success = await self.api.discharge(power, target_soc)
+            case IndevoltRealtimeAction.STOP:
+                success = await self.api.stop()
 
         if not success:
             raise HomeAssistantError(
@@ -167,3 +177,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         await self.async_request_refresh()
+
+    def get_emergency_soc(self) -> int:
+        """Get the emergency SOC value."""
+        return int(self.data[str(IndevoltConfig.READ_DISCHARGE_LIMIT)])

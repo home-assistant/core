@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import itertools
 import logging
 from typing import Any
 
+from roborock.device_features import is_wash_n_fill_dock
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
@@ -43,6 +45,13 @@ class RoborockButtonDescription(ButtonEntityDescription):
     """Describes a Roborock button entity."""
 
     attribute: ConsumableAttribute
+    is_dock_entity: bool = False
+    is_supported: Callable[[RoborockDataUpdateCoordinator], bool] = lambda _: True
+
+
+def _supports_dock_consumables(coordinator: RoborockDataUpdateCoordinator) -> bool:
+    dock_type = coordinator.properties_api.status.dock_type
+    return dock_type is not None and is_wash_n_fill_dock(dock_type)
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
@@ -73,6 +82,24 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         attribute=ConsumableAttribute.MAIN_BRUSH_WORK_TIME,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+    ),
+    RoborockButtonDescription(
+        key="reset_dock_strainer_consumable",
+        translation_key="reset_dock_strainer_consumable",
+        attribute=ConsumableAttribute.STRAINER_WORK_TIME,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        is_dock_entity=True,
+        is_supported=_supports_dock_consumables,
+    ),
+    RoborockButtonDescription(
+        key="reset_dock_cleaning_brush_consumable",
+        translation_key="reset_dock_cleaning_brush_consumable",
+        attribute=ConsumableAttribute.CLEANING_BRUSH_WORK_TIME,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        is_dock_entity=True,
+        is_supported=_supports_dock_consumables,
     ),
 ]
 
@@ -128,8 +155,9 @@ async def async_setup_entry(
                     description,
                 )
                 for coordinator in config_entry.runtime_data.v1
-                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
                 if isinstance(coordinator, RoborockDataUpdateCoordinator)
+                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
+                if description.is_supported(coordinator)
             ),
             (
                 RoborockRoutineButtonEntity(
@@ -176,9 +204,14 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
         entity_description: RoborockButtonDescription,
     ) -> None:
         """Create a button entity."""
+        device_info = (
+            coordinator.dock_device_info
+            if entity_description.is_dock_entity
+            else coordinator.device_info
+        )
         super().__init__(
             f"{entity_description.key}_{coordinator.duid_slug}",
-            coordinator.device_info,
+            device_info,
             api=coordinator.properties_api.command,
         )
         self.entity_description = entity_description
