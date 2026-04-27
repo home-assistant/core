@@ -180,27 +180,26 @@ async def async_setup_entry(
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP cloud connection sensor."""
 
+    _attr_translation_key = "cloud_connection"
+
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
         super().__init__(hap, hap.home, feature_id="cloud_connection")
 
     @property
-    def name(self) -> str:
-        """Return the name cloud connection entity."""
-
-        name = "Cloud Connection"
-        # Add a prefix to the name if the homematic ip home has a name.
-        return name if not self._home.name else f"{self._home.name} {name}"
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        # Adds a sensor to the existing HAP device
+        # Adds a sensor to the existing HAP device.
+        # Name must be set explicitly for has_entity_name to work correctly.
+        home_name = getattr(self._home, "name", None)
+        label = self._home.label or ""
+        name = f"{home_name} {label}" if home_name else label
         return DeviceInfo(
             identifiers={
                 # Serial numbers of Homematic IP device
                 (DOMAIN, self._home.id)
-            }
+            },
+            name=name,
         )
 
     @property
@@ -579,6 +578,7 @@ class HomematicipPluggableMainsFailureSurveillanceSensor(
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP security zone sensor group."""
 
+    _attr_has_entity_name = False
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(
