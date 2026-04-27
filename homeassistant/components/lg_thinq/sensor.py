@@ -520,7 +520,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     ),
     DeviceType.KIMCHI_REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
-        TEMPERATURE_SENSOR_DESC[ThinQProperty.TARGET_TEMPERATURE],
     ),
     DeviceType.MICROWAVE_OVEN: (RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],),
     DeviceType.OVEN: (
@@ -591,6 +590,17 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
 }
 
 
+ENUM_TEMPERATURE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = {
+    DeviceType.KIMCHI_REFRIGERATOR: (
+        SensorEntityDescription(
+            key=ThinQProperty.TARGET_TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            translation_key=ThinQProperty.TARGET_TEMPERATURE,
+        ),
+    ),
+}
+
+
 @dataclass(frozen=True, kw_only=True)
 class ThinQEnergySensorEntityDescription(SensorEntityDescription):
     """Describes ThinQ energy sensor entity."""
@@ -638,7 +648,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for sensor platform."""
-    entities: list[ThinQSensorEntity | ThinQEnergySensorEntity] = []
+    entities: list[
+        ThinQSensorEntity | ThinQEnergySensorEntity | ThinQEnumTempSensorEntity
+    ] = []
     for coordinator in entry.runtime_data.coordinators.values():
         if (
             descriptions := DEVICE_TYPE_SENSOR_MAP.get(
@@ -660,6 +672,21 @@ async def async_setup_entry(
                         ),
                     )
                 )
+
+        if (
+            descriptions := ENUM_TEMPERATURE_SENSOR_MAP.get(
+                coordinator.api.device.device_type
+            )
+        ) is not None:
+            for description in descriptions:
+                entities.extend(
+                    ThinQEnumTempSensorEntity(coordinator, description, property_id)
+                    for property_id in coordinator.api.get_active_idx(
+                        description.key,
+                        ActiveMode.READ_ONLY,
+                    )
+                )
+
         for energy_description in ENERGY_USAGE_SENSORS:
             entities.extend(
                 ThinQEnergySensorEntity(
@@ -702,17 +729,6 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             if self.location is None
             else f"{self.location}_{ThinQProperty.CURRENT_STATE}"
         )
-
-        if (
-            self.coordinator.api.device.device_type == DeviceType.KIMCHI_REFRIGERATOR
-            and self.entity_description.key == ThinQProperty.TARGET_TEMPERATURE
-            and self.data.options
-        ):
-            # some kimchi refrigerator's target temperature have data in the form of string with enum options.
-            # Set options to display the correct value in the UI.
-            self._attr_options = self.data.options
-            self._attr_device_class = SensorDeviceClass.ENUM
-            self._attr_native_unit_of_measurement = None
 
     def _update_status(self) -> None:
         """Update status itself."""
@@ -870,3 +886,38 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
                 self.async_update,
                 next_update,
             )
+
+
+class ThinQEnumTempSensorEntity(ThinQEntity, SensorEntity):
+    """Represent a thinq sensor platform."""
+
+    def __init__(
+        self,
+        coordinator: DeviceDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+        property_id: str,
+    ) -> None:
+        """Initialize a sensor entity."""
+        super().__init__(coordinator, entity_description, property_id)
+
+        if self.data.options:
+            # some kimchi refrigerator's target temperature have data in the form of string with enum options.
+            # Set options to display the correct value in the UI.
+            self._attr_options = self.data.options
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_native_unit_of_measurement = None
+
+    def _update_status(self) -> None:
+        """Update status itself."""
+        super()._update_status()
+        self._attr_native_value = self.data.value
+
+        _LOGGER.debug(
+            "[%s:%s] update status: %s -> %s, options:%s, unit:%s",
+            self.coordinator.device_name,
+            self.property_id,
+            self.data.value,
+            self.native_value,
+            self.options,
+            self.native_unit_of_measurement,
+        )
