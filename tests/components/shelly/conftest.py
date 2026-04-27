@@ -623,7 +623,6 @@ async def mock_rpc_device():
     with (
         patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
         patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
-        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
     ):
         _update_listener = None
 
