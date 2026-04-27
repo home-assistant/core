@@ -31,7 +31,7 @@ from .services import async_setup_services
 DATA_APPS: HassKey[VizioAppsDataUpdateCoordinator] = HassKey(f"{DOMAIN}_apps")
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

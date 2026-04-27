@@ -282,14 +282,14 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
-            40960,  # 4 x 10240 byte of padding
+            51200,  # 5 x 10240 byte of padding
             "test_backups/c0cb53bd.tar.decrypted",
         ),
         (
             [
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
-            30720,  # 3 x 10240 byte of padding
+            40960,  # 4 x 10240 byte of padding
             "test_backups/c0cb53bd.tar.decrypted_skip_core2",
         ),
     ],
@@ -319,9 +319,9 @@ async def test_decrypted_backup_streamer(
     expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -367,10 +367,10 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
     stuck = asyncio.Event()
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            await stuck.wait()
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                await stuck.wait()
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -403,9 +403,9 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -436,9 +436,9 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -460,14 +460,14 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
-            40960,  # 4 x 10240 byte of padding
+            51200,  # 5 x 10240 byte of padding
             "test_backups/c0cb53bd.tar.encrypted_v3",
         ),
         (
             [
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
-            30720,  # 3 x 10240 byte of padding
+            40960,  # 4 x 10240 byte of padding
             "test_backups/c0cb53bd.tar.encrypted_v3_skip_core2",
         ),
     ],
@@ -499,9 +499,9 @@ async def test_encrypted_backup_streamer(
     expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -562,10 +562,10 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
     stuck = asyncio.Event()
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            await stuck.wait()
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                await stuck.wait()
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -600,9 +600,9 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -638,9 +638,9 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -674,8 +674,8 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     # Expect the output length to match the stored encrypted backup file, with
     # additional padding.
     encrypted_backup_data = encrypted_backup_path.read_bytes()
-    # 4 x 10240 byte of padding
-    assert len(encrypted_output1) == len(encrypted_backup_data) + 40960
+    # 5 x 10240 byte of padding
+    assert len(encrypted_output1) == len(encrypted_backup_data) + 51200
     assert encrypted_output1[: len(encrypted_backup_data)] != encrypted_backup_data
 
 
@@ -702,9 +702,9 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()

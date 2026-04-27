@@ -127,6 +127,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _read_image_size(image_path: str) -> tuple[int, int]:
+    """Open image to determine image size."""
+    with Image.open(image_path) as image:
+        return image.size
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
@@ -504,8 +510,9 @@ class MatrixBot:
             return
 
         # Get required image metadata.
-        image = await self.hass.async_add_executor_job(Image.open, image_path)
-        (width, height) = image.size
+        (width, height) = await self.hass.async_add_executor_job(
+            _read_image_size, image_path
+        )
         mime_type = mimetypes.guess_type(image_path)[0]
         file_stat = await aiofiles.os.stat(image_path)
 

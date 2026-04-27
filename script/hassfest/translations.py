@@ -12,6 +12,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
 from script.translations import upload
 
 from .model import Config, Integration, IntegrationType
@@ -305,25 +306,31 @@ def gen_data_entry_schema(
 
 def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any]:
     """Generate the issues schema."""
-    return {
-        str: vol.All(
-            cv.has_at_least_one_key("description", "fix_flow"),
-            vol.Schema(
-                {
-                    vol.Required("title"): translation_value_validator,
-                    vol.Exclusive(
-                        "description", "fixable"
-                    ): translation_value_validator,
-                    vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
-                        config=config,
-                        integration=integration,
-                        flow_title=UNDEFINED,
-                        require_step_title=False,
-                    ),
-                },
-            ),
-        )
-    }
+    issue_schema = vol.All(
+        cv.has_at_least_one_key("description", "fix_flow"),
+        vol.Schema(
+            {
+                vol.Required("title"): translation_value_validator,
+                vol.Exclusive("description", "fixable"): translation_value_validator,
+                vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=UNDEFINED,
+                    require_step_title=False,
+                ),
+            },
+        ),
+    )
+
+    frontend_issue_schema = vol.Schema(
+        {vol.Required("title"): translation_value_validator}
+    )
+
+    schema: dict[str, Any] = {}
+    for key in FRONTEND_HANDLED_ISSUES.get(integration.domain, ()):
+        schema[vol.Optional(key)] = frontend_issue_schema
+    schema[str] = issue_schema
+    return schema
 
 
 _EXCEPTIONS_SCHEMA = {

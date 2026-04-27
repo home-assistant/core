@@ -38,12 +38,12 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
-            config_entry.data[CONF_HOST],
-            config_entry.data.get(CONF_USERNAME),
-            config_entry.data.get(CONF_PASSWORD),
-            config_entry.data[CONF_SSL],
-            config_entry.data[CONF_VERIFY_SSL],
-            config_entry.data[CONF_PORT],
+            host=config_entry.data[CONF_HOST],
+            username=config_entry.data.get(CONF_USERNAME),
+            password=config_entry.data.get(CONF_PASSWORD),
+            secure=config_entry.data[CONF_SSL],
+            verify_certificate=config_entry.data[CONF_VERIFY_SSL],
+            port=config_entry.data[CONF_PORT],
         )
 
         self._completed_downloads_init = False

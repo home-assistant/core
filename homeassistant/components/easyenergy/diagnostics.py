@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .coordinator import EasyEnergyConfigEntry, EasyEnergyData
 
@@ -23,9 +24,7 @@ def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:
     """
     if not data.gas_today:
         return None
-    return data.gas_today.price_at_time(
-        data.gas_today.utcnow() + timedelta(hours=hours)
-    )
+    return data.gas_today.price_at_time(dt_util.utcnow() + timedelta(hours=hours))
 
 
 async def async_get_config_entry_diagnostics(
@@ -40,21 +39,21 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
         },
         "energy_usage": {
-            "current_hour_price": energy_today.current_usage_price,
+            "current_hour_price": energy_today.current_price,
             "next_hour_price": energy_today.price_at_time(
-                energy_today.utcnow() + timedelta(hours=1)
+                dt_util.utcnow() + timedelta(hours=1)
             ),
-            "average_price": energy_today.average_usage_price,
-            "max_price": energy_today.extreme_usage_prices[1],
-            "min_price": energy_today.extreme_usage_prices[0],
-            "highest_price_time": energy_today.highest_usage_price_time,
-            "lowest_price_time": energy_today.lowest_usage_price_time,
-            "percentage_of_max": energy_today.pct_of_max_usage,
+            "average_price": energy_today.average_price,
+            "max_price": energy_today.extreme_prices[1],
+            "min_price": energy_today.extreme_prices[0],
+            "highest_price_time": energy_today.highest_price_time,
+            "lowest_price_time": energy_today.lowest_price_time,
+            "percentage_of_max": energy_today.pct_of_max,
         },
         "energy_return": {
             "current_hour_price": energy_today.current_return_price,
-            "next_hour_price": energy_today.price_at_time(
-                energy_today.utcnow() + timedelta(hours=1), "return"
+            "next_hour_price": energy_today.return_price_at_time(
+                dt_util.utcnow() + timedelta(hours=1)
             ),
             "average_price": energy_today.average_return_price,
             "max_price": energy_today.extreme_return_prices[1],

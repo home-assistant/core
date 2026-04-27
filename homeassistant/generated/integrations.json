@@ -1329,6 +1329,12 @@
           "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
         },
+        "denon_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Denon RS232"
+        },
         "heos": {
           "integration_type": "hub",
           "config_flow": true,
@@ -1527,6 +1533,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "duco": {
+      "name": "Duco",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "dunehd": {
       "name": "Dune HD",
       "integration_type": "device",
@@ -1556,6 +1568,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "earn_e_p1": {
+      "name": "EARN-E P1 Meter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "eastron": {
       "name": "Eastron",
@@ -1924,6 +1942,12 @@
           "name": "EufyLife"
         }
       }
+    },
+    "eurotronic_cometblue": {
+      "name": "Eurotronic Comet Blue",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "eve": {
       "name": "Eve",
@@ -2313,6 +2337,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "fumis": {
+      "name": "Fumis",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "futurenow": {
       "name": "P5 FutureNow",
@@ -2951,6 +2981,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Honeywell Total Connect Comfort (US)"
+        },
+        "honeywell_string_lights": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Honeywell String Lights"
         }
       }
     },
@@ -3062,7 +3098,7 @@
       "iot_class": "local_polling"
     },
     "iaqualink": {
-      "name": "Jandy iAqualink",
+      "name": "Jandy iAquaLink",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -3460,6 +3496,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "assumed_state"
+    },
+    "kiosker": {
+      "name": "Kiosker",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "kira": {
       "name": "Kira",
@@ -6943,6 +6985,12 @@
         }
       }
     },
+    "teleinfo": {
+      "name": "Teleinfo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "telldus": {
       "name": "Telldus",
       "integrations": {
@@ -7605,6 +7653,12 @@
     "victron": {
       "name": "Victron",
       "integrations": {
+        "victron_gx": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Victron GX"
+        },
         "victron_ble": {
           "integration_type": "device",
           "config_flow": true,
