@@ -268,8 +268,11 @@ async def test_setup_auth_required_exception_from_devices_calls_reauth(
             return_value=service_instance,
         ),
         patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
     ):
         account.setup()
 
     mock_reauth.assert_called_once()
     assert account.api is None
+    mock_logger.error.assert_called_once()
+    mock_logger.warning.assert_not_called()

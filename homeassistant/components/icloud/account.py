@@ -140,42 +140,15 @@ class IcloudAccount:
 
         except PyiCloudAuthRequiredException:
             requires_2fa = self.api is not None and self.api.requires_2fa
-            self.api = None
-            if requires_2fa:
-                _LOGGER.warning(
-                    (
-                        "2FA authentication required for '%s'; Go to the "
-                        "Integrations menu and click on Configure on the iCloud "
-                        "card to enter your verification code"
-                    ),
-                    self._config_entry.data[CONF_USERNAME],
-                )
-            else:
-                _LOGGER.error(
-                    (
-                        "Re-authentication required for '%s'; Go to the "
-                        "Integrations menu and click on Configure on the iCloud "
-                        "card to login again"
-                    ),
-                    self._config_entry.data[CONF_USERNAME],
-                )
-            self._require_reauth()
+            self._handle_auth_required(requires_2fa)
             return
 
         try:
             # Gets device owners infos
             user_info = self.api.devices.user_info
         except PyiCloudAuthRequiredException:
-            self.api = None
-            _LOGGER.warning(
-                (
-                    "Re-authentication required for '%s'; Go to the "
-                    "Integrations menu and click on Configure on the iCloud "
-                    "card to enter your verification code"
-                ),
-                self._config_entry.data[CONF_USERNAME],
-            )
-            self._require_reauth()
+            requires_2fa = self.api is not None and self.api.requires_2fa
+            self._handle_auth_required(requires_2fa)
             return
         except (
             PyiCloudServiceNotActivatedException,
@@ -201,6 +174,29 @@ class IcloudAccount:
 
         self._devices = {}
         self.update_devices()
+
+    def _handle_auth_required(self, requires_2fa: bool) -> None:
+        """Log an auth-required event and trigger reauth."""
+        self.api = None
+        if requires_2fa:
+            _LOGGER.warning(
+                (
+                    "2FA authentication required for '%s'; Go to the "
+                    "Integrations menu and click on Configure on the iCloud "
+                    "card to enter your verification code"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        else:
+            _LOGGER.error(
+                (
+                    "Re-authentication required for '%s'; Go to the "
+                    "Integrations menu and click on Configure on the iCloud "
+                    "card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        self._require_reauth()
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
