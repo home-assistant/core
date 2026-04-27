@@ -51,9 +51,8 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CUSTOM_EFFECTS,
+    DATA_CUSTOM_EFFECTS_KEY,
     DATA_UPDATED,
-    DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
 )
@@ -218,7 +217,9 @@ def _transitions_config_parser(transitions):
 
 
 @callback
-def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
+def _parse_custom_effects(
+    effects_config: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
@@ -280,8 +281,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
-    # pylint: disable-next=hass-use-runtime-data
-    custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
+    custom_effects = _parse_custom_effects(hass.data[DATA_CUSTOM_EFFECTS_KEY])
 
     device = config_entry.runtime_data
     _LOGGER.debug("Adding %s", device.name)

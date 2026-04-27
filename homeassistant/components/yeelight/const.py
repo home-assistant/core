@@ -1,10 +1,13 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "yeelight"
+DATA_CUSTOM_EFFECTS_KEY: HassKey[list[dict[str, Any]]] = HassKey(DOMAIN)
 
 
 STATE_CHANGE_TIME = 0.40  # seconds
@@ -42,8 +45,6 @@ CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
 CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
-
-DATA_CUSTOM_EFFECTS = "custom_effects"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
