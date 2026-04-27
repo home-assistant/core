@@ -245,6 +245,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
+    @http.require_admin
     async def get(
         self,
         request: web.Request,
