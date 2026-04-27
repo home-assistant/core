@@ -52,6 +52,7 @@ async def async_setup_entry(
         event_type: EventType, resource: HueScene | HueSmartScene
     ) -> None:
         """Add entity from Hue resource."""
+        # Catch creation errors to continue adding other scenes even if one fails
         try:
             entity: HueSceneEntityBase
             if isinstance(resource, HueSmartScene):
