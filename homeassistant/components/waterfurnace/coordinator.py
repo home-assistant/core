@@ -274,7 +274,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                     break
                 batch_end = batch_start
                 continue
-            except UpdateFailed, WFException:
+            except (UpdateFailed, WFException):
                 _LOGGER.exception("Error fetching energy data during backfill")
                 break
 
