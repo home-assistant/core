@@ -103,6 +103,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
                 f"Could not fetch initial sensor data from Wibeee at {host}"
             )
 
+        coordinator.async_set_updated_data(initial_data)
+
         # Register with push receiver
         # Ensure we use a concrete IP even if host is a hostname
         import socket  # noqa: PLC0415
