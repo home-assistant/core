@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from uiprotect.data import (
     ModelType,
@@ -32,7 +31,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, assert_entity_counts, init_entry
 
 from tests.common import async_fire_time_changed
 
@@ -43,25 +42,20 @@ SIREN_NAME = "Garage Siren"
 SIREN_ENTITY_ID = "siren.garage_siren"
 
 
-def _make_siren_status(*, is_active: bool = False) -> Mock:
-    """Build a mock :class:`PublicSirenStatus`."""
+def _make_siren(*, is_active: bool = False) -> Mock:
+    """Build a mock :class:`Siren`."""
     status = Mock(spec=PublicSirenStatus)
     status.is_active = is_active
     status.activated_at = None
     status.duration = None
     status.turn_off_at = None
-    return status
-
-
-def _make_siren(*, is_active: bool = False) -> Mock:
-    """Build a mock :class:`Siren`."""
     siren = Mock(spec=Siren)
     siren.id = SIREN_ID
     siren.mac = SIREN_MAC
     siren.name = SIREN_NAME
     siren.model = ModelType.SIREN
     siren.volume = 50
-    siren.siren_status = _make_siren_status(is_active=is_active)
+    siren.siren_status = status
     siren.is_active = is_active
     siren.play = AsyncMock()
     siren.stop = AsyncMock()
@@ -79,13 +73,27 @@ def _make_public_bootstrap(siren: Mock | None) -> Mock:
     return pb
 
 
+def _make_ws_msg(siren: Mock, *, deleted: bool = False) -> Mock:
+    """Build a minimal WS subscription message for siren tests."""
+    msg = Mock()
+    msg.changed_data = {}
+    msg.old_obj = siren
+    msg.new_obj = None if deleted else siren
+    return msg
+
+
+@pytest.fixture(name="siren")
+def _siren_fixture() -> Mock:
+    """Build a mock Siren."""
+    return _make_siren()
+
+
 @pytest.fixture(name="ufp_with_siren")
-def _ufp_with_siren(ufp: MockUFPFixture) -> tuple[MockUFPFixture, Mock]:
+def _ufp_with_siren(ufp: MockUFPFixture, siren: Mock) -> MockUFPFixture:
     """Configure ufp fixture with a single siren accessible via public API."""
-    siren = _make_siren()
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = _make_public_bootstrap(siren)
-    return ufp, siren
+    return ufp
 
 
 # ---------------------------------------------------------------------------
@@ -100,19 +108,16 @@ async def test_siren_not_created_without_public_bootstrap(
     ufp.api.has_public_bootstrap = False
     await init_entry(hass, ufp, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID) is None
+    assert_entity_counts(hass, Platform.SIREN, 0, 0)
 
 
 async def test_siren_created_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
 ) -> None:
     """Siren entity is created with state off when siren is idle."""
-    ufp, siren = ufp_with_siren
-    siren.is_active = False
-
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
     entry = entity_registry.async_get(SIREN_ENTITY_ID)
     assert entry is not None
@@ -125,13 +130,13 @@ async def test_siren_created_off(
 
 async def test_siren_created_on(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Siren entity is created with state on when siren is active."""
-    ufp, siren = ufp_with_siren
     siren.is_active = True
 
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
@@ -145,11 +150,11 @@ async def test_siren_created_on(
 
 async def test_siren_turn_on(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Calling turn_on activates the siren via play()."""
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
         Platform.SIREN,
@@ -160,30 +165,41 @@ async def test_siren_turn_on(
     siren.play.assert_awaited_once_with(duration=None)
 
 
+@pytest.mark.parametrize(
+    ("seconds", "expected"),
+    [
+        (5, SirenDuration.FIVE),
+        (10, SirenDuration.TEN),
+        (20, SirenDuration.TWENTY),
+        (30, SirenDuration.THIRTY),
+    ],
+)
 async def test_siren_turn_on_with_duration(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
+    seconds: int,
+    expected: SirenDuration,
 ) -> None:
-    """Passing duration to turn_on calls play with the matching SirenDuration."""
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    """Passing a valid duration to turn_on calls play with the matching SirenDuration."""
+    await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
         Platform.SIREN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_DURATION: 10},
+        {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_DURATION: seconds},
         blocking=True,
     )
-    siren.play.assert_awaited_once_with(duration=SirenDuration.TEN)
+    siren.play.assert_awaited_once_with(duration=expected)
 
 
 async def test_siren_turn_on_invalid_duration(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Passing an unsupported duration raises ServiceValidationError."""
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -197,15 +213,15 @@ async def test_siren_turn_on_invalid_duration(
 
 async def test_siren_turn_on_invalid_duration_does_not_set_volume(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Duration is validated before set_volume is called.
 
     When both an invalid duration and a volume are given, neither set_volume nor
     play must be called — duration validation must happen first.
     """
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -224,11 +240,11 @@ async def test_siren_turn_on_invalid_duration_does_not_set_volume(
 
 async def test_siren_turn_on_with_volume(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Passing volume_level to turn_on calls set_volume before play."""
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
         Platform.SIREN,
@@ -242,14 +258,16 @@ async def test_siren_turn_on_with_volume(
 
 async def test_siren_turn_off(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Calling turn_off stops the siren via stop() and immediately sets state to off."""
-    ufp, siren = ufp_with_siren
     siren.is_active = True
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
         Platform.SIREN,
@@ -258,7 +276,9 @@ async def test_siren_turn_off(
         blocking=True,
     )
     siren.stop.assert_awaited_once()
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 # ---------------------------------------------------------------------------
@@ -266,34 +286,20 @@ async def test_siren_turn_off(
 # ---------------------------------------------------------------------------
 
 
-async def test_siren_turn_on_not_authorized(
+@pytest.mark.parametrize(
+    "exc",
+    [NotAuthorized("denied"), ClientError("timeout")],
+)
+async def test_siren_turn_on_api_error(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
+    exc: Exception,
 ) -> None:
-    """NotAuthorized from play() is wrapped as HomeAssistantError."""
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    """API errors from play() are wrapped as HomeAssistantError."""
+    await init_entry(hass, ufp_with_siren, [])
 
-    siren.play.side_effect = NotAuthorized("denied")
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            Platform.SIREN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
-            blocking=True,
-        )
-
-
-async def test_siren_turn_on_client_error(
-    hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
-) -> None:
-    """ClientError from play() is wrapped as HomeAssistantError."""
-    ufp, siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
-
-    siren.play.side_effect = ClientError("timeout")
+    siren.play.side_effect = exc
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -306,13 +312,12 @@ async def test_siren_turn_on_client_error(
 
 async def test_siren_turn_on_when_siren_gone(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
 ) -> None:
     """Command raises HomeAssistantError when siren is no longer in bootstrap."""
-    ufp, _siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    ufp.api.public_bootstrap.sirens = {}
+    ufp_with_siren.api.public_bootstrap.sirens = {}
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -325,13 +330,12 @@ async def test_siren_turn_on_when_siren_gone(
 
 async def test_siren_turn_off_when_bootstrap_unavailable(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
 ) -> None:
     """Command raises HomeAssistantError when has_public_bootstrap is False."""
-    ufp, _siren = ufp_with_siren
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    ufp.api.has_public_bootstrap = False
+    ufp_with_siren.api.has_public_bootstrap = False
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -349,94 +353,93 @@ async def test_siren_turn_off_when_bootstrap_unavailable(
 
 async def test_siren_state_updates_from_public_ws(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """A public devices WS update for the siren refreshes the entity state."""
-    ufp, siren = ufp_with_siren
-    siren.is_active = False
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
     siren.is_active = True
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = siren
-    mock_msg.new_obj = siren
-    assert ufp.devices_ws_subscription is not None
-    ufp.devices_ws_subscription(mock_msg)
+    mock_msg = _make_ws_msg(siren)
+    assert ufp_with_siren.devices_ws_subscription is not None
+    ufp_with_siren.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_siren_ws_update_no_state_change(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
-    """WS update with identical state does not trigger an unnecessary state write."""
-    ufp, siren = ufp_with_siren
+    """WS update with identical state leaves the entity state unchanged."""
     siren.is_active = True
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = siren
-    mock_msg.new_obj = siren
-    assert ufp.devices_ws_subscription is not None
+    mock_msg = _make_ws_msg(siren)
+    assert ufp_with_siren.devices_ws_subscription is not None
+    ufp_with_siren.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
 
-    # Patch at the platform level to verify the guard prevents redundant writes.
-    with patch(
-        "homeassistant.components.unifiprotect.siren.ProtectSiren.async_write_ha_state"
-    ) as mock_write:
-        ufp.devices_ws_subscription(mock_msg)
-        await hass.async_block_till_done()
-        mock_write.assert_not_called()
-
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_siren_availability_follows_websocket_state(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
 ) -> None:
     """Siren entity becomes unavailable on WS disconnect and recovers on reconnect."""
-    ufp, siren = ufp_with_siren
-    siren.is_active = False
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
-    assert ufp.ws_state_subscription is not None
-    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    assert ufp_with_siren.ws_state_subscription is not None
+    ufp_with_siren.ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
-    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    ufp_with_siren.ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_siren_auto_off_after_timed_duration(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
-    freezer: FrozenDateTimeFactory,
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """State flips to OFF automatically when a timed duration expires.
 
     The public devices WS never sends an 'off' event for timed runs, so the
     entity must schedule its own callback via async_call_later.
     """
-    ufp, siren = ufp_with_siren
-    siren.is_active = False
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
     # Simulate a WS update: siren becomes active for 10 seconds.
     now = dt_util.utcnow()
@@ -452,27 +455,81 @@ async def test_siren_auto_off_after_timed_duration(
     siren.is_active = True
     siren.siren_status = active_status
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = siren
-    mock_msg.new_obj = siren
-    assert ufp.devices_ws_subscription is not None
-    ufp.devices_ws_subscription(mock_msg)
+    mock_msg = _make_ws_msg(siren)
+    assert ufp_with_siren.devices_ws_subscription is not None
+    ufp_with_siren.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
 
-    # Advance time past turn_off_at — the scheduled callback should fire.
-    freezer.tick(timedelta(seconds=11))
-    async_fire_time_changed(hass)
+    # Advance HA time past turn_off_at — the scheduled callback should fire.
+    async_fire_time_changed(hass, now + timedelta(seconds=11))
     await hass.async_block_till_done()
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_siren_turn_off_cancels_scheduled_timer(
+    hass: HomeAssistant,
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
+) -> None:
+    """Manual turn_off cancels the pending auto-off timer.
+
+    When a timed run is active the entity holds a scheduled callback.  A
+    manual turn_off must cancel that callback so the timer never fires and
+    the state stays OFF afterwards.
+    """
+    await init_entry(hass, ufp_with_siren, [])
+
+    # Start a timed run — schedules an auto-off callback 30 s from now.
+    now = dt_util.utcnow()
+    active_status = Mock(spec=PublicSirenStatus)
+    active_status.is_active = True
+    active_status.activated_at = int(now.timestamp() * 1000)
+    active_status.duration = 30000  # 30 s — won't expire on its own
+    active_status.turn_off_at = None
+
+    siren.is_active = True
+    siren.siren_status = active_status
+
+    mock_msg = _make_ws_msg(siren)
+    assert ufp_with_siren.devices_ws_subscription is not None
+    ufp_with_siren.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Manually turn off — must cancel the scheduled timer.
+    await hass.services.async_call(
+        Platform.SIREN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Advance time past the original timer — state must stay OFF.
+    async_fire_time_changed(hass, now + timedelta(seconds=35))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_siren_auto_off_when_already_expired_at_update(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """State flips to OFF when a WS update arrives with an already-expired duration.
 
@@ -480,11 +537,11 @@ async def test_siren_auto_off_when_already_expired_at_update(
     activated_at+duration that is already in the past.  The entity must treat
     delay<=0 as immediately expired and set its state to OFF immediately.
     """
-    ufp, siren = ufp_with_siren
-    siren.is_active = False
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
     # Build a status whose turn-off time is 5 seconds in the PAST.
     now = dt_util.utcnow()
@@ -499,22 +556,22 @@ async def test_siren_auto_off_when_already_expired_at_update(
     siren.is_active = True
     siren.siren_status = expired_status
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = siren
-    mock_msg.new_obj = siren
-    assert ufp.devices_ws_subscription is not None
-    ufp.devices_ws_subscription(mock_msg)
+    mock_msg = _make_ws_msg(siren)
+    assert ufp_with_siren.devices_ws_subscription is not None
+    ufp_with_siren.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
     # Entity stays OFF: delay<=0 overrides is_active=True inline, so the state
     # machine never sees ON.
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_siren_unavailable_on_delete_event(
     hass: HomeAssistant,
-    ufp_with_siren: tuple[MockUFPFixture, Mock],
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
 ) -> None:
     """Entity becomes UNAVAILABLE when the siren is removed via a WS delete event.
 
@@ -523,22 +580,21 @@ async def test_siren_unavailable_on_delete_event(
     The entity then checks self._siren; if it is no longer in the bootstrap
     it must override _attr_available to False.
     """
-    ufp, siren = ufp_with_siren
-    siren.is_active = False
-    await init_entry(hass, ufp, [])
+    await init_entry(hass, ufp_with_siren, [])
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
     # Remove the siren from the public bootstrap so _siren returns None.
-    del ufp.api.public_bootstrap.sirens[SIREN_ID]
+    del ufp_with_siren.api.public_bootstrap.sirens[SIREN_ID]
 
     # Simulate a WS delete event: new_obj=None, old_obj=last-known siren.
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = None
-    mock_msg.old_obj = siren
-    assert ufp.devices_ws_subscription is not None
-    ufp.devices_ws_subscription(mock_msg)
+    mock_msg = _make_ws_msg(siren, deleted=True)
+    assert ufp_with_siren.devices_ws_subscription is not None
+    ufp_with_siren.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
-    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE  # type: ignore[union-attr]
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
