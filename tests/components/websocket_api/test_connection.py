@@ -142,6 +142,7 @@ async def test_binary_handler_registration() -> None:
 async def test_credential_redaction(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
+    """Test credential redaction."""
     send_messages = []
     user = MockUser()
     refresh_token = Mock()
