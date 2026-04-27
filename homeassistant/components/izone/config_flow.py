@@ -133,6 +133,10 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     _discovered_host: str | None = None
     _discovered_controller_uid: str | None = None
 
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        return await self.async_step_user(import_data or {})
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
