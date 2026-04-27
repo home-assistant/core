@@ -209,7 +209,9 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             return self.async_abort(reason="no_devices_found")
 
         if user_input is not None:
-            controller = self._user_discovered_controllers[user_input[CONF_HOST]]
+            controller = self._user_discovered_controllers.get(user_input[CONF_HOST])
+            if controller is None:
+                return self.async_abort(reason="no_devices_found")
             return await self._async_create_controller_entry(controller)
 
         return self.async_show_form(
