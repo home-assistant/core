@@ -8,6 +8,7 @@ from typing import Final
 from easyenergy import (
     Electricity,
     ElectricityGranularity,
+    ElectricityPriceType,
     Gas,
     PriceInterval,
     VatOption,
@@ -41,7 +42,7 @@ ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
 ENERGY_RETURN_SERVICE_NAME: Final = "get_energy_return_prices"
 
 
-class PriceType(StrEnum):
+class ServicePriceType(StrEnum):
     """Type of price."""
 
     ENERGY_USAGE = "energy_usage"
@@ -49,26 +50,12 @@ class PriceType(StrEnum):
     GAS = "gas"
 
 
-class UsagePriceType(StrEnum):
-    """Type of usage price."""
-
-    MARKET = "market"
-    ALL_IN = "all_in"
-
-
-class Granularity(StrEnum):
-    """Price granularity."""
-
-    HOUR = "hour"
-    QUARTER = "quarter"
-
-
-GRANULARITY_MAP: Final = {
-    Granularity.HOUR.value: ElectricityGranularity.HOUR,
-    Granularity.QUARTER.value: ElectricityGranularity.QUARTER,
-}
-GRANULARITY_OPTIONS: Final = (Granularity.HOUR.value, Granularity.QUARTER.value)
-PRICE_TYPE_OPTIONS: Final = (UsagePriceType.MARKET.value, UsagePriceType.ALL_IN.value)
+GRANULARITY_OPTIONS: Final = tuple(
+    granularity.value for granularity in ElectricityGranularity
+)
+PRICE_TYPE_OPTIONS: Final = tuple(
+    electricity_price_type.value for electricity_price_type in ElectricityPriceType
+)
 
 BASE_SERVICE_SCHEMA: Final = vol.Schema(
     {
@@ -84,27 +71,27 @@ BASE_SERVICE_SCHEMA: Final = vol.Schema(
 GAS_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(ATTR_PRICE_TYPE, default=UsagePriceType.MARKET.value): vol.In(
-            PRICE_TYPE_OPTIONS
-        ),
+        vol.Optional(
+            ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
+        ): vol.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_USAGE_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(ATTR_GRANULARITY, default=Granularity.HOUR.value): vol.In(
-            GRANULARITY_OPTIONS
-        ),
-        vol.Optional(ATTR_PRICE_TYPE, default=UsagePriceType.MARKET.value): vol.In(
-            PRICE_TYPE_OPTIONS
-        ),
+        vol.Optional(
+            ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
+        ): vol.In(GRANULARITY_OPTIONS),
+        vol.Optional(
+            ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
+        ): vol.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_RETURN_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_GRANULARITY, default=Granularity.HOUR.value): vol.In(
-            GRANULARITY_OPTIONS
-        ),
+        vol.Optional(
+            ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
+        ): vol.In(GRANULARITY_OPTIONS),
     }
 )
 
@@ -176,7 +163,7 @@ def __get_coordinator(call: ServiceCall) -> EasyEnergyDataUpdateCoordinator:
 async def __get_prices(
     call: ServiceCall,
     *,
-    price_type: PriceType,
+    service_price_type: ServicePriceType,
 ) -> ServiceResponse:
     """Get prices from easyEnergy."""
     coordinator = __get_coordinator(call)
@@ -191,13 +178,13 @@ async def __get_prices(
     data: Electricity | Gas
     prices: list[dict[str, float | datetime]]
 
-    if price_type == PriceType.GAS:
+    if service_price_type == ServicePriceType.GAS:
         data = await coordinator.easyenergy.gas_prices(
             start_date=start_date,
             end_date=end_date,
             vat=vat,
         )
-        if call.data[ATTR_PRICE_TYPE] == UsagePriceType.ALL_IN.value:
+        if call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value:
             prices = [
                 {"timestamp": interval.starts_at, "price": interval.invoice_price}
                 for interval in data.intervals
@@ -208,12 +195,12 @@ async def __get_prices(
         data = await coordinator.easyenergy.energy_prices(
             start_date=start_date,
             end_date=end_date,
-            granularity=GRANULARITY_MAP[call.data[ATTR_GRANULARITY]],
+            granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
             vat=vat,
         )
 
-        if price_type == PriceType.ENERGY_USAGE:
-            if call.data[ATTR_PRICE_TYPE] == UsagePriceType.ALL_IN.value:
+        if service_price_type == ServicePriceType.ENERGY_USAGE:
+            if call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value:
                 prices = [
                     {"timestamp": interval.starts_at, "price": interval.invoice_price}
                     for interval in data.intervals
@@ -247,21 +234,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.GAS),
+        partial(__get_prices, service_price_type=ServicePriceType.GAS),
         schema=GAS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_USAGE_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.ENERGY_USAGE),
+        partial(__get_prices, service_price_type=ServicePriceType.ENERGY_USAGE),
         schema=ENERGY_USAGE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_RETURN_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.ENERGY_RETURN),
+        partial(__get_prices, service_price_type=ServicePriceType.ENERGY_RETURN),
         schema=ENERGY_RETURN_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

@@ -160,14 +160,14 @@ async def test_service_filters_datetime_range(
         ),
     ],
 )
-async def test_usage_services_all_in_price_type(
+async def test_usage_services_invoice_price_type(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_easyenergy: MagicMock,
     service: str,
     expected_prices: list[dict[str, str | float]],
 ) -> None:
-    """Test usage services can return all-in prices."""
+    """Test usage services can return invoice prices."""
     mock_easyenergy.reset_mock()
 
     response = await hass.services.async_call(
@@ -175,7 +175,7 @@ async def test_usage_services_all_in_price_type(
         service,
         {
             ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
-            ATTR_PRICE_TYPE: "all_in",
+            ATTR_PRICE_TYPE: "invoice",
             "incl_vat": True,
             "start": "2026-04-19 02:00:00+02:00",
             "end": "2026-04-19 05:00:00+02:00",
