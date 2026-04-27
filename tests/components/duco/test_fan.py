@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import logging
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError, DucoRateLimitError
@@ -124,10 +124,7 @@ async def test_fan_set_state_rate_limit_logs_warning(
         side_effect=DucoRateLimitError()
     )
 
-    with (
-        pytest.raises(HomeAssistantError),
-        caplog.at_level(logging.WARNING, logger="homeassistant.components.duco.fan"),
-    ):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
@@ -156,3 +153,62 @@ async def test_coordinator_update_marks_unavailable(
     state = hass.states.get(_FAN_ENTITY)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_optimistic_state_shown_immediately(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that the fan shows the new state optimistically before the API confirms it."""
+    api_called = asyncio.Event()
+    can_return = asyncio.Event()
+
+    async def paused_set(*args: object, **kwargs: object) -> None:
+        api_called.set()
+        await can_return.wait()
+
+    mock_duco_client.async_set_ventilation_state = paused_set
+
+    service_task = hass.async_create_task(
+        hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+            blocking=True,
+        )
+    )
+
+    await api_called.wait()
+
+    state = hass.states.get(_FAN_ENTITY)
+    assert state is not None
+    assert state.attributes[ATTR_PERCENTAGE] == 100
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+
+    can_return.set()
+    await service_task
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_optimistic_state_reverts_on_error(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that the fan reverts to coordinator state when the API call fails."""
+    mock_duco_client.async_set_ventilation_state = AsyncMock(
+        side_effect=DucoError("Device error")
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+            blocking=True,
+        )
+
+    state = hass.states.get(_FAN_ENTITY)
+    assert state is not None
+    assert state.attributes.get(ATTR_PERCENTAGE) is None
+    assert state.attributes.get(ATTR_PRESET_MODE) == "auto"

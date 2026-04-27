@@ -80,6 +80,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_preset_modes = [PRESET_AUTO]
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
+    _optimistic_state: VentilationState | None = None
 
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the fan entity."""
@@ -89,6 +90,8 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage, or None when in AUTO mode."""
+        if self._optimistic_state is not None:
+            return _STATE_TO_PERCENTAGE.get(self._optimistic_state)
         node = self._node
         if node.ventilation is None:
             return None
@@ -97,12 +100,21 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode (auto when Duco controls, else None)."""
+        if self._optimistic_state is not None:
+            return (
+                None if self._optimistic_state in _STATE_TO_PERCENTAGE else PRESET_AUTO
+            )
         node = self._node
         if node.ventilation is None:
             return None
         if node.ventilation.state not in _STATE_TO_PERCENTAGE:
             return PRESET_AUTO
         return None
+
+    def _handle_coordinator_update(self) -> None:
+        """Clear optimistic state when confirmed data arrives from the coordinator."""
+        self._optimistic_state = None
+        super()._handle_coordinator_update()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode: 'auto' hands control back to Duco."""
@@ -119,17 +131,23 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     async def _async_set_state(self, state: VentilationState) -> None:
         """Send the ventilation state to the device and refresh coordinator."""
+        self._optimistic_state = state
+        self.async_write_ha_state()
         try:
             await self.coordinator.client.async_set_ventilation_state(
                 self._node_id, state
             )
         except DucoRateLimitError as err:
+            self._optimistic_state = None
+            self.async_write_ha_state()
             _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limit_exceeded",
             ) from err
         except DucoError as err:
+            self._optimistic_state = None
+            self.async_write_ha_state()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
