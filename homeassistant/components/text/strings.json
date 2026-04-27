@@ -1,4 +1,7 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if"
+  },
   "conditions": {
     "is_equal_to": {
       "description": "Tests if one or more texts are equal to a specified value.",

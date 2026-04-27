@@ -1,5 +1,6 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least"
   },
   "conditions": {
