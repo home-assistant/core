@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     UnitOfTemperature,
 )
 from homeassistant.const import (
-    DEGREE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfElectricPotential,
@@ -126,32 +125,6 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         value_fn=lambda coord: coord.data.device_temperature,
     ),
     CentriConnectSensorEntityDescription(
-        key=CentriConnectSensorType.LAST_POST_TIME,
-        translation_key=CentriConnectSensorType.LAST_POST_TIME,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda coord: coord.data.last_post_time,
-    ),
-    CentriConnectSensorEntityDescription(
-        key=CentriConnectSensorType.LATITUDE,
-        translation_key=CentriConnectSensorType.LATITUDE,
-        native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda coord: coord.data.latitude,
-    ),
-    CentriConnectSensorEntityDescription(
-        key=CentriConnectSensorType.LONGITUDE,
-        translation_key=CentriConnectSensorType.LONGITUDE,
-        native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda coord: coord.data.longitude,
-    ),
-    CentriConnectSensorEntityDescription(
         key=CentriConnectSensorType.LTE_SIGNAL_LEVEL,
         translation_key=CentriConnectSensorType.LTE_SIGNAL_LEVEL,
         native_unit_of_measurement=PERCENTAGE,
@@ -176,14 +149,6 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda coord: coord.data.lte_signal_strength,
-    ),
-    CentriConnectSensorEntityDescription(
-        key=CentriConnectSensorType.NEXT_POST_TIME,
-        translation_key=CentriConnectSensorType.NEXT_POST_TIME,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda coord: coord.data.next_post_time,
     ),
     CentriConnectSensorEntityDescription(
         key=CentriConnectSensorType.SOLAR_LEVEL,
