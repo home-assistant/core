@@ -673,6 +673,7 @@ FLOWS = {
         "smhi",
         "smlight",
         "snapcast",
+        "snmp",
         "snoo",
         "snooz",
         "solaredge",

@@ -1624,8 +1624,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/smlight/ @tl-sl
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
-/homeassistant/components/snmp/ @nmaggioni
-/tests/components/snmp/ @nmaggioni
+/homeassistant/components/snmp/ @nmaggioni @IsaccoBenedetti
+/tests/components/snmp/ @nmaggioni @IsaccoBenedetti
 /homeassistant/components/snoo/ @Lash-L
 /tests/components/snoo/ @Lash-L
 /homeassistant/components/snooz/ @AustinBrunkhorst
