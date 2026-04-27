@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to LocknAlert Bridge",
+        "description": "Manually add a LocknAlert Bridge.",
+        "data": {
+          "host": "Bridge host or IP",
+          "api_port": "HTTPS API port",
+          "bridge_serial": "Bridge serial",
+          "pairing_token": "Pairing token (optional)",
+          "verify_ssl": "Verify TLS certificate"
+        }
+      },
+      "confirm": {
+        "title": "Discovered LocknAlert Bridge",
+        "description": "Bridge at {host} (Serial: {bridge_serial}). Confirm and optionally provide a pairing token.",
+        "data": {
+          "bridge_serial": "Bridge serial",
+          "pairing_token": "Pairing token (optional)",
+          "verify_ssl": "Verify TLS certificate"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect LocknAlert Bridge",
+        "description": "Refresh credentials for bridge at {host} (Serial: {bridge_serial}).",
+        "data": {
+          "pairing_token": "Pairing token (optional)",
+          "verify_ssl": "Verify TLS certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to bridge",
+      "invalid_auth": "Invalid credentials or token",
+      "serial_mismatch": "Bridge serial does not match this bridge",
+      "pairing_required": "Bridge is not in pairing mode",
+      "invalid_bootstrap": "Bridge returned an invalid bootstrap payload"
+    },
+    "abort": {
+      "already_configured": "This LocknAlert Bridge is already configured",
+      "reauth_successful": "Reauthentication completed successfully"
+    }
+  }
+}

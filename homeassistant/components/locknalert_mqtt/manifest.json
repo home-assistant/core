@@ -1,0 +1,18 @@
+{
+  "domain": "locknalert",
+  "name": "LocknAlert",
+  "codeowners": ["@LocknAlert-Pty-LTD"],
+  "config_flow": true,
+  "documentation": "https://github.com/LocknAlert-Pty-LTD/locknalert_paradox",
+  "iot_class": "local_push",
+  "integration_type": "hub",
+  "loggers": ["locknalert", "homeassistant.components.locknalert"],
+  "requirements": ["paho-mqtt==2.1.0"],
+  "zeroconf": [
+    {
+      "type": "_locknalert._tcp.local.",
+      "name": "LocknAlert Bridge*"
+    }
+  ],
+  "version": "0.2.0"
+}
