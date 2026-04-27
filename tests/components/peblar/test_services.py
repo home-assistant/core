@@ -19,7 +19,7 @@ async def test_services_registered_on_setup(
     """Test that RFID services are registered when entry is loaded."""
     assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
     assert hass.services.has_service(DOMAIN, "add_rfid_token")
-    assert hass.services.has_service(DOMAIN, "remove_rfid_token")
+    assert hass.services.has_service(DOMAIN, "delete_rfid_token")
 
 
 async def test_services_not_removed_while_other_entry_loaded(
@@ -101,15 +101,15 @@ async def test_add_rfid_token(
     )
 
 
-async def test_remove_rfid_token(
+async def test_delete_rfid_token(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test remove_rfid_token calls library with correct args."""
+    """Test delete_rfid_token calls library with correct args."""
     await hass.services.async_call(
         DOMAIN,
-        "remove_rfid_token",
+        "delete_rfid_token",
         {
             "config_entry_id": init_integration.entry_id,
             "uid": "AA:BB:CC:DD",

@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import cast
 
-import voluptuous as vol
 from aiohttp import CookieJar
 from peblar import (
     AccessMode,
@@ -15,18 +13,12 @@ from peblar import (
     PeblarError,
 )
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    ServiceValidationError,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
@@ -34,6 +26,7 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
     PeblarVersionDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -48,7 +41,7 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Peblar domain."""
-    _async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -97,72 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-def _async_register_services(hass: HomeAssistant) -> None:
-    """Register RFID management services."""
-
-    def _get_peblar(call: ServiceCall) -> Peblar:
-        entry_id: str = call.data["config_entry_id"]
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_config_entry",
-                translation_placeholders={"config_entry_id": entry_id},
-            )
-        return cast(PeblarConfigEntry, entry).runtime_data.user_configuration_coordinator.peblar
-
-    async def _handle_list_rfid_tokens(call: ServiceCall) -> ServiceResponse:
-        peblar = _get_peblar(call)
-        tokens = await peblar.rfid_tokens()
-        return {
-            "tokens": [
-                {
-                    "uid": t.rfid_token_uid,
-                    "description": t.rfid_token_description,
-                }
-                for t in tokens
-            ]
-        }
-
-    async def _handle_add_rfid_token(call: ServiceCall) -> None:
-        peblar = _get_peblar(call)
-        await peblar.add_rfid_token(
-            rfid_token_uid=call.data["uid"],
-            rfid_token_description=call.data["description"],
-        )
-
-    async def _handle_remove_rfid_token(call: ServiceCall) -> None:
-        peblar = _get_peblar(call)
-        await peblar.delete_rfid_token(uid=call.data["uid"])
-
-    hass.services.async_register(
-        DOMAIN,
-        "list_rfid_tokens",
-        _handle_list_rfid_tokens,
-        schema=vol.Schema({vol.Required("config_entry_id"): str}),
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        "add_rfid_token",
-        _handle_add_rfid_token,
-        schema=vol.Schema({
-            vol.Required("config_entry_id"): str,
-            vol.Required("uid"): str,
-            vol.Required("description"): str,
-        }),
-    )
-    hass.services.async_register(
-        DOMAIN,
-        "remove_rfid_token",
-        _handle_remove_rfid_token,
-        schema=vol.Schema({
-            vol.Required("config_entry_id"): str,
-            vol.Required("uid"): str,
-        }),
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:

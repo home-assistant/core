@@ -209,17 +209,17 @@
         }
       }
     },
-    "remove_rfid_token": {
-      "name": "Remove RFID token",
-      "description": "Removes an RFID token from the charger's standalone authorization list.",
+    "delete_rfid_token": {
+      "name": "Delete RFID token",
+      "description": "Deletes an RFID token from the charger's standalone authorization list.",
       "fields": {
         "config_entry_id": {
           "name": "Config entry",
-          "description": "The Peblar EV charger to remove the RFID token from."
+          "description": "The Peblar EV charger to delete the RFID token from."
         },
         "uid": {
           "name": "UID",
-          "description": "The unique identifier of the RFID token to remove."
+          "description": "The unique identifier of the RFID token to delete."
         }
       }
     }

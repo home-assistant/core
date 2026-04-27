@@ -22,7 +22,7 @@ add_rfid_token:
       selector:
         text:
 
-remove_rfid_token:
+delete_rfid_token:
   fields:
     config_entry_id:
       required: true

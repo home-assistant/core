@@ -6,7 +6,7 @@
     "add_rfid_token": {
       "service": "mdi:card-plus"
     },
-    "remove_rfid_token": {
+    "delete_rfid_token": {
       "service": "mdi:card-remove"
     }
   },
