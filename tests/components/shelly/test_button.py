@@ -1,7 +1,7 @@
 """Tests for Shelly button platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -494,7 +494,12 @@ async def test_rpc_smoke_mute_alarm_button(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     monkeypatch.setattr(mock_rpc_device, "config", {"smoke:0": {"id": 0, "name": None}})
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
         await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
