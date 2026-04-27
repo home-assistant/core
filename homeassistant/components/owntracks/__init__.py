@@ -171,6 +171,10 @@ async def handle_webhook(
         _LOGGER.warning("Received invalid JSON from OwnTracks")
         return web.json_response([])
 
+    if not isinstance(message, dict) or "_type" not in message:
+        _LOGGER.warning("Received invalid payload from OwnTracks (missing _type)")
+        return web.json_response([])
+
     # Android doesn't populate topic
     if "topic" not in message:
         headers = request.headers
