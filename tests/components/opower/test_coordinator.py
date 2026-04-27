@@ -250,8 +250,6 @@ async def test_coordinator_migration(
         ("async_get_accounts", None),
         ("async_get_forecast", None),
         ("async_get_cost_reads", AggregateType.BILL),
-        ("async_get_cost_reads", AggregateType.DAY),
-        ("async_get_cost_reads", AggregateType.HOUR),
     ],
 )
 async def test_coordinator_api_exceptions(
@@ -288,6 +286,47 @@ async def test_coordinator_api_exceptions(
 
     with pytest.raises(ApiException):
         await coordinator._async_update_data()
+
+
+@pytest.mark.parametrize(
+    "failing_aggregate_type",
+    [AggregateType.DAY, AggregateType.HOUR],
+)
+async def test_coordinator_cost_reads_fallback_on_api_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    failing_aggregate_type: AggregateType,
+) -> None:
+    """Test that daily/hourly cost read failures fall back to coarser data."""
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+
+    # Use a single ELEC account with HOUR resolution so all read levels are attempted
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    mock_opower_api.async_get_accounts.return_value = [account]
+
+    t1 = dt_util.as_utc(datetime(2023, 1, 1, 0))
+    t2 = dt_util.as_utc(datetime(2023, 1, 2, 0))
+    bill_read = CostRead(
+        start_time=t1, end_time=t2, consumption=10.0, provided_cost=1.0
+    )
+
+    async def side_effect(
+        acc: object,
+        agg_type: AggregateType,
+        start: object,
+        end: object,
+    ) -> list[CostRead]:
+        if agg_type == failing_aggregate_type:
+            raise ApiException(message="HTTP Error: 500", url="http://example.com")
+        return [bill_read]
+
+    mock_opower_api.async_get_cost_reads.side_effect = side_effect
+
+    # Should NOT raise — the coordinator should fall back to coarser data
+    result = await coordinator._async_update_data()
+    assert result is not None
 
 
 async def test_coordinator_updates_with_finer_grained_data(

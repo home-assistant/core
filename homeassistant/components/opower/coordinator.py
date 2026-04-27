@@ -563,8 +563,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 account, AggregateType.DAY, start, end
             )
         except ApiException as err:
-            _LOGGER.error("Error getting daily cost reads: %s", err)
-            raise
+            # Fall back to coarser monthly data rather than crashing the coordinator.
+            _LOGGER.warning("Error getting daily cost reads, using monthly: %s", err)
+            return cost_reads
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution == ReadResolution.DAY:
@@ -581,8 +582,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 account, AggregateType.HOUR, start, end
             )
         except ApiException as err:
-            _LOGGER.error("Error getting hourly cost reads: %s", err)
-            raise
+            # Fall back to coarser data rather than crashing the coordinator.
+            _LOGGER.warning("Error getting hourly cost reads, using daily: %s", err)
+            return cost_reads
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
