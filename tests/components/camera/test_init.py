@@ -389,6 +389,27 @@ async def test_websocket_get_prefs(
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_websocket_update_prefs_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test updating camera preferences requires admin."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "camera/update_prefs",
+            "entity_id": "camera.demo_camera",
+            "preload_stream": True,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_websocket_update_preload_prefs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

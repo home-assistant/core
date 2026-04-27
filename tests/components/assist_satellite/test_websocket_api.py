@@ -423,6 +423,33 @@ async def test_set_wake_words_bad_id(
     }
 
 
+async def test_connection_test_require_admin(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test connection test requires admin access."""
+    ws_client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/test_connection",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unauthorized",
+        "message": "Unauthorized",
+    }
+
+
 async def test_connection_test(
     hass: HomeAssistant,
     init_components: ConfigEntry,

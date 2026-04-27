@@ -3591,6 +3591,34 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
+async def test_websocket_config_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config command requires admin."""
+    config = {
+        "alias": "hello",
+        "triggers": {"trigger": "event", "event_type": "test_event"},
+        "actions": {"action": "test.automation", "data": 100},
+    }
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: config}
+    )
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "automation/config",
+            "entity_id": "automation.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
 async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)

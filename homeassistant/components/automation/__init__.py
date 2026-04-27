@@ -1276,6 +1276,7 @@ async def _async_process_if(
 
 
 @websocket_api.websocket_command({"type": "automation/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
