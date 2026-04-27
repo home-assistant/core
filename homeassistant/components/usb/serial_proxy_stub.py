@@ -17,7 +17,7 @@ class HassESPHomeSerialStub(ESPHomeSerial):
 
 
 class HassESPHomeSerialStubTransport(ESPHomeSerialTransport):
-    """Transport variant that constructs :class:`HassESPHomeSerial`."""
+    """Transport variant that constructs `HassESPHomeSerialStub`."""
 
     transport_name = "esphome-hass"
     _serial_cls = HassESPHomeSerialStub
