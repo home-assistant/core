@@ -158,6 +158,13 @@ async def _async_setup_entry(
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
 
+    # Prime the public bootstrap. The devices websocket subscription was already
+    # registered in async_setup() per library docs (subscribe first, then prime).
+    try:
+        await data_service.api.update_public()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Public API bootstrap update failed", exc_info=True)
+
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()
 
