@@ -47,11 +47,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    had_loaded_entries = any(
+        config_entry.state is config_entries.ConfigEntryState.LOADED
+        for config_entry in hass.config_entries.async_entries(IZONE)
+    )
     await async_start_discovery_service(hass)
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
-        await async_stop_discovery_service(hass)
+        if not had_loaded_entries:
+            await async_stop_discovery_service(hass)
         raise
     return True
 

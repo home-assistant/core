@@ -13,6 +13,12 @@
       "confirm": {
         "description": "Do you want to set up iZone?\n\nController UID: {controller_uid}\nController IP: {host}"
       },
+      "select_controller": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Multiple unconfigured iZone controllers were found. Select the controller you want to set up."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
