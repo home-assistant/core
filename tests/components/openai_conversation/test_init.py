@@ -1403,14 +1403,13 @@ async def test_devices(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test devices are correctly created for subentries."""
-    devices = sorted(
-        dr.async_entries_for_config_entry(device_registry, mock_config_entry.entry_id),
-        key=lambda d: d.name,
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 4  # One for conversation, AI task, STT, and TTS
 
-    # Use the first device for snapshot comparison
-    device = devices[0]
+    # Find the conversation device for snapshot comparison
+    device = next(d for d in devices if d.name == "OpenAI Conversation")
     assert device == snapshot(exclude=props("identifiers"))
     # Verify the device has identifiers matching one of the subentries
     expected_identifiers = [
