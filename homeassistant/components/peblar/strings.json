@@ -70,6 +70,25 @@
       }
     },
     "select": {
+      "buzzer_volume": {
+        "name": "Buzzer volume",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "led_brightness": {
+        "name": "LED brightness",
+        "state": {
+          "automatic": "Automatic",
+          "bright": "Bright",
+          "dim": "Dim",
+          "medium": "Medium",
+          "off": "Off"
+        }
+      },
       "smart_charging": {
         "name": "Smart charging",
         "state": {

@@ -13,7 +13,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
+from .const import (
+    HOME_ASSISTANT_TO_LED_BRIGHTNESS,
+    HOME_ASSISTANT_TO_SOUND_VOLUME,
+    PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT,
+    PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT,
+)
+from .coordinator import PeblarConfigEntry, PeblarRuntimeData, PeblarUserConfigurationDataUpdateCoordinator
 from .entity import PeblarEntity
 from .helpers import peblar_exception_handler
 
@@ -24,6 +30,7 @@ PARALLEL_UPDATES = 1
 class PeblarSelectEntityDescription(SelectEntityDescription):
     """Class describing Peblar select entities."""
 
+    has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
     current_fn: Callable[[PeblarUserConfiguration], str | None]
     select_fn: Callable[[Peblar, str], Awaitable[Any]]
 
@@ -43,6 +50,24 @@ DESCRIPTIONS = [
         current_fn=lambda x: x.smart_charging.value if x.smart_charging else None,
         select_fn=lambda x, mode: x.smart_charging(SmartChargingMode(mode)),
     ),
+    PeblarSelectEntityDescription(
+        key="buzzer_volume",
+        translation_key="buzzer_volume",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_buzzer,
+        options=list(PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.values()),
+        current_fn=lambda x: PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.get(x.buzzer_volume),
+        select_fn=lambda x, option: x.set_buzzer_volume(volume=HOME_ASSISTANT_TO_SOUND_VOLUME[option]),
+    ),
+    PeblarSelectEntityDescription(
+        key="led_brightness",
+        translation_key="led_brightness",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_led,
+        options=list(PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.values()),
+        current_fn=lambda x: PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.get(x.led_brightness) if x.led_brightness is not None else None,
+        select_fn=lambda x, option: x.set_led_brightness(brightness=HOME_ASSISTANT_TO_LED_BRIGHTNESS[option]),
+    ),
 ]
 
 
@@ -59,6 +84,7 @@ async def async_setup_entry(
             description=description,
         )
         for description in DESCRIPTIONS
+        if description.has_fn(entry.runtime_data)
     )
 
 

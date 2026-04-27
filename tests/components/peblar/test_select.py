@@ -3,10 +3,12 @@
 from unittest.mock import MagicMock
 
 from peblar import (
+    LedBrightness,
     PeblarAuthenticationError,
     PeblarConnectionError,
     PeblarError,
     SmartChargingMode,
+    SoundVolume,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -182,3 +184,45 @@ async def test_select_option_authentication_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_select_buzzer_volume(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+) -> None:
+    """Test the Peblar EV charger buzzer volume select."""
+    entity_id = "select.peblar_ev_charger_buzzer_volume"
+    mocked_method = mock_peblar.set_buzzer_volume
+    mocked_method.reset_mock()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "medium"},
+        blocking=True,
+    )
+
+    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_with(volume=SoundVolume.MEDIUM)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_select_led_brightness(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+) -> None:
+    """Test the Peblar EV charger LED brightness select."""
+    entity_id = "select.peblar_ev_charger_led_brightness"
+    mocked_method = mock_peblar.set_led_brightness
+    mocked_method.reset_mock()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "bright"},
+        blocking=True,
+    )
+
+    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_with(brightness=LedBrightness.BRIGHT)
