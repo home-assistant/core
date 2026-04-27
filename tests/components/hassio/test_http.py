@@ -155,16 +155,16 @@ async def test_forward_request_onboarded_noauth_unallowed_paths(
     assert len(aioclient_mock.mock_calls) == 0
 
 
-@pytest.mark.parametrize(
-    ("method", "path"),
-    [
-        ("GET", "backups/1234abcd/info"),
-        ("GET", "backups/1234abcd/download"),
-        ("POST", "backups/1234abcd/restore/full"),
-        ("POST", "backups/1234abcd/restore/partial"),
-        ("POST", "backups/new/upload"),
-    ],
-)
+BACKUP_NON_ADMIN_REJECTED_PARAMS = [
+    ("GET", "backups/1234abcd/info"),
+    ("GET", "backups/1234abcd/download"),
+    ("POST", "backups/1234abcd/restore/full"),
+    ("POST", "backups/1234abcd/restore/partial"),
+    ("POST", "backups/new/upload"),
+]
+
+
+@pytest.mark.parametrize(("method", "path"), BACKUP_NON_ADMIN_REJECTED_PARAMS)
 async def test_forward_request_backup_unauthenticated_rejected(
     hassio_noauth_client: TestClient,
     aioclient_mock: AiohttpClientMocker,
@@ -173,6 +173,20 @@ async def test_forward_request_backup_unauthenticated_rejected(
 ) -> None:
     """Test backup endpoints reject unauthenticated requests."""
     resp = await hassio_noauth_client.request(method, f"/api/hassio/{path}")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(("method", "path"), BACKUP_NON_ADMIN_REJECTED_PARAMS)
+async def test_forward_request_backup_non_admin_rejected(
+    hassio_user_client: TestClient,
+    aioclient_mock: AiohttpClientMocker,
+    method: str,
+    path: str,
+) -> None:
+    """Test backup endpoints reject authenticated non-admin requests."""
+    resp = await hassio_user_client.request(method, f"/api/hassio/{path}")
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(aioclient_mock.mock_calls) == 0
