@@ -1317,8 +1317,9 @@ async def test_devices(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Assert that devices are created correctly."""
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
+    devices = sorted(
+        dr.async_entries_for_config_entry(device_registry, mock_config_entry.entry_id),
+        key=lambda d: d.name,
     )
     assert devices == snapshot
 
