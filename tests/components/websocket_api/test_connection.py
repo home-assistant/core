@@ -100,7 +100,12 @@ async def test_exception_handling(
     ) as current_request:
         current_request.get.return_value = mocked_request
         conn = websocket_api.ActiveConnection(
-            logging.getLogger(__name__), hass, send_messages.append, user, refresh_token
+            logging.getLogger(__name__),
+            hass,
+            send_messages.append,
+            user,
+            refresh_token,
+            remote="127.0.0.42",
         )
 
         conn.async_handle_exception({"id": 5}, exc)
@@ -113,7 +118,7 @@ async def test_exception_handling(
 async def test_binary_handler_registration() -> None:
     """Test binary handler registration."""
     connection = websocket_api.ActiveConnection(
-        None, Mock(data={websocket_api.DOMAIN: None}), None, None, Mock()
+        None, Mock(data={websocket_api.DOMAIN: None}), None, None, Mock(), remote=None
     )
 
     # One filler to align indexes with prefix numbers

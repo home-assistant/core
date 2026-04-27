@@ -9,10 +9,13 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import webhook
+from homeassistant.components.websocket_api import auth, http
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
+from homeassistant.util.aiohttp import MockRequest
 
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -267,6 +270,45 @@ async def test_webhook_local_only(hass: HomeAssistant, mock_client) -> None:
     assert len(hooks) == 1
 
 
+@pytest.mark.parametrize(
+    ("remote", "expected_calls"),
+    [
+        (None, 0),
+        ("123.123.123.123", 0),
+        ("not-an-ip", 0),
+        ("192.168.1.50", 1),
+    ],
+)
+async def test_webhook_local_only_mock_request(
+    hass: HomeAssistant, remote: str | None, expected_calls: int
+) -> None:
+    """Test local_only webhooks for MockRequests with various remote values."""
+    await async_setup_component(hass, "webhook", {})
+
+    hooks = []
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(hass: HomeAssistant, webhook_id: str, request: web.Request):
+        """Handle webhook."""
+        hooks.append((hass, webhook_id, await request.text()))
+
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, local_only=True
+    )
+
+    request = MockRequest(
+        content=b'{"data": true}',
+        headers={"Content-Type": "application/json"},
+        method="POST",
+        query_string="",
+        mock_source="test",
+        remote=remote,
+    )
+    resp = await webhook.async_handle_webhook(hass, webhook_id, request)
+    assert resp.status == HTTPStatus.OK
+    assert len(hooks) == expected_calls
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_listing_webhook(
     hass: HomeAssistant,
@@ -356,6 +398,8 @@ async def test_ws_webhook(
     assert received[0].headers["content-type"] == "application/json"
     assert received[0].query == {"a": "2"}
     assert await received[0].json() == {"hello": "world"}
+    # The MockRequest is created with the websocket connection's remote IP
+    assert received[0].remote is not None
 
     # Non existing webhook
     caplog.clear()
@@ -383,3 +427,68 @@ async def test_ws_webhook(
         in caplog.text
     )
     assert '{"nonexisting": "payload"}' in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("remote_ip", "expected_calls"),
+    [
+        ("192.168.1.50", 1),
+        ("123.123.123.123", 0),
+    ],
+)
+async def test_ws_webhook_local_only(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+    remote_ip: str,
+    expected_calls: int,
+) -> None:
+    """Test a local_only webhook over the websocket connection."""
+    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    received = []
+
+    async def handler(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle a webhook."""
+        received.append(request)
+        return web.json_response({"from": "handler"})
+
+    webhook.async_register(
+        hass, "test", "Test", "mock-webhook-id", handler, local_only=True
+    )
+
+    set_mock_ip = mock_real_ip(hass.http.app)
+    set_mock_ip(remote_ip)
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(http.URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == auth.TYPE_AUTH_REQUIRED
+
+        await ws.send_json({"type": auth.TYPE_AUTH, "access_token": hass_access_token})
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == auth.TYPE_AUTH_OK
+
+        await ws.send_json(
+            {
+                "id": 5,
+                "type": "webhook/handle",
+                "webhook_id": "mock-webhook-id",
+                "method": "POST",
+                "headers": {"Content-Type": "application/json"},
+                "body": '{"hello": "world"}',
+                "query": "",
+            }
+        )
+        result = await ws.receive_json()
+
+    assert result["success"], result
+    assert result["result"]["status"] == HTTPStatus.OK
+    assert len(received) == expected_calls
+    if expected_calls:
+        assert received[0].remote == remote_ip
