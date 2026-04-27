@@ -13,8 +13,13 @@ from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .common import (
@@ -56,13 +61,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
-    )
+    hass.async_create_task(_async_setup(hass))
 
     return True
+
+
+async def _async_setup(hass: HomeAssistant) -> None:
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+    )
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.11.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Shopping List",
+        },
+    )
 
 
 async def async_setup_entry(
