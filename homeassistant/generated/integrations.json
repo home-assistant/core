@@ -5114,12 +5114,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "otp": {
-      "name": "One-Time Password (OTP)",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "ourgroceries": {
       "name": "OurGroceries",
       "integration_type": "service",
@@ -8315,6 +8309,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "otp": {
+      "name": "One-Time Password (OTP)",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "random": {
       "integration_type": "helper",

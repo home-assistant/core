@@ -53,7 +53,6 @@ MISSING_INTEGRATION_TYPE = {
     "modern_forms",
     "ness_alarm",
     "nmap_tracker",
-    "otp",
     "profiler",
     "proximity",
     "rhasspy",
