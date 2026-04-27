@@ -114,6 +114,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def mock_wibeee_api_global() -> Generator[MagicMock]:
+    """Globally mock WibeeeAPI to prevent socket errors."""
+    with (
+        patch("homeassistant.components.wibeee.config_flow.WibeeeAPI", autospec=True),
+        patch("homeassistant.components.wibeee.WibeeeAPI", autospec=True),
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_wibeee_api() -> Generator[MagicMock]:
     """Mock the WibeeeAPI class."""
