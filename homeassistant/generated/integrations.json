@@ -8013,8 +8013,7 @@
       "name": "Xthings Cloud",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push",
-      "single_config_entry": true
+      "iot_class": "cloud_push"
     },
     "yale": {
       "name": "Yale (non-US/Canada)",
