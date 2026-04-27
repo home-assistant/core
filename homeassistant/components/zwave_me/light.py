@@ -69,7 +69,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+        """Turn the device off."""
         command = "off"
         transition = kwargs.get(ATTR_TRANSITION)
         if transition is not None:
