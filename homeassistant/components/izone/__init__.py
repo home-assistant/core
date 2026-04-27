@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_EXCLUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -42,23 +42,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-    # Start the discovery service
-    await async_start_discovery_service(hass)
-
-    async def shutdown_event(event):
-        await async_stop_discovery_service(hass)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    await async_start_discovery_service(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry and stop discovery process."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok and not any(
+        config_entry.state is config_entries.ConfigEntryState.LOADED
+        for config_entry in hass.config_entries.async_entries(IZONE)
+    ):
+        await async_stop_discovery_service(hass)
+
+    return unload_ok
