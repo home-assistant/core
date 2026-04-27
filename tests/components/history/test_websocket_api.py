@@ -7,7 +7,6 @@ from unittest.mock import ANY, patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.auth.models import Credentials
 from homeassistant.components import history
 from homeassistant.components.history import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, STATE_OFF, STATE_ON
@@ -16,7 +15,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import CLIENT_ID, MockUser, async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
@@ -2177,28 +2176,11 @@ async def test_history_stream_live_chained_events(
     }
 
 
-async def _async_get_read_only_token(
-    hass: HomeAssistant, hass_read_only_user: MockUser
-) -> str:
-    """Create an access token for the read-only user."""
-    credential = Credentials(
-        id="mock-read-only-credential-id",
-        auth_provider_type="homeassistant",
-        auth_provider_id=None,
-        data={"username": "readonly"},
-        is_new=False,
-    )
-    await hass.auth.async_link_user(hass_read_only_user, credential)
-    refresh_token = await hass.auth.async_create_refresh_token(
-        hass_read_only_user, CLIENT_ID, credential=credential
-    )
-    return hass.auth.async_create_access_token(refresh_token)
-
-
 @pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period_filters_unauthorized_entities(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test history_during_period filters by per-entity read permissions."""
@@ -2214,8 +2196,7 @@ async def test_history_during_period_filters_unauthorized_entities(
     hass.states.async_set("sensor.forbidden", "on")
     await async_wait_recording_done(hass)
 
-    token = await _async_get_read_only_token(hass, hass_read_only_user)
-    client = await hass_ws_client(access_token=token)
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
 
     await client.send_json_auto_id(
         {
@@ -2251,6 +2232,7 @@ async def test_history_during_period_filters_unauthorized_entities(
 async def test_history_stream_filters_unauthorized_entities(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test history/stream filters by per-entity read permissions."""
@@ -2267,8 +2249,7 @@ async def test_history_stream_filters_unauthorized_entities(
     await async_wait_recording_done(hass)
 
     end_time = dt_util.utcnow() + timedelta(seconds=1)
-    token = await _async_get_read_only_token(hass, hass_read_only_user)
-    client = await hass_ws_client(access_token=token)
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
 
     await client.send_json_auto_id(
         {
