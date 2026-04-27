@@ -12,13 +12,12 @@ from urllib.parse import urlparse
 import aiohttp
 import voluptuous as vol
 
-from pywibeee import WibeeeAPI, WibeeeDeviceInfo
+from pywibeee import WibeeeAPI
 
-from homeassistant import config_entries, exceptions
-from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_AUTO_CONFIGURE, CONF_HOST
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import AbortFlow, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -27,8 +26,11 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import WibeeeConfigEntry
 from .const import (
+    CONF_AUTO_CONFIGURE,
     CONF_MAC_ADDRESS,
     CONF_UPDATE_MODE,
     CONF_WIBEEE_ID,
@@ -42,7 +44,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HA_PORT = 8123
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> tuple[str, str, dict[str, Any]]:
     """Validate the user input allows us to connect.
 
     Returns:
@@ -96,11 +100,13 @@ async def _async_configure_device(hass: HomeAssistant, host: str) -> bool:
         api = WibeeeAPI(session, host, timeout=timedelta(seconds=15))
         success = await api.async_configure_push_server(local_ip, ha_port)
         if success:
-            _LOGGER.debug("Auto-configured WiBeee at %s to push to %s:%d", host, local_ip, ha_port)
+            _LOGGER.debug(
+                "Auto-configured WiBeee at %s to push to %s:%d", host, local_ip, ha_port
+            )
             return True
-        return False
     except (TimeoutError, aiohttp.ClientError, OSError):
-        return False
+        pass
+    return False
 
 
 def _get_local_ip_sync() -> str:
@@ -118,15 +124,19 @@ def _get_local_ip_sync() -> str:
 async def _get_local_ip(hass: HomeAssistant) -> str:
     """Determine the local IP of the Home Assistant instance."""
     try:
-        from homeassistant.components.network import async_get_source_ip  # noqa: PLC0415
+        from homeassistant.components.network import (  # noqa: PLC0415
+            async_get_source_ip,
+        )
+
         ip = await async_get_source_ip(hass)
         if ip is not None:
             return ip
-    except (ImportError, exceptions.HomeAssistantError, OSError):
+    except (ImportError, HomeAssistantError, OSError):
         pass
 
     try:
         from homeassistant.helpers.network import get_url  # noqa: PLC0415
+
         url = get_url(hass, prefer_external=False)
         host = urlparse(url).hostname
         if host is not None:
@@ -136,7 +146,7 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
                     return host
             except ValueError:
                 pass
-    except (ImportError, exceptions.HomeAssistantError, OSError):
+    except (ImportError, HomeAssistantError, OSError):
         pass
 
     return await hass.async_add_executor_job(_get_local_ip_sync)
@@ -146,11 +156,12 @@ def _get_ha_port(hass: HomeAssistant) -> int:
     """Get the port Home Assistant's HTTP server is listening on."""
     try:
         from homeassistant.helpers.network import get_url  # noqa: PLC0415
+
         url = get_url(hass, prefer_external=False)
         port = urlparse(url).port
         if port is not None:
             return port
-    except (ImportError, exceptions.HomeAssistantError, OSError):
+    except (ImportError, HomeAssistantError, OSError):
         pass
 
     return DEFAULT_HA_PORT
@@ -166,7 +177,9 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._user_data: dict[str, str] = {}
         self._discovered_host: str | None = None
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> config_entries.ConfigFlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
         """Handle DHCP discovery of a Wibeee device."""
         host = discovery_info.ip
         mac = discovery_info.macaddress.replace(":", "").lower()
@@ -186,7 +199,9 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input: dict[str, str] | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Step 1: User enters the device IP."""
         errors: dict[str, str] = {}
 
@@ -203,7 +218,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._user_data["_title"] = title
                 return await self.async_step_mode()
 
-            except exceptions.AbortFlow:
+            except AbortFlow:
                 raise
             except NoDeviceInfo:
                 errors[CONF_HOST] = "no_device_info"
@@ -214,11 +229,15 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         default_host = (user_input or {}).get(CONF_HOST) or self._discovered_host or ""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=default_host): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST, default=default_host): str}
+            ),
             errors=errors,
         )
 
-    async def async_step_mode(self, user_input: dict[str, Any] | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Step 2: Choose update mode."""
         errors: dict[str, str] = {}
 
@@ -227,12 +246,18 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             auto_configure = user_input.get(CONF_AUTO_CONFIGURE, False)
 
             if mode == MODE_LOCAL_PUSH and auto_configure:
-                if not await _async_configure_device(self.hass, self._user_data[CONF_HOST]):
+                if not await _async_configure_device(
+                    self.hass, self._user_data[CONF_HOST]
+                ):
                     errors["base"] = "auto_configure_failed"
 
             if not errors:
                 title = self._user_data.pop("_title")
-                return self.async_create_entry(title=title, data=self._user_data, options={CONF_UPDATE_MODE: mode})
+                return self.async_create_entry(
+                    title=title,
+                    data=self._user_data,
+                    options={CONF_UPDATE_MODE: mode},
+                )
 
         return self.async_show_form(
             step_id="mode",
@@ -241,7 +266,9 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_UPDATE_MODE, default=MODE_LOCAL_PUSH): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                SelectOptionDict(label="Local Push", value=MODE_LOCAL_PUSH),
+                                SelectOptionDict(
+                                    label="Local Push", value=MODE_LOCAL_PUSH
+                                ),
                                 SelectOptionDict(label="Polling", value=MODE_POLLING),
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
@@ -255,11 +282,15 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> WibeeeOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: WibeeeConfigEntry,
+    ) -> WibeeeOptionsFlowHandler:
         """Get the options flow handler."""
         return WibeeeOptionsFlowHandler()
 
-    async def async_step_reconfigure(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_reconfigure(
+        self, user_input: dict | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Handle reconfiguration."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
@@ -269,8 +300,10 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _, unique_id, data = await validate_input(self.hass, user_input)
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
-                return self.async_update_reload_and_abort(reconfigure_entry, data_updates=data)
-            except exceptions.AbortFlow:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data
+                )
+            except AbortFlow:
                 raise
             except NoDeviceInfo:
                 errors[CONF_HOST] = "no_device_info"
@@ -280,7 +313,14 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=reconfigure_entry.data.get(CONF_HOST, "")): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=reconfigure_entry.data.get(CONF_HOST, ""),
+                    ): str
+                }
+            ),
             errors=errors,
         )
 
@@ -288,7 +328,9 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow."""
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Main options step."""
         errors: dict[str, str] = {}
         options = dict(self.config_entry.options)
@@ -299,27 +341,39 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
             auto_configure = user_input.get(CONF_AUTO_CONFIGURE, False)
 
             if new_mode == MODE_LOCAL_PUSH and auto_configure:
-                if not await _async_configure_device(self.hass, self.config_entry.data[CONF_HOST]):
+                if not await _async_configure_device(
+                    self.hass, self.config_entry.data[CONF_HOST]
+                ):
                     errors["base"] = "auto_configure_failed"
 
             if not errors:
-                return self.async_create_entry(title="", data={CONF_UPDATE_MODE: new_mode})
+                return self.async_create_entry(
+                    title="", data={CONF_UPDATE_MODE: new_mode}
+                )
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_UPDATE_MODE, default=current_mode): SelectSelector(
+                        vol.Required(
+                            CONF_UPDATE_MODE, default=current_mode
+                        ): SelectSelector(
                             SelectSelectorConfig(
                                 options=[
-                                    SelectOptionDict(label="Local Push", value=MODE_LOCAL_PUSH),
-                                    SelectOptionDict(label="Polling", value=MODE_POLLING),
+                                    SelectOptionDict(
+                                        label="Local Push", value=MODE_LOCAL_PUSH
+                                    ),
+                                    SelectOptionDict(
+                                        label="Polling", value=MODE_POLLING
+                                    ),
                                 ],
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
-                        vol.Optional(CONF_AUTO_CONFIGURE, default=False): BooleanSelector(),
+                        vol.Optional(
+                            CONF_AUTO_CONFIGURE, default=False
+                        ): BooleanSelector(),
                     }
                 ),
                 options,
@@ -328,5 +382,5 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class NoDeviceInfo(exceptions.HomeAssistantError):
+class NoDeviceInfo(HomeAssistantError):
     """Error to indicate we could not get info from a Wibeee device."""
