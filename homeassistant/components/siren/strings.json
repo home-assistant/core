@@ -1,17 +1,12 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
-    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more sirens are off.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::siren::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::siren::common::condition_for_name%]"
         }
@@ -21,9 +16,6 @@
     "is_on": {
       "description": "Tests if one or more sirens are on.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::siren::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::siren::common::condition_for_name%]"
         }
@@ -42,21 +34,6 @@
         "available_tones": {
           "name": "Available tones"
         }
-      }
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -93,9 +70,6 @@
     "turned_off": {
       "description": "Triggers after one or more sirens turn off.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::siren::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::siren::common::trigger_for_name%]"
         }
@@ -105,9 +79,6 @@
     "turned_on": {
       "description": "Triggers after one or more sirens turn on.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::siren::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::siren::common::trigger_for_name%]"
         }

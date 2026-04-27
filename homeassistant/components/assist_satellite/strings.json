@@ -1,17 +1,12 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
-    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_idle": {
       "description": "Tests if one or more Assist satellites are idle.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::condition_for_name%]"
         }
@@ -21,9 +16,6 @@
     "is_listening": {
       "description": "Tests if one or more Assist satellites are listening.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::condition_for_name%]"
         }
@@ -33,9 +25,6 @@
     "is_processing": {
       "description": "Tests if one or more Assist satellites are processing.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::condition_for_name%]"
         }
@@ -45,9 +34,6 @@
     "is_responding": {
       "description": "Tests if one or more Assist satellites are responding.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::condition_for_name%]"
         }
@@ -71,19 +57,6 @@
       "fields": {
         "id": "Answer ID",
         "sentences": "Sentences"
-      }
-    },
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -172,9 +145,6 @@
     "idle": {
       "description": "Triggers after one or more Assist satellites become idle after having processed a command.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
@@ -184,9 +154,6 @@
     "listening": {
       "description": "Triggers after one or more Assist satellites start listening for a command from someone.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
@@ -196,9 +163,6 @@
     "processing": {
       "description": "Triggers after one or more Assist satellites start processing a command after having heard it.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
@@ -208,9 +172,6 @@
     "responding": {
       "description": "Triggers after one or more Assist satellites start responding to a command after having processed it, or start announcing something.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }

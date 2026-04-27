@@ -8,7 +8,6 @@
       default: any
       selector:
         automation_behavior:
-          translation_key: condition_behavior
           mode: condition
 
 .humidity_threshold_entity: &humidity_threshold_entity

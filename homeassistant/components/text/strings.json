@@ -1,14 +1,8 @@
 {
-  "common": {
-    "condition_behavior_name": "Condition passes if"
-  },
   "conditions": {
     "is_equal_to": {
       "description": "Tests if one or more texts are equal to a specified value.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::text::common::condition_behavior_name%]"
-        },
         "value": {
           "description": "The value to compare the text to.",
           "name": "Value"
@@ -45,14 +39,6 @@
         "pattern": {
           "name": "Pattern"
         }
-      }
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
       }
     }
   },

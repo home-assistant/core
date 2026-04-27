@@ -1,17 +1,12 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
-    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_docked": {
       "description": "Tests if one or more lawn mowers are docked.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::condition_for_name%]"
         }
@@ -21,9 +16,6 @@
     "is_encountering_an_error": {
       "description": "Tests if one or more lawn mowers are encountering an error.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::condition_for_name%]"
         }
@@ -33,9 +25,6 @@
     "is_mowing": {
       "description": "Tests if one or more lawn mowers are mowing.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::condition_for_name%]"
         }
@@ -45,9 +34,6 @@
     "is_paused": {
       "description": "Tests if one or more lawn mowers are paused.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::condition_for_name%]"
         }
@@ -57,9 +43,6 @@
     "is_returning": {
       "description": "Tests if one or more lawn mowers are returning to the dock.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::condition_for_name%]"
         }
@@ -76,21 +59,6 @@
         "mowing": "Mowing",
         "paused": "[%key:common::state::paused%]",
         "returning": "Returning"
-      }
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -113,9 +81,6 @@
     "docked": {
       "description": "Triggers after one or more lawn mowers have returned to dock.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::trigger_for_name%]"
         }
@@ -125,9 +90,6 @@
     "errored": {
       "description": "Triggers after one or more lawn mowers encounter an error.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::trigger_for_name%]"
         }
@@ -137,9 +99,6 @@
     "paused_mowing": {
       "description": "Triggers after one or more lawn mowers pause mowing.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::trigger_for_name%]"
         }
@@ -149,9 +108,6 @@
     "started_mowing": {
       "description": "Triggers after one or more lawn mowers start mowing.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::trigger_for_name%]"
         }
@@ -161,9 +117,6 @@
     "started_returning": {
       "description": "Triggers after one or more lawn mowers start returning to dock.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::lawn_mower::common::trigger_for_name%]"
         }

@@ -3,9 +3,6 @@
     "is_option_selected": {
       "description": "Tests if one or more dropdowns have a specific option selected.",
       "fields": {
-        "behavior": {
-          "name": "Condition passes if"
-        },
         "option": {
           "description": "The options to check for.",
           "name": "Option"
@@ -49,14 +46,6 @@
   "exceptions": {
     "not_valid_option": {
       "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
     }
   },
   "services": {

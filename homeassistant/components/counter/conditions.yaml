@@ -8,7 +8,6 @@ is_value:
       default: any
       selector:
         automation_behavior:
-          translation_key: condition_behavior
           mode: condition
     threshold:
       required: true

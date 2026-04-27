@@ -4,7 +4,6 @@
     default: any
     selector:
       automation_behavior:
-        translation_key: trigger_behavior
         mode: trigger
 
 .battery_threshold_entity: &battery_threshold_entity

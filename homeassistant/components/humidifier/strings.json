@@ -1,36 +1,21 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
-    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_drying": {
       "description": "Tests if one or more humidifiers are drying.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
-        }
-      },
       "name": "Humidifier is drying"
     },
     "is_humidifying": {
       "description": "Tests if one or more humidifiers are humidifying.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
-        }
-      },
       "name": "Humidifier is humidifying"
     },
     "is_mode": {
       "description": "Tests if one or more humidifiers are set to a specific mode.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
-        },
         "mode": {
           "description": "The operation modes to check for.",
           "name": "Mode"
@@ -41,9 +26,6 @@
     "is_off": {
       "description": "Tests if one or more humidifiers are off.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::condition_for_name%]"
         }
@@ -53,9 +35,6 @@
     "is_on": {
       "description": "Tests if one or more humidifiers are on.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::condition_for_name%]"
         }
@@ -65,9 +44,6 @@
     "is_target_humidity": {
       "description": "Tests the target humidity of one or more humidifiers.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
-        },
         "threshold": {
           "name": "[%key:component::humidifier::common::condition_threshold_name%]"
         }
@@ -162,21 +138,6 @@
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "set_humidity": {
       "description": "Sets the target humidity of a humidifier.",
@@ -216,9 +177,6 @@
     "mode_changed": {
       "description": "Triggers after the operation mode of one or more humidifiers changes.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::trigger_for_name%]"
         },
@@ -232,9 +190,6 @@
     "started_drying": {
       "description": "Triggers after one or more humidifiers start drying.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::trigger_for_name%]"
         }
@@ -244,9 +199,6 @@
     "started_humidifying": {
       "description": "Triggers after one or more humidifiers start humidifying.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::trigger_for_name%]"
         }
@@ -256,9 +208,6 @@
     "turned_off": {
       "description": "Triggers after one or more humidifiers turn off.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::trigger_for_name%]"
         }
@@ -268,9 +217,6 @@
     "turned_on": {
       "description": "Triggers after one or more humidifiers turn on.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidifier::common::trigger_for_name%]"
         }

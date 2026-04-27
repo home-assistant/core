@@ -31,29 +31,11 @@
       "name": "Garage door is open"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "title": "Garage door",
   "triggers": {
     "closed": {
       "description": "Triggers after one or more garage doors close.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::garage_door::common::trigger_for_name%]"
         }
@@ -63,9 +45,6 @@
     "opened": {
       "description": "Triggers after one or more garage doors open.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::garage_door::common::trigger_for_name%]"
         }
