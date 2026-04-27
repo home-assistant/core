@@ -42,6 +42,21 @@ CONF_REGION_MAPPING = "region_mapping"
 CONF_EVENTS_ONLY = "events_only"
 BEACON_DEV_ID = "beacon"
 PLATFORMS = [Platform.DEVICE_TRACKER]
+VALID_OWNTRACKS_TYPES = frozenset(
+    {
+        "location",
+        "transition",
+        "waypoint",
+        "waypoints",
+        "encrypted",
+        "lwt",
+        "configuration",
+        "beacon",
+        "cmd",
+        "steps",
+        "card",
+    }
+)
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
@@ -171,6 +186,13 @@ async def handle_webhook(
         _LOGGER.warning("Received invalid JSON from OwnTracks")
         return web.json_response([])
 
+    msg_type = message.get("_type")
+    if msg_type not in VALID_OWNTRACKS_TYPES:
+        _LOGGER.warning(
+            "Received unsupported message type from OwnTracks: %s", msg_type
+        )
+        return web.json_response([])
+
     # Android doesn't populate topic
     if "topic" not in message:
         headers = request.headers
@@ -180,7 +202,7 @@ async def handle_webhook(
         if user:
             message["topic"] = f"{topic_base}/{user}/{device}"
 
-        elif message["_type"] != "encrypted":
+        elif msg_type != "encrypted":
             _LOGGER.warning(
                 "No topic or user found in message. If on Android,"
                 " set a username in Connection -> Identification"
@@ -202,7 +224,7 @@ async def handle_webhook(
         if "latitude" in person.attributes and "longitude" in person.attributes
     ]
 
-    if message["_type"] == "encrypted" and context.secret:
+    if msg_type == "encrypted" and context.secret:
         return web.json_response(
             {
                 "_type": "encrypted",
