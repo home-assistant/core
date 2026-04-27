@@ -215,8 +215,8 @@ async def __get_prices(
         if price_type == PriceType.ENERGY_USAGE:
             if call.data[ATTR_PRICE_TYPE] == UsagePriceType.ALL_IN.value:
                 prices = [
-                    {"timestamp": timestamp, "price": price}
-                    for timestamp, price in data.invoice_prices.items()
+                    {"timestamp": interval.starts_at, "price": interval.invoice_price}
+                    for interval in data.intervals
                 ]
             else:
                 prices = data.timestamp_prices
