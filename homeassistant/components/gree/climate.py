@@ -117,7 +117,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         e.name for e in sorted(HorizontalSwing, key=lambda x: x.value)
     ]
     _attr_name = None
-    translation_key = "climate"
+    _attr_translation_key = "climate"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
