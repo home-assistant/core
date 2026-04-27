@@ -14,6 +14,18 @@
       "dependsOn": ["Compile English translations"]
     },
     {
+      "label": "Run Home Assistant Core (Recovery Mode)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m homeassistant -c ./config --recovery-mode",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": [],
+      "dependsOn": ["Compile English translations"]
+    },
+    {
       "label": "Pytest",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest --timeout=10 tests",
