@@ -224,7 +224,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not is_wibeee:
                 return self.async_abort(reason="not_wibeee_device")
         except TimeoutError, aiohttp.ClientError:
-            return self.async_abort(reason="no_device_info")
+            return self.async_abort(reason="not_wibeee_device")
 
         self._discovered_host = host
         return await self.async_step_user()
