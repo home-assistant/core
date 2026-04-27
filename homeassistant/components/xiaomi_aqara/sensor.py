@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     LIGHT_LUX,
@@ -174,7 +173,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         name: str,
         data_key: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSensor."""
         self._data_key = data_key

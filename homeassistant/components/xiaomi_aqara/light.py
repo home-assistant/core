@@ -13,7 +13,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -52,7 +51,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         device: dict[str, Any],
         name: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiGatewayLight."""
         self._data_key = "rgb"

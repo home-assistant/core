@@ -7,7 +7,6 @@ from typing import Any
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -47,7 +46,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         device: dict[str, Any],
         name: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiAqaraLock."""
         self._attr_changed_by = "0"

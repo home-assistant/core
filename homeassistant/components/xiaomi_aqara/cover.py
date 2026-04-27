@@ -5,7 +5,6 @@ from typing import Any
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -48,7 +47,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         name: str,
         data_key: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key

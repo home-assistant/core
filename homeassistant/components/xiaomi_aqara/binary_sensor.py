@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -147,7 +146,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         xiaomi_hub: XiaomiGateway,
         data_key: str,
         device_class: BinarySensorDeviceClass | None,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
@@ -167,7 +166,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._density = None
@@ -224,7 +223,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         device: dict[str, Any],
         hass: HomeAssistant,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
@@ -333,7 +332,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
@@ -400,7 +399,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiWaterLeakSensor."""
         if "proto" not in device or int(device["proto"][0:1]) == 1:
@@ -451,7 +450,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         self,
         device: dict[str, Any],
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._density = 0
@@ -508,7 +507,7 @@ class XiaomiVibration(XiaomiBinarySensor):
         name: str,
         data_key: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiVibration."""
         self._last_action = None
@@ -556,7 +555,7 @@ class XiaomiButton(XiaomiBinarySensor):
         data_key: str,
         hass: HomeAssistant,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiButton."""
         self._hass = hass
@@ -623,7 +622,7 @@ class XiaomiCube(XiaomiBinarySensor):
         device: dict[str, Any],
         hass: HomeAssistant,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the Xiaomi Cube."""
         self._hass = hass

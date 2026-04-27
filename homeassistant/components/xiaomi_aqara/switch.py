@@ -6,7 +6,6 @@ from typing import Any
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -145,7 +144,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         data_key: str,
         supports_power_consumption: bool,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiPlug."""
         self._data_key = data_key
