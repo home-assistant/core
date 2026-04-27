@@ -2,13 +2,21 @@
 
 import argparse
 from pathlib import Path
-import subprocess
+import runpy
 import sys
 
 from script.util import valid_integration
 
 from . import docs, error, gather_info, generate
 from .model import Info
+
+
+class _ProcessError(Exception):
+    """Raised when a sub-process exits with a non-zero return code."""
+
+    def __init__(self, returncode: int) -> None:
+        self.returncode = returncode
+        super().__init__(f"Process failed with exit code {returncode}")
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
@@ -30,27 +38,41 @@ def get_arguments() -> argparse.Namespace:
 
 
 def run_process(name: str, cmd: list[str], info: Info) -> None:
-    """Run a sub process and handle the result.
+    """Run a Python module command and handle the result.
 
-    :param name: The name of the sub process used in reporting.
-    :param cmd: The sub process arguments.
+    :param name: The name of the command used in reporting.
+    :param cmd: The command arguments (must be a ``python -m <module> [args]`` invocation).
     :param info: The Info object.
-    :raises subprocess.CalledProcessError: If the subprocess failed.
+    :raises _ProcessError: If the command failed.
 
-    If the sub process was successful print a success message, otherwise
-    print an error message and raise a subprocess.CalledProcessError.
+    If the command was successful print a success message, otherwise
+    print an error message and raise a _ProcessError.
     """
     print(f"Command: {' '.join(cmd)}")
     print()
-    result: subprocess.CompletedProcess = subprocess.run(cmd, check=False)
-    if result.returncode == 0:
+
+    m_idx = cmd.index("-m") if "-m" in cmd else -1
+    module = cmd[m_idx + 1] if m_idx >= 0 else cmd[0]
+    module_args = cmd[m_idx + 2:] if m_idx >= 0 else cmd[1:]
+
+    old_argv = sys.argv
+    sys.argv = [module, *module_args]
+    try:
+        runpy.run_module(module, run_name="__main__", alter_sys=True)
+        returncode = 0
+    except SystemExit as exc:
+        returncode = int(exc.code) if exc.code is not None else 0
+    finally:
+        sys.argv = old_argv
+
+    if returncode == 0:
         print()
         print(f"Completed {name} successfully.")
         print()
         return
 
     print()
-    print(f"Fatal Error: {name} failed with exit code {result.returncode}")
+    print(f"Fatal Error: {name} failed with exit code {returncode}")
     print()
     if info.is_new:
         print("This is a bug, please report an issue!")
@@ -60,7 +82,7 @@ def run_process(name: str, cmd: list[str], info: Info) -> None:
             "if so fix and run `script.scaffold` again,",
             "otherwise please report an issue.",
         )
-    result.check_returncode()
+    raise _ProcessError(returncode)
 
 
 def main() -> int:
@@ -159,7 +181,7 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except subprocess.CalledProcessError as err:
+    except _ProcessError as err:
         sys.exit(err.returncode)
     except error.ExitApp as err:
         print()
