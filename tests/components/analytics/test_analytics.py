@@ -42,6 +42,8 @@ from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from . import MOCK_SNAPSHOT_PAYLOAD_HASH
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -1523,6 +1525,10 @@ async def test_send_snapshot_success(
     await analytics.send_snapshot()
 
     assert len(aioclient_mock.mock_calls) == 1
+    call_headers = aioclient_mock.mock_calls[0][3]
+    assert (
+        call_headers["X-Device-Database-Submission-Hash"] == MOCK_SNAPSHOT_PAYLOAD_HASH
+    )
 
     preferences = await analytics._store.async_load()
     assert preferences["submission_identifier"] == "test-identifier-123"

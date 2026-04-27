@@ -7,6 +7,7 @@ from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
+import hashlib
 import random
 import time
 from typing import Any, Protocol
@@ -47,6 +48,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.json import json_bytes_sorted
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
@@ -540,6 +542,7 @@ class Analytics:
         headers = {
             "Content-Type": "application/json",
             "User-Agent": f"home-assistant/{HA_VERSION}",
+            "X-Device-Database-Submission-Hash": _snapshot_payload_hash(payload),
         }
         if self._data.submission_identifier is not None:
             headers["X-Device-Database-Submission-Identifier"] = (
@@ -936,6 +939,19 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
             entities_info.append(entity_info)
 
     return integrations_info
+
+
+def _snapshot_payload_hash(payload: dict[str, Any]) -> str:
+    """Compute the snapshot submission hash.
+
+    Integration-level entities are excluded since they are ignored server-side.
+    Keys are sorted so the hash is robust against accidental dict ordering
+    changes in the payload.
+    """
+    hash_input = {
+        domain: {"devices": info["devices"]} for domain, info in payload.items()
+    }
+    return hashlib.sha256(json_bytes_sorted(hash_input)).hexdigest()
 
 
 async def async_devices_payload(hass: HomeAssistant) -> dict:

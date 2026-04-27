@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-MOCK_SNAPSHOT_PAYLOAD = {"mock_integration": {"devices": [], "entities": []}}
+from . import MOCK_SNAPSHOT_PAYLOAD
 
 
 @pytest.fixture
