@@ -127,7 +127,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_CO,
-        translation_key="co",
+        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -178,7 +178,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airly sensor entities based on a config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME) or entry.title
 
     coordinator = entry.runtime_data
 

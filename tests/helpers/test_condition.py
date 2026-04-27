@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import io
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -1146,6 +1147,11 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
+        "sensor.uptime_am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+    )
+    hass.states.async_set(
         "sensor.no_device_class",
         "2020-06-01 01:00:00.000000+00:00",
     )
@@ -1167,6 +1173,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.uptime_am", before="sensor.pm")
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
@@ -4441,13 +4448,13 @@ async def test_compound_condition_forwards_async_unload(
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
 
-    # The compound checker should hold child checkers
-    assert hasattr(test, "_checks")
-    assert len(test._checks) == 2
+    # The compound checker should hold child conditions
+    assert hasattr(test, "_conditions")
+    assert len(test._conditions) == 2
 
     test.async_unload()
 
-    for child in test._checks:
+    for child in test._conditions:
         child.async_unload.assert_called_once()
 
 
@@ -4479,12 +4486,68 @@ async def test_nested_compound_condition_forwards_async_unload(
     test = await condition.async_from_config(hass, config)
 
     # Outer compound with 2 children: an inner compound and a leaf
-    assert len(test._checks) == 2
-    inner_checker = test._checks[0]
-    assert hasattr(inner_checker, "_checks")
-    assert len(inner_checker._checks) == 1
+    assert len(test._conditions) == 2
+    inner_checker = test._conditions[0]
+    assert hasattr(inner_checker, "_conditions")
+    assert len(inner_checker._conditions) == 1
 
     test.async_unload()
 
-    test._checks[0]._checks[0].async_unload.assert_called_once()
-    test._checks[1].async_unload.assert_called_once()
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
+    test._conditions[1].async_unload.assert_called_once()
+
+
+async def test_conditions_from_config_forwards_async_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_conditions_from_config forwards async_unload to children."""
+    await _setup_mock_integration(hass)
+    configs = [
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+
+    assert hasattr(test, "_conditions")
+    assert len(test._conditions) == 2
+
+    test.async_unload()
+
+    for child in test._conditions:
+        child.async_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "inner_type",
+    ["and", "or", "not"],
+)
+async def test_conditions_from_config_nested_forwards_async_unload(
+    hass: HomeAssistant, inner_type: str
+) -> None:
+    """Test that async_conditions_from_config forwards async_unload recursively."""
+    await _setup_mock_integration(hass)
+    configs = [
+        await condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": inner_type,
+                "conditions": [{"condition": "test"}],
+            },
+        ),
+        await condition.async_validate_condition_config(hass, {"condition": "test"}),
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+
+    assert len(test._conditions) == 2
+    inner_checker = test._conditions[0]
+    assert hasattr(inner_checker, "_conditions")
+    assert len(inner_checker._conditions) == 1
+
+    test.async_unload()
+
+    test._conditions[0]._conditions[0].async_unload.assert_called_once()
+    test._conditions[1].async_unload.assert_called_once()
