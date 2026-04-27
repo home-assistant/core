@@ -98,6 +98,7 @@ _PLATFORM_ALIASES = {
     "state": "homeassistant",
     "time_pattern": "homeassistant",
     "time": "homeassistant",
+    "event_entity": "homeassistant",
 }
 
 DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = HassKey(
