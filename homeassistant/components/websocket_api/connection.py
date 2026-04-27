@@ -289,6 +289,8 @@ class ActiveConnection:
         translation_key: str | None = None
         translation_placeholders: dict[str, Any] | None = None
 
+        msg = async_redact_data(msg, REDACT_KEYS)
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
@@ -327,5 +329,4 @@ class ActiveConnection:
             err_message += f" ({code})"
         err_message += " " + self.get_description(current_request.get())
 
-        err_message = async_redact_data(err_message, REDACT_KEYS)
         log_handler("Error handling message: %s", err_message)
