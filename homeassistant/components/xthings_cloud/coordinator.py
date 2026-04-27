@@ -46,41 +46,42 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.devices: list[dict[str, Any]] = []
         self.websocket: XthingsCloudWebSocket | None = None
 
-    async def _async_refresh_token(self) -> bool:
-        """Try to refresh token using refresh_token."""
+    async def _async_ensure_token_valid(self) -> None:
+        """Ensure the token is valid, refresh if expired.
+
+        Raises ConfigEntryAuthFailed if refresh fails.
+        """
+        if not self.client.is_token_expired():
+            return
         try:
             token_data = await self.client.async_refresh_token(
                 self.config_entry.data[CONF_REFRESH_TOKEN]
             )
-        except XthingsCloudAuthError:
-            return False
-        else:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={
-                    **self.config_entry.data,
-                    CONF_TOKEN: token_data["token"],
-                    CONF_REFRESH_TOKEN: token_data["refresh_token"],
-                },
-            )
-            return True
+        except XthingsCloudAuthError as err:
+            raise ConfigEntryAuthFailed(
+                "Token expired and refresh failed, re-authentication required"
+            ) from err
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data={
+                **self.config_entry.data,
+                CONF_TOKEN: token_data["token"],
+                CONF_REFRESH_TOKEN: token_data["refresh_token"],
+            },
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest device data from cloud."""
-        if self.client.is_token_expired():
-            if not await self._async_refresh_token():
-                raise ConfigEntryAuthFailed(
-                    "Token expired and refresh failed, re-authentication required"
-                )
+        await self._async_ensure_token_valid()
         try:
             self.devices = await self.client.async_get_devices()
-            return {device["id"]: device for device in self.devices}
         except XthingsCloudAuthError as err:
             raise ConfigEntryAuthFailed(
                 "Invalid token, re-authentication required"
             ) from err
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
+        return {device["id"]: device for device in self.devices}
 
     async def async_start_websocket(self) -> None:
         """Start WebSocket connection."""
@@ -118,11 +119,13 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _handle_ws_token_expired(self) -> None:
         """Handle WebSocket auth expiry, refresh token."""
-        if await self._async_refresh_token():
-            new_token = self.config_entry.data[CONF_TOKEN]
-            self.client.token = new_token
-            if self.websocket:
-                self.websocket.token = new_token
-            LOGGER.info("WebSocket token refreshed successfully")
-        else:
+        try:
+            await self._async_ensure_token_valid()
+        except ConfigEntryAuthFailed:
             LOGGER.error("WebSocket token refresh failed")
+            return
+        new_token = self.config_entry.data[CONF_TOKEN]
+        self.client.token = new_token
+        if self.websocket:
+            self.websocket.token = new_token
+        LOGGER.info("WebSocket token refreshed successfully")

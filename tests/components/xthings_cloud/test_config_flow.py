@@ -5,10 +5,12 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
+import pytest
 
 from homeassistant.components.xthings_cloud.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
+    CONF_REFRESH_TOKEN,
     CONF_TOKEN,
     DOMAIN,
 )
@@ -18,10 +20,13 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MOCK_EMAIL = "appdev@u-tec.com"
-MOCK_PASSWORD = "Welcome@2022"
-MOCK_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcHBfaWQiOiIxMmE0MmNhZjdkYmI0N2JiYTAxNjM1YzQ4YzQ0YWU1ZiIsInZlcnNpb24iOiIxLjAuMCIsImF1ZCI6Inh0aGluZ3MtNWVhOTlkYTktODIxZC1kYWEyLWNiYjQtNWY2ZjZlM2U1MWRkIiwidXNlcl91dWlkIjoiMDJjN2JhZGYyYjNkNDRkOTUzYjQ4YjU3OWViOWVlYjUiLCJpc3MiOiJjbG91ZC51LXRlYy5jb20iLCJpYXQiOjE3NzY2NTM1MzQsIm5iZiI6MTc3NjY1MzUyNCwiZXhwIjoxNzc3MjU4MzM0fQ.5MU6NiatOOHbX_4Qw2Br4anLi4aPxtvWxML38MgqB9w"
-MOCK_REFRESH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX3V1aWQiOiIwMmM3YmFkZjJiM2Q0NGQ5NTNiNDhiNTc5ZWI5ZWViNSIsImlzcyI6ImNsb3VkLnUtdGVjLmNvbSIsImlhdCI6MTc3NjY1MzUzNCwibmJmIjoxNzc2NjUzNTI0LCJleHAiOjE3NzkyNDU1MzR9.14qnBK9_dUIOaWzWvtewApO1qk3QJiHxOtc-CObT3IM"
+from .const import (
+    MOCK_EMAIL,
+    MOCK_PASSWORD,
+    MOCK_REFRESH_TOKEN,
+    MOCK_TOKEN,
+    MOCK_USER_ID,
+)
 
 
 async def test_user_flow_success(
@@ -43,19 +48,34 @@ async def test_user_flow_success(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_EMAIL
-    assert result["data"][CONF_EMAIL] == MOCK_EMAIL
-    assert result["data"][CONF_TOKEN] == MOCK_TOKEN
+    assert result["result"].unique_id == MOCK_USER_ID
+    assert result["data"] == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_TOKEN: MOCK_TOKEN,
+        CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
+    }
 
 
-async def test_user_flow_auth_error(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (XthingsCloudAuthError("Auth failed", code=21014), "password_wrong"),
+        (XthingsCloudApiError("API error", code=22001), "device_not_found"),
+        (XthingsCloudApiError("Connection failed", code=0), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+)
+async def test_user_flow_error_and_recover(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_instance_id: None,
+    mock_login_success: dict,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test user flow with auth error."""
-    mock_api_client.async_login.side_effect = XthingsCloudAuthError(
-        "Auth failed", code=21014
-    )
+    """Test user flow shows error then recovers on retry."""
+    mock_api_client.async_login.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -64,65 +84,23 @@ async def test_user_flow_auth_error(
         {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "password_wrong"
+    assert result["errors"]["base"] == expected_error
 
-
-async def test_user_flow_api_error(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_instance_id: None,
-) -> None:
-    """Test user flow with API error."""
-    mock_api_client.async_login.side_effect = XthingsCloudApiError(
-        "API error", code=22001
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    # Recover: repatch to succeed
+    mock_api_client.async_login.side_effect = None
+    mock_api_client.async_login.return_value = mock_login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "device_not_found"
-
-
-async def test_user_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_instance_id: None,
-) -> None:
-    """Test user flow with connection error (code=0)."""
-    mock_api_client.async_login.side_effect = XthingsCloudApiError(
-        "Connection failed", code=0
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_user_flow_unknown_error(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_instance_id: None,
-) -> None:
-    """Test user flow with unexpected exception."""
-    mock_api_client.async_login.side_effect = RuntimeError("unexpected")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_EMAIL
+    assert result["result"].unique_id == MOCK_USER_ID
+    assert result["data"] == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_TOKEN: MOCK_TOKEN,
+        CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
+    }
 
 
 async def test_user_flow_already_configured(

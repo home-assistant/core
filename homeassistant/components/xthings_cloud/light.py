@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light platform."""
-    coordinator: XthingsCloudCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     entities = [
         XthingsCloudLight(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
@@ -79,9 +79,9 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the light is on."""
-        return self.device_data["status"].get("on")
+        return self.device_data["status"]["on"]
 
     @property
     def brightness(self) -> int | None:

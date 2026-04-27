@@ -32,7 +32,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: XthingsCloudConfigEntry
 ) -> bool:
     """Unload config entry."""
-    coordinator: XthingsCloudCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await coordinator.async_stop_websocket()
     return unload_ok
