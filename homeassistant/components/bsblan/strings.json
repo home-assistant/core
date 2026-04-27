@@ -163,8 +163,8 @@
       "description": "Sets the heating schedule for a BSB-LAN heating circuit.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::device_id::description%]",
-          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::device_id::name%]"
+          "description": "The heating circuit sub-device to configure.",
+          "name": "Heating circuit"
         },
         "friday_slots": {
           "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::friday_slots::description%]",
