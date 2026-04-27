@@ -71,19 +71,6 @@ async def _login_and_fetch_site_info(
     return site_info.site_name, gateway_din
 
 
-def _is_synthetic_unique_id(unique_id: str) -> bool:
-    """Return True if the unique_id was synthesized by us.
-
-    Real Powerwall DINs are short alphanumeric strings; the synthetic forms we
-    produce are dotted IPs (legacy) or 64-character hex digests (restricted
-    PW3 gateways). Anything else is treated as a real DIN and must not be
-    silently overwritten by DHCP discovery.
-    """
-    if is_ip_address(unique_id):
-        return True
-    return len(unique_id) == 64 and all(c in "0123456789abcdef" for c in unique_id)
-
-
 async def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
     """Check if the powerwall is reachable."""
     try:
@@ -165,11 +152,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(gateway_din)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_IP_ADDRESS] == discovery_info.ip:
-                if (
-                    entry.unique_id is not None
-                    and entry.unique_id != gateway_din
-                    and _is_synthetic_unique_id(entry.unique_id)
-                ):
+                if entry.unique_id is not None and is_ip_address(entry.unique_id):
                     if self.hass.config_entries.async_update_entry(
                         entry, unique_id=gateway_din
                     ):
