@@ -132,6 +132,30 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     VERSION = 1
     _discovered_host: str | None = None
     _discovered_controller_uid: str | None = None
+    _user_discovered_controllers: dict[str, pizone.Controller] | None = None
+
+    @callback
+    def _async_get_unconfigured_controllers(
+        self, controllers: dict[str, pizone.Controller]
+    ) -> dict[str, pizone.Controller]:
+        """Return discovered controllers that do not already have config entries."""
+        configured_uids = self._async_current_ids(include_ignore=False)
+        return {
+            controller.device_ip: controller
+            for controller in controllers.values()
+            if controller.device_uid not in configured_uids
+        }
+
+    async def _async_create_controller_entry(
+        self, controller: pizone.Controller
+    ) -> ConfigFlowResult:
+        """Create a config entry for a discovered controller."""
+        await self.async_set_unique_id(controller.device_uid)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: controller.device_ip})
+        return self.async_create_entry(
+            title=f"iZone {controller.device_uid}",
+            data={CONF_HOST: controller.device_ip},
+        )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
@@ -159,20 +183,47 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                     _LOGGER.debug("No controllers found")
                     return self.async_abort(reason="no_devices_found")
 
-                controller = next(iter(controllers.values()))
-                await self.async_set_unique_id(controller.device_uid)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: controller.device_ip}
+                self._user_discovered_controllers = (
+                    self._async_get_unconfigured_controllers(controllers)
                 )
-                return self.async_create_entry(
-                    title=f"iZone {controller.device_uid}",
-                    data={CONF_HOST: controller.device_ip},
+                if not self._user_discovered_controllers:
+                    return self.async_abort(reason="already_configured")
+                if len(self._user_discovered_controllers) > 1:
+                    return await self.async_step_select_controller()
+
+                return await self._async_create_controller_entry(
+                    next(iter(self._user_discovered_controllers.values()))
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
             errors=errors,
+        )
+
+    async def async_step_select_controller(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select a controller when multiple unconfigured controllers are discovered."""
+        if not self._user_discovered_controllers:
+            return self.async_abort(reason="no_devices_found")
+
+        if user_input is not None:
+            controller = self._user_discovered_controllers[user_input[CONF_HOST]]
+            return await self._async_create_controller_entry(controller)
+
+        return self.async_show_form(
+            step_id="select_controller",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): vol.In(
+                        {
+                            host: f"{controller.device_uid} ({host})"
+                            for host, controller in self._user_discovered_controllers.items()
+                        }
+                    )
+                }
+            ),
         )
 
     async def async_step_homekit(
@@ -204,8 +255,11 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             ):
                 self._discovered_host = host
 
+            discovered_host = self._discovered_host or host
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: self._discovered_host or host}
+                updates={CONF_HOST: discovered_host}
+                if discovered_host is not None
+                else {}
             )
             self.context["title_placeholders"] = {"name": model}
         else:
@@ -242,20 +296,17 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
 
         controllers = await _async_discover_controllers(self.hass)
         if controllers:
-            controller = (
-                controllers[self._discovered_controller_uid]
-                if self._discovered_controller_uid
-                and self._discovered_controller_uid in controllers
-                else next(iter(controllers.values()))
-            )
-            await self.async_set_unique_id(controller.device_uid)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: controller.device_ip}
-            )
-            return self.async_create_entry(
-                title=f"iZone {controller.device_uid}",
-                data={CONF_HOST: controller.device_ip},
-            )
+            if self._discovered_controller_uid:
+                controller = controllers.get(self._discovered_controller_uid)
+                if controller is None:
+                    _LOGGER.debug(
+                        "Discovered controller UID %s was not found during confirmation",
+                        self._discovered_controller_uid,
+                    )
+                    return self.async_abort(reason="no_devices_found")
+            else:
+                controller = next(iter(controllers.values()))
+            return await self._async_create_controller_entry(controller)
 
         _LOGGER.debug("No controllers found")
         return self.async_abort(reason="no_devices_found")
