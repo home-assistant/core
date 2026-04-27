@@ -139,7 +139,11 @@ def mock_wibeee_api() -> Generator[MagicMock]:
                 "fase1": {
                     "vrms": "230.5",
                     "p_activa": "277",
-                }
+                },
+                "fase4": {
+                    "vrms": "230.5",
+                    "p_activa": "277",
+                },
             }
         )
         api.async_configure_push_server = AsyncMock(return_value=True)

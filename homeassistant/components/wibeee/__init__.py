@@ -80,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
         coordinator = WibeeeCoordinator(
             hass,
             api,
+            config_entry=entry,
             name=f"Wibeee {device_info.mac_addr_short}",
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
@@ -89,6 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
         coordinator = WibeeeCoordinator(
             hass,
             api,
+            config_entry=entry,
             name=f"Wibeee {device_info.mac_addr_short}",
             update_interval=None,
         )
