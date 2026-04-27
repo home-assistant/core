@@ -193,11 +193,11 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                     OPENALPR_API_URL, params=params, data=body
                 )
 
-                data = await request.json()
-
                 if request.status != HTTPStatus.OK:
-                    _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
+                    _LOGGER.error("Error %d", request.status)
                     return
+
+                data = await request.json(content_type=None)
 
         except TimeoutError, aiohttp.ClientError:
             _LOGGER.error("Timeout for OpenALPR API")
