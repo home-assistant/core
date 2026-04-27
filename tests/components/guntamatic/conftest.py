@@ -11,9 +11,9 @@ from homeassistant.const import CONF_HOST
 from tests.common import MockConfigEntry
 
 MOCK_DATA = {
-    "Boiler Temperature": ["14.09", "°C"],
-    "Outdoor Temperature": ["15.95", "°C"],
-    "Buffer Load": ["22", "%"],
+    "Boiler temperature": ["14.09", "°C"],
+    "Outdoor temperature": ["15.95", "°C"],
+    "Buffer load": ["22", "%"],
     "Program": ["HEAT", ""],
     "Status": ["Service Ign.", ""],
     "Serial": ["959103", ""],
