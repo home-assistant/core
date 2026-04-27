@@ -1,6 +1,6 @@
 """Tests for the iCloud account."""
 
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from pyicloud.exceptions import PyiCloudAuthRequiredException
 import pytest
@@ -254,13 +254,14 @@ async def test_setup_auth_required_exception_from_devices_calls_reauth(
     """
     account = _make_account(hass, mock_store)
 
+    class _DevicesAuthError:
+        @property
+        def user_info(self):
+            raise PyiCloudAuthRequiredException("test@example.com", MagicMock())
+
     service_instance = MagicMock()
     service_instance.requires_2fa = False
-    devices_mock = MagicMock()
-    type(devices_mock).user_info = PropertyMock(
-        side_effect=PyiCloudAuthRequiredException("test@example.com", MagicMock())
-    )
-    service_instance.devices = devices_mock
+    service_instance.devices = _DevicesAuthError()
 
     with (
         patch(
