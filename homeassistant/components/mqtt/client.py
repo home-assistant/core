@@ -698,9 +698,9 @@ class MQTT:
         message_expiry_interval: int | None = None,
     ) -> None:
         """Publish a MQTT message."""
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
-
         if message_expiry_interval is not None:
+            import paho.mqtt.client as mqtt  # noqa: PLC0415
+
             if (
                 protocol := self.conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
             ) != PROTOCOL_5:

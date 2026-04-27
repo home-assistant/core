@@ -34,6 +34,8 @@ publish:
       selector:
         number:
           min: 0
+          step: 1
+          unit_of_measurement: "seconds"
 
 dump:
   fields:

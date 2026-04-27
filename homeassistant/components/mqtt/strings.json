@@ -1100,7 +1100,7 @@
       "message": "Error talking to MQTT: {error_message}."
     },
     "mqtt_message_expiry_interval_not_supported": {
-      "message": "Publishing to topic {topic} with a Message Exiry Interval is not supported with protocol version {protocol}."
+      "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
     },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
@@ -1550,7 +1550,7 @@
           "name": "Evaluate payload"
         },
         "message_expiry_interval": {
-          "description": "Expires a publish message after the interval in case the device subscriber was temporary offline, or the message was set as a retained message. Only supported with MQTT protocol version 5.0.",
+          "description": "Expires a publish message after the interval in case the device subscriber was temporarily offline, or the message was set as a retained message. Only supported with MQTT protocol version 5.0.",
           "name": "Message Expiry Interval"
         },
         "payload": {
