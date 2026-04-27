@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Generator
 from contextlib import nullcontext
+import json
 from unittest.mock import MagicMock, patch
 
 from peblar import (
@@ -134,4 +134,3 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return mock_config_entry
-

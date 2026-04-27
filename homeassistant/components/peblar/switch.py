@@ -95,26 +95,28 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar switch based on a config entry."""
-    async_add_entities([
-        *[
-            PeblarSwitchEntity(
-                entry=entry,
-                coordinator=entry.runtime_data.data_coordinator,
-                description=description,
-            )
-            for description in DATA_DESCRIPTIONS
-            if description.has_fn(entry.runtime_data)
-        ],
-        *[
-            PeblarUserConfigSwitchEntity(
-                entry=entry,
-                coordinator=entry.runtime_data.user_configuration_coordinator,
-                description=description,
-            )
-            for description in USER_CONFIG_DESCRIPTIONS
-            if description.has_fn(entry.runtime_data)
-        ],
-    ])
+    async_add_entities(
+        [
+            *[
+                PeblarSwitchEntity(
+                    entry=entry,
+                    coordinator=entry.runtime_data.data_coordinator,
+                    description=description,
+                )
+                for description in DATA_DESCRIPTIONS
+                if description.has_fn(entry.runtime_data)
+            ],
+            *[
+                PeblarUserConfigSwitchEntity(
+                    entry=entry,
+                    coordinator=entry.runtime_data.user_configuration_coordinator,
+                    description=description,
+                )
+                for description in USER_CONFIG_DESCRIPTIONS
+                if description.has_fn(entry.runtime_data)
+            ],
+        ]
+    )
 
 
 class PeblarSwitchEntity(
