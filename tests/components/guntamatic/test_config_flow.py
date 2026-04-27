@@ -87,7 +87,7 @@ async def test_form_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_heater: MagicMock,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
