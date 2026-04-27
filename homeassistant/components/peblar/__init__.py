@@ -24,6 +24,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
@@ -43,6 +44,12 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Peblar domain."""
+    _async_register_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
@@ -88,10 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
 
     # Forward the setup to the platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register RFID services once (shared across all entries)
-    if not hass.services.has_service(DOMAIN, "list_rfid_tokens"):
-        _async_register_services(hass)
 
     return True
 
@@ -164,9 +167,4 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Unload Peblar config entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded and not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.services.async_remove(DOMAIN, "list_rfid_tokens")
-        hass.services.async_remove(DOMAIN, "add_rfid_token")
-        hass.services.async_remove(DOMAIN, "remove_rfid_token")
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

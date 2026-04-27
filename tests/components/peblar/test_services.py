@@ -12,19 +12,6 @@ from homeassistant.exceptions import ServiceValidationError
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_peblar: MagicMock,
-) -> MockConfigEntry:
-    """Set up the Peblar integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry
-
-
 async def test_services_registered_on_setup(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -33,19 +20,6 @@ async def test_services_registered_on_setup(
     assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
     assert hass.services.has_service(DOMAIN, "add_rfid_token")
     assert hass.services.has_service(DOMAIN, "remove_rfid_token")
-
-
-async def test_services_removed_on_last_unload(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test RFID services removed when last entry unloads."""
-    await hass.config_entries.async_unload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not hass.services.has_service(DOMAIN, "list_rfid_tokens")
-    assert not hass.services.has_service(DOMAIN, "add_rfid_token")
-    assert not hass.services.has_service(DOMAIN, "remove_rfid_token")
 
 
 async def test_services_not_removed_while_other_entry_loaded(
