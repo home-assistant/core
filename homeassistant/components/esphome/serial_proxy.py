@@ -20,8 +20,6 @@ from homeassistant.core import HomeAssistant, async_get_hass
 from .const import DOMAIN
 from .entry_data import ESPHomeConfigEntry
 
-SCHEME = "esphome-hass://"
-
 # This is required so that serialx can safely query Core for an instance of an
 # aioesphomeapi client. We cannot make any assumptions here, some packages run separate
 # asyncio event loops in dedicated threads.
@@ -106,8 +104,8 @@ class HassESPHomeSerialTransport(ESPHomeSerialTransport):
 
 
 register_uri_handler(
-    scheme=SCHEME,
-    unique_scheme=SCHEME,
+    scheme="esphome-hass://",
+    unique_scheme="esphome-hass-internal://",  # The unique scheme must differ
     sync_cls=HassESPHomeSerial,
     async_transport_cls=HassESPHomeSerialTransport,
 )
