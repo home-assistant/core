@@ -14,31 +14,31 @@
     "climate": {
       "climate": {
         "state_attributes": {
-          "swing_mode": {
-            "state": {
-              "Default": "Default",
-              "FullSwing": "Full swing",
-              "FixedUpper": "Fixed upper",
-              "FixedUpperMiddle": "Fixed upper middle",
-              "FixedMiddle": "Fixed middle",
-              "FixedLowerMiddle": "Fixed lower middle",
-              "FixedLower": "Fixed lower",
-              "SwingUpper": "Swing upper",
-              "SwingUpperMiddle": "Swing upper middle",
-              "SwingMiddle": "Swing middle",
-              "SwingLowerMiddle": "Swing lower middle",
-              "SwingLower": "Swing lower"
-            }
-          },
           "swing_horizontal_mode": {
             "state": {
-              "Default": "Default",
-              "FullSwing": "Full swing",
-              "Left": "Left",
-              "LeftCenter": "Left center",
-              "Center": "Center",
-              "RightCenter": "Right center",
-              "Right": "Right"
+              "center": "Center",
+              "default": "Default",
+              "full_swing": "Full swing",
+              "left": "Left",
+              "left_center": "Left center",
+              "right": "Right",
+              "right_center": "Right center"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "default": "Default",
+              "fixed_lower": "Fixed lower",
+              "fixed_lower_middle": "Fixed lower middle",
+              "fixed_middle": "Fixed middle",
+              "fixed_upper": "Fixed upper",
+              "fixed_upper_middle": "Fixed upper middle",
+              "full_swing": "Full swing",
+              "swing_lower": "Swing lower",
+              "swing_lower_middle": "Swing lower middle",
+              "swing_middle": "Swing middle",
+              "swing_upper": "Swing upper",
+              "swing_upper_middle": "Swing upper middle"
             }
           }
         }

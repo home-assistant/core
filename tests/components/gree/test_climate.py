@@ -42,8 +42,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.gree.climate import (
     FAN_MODES_REVERSE,
+    HORIZONTAL_SWING_MODES_REVERSE,
     HVAC_MODES,
     HVAC_MODES_REVERSE,
+    VERTICAL_SWING_MODES_REVERSE,
     GreeClimateEntity,
 )
 from homeassistant.components.gree.const import (
@@ -787,7 +789,7 @@ async def test_update_fan_mode(
 
 @pytest.mark.parametrize(
     "swing_mode",
-    ["Default", "FullSwing", "FixedUpper", "FixedLower"],
+    ["default", "full_swing", "fixed_upper", "fixed_lower"],
 )
 async def test_send_swing_mode(
     hass: HomeAssistant, discovery, device, swing_mode: str
@@ -826,7 +828,7 @@ async def test_send_invalid_swing_mode(hass: HomeAssistant, discovery, device) -
 
 @pytest.mark.parametrize(
     "swing_mode",
-    ["Default", "FullSwing", "FixedUpper", "FixedLower"],
+    ["default", "full_swing", "fixed_upper", "fixed_lower"],
 )
 async def test_send_swing_mode_device_timeout(
     hass: HomeAssistant, discovery, device, swing_mode: str
@@ -862,12 +864,12 @@ async def test_update_swing_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_SWING_MODE) == vertical_swing.name
+    assert state.attributes.get(ATTR_SWING_MODE) == VERTICAL_SWING_MODES_REVERSE[vertical_swing]
 
 
 @pytest.mark.parametrize(
     "swing_horizontal_mode",
-    ["Default", "FullSwing", "Left", "Right"],
+    ["default", "full_swing", "left", "right"],
 )
 async def test_send_swing_horizontal_mode(
     hass: HomeAssistant, discovery, device, swing_horizontal_mode: str
@@ -908,7 +910,7 @@ async def test_send_invalid_swing_horizontal_mode(
 
 @pytest.mark.parametrize(
     "swing_horizontal_mode",
-    ["Default", "FullSwing", "Left", "Right"],
+    ["default", "full_swing", "left", "right"],
 )
 async def test_send_swing_horizontal_mode_device_timeout(
     hass: HomeAssistant, discovery, device, swing_horizontal_mode: str
@@ -944,7 +946,7 @@ async def test_update_swing_horizontal_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == horizontal_swing.name
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == HORIZONTAL_SWING_MODES_REVERSE[horizontal_swing]
 
 
 async def test_swing_mode_unknown_device_value(

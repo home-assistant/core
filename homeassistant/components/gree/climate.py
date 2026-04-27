@@ -75,6 +75,38 @@ FAN_MODES = {
 }
 FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
 
+VERTICAL_SWING_MODES: dict[str, VerticalSwing] = {
+    "default": VerticalSwing.Default,
+    "full_swing": VerticalSwing.FullSwing,
+    "fixed_upper": VerticalSwing.FixedUpper,
+    "fixed_upper_middle": VerticalSwing.FixedUpperMiddle,
+    "fixed_middle": VerticalSwing.FixedMiddle,
+    "fixed_lower_middle": VerticalSwing.FixedLowerMiddle,
+    "fixed_lower": VerticalSwing.FixedLower,
+    "swing_upper": VerticalSwing.SwingUpper,
+    "swing_upper_middle": VerticalSwing.SwingUpperMiddle,
+    "swing_middle": VerticalSwing.SwingMiddle,
+    "swing_lower_middle": VerticalSwing.SwingLowerMiddle,
+    "swing_lower": VerticalSwing.SwingLower,
+}
+VERTICAL_SWING_MODES_REVERSE: dict[VerticalSwing, str] = {
+    v: k for k, v in VERTICAL_SWING_MODES.items()
+}
+
+HORIZONTAL_SWING_MODES: dict[str, HorizontalSwing] = {
+    "default": HorizontalSwing.Default,
+    "full_swing": HorizontalSwing.FullSwing,
+    "left": HorizontalSwing.Left,
+    "left_center": HorizontalSwing.LeftCenter,
+    "center": HorizontalSwing.Center,
+    "right_center": HorizontalSwing.RightCenter,
+    "right": HorizontalSwing.Right,
+}
+HORIZONTAL_SWING_MODES_REVERSE: dict[HorizontalSwing, str] = {
+    v: k for k, v in HORIZONTAL_SWING_MODES.items()
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeConfigEntry,
@@ -112,10 +144,8 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
     _attr_fan_modes = [*FAN_MODES_REVERSE]
-    _attr_swing_modes = [e.name for e in sorted(VerticalSwing, key=lambda x: x.value)]
-    _attr_swing_horizontal_modes = [
-        e.name for e in sorted(HorizontalSwing, key=lambda x: x.value)
-    ]
+    _attr_swing_modes = [*VERTICAL_SWING_MODES]
+    _attr_swing_horizontal_modes = [*HORIZONTAL_SWING_MODES]
     _attr_name = None
     _attr_translation_key = "climate"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -264,7 +294,9 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def swing_mode(self) -> str | None:
         """Return the current vertical swing mode for the device."""
         try:
-            return VerticalSwing(self.coordinator.device.vertical_swing).name
+            return VERTICAL_SWING_MODES_REVERSE[
+                VerticalSwing(self.coordinator.device.vertical_swing)
+            ]
         except ValueError:
             return None
 
@@ -276,7 +308,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_name,
         )
 
-        self.coordinator.device.vertical_swing = VerticalSwing[swing_mode]
+        self.coordinator.device.vertical_swing = VERTICAL_SWING_MODES[swing_mode]
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
@@ -284,7 +316,9 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def swing_horizontal_mode(self) -> str | None:
         """Return the current horizontal swing mode for the device."""
         try:
-            return HorizontalSwing(self.coordinator.device.horizontal_swing).name
+            return HORIZONTAL_SWING_MODES_REVERSE[
+                HorizontalSwing(self.coordinator.device.horizontal_swing)
+            ]
         except ValueError:
             return None
 
@@ -296,7 +330,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_name,
         )
 
-        self.coordinator.device.horizontal_swing = HorizontalSwing[swing_horizontal_mode]
+        self.coordinator.device.horizontal_swing = HORIZONTAL_SWING_MODES[swing_horizontal_mode]
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
