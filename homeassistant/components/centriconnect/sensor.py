@@ -280,17 +280,6 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
 )
 
 
-class CentriConnectSensor(CentriConnectBaseEntity, SensorEntity):
-    """Representation of a CentriConnect sensor entity."""
-
-    entity_description: CentriConnectSensorEntityDescription
-
-    @property
-    def native_value(self) -> StateType | datetime | None:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CentriConnectConfigEntry,
@@ -302,3 +291,14 @@ async def async_setup_entry(
         for description in ENTITIES
         if description.value_fn(entry.runtime_data) is not None
     )
+
+
+class CentriConnectSensor(CentriConnectBaseEntity, SensorEntity):
+    """Representation of a CentriConnect sensor entity."""
+
+    entity_description: CentriConnectSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType | datetime | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator)
