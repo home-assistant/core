@@ -7,15 +7,17 @@ import os
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
-from serialx import SerialPortInfo
+from serialx import SerialPortInfo, create_serial_connection, serial_for_url
 
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.components.usb import DOMAIN, async_scan_serial_ports
 from homeassistant.components.usb.models import SerialDevice, USBDevice
+from homeassistant.components.usb.serial_proxy_stub import HassESPHomeSerialStub
 from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1752,3 +1754,20 @@ async def test_list_serial_ports_os_error(
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert "Permission denied" in response["error"]["message"]
+
+
+async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:
+    """Test ESPHome serial proxy stub."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    serial_cls = serial_for_url("esphome-hass-usb://192.0.2.1")
+    assert isinstance(serial_cls, HassESPHomeSerialStub)
+
+    # Nothing actually opens, it just throws an error
+    with pytest.raises(ConfigEntryNotReady):
+        await create_serial_connection(
+            loop=asyncio.get_running_loop(),
+            protocol_factory=asyncio.Protocol,
+            url="esphome-hass-usb://192.0.2.1",
+            baudrate=115200,
+        )

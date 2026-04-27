@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     __version__ as ha_version,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -80,7 +81,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if "usb" in hass.config.components:
         async_register_serial_port_scanner(hass, _async_scan_serial_ports)
-        serial_proxy.set_hass_loop(hass.loop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            serial_proxy.register_serialx_transport(hass.loop),
+        )
 
     return True
 

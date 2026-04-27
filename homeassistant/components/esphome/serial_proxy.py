@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import cast
 
 from aioesphomeapi import APIClient
@@ -15,23 +16,15 @@ from serialx.platforms.serial_esphome import (
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 
 from .const import DOMAIN
 from .entry_data import ESPHomeConfigEntry
-
-SCHEME = "esphome-hass://"
 
 # This is required so that serialx can safely query Core for an instance of an
 # aioesphomeapi client. We cannot make any assumptions here, some packages run separate
 # asyncio event loops in dedicated threads.
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
-
-
-def set_hass_loop(loop: asyncio.AbstractEventLoop) -> None:
-    """Store a reference to the Core event loop."""
-    global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
-    _HASS_LOOP = loop
 
 
 def build_url(entry_id: str, port_name: str) -> URL:
@@ -105,9 +98,24 @@ class HassESPHomeSerialTransport(ESPHomeSerialTransport):
     _serial_cls = HassESPHomeSerial
 
 
-register_uri_handler(
-    scheme=SCHEME,
-    unique_scheme=SCHEME,
-    sync_cls=HassESPHomeSerial,
-    async_transport_cls=HassESPHomeSerialTransport,
-)
+def register_serialx_transport(
+    loop: asyncio.AbstractEventLoop,
+) -> Callable[[Event], None]:
+    """Register the ESPHome URI handler."""
+    global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
+    _HASS_LOOP = loop
+
+    unregister = register_uri_handler(
+        scheme="esphome-hass://",
+        unique_scheme="esphome-hass-internal://",  # The unique scheme must differ
+        sync_cls=HassESPHomeSerial,
+        async_transport_cls=HassESPHomeSerialTransport,
+    )
+
+    @callback
+    def _unregister(event: Event) -> None:
+        global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
+        unregister()
+        _HASS_LOOP = None
+
+    return _unregister
