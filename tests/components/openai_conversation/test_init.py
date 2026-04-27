@@ -1403,8 +1403,9 @@ async def test_devices(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test devices are correctly created for subentries."""
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
+    devices = sorted(
+        dr.async_entries_for_config_entry(device_registry, mock_config_entry.entry_id),
+        key=lambda d: d.name,
     )
     assert len(devices) == 4  # One for conversation, AI task, STT, and TTS
 
