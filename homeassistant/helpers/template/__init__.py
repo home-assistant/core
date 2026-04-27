@@ -268,11 +268,7 @@ class Template:
     )
 
     def __init__(self, template: str, hass: HomeAssistant) -> None:
-        """Instantiate a template.
-
-        Note: A valid hass instance should always be passed in. The hass parameter
-        will be non optional in Home Assistant Core 2025.10.
-        """
+        """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
