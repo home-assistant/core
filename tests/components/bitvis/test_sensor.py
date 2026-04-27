@@ -10,6 +10,7 @@ from homeassistant.components.bitvis.const import DOMAIN, MANUFACTURER, MODEL_NA
 from homeassistant.components.bitvis.sensor import (
     DIAGNOSTIC_SENSOR_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
+    UPTIME_DESCRIPTION,
     _build_device_info,
 )
 from homeassistant.core import HomeAssistant
@@ -28,7 +29,7 @@ async def test_sensor_platform_creates_all_entities(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    expected_count = len(SENSOR_DESCRIPTIONS) + len(DIAGNOSTIC_SENSOR_DESCRIPTIONS)
+    expected_count = len(SENSOR_DESCRIPTIONS) + len(DIAGNOSTIC_SENSOR_DESCRIPTIONS) + 1
     assert len(entities) == expected_count
 
 
@@ -120,7 +121,7 @@ async def test_diagnostic_sensor_native_value_no_data(
 ) -> None:
     """Test that diagnostic sensors return unavailable when no diagnostic data."""
     base_unique_id = mock_config_entry.unique_id or mock_config_entry.entry_id
-    expected_unique_id = f"{base_unique_id}_{DIAGNOSTIC_SENSOR_DESCRIPTIONS[0].key}"
+    expected_unique_id = f"{base_unique_id}_{UPTIME_DESCRIPTION.key}"
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -334,10 +335,9 @@ async def test_build_device_info_no_diagnostic(
         await hass.async_block_till_done()
 
     coordinator = mock_config_entry.runtime_data
-    info = _build_device_info(coordinator, "test-id", "Test Title")
+    info = _build_device_info(coordinator, "test-id")
 
     assert info["identifiers"] == {(DOMAIN, "test-id")}
-    assert info["name"] == "Test Title"
     assert info["manufacturer"] == MANUFACTURER
     assert info["model"] == MODEL_NAME
     assert info.get("sw_version") is None
@@ -365,7 +365,7 @@ async def test_build_device_info_with_diagnostic(
     payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
     coordinator._handle_diagnostic(PayloadDiagnostic(diagnostic=payload.diagnostic))
 
-    info = _build_device_info(coordinator, "test-id", "Test Title")
+    info = _build_device_info(coordinator, "test-id")
 
     assert info["model"] == "PowerHub Gen2"
     assert info["sw_version"] == "2.0.0"
