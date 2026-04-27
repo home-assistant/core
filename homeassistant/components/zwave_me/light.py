@@ -65,7 +65,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     @staticmethod
     def _transition_to_duration(transition: float) -> int:
-        if transition < 127:
+        if transition <= 127:
             return round(transition)
         return min(127, round((transition) / 60)) + 127
 
