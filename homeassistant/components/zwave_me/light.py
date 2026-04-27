@@ -64,7 +64,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
 
     @staticmethod
-    def _transition_to_duration(transition: float):
+    def _transition_to_duration(transition: float) -> int:
         if transition < 127:
             return round(transition)
         else:
