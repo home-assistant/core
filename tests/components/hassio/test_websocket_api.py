@@ -132,6 +132,27 @@ async def test_ws_subscription(
 
 
 @pytest.mark.usefixtures("hassio_env")
+async def test_non_admin_publish_supervisor_event_failure(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test non admin user cannot publish supervisor event."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(hass, "hassio", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: "supervisor/event",
+            ATTR_DATA: {ATTR_WS_EVENT: "test", "lorem": "ipsum"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    assert msg["error"]["message"] == "Unauthorized"
+
+
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_supervisor_api(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -277,7 +298,17 @@ async def test_websocket_non_admin_user(
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.get(
         "http://127.0.0.1/addons/test_addon/info",
-        json={"result": "ok", "data": {}},
+        json={
+            "result": "ok",
+            "data": {
+                "name": "test",
+                "state": "started",
+                "slug": "test_addon",
+                "version": "2.0.0",
+                "ingress_url": "http://127.0.0.1/ingress/test_addon",
+                "options": {"option1": "value1", "option2": "value2"},
+            },
+        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/session",
@@ -288,6 +319,8 @@ async def test_websocket_non_admin_user(
         json={"result": "ok", "data": {}},
     )
 
+    # Should return the fields frontend needs (name, version, state, slug and ingress_url)
+    # but not options, as user is not admin and options can contain sensitive information
     await websocket_client.send_json(
         {
             WS_ID: 1,
@@ -297,7 +330,14 @@ async def test_websocket_non_admin_user(
         }
     )
     msg = await websocket_client.receive_json()
-    assert msg["result"] == {}
+    assert msg["result"] == {
+        "name": "test",
+        "state": "started",
+        "slug": "test_addon",
+        "version": "2.0.0",
+        "ingress_url": "http://127.0.0.1/ingress/test_addon",
+        "options": {},
+    }
 
     await websocket_client.send_json(
         {
