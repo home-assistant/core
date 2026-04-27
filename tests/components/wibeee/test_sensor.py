@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -37,7 +38,7 @@ async def test_sensor_no_data(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.wibeee_2233_active_power")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_invalid_value(
@@ -57,4 +58,4 @@ async def test_sensor_invalid_value(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.wibeee_2233_active_power")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
