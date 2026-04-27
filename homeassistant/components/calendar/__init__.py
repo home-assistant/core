@@ -960,7 +960,7 @@ async def handle_calendar_event_delete(
 async def handle_calendar_event_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle creation of a calendar event."""
+    """Handle update of a calendar event."""
     if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
         raise Unauthorized(entity_id=msg["entity_id"])
 
