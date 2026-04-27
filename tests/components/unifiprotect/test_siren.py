@@ -598,3 +598,40 @@ async def test_siren_unavailable_on_delete_event(
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_siren_auto_off_timer_scheduled_at_startup(
+    hass: HomeAssistant,
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
+) -> None:
+    """Auto-off timer is scheduled during async_added_to_hass for an already-active siren.
+
+    If a timed run is already in progress when HA starts, the entity must
+    schedule its own auto-off callback immediately (not wait for a WS update)
+    so the siren does not remain stuck ON after the run expires.
+    """
+    # Configure the siren as already active with 10 s remaining.
+    now = dt_util.utcnow()
+    active_status = Mock(spec=PublicSirenStatus)
+    active_status.is_active = True
+    active_status.activated_at = int(now.timestamp() * 1000)
+    active_status.duration = 10000
+    active_status.turn_off_at = None
+
+    siren.is_active = True
+    siren.siren_status = active_status
+
+    await init_entry(hass, ufp_with_siren, [])
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Advance HA time past the expiry — the startup-scheduled timer must fire.
+    async_fire_time_changed(hass, now + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF

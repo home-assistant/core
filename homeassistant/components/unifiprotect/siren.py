@@ -154,6 +154,10 @@ class ProtectSiren(SirenEntity):
             self.data.async_subscribe_siren(self._siren_mac, self._async_updated)
         )
         self.async_on_remove(self._cancel_off_timer)
+        # Schedule the auto-off timer for any already-active timed run so
+        # a siren that was running when HA started does not remain stuck ON.
+        if (siren := self._siren) is not None:
+            self._async_updated(siren)
 
     @callback
     def _cancel_off_timer(self) -> None:
