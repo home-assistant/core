@@ -139,7 +139,9 @@ async def test_binary_handler_registration() -> None:
     assert prefix == 15
 
 
-async def test_credential_redaction(hass: HomeAssistant) -> None:
+async def test_credential_redaction(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     send_messages = []
     user = MockUser()
     refresh_token = Mock()
@@ -154,11 +156,25 @@ async def test_credential_redaction(hass: HomeAssistant) -> None:
         remote=None,
     )
 
-    msg = {"id": 5, "detail": "bad input", "password": "secretpassword", "token": "api-token-12345"}
+    msg = {
+        "id": 5,
+        "detail": "bad input",
+        "password": "secretpassword",
+        "token": "api-token-12345",
+    }
     connection.async_handle_exception(msg, vol.Invalid("bad input"))
 
     assert len(send_messages) == 1
     error_message = send_messages[0]["error"]["message"]
-    assert "supersecret" not in error_message
-    assert "my-api-token" not in error_message
+    assert "secretpasswod" not in error_message
+    assert "api-token-12345" not in error_message
+    assert "**REDACTED**" in error_message
     assert "bad input" in error_message
+
+    msg = {"type": "auth", "access_token": "api-token-12345"}
+    connection.async_handle(msg)
+
+    assert len(send_messages) == 2
+    assert send_messages[1]["error"]["message"] == "Message incorrectly formatted."
+    assert "api-token-12345" not in caplog.text
+    assert "**REDACTED**" in caplog.text
