@@ -19,7 +19,6 @@ is_option_selected:
       required: true
       selector:
         state:
-          attribute: options
           hide_states:
             - unavailable
             - unknown

@@ -40,5 +40,13 @@
     "toggle": {
       "service": "mdi:valve-open"
     }
+  },
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:valve-closed"
+    },
+    "opened": {
+      "trigger": "mdi:valve-open"
+    }
   }
 }

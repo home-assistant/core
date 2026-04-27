@@ -87,7 +87,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS binary sensors from a config entry."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.status
 
     entities = [
         AirOSBinarySensor(coordinator, description)

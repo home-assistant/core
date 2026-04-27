@@ -1,6 +1,6 @@
 """Test the Casper Glow light platform."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
 from pycasperglow import CasperGlowError, GlowState
@@ -83,19 +83,19 @@ async def test_turn_off(
 async def test_state_update_via_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test that the entity updates state when the device fires a callback."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    fire_callbacks(GlowState(is_on=True))
+    await fire_callbacks(GlowState(is_on=True))
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
 
-    fire_callbacks(GlowState(is_on=False))
+    await fire_callbacks(GlowState(is_on=False))
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
@@ -149,10 +149,10 @@ async def test_brightness_snap_to_nearest(
 async def test_brightness_update_via_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test that brightness updates via device callback."""
-    fire_callbacks(GlowState(is_on=True, brightness_level=80))
+    await fire_callbacks(GlowState(is_on=True, brightness_level=80))
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -196,7 +196,7 @@ async def test_state_update_via_callback_after_command_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test that device callbacks correctly update state even after a command failure."""
     mock_casper_glow.turn_on.side_effect = CasperGlowError("Connection failed")
@@ -215,7 +215,7 @@ async def test_state_update_via_callback_after_command_failure(
     assert state.state == STATE_UNKNOWN
 
     # Device sends a push state update — entity reflects true device state
-    fire_callbacks(GlowState(is_on=True))
+    await fire_callbacks(GlowState(is_on=True))
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None

@@ -26,6 +26,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
+type QnapConfigEntry = ConfigEntry[QnapCoordinator]
+
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +48,9 @@ def suppress_insecure_request_warning():
 class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Custom coordinator for the qnap integration."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    config_entry: QnapConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: QnapConfigEntry) -> None:
         """Initialize the qnap coordinator."""
         super().__init__(
             hass,

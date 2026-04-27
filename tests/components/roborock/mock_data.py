@@ -5,6 +5,7 @@ from __future__ import annotations
 from PIL import Image
 from roborock.data import (
     B01Props,
+    CleanPathPreferenceMapping,
     CleanRecord,
     CleanSummary,
     Consumable,
@@ -1558,6 +1559,7 @@ SCENES = [
 
 Q7_B01_PROPS = B01Props(
     status=WorkStatusMapping.SWEEP_MOPING,
+    clean_path_preference=CleanPathPreferenceMapping.BALANCED,
     main_brush=5000,
     side_brush=3000,
     hypa=1500,
@@ -1568,11 +1570,15 @@ Q7_B01_PROPS = B01Props(
 )
 
 Q10_STATUS = Q10Status(
-    clean_time=120,
+    clean_time=1800,
     clean_area=15,
     battery=100,
     status=YXDeviceState.CHARGING,
     fan_level=YXFanLevel.BALANCED,
     water_level=YXWaterLevel.MEDIUM,
     clean_count=1,
+    main_brush_life=81,
+    side_brush_life=90,
+    filter_life=90,
+    sensor_life=28,
 )

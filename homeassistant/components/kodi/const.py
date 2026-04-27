@@ -1,4 +1,4 @@
-"""Constants for the Kodi platform."""
+"""Constants for the Kodi integration."""
 
 DOMAIN = "kodi"
 

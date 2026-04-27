@@ -8,16 +8,12 @@ import pylitejet
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
+from . import LiteJetConfigEntry
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 
@@ -77,7 +73,7 @@ class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LiteJetConfigEntry,
     ) -> LiteJetOptionsFlow:
         """Get the options flow for this handler."""
         return LiteJetOptionsFlow()

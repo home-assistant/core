@@ -11,3 +11,5 @@ CONF_OUTPUT_DEVICE_ID = "output_device_id"
 
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"
+
+ATTR_TEXT = "text"

@@ -1,0 +1,48 @@
+{
+  "units": [
+    {
+      "usn": "INV001",
+      "name": "Inverter",
+      "type": "INVERTER",
+      "abnormalAmount": 0,
+      "resettable": false,
+      "version": {
+        "currentVersion": "V1.032",
+        "status": "NO_UPDATE"
+      }
+    },
+    {
+      "usn": "ems",
+      "name": "EMS",
+      "type": "EMS",
+      "abnormalAmount": 0,
+      "resettable": false,
+      "version": {
+        "currentVersion": "V1.01.45E",
+        "status": "NO_UPDATE"
+      }
+    },
+    {
+      "usn": "BAT001",
+      "name": "Battery - 1",
+      "type": "BATTERY",
+      "abnormalAmount": 0,
+      "resettable": false,
+      "version": {
+        "currentVersion": "V1.20",
+        "status": "NO_UPDATE"
+      }
+    },
+    {
+      "usn": "BAT002",
+      "name": "Battery - 2",
+      "type": "BATTERY",
+      "abnormalAmount": 0,
+      "resettable": false,
+      "version": {
+        "currentVersion": "V1.20",
+        "status": "NO_UPDATE"
+      }
+    }
+  ]
+}
