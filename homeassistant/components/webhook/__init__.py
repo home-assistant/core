@@ -61,6 +61,10 @@ def async_register(
         )
 
     if not isinstance(local_only, bool):
+        # Previously it was valid to pass None for local_only and it was treated as False
+        # with a deprecation warning. In case a custom component is still passing None,
+        # we want to raise an error instead of silently treating it as False as the
+        # deprecation period has ended and the message was removed.
         raise TypeError("local_only must be a boolean")
 
     handlers[webhook_id] = {
