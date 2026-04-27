@@ -420,7 +420,12 @@ async def test_rpc_sleeping_update(
         },
     )
     entity_id = f"{UPDATE_DOMAIN}.test_name_firmware"
-    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
         await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
