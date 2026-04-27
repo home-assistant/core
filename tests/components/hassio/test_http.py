@@ -1,8 +1,6 @@
 """The tests for the hassio component."""
 
-from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import patch
 
 from aiohttp import StreamReader
 from aiohttp.test_utils import TestClient
@@ -10,15 +8,6 @@ import pytest
 
 from tests.common import MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-@pytest.fixture
-def mock_not_onboarded() -> Generator[None]:
-    """Mock that we're not onboarded."""
-    with patch(
-        "homeassistant.components.hassio.http.async_is_onboarded", return_value=False
-    ):
-        yield
 
 
 @pytest.fixture
@@ -166,24 +155,24 @@ async def test_forward_request_onboarded_noauth_unallowed_paths(
     assert len(aioclient_mock.mock_calls) == 0
 
 
-@pytest.mark.usefixtures("mock_not_onboarded")
 @pytest.mark.parametrize(
-    "path",
+    ("method", "path"),
     [
-        "backups/1234abcd/info",
-        "backups/1234abcd/download",
-        "backups/1234abcd/restore/full",
-        "backups/1234abcd/restore/partial",
-        "backups/new/upload",
+        ("GET", "backups/1234abcd/info"),
+        ("GET", "backups/1234abcd/download"),
+        ("POST", "backups/1234abcd/restore/full"),
+        ("POST", "backups/1234abcd/restore/partial"),
+        ("POST", "backups/new/upload"),
     ],
 )
-async def test_forward_request_not_onboarded_backup_unauthorized(
+async def test_forward_request_backup_unauthenticated_rejected(
     hassio_noauth_client: TestClient,
     aioclient_mock: AiohttpClientMocker,
+    method: str,
     path: str,
 ) -> None:
-    """Test backup endpoints reject unauthenticated requests during onboarding."""
-    resp = await hassio_noauth_client.get(f"/api/hassio/{path}")
+    """Test backup endpoints reject unauthenticated requests."""
+    resp = await hassio_noauth_client.request(method, f"/api/hassio/{path}")
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(aioclient_mock.mock_calls) == 0
