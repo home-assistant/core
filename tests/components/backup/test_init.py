@@ -159,15 +159,23 @@ async def test_setup_entry(
     assert entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("service", ["create", "create_automatic"])
+@pytest.mark.parametrize(
+    ("service", "with_hassio"),
+    [
+        ("create", False),
+        ("create_automatic", False),
+        ("create_automatic", True),
+    ],
+)
 @pytest.mark.usefixtures("supervisor_client")
 async def test_services_require_admin(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
     service: str,
+    with_hassio: bool,
 ) -> None:
     """Test backup services require admin."""
-    await setup_backup_integration(hass, with_hassio=False)
+    await setup_backup_integration(hass, with_hassio=with_hassio)
 
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
