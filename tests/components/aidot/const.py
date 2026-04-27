@@ -20,7 +20,6 @@ TEST_LOGIN_RESP = {
 }
 
 ENTITY_LIGHT = "light.test_light"
-ENTITY_LIGHT2 = "light.test_light2"
 LIGHT_DOMAIN = "light"
 
 TEST_DEVICE1 = {
@@ -43,24 +42,4 @@ TEST_DEVICE1 = {
     },
 }
 
-TEST_DEVICE2 = {
-    "id": "device_id2",
-    "name": "Test Light2",
-    "modelId": "aidot.light.dimming",
-    "mac": "AA:BB:CC:DD:EE:EE",
-    "hardwareVersion": "2.0",
-    "type": "light",
-    "aesKey": ["mock_aes_key2"],
-    "product": {
-        "id": "test_product2",
-        "serviceModules": [
-            {
-                "identity": "control.light.cct",
-                "properties": [{"identity": "CCT", "maxValue": 5000, "minValue": 3000}],
-            },
-        ],
-    },
-}
-
 TEST_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1]}
-TEST_MULTI_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1, TEST_DEVICE2]}
