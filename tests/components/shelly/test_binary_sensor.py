@@ -1,7 +1,7 @@
 """Tests for Shelly binary sensor platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aioshelly.const import (
     MODEL_BLU_GATEWAY_G3,
@@ -10,6 +10,7 @@ from aioshelly.const import (
     MODEL_MOTION,
     MODEL_PLUS_SMOKE,
 )
+from aioshelly.exceptions import DeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -335,7 +336,8 @@ async def test_rpc_sleeping_binary_sensor(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    config_entry = await init_integration(hass, 2, sleep_period=1000)
+    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+        config_entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
@@ -376,7 +378,8 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel_name_smoke"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+        await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None

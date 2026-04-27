@@ -1,6 +1,6 @@
 """Tests for Shelly update platform."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
@@ -420,7 +420,8 @@ async def test_rpc_sleeping_update(
         },
     )
     entity_id = f"{UPDATE_DOMAIN}.test_name_firmware"
-    await init_integration(hass, 2, sleep_period=1000)
+    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+        await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
     assert hass.states.get(entity_id) is None
