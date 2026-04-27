@@ -204,7 +204,10 @@ def get_accessory(  # noqa: C901
 
         if device_class == MediaPlayerDeviceClass.RECEIVER:
             a_type = "ReceiverMediaPlayer"
-        elif device_class == MediaPlayerDeviceClass.TV:
+        elif device_class in (
+            MediaPlayerDeviceClass.TV,
+            MediaPlayerDeviceClass.PROJECTOR,
+        ):
             a_type = "TelevisionMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"

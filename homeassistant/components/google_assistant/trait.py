@@ -2712,7 +2712,11 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & MediaPlayerEntityFeature.PLAY_MEDIA)
-            and device_class == media_player.MediaPlayerDeviceClass.TV
+            and device_class
+            in (
+                media_player.MediaPlayerDeviceClass.TV,
+                media_player.MediaPlayerDeviceClass.PROJECTOR,
+            )
         ):
             return True
 

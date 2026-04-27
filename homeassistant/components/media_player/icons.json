@@ -25,6 +25,12 @@
         "playing": "mdi:cast-connected"
       }
     },
+    "projector": {
+      "default": "mdi:projector",
+      "state": {
+        "off": "mdi:projector-off"
+      }
+    },
     "receiver": {
       "default": "mdi:audio-video",
       "state": {

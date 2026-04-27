@@ -157,6 +157,7 @@ class MediaPlayerDeviceClass(StrEnum):
     TV = "tv"
     SPEAKER = "speaker"
     RECEIVER = "receiver"
+    PROJECTOR = "projector"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))

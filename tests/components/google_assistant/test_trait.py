@@ -4138,6 +4138,12 @@ async def test_channel(hass: HomeAssistant) -> None:
         media_player.MediaPlayerDeviceClass.TV,
         None,
     )
+    assert trait.ChannelTrait.supported(
+        media_player.DOMAIN,
+        MediaPlayerEntityFeature.PLAY_MEDIA,
+        media_player.MediaPlayerDeviceClass.PROJECTOR,
+        None,
+    )
     assert (
         trait.ChannelTrait.supported(
             media_player.DOMAIN,

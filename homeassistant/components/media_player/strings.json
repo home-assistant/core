@@ -214,6 +214,9 @@
         }
       }
     },
+    "projector": {
+      "name": "Projector"
+    },
     "receiver": {
       "name": "Receiver"
     },
