@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -44,6 +45,7 @@ async def async_setup_entry(
     if (
         isinstance(coordinator.device, switchbot.SwitchbotLock)
         and coordinator.model is SwitchbotModel.LOCK_ULTRA
+        and entry.options.get(CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH)
     ):
         entities.append(HalfLockButton(coordinator))
 

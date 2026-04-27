@@ -8,7 +8,19 @@ import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.switchbot.const import (
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
+    CONF_LOCK_NIGHTLATCH,
+    CONF_RETRY_COUNT,
+    DEFAULT_RETRY_COUNT,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ADDRESS,
+    CONF_NAME,
+    CONF_SENSOR_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -223,12 +235,24 @@ async def test_air_purifier_buttons(
 
 async def test_lock_ultra_half_lock_button(
     hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
 ) -> None:
-    """Test pressing the half lock button on Lock Ultra."""
+    """Test pressing the half lock button on Lock Ultra when nightlatch is enabled."""
     inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
 
-    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "lock_ultra",
+            CONF_KEY_ID: "ff",
+            CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT, CONF_LOCK_NIGHTLATCH: True},
+    )
     entry.add_to_hass(hass)
 
     mock_instance = AsyncMock(return_value=True)
@@ -236,7 +260,6 @@ async def test_lock_ultra_half_lock_button(
     with patch.multiple(
         "homeassistant.components.switchbot.button.switchbot.SwitchbotLock",
         update=AsyncMock(return_value=None),
-        is_night_latch_enabled=lambda self: True,
         half_lock=mock_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -255,3 +278,26 @@ async def test_lock_ultra_half_lock_button(
         )
 
         mock_instance.assert_awaited_once()
+
+
+async def test_lock_ultra_half_lock_button_not_registered_without_nightlatch(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test that the half lock button is not registered when nightlatch is disabled."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.button.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_ids = [
+            entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
+        ]
+        assert "button.test_name_half_lock" not in entity_ids
