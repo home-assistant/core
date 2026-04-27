@@ -272,4 +272,5 @@ async def test_reauth_invalid_auth(
         assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "reauth_successful"
 
+    await hass.async_block_till_done()
     mock_setup_entry.assert_awaited_once()
