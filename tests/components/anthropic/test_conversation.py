@@ -49,6 +49,8 @@ from homeassistant.components.anthropic.const import (
     DOMAIN,
 )
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -486,19 +488,25 @@ async def test_assist_api_tools_conversion(
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
     for component in (
-        "intent",
-        "todo",
-        "light",
-        "shopping_list",
-        "humidifier",
+        "calendar",
         "climate",
-        "media_player",
-        "vacuum",
         "cover",
-        "weather",
         "demo",
+        "humidifier",
+        "intent",
+        "light",
+        "media_player",
+        "script",
+        "shopping_list",
+        "todo",
+        "vacuum",
+        "weather",
     ):
         assert await async_setup_component(hass, component, {})
+        hass.states.async_set(f"{component}.test", "on")
+        async_expose_entity(hass, "conversation", f"{component}.test", True)
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
 
     agent_id = "conversation.claude_conversation"
 
@@ -506,10 +514,19 @@ async def test_assist_api_tools_conversion(
         create_content_block(0, ["Hello, how can I help you?"])
     ]
 
-    await conversation.async_converse(hass, "hello", None, Context(), agent_id=agent_id)
+    await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=agent_id, device_id="test_device"
+    )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
+
+    for tool in tools:
+        for key in ("oneOf", "allOf", "anyOf"):
+            assert key not in tool["input_schema"], (
+                f"{tool['name']}.input_schema: input_schema does not support "
+                "oneOf, allOf, or anyOf at the top level"
+            )
 
 
 async def test_unknown_hass_api(
@@ -742,7 +759,7 @@ async def test_extended_thinking(
         },
         {
             CONF_LLM_HASS_API: "assist",
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_THINKING_EFFORT: "none",
         },
     ],
@@ -830,7 +847,7 @@ async def test_extended_thinking_tool_call(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_THINKING_EFFORT: "medium",
         },
     )
@@ -1120,7 +1137,7 @@ async def test_web_search_dynamic_filtering(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_MAX_USES: 5,
@@ -1263,7 +1280,7 @@ async def test_bash_code_execution(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
         },
     )
@@ -1343,7 +1360,7 @@ async def test_bash_code_execution_error(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
         },
     )
@@ -1511,7 +1528,7 @@ async def test_text_editor_code_execution(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
         },
     )
