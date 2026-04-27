@@ -211,29 +211,26 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
            reporting the VMID so the choice is deterministic and does
            not depend on dict iteration order.
         """
+        vm_candidates: dict[int, list[str]] = {}
+        ct_candidates: dict[int, list[str]] = {}
+        for node_name, node_data in data.items():
+            for vmid in node_data.vms:
+                vm_candidates.setdefault(vmid, []).append(node_name)
+            for ctid in node_data.containers:
+                ct_candidates.setdefault(ctid, []).append(node_name)
+
+        for nodes in vm_candidates.values():
+            nodes.sort()
+        for nodes in ct_candidates.values():
+            nodes.sort()
+
         self.vmid_node_map = self._resolve_id_map(
-            {
-                vmid: sorted(
-                    node_name
-                    for node_name, node_data in data.items()
-                    if vmid in node_data.vms
-                )
-                for node_data in data.values()
-                for vmid in node_data.vms
-            },
+            vm_candidates,
             self.vmid_node_map,
         )
 
         self.ctid_node_map = self._resolve_id_map(
-            {
-                ctid: sorted(
-                    node_name
-                    for node_name, node_data in data.items()
-                    if ctid in node_data.containers
-                )
-                for node_data in data.values()
-                for ctid in node_data.containers
-            },
+            ct_candidates,
             self.ctid_node_map,
         )
 

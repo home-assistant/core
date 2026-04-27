@@ -7,6 +7,7 @@ from typing import Any
 from yarl import URL
 
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -156,7 +157,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         """Resolve current node from coordinator's centralized map."""
         node = self.coordinator.vmid_node_map.get(self.device_id)
         if node is None:
-            raise RuntimeError(f"VM {self.device_id} not found on any node")
+            raise HomeAssistantError(f"VM {self.device_id} not found on any node")
         return node
 
     @property
@@ -211,7 +212,9 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         """Resolve current node from coordinator's centralized map."""
         node = self.coordinator.ctid_node_map.get(self.device_id)
         if node is None:
-            raise RuntimeError(f"Container {self.device_id} not found on any node")
+            raise HomeAssistantError(
+                f"Container {self.device_id} not found on any node"
+            )
         return node
 
     @property
