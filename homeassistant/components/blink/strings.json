@@ -98,10 +98,6 @@
         }
       },
       "title": "Blink update service is being removed"
-    },
-    "service_send_pin_deprecation": {
-      "description": "The service {service_name} has been removed and is no longer needed. When a new two-factor authentication code is required, Home Assistant will automatically prompt you to reauthenticate through the integration configuration. Please remove any automations or scripts that call this service.",
-      "title": "Blink send PIN service has been removed"
     }
   },
   "options": {
