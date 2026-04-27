@@ -48,8 +48,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     had_loaded_entries = any(
-        config_entry.state is config_entries.ConfigEntryState.LOADED
+        config_entry.state
+        in (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+        )
         for config_entry in hass.config_entries.async_entries(IZONE)
+        if config_entry.entry_id != entry.entry_id
     )
     await async_start_discovery_service(hass)
     try:
