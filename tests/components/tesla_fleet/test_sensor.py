@@ -189,26 +189,16 @@ async def test_total_increasing_clamp(
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
 ) -> None:
-    """Test that total_increasing sensors clamp small backwards jitter.
-
-    The Tesla Fleet API occasionally returns a value slightly below the
-    previous reading due to floating-point jitter or server-side
-    recalculation. Recorder emits a warning and resets the statistics
-    baseline in that case. The sensor platform must clamp such decreases
-    to the last seen maximum while still forwarding a real drop to zero
-    (meter cycle) so the statistics engine keeps working as expected.
-    """
+    """Test that total_increasing sensors clamp small backwards jitter."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
-    # The odometer is reported by the Fleet API in miles (native unit) but HA
-    # converts to the system length unit (kilometers by default in tests).
+    # HA converts the miles-native odometer to the system length unit.
     def miles_to_state(miles: float) -> float:
         return DistanceConverter.convert(
             miles, UnitOfLength.MILES, UnitOfLength.KILOMETERS
         )
 
-    # Seed initial odometer value
     initial_data = deepcopy(VEHICLE_DATA)
     initial_data["response"]["vehicle_state"]["odometer"] = 6481.02
     mock_vehicle_data.return_value = initial_data
@@ -277,16 +267,7 @@ async def test_total_increasing_clamp_after_reload(
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
 ) -> None:
-    """Test that the clamp baseline survives a config entry reload.
-
-    Regression for the restore-seeding path: the parent
-    ``TeslaFleetEntity.__init__`` seeds ``_previous_value`` from the current
-    coordinator reading before ``async_added_to_hass`` runs. Without the max()
-    merge the restored state would be shadowed, so a slightly lower reading
-    right after a restart would be exported verbatim and reset the statistics
-    baseline. The fix seeds ``_previous_value`` to max(current, restored)
-    so a lower post-reload reading stays clamped to the restored value.
-    """
+    """Test that the clamp baseline survives a config entry reload."""
     freezer.move_to("2024-01-01 00:00:00+00:00")
     entity_id = "sensor.test_odometer"
 
@@ -312,7 +293,6 @@ async def test_total_increasing_clamp_after_reload(
     with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
 
-    # The restored baseline must win — exported state does not regress.
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(expected_km)

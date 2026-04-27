@@ -530,13 +530,8 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         ):
             self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
-        # For TOTAL_INCREASING sensors, seed the cached monotonic baseline from
-        # the restored state. The parent TeslaFleetEntity.__init__ already set
-        # _previous_value from the current coordinator reading via
-        # _async_update_attrs, so take the maximum of that and the restored
-        # value — if the restored value is higher we clamp against it to
-        # survive jitter around a restart, then re-apply _async_update_attrs
-        # so _attr_native_value reflects the higher baseline.
+        # Merge restored state into the monotonic baseline so post-restart
+        # jitter cannot regress the exported value.
         if (
             self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
             and restored_sensor_data is not None
@@ -567,14 +562,8 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
                 self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
                 and isinstance(new_value, float | int)
             ):
-                # Tesla Fleet occasionally returns values slightly below the
-                # previous reading due to floating-point jitter or server-side
-                # recalculations. For total_increasing sensors this triggers
-                # Recorder warnings and resets the statistics baseline. Clamp
-                # the value to the last seen maximum to keep the series
-                # monotonically non-decreasing. A real meter reset (a drop to
-                # zero) is passed through unchanged so statistics still handle
-                # meter cycles correctly.
+                # Clamp Fleet API jitter to the last maximum, but pass through
+                # a real reset to zero so statistics detect meter cycles.
                 if (
                     self._previous_value is not None
                     and new_value < self._previous_value
