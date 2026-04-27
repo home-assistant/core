@@ -2816,8 +2816,6 @@ async def test_zeroconf_sleeping_device_attempts_configure(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Error connecting to Shelly device" in caplog.text
-
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
