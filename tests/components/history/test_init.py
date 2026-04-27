@@ -8,6 +8,7 @@ from unittest.mock import sentinel
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.auth.models import Credentials
 from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
@@ -17,6 +18,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import CLIENT_ID, MockUser
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context,
@@ -770,3 +772,55 @@ async def test_history_with_invalid_entity_ids(
     response_json = await response.json()
     assert response_contains1 in str(response_json)
     assert response_contains2 in str(response_json)
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_fetch_period_api_filters_unauthorized_entities(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test history is filtered by per-entity read permissions for non-admins."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"light.kitchen": True}}}
+    )
+    await async_setup_component(hass, "history", {})
+
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    await async_wait_recording_done(hass)
+
+    read_only_user_credential = Credentials(
+        id="mock-read-only-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "readonly"},
+        is_new=False,
+    )
+    await hass.auth.async_link_user(hass_read_only_user, read_only_user_credential)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_read_only_user, CLIENT_ID, credential=read_only_user_credential
+    )
+    token = hass.auth.async_create_access_token(refresh_token)
+    client = await hass_client(token)
+
+    now = dt_util.utcnow().isoformat()
+    response = await client.get(
+        f"/api/history/period/{now}",
+        params={"filter_entity_id": "light.kitchen,light.cow"},
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert all(
+        state["entity_id"] == "light.kitchen"
+        for entity_states in response_json
+        for state in entity_states
+    )
+
+    response = await client.get(
+        f"/api/history/period/{now}",
+        params={"filter_entity_id": "light.cow"},
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == []

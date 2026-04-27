@@ -9,8 +9,10 @@ from typing import cast
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import frontend
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
@@ -82,6 +84,17 @@ class HistoryPeriodView(HomeAssistantView):
                 return self.json_message(
                     "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
                 )
+
+        user: User = request[KEY_HASS_USER]
+        if not user.is_admin:
+            entity_perm = user.permissions.check_entity
+            entity_ids = [
+                entity_id
+                for entity_id in entity_ids
+                if entity_perm(entity_id, POLICY_READ)
+            ]
+            if not entity_ids:
+                return self.json([])
 
         now = dt_util.utcnow()
         if datetime_:
