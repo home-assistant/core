@@ -14,7 +14,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PeblarConfigEntry, PeblarData, PeblarDataUpdateCoordinator, PeblarRuntimeData
+from .coordinator import (
+    PeblarConfigEntry,
+    PeblarData,
+    PeblarDataUpdateCoordinator,
+    PeblarRuntimeData,
+)
 from .entity import PeblarEntity
 
 PARALLEL_UPDATES = 0
@@ -50,7 +55,7 @@ DESCRIPTIONS = [
         translation_key="lock_state",
         device_class=BinarySensorDeviceClass.LOCK,
         has_fn=lambda x: x.system_information.hardware_has_socket,
-        is_on_fn=lambda x: x.ev.lock_state,
+        is_on_fn=lambda x: bool(x.ev.lock_state),
     ),
 ]
 

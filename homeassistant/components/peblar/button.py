@@ -17,7 +17,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PeblarConfigEntry, PeblarRuntimeData, PeblarUserConfigurationDataUpdateCoordinator
+from .coordinator import (
+    PeblarConfigEntry,
+    PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
+)
 from .entity import PeblarEntity
 from .helpers import peblar_exception_handler
 
