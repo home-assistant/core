@@ -864,7 +864,10 @@ async def test_update_swing_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_SWING_MODE) == VERTICAL_SWING_MODES_REVERSE[vertical_swing]
+    assert (
+        state.attributes.get(ATTR_SWING_MODE)
+        == VERTICAL_SWING_MODES_REVERSE[vertical_swing]
+    )
 
 
 @pytest.mark.parametrize(
@@ -946,7 +949,10 @@ async def test_update_swing_horizontal_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == HORIZONTAL_SWING_MODES_REVERSE[horizontal_swing]
+    assert (
+        state.attributes.get(ATTR_SWING_HORIZONTAL_MODE)
+        == HORIZONTAL_SWING_MODES_REVERSE[horizontal_swing]
+    )
 
 
 async def test_swing_mode_unknown_device_value(

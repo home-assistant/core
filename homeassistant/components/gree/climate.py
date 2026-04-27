@@ -330,7 +330,9 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_name,
         )
 
-        self.coordinator.device.horizontal_swing = HORIZONTAL_SWING_MODES[swing_horizontal_mode]
+        self.coordinator.device.horizontal_swing = HORIZONTAL_SWING_MODES[
+            swing_horizontal_mode
+        ]
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
