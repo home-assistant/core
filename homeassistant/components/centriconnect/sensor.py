@@ -95,6 +95,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coord: (
+            # TODO(gresrun): Move this logic into the library.
             # The battery level is estimated based on the battery voltage,
             # with 3.5V or below being 0% and 4.05V or above being 100%.
             min(1.0, max(((coord.data.battery_voltage - 3.5) / 0.5), 0.0)) * 100
@@ -158,6 +159,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
         value_fn=lambda coord: (
+            # TODO(gresrun): Move this logic into the library.
             # The LTE signal level is estimated based on the LTE signal strength,
             # with -140 dBm or below being 0% and -70 dBm or above being 100%.
             min(1.0, max(((coord.data.lte_signal_strength + 140.0) / 70.0), 0.0)) * 100
@@ -191,6 +193,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
         value_fn=lambda coord: (
+            # TODO(gresrun): Move this logic into the library.
             # The solar level is estimated based on the solar voltage,
             # with 0V being 0% and 2.86V or above being 110%.
             min(1.1, max((coord.data.solar_voltage / 2.6), 0.0)) * 100
