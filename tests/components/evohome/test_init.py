@@ -7,7 +7,7 @@ import logging
 from unittest.mock import Mock, patch
 
 import aiohttp
-from evohomeasync2 import EvohomeClient, exceptions as evo_exc
+from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -172,11 +172,8 @@ async def test_client_request_failure_v2(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_setup(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-    snapshot: SnapshotAssertion,
-) -> None:
+@pytest.mark.usefixtures("evohome")
+async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test services after setup of evohome.
 
     Registered services vary by the type of system.

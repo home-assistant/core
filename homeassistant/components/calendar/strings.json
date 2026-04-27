@@ -1,6 +1,7 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_event_active": {
@@ -8,6 +9,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::calendar::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::calendar::common::condition_for_name%]"
         }
       },
       "name": "Calendar event is active"

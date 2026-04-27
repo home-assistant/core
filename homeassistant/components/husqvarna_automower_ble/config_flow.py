@@ -11,7 +11,8 @@ from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import get_device
 from gardena_bluetooth.const import ScanService
-from gardena_bluetooth.parse import ManufacturerData, ProductType
+from gardena_bluetooth.parse import ProductType
+from gardena_bluetooth.scan import async_get_manufacturer_data
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -37,43 +38,6 @@ USER_SCHEMA = vol.Schema(
 REAUTH_SCHEMA = BLUETOOTH_SCHEMA
 
 
-def _is_supported(discovery_info: BluetoothServiceInfo):
-    """Check if device is supported."""
-    if ScanService not in discovery_info.service_uuids:
-        LOGGER.debug(
-            "Unsupported device, missing service %s: %s", ScanService, discovery_info
-        )
-        return False
-
-    if not (data := discovery_info.manufacturer_data.get(ManufacturerData.company)):
-        LOGGER.debug(
-            "Unsupported device, missing manufacturer data %s: %s",
-            ManufacturerData.company,
-            discovery_info,
-        )
-        return False
-
-    manufacturer_data = ManufacturerData.decode(data)
-    product_type = ProductType.from_manufacturer_data(manufacturer_data)
-
-    # Some mowers only expose the serial number in the manufacturer data
-    # and not the product type, so we allow None here as well.
-    if product_type not in (ProductType.MOWER, ProductType.UNKNOWN):
-        LOGGER.debug("Unsupported device: %s (%s)", manufacturer_data, discovery_info)
-        return False
-
-    if not manufacturer_data.pairable:
-        LOGGER.error(
-            "The mower does not appear to be pairable. "
-            "Ensure the mower is in pairing mode before continuing. "
-            "If the mower isn't pariable you will receive authentication "
-            "errors and be unable to connect"
-        )
-
-    LOGGER.debug("Supported device: %s", manufacturer_data)
-    return True
-
-
 def _pin_valid(pin: str) -> bool:
     """Check if the pin is valid."""
     try:
@@ -91,6 +55,32 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     address: str | None = None
     mower_name: str = ""
     pin: str | None = None
+    pairable: bool | None = None
+
+    async def _is_supported(self, discovery_info: BluetoothServiceInfo):
+        """Check if device is supported."""
+        if ScanService not in discovery_info.service_uuids:
+            LOGGER.debug(
+                "Unsupported device, missing service %s: %s",
+                ScanService,
+                discovery_info,
+            )
+            return False
+
+        manufacturer_data = (
+            await async_get_manufacturer_data({discovery_info.address})
+        )[discovery_info.address]
+
+        if manufacturer_data.product_type != ProductType.MOWER:
+            LOGGER.debug(
+                "Unsupported device: %s (%s)", manufacturer_data, discovery_info
+            )
+            return False
+
+        self.pairable = manufacturer_data.pairable
+
+        LOGGER.debug("Supported device: %s", manufacturer_data)
+        return True
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -98,7 +88,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
 
         LOGGER.debug("Discovered device: %s", discovery_info)
-        if not _is_supported(discovery_info):
+        if not await self._is_supported(discovery_info):
             return self.async_abort(reason="no_devices_found")
 
         self.context["title_placeholders"] = {
@@ -122,6 +112,13 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_pin"
             else:
                 self.pin = user_input[CONF_PIN]
+                if self.pairable is False:
+                    LOGGER.warning(
+                        "The mower does not appear to be pairable. "
+                        "Ensure the mower is in pairing mode before continuing. "
+                        "If the mower isn't pairable you will receive authentication "
+                        "errors and be unable to connect"
+                    )
                 return await self.check_mower(user_input)
 
         return self.async_show_form(

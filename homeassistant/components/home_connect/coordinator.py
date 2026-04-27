@@ -533,7 +533,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         current_program_key = program.key
                         program_options = program.options
                         if (
-                            current_program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+                            current_program_key
+                            in (
+                                ProgramKey.BSH_COMMON_FAVORITE_001,
+                                ProgramKey.BSH_COMMON_FAVORITE_002,
+                            )
                             and program_options
                         ):
                             # The API doesn't allow to fetch the options from the favorite program.
@@ -616,7 +620,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options_to_notify = options.copy()
         options.clear()
         if (
-            program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+            program_key
+            in (
+                ProgramKey.BSH_COMMON_FAVORITE_001,
+                ProgramKey.BSH_COMMON_FAVORITE_002,
+            )
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
             and isinstance(event.value, str)
         ):

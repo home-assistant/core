@@ -41,6 +41,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
+    "serialx": "SemVer",
     "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
@@ -189,11 +190,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "opnsense": {
-        # https://github.com/mtreinish/pyopnsense/issues/27
-        # pyopnsense > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -257,6 +253,12 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/tkdrob/pyefergy
+    # pyefergy declares codecov as a runtime dependency, which pulls in
+    # coverage; coverage ships an 'a1_coverage.pth' file starting from
+    # 7.13.x. Upstream fix pending in
+    # https://github.com/tkdrob/pyefergy/pull/47
+    "efergy": {"codecov": {"coverage"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
     "fitbit": {
         # Setuptools - distutils-precedence.pth
@@ -298,10 +300,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
-    "opnsense": {
-        # Setuptools - distutils-precedence.pth
-        "pbr": {"setuptools"}
-    },
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
     "remote_rpi_gpio": {
@@ -731,7 +729,7 @@ def check_dependency_files(
             if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
                 top_level.add(top)
             if (name := str(file).lower()) in FORBIDDEN_FILE_NAMES or (
-                name.endswith(".pth") and len(file.parts) == 1
+                name.endswith((".pth", ".start")) and len(file.parts) == 1
             ):
                 file_names.add(str(file))
         results = _PackageFilesCheckResult(

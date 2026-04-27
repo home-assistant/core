@@ -68,8 +68,16 @@ PROGRAM_OPTIONS = {
         ),
         OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
+        OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_INTENSIVE_PLUS: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_MINI_LOAD: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_PREWASH: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_RINSE_HOLD: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_SOAK: bool,
+        OptionKey.LAUNDRY_CARE_WASHER_WATER_PLUS: bool,
     }.items()
 }
 

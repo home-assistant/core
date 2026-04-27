@@ -140,6 +140,9 @@
       "reset": {
         "name": "Reset"
       },
+      "resume_all": {
+        "name": "Resume"
+      },
       "shutdown": {
         "name": "Shut down"
       },
@@ -313,7 +316,7 @@
       "message": "No active nodes were found on the Proxmox VE server."
     },
     "no_permission_node_power": {
-      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'Sys.PowerMgmt' permission and try again."
     },
     "no_permission_snapshot": {
       "message": "The configured Proxmox VE user does not have permission to create snapshots of VMs and containers. Please grant the user the 'VM.Snapshot' permission and try again."

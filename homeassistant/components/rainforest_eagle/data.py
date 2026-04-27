@@ -34,7 +34,7 @@ class InvalidAuth(RainforestError):
 
 async def async_get_type(hass, cloud_id, install_code, host):
     """Try API call 'get_network_info' to see if target device is Eagle-100 or Eagle-200."""
-    # For EAGLE-200, fetch the hardware address of the meter too.
+    # For EAGLE-200, fetch the hardware address of the first connected meter, too.
     hub = aioeagle.EagleHub(
         aiohttp_client.async_get_clientsession(hass), cloud_id, install_code, host=host
     )
@@ -50,8 +50,17 @@ async def async_get_type(hass, cloud_id, install_code, host):
 
     if meters is not None:
         if meters:
-            hardware_address = meters[0].hardware_address
+            # If there is at least one meter, use the first one with a connection status of "Connected"
+            hardware_address = next(
+                (
+                    m.hardware_address
+                    for m in meters
+                    if getattr(m, "connection_status", None) == "Connected"
+                ),
+                None,
+            )
         else:
+            # If there are no meters (empty list, since None was already checked for), set the hardware address to None
             hardware_address = None
 
         return TYPE_EAGLE_200, hardware_address

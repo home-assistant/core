@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from opendisplay import (
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
     BLEConnectionError,
     BLETimeoutError,
     GlobalConfig,
@@ -19,7 +21,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
@@ -27,14 +29,14 @@ from homeassistant.helpers.typing import ConfigType
 if TYPE_CHECKING:
     from opendisplay.models import FirmwareVersion
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
 from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _BASE_PLATFORMS: list[Platform] = []
-_FLEX_PLATFORMS = [Platform.SENSOR]
+_FLEX_PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
 
 @dataclass
@@ -49,6 +51,23 @@ class OpenDisplayRuntimeData:
 
 
 type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]
+
+
+def _get_encryption_key(entry: OpenDisplayConfigEntry) -> bytes | None:
+    """Return the encryption key bytes from entry data, or None."""
+    raw = entry.data.get(CONF_ENCRYPTION_KEY)
+    if raw is None:
+        return None
+    if len(raw) != 32:
+        raise ConfigEntryAuthFailed(
+            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+        )
+    try:
+        return bytes.fromhex(raw)
+    except ValueError as err:
+        raise ConfigEntryAuthFailed(
+            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+        ) from err
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -69,12 +88,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             f"Could not find OpenDisplay device with address {address}"
         )
 
+    encryption_key = _get_encryption_key(entry)
+
     try:
         async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device
+            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
         ) as device:
             fw = await device.read_firmware_version()
             is_flex = device.is_flex
+    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+        raise ConfigEntryAuthFailed(
+            f"Encryption key rejected by OpenDisplay device: {err}"
+        ) from err
     except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to OpenDisplay device: {err}"

@@ -60,6 +60,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -110,6 +111,20 @@ class SensorDeviceClass(StrEnum):
 
     TIMESTAMP = "timestamp"
     """Timestamp.
+
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    UPTIME = "uptime"
+    """Uptime.
+
+    Represents the point in time when a device or service last restarted.
+
+    Small drift between updates is automatically suppressed in
+    `SensorEntity.state` to avoid unnecessary state changes caused by clock
+    jitter.
 
     Unit of measurement: `None`
 
@@ -180,7 +195,7 @@ class SensorDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`, `mA`
+    Unit of measurement: `A`, `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -515,6 +530,7 @@ NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.DATE,
     SensorDeviceClass.ENUM,
     SensorDeviceClass.TIMESTAMP,
+    SensorDeviceClass.UPTIME,
 }
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
@@ -565,6 +581,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    SensorDeviceClass.FREQUENCY: FrequencyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     SensorDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,
@@ -814,6 +831,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TEMPERATURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TEMPERATURE_DELTA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TIMESTAMP: set(),
+    SensorDeviceClass.UPTIME: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},
