@@ -29,11 +29,12 @@ from homeassistant.components.assist_satellite.entity import AssistSatelliteStat
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
+from tests.common import MockUser
 from tests.components.tts.common import MockResultStream
 
 
@@ -965,6 +966,24 @@ async def test_ask_question(
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
+
+
+async def test_ask_question_requires_entity_permission(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test ask_question is denied for users without POLICY_CONTROL on the entity."""
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            "assist_satellite",
+            "ask_question",
+            {"entity_id": "assist_satellite.test_entity", "question": "Anything?"},
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
 
 
 async def test_wake_word_start_keeps_responding(
