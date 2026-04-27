@@ -583,7 +583,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
         except ApiException as err:
             # Fall back to coarser data rather than crashing the coordinator.
-            _LOGGER.warning("Error getting hourly cost reads, using daily: %s", err)
+            _LOGGER.warning(
+                "Error getting hourly cost reads, using coarser reads: %s", err
+            )
             return cost_reads
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)

@@ -326,6 +326,7 @@ async def test_coordinator_cost_reads_fallback_on_api_error(
 
     # Should NOT raise — the coordinator should fall back to coarser data
     result = await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
     assert result is not None
 
 
