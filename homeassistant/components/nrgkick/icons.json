@@ -1,5 +1,15 @@
 {
   "entity": {
+    "binary_sensor": {
+      "charge_permitted": {
+        "default": "mdi:ev-station"
+      }
+    },
+    "device_tracker": {
+      "gps_tracker": {
+        "default": "mdi:map-marker"
+      }
+    },
     "number": {
       "current_set": {
         "default": "mdi:current-ac"

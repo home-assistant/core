@@ -9,7 +9,7 @@ from typing import Any, Self, cast
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
@@ -95,9 +95,12 @@ class StoredState:
         )
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load the restore state task."""
-    await async_get(hass).async_setup()
+    data = async_get(hass)
+    if load_empty:
+        data.set_load_empty()
+    await data.async_setup()
 
 
 @callback
@@ -124,6 +127,10 @@ class RestoreStateData:
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
 
+    def set_load_empty(self) -> None:
+        """Set the store to load empty and become read-only."""
+        self.store.set_load_empty()
+
     async def async_setup(self) -> None:
         """Set up up the instance of this data helper."""
         await self.async_load()
@@ -139,6 +146,8 @@ class RestoreStateData:
         """Load the instance of this data helper."""
         try:
             stored_states = await self.store.async_load()
+        except UnsupportedStorageVersionError:
+            raise
         except HomeAssistantError as exc:
             _LOGGER.error("Error loading last states", exc_info=exc)
             stored_states = None
@@ -172,15 +181,24 @@ class RestoreStateData:
         }
 
         # Start with the currently registered states
-        stored_states = [
-            StoredState(
-                current_states_by_entity_id[entity_id],
-                entity.extra_restore_state_data,
-                now,
+        stored_states: list[StoredState] = []
+        for entity_id, entity in self.entities.items():
+            if entity_id not in current_states_by_entity_id:
+                continue
+            try:
+                extra_data = entity.extra_restore_state_data
+            except Exception:
+                _LOGGER.exception(
+                    "Error getting extra restore state data for %s", entity_id
+                )
+                continue
+            stored_states.append(
+                StoredState(
+                    current_states_by_entity_id[entity_id],
+                    extra_data,
+                    now,
+                )
             )
-            for entity_id, entity in self.entities.items()
-            if entity_id in current_states_by_entity_id
-        ]
         expiration_time = now - STATE_EXPIRATION
 
         for entity_id, stored_state in self.last_states.items():
@@ -210,6 +228,8 @@ class RestoreStateData:
             )
         except HomeAssistantError as exc:
             _LOGGER.error("Error saving current states", exc_info=exc)
+        except Exception:
+            _LOGGER.exception("Unexpected error saving current states")
 
     @callback
     def async_setup_dump(self, *args: Any) -> None:
@@ -249,13 +269,15 @@ class RestoreStateData:
 
     @callback
     def async_restore_entity_removed(
-        self, entity_id: str, extra_data: ExtraStoredData | None
+        self,
+        entity_id: str,
+        state: State | None,
+        extra_data: ExtraStoredData | None,
     ) -> None:
         """Unregister this entity from saving state."""
         # When an entity is being removed from hass, store its last state. This
         # allows us to support state restoration if the entity is removed, then
         # re-added while hass is still running.
-        state = self.hass.states.get(entity_id)
         # To fully mimic all the attribute data types when loaded from storage,
         # we're going to serialize it to JSON and then re-load it.
         if state is not None:
@@ -278,8 +300,18 @@ class RestoreEntity(Entity):
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        try:
+            extra_data = self.extra_restore_state_data
+        except Exception:
+            _LOGGER.exception(
+                "Error getting extra restore state data for %s", self.entity_id
+            )
+            state = None
+            extra_data = None
+        else:
+            state = self.hass.states.get(self.entity_id)
         async_get(self.hass).async_restore_entity_removed(
-            self.entity_id, self.extra_restore_state_data
+            self.entity_id, state, extra_data
         )
         await super().async_internal_will_remove_from_hass()
 

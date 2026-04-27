@@ -38,6 +38,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_remote_setup(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:

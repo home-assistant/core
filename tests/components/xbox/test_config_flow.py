@@ -648,7 +648,7 @@ async def test_unique_id_and_friends_migration(
 @pytest.mark.parametrize(
     ("provider", "method"),
     [
-        ("people", "get_friends_by_xuid"),
+        ("people", "get_friend_by_xuid"),
         ("people", "get_friends_own"),
     ],
 )

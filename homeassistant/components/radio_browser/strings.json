@@ -5,5 +5,13 @@
         "description": "Do you want to add Radio Browser to Home Assistant?"
       }
     }
+  },
+  "exceptions": {
+    "config_entry_not_ready": {
+      "message": "Radio Browser integration is not ready"
+    },
+    "radio_browser_error": {
+      "message": "Error occurred while communicating with Radio Browser"
+    }
   }
 }

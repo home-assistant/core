@@ -1,39 +1,38 @@
 {
-  "sn": "ALG001124100107",
-  "name": "Zinvolt Batterij",
-  "longitude": 4.8936,
-  "latitude": 52.3792,
+  "sn": "ZVG011025120088",
+  "name": "ZVG011025120088",
   "onlineStatus": "ONLINE",
   "currentPower": {
-    "soc": 4,
-    "coc": 0.04,
-    "pbt": 0,
+    "soc": 100,
+    "coc": 4,
+    "pbt": -19,
     "ppv": 0,
-    "pso": 0,
+    "pso": -19,
     "onGrid": true,
     "onlineStatus": "ONLINE",
     "smp": 800,
-    "isDormancy": false
+    "isDormancy": false,
+    "socCalibrateStatus": false
   },
-  "smartMode": "DYNAMIC",
+  "smartMode": "CHARGED",
   "globalSettings": {
     "maxOutput": 800,
     "maxOutputLimit": 800,
     "maxOutputUnlocked": false,
     "batHighCap": 100,
-    "batUseCap": 25,
-    "maxChargePower": 900,
+    "batUseCap": 10,
+    "maxChargePower": 800,
     "feedModePower": {
       "modeType": "FIXED",
       "fixedPower": 200,
       "pvFeedLimitPower": 800,
       "equips": []
     },
-    "haveElectricityPrices": true,
+    "haveElectricityPrices": false,
     "standbyTime": 60
   },
   "tips": [],
-  "bpd": 493,
+  "bpd": 2119,
   "updating": {
     "units": []
   },
@@ -44,8 +43,5 @@
   },
   "isShowStatistic": false,
   "meterReaders": [],
-  "isHomeDisplay": false,
-  "dynamicPriceStatus": "CONFIGURED",
-  "dynamicStrategyStatus": "CONFIGURED",
   "remindManualSocCalibration": true
 }

@@ -1,7 +1,7 @@
 {
   "domain": "homevolt",
   "name": "Homevolt",
-  "codeowners": ["@danielhiversen"],
+  "codeowners": ["@danielhiversen", "@liudger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homevolt",
   "integration_type": "device",

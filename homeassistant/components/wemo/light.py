@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools as ft
 from typing import Any, cast
 
 from pywemo import Bridge, BridgeLight, Dimmer
@@ -166,7 +167,7 @@ class WemoLight(WemoEntity, LightEntity):
         """Return true if device is on."""
         return self.light.state.get("onoff", WEMO_OFF) != WEMO_OFF
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         xy_color = None
 
@@ -184,7 +185,7 @@ class WemoLight(WemoEntity, LightEntity):
             "force_update": False,
         }
 
-        with self._wemo_call_wrapper("turn on"):
+        def _turn_on() -> None:
             if xy_color is not None:
                 self.light.set_color(xy_color, transition=transition_time)
 
@@ -195,12 +196,14 @@ class WemoLight(WemoEntity, LightEntity):
 
             self.light.turn_on(**turn_on_kwargs)
 
-    def turn_off(self, **kwargs: Any) -> None:
+        await self._async_wemo_call("turn on", _turn_on)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
-
-        with self._wemo_call_wrapper("turn off"):
-            self.light.turn_off(transition=transition_time)
+        await self._async_wemo_call(
+            "turn off", ft.partial(self.light.turn_off, transition=transition_time)
+        )
 
 
 class WemoDimmer(WemoBinaryStateEntity, LightEntity):
@@ -216,20 +219,19 @@ class WemoDimmer(WemoBinaryStateEntity, LightEntity):
         wemo_brightness: int = self.wemo.get_brightness()
         return int((wemo_brightness * 255) / 100)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         # Wemo dimmer switches use a range of [0, 100] to control
         # brightness. Level 255 might mean to set it to previous value
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int((brightness / 255) * 100)
-            with self._wemo_call_wrapper("set brightness"):
-                self.wemo.set_brightness(brightness)
+            await self._async_wemo_call(
+                "set brightness", ft.partial(self.wemo.set_brightness, brightness)
+            )
         else:
-            with self._wemo_call_wrapper("turn on"):
-                self.wemo.on()
+            await self._async_wemo_call("turn on", self.wemo.on)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
-        with self._wemo_call_wrapper("turn off"):
-            self.wemo.off()
+        await self._async_wemo_call("turn off", self.wemo.off)

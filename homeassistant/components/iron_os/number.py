@@ -358,7 +358,7 @@ PINECIL_SETPOINT_NUMBER_DESCRIPTION = IronOSNumberEntityDescription(
     native_max_value=MAX_TEMP,
     native_min_value_f=MIN_TEMP_F,
     native_max_value_f=MAX_TEMP_F,
-    native_step=5,
+    native_step=1,
 )
 
 

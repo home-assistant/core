@@ -222,6 +222,10 @@ async def test_recovery_java(hass: HomeAssistant) -> None:
             "homeassistant.components.minecraft_server.api.JavaServer.async_status",
             side_effect=OSError,
         ),
+        patch(
+            "homeassistant.components.minecraft_server.api.LegacyServer.async_lookup",
+            side_effect=ValueError,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -262,6 +266,14 @@ async def test_recovery_bedrock(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
             side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.LegacyServer.async_lookup",
+            side_effect=ValueError,
         ),
     ):
         result = await hass.config_entries.flow.async_init(

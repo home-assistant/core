@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import LOGGER
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 
-PLATFORMS = [Platform.FAN, Platform.SELECT]
+PLATFORMS = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(

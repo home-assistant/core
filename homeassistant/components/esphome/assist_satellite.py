@@ -524,14 +524,10 @@ class EsphomeAssistSatellite(
         self._active_pipeline_index = 0
 
         maybe_pipeline_index = 0
-        while True:
-            if not (ww_entity_id := self.get_wake_word_entity(maybe_pipeline_index)):
-                break
-
-            if not (ww_state := self.hass.states.get(ww_entity_id)):
-                continue
-
-            if ww_state.state == wake_word_phrase:
+        while ww_entity_id := self.get_wake_word_entity(maybe_pipeline_index):
+            if (
+                ww_state := self.hass.states.get(ww_entity_id)
+            ) and ww_state.state == wake_word_phrase:
                 # First match
                 self._active_pipeline_index = maybe_pipeline_index
                 break

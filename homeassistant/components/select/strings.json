@@ -1,4 +1,19 @@
 {
+  "conditions": {
+    "is_option_selected": {
+      "description": "Tests if one or more dropdowns have a specific option selected.",
+      "fields": {
+        "behavior": {
+          "name": "Condition passes if"
+        },
+        "option": {
+          "description": "The options to check for.",
+          "name": "Option"
+        }
+      },
+      "name": "Option is selected"
+    }
+  },
   "device_automation": {
     "action_type": {
       "select_first": "Change {entity_name} to first option",
@@ -36,45 +51,59 @@
       "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    }
+  },
   "services": {
     "select_first": {
-      "description": "Selects the first option.",
-      "name": "First"
+      "description": "Selects the first option of a select.",
+      "name": "Select first option"
     },
     "select_last": {
-      "description": "Selects the last option.",
-      "name": "Last"
+      "description": "Selects the last option of a select.",
+      "name": "Select last option"
     },
     "select_next": {
-      "description": "Selects the next option.",
+      "description": "Selects the next option of a select.",
       "fields": {
         "cycle": {
           "description": "If the option should cycle from the last to the first.",
           "name": "Cycle"
         }
       },
-      "name": "Next"
+      "name": "Select next option"
     },
     "select_option": {
-      "description": "Selects an option.",
+      "description": "Selects an option of a select.",
       "fields": {
         "option": {
           "description": "Option to be selected.",
           "name": "Option"
         }
       },
-      "name": "Select"
+      "name": "Select option"
     },
     "select_previous": {
-      "description": "Selects the previous option.",
+      "description": "Selects the previous option of a select.",
       "fields": {
         "cycle": {
           "description": "If the option should cycle from the first to the last.",
           "name": "Cycle"
         }
       },
-      "name": "Previous"
+      "name": "Select previous option"
     }
   },
-  "title": "Select"
+  "title": "Select",
+  "triggers": {
+    "selection_changed": {
+      "description": "Triggers after the selected option of one or more dropdowns changes.",
+      "name": "Selection changed"
+    }
+  }
 }

@@ -23,7 +23,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,7 +30,7 @@ from homeassistant.util import color as color_util
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 from .util import (
     convert_to_hass_hs,
@@ -46,6 +45,14 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
     clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
+
+# Maximum Mireds value per the Matter spec is 65279
+# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin, so this corresponds to a minimum color temperature of ~15.3K
+# Which is shown in UI as 15 Kelvin due to rounding.
+# But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
+# and causes Invoke error, so cap values over maximum when sending
+MATTER_MAX_MIREDS = 65279
+
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
@@ -78,11 +85,11 @@ TRANSITION_BLOCKLIST = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 
@@ -152,7 +159,7 @@ class MatterLight(MatterEntity, LightEntity):
         )
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperatureMireds=color_temp_mired,
+                colorTemperatureMireds=min(color_temp_mired, MATTER_MAX_MIREDS),
                 # transition in matter is measured in tenths of a second
                 transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,

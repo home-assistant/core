@@ -1,6 +1,6 @@
 """Test the System Nexa 2 switch platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sn2 import ConnectionStatus, SettingsUpdate, StateChange
@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -34,10 +35,17 @@ async def test_switch_entities(
     """Test the switch entities."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Only load the switch platform for snapshot testing
+    with patch(
+        "homeassistant.components.systemnexa2.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 async def test_switch_turn_on_off_toggle(

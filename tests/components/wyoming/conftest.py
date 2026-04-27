@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components import stt
-from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -254,4 +253,4 @@ async def satellite_device(
     hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
 ) -> SatelliteDevice:
     """Get a satellite device fixture."""
-    return hass.data[DOMAIN][satellite_config_entry.entry_id].device
+    return satellite_config_entry.runtime_data.device

@@ -32,5 +32,16 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
+  },
+  "exceptions": {
+    "close_door_failed": {
+      "message": "Failed to close the garage door"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "open_door_failed": {
+      "message": "Failed to open the garage door"
+    }
   }
 }

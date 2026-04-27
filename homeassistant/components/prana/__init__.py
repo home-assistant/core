@@ -14,13 +14,11 @@ from .coordinator import PranaConfigEntry, PranaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# Keep platforms sorted alphabetically to satisfy lint rule
-PLATFORMS = [Platform.SWITCH]
+PLATFORMS = [Platform.FAN, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PranaConfigEntry) -> bool:
     """Set up Prana from a config entry."""
-
     coordinator = PranaCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

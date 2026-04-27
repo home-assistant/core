@@ -8,7 +8,11 @@ from typing import Any
 from powerfox import Powerfox, PowerfoxAuthenticationError, PowerfoxConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -38,26 +42,27 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
-            client = Powerfox(
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
+            error = await self._async_validate_credentials(
+                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
-            try:
-                await client.all_devices()
-            except PowerfoxAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except PowerfoxConnectionError:
-                errors["base"] = "cannot_connect"
+            if error:
+                errors["base"] = error
+            elif self.source == SOURCE_RECONFIGURE:
+                reconfigure_entry = self._get_reconfigure_entry()
+                if reconfigure_entry.data[CONF_EMAIL] != user_input[CONF_EMAIL]:
+                    self._async_abort_entries_match(
+                        {CONF_EMAIL: user_input[CONF_EMAIL]}
+                    )
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
             else:
+                self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data={
-                        CONF_EMAIL: user_input[CONF_EMAIL],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
+                    data=user_input,
                 )
+
         return self.async_show_form(
             step_id="user",
             errors=errors,
@@ -78,22 +83,17 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            client = Powerfox(
-                username=reauth_entry.data[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
+            error = await self._async_validate_credentials(
+                reauth_entry.data[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
-            try:
-                await client.all_devices()
-            except PowerfoxAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except PowerfoxConnectionError:
-                errors["base"] = "cannot_connect"
+            if error:
+                errors["base"] = error
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates=user_input,
                 )
+
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"email": reauth_entry.data[CONF_EMAIL]},
@@ -104,32 +104,22 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Reconfigure Powerfox configuration."""
-        errors = {}
+        """Handle reconfiguration."""
+        return await self.async_step_user()
 
-        reconfigure_entry = self._get_reconfigure_entry()
-        if user_input is not None:
-            client = Powerfox(
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
-            )
-            try:
-                await client.all_devices()
-            except PowerfoxAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except PowerfoxConnectionError:
-                errors["base"] = "cannot_connect"
-            else:
-                if reconfigure_entry.data[CONF_EMAIL] != user_input[CONF_EMAIL]:
-                    self._async_abort_entries_match(
-                        {CONF_EMAIL: user_input[CONF_EMAIL]}
-                    )
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=user_input
-                )
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
+    async def _async_validate_credentials(
+        self, email: str, password: str
+    ) -> str | None:
+        """Validate credentials and return error string or None if valid."""
+        client = Powerfox(
+            username=email,
+            password=password,
+            session=async_get_clientsession(self.hass),
         )
+        try:
+            await client.all_devices()
+        except PowerfoxAuthenticationError:
+            return "invalid_auth"
+        except PowerfoxConnectionError:
+            return "cannot_connect"
+        return None

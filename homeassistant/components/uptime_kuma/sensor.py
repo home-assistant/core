@@ -9,6 +9,7 @@ from typing import Any
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
 from pythonkuma.models import MonitorStatus
+from yarl import URL
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, HAS_CERT, HAS_HOST, HAS_PORT, HAS_URL
+from .const import DOMAIN, HAS_CERT, HAS_HOST, HAS_PORT, HAS_URL, LOCAL_INSTANCE
 from .coordinator import UptimeKumaConfigEntry, UptimeKumaDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
@@ -107,13 +108,6 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda m: m.monitor_hostname,
         create_entity=lambda t: t in HAS_HOST,
-    ),
-    UptimeKumaSensorEntityDescription(
-        key=UptimeKumaSensor.PORT,
-        translation_key=UptimeKumaSensor.PORT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda m: m.monitor_port,
-        create_entity=lambda t: t in HAS_PORT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.PORT,
@@ -253,16 +247,21 @@ class UptimeKumaSensorEntity(
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{monitor!s}_{entity_description.key}"
         )
+
+        url = URL(coordinator.config_entry.data[CONF_URL]) / "dashboard"
+        if url.host in LOCAL_INSTANCE:
+            configuration_url = None
+        elif isinstance(monitor, int):
+            configuration_url = url / str(monitor)
+        else:
+            configuration_url = url
+
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.data[monitor].monitor_name,
             identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor!s}")},
             manufacturer="Uptime Kuma",
-            configuration_url=(
-                None
-                if "127.0.0.1" in (url := coordinator.config_entry.data[CONF_URL])
-                else url
-            ),
+            configuration_url=configuration_url,
             sw_version=coordinator.api.version.version,
         )
 

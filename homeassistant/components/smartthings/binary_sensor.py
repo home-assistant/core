@@ -36,6 +36,7 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
         | None
     ) = None
     component_translation_key: dict[str, str] | None = None
+    supported_states_attributes: Attribute | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -188,6 +189,63 @@ CAPABILITY_TO_SENSORS: dict[
             },
         )
     },
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_DUST_BAG: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="full",
+            component_translation_key={
+                "station": "robot_cleaner_dust_bag",
+            },
+            exists_fn=lambda component, _: component == "station",
+            supported_states_attributes=Attribute.SUPPORTED_STATUS,
+        )
+    },
+    Capability.CUSTOM_COOKTOP_OPERATING_STATE: {
+        Attribute.COOKTOP_OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.COOKTOP_OPERATING_STATE,
+            translation_key="cooktop_operating_state",
+            is_on_key="run",
+            supported_states_attributes=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
+        )
+    },
+    Capability.SAMSUNG_CE_CLEAN_STATION_STICK_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            component_translation_key={
+                "station": "stick_cleaner_status",
+            },
+            exists_fn=lambda component, _: component == "station",
+            is_on_key="attached",
+        )
+    },
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            translation_key="microfiber_filter_blockage",
+            is_on_key="blockage",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUST_BAG: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="full",
+            component_translation_key={
+                "station": "stick_cleaner_dust_bag",
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            exists_fn=lambda component, _: component == "station",
+        )
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_STICK_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="charging",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
 }
 
 
@@ -236,6 +294,18 @@ async def async_setup_entry(
             and (
                 not description.category
                 or get_main_component_category(device) in description.category
+            )
+            and (
+                not description.supported_states_attributes
+                or (
+                    isinstance(
+                        options := device.status[component][capability][
+                            description.supported_states_attributes
+                        ].value,
+                        list,
+                    )
+                    and len(options) == 2
+                )
             )
         )
     )

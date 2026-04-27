@@ -174,6 +174,14 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Backblaze B2 bucket '%s' does not exist", user_input[CONF_BUCKET]
             )
             errors[CONF_BUCKET] = "invalid_bucket_name"
+        except exception.BadRequest as err:
+            _LOGGER.error(
+                "Backblaze B2 API rejected the request for Key ID '%s': %s",
+                user_input[CONF_KEY_ID],
+                err,
+            )
+            errors["base"] = "bad_request"
+            placeholders["error_message"] = str(err)
         except (
             exception.B2ConnectionError,
             exception.B2RequestTimeout,

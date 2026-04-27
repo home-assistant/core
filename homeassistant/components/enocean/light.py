@@ -5,7 +5,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import combine_hex
+from enocean_async import ERP1Telegram
+from enocean_async.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -20,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 CONF_SENDER_ID = "sender_id"
 
@@ -75,7 +76,8 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, bval, 0x01, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
-        self.send_command(command, [], 0x01)
+        packet_type = ESP3PacketType(0x01)
+        self.send_command(command, [], packet_type)
         self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -83,17 +85,18 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
-        self.send_command(command, [], 0x01)
+        packet_type = ESP3PacketType(0x01)
+        self.send_command(command, [], packet_type)
         self._attr_is_on = False
 
-    def value_changed(self, packet):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of this device.
 
         Dimmer devices like Eltako FUD61 send telegram in different RORGs.
         We only care about the 4BS (0xA5).
         """
-        if packet.data[0] == 0xA5 and packet.data[1] == 0x02:
-            val = packet.data[2]
+        if telegram.rorg == 0xA5 and telegram.telegram_data[0] == 0x02:
+            val = telegram.telegram_data[1]
             self._attr_brightness = math.floor(val / 100.0 * 256.0)
             self._attr_is_on = bool(val != 0)
             self.schedule_update_ha_state()

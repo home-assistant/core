@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_setup[button.mock_title_cleanup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -31,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cleanup',
-    'unique_id': '1C:ED:6F:12:34:11-cleanup',
+    'unique_id': '1CED6F123411-cleanup',
     'unit_of_measurement': None,
   })
 # ---
@@ -50,8 +51,9 @@
 # ---
 # name: test_button_setup[button.mock_title_firmware_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -80,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'firmware_update',
-    'unique_id': '1C:ED:6F:12:34:11-firmware_update',
+    'unique_id': '1CED6F123411-firmware_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -100,8 +102,9 @@
 # ---
 # name: test_button_setup[button.mock_title_reconnect-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -130,7 +133,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reconnect',
-    'unique_id': '1C:ED:6F:12:34:11-reconnect',
+    'unique_id': '1CED6F123411-reconnect',
     'unit_of_measurement': None,
   })
 # ---
@@ -150,8 +153,9 @@
 # ---
 # name: test_button_setup[button.mock_title_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -180,7 +184,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-reboot',
+    'unique_id': '1CED6F123411-reboot',
     'unit_of_measurement': None,
   })
 # ---
@@ -200,8 +204,9 @@
 # ---
 # name: test_button_setup[button.printer_wake_on_lan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

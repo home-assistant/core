@@ -57,7 +57,7 @@ async def _check_button_event_creation(
     entity_ids_available = list(entity_registry.entities.keys())
 
     assert entity_ids_available == unordered(entity_ids)
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 async def test_button_event_creation_balance(

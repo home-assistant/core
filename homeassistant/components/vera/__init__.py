@@ -8,10 +8,7 @@ import logging
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_LIGHTS,
@@ -21,58 +18,22 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .common import (
     ControllerData,
     SubscriptionRegistry,
+    VeraConfigEntry,
     get_configured_platforms,
-    get_controller_data,
-    set_controller_data,
 )
 from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VERA_ID_LIST_SCHEMA = vol.Schema([int])
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CONTROLLER): cv.url,
-                    vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-                    vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
-    """Set up for Vera controllers."""
-    hass.data[DOMAIN] = {}
-
-    if not (config := base_config.get(DOMAIN)):
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool:
     """Do setup of vera."""
     # Use options entered during initial config flow or provided from configuration.yml
     if entry.data.get(CONF_LIGHTS) or entry.data.get(CONF_EXCLUDE):
@@ -127,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry=entry,
     )
 
-    set_controller_data(hass, entry, controller_data)
+    entry.runtime_data = controller_data
 
     # Forward the config data to the necessary platforms.
     await hass.config_entries.async_forward_entry_setups(
@@ -146,9 +107,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: VeraConfigEntry
+) -> bool:
     """Unload vera config entry."""
-    controller_data: ControllerData = get_controller_data(hass, config_entry)
+    controller_data = config_entry.runtime_data
     await asyncio.gather(
         *(
             hass.config_entries.async_unload_platforms(

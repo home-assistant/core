@@ -23,6 +23,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -30,7 +31,6 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
 from .websocket import async_register_websocket_handlers
@@ -63,7 +63,6 @@ SERVICE_STOP = "stop"
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
-ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED = "segments_mapping_not_configured"
 
 _BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
@@ -71,7 +70,6 @@ _BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the vacuum is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -235,12 +233,6 @@ class StateVacuumEntity(
             self._report_deprecated_battery_properties("battery_level")
         if self.__vacuum_legacy_battery_icon:
             self._report_deprecated_battery_properties("battery_icon")
-
-    @callback
-    def async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
-        super().async_write_ha_state()
-        self._async_check_segments_issues()
 
     @callback
     def async_registry_entry_updated(self) -> None:
@@ -444,7 +436,14 @@ class StateVacuumEntity(
             )
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        area_mapping: dict[str, list[str]] = options.get("area_mapping", {})
+        area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
+
+        if area_mapping is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="area_mapping_not_configured",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
 
         # We use a dict to preserve the order of segments.
         segment_ids: dict[str, None] = {}
@@ -514,43 +513,6 @@ class StateVacuumEntity(
             return
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        should_have_not_configured_issue = (
-            VacuumEntityFeature.CLEAN_AREA in self.supported_features
-            and options.get("area_mapping") is None
-        )
-
-        if (
-            should_have_not_configured_issue
-            and not self._segments_not_configured_issue_created
-        ):
-            issue_id = (
-                f"{ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED}_{self.registry_entry.id}"
-            )
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                issue_id,
-                data={
-                    "entry_id": self.registry_entry.id,
-                    "entity_id": self.entity_id,
-                },
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED,
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                },
-            )
-            self._segments_not_configured_issue_created = True
-        elif (
-            not should_have_not_configured_issue
-            and self._segments_not_configured_issue_created
-        ):
-            issue_id = (
-                f"{ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED}_{self.registry_entry.id}"
-            )
-            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
-            self._segments_not_configured_issue_created = False
 
         if self._segments_changed_last_seen is not None and (
             VacuumEntityFeature.CLEAN_AREA not in self.supported_features

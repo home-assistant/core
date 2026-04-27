@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_generate_structured_data
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -46,14 +47,16 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
-      'type': 'disabled',
+      'budget_tokens': 1024,
+      'display': 'summarized',
+      'type': 'enabled',
     }),
   })
 # ---
 # name: test_generate_structured_data_legacy
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -79,7 +82,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
@@ -111,6 +113,7 @@
 # ---
 # name: test_generate_structured_data_legacy_extended_thinking
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -152,6 +155,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -181,6 +185,7 @@
 # ---
 # name: test_generate_structured_data_legacy_extra_text_block
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -226,6 +231,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -255,6 +261,7 @@
 # ---
 # name: test_generate_structured_data_legacy_tools
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -280,7 +287,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
@@ -289,7 +295,7 @@
     }),
     'tools': list([
       dict({
-        'max_uses': None,
+        'max_uses': 5,
         'name': 'web_search',
         'type': 'web_search_20250305',
       }),

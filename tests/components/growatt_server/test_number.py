@@ -54,7 +54,7 @@ async def test_set_number_value_api_error(
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
-    with pytest.raises(HomeAssistantError, match="Error while setting parameter"):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -64,6 +64,9 @@ async def test_set_number_value_api_error(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == "growatt_server"
+    assert excinfo.value.translation_key == "api_error"
+    assert "error" in excinfo.value.translation_placeholders
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")

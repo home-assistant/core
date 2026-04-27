@@ -51,11 +51,11 @@
   "services": {
     "disable_motion_detection": {
       "description": "Disables the motion detection of a camera.",
-      "name": "Disable motion detection"
+      "name": "Disable camera motion detection"
     },
     "enable_motion_detection": {
       "description": "Enables the motion detection of a camera.",
-      "name": "Enable motion detection"
+      "name": "Enable camera motion detection"
     },
     "play_stream": {
       "description": "Plays a camera stream on a supported media player.",
@@ -69,7 +69,7 @@
           "name": "Media player"
         }
       },
-      "name": "Play stream"
+      "name": "Play camera stream"
     },
     "record": {
       "description": "Creates a recording of a live camera feed.",
@@ -87,7 +87,7 @@
           "name": "Lookback"
         }
       },
-      "name": "Record"
+      "name": "Record camera feed"
     },
     "snapshot": {
       "description": "Takes a snapshot from a camera.",
@@ -97,15 +97,15 @@
           "name": "Filename"
         }
       },
-      "name": "Take snapshot"
+      "name": "Take camera snapshot"
     },
     "turn_off": {
       "description": "Turns off a camera.",
-      "name": "[%key:common::action::turn_off%]"
+      "name": "Turn off camera"
     },
     "turn_on": {
       "description": "Turns on a camera.",
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on camera"
     }
   },
   "title": "Camera"

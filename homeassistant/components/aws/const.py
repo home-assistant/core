@@ -1,10 +1,17 @@
 """Constant for AWS component."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import AWSData
+
 DOMAIN = "aws"
 
-DATA_CONFIG = "aws_config"
-DATA_HASS_CONFIG = "aws_hass_config"
-DATA_SESSIONS = "aws_sessions"
+DATA_AWS: HassKey[AWSData] = HassKey(DOMAIN)
 
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_CONTEXT = "context"

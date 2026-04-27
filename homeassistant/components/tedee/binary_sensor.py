@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiotedee import TedeeLock
-from aiotedee.lock import TedeeDoorState, TedeeLockState
+from aiotedee.models import TedeeDoorState, TedeeLockState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

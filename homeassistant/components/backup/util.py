@@ -22,6 +22,7 @@ from securetar import (
     SecureTarFile,
     SecureTarReadError,
     SecureTarRootKeyContext,
+    get_archive_max_ciphertext_size,
 )
 
 from homeassistant.core import HomeAssistant
@@ -246,6 +247,8 @@ def decrypt_backup(
         except (DecryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error decrypting backup: %s", err)
             error = err
+        except Abort:
+            raise
         except Exception as err:  # noqa: BLE001
             LOGGER.exception("Unexpected error when decrypting backup: %s", err)
             error = err
@@ -332,8 +335,10 @@ def encrypt_backup(
         except (EncryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error encrypting backup: %s", err)
             error = err
+        except Abort:
+            raise
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Unexpected error when decrypting backup: %s", err)
+            LOGGER.exception("Unexpected error when encrypting backup: %s", err)
             error = err
         else:
             # Pad the output stream to the requested minimum size
@@ -379,9 +384,12 @@ def _encrypt_backup(
         if prefix not in expected_archives:
             LOGGER.debug("Unknown inner tar file %s will not be encrypted", obj.name)
             continue
-        output_archive.import_tar(
-            input_tar.extractfile(obj), obj, derived_key_id=inner_tar_idx
-        )
+        if (fileobj := input_tar.extractfile(obj)) is None:
+            LOGGER.debug(
+                "Non regular inner tar file %s will not be encrypted", obj.name
+            )
+            continue
+        output_archive.import_tar(fileobj, obj, derived_key_id=inner_tar_idx)
         inner_tar_idx += 1
 
 
@@ -415,7 +423,7 @@ class _CipherBackupStreamer:
         hass: HomeAssistant,
         backup: AgentBackup,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        password: str | None,
+        password: str,
     ) -> None:
         """Initialize."""
         self._workers: list[_CipherWorkerStatus] = []
@@ -427,7 +435,9 @@ class _CipherBackupStreamer:
 
     def size(self) -> int:
         """Return the maximum size of the decrypted or encrypted backup."""
-        return self._backup.size + self._num_tar_files() * tarfile.RECORDSIZE
+        return get_archive_max_ciphertext_size(
+            self._backup.size, SECURETAR_CREATE_VERSION, self._num_tar_files()
+        )
 
     def _num_tar_files(self) -> int:
         """Return the number of inner tar files."""

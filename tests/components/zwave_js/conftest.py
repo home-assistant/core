@@ -346,6 +346,12 @@ def jasco_14314_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fan_jasco_14314_state.json", DOMAIN)
 
 
+@pytest.fixture(name="enbrighten_55258_zw4002_state", scope="package")
+def enbrighten_55258_zw4002_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 55258/ZW4002 node state fixture data."""
+    return load_json_object_fixture("enbrighten_55258_zw4002_state.json", DOMAIN)
+
+
 @pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
 def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
     """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
@@ -580,6 +586,15 @@ def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
     return cast(
         NodeDataType,
         load_json_object_fixture("nabu_casa_zwa2_legacy_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="hoppe_ehandle_connectsense_state")
+def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Hoppe eHandle ConnectSense."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("hoppe_ehandle_connectsense_state.json", DOMAIN),
     )
 
 
@@ -1157,6 +1172,14 @@ def jasco_14314_fixture(client, jasco_14314_state) -> Node:
     return node
 
 
+@pytest.fixture(name="enbrighten_55258_zw4002")
+def enbrighten_55258_zw4002_fixture(client, enbrighten_55258_zw4002_state) -> Node:
+    """Mock a Enbrighten_55258/ZW4002 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_55258_zw4002_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="enbrighten_58446_zwa4013")
 def enbrighten_58446_zwa4013_fixture(client, enbrighten_58446_zwa4013_state) -> Node:
     """Mock a Enbrighten_58446/zwa4013 fan controller node."""
@@ -1457,5 +1480,15 @@ def nabu_casa_zwa2_legacy_fixture(
 ) -> Node:
     """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
     node = Node(client, nabu_casa_zwa2_legacy_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="hoppe_ehandle_connectsense")
+def hoppe_ehandle_connectsense_fixture(
+    client: MagicMock, hoppe_ehandle_connectsense_state: NodeDataType
+) -> Node:
+    """Load node for Hoppe eHandle ConnectSense."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

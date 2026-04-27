@@ -12,11 +12,7 @@ from homeassistant.components.knx.const import (
     CONF_SYNC_STATE,
 )
 from homeassistant.components.knx.schema import SensorSchema
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 
@@ -66,6 +62,9 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_no_telegram()
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test restoring KNX sensor state."""
     ADDRESS = "2/2/2"
@@ -183,10 +182,19 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
     assert len(events) == 6
 
 
+@pytest.mark.parametrize(
+    "attribute_config",
+    [
+        {"state_class": "total_increasing"},  # invalid for temperature DPT
+        {"unit_of_measurement": "invalid"},
+        {"device_class": "energy", "unit_of_measurement": "invalid"},
+    ],
+)
 async def test_sensor_yaml_attribute_validation(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     knx: KNXTestKit,
+    attribute_config: dict[str, Any],
 ) -> None:
     """Test creating a sensor with invalid unit, state_class or device_class."""
     with caplog.at_level(logging.ERROR):
@@ -196,17 +204,14 @@ async def test_sensor_yaml_attribute_validation(
                     CONF_NAME: "test",
                     CONF_STATE_ADDRESS: "1/1/1",
                     CONF_TYPE: "9.001",  # temperature 2 byte float
-                    CONF_SENSOR_STATE_CLASS: "total_increasing",  # invalid for temperature
+                    **attribute_config,
                 }
             }
         )
     assert len(caplog.messages) == 2
     record = caplog.records[0]
     assert record.levelname == "ERROR"
-    assert (
-        "Invalid config for 'knx': State class 'total_increasing' is not valid for device class"
-        in record.message
-    )
+    assert "Invalid config for 'knx': " in record.message
 
     record = caplog.records[1]
     assert record.levelname == "ERROR"

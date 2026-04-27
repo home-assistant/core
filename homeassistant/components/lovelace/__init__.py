@@ -338,10 +338,7 @@ async def create_yaml_resource_col(
 @callback
 def _async_ensure_default_panel(hass: HomeAssistant) -> None:
     """Ensure a default lovelace panel is registered for backward compatibility."""
-    if (
-        frontend.DATA_PANELS not in hass.data
-        or DOMAIN not in hass.data[frontend.DATA_PANELS]
-    ):
+    if not frontend.async_panel_exists(hass, DOMAIN):
         frontend.async_register_built_in_panel(hass, DOMAIN)
 
 
@@ -353,13 +350,12 @@ def _register_panel(
     kwargs = {
         "frontend_url_path": url_path,
         "require_admin": config[CONF_REQUIRE_ADMIN],
+        "show_in_sidebar": config[CONF_SHOW_IN_SIDEBAR],
+        "sidebar_title": config[CONF_TITLE],
+        "sidebar_icon": config.get(CONF_ICON, DEFAULT_ICON),
         "config": {"mode": mode},
         "update": update,
     }
-
-    if config[CONF_SHOW_IN_SIDEBAR]:
-        kwargs["sidebar_title"] = config[CONF_TITLE]
-        kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
 

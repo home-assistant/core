@@ -7,7 +7,7 @@ import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import ReolinkError
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
+from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (

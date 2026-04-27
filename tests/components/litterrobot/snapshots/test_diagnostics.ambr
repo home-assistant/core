@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'pets': list([
+    ]),
+    'robots': list([
+      dict({
+        'DFICycleCount': '5054',
+        'autoOfflineDisabled': True,
+        'baselineCycleCount': '0',
+        'cleanCycleWaitTimeMinutes': '7',
+        'cycleCapacity': '30',
+        'cycleCount': '15',
+        'cyclesAfterDrawerFull': 0,
+        'deviceType': 'iot',
+        'didNotifyOffline': False,
+        'isDFITriggered': '0',
+        'isDf1Triggered': '0',
+        'isDf2Triggered': '0',
+        'isDfsTriggered': '0',
+        'isManualReset': True,
+        'isOnboarded': True,
+        'lastSeen': '2022-09-17T13:06:37.884000',
+        'litterRobotId': '**REDACTED**',
+        'litterRobotNickname': 'Test',
+        'litterRobotSerial': '**REDACTED**',
+        'newCycleCapacity': '39',
+        'nightLightActive': '1',
+        'panelLockActive': '0',
+        'powerStatus': 'AC',
+        'previousDFITriggered': '0',
+        'savedCycleCapacity': '30',
+        'savedCycleCount': '5',
+        'savedIsManualReset': True,
+        'scoopsSavedCount': 5054,
+        'setupDate': '2022-02-05T02:35:53.731810',
+        'sleepModeActive': '112:50:19',
+        'sleepModeEndTime': '0',
+        'sleepModeStartTime': '0',
+        'sleepModeTime': 1663460160,
+        'totalCycleCount': '5054',
+        'unitStatus': 'RDY',
+      }),
+    ]),
+  })
+# ---
