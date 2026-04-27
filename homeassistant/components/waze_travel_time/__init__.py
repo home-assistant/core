@@ -49,7 +49,7 @@ from .const import (
     DOMAIN,
     METRIC_UNITS,
     REGIONS,
-    SEMAPHORE,
+    SEMAPHORE_KEY,
     UNITS,
     VEHICLE_TYPES,
 )
@@ -115,8 +115,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Load the saved entities."""
-    if SEMAPHORE not in hass.data.setdefault(DOMAIN, {}):
-        hass.data.setdefault(DOMAIN, {})[SEMAPHORE] = asyncio.Semaphore(1)
+    if SEMAPHORE_KEY not in hass.data:
+        hass.data[SEMAPHORE_KEY] = asyncio.Semaphore(1)
 
     httpx_client = get_async_client(hass)
     client = WazeRouteCalculator(

@@ -3004,7 +3004,7 @@
     },
     "html5": {
       "name": "HTML5 Push Notifications",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -5111,12 +5111,6 @@
     "otbr": {
       "name": "Open Thread Border Router",
       "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "otp": {
-      "name": "One-Time Password (OTP)",
-      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8315,6 +8309,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "otp": {
+      "name": "One-Time Password (OTP)",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "random": {
       "integration_type": "helper",

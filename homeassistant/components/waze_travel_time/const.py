@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+
+from homeassistant.util.hass_dict import HassKey
+
 DOMAIN = "waze_travel_time"
-SEMAPHORE = "semaphore"
+SEMAPHORE_KEY: HassKey[asyncio.Semaphore] = HassKey(DOMAIN)
 
 CONF_BASE_COORDINATES = "base_coordinates"
 CONF_DESTINATION = "destination"
