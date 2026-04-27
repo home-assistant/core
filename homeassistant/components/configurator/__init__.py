@@ -14,6 +14,8 @@ from datetime import datetime
 import functools as ft
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import (
     HassJob,
@@ -24,6 +26,7 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -149,8 +152,12 @@ class Configurator:
         self._requests: dict[
             str, tuple[str, list[dict[str, str]], ConfiguratorCallback | None]
         ] = {}
-        hass.services.async_register(
-            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            SERVICE_CONFIGURE,
+            self.async_handle_service_call,
+            schema=vol.Schema({}, extra=vol.ALLOW_EXTRA),
         )
 
     @async_callback
