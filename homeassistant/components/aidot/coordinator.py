@@ -9,7 +9,6 @@ from aidot.const import (
     CONF_AES_KEY,
     CONF_DEVICE_LIST,
     CONF_ID,
-    CONF_LOGIN_INFO,
     CONF_TYPE,
 )
 from aidot.device_client import DeviceClient, DeviceStatusData
@@ -17,7 +16,7 @@ from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -82,7 +81,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = AidotClient(
             session=async_get_clientsession(hass),
-            token=config_entry.data[CONF_LOGIN_INFO],
+            token=config_entry.data,
         )
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.device_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
@@ -92,14 +91,14 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.async_auto_login()
         except AidotUserOrPassIncorrect as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryError from error
 
     async def _async_update_data(self) -> None:
         """Update data async."""
         try:
             data = await self.client.async_get_all_device()
         except AidotAuthFailed as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryError from error
         current_devices = {
             device[CONF_ID]: device
             for device in data[CONF_DEVICE_LIST]
@@ -135,7 +134,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
     def token_fresh_cb(self) -> None:
         """Update token."""
         self.hass.config_entries.async_update_entry(
-            self.config_entry, data={CONF_LOGIN_INFO: self.client.login_info.copy()}
+            self.config_entry, data=self.client.login_info.copy()
         )
 
     async def async_auto_login(self) -> None:

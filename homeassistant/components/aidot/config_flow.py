@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from aidot.client import AidotClient
-from aidot.const import CONF_LOGIN_INFO, DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES
+from aidot.const import DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES
 from aidot.exceptions import AidotUserOrPassIncorrect
 from aiohttp import ClientError
 import voluptuous as vol
@@ -43,71 +42,27 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             client = AidotClient(
                 session=async_get_clientsession(self.hass),
                 country_code=user_input[CONF_COUNTRY_CODE],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
             )
-            await self.async_set_unique_id(client.get_identifier())
-            self._abort_if_unique_id_configured()
             try:
                 login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
                 errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
+            except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
+                await self.async_set_unique_id(client.get_identifier())
                 return self.async_create_entry(
                     title=f"{user_input[CONF_USERNAME]} {user_input[CONF_COUNTRY_CODE]}",
-                    data={
-                        CONF_LOGIN_INFO: login_info,
-                    },
+                    data=login_info,
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            login_info = self._get_reauth_entry().data[CONF_LOGIN_INFO]
-            client = AidotClient(
-                session=async_get_clientsession(self.hass),
-                country_code=login_info.get(CONF_COUNTRY_CODE, DEFAULT_COUNTRY_CODE),
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-            )
-            try:
-                new_login_info = await client.async_post_login()
-            except AidotUserOrPassIncorrect:
-                errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data={CONF_LOGIN_INFO: new_login_info},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            errors=errors,
         )

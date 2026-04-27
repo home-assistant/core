@@ -14,6 +14,9 @@ TEST_LOGIN_RESP = {
     "expiresIn": 10000,
     "nickname": TEST_EMAIL,
     "username": TEST_EMAIL,
+    "password": TEST_PASSWORD,
+    "region": TEST_REGION,
+    "country": "United States",
 }
 
 ENTITY_LIGHT = "light.test_light"
@@ -43,18 +46,17 @@ TEST_DEVICE1 = {
 TEST_DEVICE2 = {
     "id": "device_id2",
     "name": "Test Light2",
-    "modelId": "aidot.light.rgbw",
+    "modelId": "aidot.light.dimming",
     "mac": "AA:BB:CC:DD:EE:EE",
-    "hardwareVersion": "1.0",
+    "hardwareVersion": "2.0",
     "type": "light",
-    "aesKey": ["mock_aes_key"],
+    "aesKey": ["mock_aes_key2"],
     "product": {
-        "id": "test_product",
+        "id": "test_product2",
         "serviceModules": [
-            {"identity": "control.light.rgbw"},
             {
                 "identity": "control.light.cct",
-                "properties": [{"identity": "CCT", "maxValue": 6500, "minValue": 2700}],
+                "properties": [{"identity": "CCT", "maxValue": 5000, "minValue": 3000}],
             },
         ],
     },

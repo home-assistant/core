@@ -4,31 +4,25 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aidot.client import AidotClient
 from aidot.const import (
     CONF_ACCESS_TOKEN,
     CONF_HARDWARE_VERSION,
     CONF_ID,
-    CONF_LOGIN_INFO,
     CONF_MAC,
     CONF_MODEL_ID,
     CONF_NAME,
-    CONF_REGION,
 )
 from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
-from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (
-    TEST_COUNTRY,
     TEST_DEVICE1,
     TEST_DEVICE_LIST,
     TEST_EMAIL,
     TEST_LOGIN_RESP,
-    TEST_PASSWORD,
     TEST_REGION,
 )
 
@@ -51,16 +45,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=f"{TEST_REGION}-{TEST_EMAIL}",
         title=TEST_EMAIL,
-        data={
-            CONF_LOGIN_INFO: {
-                CONF_USERNAME: TEST_EMAIL,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_REGION: TEST_REGION,
-                CONF_COUNTRY_CODE: TEST_COUNTRY,
-                CONF_ACCESS_TOKEN: "123456789",
-                CONF_ID: "123456",
-            }
-        },
+        data=TEST_LOGIN_RESP.copy(),
     )
 
 
@@ -100,9 +85,11 @@ def mocked_device_client() -> MagicMock:
     return create_device_client(TEST_DEVICE1)
 
 
-@pytest.fixture
-def mocked_aidot_client(mocked_device_client: MagicMock) -> MagicMock:
-    """Fixture AidotClient."""
+@pytest.fixture(autouse=True)
+def patch_aidot_client(
+    mocked_device_client: MagicMock,
+) -> Generator[MagicMock]:
+    """Patch AidotClient."""
 
     @callback
     def get_device_client(device: dict[str, Any]):
@@ -110,32 +97,24 @@ def mocked_aidot_client(mocked_device_client: MagicMock) -> MagicMock:
             return mocked_device_client
         return create_device_client(device)
 
-    mock_aidot_client = MagicMock(spec=AidotClient)
-    mock_aidot_client.get_device_client = get_device_client
-    mock_aidot_client.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
-    mock_aidot_client.async_post_login = AsyncMock(return_value=TEST_LOGIN_RESP)
-    mock_aidot_client.get_identifier.return_value = f"{TEST_REGION}-{TEST_EMAIL}"
-    mock_aidot_client.login_info = {
-        CONF_ACCESS_TOKEN: "123456789",
-    }
-    mock_aidot_client.set_token_fresh_cb = MagicMock()
-    mock_aidot_client.async_cleanup = AsyncMock()
-    return mock_aidot_client
-
-
-@pytest.fixture(autouse=True)
-def patch_aidot_client(
-    mocked_aidot_client: MagicMock,
-) -> Generator[None]:
-    """Patch AidotClient."""
     with (
         patch(
             "homeassistant.components.aidot.config_flow.AidotClient",
-            return_value=mocked_aidot_client,
-        ),
+            autospec=True,
+        ) as mocked_aidot_client,
         patch(
             "homeassistant.components.aidot.coordinator.AidotClient",
-            return_value=mocked_aidot_client,
+            new=mocked_aidot_client,
         ),
     ):
-        yield
+        mock_instance = mocked_aidot_client.return_value
+        mock_instance.get_device_client = get_device_client
+        mock_instance.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
+        mock_instance.async_post_login = AsyncMock(return_value=TEST_LOGIN_RESP)
+        mock_instance.get_identifier.return_value = f"{TEST_REGION}-{TEST_EMAIL}"
+        mock_instance.login_info = {
+            CONF_ACCESS_TOKEN: "123456789",
+        }
+        mock_instance.set_token_fresh_cb = MagicMock()
+        mock_instance.async_cleanup = AsyncMock()
+        yield mock_instance

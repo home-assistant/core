@@ -1,6 +1,5 @@
 """Test the aidot device."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aidot.const import CONF_DEVICE_LIST
@@ -148,7 +147,6 @@ async def test_light_unavailable(
     assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
 
     # Simulate device going offline
-    mocked_device_client.status.online = False
     status = Mock(spec=DeviceStatusData)
     status.online = False
     status.on = False
@@ -167,24 +165,24 @@ async def test_light_unavailable(
 async def test_coordinator_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mocked_aidot_client: MagicMock,
+    patch_aidot_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handles auth failure during update."""
     await async_init_integration(hass, mock_config_entry)
 
-    mocked_aidot_client.async_get_all_device = AsyncMock(side_effect=AidotAuthFailed())
+    patch_aidot_client.async_get_all_device = AsyncMock(side_effect=AidotAuthFailed())
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is not None
+    patch_aidot_client.async_get_all_device.assert_awaited_once()
 
 
 async def test_coordinator_device_removal(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mocked_aidot_client: MagicMock,
+    patch_aidot_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handles device removal."""
@@ -193,10 +191,11 @@ async def test_coordinator_device_removal(
     assert hass.states.get(ENTITY_LIGHT) is not None
 
     # Return empty device list
-    mocked_aidot_client.async_get_all_device.return_value = {CONF_DEVICE_LIST: []}
-    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL + timedelta(seconds=1))
+    patch_aidot_client.async_get_all_device.return_value = {CONF_DEVICE_LIST: []}
+    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
-    assert len(coordinator.device_coordinators) == 0
+    # Entity should no longer exist after device removal
+    entity_reg = er.async_get(hass)
+    assert entity_reg.async_get(ENTITY_LIGHT) is None

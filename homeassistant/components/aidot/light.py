@@ -76,7 +76,6 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
 
     def _update_status(self) -> None:
         """Update light status from coordinator data."""
-        self._attr_available = self.coordinator.data.online
         self._attr_is_on = self.coordinator.data.on
         self._attr_brightness = self.coordinator.data.dimming
         self._attr_color_temp_kelvin = self.coordinator.data.cct
@@ -85,7 +84,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.data.online
+        return super().available and self.coordinator.data.online
 
     @callback
     def _handle_coordinator_update(self) -> None:
