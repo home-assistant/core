@@ -19,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 PLATFORMS = [Platform.LIGHT]
 
@@ -40,7 +40,7 @@ def _login_and_get_switches(email: str, password: str) -> DecoraWifiData:
     success = session.login(email, password)
 
     if success is None:
-        raise ConfigEntryAuthFailed("Invalid credentials for myLeviton account")
+        raise ConfigEntryError("Invalid credentials for myLeviton account")
 
     perms = session.user.get_residential_permissions()
     all_switches: list[IotSwitch] = []
