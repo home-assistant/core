@@ -389,3 +389,55 @@ async def test_relay_switch_availability_follows_websocket_state(
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_relay_public_ws_message_with_none_new_obj(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Public WS message with new_obj=None is silently ignored."""
+    ufp, _ = ufp_with_relay
+    await init_entry(hass, ufp, [])
+
+    state_before = hass.states.get(SWITCH_ENTITY_ID)
+    assert state_before is not None
+
+    mock_msg = Mock()
+    mock_msg.new_obj = None
+
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    # Entity state must be unchanged.
+    assert hass.states.get(SWITCH_ENTITY_ID) == state_before
+
+
+async def test_relay_switch_output_removed_from_relay_update(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """WS update where the output is no longer present marks the entity unavailable."""
+    ufp, relay = ufp_with_relay
+    relay.outputs[0].state = RelayOutputState.ON
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+
+    # Build a relay WS update that no longer contains any outputs.
+    relay_no_outputs = _make_relay(outputs=[])
+    relay_no_outputs.id = relay.id
+    relay_no_outputs.mac = relay.mac
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.old_obj = relay_no_outputs
+    mock_msg.new_obj = relay_no_outputs
+
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

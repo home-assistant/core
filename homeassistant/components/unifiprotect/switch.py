@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, Literal
 
 from uiprotect.data import (
     Camera,
@@ -428,6 +428,12 @@ NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+_RELAY_STATE_MAP: dict[RelayOutputState, bool] = {
+    RelayOutputState.ON: True,
+    RelayOutputState.OFF: False,
+    RelayOutputState.OFF_OTP: False,
+}
+
 _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SWITCHES,
     ModelType.LIGHT: LIGHT_SWITCHES,
@@ -638,12 +644,9 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             self._attr_is_on = None
             return
         self._attr_available = self.data.last_update_success
-        if output.state is RelayOutputState.ON:
-            self._attr_is_on = True
-        elif output.state in (RelayOutputState.OFF, RelayOutputState.OFF_OTP):
-            self._attr_is_on = False
-        else:
-            self._attr_is_on = None
+        self._attr_is_on = (
+            _RELAY_STATE_MAP.get(output.state) if output.state is not None else None
+        )
 
     @callback
     def _async_updated(self, relay: Relay) -> None:
@@ -665,22 +668,21 @@ class ProtectRelayOutputSwitch(SwitchEntity):
                 self.data.async_subscribe_relay(relay.mac, self._async_updated)
             )
 
-    @async_ufp_instance_command
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the relay output on."""
+    async def _activate_output(self, state: Literal["on", "off"]) -> None:
+        """Send activate_output to the relay, raising if unavailable."""
         if (relay := self._relay) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="relay_not_available",
             )
-        await relay.activate_output(self._output_id, state="on")
+        await relay.activate_output(self._output_id, state=state)
+
+    @async_ufp_instance_command
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the relay output on."""
+        await self._activate_output("on")
 
     @async_ufp_instance_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the relay output off."""
-        if (relay := self._relay) is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="relay_not_available",
-            )
-        await relay.activate_output(self._output_id, state="off")
+        await self._activate_output("off")
