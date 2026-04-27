@@ -8,11 +8,19 @@
   "conditions": {
     "is_not_playing": {
       "description": "Tests if one or more media players are not playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
       "name": "Media player is not playing"
     },
     "is_off": {
       "description": "Tests if one or more media players are off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::condition_for_name%]"
         }
@@ -21,11 +29,19 @@
     },
     "is_on": {
       "description": "Tests if one or more media players are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
       "name": "Media player is on"
     },
     "is_paused": {
       "description": "Tests if one or more media players are paused.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::condition_for_name%]"
         }
@@ -35,6 +51,9 @@
     "is_playing": {
       "description": "Tests if one or more media players are playing.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::condition_for_name%]"
         }
@@ -415,6 +434,9 @@
     "paused_playing": {
       "description": "Triggers after one or more media players pause playing.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::trigger_for_name%]"
         }
@@ -424,6 +446,9 @@
     "started_playing": {
       "description": "Triggers after one or more media players start playing.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::trigger_for_name%]"
         }
@@ -433,6 +458,9 @@
     "stopped_playing": {
       "description": "Triggers after one or more media players stop playing.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::trigger_for_name%]"
         }
@@ -442,6 +470,9 @@
     "turned_off": {
       "description": "Triggers after one or more media players turn off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::trigger_for_name%]"
         }
@@ -451,6 +482,9 @@
     "turned_on": {
       "description": "Triggers after one or more media players turn on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::media_player::common::trigger_for_name%]"
         }

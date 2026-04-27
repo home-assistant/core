@@ -9,6 +9,9 @@
     "is_detected": {
       "description": "Tests if one or more occupancy sensors are detecting occupancy.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::occupancy::common::condition_for_name%]"
         }
@@ -18,6 +21,9 @@
     "is_not_detected": {
       "description": "Tests if one or more occupancy sensors are not detecting occupancy.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::occupancy::common::condition_for_name%]"
         }
@@ -30,6 +36,9 @@
     "cleared": {
       "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::occupancy::common::trigger_for_name%]"
         }
@@ -39,6 +48,9 @@
     "detected": {
       "description": "Triggers after one or more occupancy sensors start detecting occupancy.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::occupancy::common::trigger_for_name%]"
         }

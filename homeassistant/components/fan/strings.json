@@ -9,6 +9,9 @@
     "is_off": {
       "description": "Tests if one or more fans are off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::fan::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::fan::common::condition_for_name%]"
         }
@@ -18,6 +21,9 @@
     "is_on": {
       "description": "Tests if one or more fans are on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::fan::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::fan::common::condition_for_name%]"
         }
@@ -183,6 +189,9 @@
     "turned_off": {
       "description": "Triggers after one or more fans turn off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::fan::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::fan::common::trigger_for_name%]"
         }
@@ -192,6 +201,9 @@
     "turned_on": {
       "description": "Triggers after one or more fans turn on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::fan::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::fan::common::trigger_for_name%]"
         }

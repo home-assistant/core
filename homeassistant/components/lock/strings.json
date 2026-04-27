@@ -9,6 +9,9 @@
     "is_jammed": {
       "description": "Tests if one or more locks are jammed.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -18,6 +21,9 @@
     "is_locked": {
       "description": "Tests if one or more locks are locked.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -27,6 +33,9 @@
     "is_open": {
       "description": "Tests if one or more locks are open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -36,6 +45,9 @@
     "is_unlocked": {
       "description": "Tests if one or more locks are unlocked.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -131,6 +143,9 @@
     "jammed": {
       "description": "Triggers after one or more locks jam.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }
@@ -140,6 +155,9 @@
     "locked": {
       "description": "Triggers after one or more locks lock.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }
@@ -149,6 +167,9 @@
     "opened": {
       "description": "Triggers after one or more locks open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }
@@ -158,6 +179,9 @@
     "unlocked": {
       "description": "Triggers after one or more locks unlock.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }

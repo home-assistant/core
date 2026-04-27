@@ -9,6 +9,9 @@
     "is_detected": {
       "description": "Tests if one or more motion sensors are detecting motion.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::motion::common::condition_for_name%]"
         }
@@ -18,6 +21,9 @@
     "is_not_detected": {
       "description": "Tests if one or more motion sensors are not detecting motion.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::motion::common::condition_for_name%]"
         }
@@ -30,6 +36,9 @@
     "cleared": {
       "description": "Triggers after one or more motion sensors stop detecting motion.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::motion::common::trigger_for_name%]"
         }
@@ -39,6 +48,9 @@
     "detected": {
       "description": "Triggers after one or more motion sensors start detecting motion.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::motion::common::trigger_for_name%]"
         }

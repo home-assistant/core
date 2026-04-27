@@ -9,6 +9,9 @@
     "is_off": {
       "description": "Tests if one or more remotes are off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::remote::common::condition_for_name%]"
         }
@@ -18,6 +21,9 @@
     "is_on": {
       "description": "Tests if one or more remotes are on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::remote::common::condition_for_name%]"
         }
@@ -144,6 +150,9 @@
     "turned_off": {
       "description": "Triggers when one or more remotes turn off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::remote::common::trigger_for_name%]"
         }
@@ -153,6 +162,9 @@
     "turned_on": {
       "description": "Triggers when one or more remotes turn on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::remote::common::trigger_for_name%]"
         }

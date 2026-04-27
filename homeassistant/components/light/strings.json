@@ -44,6 +44,9 @@
     "is_brightness": {
       "description": "Tests the brightness of one or more lights.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
         "threshold": {
           "name": "[%key:component::light::common::condition_threshold_name%]"
         }
@@ -53,6 +56,9 @@
     "is_off": {
       "description": "Tests if one or more lights are off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::light::common::condition_for_name%]"
         }
@@ -62,6 +68,9 @@
     "is_on": {
       "description": "Tests if one or more lights are on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::light::common::condition_for_name%]"
         }
@@ -498,6 +507,9 @@
     "brightness_crossed_threshold": {
       "description": "Triggers after the brightness of one or more lights crosses a threshold.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::light::common::trigger_for_name%]"
         },
@@ -510,6 +522,9 @@
     "turned_off": {
       "description": "Triggers after one or more lights turn off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::light::common::trigger_for_name%]"
         }
@@ -519,6 +534,9 @@
     "turned_on": {
       "description": "Triggers after one or more lights turn on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::light::common::trigger_for_name%]"
         }

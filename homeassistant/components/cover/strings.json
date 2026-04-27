@@ -269,6 +269,9 @@
     "awning_closed": {
       "description": "Triggers after one or more awnings close.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -278,6 +281,9 @@
     "awning_opened": {
       "description": "Triggers after one or more awnings open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -287,6 +293,9 @@
     "blind_closed": {
       "description": "Triggers after one or more blinds close.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -296,6 +305,9 @@
     "blind_opened": {
       "description": "Triggers after one or more blinds open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -305,6 +317,9 @@
     "curtain_closed": {
       "description": "Triggers after one or more curtains close.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -314,6 +329,9 @@
     "curtain_opened": {
       "description": "Triggers after one or more curtains open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -323,6 +341,9 @@
     "shade_closed": {
       "description": "Triggers after one or more shades close.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -332,6 +353,9 @@
     "shade_opened": {
       "description": "Triggers after one or more shades open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -341,6 +365,9 @@
     "shutter_closed": {
       "description": "Triggers after one or more shutters close.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
@@ -350,6 +377,9 @@
     "shutter_opened": {
       "description": "Triggers after one or more shutters open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::cover::common::trigger_for_name%]"
         }
