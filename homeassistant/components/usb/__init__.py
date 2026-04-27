@@ -188,10 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
 
-    unregister_serialx_transport = register_serialx_transport()
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda _: unregister_serialx_transport()
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
     return True
 

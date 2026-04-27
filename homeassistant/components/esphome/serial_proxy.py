@@ -16,7 +16,7 @@ from serialx.platforms.serial_esphome import (
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 
 from .const import DOMAIN
 from .entry_data import ESPHomeConfigEntry
@@ -100,8 +100,8 @@ class HassESPHomeSerialTransport(ESPHomeSerialTransport):
 
 def register_serialx_transport(
     loop: asyncio.AbstractEventLoop,
-) -> Callable[[], None]:
-    """Register the ESPHome URI handler and return an unregister callable."""
+) -> Callable[[Event], None]:
+    """Register the ESPHome URI handler."""
     global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
     _HASS_LOOP = loop
 
@@ -112,7 +112,8 @@ def register_serialx_transport(
         async_transport_cls=HassESPHomeSerialTransport,
     )
 
-    def _unregister() -> None:
+    @callback
+    def _unregister(event: Event) -> None:
         global _HASS_LOOP  # noqa: PLW0603  # pylint: disable=global-statement
         unregister()
         _HASS_LOOP = None

@@ -81,11 +81,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if "usb" in hass.config.components:
         async_register_serial_port_scanner(hass, _async_scan_serial_ports)
-        unregister_serialx_transport = serial_proxy.register_serialx_transport(
-            hass.loop
-        )
         hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, lambda _: unregister_serialx_transport()
+            EVENT_HOMEASSISTANT_STOP,
+            serial_proxy.register_serialx_transport(hass.loop),
         )
 
     return True
