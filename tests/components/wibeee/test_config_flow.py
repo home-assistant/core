@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.wibeee.const import (
@@ -112,9 +112,9 @@ async def test_dhcp_discovery(
         data=discovery_info,
     )
 
+    # In success case, DHCP flow goes straight to 'mode' step after internal user step validation
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["data_schema"].schema[CONF_HOST].default == MOCK_HOST
+    assert result["step_id"] == "mode"
 
 
 async def test_dhcp_discovery_not_wibeee(
@@ -180,10 +180,14 @@ async def test_mode_step_creates_entry_push(
         {CONF_HOST: MOCK_HOST},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_UPDATE_MODE: MODE_LOCAL_PUSH, CONF_AUTO_CONFIGURE: False},
-    )
+    with patch(
+        "homeassistant.components.wibeee.config_flow._get_local_ip",
+        return_value="192.168.1.50",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_UPDATE_MODE: MODE_LOCAL_PUSH, CONF_AUTO_CONFIGURE: False},
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == MOCK_HOST
@@ -207,10 +211,14 @@ async def test_mode_step_auto_configure_fail(
         {CONF_HOST: MOCK_HOST},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_UPDATE_MODE: MODE_LOCAL_PUSH, CONF_AUTO_CONFIGURE: True},
-    )
+    with patch(
+        "homeassistant.components.wibeee.config_flow._get_local_ip",
+        return_value="192.168.1.50",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_UPDATE_MODE: MODE_LOCAL_PUSH, CONF_AUTO_CONFIGURE: True},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "auto_configure_failed"
@@ -245,13 +253,17 @@ async def test_options_flow_auto_configure_fail(
 
     result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_UPDATE_MODE: MODE_LOCAL_PUSH,
-            CONF_AUTO_CONFIGURE: True,
-        },
-    )
+    with patch(
+        "homeassistant.components.wibeee.config_flow._get_local_ip",
+        return_value="192.168.1.50",
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_UPDATE_MODE: MODE_LOCAL_PUSH,
+                CONF_AUTO_CONFIGURE: True,
+            },
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "auto_configure_failed"
