@@ -99,8 +99,8 @@ async def _async_discover_controllers(
     # Start discovery and wait for a controller to be found or timeout. Close service
     # after it's found or timeout to clean up resources, we don't want it running in
     # the background if the user isn't setting up an integration
-    await discovery.start_discovery()
     try:
+        await discovery.start_discovery()
         with suppress(TimeoutError):
             async with asyncio.timeout(TIMEOUT_DISCOVERY):
                 await controller_ready.wait()
