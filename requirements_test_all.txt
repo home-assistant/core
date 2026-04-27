@@ -200,7 +200,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.3
+aioautomower==2.7.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -324,7 +324,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.4
+aiontfy==0.8.5
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1142,7 +1142,7 @@ hyperion-py==0.7.6
 hyponcloud==0.9.3
 
 # homeassistant.components.iaqualink
-iaqualink==0.6.0
+iaqualink==0.7.0
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
