@@ -171,6 +171,14 @@ async def handle_webhook(
         _LOGGER.warning("Received invalid JSON from OwnTracks")
         return web.json_response([])
 
+    # When a secret is configured, only accept encrypted messages to prevent spoofing
+    if context.secret and message.get("_type") != "encrypted":
+        _LOGGER.warning(
+            "Rejecting unencrypted OwnTracks webhook message. "
+            "Enable encryption in the OwnTracks app when a secret is configured."
+        )
+        return web.Response(status=403)
+
     # Android doesn't populate topic
     if "topic" not in message:
         headers = request.headers
