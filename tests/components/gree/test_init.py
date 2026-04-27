@@ -21,10 +21,6 @@ async def test_setup_simple(hass: HomeAssistant) -> None:
             return_value=True,
         ) as climate_setup,
         patch(
-            "homeassistant.components.gree.select.async_setup_entry",
-            return_value=True,
-        ) as select_setup,
-        patch(
             "homeassistant.components.gree.switch.async_setup_entry",
             return_value=True,
         ) as switch_setup,
@@ -33,7 +29,6 @@ async def test_setup_simple(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert len(climate_setup.mock_calls) == 1
-        assert len(select_setup.mock_calls) == 1
         assert len(switch_setup.mock_calls) == 1
         assert entry.state is ConfigEntryState.LOADED
 

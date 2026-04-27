@@ -15,7 +15,7 @@ from .coordinator import DiscoveryService, GreeConfigEntry, GreeRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SWITCH]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:

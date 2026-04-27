@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
@@ -34,12 +35,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
-    SWING_BOTH,
-    SWING_HORIZONTAL,
-    SWING_OFF,
-    SWING_VERTICAL,
     HVACMode,
 )
 from homeassistant.components.gree.climate import (
@@ -788,10 +786,11 @@ async def test_update_fan_mode(
 
 
 @pytest.mark.parametrize(
-    "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
+    "swing_mode",
+    ["Default", "FullSwing", "FixedUpper", "FixedLower"],
 )
 async def test_send_swing_mode(
-    hass: HomeAssistant, discovery, device, swing_mode
+    hass: HomeAssistant, discovery, device, swing_mode: str
 ) -> None:
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
@@ -826,10 +825,11 @@ async def test_send_invalid_swing_mode(hass: HomeAssistant, discovery, device) -
 
 
 @pytest.mark.parametrize(
-    "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
+    "swing_mode",
+    ["Default", "FullSwing", "FixedUpper", "FixedLower"],
 )
 async def test_send_swing_mode_device_timeout(
-    hass: HomeAssistant, discovery, device, swing_mode
+    hass: HomeAssistant, discovery, device, swing_mode: str
 ) -> None:
     """Test for sending swing mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -849,28 +849,128 @@ async def test_send_swing_mode_device_timeout(
 
 
 @pytest.mark.parametrize(
-    "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
+    "vertical_swing",
+    [VerticalSwing.Default, VerticalSwing.FullSwing, VerticalSwing.FixedUpper],
 )
 async def test_update_swing_mode(
-    hass: HomeAssistant, discovery, device, swing_mode
+    hass: HomeAssistant, discovery, device, vertical_swing: VerticalSwing
 ) -> None:
     """Test for updating swing mode from the device."""
-    device().horizontal_swing = (
-        HorizontalSwing.FullSwing
-        if swing_mode in (SWING_BOTH, SWING_HORIZONTAL)
-        else HorizontalSwing.Default
-    )
-    device().vertical_swing = (
-        VerticalSwing.FullSwing
-        if swing_mode in (SWING_BOTH, SWING_VERTICAL)
-        else VerticalSwing.Default
-    )
+    device().vertical_swing = vertical_swing
 
     await async_setup_gree(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_SWING_MODE) == swing_mode
+    assert state.attributes.get(ATTR_SWING_MODE) == vertical_swing.name
+
+
+@pytest.mark.parametrize(
+    "swing_horizontal_mode",
+    ["Default", "FullSwing", "Left", "Right"],
+)
+async def test_send_swing_horizontal_mode(
+    hass: HomeAssistant, discovery, device, swing_horizontal_mode: str
+) -> None:
+    """Test for sending horizontal swing mode command to the device."""
+    await async_setup_gree(hass)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_HORIZONTAL_MODE: swing_horizontal_mode},
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == swing_horizontal_mode
+
+
+async def test_send_invalid_swing_horizontal_mode(
+    hass: HomeAssistant, discovery, device
+) -> None:
+    """Test for sending an invalid horizontal swing mode command to the device."""
+    await async_setup_gree(hass)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_HORIZONTAL_MODE: "invalid"},
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) != "invalid"
+
+
+@pytest.mark.parametrize(
+    "swing_horizontal_mode",
+    ["Default", "FullSwing", "Left", "Right"],
+)
+async def test_send_swing_horizontal_mode_device_timeout(
+    hass: HomeAssistant, discovery, device, swing_horizontal_mode: str
+) -> None:
+    """Test for sending horizontal swing mode command to the device with a device timeout."""
+    device().push_state_update.side_effect = DeviceTimeoutError
+
+    await async_setup_gree(hass)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_HORIZONTAL_MODE: swing_horizontal_mode},
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == swing_horizontal_mode
+
+
+@pytest.mark.parametrize(
+    "horizontal_swing",
+    [HorizontalSwing.Default, HorizontalSwing.FullSwing, HorizontalSwing.Left],
+)
+async def test_update_swing_horizontal_mode(
+    hass: HomeAssistant, discovery, device, horizontal_swing: HorizontalSwing
+) -> None:
+    """Test for updating horizontal swing mode from the device."""
+    device().horizontal_swing = horizontal_swing
+
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == horizontal_swing.name
+
+
+async def test_swing_mode_unknown_device_value(
+    hass: HomeAssistant, discovery, device
+) -> None:
+    """Test that an out-of-range vertical swing value from the device returns None."""
+    device().vertical_swing = 99
+
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_SWING_MODE) is None
+
+
+async def test_swing_horizontal_mode_unknown_device_value(
+    hass: HomeAssistant, discovery, device
+) -> None:
+    """Test that an out-of-range horizontal swing value from the device returns None."""
+    device().horizontal_swing = 99
+
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) is None
 
 
 async def test_coordinator_update_handler(
