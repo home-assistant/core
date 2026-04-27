@@ -10,7 +10,7 @@ from typing import Any, Self
 
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import target as target_helpers
+from homeassistant.helpers import entity_registry as er, target as target_helpers
 from homeassistant.helpers.condition import (
     async_get_all_descriptions as async_get_all_condition_descriptions,
 )
@@ -92,12 +92,14 @@ class _AutomationComponentLookupData:
 
     component: str
     filters: list[_EntityFilter]
+    primary_entities_only: bool = True
 
     @classmethod
     def create(cls, component: str, target_description: dict[str, Any]) -> Self:
         """Build automation component lookup data from target description."""
         filters: list[_EntityFilter] = []
 
+        primary_entities_only = target_description.get("primary_entities_only", True)
         entity_filters_config = target_description.get("entity", [])
         for entity_filter_config in entity_filters_config:
             entity_filter = _EntityFilter(
@@ -110,14 +112,28 @@ class _AutomationComponentLookupData:
             )
             filters.append(entity_filter)
 
-        return cls(component=component, filters=filters)
+        return cls(
+            component=component,
+            filters=filters,
+            primary_entities_only=primary_entities_only,
+        )
 
     def matches(
-        self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
+        self,
+        hass: HomeAssistant,
+        entity_id: str,
+        domain: str,
+        integration: str,
+        check_entity_category: bool,
     ) -> bool:
         """Return if entity matches ANY of the filters."""
         if not self.filters:
             return True
+
+        if check_entity_category and self.primary_entities_only:
+            entry = er.async_get(hass).async_get(entity_id)
+            if entry is None or entry.entity_category is not None:
+                return False
         return any(
             f.matches(hass, entity_id, domain, integration) for f in self.filters
         )
@@ -220,6 +236,7 @@ def _async_get_automation_components_for_target(
         hass,
         target_helpers.TargetSelection(target_selection),
         expand_group=expand_group,
+        primary_entities_only=False,
     )
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
@@ -230,6 +247,7 @@ def _async_get_automation_components_for_target(
         "Automation components per domain: %s", lookup_table.domain_components
     )
 
+    check_entity_category = len(extracted.indirectly_referenced) > 0
     entity_infos = entity_sources(hass)
     matched_components: set[str] = set()
     for entity_id in extracted.referenced | extracted.indirectly_referenced:
@@ -253,7 +271,11 @@ def _async_get_automation_components_for_target(
                 if component_data.component in matched_components:
                     continue
                 if component_data.matches(
-                    hass, entity_id, entity_domain, entity_integration
+                    hass,
+                    entity_id,
+                    entity_domain,
+                    entity_integration,
+                    check_entity_category,
                 ):
                     matched_components.add(component_data.component)
 

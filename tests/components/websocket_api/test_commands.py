@@ -177,6 +177,24 @@ async def target_entities(
     switch_platform.config_entry = config_entry
     await switch_platform.async_add_entities([device1_switch, area_device_switch])
 
+    area_device_diagnostic_sensor = MockEntity(
+        entity_id="sensor.test7",
+        unique_id="test7",
+        device_info=dr.DeviceInfo(identifiers=area_device.identifiers),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    label2_device_config_sensor = MockEntity(
+        entity_id="sensor.test8",
+        unique_id="test8",
+        device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
+        entity_category=EntityCategory.CONFIG,
+    )
+    sensor_platform = MockEntityPlatform(hass, domain="sensor", platform_name="test")
+    sensor_platform.config_entry = config_entry
+    await sensor_platform.async_add_entities(
+        [area_device_diagnostic_sensor, label2_device_config_sensor]
+    )
+
     component1_light = MockEntity(
         entity_id="light.component1_light", unique_id="component1_light"
     )
@@ -246,6 +264,8 @@ async def target_entities(
         "light.test6",
         "switch.test2",
         "switch.test5",
+        "sensor.test7",
+        "sensor.test8",
         "light.component1_light",
         "light.component1_flash_light",
         "light.component1_effect_flash_light",
@@ -3795,7 +3815,11 @@ async def test_get_triggers_conditions_for_target(
         Mock(
             **{
                 f"async_get_{automation_component}s": AsyncMock(
-                    return_value={"match_all": Mock, "other_integration_lights": Mock}
+                    return_value={
+                        "match_all": Mock,
+                        "other_integration_lights": Mock,
+                        "non_primary_sensor": Mock,
+                    }
                 )
             }
         ),
@@ -3873,6 +3897,12 @@ async def test_get_triggers_conditions_for_target(
                   - light.LightEntityFeature.EFFECT
               - integration: test
                 domain: light
+
+        non_primary_sensor:
+          target:
+            entity:
+              domain: sensor
+            primary_entities_only: false
     """
 
     def _load_yaml(fname, secrets=None):
@@ -3978,6 +4008,7 @@ async def test_get_triggers_conditions_for_target(
                 "component1",
                 "component1.light_message",
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "light.turned_on",
                 "sensor.turned_on",
@@ -3990,6 +4021,7 @@ async def test_get_triggers_conditions_for_target(
             {"area_id": ["kitchen", "living_room"]},
             [
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "light.turned_on",
                 "switch.turned_on",
@@ -4003,10 +4035,23 @@ async def test_get_triggers_conditions_for_target(
                 "light.turned_on",
                 "component1",
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "switch.turned_on",
             ],
         )
+
+        # Test direct targeting of a non-primary entity - even
+        # primary_entities_only=True components match
+        await assert_command(
+            {"entity_id": ["sensor.test7"]},
+            [
+                "component2.match_all",
+                "component2.non_primary_sensor",
+                "sensor.turned_on",
+            ],
+        )
+
         # Test mixed target types
         await assert_command(
             {
@@ -4019,6 +4064,7 @@ async def test_get_triggers_conditions_for_target(
                 "component1",
                 "component1.light_message",
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "light.turned_on",
                 "sensor.turned_on",
@@ -4107,6 +4153,12 @@ async def test_get_services_for_target(
                   - light.LightEntityFeature.EFFECT
               - integration: test
                 domain: light
+
+        non_primary_sensor:
+          target:
+            entity:
+              domain: sensor
+            primary_entities_only: false
     """
 
     def _load_yaml(fname, secrets=None):
@@ -4145,6 +4197,7 @@ async def test_get_services_for_target(
     hass.services.async_register(
         "component2", "other_integration_lights", lambda call: None
     )
+    hass.services.async_register("component2", "non_primary_sensor", lambda call: None)
     await hass.async_block_till_done()
 
     async def assert_services(
@@ -4226,6 +4279,7 @@ async def test_get_services_for_target(
         [
             "component1.light_message",
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "light.turn_on",
             "sensor.turn_on",
@@ -4238,6 +4292,7 @@ async def test_get_services_for_target(
         {"area_id": ["kitchen", "living_room"]},
         [
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "light.turn_on",
             "switch.turn_on",
@@ -4250,10 +4305,23 @@ async def test_get_services_for_target(
         [
             "light.turn_on",
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "switch.turn_on",
         ],
     )
+
+    # Test direct targeting of a non-primary entity - even
+    # primary_entities_only=True components match
+    await assert_services(
+        {"entity_id": ["sensor.test7"]},
+        [
+            "component2.match_all",
+            "component2.non_primary_sensor",
+            "sensor.turn_on",
+        ],
+    )
+
     # Test mixed target types
     await assert_services(
         {
@@ -4265,6 +4333,7 @@ async def test_get_services_for_target(
         [
             "component1.light_message",
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "light.turn_on",
             "sensor.turn_on",
