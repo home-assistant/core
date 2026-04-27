@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_centriconnect_client() -> Generator[AsyncMock]:
-    """Mock an CentriConnect/MyPropane client."""
+    """Mock a CentriConnect/MyPropane client."""
     with patch(
         "aiocentriconnect.api.API.async_request",
         return_value={
