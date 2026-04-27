@@ -2758,7 +2758,12 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
         },
     )
     entry.add_to_hass(hass)
-    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -2812,7 +2817,12 @@ async def test_zeroconf_sleeping_device_attempts_configure(
         },
     )
     entry.add_to_hass(hass)
-    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -2877,7 +2887,12 @@ async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
         },
     )
     entry.add_to_hass(hass)
-    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -2942,7 +2957,12 @@ async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
         },
     )
     entry.add_to_hass(hass)
-    with patch.object(mock_rpc_device, "initialize", side_effect=DeviceConnectionError):
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
