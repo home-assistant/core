@@ -13,7 +13,6 @@ from yeelight.main import get_known_models
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -28,6 +27,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
+from . import YeelightConfigEntry
 from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
@@ -62,7 +62,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: YeelightConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler()

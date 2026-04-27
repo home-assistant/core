@@ -1,5 +1,4 @@
 """Light platform support for yeelight."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -40,7 +39,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
-from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
+from . import YEELIGHT_FLOW_TRANSITION_SCHEMA, YeelightConfigEntry
 from .const import (
     ACTION_RECOVER,
     ATTR_ACTION,
@@ -52,9 +51,7 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CONFIG_ENTRIES,
     DATA_CUSTOM_EFFECTS,
-    DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
@@ -279,13 +276,14 @@ def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YeelightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
+    # pylint: disable-next=hass-use-runtime-data
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
-    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
+    device = config_entry.runtime_data
     _LOGGER.debug("Adding %s", device.name)
 
     nl_switch_light = device.config.get(CONF_NIGHTLIGHT_SWITCH)
