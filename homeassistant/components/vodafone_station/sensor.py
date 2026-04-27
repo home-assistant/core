@@ -116,7 +116,6 @@ SENSOR_TYPES: Final = (
     ),
     VodafoneStationEntityDescription(
         key="sys_uptime",
-        translation_key="sys_uptime",
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda coordinator, last_value, key: coordinator.api.convert_uptime(
