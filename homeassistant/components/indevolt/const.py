@@ -38,7 +38,6 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltSolar.DC_INPUT_POWER_4,
         IndevoltConfig.READ_DISCHARGE_LIMIT,
         IndevoltGrid.METER_POWER_GEN1,
-        IndevoltGrid.METER_CONNECTED,
         IndevoltSolar.CUMULATIVE_PRODUCTION,
     ],
     2: [
