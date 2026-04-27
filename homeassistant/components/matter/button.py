@@ -177,7 +177,7 @@ DISCOVERY_SCHEMAS = [
             command=HeimanCluster.Commands.MutingSensor,
         ),
         entity_class=MatterCommandButton,
-        required_attributes=(HeimanCluster.Attributes.AlarmMute,),
+        required_attributes=(HeimanCluster.Attributes.AcceptedCommandList,),
         value_contains=HeimanCluster.Commands.MutingSensor.command_id,
     ),
 ]
