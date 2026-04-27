@@ -82,9 +82,6 @@
     },
     "not_loaded": {
       "message": "{target} is not loaded."
-    },
-    "service_removed": {
-      "message": "The service {service_name} has been removed and is no longer needed. Home Assistant will automatically prompt for reauthentication when required."
     }
   },
   "issues": {
@@ -135,20 +132,6 @@
         }
       },
       "name": "Save video"
-    },
-    "send_pin": {
-      "description": "Sends a new PIN to Blink for 2FA.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The Blink integration ID.",
-          "name": "Integration ID"
-        },
-        "pin": {
-          "description": "PIN received from Blink. Leave empty if you only received a verification email.",
-          "name": "PIN"
-        }
-      },
-      "name": "Send PIN"
     },
     "trigger_camera": {
       "description": "Requests camera to take new image.",
