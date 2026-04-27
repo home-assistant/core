@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import goto_future, init_integration
-from .conftest import TRAINS, get_time
+from .conftest import TRAINS, get_time, get_train_route
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -37,7 +37,7 @@ async def test_update_train(
 ) -> None:
     """Ensure the train data is updated."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 6
+    assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     expected_time = get_time(10, 10)
     assert departure_sensor.state == expected_time
@@ -46,7 +46,7 @@ async def test_update_train(
 
     await goto_future(hass, freezer)
 
-    assert len(hass.states.async_entity_ids()) == 6
+    assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     expected_time = get_time(10, 20)
     assert departure_sensor.state == expected_time
@@ -60,10 +60,10 @@ async def test_fail_query(
 ) -> None:
     """Ensure the integration handles query failures."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 6
+    assert len(hass.states.async_entity_ids()) == 7
     mock_israelrail.query.side_effect = Exception("error")
     await goto_future(hass, freezer)
-    assert len(hass.states.async_entity_ids()) == 6
+    assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     assert departure_sensor.state == STATE_UNAVAILABLE
 
@@ -76,7 +76,7 @@ async def test_no_departures(
 ) -> None:
     """Test handling when there are no departures available."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 6
+    assert len(hass.states.async_entity_ids()) == 7
 
     # Simulate no departures (e.g., after-hours)
     mock_israelrail.query.return_value = []
@@ -84,7 +84,7 @@ async def test_no_departures(
     await goto_future(hass, freezer)
 
     # All sensors should still exist
-    assert len(hass.states.async_entity_ids()) == 6
+    assert len(hass.states.async_entity_ids()) == 7
 
     # Departure sensors should have unknown state (None)
     departure_sensor = hass.states.get("sensor.mock_title_departure")
@@ -106,3 +106,35 @@ async def test_no_departures(
 
     train_number_sensor = hass.states.get("sensor.mock_title_train_number")
     assert train_number_sensor.state == STATE_UNKNOWN
+
+    departure_delay_sensor = hass.states.get("sensor.mock_title_departure_delay")
+    assert departure_delay_sensor.state == STATE_UNKNOWN
+
+
+async def test_departure_delay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure departure_delay is exposed as a sensor."""
+    await init_integration(hass, mock_config_entry)
+
+    departure_delay_sensor = hass.states.get("sensor.mock_title_departure_delay")
+    assert departure_delay_sensor is not None
+    assert departure_delay_sensor.state == "0"
+
+    mock_israelrail.query.return_value = [
+        get_train_route(
+            train_number="1234",
+            departure_time=get_time(10, 10),
+            arrival_time=get_time(10, 30),
+            departure_delay=7,
+        ),
+        *TRAINS[1:],
+    ]
+
+    await goto_future(hass, freezer)
+
+    departure_delay_sensor = hass.states.get("sensor.mock_title_departure_delay")
+    assert departure_delay_sensor.state == "7"

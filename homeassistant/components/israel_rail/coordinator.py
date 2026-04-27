@@ -25,6 +25,7 @@ class DataConnection:
     """A connection data class."""
 
     departure: datetime | None
+    departure_delay: int | None
     platform: str
     start: str
     destination: str
@@ -83,6 +84,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         return [
             DataConnection(
                 departure=departure_time(train_routes[i]),
+                departure_delay=train_routes[i].trains[0].departure_delay,
                 train_number=train_routes[i].trains[0].data["trainNumber"],
                 platform=train_routes[i].trains[0].platform,
                 trains=len(train_routes[i].trains),
