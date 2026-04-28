@@ -42,8 +42,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices:
-    status: done
+  devices: done
   diagnostics: done
   discovery-update-info:
     status: exempt

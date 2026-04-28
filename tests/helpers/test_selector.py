@@ -1125,6 +1125,22 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
+        (None, ("/dev/ttyUSB0", "/dev/ttyACM1", "COM3"), (None, 1, True)),
+        ({}, ("/dev/ttyUSB0",), (None,)),
+    ],
+)
+def test_serial_port_selector_schema(
+    schema: dict | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test serial port selector."""
+    _test_selector("serial_port", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
         ({}, ({"entity_id": ["sensor.abc123"]},), ("abc123", None)),
         ({"entity": {}}, (), ()),
         ({"entity": {"domain": "light"}}, (), ()),
@@ -1165,6 +1181,24 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
             {
                 "entity": {"domain": "binary_sensor", "device_class": "motion"},
                 "device": {"integration": "demo", "model": "mock-model"},
+            },
+            (),
+            (),
+        ),
+        (
+            {"primary_entities_only": True},
+            (),
+            (),
+        ),
+        (
+            {"primary_entities_only": False},
+            (),
+            (),
+        ),
+        (
+            {
+                "entity": {"domain": "light"},
+                "primary_entities_only": True,
             },
             (),
             (),

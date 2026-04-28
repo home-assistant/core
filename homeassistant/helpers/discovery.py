@@ -13,7 +13,6 @@ from typing import Any, TypedDict
 
 from homeassistant import core, setup
 from homeassistant.const import Platform
-from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalTypeFormat
 
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
@@ -36,7 +35,6 @@ class DiscoveryDict(TypedDict):
 
 
 @core.callback
-@bind_hass
 def async_listen(
     hass: core.HomeAssistant,
     service: str,
@@ -62,7 +60,6 @@ def async_listen(
     )
 
 
-@bind_hass
 def discover(
     hass: core.HomeAssistant,
     service: str,
@@ -77,7 +74,6 @@ def discover(
     )
 
 
-@bind_hass
 async def async_discover(
     hass: core.HomeAssistant,
     service: str,
@@ -100,7 +96,6 @@ async def async_discover(
     )
 
 
-@bind_hass
 def async_listen_platform(
     hass: core.HomeAssistant,
     component: str,
@@ -127,7 +122,6 @@ def async_listen_platform(
     )
 
 
-@bind_hass
 def load_platform(
     hass: core.HomeAssistant,
     component: Platform | str,
@@ -142,7 +136,6 @@ def load_platform(
     )
 
 
-@bind_hass
 async def async_load_platform(
     hass: core.HomeAssistant,
     component: Platform | str,

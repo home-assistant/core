@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
-from opendisplay import MANUFACTURER_ID, parse_advertisement
-from opendisplay.models.advertisement import AdvertisementData
+from opendisplay import MANUFACTURER_ID, AdvertisementTracker, parse_advertisement
+from opendisplay.models.advertisement import AdvertisementData, ButtonChangeEvent
 
 from homeassistant.components.bluetooth import (
     BluetoothChange,
@@ -27,6 +27,7 @@ class OpenDisplayUpdate:
 
     address: str
     advertisement: AdvertisementData
+    button_events: list[ButtonChangeEvent] = field(default_factory=list)
 
 
 class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
@@ -42,6 +43,7 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
             connectable=True,
         )
         self.data: OpenDisplayUpdate | None = None
+        self._tracker: AdvertisementTracker = AdvertisementTracker()
 
     @callback
     def _async_handle_unavailable(
@@ -78,9 +80,11 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 exc_info=True,
             )
         else:
+            button_events = self._tracker.update(service_info.address, advertisement)
             self.data = OpenDisplayUpdate(
                 address=service_info.address,
                 advertisement=advertisement,
+                button_events=button_events,
             )
 
         super()._async_handle_bluetooth_event(service_info, change)

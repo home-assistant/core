@@ -84,7 +84,7 @@ def main() -> int:
         # If it's a new integration and it's not a config flow,
         # create a config flow too.
         if not args.template.startswith("config_flow"):
-            if info.helper:
+            if info.integration_type == "helper":
                 template = "config_flow_helper"
             elif info.oauth2:
                 template = "config_flow_oauth2"

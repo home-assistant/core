@@ -566,8 +566,8 @@ async def test_zeo_device_fails_setup(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Roborock Q7",
+        "Roborock Q10 S5+",
         # Zeo device is missing
-        # Q10 has no sensor entities
     }
 
 
@@ -621,7 +621,7 @@ async def test_dyad_device_fails_setup(
         # Dyad device is missing
         "Zeo One",
         "Roborock Q7",
-        # Q10 has no sensor entities
+        "Roborock Q10 S5+",
     }
 
 

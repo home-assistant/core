@@ -37,16 +37,6 @@ def platform_autouse():
         yield
 
 
-@pytest.fixture(autouse=True)
-def mock_getrandbits():
-    """Mock camera access token which normally is randomized."""
-    with patch(
-        "homeassistant.components.camera.SystemRandom.getrandbits",
-        return_value=1,
-    ):
-        yield
-
-
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-import os
 from typing import Any
 
 from dsmr_parser import obis_references as obis_ref
@@ -15,9 +14,9 @@ from dsmr_parser.clients.rfxtrx_protocol import (
 )
 from dsmr_parser.objects import DSMRObject
 import serial
-import serial.tools.list_ports
 import voluptuous as vol
 
+from homeassistant.components import usb
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -229,9 +228,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._dsmr_version = user_input[CONF_DSMR_VERSION]
                 return await self.async_step_setup_serial_manual_path()
 
-            dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, user_selection
-            )
+            dev_path = user_selection
 
             validate_data = {
                 CONF_PORT: dev_path,
@@ -242,9 +239,10 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
 
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await usb.async_scan_serial_ports(self.hass)
         list_of_ports = {
-            port.device: f"{port}, s/n: {port.serial_number or 'n/a'}"
+            port.device: f"{port.device} - {port.description or 'n/a'}"
+            f", s/n: {port.serial_number or 'n/a'}"
             + (f" - {port.manufacturer}" if port.manufacturer else "")
             for port in ports
         }
@@ -333,18 +331,6 @@ class DSMROptionFlowHandler(OptionsFlow):
                 }
             ),
         )
-
-
-def get_serial_by_id(dev_path: str) -> str:
-    """Return a /dev/serial/by-id match for given device if available."""
-    by_id = "/dev/serial/by-id"
-    if not os.path.isdir(by_id):
-        return dev_path
-
-    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-        if os.path.realpath(path) == dev_path:
-            return path
-    return dev_path
 
 
 class CannotConnect(HomeAssistantError):
