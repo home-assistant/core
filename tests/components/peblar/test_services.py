@@ -22,6 +22,21 @@ async def test_services_registered_on_setup(
     assert hass.services.has_service(DOMAIN, "delete_rfid_token")
 
 
+async def test_services_removed_when_last_entry_unloaded(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test RFID services are unregistered when the last Peblar entry unloads."""
+    assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
+
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(DOMAIN, "list_rfid_tokens")
+    assert not hass.services.has_service(DOMAIN, "add_rfid_token")
+    assert not hass.services.has_service(DOMAIN, "delete_rfid_token")
+
+
 async def test_services_not_removed_while_other_entry_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

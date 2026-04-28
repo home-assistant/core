@@ -20,10 +20,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN
+from .const import CONF_UID, DOMAIN
 from .coordinator import PeblarConfigEntry
-
-CONF_UID = "uid"
 
 LIST_RESPONSE_SCHEMA = vol.Schema(
     {
@@ -122,3 +120,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             }
         ),
     )
+
+
+@callback
+def async_unload_services(hass: HomeAssistant) -> None:
+    """Unregister RFID management services."""
+    hass.services.async_remove(DOMAIN, "list_rfid_tokens")
+    hass.services.async_remove(DOMAIN, "add_rfid_token")
+    hass.services.async_remove(DOMAIN, "delete_rfid_token")

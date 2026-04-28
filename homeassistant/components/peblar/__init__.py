@@ -28,7 +28,7 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
     PeblarVersionDataUpdateCoordinator,
 )
-from .services import async_setup_services
+from .services import async_setup_services, async_unload_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -98,4 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Unload Peblar config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and not any(
+        e.entry_id != entry.entry_id
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+    ):
+        async_unload_services(hass)
+    return unload_ok
