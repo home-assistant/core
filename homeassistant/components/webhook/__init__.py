@@ -8,7 +8,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import secrets
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import StreamReader
 from aiohttp.hdrs import METH_GET, METH_HEAD, METH_POST, METH_PUT
@@ -152,6 +152,10 @@ async def async_handle_webhook(
             received_from += f" ({request.remote})"
         content_stream = request.content
         method_name = request.method
+        if TYPE_CHECKING:
+            # MockRequest mimics the aiohttp Request interface and is used for
+            # cloudhooks and webhooks triggered via the WebSocket API.
+            request = cast(Request, request)
     else:
         received_from = request.remote
         content_stream = request.content
