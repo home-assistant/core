@@ -425,6 +425,35 @@ async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     assert test(hass)
 
 
+async def test_conditions_from_config_has_and_semantics(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_conditions_from_config returns a callable with AND semantics."""
+    hass.states.async_set("binary_sensor.test_one", STATE_ON)
+    hass.states.async_set("binary_sensor.test_two", STATE_ON)
+    configs = await condition.async_validate_conditions_config(
+        hass,
+        [
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test_one",
+                "state": STATE_ON,
+            },
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test_two",
+                "state": STATE_ON,
+            },
+        ],
+    )
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+    assert test() is True
+    hass.states.async_set("binary_sensor.test_two", STATE_OFF)
+    assert test() is False
+
+
 async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     """Test the 'and' condition list shorthand syntax check."""
     config = {
