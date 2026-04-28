@@ -37,7 +37,9 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
     ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN,
+    ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
+    ATTR_PUSH_TAG,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
@@ -238,8 +240,8 @@ class MobileAppNotificationService(BaseNotificationService):
         if not notification_data.get(ATTR_LIVE_UPDATE):
             return None
 
-        tag = notification_data.get("tag")
-        if not tag or not isinstance(tag, str):
+        tag = notification_data.get(ATTR_PUSH_TAG)
+        if not tag:
             return None
 
         # Per-activity token — the activity is already running on the device.
@@ -299,7 +301,7 @@ async def _send_message(
     # server can set apns.liveActivityToken in the FCM payload. FCM then handles
     # apns-push-type: liveactivity and APNs routing automatically.
     if live_activity_token:
-        payload["live_activity_token"] = live_activity_token
+        payload[ATTR_LIVE_ACTIVITY_TOKEN] = live_activity_token
 
     try:
         async with asyncio.timeout(10):
