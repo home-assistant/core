@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@example.com"
 MOCK_PASSWORD = "password"
+MOCK_USER_ID = "account-123"
 MOCK_DATA = {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD}
 
 
@@ -46,7 +47,15 @@ class SystemDevices:
 @pytest.fixture(name="client")
 def client_fixture():
     """Create client fixture."""
-    return AqualinkClient(username=MOCK_USERNAME, password=MOCK_PASSWORD)
+    client = AqualinkClient(username=MOCK_USERNAME, password=MOCK_PASSWORD)
+    client.user_id = MOCK_USER_ID
+    return client
+
+
+@pytest.fixture(autouse=True)
+def user_id_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Expose a default public user_id on the test client class."""
+    monkeypatch.setattr(AqualinkClient, "user_id", MOCK_USER_ID, raising=False)
 
 
 def get_aqualink_system(aqualink, cls=None, data=None):
