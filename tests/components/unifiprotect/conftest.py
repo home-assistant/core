@@ -155,6 +155,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
+    client.has_public_bootstrap = False
     return client
 
 
