@@ -23,7 +23,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,7 +30,7 @@ from homeassistant.util import color as color_util
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 from .util import (
     convert_to_hass_hs,
@@ -86,11 +85,11 @@ TRANSITION_BLOCKLIST = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 

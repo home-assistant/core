@@ -147,6 +147,80 @@
         "name": "Treble"
       }
     },
+    "select": {
+      "dimmer": {
+        "name": "Dimmer",
+        "state": {
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "equalizer_mode": {
+        "name": "Equalizer mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "Bypass",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
+      "link_audio_delay": {
+        "name": "Link audio delay",
+        "state": {
+          "audio_sync": "Audio synchronization",
+          "audio_sync_off": "Audio synchronization off",
+          "audio_sync_on": "Audio synchronization on",
+          "balanced": "Balanced",
+          "lip_sync": "Lip synchronization"
+        }
+      },
+      "link_audio_quality": {
+        "name": "Link audio quality",
+        "state": {
+          "compressed": "Compressed",
+          "uncompressed": "Uncompressed"
+        }
+      },
+      "link_control": {
+        "name": "Link control",
+        "state": {
+          "speed": "Speed",
+          "stability": "Stability",
+          "standard": "Standard"
+        }
+      },
+      "sleep": {
+        "name": "Sleep timer",
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "30": "30 minutes",
+          "60": "60 minutes",
+          "90": "90 minutes",
+          "120": "120 minutes"
+        }
+      },
+      "surround_decoder_type": {
+        "name": "Surround decoder type",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "dolby_pl": "Dolby ProLogic",
+          "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+          "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+          "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+          "dolby_surround": "Dolby Surround",
+          "dts_neo6_cinema": "DTS Neo:6 Cinema",
+          "dts_neo6_music": "DTS Neo:6 Music",
+          "dts_neural_x": "DTS Neural:X",
+          "toggle": "[%key:common::action::toggle%]"
+        }
+      },
+      "tone_control_mode": {
+        "name": "Tone control mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "Bypass",
+          "manual": "[%key:common::state::manual%]"
+        }
+      }
+    },
     "switch": {
       "adaptive_drc": {
         "name": "Adaptive DRC"
