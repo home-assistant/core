@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from indevolt_api import IndevoltBattery, IndevoltGrid
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,7 +17,6 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-METER_CONNECTED_KEY = "7120"
 METER_CONNECTED_VALUE = 1000
 METER_DISCONNECTED_VALUE = 1001
 
@@ -48,7 +48,9 @@ async def test_meter_connected_on_state(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test meter_connected reports ON when value is 1000 (Enable)."""
-    mock_indevolt.fetch_data.return_value[METER_CONNECTED_KEY] = METER_CONNECTED_VALUE
+    mock_indevolt.fetch_data.return_value[IndevoltGrid.METER_CONNECTED] = (
+        METER_CONNECTED_VALUE
+    )
 
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
@@ -66,7 +68,7 @@ async def test_meter_connected_off_state(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test meter_connected reports OFF when value is 1001 (Disable)."""
-    mock_indevolt.fetch_data.return_value[METER_CONNECTED_KEY] = (
+    mock_indevolt.fetch_data.return_value[IndevoltGrid.METER_CONNECTED] = (
         METER_DISCONNECTED_VALUE
     )
 
@@ -116,11 +118,11 @@ async def test_battery_pack_heating_filtering(
 
     # Mock battery pack data - only first two packs have SNs
     mock_indevolt.fetch_data.return_value = {
-        "9032": "BAT001",
-        "9051": "BAT002",
-        "9070": None,
-        "9165": "",
-        "9218": None,
+        IndevoltBattery.PACK_1_SERIAL_NUMBER: "BAT001",
+        IndevoltBattery.PACK_2_SERIAL_NUMBER: "BAT002",
+        IndevoltBattery.PACK_3_SERIAL_NUMBER: None,
+        IndevoltBattery.PACK_4_SERIAL_NUMBER: "",
+        IndevoltBattery.PACK_5_SERIAL_NUMBER: None,
     }
 
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BINARY_SENSOR]):
@@ -134,16 +136,36 @@ async def test_battery_pack_heating_filtering(
     )
 
     # Verify sensors for packs 1 and 2 exist (with SNs)
-    pack1_sensors = [e for e in entity_entries if "9096" in e.unique_id]
-    pack2_sensors = [e for e in entity_entries if "9112" in e.unique_id]
+    pack1_sensors = [
+        e
+        for e in entity_entries
+        if e.unique_id.endswith(IndevoltBattery.PACK_1_HEATING_STATE)
+    ]
+    pack2_sensors = [
+        e
+        for e in entity_entries
+        if e.unique_id.endswith(IndevoltBattery.PACK_2_HEATING_STATE)
+    ]
 
     assert len(pack1_sensors) == 1
     assert len(pack2_sensors) == 1
 
     # Verify sensors for packs 3, 4, and 5 don't exist (no SNs)
-    pack3_sensors = [e for e in entity_entries if "9128" in e.unique_id]
-    pack4_sensors = [e for e in entity_entries if "9144" in e.unique_id]
-    pack5_sensors = [e for e in entity_entries if "9279" in e.unique_id]
+    pack3_sensors = [
+        e
+        for e in entity_entries
+        if e.unique_id.endswith(IndevoltBattery.PACK_3_HEATING_STATE)
+    ]
+    pack4_sensors = [
+        e
+        for e in entity_entries
+        if e.unique_id.endswith(IndevoltBattery.PACK_4_HEATING_STATE)
+    ]
+    pack5_sensors = [
+        e
+        for e in entity_entries
+        if e.unique_id.endswith(IndevoltBattery.PACK_5_HEATING_STATE)
+    ]
 
     assert len(pack3_sensors) == 0
     assert len(pack4_sensors) == 0
