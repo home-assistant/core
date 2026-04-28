@@ -8,7 +8,7 @@ from aiohasupervisor.models import IngressPanel
 from aiohttp import web
 
 from homeassistant.components import frontend
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant
 
 from .handler import get_supervisor_client
@@ -43,6 +43,7 @@ class HassIOAddonPanel(HomeAssistantView):
         self.hass = hass
         self.client = get_supervisor_client(hass)
 
+    @require_admin
     async def post(self, request: web.Request, addon: str) -> web.Response:
         """Handle new add-on panel requests."""
         panels = await self.get_panels()
@@ -56,6 +57,7 @@ class HassIOAddonPanel(HomeAssistantView):
         _register_panel(self.hass, addon, panels[addon])
         return web.Response()
 
+    @require_admin
     async def delete(self, request: web.Request, addon: str) -> web.Response:
         """Handle remove add-on panel requests."""
         frontend.async_remove_panel(self.hass, addon)
