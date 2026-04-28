@@ -769,6 +769,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
         await self.script.async_stop()
+        self.script.async_unload()
 
         # remove service
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
