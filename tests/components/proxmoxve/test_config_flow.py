@@ -712,7 +712,6 @@ async def test_form_offline_node_skipped(
         result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
     )
 
-    # Setup must succeed despite pve3 being offline
     assert result["type"] is FlowResultType.CREATE_ENTRY
     nodes_in_result = [n[CONF_NODE] for n in result["data"][CONF_NODES]]
     assert "pve3" not in nodes_in_result
