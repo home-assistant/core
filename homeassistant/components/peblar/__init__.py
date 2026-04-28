@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
@@ -43,14 +42,10 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Peblar domain."""
-    async_setup_services(hass)
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Set up Peblar from a config entry."""
+    if not hass.services.has_service(DOMAIN, "list_rfid_tokens"):
+        async_setup_services(hass)
 
     # Set up connection to the Peblar charger
     peblar = Peblar(
