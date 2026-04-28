@@ -1771,8 +1771,10 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-class SerialPortSelectorConfig(BaseSelectorConfig):
+class SerialPortSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a serial port selector config."""
+
+    extra_recommended_domains: list[str]
 
 
 @SELECTORS.register("serial_port")
@@ -1781,7 +1783,11 @@ class SerialPortSelector(Selector[SerialPortSelectorConfig]):
 
     selector_type = "serial_port"
 
-    CONFIG_SCHEMA = make_selector_config_schema()
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("extra_recommended_domains"): [str],
+        }
+    )
 
     def __init__(self, config: SerialPortSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

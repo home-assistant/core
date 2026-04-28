@@ -1127,6 +1127,17 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
     [
         (None, ("/dev/ttyUSB0", "/dev/ttyACM1", "COM3"), (None, 1, True)),
         ({}, ("/dev/ttyUSB0",), (None,)),
+        (
+            {
+                "extra_recommended_domains": [
+                    "homeassistant_yellow",
+                    "homeassistant_sky_connect",
+                ]
+            },
+            ("/dev/ttyUSB0",),
+            (None,),
+        ),
+        ({"extra_recommended_domains": []}, ("/dev/ttyUSB0",), (None,)),
     ],
 )
 def test_serial_port_selector_schema(
