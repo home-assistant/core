@@ -88,6 +88,7 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
     _attributes_extra_blocked = MQTT_DATETIME_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format = datetime.ENTITY_ID_FORMAT
+    _timezone_config: str | None = None
     _zone_info: ZoneInfo | None = None
     _time_zone_delta: datetime_library.timedelta | None
 
@@ -104,20 +105,7 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._zone_info = None
-
-        async def async_set_zone_info(timezone: str) -> None:
-            self._zone_info = await async_get_time_zone(timezone)
-            if self._zone_info:
-                return
-            _LOGGER.warning(
-                "Ignoring invalid timezone identifier for entity %s, got '%s'",
-                self.entity_id,
-                timezone,
-            )
-
-        if timezone := config.get(CONF_TIMEZONE):
-            self.hass.async_create_task(async_set_zone_info(timezone))
+        self._timezone_config = config.get(CONF_TIMEZONE)
 
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE),
@@ -130,6 +118,18 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
         self._attr_assumed_state = bool(self._optimistic)
+
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Finish configuration."""
+        self._zone_info = None
+        if timezone := self._timezone_config:
+            self._zone_info = await async_get_time_zone(timezone)
+            if not self._zone_info:
+                _LOGGER.warning(
+                    "Ignoring invalid timezone identifier for entity %s, got '%s'",
+                    self.entity_id,
+                    timezone,
+                )
 
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
