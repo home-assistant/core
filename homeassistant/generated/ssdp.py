@@ -341,24 +341,6 @@ SSDP = {
             "manufacturer": "Synology",
         },
     ],
-    "unifi": [
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine Pro",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine SE",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine Pro Max",
-        },
-    ],
     "unifi_discovery": [
         {
             "manufacturer": "Ubiquiti Networks",
