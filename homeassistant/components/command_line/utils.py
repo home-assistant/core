@@ -105,7 +105,7 @@ def create_platform_yaml_not_supported_issue(
         DOMAIN,
         f"{platform_domain}_platform_yaml_not_supported",
         is_fixable=False,
-        severity=IssueSeverity.WARNING,
+        severity=IssueSeverity.ERROR,
         translation_key="platform_yaml_not_supported",
         translation_placeholders={"platform": platform_domain},
         learn_more_url="https://www.home-assistant.io/integrations/command_line/",
