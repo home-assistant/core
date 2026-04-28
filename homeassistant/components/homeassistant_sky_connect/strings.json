@@ -115,12 +115,13 @@
           "addon_install_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_install_failed%]",
           "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
           "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
+          "fw_install_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_install_failed%]",
           "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
           "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
         },
         "progress": {
           "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
-          "start_flasher_addon": "Please wait while the {addon_name} app reverts your radio to Zigbee-only firmware. This can take several minutes.",
+          "install_zigbee_firmware": "Please wait while Zigbee-only firmware is installed on your {hardware_name}. This can take several minutes.",
           "uninstall_multiprotocol_addon": "Please wait while the {addon_name} app is uninstalled."
         },
         "step": {
