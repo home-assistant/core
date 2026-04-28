@@ -362,6 +362,21 @@ class DisabledConditionChecker(ConditionChecker):
         return None
 
 
+class CompoundConditionChecker(ConditionChecker):
+    """Base class for compound condition checkers (and/or/not)."""
+
+    def __init__(self, hass: HomeAssistant, conditions: list[ConditionChecker]) -> None:
+        """Initialize condition checker."""
+        super().__init__(hass)
+        self._conditions = conditions
+
+    def async_unload(self) -> None:
+        """Clean up child conditions."""
+        for condition in self._conditions:
+            condition.async_unload()
+        super().async_unload()
+
+
 class Condition(ConditionChecker):
     """Condition class."""
 
@@ -1090,31 +1105,39 @@ async def async_from_config(
         check_factory = check_factory.func
 
     if inspect.iscoroutinefunction(check_factory):
-        checker = cast(ConditionCheckerType, await factory(hass, config))
+        checker = await factory(hass, config)
     else:
-        checker = cast(ConditionCheckerType, factory(config))
-    return LegacyConditionChecker(hass, checker)
+        checker = factory(config)
+    if isinstance(checker, ConditionChecker):
+        return checker
+    return LegacyConditionChecker(hass, cast(ConditionCheckerType, checker))
 
 
 async def async_and_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'AND'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return AndConditionChecker(hass, checks)
 
-    def if_and_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class AndConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'and' compound conditions."""
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables) is False:
+                    if condition.async_check(**kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "and", index=index, total=len(self._conditions), error=ex
+                    )
                 )
 
         # Raise the errors if no check was false
@@ -1123,28 +1146,32 @@ async def async_and_from_config(
 
         return True
 
-    return if_and_condition
-
 
 async def async_or_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'OR'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return OrConditionChecker(hass, checks)
 
-    def if_or_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class OrConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'or' compound conditions."""
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables) is True:
+                    if condition.async_check(**kwargs) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "or", index=index, total=len(self._conditions), error=ex
+                    )
                 )
 
         # Raise the errors if no check was true
@@ -1153,28 +1180,32 @@ async def async_or_from_config(
 
         return False
 
-    return if_or_condition
-
 
 async def async_not_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'NOT'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return NotConditionChecker(hass, checks)
 
-    def if_not_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class NotConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'not' compound conditions."""
+
+    @callback
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if condition.async_check(**kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "not", index=index, total=len(self._conditions), error=ex
+                    )
                 )
 
         # Raise the errors if no check was true
@@ -1182,8 +1213,6 @@ async def async_not_from_config(
             raise ConditionErrorContainer("not", errors=errors)
 
         return True
-
-    return if_not_condition
 
 
 def numeric_state(
@@ -1563,7 +1592,7 @@ def time(
             after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
             after_entity.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.TIMESTAMP
+            in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
@@ -1593,7 +1622,7 @@ def time(
                 return False
         elif (
             before_entity.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.TIMESTAMP
+            in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
@@ -1733,39 +1762,80 @@ async def async_conditions_from_config(
     condition_configs: list[ConfigType],
     logger: logging.Logger,
     name: str,
-) -> Callable[[TemplateVarsType], bool]:
+) -> ConditionsChecker:
     """AND all conditions."""
     checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
+    return ConditionsChecker(checks, logger, name)
 
-    def check_conditions(variables: TemplateVarsType = None) -> bool:
+
+class ConditionsChecker:
+    """Condition checker that ANDs multiple conditions.
+
+    Used by automations and template entities. Unlike AndConditionChecker,
+    this logs warnings on errors instead of raising, and uses "condition"
+    as the trace path prefix.
+    """
+
+    def __init__(
+        self,
+        conditions: list[ConditionChecker],
+        logger: logging.Logger,
+        name: str,
+    ) -> None:
+        """Initialize condition checker."""
+        self._conditions = conditions
+        self._logger = logger
+        self._name = name
+        self._unloaded = False
+
+    def __call__(self, variables: TemplateVarsType = None) -> bool:
+        """Check all conditions."""
+        return self.async_check(variables=variables)
+
+    def __del__(self) -> None:
+        """Clean up when the checker is deleted."""
+        if self._unloaded:
+            return
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading condition checker")
+
+    def async_unload(self) -> None:
+        """Clean up child conditions."""
+        self._unloaded = True
+        for condition in self._conditions:
+            condition.async_unload()
+
+    def async_check(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["condition", str(index)]):
-                    if check(hass, variables) is False:
+                    if condition.async_check(variables=variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "condition", index=index, total=len(checks), error=ex
+                        "condition", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
         if errors:
-            logger.warning(
+            self._logger.warning(
                 "Error evaluating condition in '%s':\n%s",
-                name,
+                self._name,
                 ConditionErrorContainer("condition", errors=errors),
             )
             return False
 
         return True
-
-    return check_conditions
 
 
 @callback
