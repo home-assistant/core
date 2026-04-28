@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME
@@ -65,3 +65,8 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
             identifiers={(DOMAIN, self._attr_unique_id)},
             via_device=(DOMAIN, config_entry_id),
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._controller.connected

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLANError, SetHotWaterParam
+from bsblan import BSBLANError, HotWaterState, SetHotWaterParam
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import DOMAIN
-from .entity import BSBLanDualCoordinatorEntity
+from .entity import BSBLanWaterHeaterDeviceEntity
 
 PARALLEL_UPDATES = 1
 
@@ -46,8 +46,10 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     # Only create water heater entity if DHW (Domestic Hot Water) is available
-    # Check if we have any DHW-related data indicating water heater support
     dhw_data = data.fast_coordinator.data.dhw
+    if dhw_data is None:
+        # Device does not support DHW, skip water heater setup
+        return
     if (
         dhw_data.operating_mode is None
         and dhw_data.nominal_setpoint is None
@@ -59,7 +61,7 @@ async def async_setup_entry(
     async_add_entities([BSBLANWaterHeater(data)])
 
 
-class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
+class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
@@ -108,10 +110,20 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
             self._attr_max_temp = 65.0  # Default maximum
 
     @property
+    def _dhw(self) -> HotWaterState:
+        """Return DHW state data.
+
+        This entity is only created when DHW data is available.
+        """
+        dhw = self.coordinator.data.dhw
+        assert dhw is not None
+        return dhw
+
+    @property
     def current_operation(self) -> str | None:
         """Return current operation."""
         if (
-            operating_mode := self.coordinator.data.dhw.operating_mode
+            operating_mode := self._dhw.operating_mode
         ) is None or operating_mode.value is None:
             return None
         return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
@@ -119,16 +131,14 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if (
-            current_temp := self.coordinator.data.dhw.dhw_actual_value_top_temperature
-        ) is None:
+        if (current_temp := self._dhw.dhw_actual_value_top_temperature) is None:
             return None
         return current_temp.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if (target_temp := self.coordinator.data.dhw.nominal_setpoint) is None:
+        if (target_temp := self._dhw.nominal_setpoint) is None:
             return None
         return target_temp.value
 

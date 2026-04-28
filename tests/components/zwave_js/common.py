@@ -41,12 +41,12 @@ EATON_RF9640_ENTITY = "light.allloaddimmer"
 AEON_SMART_SWITCH_LIGHT_ENTITY = "light.smart_switch_6"
 SCHLAGE_BE469_LOCK_ENTITY = "lock.touchscreen_deadbolt"
 ZEN_31_ENTITY = "light.kitchen_under_cabinet_lights"
-METER_ENERGY_SENSOR = "sensor.smart_switch_6_electric_consumed_kwh"
 METER_VOLTAGE_SENSOR = "sensor.smart_switch_6_electric_consumed_v"
 HUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_humidifier"
 DEHUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_dehumidifier"
 
 PROPERTY_ULTRAVIOLET = "Ultraviolet"
+TEST_SENSITIVE_NETWORK_KEY = "00112233445566778899AABBCCDDEEFF"
 
 
 def replace_value_of_zwave_value(

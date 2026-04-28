@@ -173,7 +173,7 @@ async def test_oauth_session_refresh_user_and_xsts_token_exceptions(
     [
         ("smartglass", "get_console_status"),
         ("catalog", "get_product_from_alternate_id"),
-        ("people", "get_friends_by_xuid"),
+        ("people", "get_friend_by_xuid"),
         ("people", "get_friends_own"),
     ],
 )

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -15,8 +14,8 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, UNIT_CPM
-from .coordinator import MedcomBleUpdateCoordinator
+from .const import UNIT_CPM
+from .coordinator import MedcomBleConfigEntry, MedcomBleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +31,12 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: MedcomBleConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Medcom BLE radiation monitor sensors."""
 
-    coordinator: MedcomBleUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)

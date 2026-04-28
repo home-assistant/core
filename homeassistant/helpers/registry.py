@@ -77,6 +77,19 @@ class BaseRegistry[_StoreDataT: Mapping[str, Any] | Sequence[Any]](ABC):
         delay = SAVE_DELAY if self.hass.state is CoreState.running else SAVE_DELAY_LONG
         self._store.async_delay_save(self._data_to_save, delay)
 
+    async def async_load(self, *, load_empty: bool = False) -> None:
+        """Load the registry.
+
+        Optionally set the store to load empty and become read-only.
+        """
+        if load_empty:
+            self._store.set_load_empty()
+        await self._async_load()
+
+    @abstractmethod
+    async def _async_load(self) -> None:
+        """Load the registry."""
+
     @abstractmethod
     def _data_to_save(self) -> _StoreDataT:
         """Return data of registry to store in a file."""

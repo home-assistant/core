@@ -23,6 +23,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -40,8 +41,11 @@ async def test_number_entities(
     [
         ("number.hdfury_vrroom_02_oled_fade_timer", "set_oled_fade"),
         ("number.hdfury_vrroom_02_restart_timer", "set_reboot_timer"),
+        ("number.hdfury_vrroom_02_unmute_delay", "set_audio_unmute"),
+        ("number.hdfury_vrroom_02_earc_unmute_delay", "set_earc_unmute"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_set_value(
     hass: HomeAssistant,
     mock_hdfury_client: AsyncMock,
@@ -68,8 +72,11 @@ async def test_number_set_value(
     [
         ("number.hdfury_vrroom_02_oled_fade_timer", "set_oled_fade"),
         ("number.hdfury_vrroom_02_restart_timer", "set_reboot_timer"),
+        ("number.hdfury_vrroom_02_unmute_delay", "set_audio_unmute"),
+        ("number.hdfury_vrroom_02_earc_unmute_delay", "set_earc_unmute"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_error(
     hass: HomeAssistant,
     mock_hdfury_client: AsyncMock,
@@ -100,8 +107,11 @@ async def test_number_error(
     [
         ("number.hdfury_vrroom_02_oled_fade_timer"),
         ("number.hdfury_vrroom_02_restart_timer"),
+        ("number.hdfury_vrroom_02_unmute_delay"),
+        ("number.hdfury_vrroom_02_earc_unmute_delay"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_entities_unavailable_on_error(
     hass: HomeAssistant,
     mock_hdfury_client: AsyncMock,

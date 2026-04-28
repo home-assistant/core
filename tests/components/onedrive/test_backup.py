@@ -234,6 +234,10 @@ async def test_agents_upload(
     assert resp.status == 201
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
+    assert (
+        mock_large_file_upload_client.call_args.kwargs.get("progress_callback")
+        is not None
+    )
     # upload_file should be called for the metadata file
     mock_onedrive_client.upload_file.assert_called_once()
     # update_drive_item should not be called (no description updates)
@@ -272,6 +276,10 @@ async def test_agents_upload_corrupt_upload(
     assert resp.status == 201
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
+    assert (
+        mock_large_file_upload_client.call_args.kwargs.get("progress_callback")
+        is not None
+    )
     assert mock_onedrive_client.update_drive_item.call_count == 0
     assert "Hash validation failed, backup file might be corrupt" in caplog.text
 
@@ -308,6 +316,10 @@ async def test_agents_upload_metadata_upload_failed(
     assert resp.status == 201
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
+    assert (
+        mock_large_file_upload_client.call_args.kwargs.get("progress_callback")
+        is not None
+    )
     mock_onedrive_client.delete_drive_item.assert_called_once()
     assert mock_onedrive_client.update_drive_item.call_count == 0
 

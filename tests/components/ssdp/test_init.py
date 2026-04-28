@@ -41,7 +41,11 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
 async def test_ssdp_flow_dispatched_on_st(
-    mock_get_ssdp, hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_flow_init
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_flow_init,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test matching based on ST."""
     mock_ssdp_search_response = _ssdp_headers(
@@ -84,7 +88,11 @@ async def test_ssdp_flow_dispatched_on_st(
     return_value={"mock-domain": [{"manufacturerURL": "mock-url"}]},
 )
 async def test_ssdp_flow_dispatched_on_manufacturer_url(
-    mock_get_ssdp, hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_flow_init
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_flow_init,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test matching based on manufacturerURL."""
     mock_ssdp_search_response = _ssdp_headers(
@@ -1038,6 +1046,7 @@ async def test_ssdp_rediscover(
 async def test_ssdp_rediscover_no_match(
     mock_get_ssdp,
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     mock_flow_init,
     entry_domain: str,
     entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],

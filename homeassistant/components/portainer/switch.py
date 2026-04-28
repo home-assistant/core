@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from pyportainer import Portainer
+from pyportainer import DockerContainerState, Portainer, StackStatus
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN, STACK_STATUS_ACTIVE
+from .const import DOMAIN
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
@@ -88,7 +88,10 @@ CONTAINER_SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
         key="container",
         translation_key="container",
         device_class=SwitchDeviceClass.SWITCH,
-        is_on_fn=lambda data: data.container.state == "running",
+        is_on_fn=lambda data: (
+            data.container.state
+            in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
+        ),
         turn_on_fn=lambda portainer: portainer.start_container,
         turn_off_fn=lambda portainer: portainer.stop_container,
     ),
@@ -99,7 +102,7 @@ STACK_SWITCHES: tuple[PortainerStackSwitchEntityDescription, ...] = (
         key="stack",
         translation_key="stack",
         device_class=SwitchDeviceClass.SWITCH,
-        is_on_fn=lambda data: data.stack.status == STACK_STATUS_ACTIVE,
+        is_on_fn=lambda data: data.stack.status == StackStatus.ACTIVE,
         turn_on_fn=lambda portainer: portainer.start_stack,
         turn_off_fn=lambda portainer: portainer.stop_stack,
     ),
@@ -167,19 +170,6 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
 
     entity_description: PortainerSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerSwitchEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container switch."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return the state of the device."""
@@ -208,19 +198,6 @@ class PortainerStackSwitch(PortainerStackEntity, SwitchEntity):
     """Representation of a Portainer stack switch."""
 
     entity_description: PortainerStackSwitchEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerStackSwitchEntityDescription,
-        device_info: PortainerStackData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer stack switch."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.stack.id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:

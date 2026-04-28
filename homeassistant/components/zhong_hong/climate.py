@@ -149,6 +149,7 @@ class ZhongHongClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+    _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hub, addr_out, addr_in):
@@ -157,9 +158,9 @@ class ZhongHongClimate(ClimateEntity):
         self._device = ZhongHongHVAC(hub, addr_out, addr_in)
         self._hub = hub
         self._current_operation = None
-        self._current_temperature = None
-        self._target_temperature = None
         self._current_fan_mode = None
+        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"
+        self._attr_name = self._attr_unique_id
         self.is_initialized = False
 
     async def async_added_to_hass(self) -> None:
@@ -176,22 +177,12 @@ class ZhongHongClimate(ClimateEntity):
                 self._device.current_operation.lower()
             ]
         if self._device.current_temperature:
-            self._current_temperature = self._device.current_temperature
+            self._attr_current_temperature = self._device.current_temperature
         if self._device.current_fan_mode:
             self._current_fan_mode = self._device.current_fan_mode
         if self._device.target_temperature:
-            self._target_temperature = self._device.target_temperature
+            self._attr_target_temperature = self._device.target_temperature
         self.schedule_update_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.unique_id
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the HVAC."""
-        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -201,34 +192,19 @@ class ZhongHongClimate(ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
-
-    @property
     def is_on(self) -> bool:
         """Return true if on."""
         return self._device.is_on
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if not self._current_fan_mode:
             return None
         return FAN_MODE_REVERSE_MAP.get(self._current_fan_mode, self._current_fan_mode)
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         if not self._device.fan_list:
             return []

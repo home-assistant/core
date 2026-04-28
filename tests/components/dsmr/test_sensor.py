@@ -51,6 +51,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, patch
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_default_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1611,6 +1614,74 @@ async def test_heat_meter_mbus(
     telegram.add(
         MBUS_DEVICE_TYPE,
         CosemObject((0, 1), [{"value": "004", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal("745.695"), "unit": "GJ"},
+            ],
+        ),
+        "MBUS_METER_READING",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    hass.loop.set_debug(True)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if gas consumption is parsed correctly
+    heat_consumption = hass.states.get("sensor.heat_meter_energy")
+    assert heat_consumption.state == "745.695"
+    assert (
+        heat_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    )
+    assert (
+        heat_consumption.attributes.get("unit_of_measurement")
+        == UnitOfEnergy.GIGA_JOULE
+    )
+    assert (
+        heat_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+
+
+async def test_heat_cool_meter_mbus(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if heat/cool meter reading is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5",
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 1), [{"value": "012", "unit": ""}]),
         "MBUS_DEVICE_TYPE",
     )
     telegram.add(

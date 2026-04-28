@@ -400,14 +400,18 @@ async def test_reconfigure(
         return_value={"scb:network": {"Hostname": "scb"}}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "host": "1.1.1.1",
-            "password": "test-password",
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.kostal_plenticore.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
 
     mock_apiclient_class.assert_called_once_with(ANY, "1.1.1.1")
     mock_apiclient.__aenter__.assert_called_once()

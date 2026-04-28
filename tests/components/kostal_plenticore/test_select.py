@@ -49,9 +49,9 @@ async def test_select_battery_charging_usage_available(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_is_registered("select.battery_charging_usage_mode")
+    assert entity_registry.async_is_registered("select.scb_battery_charging_usage_mode")
 
-    entity = entity_registry.async_get("select.battery_charging_usage_mode")
+    entity = entity_registry.async_get("select.scb_battery_charging_usage_mode")
     assert entity.capabilities.get("options") == [
         "None",
         "Battery:SmartBatteryControl:Enable",
@@ -96,9 +96,9 @@ async def test_select_battery_charging_usage_excess_energy_available(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_is_registered("select.battery_charging_usage_mode")
+    assert entity_registry.async_is_registered("select.scb_battery_charging_usage_mode")
 
-    entity = entity_registry.async_get("select.battery_charging_usage_mode")
+    entity = entity_registry.async_get("select.scb_battery_charging_usage_mode")
     assert entity.capabilities.get("options") == [
         "None",
         "Battery:SmartBatteryControl:Enable",
@@ -118,4 +118,6 @@ async def test_select_battery_charging_usage_not_available(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not entity_registry.async_is_registered("select.battery_charging_usage_mode")
+    assert not entity_registry.async_is_registered(
+        "select.scb_battery_charging_usage_mode"
+    )

@@ -85,6 +85,7 @@ async def test_storage_data_writing(
         assert await async_setup_config_entry(
             hass, VALID_CONFIG_DEFAULT, return_value=feed_one_event
         )
+        await hass.async_block_till_done()
 
     # one new event
     assert len(events) == 1

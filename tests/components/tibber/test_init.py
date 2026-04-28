@@ -40,7 +40,7 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
         mock_client = MagicMock()
-        mock_client.set_access_token = MagicMock()
+        mock_client.set_access_token = AsyncMock()
         mock_client_cls.return_value = mock_client
 
         client = await runtime.async_get_client(hass)
@@ -49,7 +49,7 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
             access_token="access-token", websession=ANY, time_zone=ANY, ssl=ANY
         )
         session.async_ensure_token_valid.assert_awaited_once()
-        mock_client.set_access_token.assert_called_once_with("access-token")
+        mock_client.set_access_token.assert_awaited_once_with("access-token")
         assert client is mock_client
 
         mock_client.set_access_token.reset_mock()
@@ -59,7 +59,7 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
 
         mock_client_cls.assert_called_once()
         session.async_ensure_token_valid.assert_awaited_once()
-        mock_client.set_access_token.assert_called_once_with("access-token")
+        mock_client.set_access_token.assert_awaited_once_with("access-token")
         assert cached_client is client
 
 

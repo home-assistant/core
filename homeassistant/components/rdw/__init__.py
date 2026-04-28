@@ -2,43 +2,25 @@
 
 from __future__ import annotations
 
-from vehicle import RDW, Vehicle
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_LICENSE_PLATE, DOMAIN, LOGGER, SCAN_INTERVAL
+from .coordinator import RDWConfigEntry, RDWDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RDWConfigEntry) -> bool:
     """Set up RDW from a config entry."""
-    session = async_get_clientsession(hass)
-    rdw = RDW(session=session, license_plate=entry.data[CONF_LICENSE_PLATE])
-
-    coordinator: DataUpdateCoordinator[Vehicle] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        config_entry=entry,
-        name=f"{DOMAIN}_APK",
-        update_interval=SCAN_INTERVAL,
-        update_method=rdw.vehicle,
-    )
+    coordinator = RDWDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RDWConfigEntry) -> bool:
     """Unload RDW config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

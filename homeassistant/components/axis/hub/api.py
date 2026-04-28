@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ..const import LOGGER
 from ..errors import AuthenticationRequired, CannotConnect
@@ -26,7 +26,7 @@ async def get_axis_api(
     config: Mapping[str, Any],
 ) -> axis.AxisDevice:
     """Create a Axis device API."""
-    session = get_async_client(hass, verify_ssl=False)
+    session = async_get_clientsession(hass, verify_ssl=False)
 
     api = axis.AxisDevice(
         Configuration(

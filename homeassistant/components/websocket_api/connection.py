@@ -47,6 +47,7 @@ class ActiveConnection:
         "last_id",
         "logger",
         "refresh_token_id",
+        "remote",
         "send_message",
         "subscriptions",
         "supported_features",
@@ -59,14 +60,16 @@ class ActiveConnection:
         hass: HomeAssistant,
         send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
-        refresh_token: RefreshToken,
+        refresh_token: RefreshToken | None,
+        remote: str | None,
     ) -> None:
         """Initialize an active connection."""
         self.logger = logger
         self.hass = hass
         self.send_message = send_message
         self.user = user
-        self.refresh_token_id = refresh_token.id
+        self.refresh_token_id = refresh_token.id if refresh_token else None
+        self.remote = remote
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.can_coalesce = False

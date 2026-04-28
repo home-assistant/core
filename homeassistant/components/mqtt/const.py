@@ -109,6 +109,7 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_GET_POSITION_TEMPLATE = "position_template"
 CONF_GET_POSITION_TOPIC = "position_topic"
 CONF_GREEN_TEMPLATE = "green_template"
+CONF_GROUP = "group"
 CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
@@ -268,7 +269,6 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
-CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
 DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE = "{{action}}"
@@ -401,6 +401,8 @@ ENTITY_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
@@ -417,6 +419,7 @@ ENTITY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -432,6 +435,8 @@ SUPPORTED_COMPONENTS = (
     "camera",
     "climate",
     "cover",
+    "date",
+    "datetime",
     "device_automation",
     "device_tracker",
     "event",
@@ -450,6 +455,7 @@ SUPPORTED_COMPONENTS = (
     "switch",
     "tag",
     "text",
+    "time",
     "update",
     "vacuum",
     "valve",

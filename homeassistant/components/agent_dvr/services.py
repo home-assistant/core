@@ -8,18 +8,12 @@ from homeassistant.helpers import service
 
 from .const import DOMAIN
 
-_DEV_EN_ALT = "enable_alerts"
-_DEV_DS_ALT = "disable_alerts"
-_DEV_EN_REC = "start_recording"
-_DEV_DS_REC = "stop_recording"
-_DEV_SNAP = "snapshot"
-
 CAMERA_SERVICES = {
-    _DEV_EN_ALT: "async_enable_alerts",
-    _DEV_DS_ALT: "async_disable_alerts",
-    _DEV_EN_REC: "async_start_recording",
-    _DEV_DS_REC: "async_stop_recording",
-    _DEV_SNAP: "async_snapshot",
+    "enable_alerts": "async_enable_alerts",
+    "disable_alerts": "async_disable_alerts",
+    "start_recording": "async_start_recording",
+    "stop_recording": "async_stop_recording",
+    "snapshot": "async_snapshot",
 }
 
 

@@ -1,0 +1,8 @@
+{
+  "domain": "gate",
+  "name": "Gate",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/gate",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

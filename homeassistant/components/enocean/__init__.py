@@ -1,6 +1,6 @@
 """Support for EnOcean devices."""
 
-from serial import SerialException
+from enocean_async import Gateway
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -8,12 +8,15 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .dongle import EnOceanDongle
+from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
-type EnOceanConfigEntry = ConfigEntry[EnOceanDongle]
+type EnOceanConfigEntry = ConfigEntry[Gateway]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -27,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     if hass.config_entries.async_entries(DOMAIN):
-        # We can only have one dongle. If there is already one in the config,
+        # We can only have one gateway. If there is already one in the config,
         # there is no need to import the yaml based config.
         return True
 
@@ -43,23 +46,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
-    """Set up an EnOcean dongle for the given entry."""
-    try:
-        usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
-    except SerialException as err:
-        raise ConfigEntryNotReady(f"Failed to set up EnOcean dongle: {err}") from err
-    await usb_dongle.async_setup()
-    config_entry.runtime_data = usb_dongle
+    """Set up an EnOcean gateway for the given entry."""
+    gateway = Gateway(port=config_entry.data[CONF_DEVICE])
 
+    gateway.add_erp1_received_callback(
+        lambda packet: async_dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
+    )
+
+    try:
+        await gateway.start()
+    except ConnectionError as err:
+        gateway.stop()
+        raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
+
+    config_entry.runtime_data = gateway
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
+    )
     return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
-    """Unload EnOcean config entry."""
+    """Unload EnOcean config entry: stop the gateway."""
 
-    enocean_dongle = config_entry.runtime_data
-    enocean_dongle.unload()
-
+    config_entry.runtime_data.stop()
     return True

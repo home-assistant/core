@@ -29,10 +29,10 @@ async def test_binary_sensors(
     assert sensor.attributes["device_class"] == "motion"
 
     # test entertainment room active sensor
-    sensor = hass.states.get("binary_sensor.entertainmentroom_1")
+    sensor = hass.states.get("binary_sensor.philips_hue_entertainmentroom_1")
     assert sensor is not None
     assert sensor.state == "off"
-    assert sensor.name == "Entertainmentroom 1"
+    assert sensor.name == "Philips hue Entertainmentroom 1"
     assert sensor.attributes["device_class"] == "running"
 
     # test contact sensor
@@ -88,10 +88,10 @@ async def test_binary_sensors(
     assert sensor.attributes["device_class"] == "motion"
 
     # test motion aware sensor
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1")
+    sensor = hass.states.get("binary_sensor.test_room_motion_aware_sensor_1")
     assert sensor is not None
     assert sensor.state == "off"
-    assert sensor.name == "Motion Aware Sensor 1"
+    assert sensor.name == "Test Room Motion Aware Sensor 1"
     assert sensor.attributes["device_class"] == "motion"
 
 
@@ -194,7 +194,7 @@ async def test_motion_aware_sensor(
     await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
 
     # test motion aware sensor exists and has correct state
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1")
+    sensor = hass.states.get("binary_sensor.test_room_motion_aware_sensor_1")
     assert sensor is not None
     assert sensor.state == "off"
     assert sensor.attributes["device_class"] == "motion"
@@ -211,7 +211,7 @@ async def test_motion_aware_sensor(
     }
     mock_bridge_v2.api.emit_event("update", updated_sensor)
     await hass.async_block_till_done()
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1")
+    sensor = hass.states.get("binary_sensor.test_room_motion_aware_sensor_1")
     assert sensor.state == "on"
 
     # test name update when motion area configuration name changes
@@ -224,6 +224,6 @@ async def test_motion_aware_sensor(
     await hass.async_block_till_done()
     # The entity name is derived from the motion area configuration name
     # but the entity ID doesn't change - we just verify the sensor still exists
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1")
+    sensor = hass.states.get("binary_sensor.test_room_motion_aware_sensor_1")
     assert sensor is not None
-    assert sensor.name == "Updated Motion Area"
+    assert sensor.name == "Test Room Updated Motion Area"

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.const import CONF_STATE, CONF_VARIABLES
+from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -30,6 +30,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Template entity based on trigger data."""
 
+    skip_rendered_result: tuple[str, ...] | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -44,6 +46,10 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
         self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
+
+        self._skip_rendered_result: list[str] = []
+        if self.skip_rendered_result is not None:
+            self._skip_rendered_result.extend(self.skip_rendered_result)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -60,17 +66,30 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 
     def setup_state_template(
         self,
-        option: str,
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
-        """Set up a template that manages the main state of the entity."""
+        """Set up a template that manages the main state of the entity.
+
+        Requires _state_option to be set on the inheriting class. _state_option represents
+        the configuration option that derives the state. E.g. Template weather entities main state option
+        is 'condition', where switch is 'state'.
+        """
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+            )
+
         if self.add_template(
-            option, attribute, validator, on_update, none_on_template_error=False
+            self._state_option,
+            attribute,
+            validator,
+            on_update,
+            none_on_template_error=False,
         ):
-            self._to_render_simple.append(option)
-            self._parse_result.add(option)
+            self._to_render_simple.append(self._state_option)
+            self._parse_result.add(self._state_option)
 
     def setup_template(
         self,
@@ -149,7 +168,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             # Filter out state templates because they have unique behavior
             # with none_on_template_error.
             if (
-                key != CONF_STATE
+                key != self._state_option
                 and key in self._templates
                 and not self._templates[key].none_on_template_error
             ):
@@ -164,17 +183,21 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 
         # If state fails to render, the entity should go unavailable. Render the
         # state as a simple template because the result should always be a string or None.
-        if CONF_STATE in self._to_render_simple:
+        if (
+            state_option := self._state_option
+        ) is not None and state_option in self._to_render_simple:
             if (
-                result := self._render_single_template(CONF_STATE, variables)
+                result := self._render_single_template(state_option, variables)
             ) is _SENTINEL:
                 self._rendered = self._static_rendered
                 self._state_render_error = True
                 return
 
-            rendered[CONF_STATE] = result
+            rendered[state_option] = result
 
-        self._render_single_templates(rendered, variables, [CONF_STATE])
+        self._render_single_templates(
+            rendered, variables, [state_option] if state_option else []
+        )
         self._render_attributes(rendered, variables)
         self._rendered = rendered
 
@@ -182,7 +205,14 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Get a rendered result and return the value."""
         # Handle any templates.
         write_state = False
+        if self._state_render_error:
+            # The state errored and the entity is unavailable, do not process any values.
+            return True
+
         for option, entity_template in self._templates.items():
+            if option in self._skip_rendered_result:
+                continue
+
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.
@@ -225,18 +255,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         if self._render_availability_template(variables):
             self._render_templates(variables)
 
-            write_state = False
-            # While transitioning platforms to the new framework, this
-            # if-statement is necessary for backward compatibility with existing
-            # trigger based platforms.
-            if self._templates:
-                # Handle any results that were rendered.
-                write_state = self._handle_rendered_results()
-
-            # Check availability after rendering the results because the state
-            # template could render the entity unavailable
-            if not self.available:
-                write_state = True
+            write_state = self._handle_rendered_results()
 
             if len(self._rendered) > 0:
                 # In some cases, the entity may be state optimistic or

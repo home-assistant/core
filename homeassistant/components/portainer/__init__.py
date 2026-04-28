@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from pyportainer import Portainer
+from pyportainer.exceptions import PortainerError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,7 +24,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import API_MAX_RETRIES, DOMAIN
 from .coordinator import PortainerCoordinator
 from .services import async_setup_services
 
@@ -50,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         session=async_create_clientsession(
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
+        request_timeout=30,
+        max_retries=API_MAX_RETRIES,
     )
 
     coordinator = PortainerCoordinator(hass, entry, client)
@@ -136,6 +139,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
                 )
 
         hass.config_entries.async_update_entry(entry=entry, version=4)
+
+    if entry.version < 5:
+        client = Portainer(
+            api_url=entry.data[CONF_URL],
+            api_key=entry.data[CONF_API_TOKEN],
+            session=async_create_clientsession(
+                hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+            ),
+        )
+        try:
+            system_status = await client.portainer_system_status()
+        except PortainerError:
+            _LOGGER.exception("Failed to fetch instance ID during migration")
+            return False
+
+        hass.config_entries.async_update_entry(
+            entry=entry,
+            unique_id=system_status.instance_id,
+            version=5,
+        )
 
     return True
 

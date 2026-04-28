@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(autouse=True)
 def glances_setup_fixture():
-    """Mock glances entry setup."""
+    """Mock Glances entry setup."""
     with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
         yield
 

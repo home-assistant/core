@@ -329,8 +329,8 @@
           "nano_nr_3": "Nano 3",
           "nano_nr_4": "Nano 4",
           "nano_nr_5": "Nano 5",
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "summer": "Summer",
           "winter": "Winter"
         }
@@ -368,8 +368,8 @@
       "pump_status": {
         "name": "Pump status",
         "state": {
-          "off": "Off",
-          "on": "On"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "return_circuit_temperature": {
