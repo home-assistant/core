@@ -185,8 +185,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         for file_path, result in zip(file_paths, results, strict=True):
             if isinstance(result, OneDriveException):
                 failures.append((file_path, result))
-            elif isinstance(result, BaseException):
-                raise result
         if len(failures) == 1:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
