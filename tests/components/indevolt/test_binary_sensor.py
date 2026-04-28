@@ -127,7 +127,7 @@ async def test_battery_pack_heating_filtering(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get all sensor entities
+    # Get all binary sensor entities
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
