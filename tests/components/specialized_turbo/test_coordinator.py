@@ -160,7 +160,13 @@ async def test_do_poll_derives_chars_for_late_generation(
     assert coordinator._char_request_write is None
     assert coordinator._char_request_read is None
 
-    with patch.object(coordinator, "_ensure_connected", new_callable=AsyncMock):
+    with (
+        patch.object(coordinator, "_ensure_connected", new_callable=AsyncMock),
+        patch(
+            "homeassistant.components.specialized_turbo.coordinator.poll_tcx",
+            new_callable=AsyncMock,
+        ),
+    ):
         await coordinator._do_poll(TCX_SERVICE_INFO)
 
     assert coordinator._char_request_write is not None
