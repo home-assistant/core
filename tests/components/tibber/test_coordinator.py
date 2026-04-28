@@ -14,7 +14,6 @@ from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .conftest import create_tibber_home
@@ -180,6 +179,7 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     setup_credentials: None,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
     expected_message: str,
 ) -> None:
@@ -201,10 +201,9 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     await _async_fire_coordinator_update(hass, freezer, timedelta(hours=1))
 
     assert home.update_info_and_price_info.await_count == initial_update_count + 1
-    price_fetch_coordinator = config_entry.runtime_data.fetch_price_coordinator
-    assert price_fetch_coordinator.last_update_success is False
-    assert isinstance(price_fetch_coordinator.last_exception, UpdateFailed)
-    assert str(price_fetch_coordinator.last_exception) == expected_message
+    assert (
+        f"Error fetching {DOMAIN} price fetch data: {expected_message}" in caplog.text
+    )
 
     state = hass.states.get(entity_id)
     assert state is not None
