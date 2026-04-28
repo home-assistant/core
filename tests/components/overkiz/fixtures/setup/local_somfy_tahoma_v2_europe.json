@@ -742,6 +742,76 @@
       }
     },
     {
+      "creationTime": 1686173907452,
+      "deviceURL": "rts://1234-5678-3293/16757362",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [],
+      "label": "Living Room Curtain",
+      "definition": {
+        "states": [],
+        "widgetName": "UpDownDualCurtain",
+        "attributes": [],
+        "uiClass": "Curtain",
+        "commands": [
+          {
+            "nparams": 0,
+            "commandName": "stop",
+            "paramsSig": "*p1"
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "nparams": 0,
+            "commandName": "open",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "close",
+            "paramsSig": "*p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 0,
+            "commandName": "up",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "down",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "my",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "openConfiguration",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "rest",
+            "paramsSig": "*p1"
+          }
+        ],
+        "type": "ACTUATOR"
+      },
+      "attributes": [],
+      "enabled": true,
+      "controllableName": "rts:DualCurtainRTSComponent",
+      "subsystemId": 0
+    },
+    {
       "deviceURL": "io://1234-5678-3293/16483707",
       "available": true,
       "synced": true,

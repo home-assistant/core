@@ -32,19 +32,27 @@ BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, DomainSpec] = {
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "low": make_entity_target_state_trigger(BATTERY_LOW_DOMAIN_SPECS, STATE_ON),
-    "not_low": make_entity_target_state_trigger(BATTERY_LOW_DOMAIN_SPECS, STATE_OFF),
+    "low": make_entity_target_state_trigger(
+        BATTERY_LOW_DOMAIN_SPECS, STATE_ON, primary_entities_only=False
+    ),
+    "not_low": make_entity_target_state_trigger(
+        BATTERY_LOW_DOMAIN_SPECS, STATE_OFF, primary_entities_only=False
+    ),
     "started_charging": make_entity_target_state_trigger(
-        BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON, primary_entities_only=False
     ),
     "stopped_charging": make_entity_target_state_trigger(
-        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF, primary_entities_only=False
     ),
     "level_changed": make_entity_numerical_state_changed_trigger(
-        BATTERY_PERCENTAGE_DOMAIN_SPECS, valid_unit="%"
+        BATTERY_PERCENTAGE_DOMAIN_SPECS,
+        valid_unit="%",
+        primary_entities_only=False,
     ),
     "level_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        BATTERY_PERCENTAGE_DOMAIN_SPECS, valid_unit="%"
+        BATTERY_PERCENTAGE_DOMAIN_SPECS,
+        valid_unit="%",
+        primary_entities_only=False,
     ),
 }
 
