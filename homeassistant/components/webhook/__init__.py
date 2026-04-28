@@ -42,7 +42,7 @@ def async_register(
     webhook_id: str,
     handler: Callable[[HomeAssistant, str, Request], Awaitable[Response | None]],
     *,
-    local_only: bool | None = False,
+    local_only: bool = False,
     allowed_methods: Iterable[str] | None = None,
 ) -> None:
     """Register a webhook."""
@@ -59,6 +59,13 @@ def async_register(
         raise ValueError(
             f"Unexpected method: {allowed_methods.difference(SUPPORTED_METHODS)}"
         )
+
+    if not isinstance(local_only, bool):
+        # Previously it was valid to pass None for local_only and it was treated as False
+        # with a deprecation warning. In case a custom component is still passing None,
+        # we want to raise an error instead of silently treating it as False as the
+        # deprecation period has ended and the message was removed.
+        raise TypeError("local_only must be a boolean")
 
     handlers[webhook_id] = {
         "domain": domain,
@@ -159,7 +166,7 @@ async def async_handle_webhook(
         )
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-    if webhook["local_only"] in (True, None):
+    if webhook["local_only"]:
         is_local = not (is_cloud_connection(hass) or request.remote is None)
 
         if is_local:
@@ -176,17 +183,7 @@ async def async_handle_webhook(
 
         if not is_local:
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
-            if webhook["local_only"]:
-                return Response(status=HTTPStatus.OK)
-            if not webhook.get("warned_about_deprecation"):
-                webhook["warned_about_deprecation"] = True
-                _LOGGER.warning(
-                    "Deprecation warning: "
-                    "Webhook '%s' does not provide a value for local_only. "
-                    "This webhook will be blocked after the 2023.11.0 release. "
-                    "Use `local_only: false` to keep this webhook operating as-is",
-                    webhook_id,
-                )
+            return Response(status=HTTPStatus.OK)
 
     try:
         response: Response | None = await webhook["handler"](hass, webhook_id, request)
