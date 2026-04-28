@@ -463,7 +463,7 @@ class EntityConditionBase(Condition):
         if TYPE_CHECKING:
             assert config.target
             assert config.options
-        self._target_config = config.target
+        self._target = config.target
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
         self._duration: timedelta | None = config.options.get(CONF_FOR)
@@ -489,27 +489,36 @@ class EntityConditionBase(Condition):
         """
         return True
 
-    def _prime_valid_since(self, entity_id: str) -> None:
-        """Prime _valid_since for an entity already in a valid state.
+    def _update_valid_since(self, entity_id: str, _state: State | None) -> None:
+        """Update _valid_since tracking for an entity based on its current state.
+
+        If the entity is in a valid state and not already tracked, records when
+        the condition became true. If the entity is not in a valid state, removes
+        it from tracking.
 
         For state-based conditions (value_source is None), last_changed
         accurately reflects when the state changed to the current value.
         For attribute-based conditions, last_changed only tracks main state
         changes, so we use last_updated which is bumped on any update
-        (state or attributes). This is conservative - the tracked attribute
-        may have held its value longer - but it's the best we can do
+        (state or attributes). This is conservative — the tracked attribute
+        may have held its value longer — but it's the best we can do
         to avoid false positives.
         """
         if (
-            (_state := self._hass.states.get(entity_id)) is not None
+            _state is not None
             and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
             and self.is_valid_state(_state)
         ):
-            domain_spec = self._domain_specs[_state.domain]
-            if domain_spec.value_source is None:
-                self._valid_since[entity_id] = _state.last_changed
-            else:
-                self._valid_since[entity_id] = _state.last_updated
+            # Only record the time if not already tracked, to avoid
+            # resetting the duration on unrelated state/attribute updates.
+            if entity_id not in self._valid_since:
+                domain_spec = self._domain_specs[_state.domain]
+                if domain_spec.value_source is None:
+                    self._valid_since[entity_id] = _state.last_changed
+                else:
+                    self._valid_since[entity_id] = _state.last_updated
+        else:
+            self._valid_since.pop(entity_id, None)
 
     @override
     async def async_setup(self) -> None:
@@ -527,35 +536,26 @@ class EntityConditionBase(Condition):
             entity_id = event.data["entity_id"]
             to_state = event.data["new_state"]
 
-            if (
-                to_state is not None
-                and to_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-                and self.is_valid_state(to_state)
-            ):
-                if entity_id not in self._valid_since:
-                    # Prime from the state object — this handles both
-                    # genuine transitions and newly tracked entities
-                    self._prime_valid_since(entity_id)
-            else:
-                self._valid_since.pop(entity_id, None)
+            self._update_valid_since(entity_id, to_state)
 
         @callback
         def _on_entities_update(added: set[str], removed: set[str]) -> None:
             """Handle changes to the tracked entity set."""
             for entity_id in added:
-                self._prime_valid_since(entity_id)
+                self._update_valid_since(entity_id, self._hass.states.get(entity_id))
             for entity_id in removed:
                 self._valid_since.pop(entity_id, None)
 
         unsub = async_track_target_selector_state_change_event(
             self._hass,
-            self._target_config,
+            self._target,
             _state_change_listener,
             self.entity_filter,
             _on_entities_update,
         )
         self._on_unload.append(unsub)
 
+    @override
     def async_unload(self) -> None:
         """Unsubscribe from listeners."""
         super().async_unload()

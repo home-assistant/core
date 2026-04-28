@@ -5008,3 +5008,34 @@ async def test_state_condition_attr_duration_entity_added_then_state_changes(
     # Now past the duration
     freezer.tick(timedelta(seconds=3))
     assert test(hass) is True
+
+
+async def test_state_condition_attr_duration_unrelated_attr_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that unrelated attribute updates don't reset the duration timer.
+
+    When the tracked attribute stays valid but another attribute changes,
+    _update_valid_since must not overwrite the existing timestamp.
+    """
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 10}},
+    )
+
+    # Set tracked attribute to True
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True, "other": "a"})
+    await hass.async_block_till_done()
+
+    # After 6s, change an unrelated attribute (tracked attr stays True)
+    freezer.tick(timedelta(seconds=6))
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True, "other": "b"})
+    await hass.async_block_till_done()
+
+    # After 5 more seconds (11 total from initial set), the duration
+    # should be met — the unrelated attribute change must NOT have
+    # reset the timer.
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is True
