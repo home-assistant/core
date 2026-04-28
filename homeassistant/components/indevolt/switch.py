@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Final
 
+from indevolt_api import IndevoltConfig
+
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
@@ -37,8 +39,8 @@ SWITCHES: Final = (
         key="grid_charging",
         translation_key="grid_charging",
         generation=[2],
-        read_key="2618",
-        write_key="1143",
+        read_key=IndevoltConfig.READ_GRID_CHARGING,
+        write_key=IndevoltConfig.WRITE_GRID_CHARGING,
         read_on_value=1001,
         read_off_value=1000,
         device_class=SwitchDeviceClass.SWITCH,
@@ -47,16 +49,16 @@ SWITCHES: Final = (
         key="light",
         translation_key="light",
         generation=[2],
-        read_key="7171",
-        write_key="7265",
+        read_key=IndevoltConfig.READ_LIGHT,
+        write_key=IndevoltConfig.WRITE_LIGHT,
         device_class=SwitchDeviceClass.SWITCH,
     ),
     IndevoltSwitchEntityDescription(
         key="bypass",
         translation_key="bypass",
         generation=[2],
-        read_key="680",
-        write_key="7266",
+        read_key=IndevoltConfig.READ_BYPASS,
+        write_key=IndevoltConfig.WRITE_BYPASS,
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
