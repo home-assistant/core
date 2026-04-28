@@ -61,6 +61,19 @@
       "upper_threshold": {
         "name": "Maximum charge level"
       }
+    },
+    "select": {
+      "battery_mode": {
+        "name": "Mode",
+        "state": {
+          "charged": "Charged",
+          "dynamic": "Dynamic",
+          "fast_charge": "Fast charge",
+          "fast_discharge": "Fast discharge",
+          "idle": "[%key:common::state::idle%]",
+          "self_use": "Self-use"
+        }
+      }
     }
   },
   "exceptions": {
