@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "sync_clock": {
+        "default": "mdi:clock-sync"
+      }
+    },
     "sensor": {
       "combustion_chamber_temperature": {
         "default": "mdi:thermometer-high"
