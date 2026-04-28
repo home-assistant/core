@@ -21,8 +21,8 @@ from .conftest import TCX_SERVICE_INFO
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
-BATTERY_ENTITY_ID = "sensor.mock_title"
-SPEED_ENTITY_ID = "sensor.mock_title_2"
+BATTERY_ENTITY_ID = "sensor.mock_title_battery"
+SPEED_ENTITY_ID = "sensor.mock_title_speed"
 ASSIST_LEVEL_ENTITY_ID = "sensor.mock_title_assist_level"
 
 
