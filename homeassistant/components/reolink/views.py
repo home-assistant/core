@@ -5,7 +5,6 @@ from __future__ import annotations
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from collections.abc import Mapping
 from contextlib import suppress
-import datetime as dt
 from http import HTTPStatus
 import logging
 import re
@@ -33,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 _RANGE_HEADER_PATTERN = re.compile(r"^bytes=(\d*)-(\d*)$")
 _CONTENT_RANGE_TOTAL_PATTERN = re.compile(r"^bytes\s+\d+-\d+/(\d+|\*)$")
-_FILENAME_DATE_PATTERN = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 _HOP_BY_HOP_RESPONSE_HEADERS = {
     "Connection",
     "Keep-Alive",
@@ -78,6 +76,7 @@ class PlaybackProxyView(HomeAssistantView):
         )
         self._vod_type: str | None = None
         self._size_cache: dict[str, int] = {}
+        self._vod_source_cache: dict[str, tuple[str, str, int | None]] = {}
 
     @staticmethod
     def _is_webkit_client(request: web.Request) -> bool:
@@ -146,10 +145,15 @@ class PlaybackProxyView(HomeAssistantView):
         filename_decoded: str,
         reolink_url: str,
         reolink_response: ClientResponse,
+        total_length_hint: int | None = None,
     ) -> int | None:
         """Resolve and cache total byte length for deterministic range responses."""
         if (cached := self._size_cache.get(reolink_url)) is not None:
             return cached
+
+        if total_length_hint is not None:
+            self._size_cache[reolink_url] = total_length_hint
+            return total_length_hint
 
         if (
             length := self._extract_total_length_from_headers(reolink_response.headers)
@@ -178,50 +182,6 @@ class PlaybackProxyView(HomeAssistantView):
                 return length
         finally:
             probe_response.release()
-
-        if (
-            length := await self._async_lookup_total_length_from_index(
-                host, channel, stream_res, filename_decoded
-            )
-        ) is not None:
-            self._size_cache[reolink_url] = length
-            return length
-
-        return None
-
-    async def _async_lookup_total_length_from_index(
-        self,
-        host: Any,
-        channel: int,
-        stream_res: str,
-        filename_decoded: str,
-    ) -> int | None:
-        """Fallback: resolve clip size from Reolink VOD index."""
-        if (match := _FILENAME_DATE_PATTERN.search(filename_decoded)) is None:
-            return None
-
-        year, month, day = map(int, match.groups())
-        start = dt.datetime(year, month, day, 0, 0, 0)
-        end = dt.datetime(year, month, day, 23, 59, 59)
-        basename = filename_decoded.rsplit("/", 1)[-1]
-
-        try:
-            _statuses, vod_files = await host.api.request_vod_files(
-                channel, start, end, stream=stream_res
-            )
-        except ReolinkError:
-            return None
-
-        for vod_file in vod_files:
-            file_name = getattr(vod_file, "file_name", None)
-            if not isinstance(file_name, str) or (
-                file_name != basename and file_name not in filename_decoded
-            ):
-                continue
-            for attr in ("size", "file_size", "length"):
-                value = getattr(vod_file, attr, None)
-                if isinstance(value, int) and value > 0:
-                    return value
 
         return None
 
@@ -450,8 +410,12 @@ class PlaybackProxyView(HomeAssistantView):
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            _mime_type, reolink_url = await host.api.get_vod_source(
-                ch, filename_decoded, stream_res, VodRequestType(vod_type)
+            _mime_type, reolink_url, total_length_hint = await host.api.get_vod_source(
+                ch,
+                filename_decoded,
+                stream_res,
+                VodRequestType(vod_type),
+                include_total_length=True,
             )
         except ReolinkError as err:
             _LOGGER.warning("Reolink playback proxy error: %s", str(err))
@@ -515,6 +479,7 @@ class PlaybackProxyView(HomeAssistantView):
             filename_decoded,
             reolink_url,
             reolink_response,
+            total_length_hint,
         )
         force_range, content_range_total, error_response = self._plan_range_handling(
             request, reolink_response, total_length
