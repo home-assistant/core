@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from zha.application import Platform as ZhaPlatform
+from zha.application.platforms import PlatformEntity
 from zha.zigbee.device import DeviceEntityAddedEvent, DeviceEntityRemovedEvent
 from zigpy.device import Device
 from zigpy.profiles import zha
@@ -77,7 +78,7 @@ async def _create_switch_device(
     return zha_device_proxy, gateway_proxy, zigpy_device
 
 
-def _get_switch_platform_entity(zha_device_proxy: ZHADeviceProxy):
+def _get_switch_platform_entity(zha_device_proxy: ZHADeviceProxy) -> PlatformEntity:
     """Return the underlying ZHA switch platform entity for the device."""
     return next(
         entity
