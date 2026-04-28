@@ -176,7 +176,7 @@
           "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
           "workdays": "[%key:component::workday::config::step::options::data_description::workdays%]"
         },
-        "description": "Change additional options for country {country}"
+        "description": "Change additional options for {name} configured for country {country}"
       }
     }
   },
