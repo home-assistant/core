@@ -9,10 +9,12 @@ from aiohomeconnect.model import (
     Option,
     OptionKey,
     Program,
+    ProgramDefinition,
     ProgramKey,
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
+from aiohomeconnect.model.program import ProgramDefinitionOption
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from voluptuous.error import MultipleInvalid
@@ -316,6 +318,22 @@ async def test_start_selected_program(
             options=options_already_set,
         )
     )
+    # Whitelist all writable option keys for this program so options_already_set
+    # are forwarded and user-provided keys pass the writable check.
+    writable_option_keys: set[OptionKey] = set()
+    if options_already_set:
+        writable_option_keys.update(opt.key for opt in options_already_set)
+    for translation_key in additional_service_data:
+        writable_option_keys.add(PROGRAM_OPTIONS[translation_key][0])
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                ProgramDefinitionOption(key=key, type="Boolean")
+                for key in writable_option_keys
+            ],
+        )
+    )
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -383,6 +401,12 @@ async def test_start_selected_program_drops_non_writable_options(
             options=non_writable_options,
         ),
     )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+            options=[],
+        )
+    )
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -432,6 +456,16 @@ async def test_start_selected_program_keeps_user_options_only(
             ],
         ),
     )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+            options=[
+                ProgramDefinitionOption(
+                    key=OptionKey.BSH_COMMON_START_IN_RELATIVE, type="Int"
+                ),
+            ],
+        )
+    )
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -464,6 +498,50 @@ async def test_start_selected_program_keeps_user_options_only(
     )
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_start_selected_program_user_option_not_writable_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """A user-passed option that the program does not list as writable must raise."""
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+        ),
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+            options=[],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    with pytest.raises(HomeAssistantError, match=r"is not writable"):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service="start_selected_program",
+            service_data={
+                "device_id": device_entry.id,
+                "b_s_h_common_option_start_in_relative": 1800,
+            },
+            blocking=True,
+        )
+
+    assert client.start_program.call_count == 0
+
+
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("mock_attr", "error_regex", "get_active_program_side_effect"),
@@ -477,6 +555,11 @@ async def test_start_selected_program_keeps_user_options_only(
             "get_selected_program",
             r"Error.*obtaining.*program.*",
             NoProgramActiveError("error.key"),
+        ),
+        (
+            "get_available_program",
+            r"Error.*obtaining.*program.*",
+            None,
         ),
         ("start_program", r"Error.*starting.*program.*", None),
     ],
@@ -502,6 +585,12 @@ async def test_start_selected_program_and_options_exceptions(
     client.get_selected_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[],
         )
     )
     getattr(client, mock_attr).side_effect = HomeConnectError("error.key")

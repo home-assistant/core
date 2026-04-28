@@ -309,24 +309,52 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         )
 
     program = program_obj.key
-    # Only forward options that the user explicitly provided to the service call.
-    # The ``GET /programs/selected`` response includes read-only values such as
-    # ``BSH.Common.Option.EnergyForecast`` / ``WaterForecast`` and options that
-    # are valid for the program but not writable in the current appliance state.
-    # Forwarding them to ``PUT /programs/active`` triggers
-    # ``SDK.Error.UnsupportedOption`` from the cloud API (see issue #167619).
-    # ``constraints.access`` is not exposed on the selected-program response, so
-    # the integration cannot filter by writability locally and must rely on the
-    # user's explicit intent instead.
-    options = [
-        Option(PROGRAM_OPTIONS[option][0], value) for option, value in data.items()
-    ]
+    # ``GET /programs/selected`` exposes neither ``constraints.access`` per
+    # option nor whether an option is currently writable. Forwarding the full
+    # response to ``PUT /programs/active`` triggers ``SDK.Error.UnsupportedOption``
+    # for read-only values like ``BSH.Common.Option.EnergyForecast`` (see issue
+    # #167619). Fetch the program definition from
+    # ``GET /programs/available/{programKey}`` and treat only those option keys
+    # as writable.
+    try:
+        available_program = await client.get_available_program(
+            ha_id, program_key=program
+        )
+    except HomeConnectError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_program_error",
+            translation_placeholders=get_dict_from_home_connect_error(err),
+        ) from err
+
+    writable_keys = {opt.key for opt in available_program.options or []}
+
+    options_dict: dict[OptionKey, Option] = {
+        option.key: option
+        for option in program_obj.options or []
+        if option.key in writable_keys
+    }
+    for option, value in data.items():
+        option_key = PROGRAM_OPTIONS[option][0]
+        if option_key not in writable_keys:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="start_program",
+                translation_placeholders={
+                    "program": program,
+                    "error": (
+                        f"Option {option_key} is not writable for the current"
+                        " program"
+                    ),
+                },
+            )
+        options_dict[option_key] = Option(option_key, value)
 
     try:
         await client.start_program(
             ha_id,
             program_key=program,
-            options=options or None,
+            options=list(options_dict.values()) or None,
         )
     except HomeConnectError as err:
         raise HomeAssistantError(
