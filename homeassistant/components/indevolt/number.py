@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Final
 
+from indevolt_api import IndevoltConfig
+
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
@@ -37,8 +39,8 @@ NUMBERS: Final = (
         key="discharge_limit",
         generation=[2],
         translation_key="discharge_limit",
-        read_key="6105",
-        write_key="1142",
+        read_key=IndevoltConfig.READ_DISCHARGE_LIMIT,
+        write_key=IndevoltConfig.WRITE_DISCHARGE_LIMIT,
         native_min_value=0,
         native_max_value=100,
         native_step=1,
@@ -48,8 +50,8 @@ NUMBERS: Final = (
         key="max_ac_output_power",
         generation=[2],
         translation_key="max_ac_output_power",
-        read_key="11011",
-        write_key="1147",
+        read_key=IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
+        write_key=IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
         native_min_value=0,
         native_max_value=2400,
         native_step=100,
@@ -60,8 +62,8 @@ NUMBERS: Final = (
         key="inverter_input_limit",
         generation=[2],
         translation_key="inverter_input_limit",
-        read_key="11009",
-        write_key="1138",
+        read_key=IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
+        write_key=IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
         native_min_value=100,
         native_max_value=2400,
         native_step=100,
@@ -72,8 +74,8 @@ NUMBERS: Final = (
         key="feedin_power_limit",
         generation=[2],
         translation_key="feedin_power_limit",
-        read_key="11010",
-        write_key="1146",
+        read_key=IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
+        write_key=IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
         native_min_value=0,
         native_max_value=2400,
         native_step=100,
