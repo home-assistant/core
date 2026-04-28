@@ -28,16 +28,8 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 @pytest.fixture(autouse=True)
 def switch_platform_only() -> Generator[None]:
-    """Only set up the switch and required base platforms to speed up tests."""
-    with patch(
-        "homeassistant.components.zha.PLATFORMS",
-        (
-            Platform.DEVICE_TRACKER,
-            Platform.SENSOR,
-            Platform.SELECT,
-            Platform.SWITCH,
-        ),
-    ):
+    """Only set up the switch platform to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SWITCH,)):
         yield
 
 
