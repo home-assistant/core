@@ -228,12 +228,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates=self.config)
 
         self.context["title_placeholders"] = {
             CONF_HOST: host,
             CONF_SITE_ID: DEFAULT_SITE_ID,
         }
+        self.context["configuration_url"] = f"https://{host}"
 
         return await self.async_step_user()
 

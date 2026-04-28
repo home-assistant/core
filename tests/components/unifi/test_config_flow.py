@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
 
 from .conftest import ConfigEntryFactoryType
 
@@ -532,6 +533,7 @@ async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
         "host": "x.ui.direct",
         "site": "default",
     }
+    assert context["configuration_url"] == "https://x.ui.direct"
 
 
 @pytest.mark.usefixtures("config_entry")
@@ -598,6 +600,31 @@ async def test_flow_integration_discovery_aborts_on_direct_connect_host(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test that an existing entry's host is refreshed when rediscovered with the same MAC."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),
+        data={
+            CONF_HOST: "old.host",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert old_entry.data[CONF_HOST] == "x.ui.direct"
+    assert old_entry.data[CONF_VERIFY_SSL] is True
 
 
 async def test_flow_integration_discovery_aborts_without_source_ip(
