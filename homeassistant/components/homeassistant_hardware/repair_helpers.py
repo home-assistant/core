@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
@@ -67,8 +65,10 @@ class MultiPanMigrationRepairFlow(RepairsFlow):
         """Return the hardware config entry to migrate."""
         return self._repair_config_entry
 
-    async def _async_step_start_migration(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Jump straight into the uninstall step of the migration flow."""
-        return await self.async_step_uninstall_addon(user_input)  # type: ignore[attr-defined, no-any-return]
+    async def _async_step_start_migration(self) -> ConfigFlowResult:
+        """Jump straight into the uninstall step of the migration flow.
+
+        The repair flow's init data is the issue context, not user form input,
+        so pass None to render the uninstall confirmation form.
+        """
+        return await self.async_step_uninstall_addon()  # type: ignore[attr-defined, no-any-return]

@@ -29,7 +29,7 @@ class SkyConnectMultiPanMigrationRepairFlow(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Jump straight into the uninstall step."""
-        return await self._async_step_start_migration(user_input)
+        return await self._async_step_start_migration()
 
 
 async def async_create_fix_flow(
