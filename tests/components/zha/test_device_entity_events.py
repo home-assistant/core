@@ -237,17 +237,18 @@ async def test_handle_device_entity_removed_unknown_unique_id(
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
 
-    zha_device_proxy.device.emit(
-        DeviceEntityRemovedEvent.event_type,
-        DeviceEntityRemovedEvent(
-            platform=ZhaPlatform.SWITCH,
-            unique_id="nonexistent_unique_id",
-            remove=True,
-        ),
-    )
-    await hass.async_block_till_done()
+    for remove in (False, True):
+        zha_device_proxy.device.emit(
+            DeviceEntityRemovedEvent.event_type,
+            DeviceEntityRemovedEvent(
+                platform=ZhaPlatform.SWITCH,
+                unique_id="nonexistent_unique_id",
+                remove=remove,
+            ),
+        )
+        await hass.async_block_till_done()
 
-    # The original entity is untouched.
-    registry = er.async_get(hass)
-    assert registry.async_get(entity_id) is not None
-    assert hass.states.get(entity_id) is not None
+        # The original entity is untouched.
+        registry = er.async_get(hass)
+        assert registry.async_get(entity_id) is not None
+        assert hass.states.get(entity_id) is not None
