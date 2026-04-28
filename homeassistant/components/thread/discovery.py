@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
     "Amazon": "amazon",
+    "amazon": "amazon",
     "Apple": "apple",
     "Apple Inc.": "apple",
     "Aqara": "aqara_gateway",
@@ -37,6 +38,7 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "OpenThread": "openthread",
     "Samsung": "samsung",
     "SmartThings": "smartthings",
+    "Yeelight": "yeelight",
 }
 THREAD_TYPE = "_meshcop._udp.local."
 CLASS_IN = 1
