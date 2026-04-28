@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -25,7 +26,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1511,3 +1516,46 @@ async def test_legacy_door_open_state_stale_repair_issue_cleaned_up(
         )
         is None
     )
+
+
+async def test_fibaro_fgms001_v2_8_motion_discovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    fibaro_fgms001_v2_8: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the Fibaro FGMS001 on firmware 2.8 is discovered as a motion sensor.
+
+    The device exposes its motion state via the Sensor Binary CC under the
+    "Any" sensor type. Without the device-specific discovery override the
+    value would either fall through to the disabled legacy boolean schema
+    or be misclassified, so we assert that exactly one binary_sensor entity
+    with device_class=motion is created and no light entity exists.
+    """
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, fibaro_fgms001_v2_8)}
+    )
+    assert device is not None
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+
+    motion_entries = [
+        entry
+        for entry in entries
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and entry.original_device_class == BinarySensorDeviceClass.MOTION
+    ]
+    assert len(motion_entries) == 1
+    motion_entry = motion_entries[0]
+    assert motion_entry.disabled_by is None
+
+    state = hass.states.get(motion_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
+
+    assert not [entry for entry in entries if entry.domain == Platform.LIGHT]
