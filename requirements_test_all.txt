@@ -2095,6 +2095,9 @@ pyrainbird==6.3.0
 # homeassistant.components.playstation_network
 pyrate-limiter==4.1.0
 
+# homeassistant.components.rejseplanen
+pyrejseplan==1.0.9
+
 # homeassistant.components.risco
 pyrisco==0.6.8
 
