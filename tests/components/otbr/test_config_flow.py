@@ -673,7 +673,10 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
+    otbr_addon_info,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -731,7 +734,10 @@ async def test_hassio_discovery_flow_router_not_setup(
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
+    otbr_addon_info,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
