@@ -187,6 +187,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     _attr_translation_key = "derivative"
     _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

@@ -213,6 +213,7 @@ async def setup_tests(
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == expected_state
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
 
     return state
 
