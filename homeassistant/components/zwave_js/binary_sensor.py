@@ -47,6 +47,7 @@ from .helpers import (
     is_opening_state_notification_value,
 )
 from .models import (
+    FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,
     ZwaveDiscoveryInfo,
@@ -1343,6 +1344,38 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="window_door_is_tilted",
             name="Window/door is tilted",
             device_class=BinarySensorDeviceClass.WINDOW,
+        ),
+        entity_class=ZWaveBooleanBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        # Fibaro FGMS001 Motion Sensor:
+        # On firmware <= 2.8 the device supports Binary Sensor CC v1, which
+        # does not give us any information about the type of the sensor.
+        # As a result it is exposed via the generic "Any" sensor type,
+        # which fits no other discovery schema.
+        platform=Platform.BINARY_SENSOR,
+        manufacturer_id={0x010F},
+        product_type={0x0800, 0x0801, 0x8800},
+        product_id={
+            0x1001,
+            0x1002,
+            0x2001,
+            0x2002,
+            0x3001,
+            0x3002,
+            0x4001,
+            0x4002,
+            0x6001,
+        },
+        firmware_version_range=FirmwareVersionRange(max="2.8"),
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_BINARY},
+            property={"Any"},
+            type={ValueType.BOOLEAN},
+        ),
+        entity_description=BinarySensorEntityDescription(
+            key="motion",
+            device_class=BinarySensorDeviceClass.MOTION,
         ),
         entity_class=ZWaveBooleanBinarySensor,
     ),

@@ -598,6 +598,17 @@ def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="fibaro_fgms001_v2_8_state")
+def fibaro_fgms001_v2_8_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Fibaro FGMS001 on firmware 2.8."""
+    return cast(
+        NodeDataType,
+        # Note: this fixture was created from a simulated device.
+        # If necessary, replace it with one created from a real FGMS001
+        load_json_object_fixture("fibaro_fgms001_v2_8_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -1490,5 +1501,15 @@ def hoppe_ehandle_connectsense_fixture(
 ) -> Node:
     """Load node for Hoppe eHandle ConnectSense."""
     node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_v2_8")
+def fibaro_fgms001_v2_8_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load node for Fibaro FGMS001 on firmware 2.8."""
+    node = Node(client, fibaro_fgms001_v2_8_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
