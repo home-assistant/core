@@ -1111,6 +1111,7 @@ async def async_from_config(
     else:
         checker = factory(config)
     if isinstance(checker, ConditionChecker):
+        await checker.async_setup()
         return checker
     return LegacyConditionChecker(hass, cast(ConditionCheckerType, checker))
 

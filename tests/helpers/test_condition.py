@@ -5068,3 +5068,42 @@ async def test_state_condition_attr_duration_unrelated_attr_update(
     # reset the timer.
     freezer.tick(timedelta(seconds=5))
     assert test(hass) is True
+
+
+async def test_async_from_config_calls_async_setup_on_checker(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_from_config calls async_setup on ConditionChecker from factory path."""
+
+    class StubChecker(condition.ConditionChecker):
+        """Stub checker to track async_setup calls."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            super().__init__(hass)
+            self.setup_called = False
+
+        async def async_setup(self) -> None:
+            self.setup_called = True
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    stub = StubChecker(hass)
+
+    async def fake_factory(
+        hass: HomeAssistant, config: ConfigType
+    ) -> condition.ConditionChecker:
+        return stub
+
+    with (
+        patch.object(
+            condition, "async_stub_checker_from_config", fake_factory, create=True
+        ),
+        patch.dict(condition._PLATFORM_ALIASES, {"stub_checker": None}),
+    ):
+        config = {"condition": "stub_checker"}
+        config = cv.CONDITION_SCHEMA(config)
+        result = await condition.async_from_config(hass, config)
+
+    assert result is stub
+    assert stub.setup_called
