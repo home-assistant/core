@@ -22,7 +22,7 @@ class YellowMultiPanMigrationRepairFlow(
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the repair flow."""
-        super().__init__(hass, config_entry)
+        HomeAssistantYellowMultiPanOptionsFlowHandler.__init__(self, hass, config_entry)
         self._repair_config_entry = config_entry
 
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:

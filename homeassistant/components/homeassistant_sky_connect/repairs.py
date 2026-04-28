@@ -22,7 +22,7 @@ class SkyConnectMultiPanMigrationRepairFlow(
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the repair flow."""
-        super().__init__(config_entry)
+        HomeAssistantSkyConnectMultiPanOptionsFlowHandler.__init__(self, config_entry)
         self._repair_config_entry = config_entry
 
     async def async_step_init(
