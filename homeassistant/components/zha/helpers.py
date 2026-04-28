@@ -518,15 +518,14 @@ class ZHADeviceProxy(EventBase):
     ) -> None:
         """Handle an entity being removed from a device at runtime."""
         if not event.remove:
-            # Soft remove: signal the entity to unload; registry entry stays.
-            # Signal keyed by (platform, unique_id) - the ZHA identity tuple.
+            # Soft remove: signal the entity to unload; registry entry stays
             async_dispatcher_send(
                 self.gateway_proxy.hass,
                 f"{SIGNAL_REMOVE_ENTITY}_{event.platform}_{event.unique_id}",
             )
             return
 
-        # Hard remove: registry deletion works without a live entity loaded.
+        # Hard remove: delete from registry, also works without a live entity loaded
         entity_registry = er.async_get(self.gateway_proxy.hass)
         domain = Platform(event.platform)
         if entity_id := entity_registry.async_get_entity_id(
