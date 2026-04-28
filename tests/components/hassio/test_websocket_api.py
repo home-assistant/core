@@ -132,7 +132,7 @@ async def test_ws_subscription(
 
 
 @pytest.mark.usefixtures("hassio_env")
-async def test_non_admin_publish_supervisor_event_failure(
+async def test_admin_non_supervisor_publish_supervisor_event_failure(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
     """Test non admin user cannot publish supervisor event."""
