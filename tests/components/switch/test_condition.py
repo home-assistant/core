@@ -273,15 +273,15 @@ async def test_switch_condition_evaluates_both_domains(
     )
 
     # Both off - condition should be false
-    assert condition(hass) is False
+    assert condition.async_check() is False
 
     # switch entity turns on - condition should be true
     hass.states.async_set(entity_id_switch, STATE_ON)
     await hass.async_block_till_done()
-    assert condition(hass) is True
+    assert condition.async_check() is True
 
     # Reset switch, turn on input_boolean - condition should still be true
     hass.states.async_set(entity_id_switch, STATE_OFF)
     hass.states.async_set(entity_id_input_boolean, STATE_ON)
     await hass.async_block_till_done()
-    assert condition(hass) is True
+    assert condition.async_check() is True
