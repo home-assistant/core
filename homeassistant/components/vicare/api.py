@@ -21,6 +21,8 @@ class _SyncResponse:
         """Initialize sync response wrapper."""
         self._hass = hass
         self._response = response
+        self.status_code: int = response.status
+        self.headers: dict = dict(response.headers)
 
     def json(self) -> dict:
         """Return JSON body synchronously."""
