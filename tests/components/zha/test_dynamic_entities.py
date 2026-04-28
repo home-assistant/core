@@ -1,4 +1,4 @@
-"""Test ZHA handling of runtime device entity added/removed events."""
+"""Test ZHA dynamic entity lifecycle (runtime add/remove and reference cleanup)."""
 
 from collections.abc import Callable, Coroutine, Generator
 from unittest.mock import patch
