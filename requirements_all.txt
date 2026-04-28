@@ -1135,7 +1135,7 @@ google_air_quality_api==3.0.1
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
-gotailwind==0.3.0
+gotailwind==0.4.0
 
 # homeassistant.components.govee_ble
 govee-ble==1.2.0
