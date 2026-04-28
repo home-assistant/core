@@ -129,11 +129,12 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
         minus = await self._codes.async_load_command(COMMAND_MINUS)
-        plus = await self._codes.async_load_command(COMMAND_PLUS)
         for _ in range(SPEED_COUNT):
             await self._async_send(minus)
-        for _ in range(level):
-            await self._async_send(plus)
+        if level > 0:
+            plus = await self._codes.async_load_command(COMMAND_PLUS)
+            for _ in range(level):
+                await self._async_send(plus)
         self._level = level
         self.async_write_ha_state()
 
