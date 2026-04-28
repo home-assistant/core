@@ -1,12 +1,15 @@
 """Test trigger template entity."""
 
+from unittest.mock import Mock
+
 import pytest
 
 from homeassistant.components.template import DOMAIN, trigger_entity
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_STATE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import template
+from homeassistant.helpers import condition, template
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 
@@ -230,3 +233,60 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
     assert state.state == "opening"
     assert state.attributes["current_position"] == 50
     assert state.attributes["current_tilt_position"] == 49
+
+
+async def test_coordinator_shutdown_unloads_script_and_condition(
+    hass: HomeAssistant,
+) -> None:
+    """Test that coordinator shutdown unloads script and condition."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+
+    mock_script = Mock(spec=Script)
+    mock_cond = Mock(spec=condition.ConditionsChecker)
+    coordinator._script = mock_script
+    coordinator._cond_func = mock_cond
+
+    await coordinator.async_shutdown()
+
+    mock_script.async_unload.assert_called_once()
+    mock_cond.async_unload.assert_called_once()
+
+
+async def test_template_entity_remove_unloads_action_scripts(
+    hass: HomeAssistant,
+) -> None:
+    """Test that removing a template entity unloads its action scripts."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "light": {
+                    "name": "test_light",
+                    "state": "{{ true }}",
+                    "turn_on": {"service": "test.turn_on"},
+                    "turn_off": {"service": "test.turn_off"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    entity = hass.data["light"].get_entity("light.test_light")
+
+    unload_mocks = {}
+    for script_id, action_script in entity._action_scripts.items():
+        mock_unload = Mock(wraps=action_script.async_unload)
+        action_script.async_unload = mock_unload
+        unload_mocks[script_id] = mock_unload
+
+    assert set(unload_mocks.keys()) == {"turn_on", "turn_off"}
+
+    await entity.async_remove()
+    await hass.async_block_till_done()
+
+    for mock_unload in unload_mocks.values():
+        mock_unload.assert_called_once()

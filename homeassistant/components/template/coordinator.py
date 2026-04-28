@@ -1,8 +1,8 @@
 """Data update coordinator for trigger based template entities."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -37,7 +37,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, config_entry=None, name="Trigger Update Coordinator"
         )
         self.config = config
-        self._cond_func: Callable[[Mapping[str, Any] | None], bool] | None = None
+        self._cond_func: condition.ConditionsChecker | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
@@ -151,10 +151,18 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             return
         self._execute_update(run_variables, context)
 
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator and clean up resources."""
+        await super().async_shutdown()
+        if self._script is not None:
+            self._script.async_unload()
+        if self._cond_func is not None:
+            self._cond_func.async_unload()
+
     def _check_condition(self, run_variables: TemplateVarsType) -> bool:
         if not self._cond_func:
             return True
-        condition_result = self._cond_func(run_variables)
+        condition_result = self._cond_func.async_check(variables=run_variables)
         if condition_result is False:
             _LOGGER.debug(
                 "Conditions not met, aborting template trigger update. Condition summary: %s",
