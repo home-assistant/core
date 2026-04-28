@@ -700,6 +700,12 @@
     "service_error": {
       "message": "Error calling UniFi Protect service, check the logs for more details"
     },
+    "siren_invalid_duration": {
+      "message": "Invalid siren duration {duration}s. Valid values are: {valid} seconds"
+    },
+    "siren_not_available": {
+      "message": "Siren is no longer available"
+    },
     "stream_error": {
       "message": "Error playing audio, check the logs for more details"
     }

@@ -19,6 +19,7 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    Siren,
     WSSubscriptionMessage,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
@@ -83,6 +84,9 @@ class ProtectData:
         self._subscriptions: defaultdict[
             str, set[Callable[[ProtectDeviceType], None]]
         ] = defaultdict(set)
+        self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
+            defaultdict(set)
+        )
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
@@ -178,12 +182,23 @@ class ProtectData:
     ) -> None:
         """Process a message from the public devices websocket.
 
-        The API client pre-filters messages to ModelType.NVR via
-        DEVICES_WS_SUBSCRIBED_MODELS, so every message here is an NVR update.
-        The library has already merged the arm_mode into the PublicNVR cache;
-        signal the private NVR so alarm entities pick up the new state.
+        The API client pre-filters messages to the model types listed in
+        DEVICES_WS_SUBSCRIBED_MODELS. NVR messages signal the private NVR so
+        alarm entities pick up the new arm state. Siren messages dispatch
+        the merged Siren object by mac so siren entities can refresh.
         """
-        self._async_signal_device_update(self.api.bootstrap.nvr)
+        new_obj = message.new_obj
+        if new_obj is None:
+            # Delete event: notify subscribers so entities can be marked unavailable.
+            old_obj = message.old_obj
+            if old_obj is not None and old_obj.model is ModelType.SIREN:
+                self._async_signal_siren_update(cast(Siren, old_obj))
+            return
+        if new_obj.model is ModelType.NVR:
+            self._async_signal_device_update(self.api.bootstrap.nvr)
+            return
+        if new_obj.model is ModelType.SIREN:
+            self._async_signal_siren_update(cast(Siren, new_obj))
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
@@ -356,6 +371,9 @@ class ProtectData:
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
+        if self.api.has_public_bootstrap:
+            for siren in self.api.public_bootstrap.sirens.values():
+                self._async_signal_siren_update(siren)
 
     @callback
     def _async_poll(self, now: datetime) -> None:
@@ -385,6 +403,23 @@ class ProtectData:
             del self._subscriptions[mac]
 
     @callback
+    def async_subscribe_siren(
+        self, mac: str, update_callback: Callable[[Siren], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for siren updates."""
+        self._siren_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_siren, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_siren(
+        self, mac: str, update_callback: Callable[[Siren], None]
+    ) -> None:
+        """Remove a siren callback subscriber."""
+        self._siren_subscriptions[mac].remove(update_callback)
+        if not self._siren_subscriptions[mac]:
+            del self._siren_subscriptions[mac]
+
+    @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
         mac = device.mac
@@ -393,6 +428,16 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
+
+    @callback
+    def _async_signal_siren_update(self, siren: Siren) -> None:
+        """Call the callbacks for a siren mac."""
+        mac = siren.mac
+        if not (subscriptions := self._siren_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating siren: %s (%s)", siren.name, mac)
+        for update_callback in subscriptions:
+            update_callback(siren)
 
 
 @callback

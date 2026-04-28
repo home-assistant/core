@@ -52,8 +52,9 @@ DEVICES_THAT_ADOPT = {
 DEVICES_WITH_ENTITIES = DEVICES_THAT_ADOPT | {ModelType.NVR}
 DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 
-# Public API devices WebSocket: NVR (for arm_mode updates).
-DEVICES_WS_SUBSCRIBED_MODELS = {ModelType.NVR}
+# Public API devices WebSocket: NVR (for arm_mode updates) and Siren
+# (for siren active-state updates).
+DEVICES_WS_SUBSCRIBED_MODELS = {ModelType.NVR, ModelType.SIREN}
 
 MIN_REQUIRED_PROTECT_V = Version("6.0.0")
 OUTDATED_LOG_MESSAGE = (
@@ -75,6 +76,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
 ]
