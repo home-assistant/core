@@ -4488,3 +4488,42 @@ async def test_nested_compound_condition_forwards_async_unload(
 
     test._checks[0]._checks[0].async_unload.assert_called_once()
     test._checks[1].async_unload.assert_called_once()
+
+
+async def test_async_from_config_calls_async_setup_on_checker(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_from_config calls async_setup on ConditionChecker from factory path."""
+
+    class StubChecker(condition.ConditionChecker):
+        """Stub checker to track async_setup calls."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            super().__init__(hass)
+            self.setup_called = False
+
+        async def async_setup(self) -> None:
+            self.setup_called = True
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    stub = StubChecker(hass)
+
+    async def fake_factory(
+        hass: HomeAssistant, config: ConfigType
+    ) -> condition.ConditionChecker:
+        return stub
+
+    with (
+        patch.object(
+            condition, "async_stub_checker_from_config", fake_factory, create=True
+        ),
+        patch.dict(condition._PLATFORM_ALIASES, {"stub_checker": None}),
+    ):
+        config = {"condition": "stub_checker"}
+        config = cv.CONDITION_SCHEMA(config)
+        result = await condition.async_from_config(hass, config)
+
+    assert result is stub
+    assert stub.setup_called
