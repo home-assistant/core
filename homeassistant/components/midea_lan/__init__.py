@@ -32,11 +32,12 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Register update listener called for config entry updates."""
-    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS),
-    )
+    if not unload_ok:
+        return
+
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     customize = entry.options.get(CONF_CUSTOMIZE, "")
     dev: MideaDevice | None = entry.runtime_data
     if dev:

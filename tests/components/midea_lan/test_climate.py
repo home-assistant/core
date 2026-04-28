@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
 from midealocal.const import DeviceType
@@ -34,53 +33,7 @@ from homeassistant.components.midea_lan import climate
 from homeassistant.const import ATTR_TEMPERATURE, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 
-
-class DummyDevice:
-    """Simple fake Midea device for climate tests."""
-
-    def __init__(
-        self,
-        device_type: int,
-        *,
-        attributes: dict | None = None,
-    ) -> None:
-        """Initialize fake device."""
-        self.device_type = device_type
-        self.device_id = 123
-        self.name = "Dummy"
-        self.model = "M1"
-        self.subtype = 7
-        self.available = True
-        self.attributes = attributes or {}
-        self._callbacks: list[Callable] = []
-        self.calls: list[tuple] = []
-        self.temperature_step = 1
-        self.fan_modes = ["low", "high"]
-        self.modes = ["comfort", "eco"]
-
-    def register_update(self, callback: Callable) -> None:
-        """Record update callback registration."""
-        self._callbacks.append(callback)
-
-    def get_attribute(self, attr):
-        """Return attribute value."""
-        return self.attributes.get(attr)
-
-    def set_attribute(self, attr, value) -> None:
-        """Record set attribute call."""
-        self.calls.append(("set_attribute", attr, value))
-
-    def set_target_temperature(self, **kwargs) -> None:
-        """Record set target temperature call."""
-        self.calls.append(("set_target_temperature", kwargs))
-
-    def set_swing(self, **kwargs) -> None:
-        """Record set swing call."""
-        self.calls.append(("set_swing", kwargs))
-
-    def set_mode(self, zone: int, mode: int) -> None:
-        """Record set mode call."""
-        self.calls.append(("set_mode", zone, mode))
+from .conftest import DummyDevice
 
 
 def _climate_entities() -> list[climate.MideaClimateEntityDescription]:
@@ -219,13 +172,6 @@ def test_midea_climate_base_methods() -> None:
         dev.attributes[key] = True
         ent.set_preset_mode(PRESET_NONE)
         assert expected in dev.calls
-
-    ent.schedule_update_ha_state = MagicMock()
-    ent.hass = None
-    ent.update_state({})
-    ent.hass = MagicMock()
-    ent.update_state({})
-    ent.schedule_update_ha_state.assert_called_once()
 
 
 def test_midea_ac_specific() -> None:

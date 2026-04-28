@@ -2,38 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from unittest.mock import MagicMock
 
 from midealocal.const import DeviceType
 
 from homeassistant.components.midea_lan import entity as entity_module
 
-
-class DummyDevice:
-    """Simple fake Midea device for entity tests."""
-
-    def __init__(
-        self,
-        device_type: int,
-        *,
-        attributes: dict | None = None,
-        available: bool = True,
-    ) -> None:
-        """Initialize fake device."""
-        self.device_type = device_type
-        self.device_id = 123
-        self.name = "Dummy"
-        self.model = "M1"
-        self.subtype = 7
-        self.available = available
-        self.attributes = attributes or {}
-        self._callbacks: list[Callable] = []
-        self._updates: list[Callable] = self._callbacks
-
-    def register_update(self, callback: Callable) -> None:
-        """Record update callback registration."""
-        self._callbacks.append(callback)
+from .conftest import DummyDevice
 
 
 def test_midea_entity_basics_and_update_state() -> None:

@@ -135,10 +135,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return not (
             device.get(CONF_PROTOCOL) == ProtocolVersion.V3
-            and (
-                storage_device.get(CONF_TOKEN) is None
-                or storage_device.get(CONF_KEY) is None
-            )
+            and (not storage_device.get(CONF_TOKEN) or not storage_device.get(CONF_KEY))
         )
 
     def _already_configured(self, device_id: str, ip_address: str) -> bool:

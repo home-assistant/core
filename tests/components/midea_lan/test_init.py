@@ -23,31 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-
-class DummyDevice:
-    """Simple fake Midea device for init tests."""
-
-    def __init__(self, device_type: int) -> None:
-        """Initialize fake device."""
-        self.device_type = device_type
-        self.device_id = 123
-        self.calls: list[tuple] = []
-
-    def set_customize(self, value: str) -> None:
-        """Record customize call."""
-        self.calls.append(("set_customize", value))
-
-    def set_ip_address(self, value: str) -> None:
-        """Record ip address call."""
-        self.calls.append(("set_ip_address", value))
-
-    def open(self) -> None:
-        """Record open call."""
-        self.calls.append(("open",))
-
-    def close(self) -> None:
-        """Record close call."""
-        self.calls.append(("close",))
+from .conftest import DummyDevice
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
@@ -89,14 +65,10 @@ async def test_update_listener_updates_device(hass: HomeAssistant) -> None:
     """Test update_listener updates registered runtime device."""
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    hass.async_create_task = MagicMock(side_effect=lambda coro: coro.close())
 
     dev = DummyDevice(DeviceType.AC)
     entry = MagicMock()
-    entry.data = {CONF_DEVICE_ID: 123}
-    entry.options = {
-        CONF_CUSTOMIZE: "x",
-    }
+    entry.options = {CONF_CUSTOMIZE: "x"}
     entry.runtime_data = dev
 
     await update_listener(hass, entry)
@@ -108,14 +80,27 @@ async def test_update_listener_no_device(hass: HomeAssistant) -> None:
     """Test update_listener no-op when device is missing."""
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    hass.async_create_task = MagicMock(side_effect=lambda coro: coro.close())
 
     entry = MagicMock()
-    entry.data = {CONF_DEVICE_ID: 123}
     entry.options = {}
     entry.runtime_data = None
 
     await update_listener(hass, entry)
+
+
+async def test_update_listener_unload_fails(hass: HomeAssistant) -> None:
+    """Test update_listener returns early when unload fails."""
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
+
+    entry = MagicMock()
+    entry.options = {}
+    entry.runtime_data = None
+
+    await update_listener(hass, entry)
+
+    # async_forward_entry_setups should not be called
+    hass.config_entries.async_forward_entry_setups.assert_not_called()
 
 
 async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
