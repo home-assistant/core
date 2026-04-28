@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -156,7 +157,7 @@ async def test_relay_switch_unknown_state_is_unknown(
     # ``is_on`` is None while ``available`` is True → state is "unknown".
     # "unavailable" would mean the device is unreachable; UNKNOWN output state
     # means state data was received but cannot be interpreted.
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_relay_switch_turn_on_off(

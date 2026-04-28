@@ -612,6 +612,7 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         """Initialize the relay output switch."""
         self.data = data
         self._relay_id = relay.id
+        self._relay_mac = relay.mac
         self._output_id = output.id
         self._attr_unique_id = f"{relay.mac}_relay_output_{output.id}"
         self._attr_translation_placeholders = {
@@ -663,10 +664,9 @@ class ProtectRelayOutputSwitch(SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to public relay WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
-        if (relay := self._relay) is not None:
-            self.async_on_remove(
-                self.data.async_subscribe_relay(relay.mac, self._async_updated)
-            )
+        self.async_on_remove(
+            self.data.async_subscribe_relay(self._relay_mac, self._async_updated)
+        )
 
     async def _activate_output(self, state: Literal["on", "off"]) -> None:
         """Send activate_output to the relay, raising if unavailable."""
