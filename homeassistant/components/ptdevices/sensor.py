@@ -160,7 +160,7 @@ async def async_setup_entry(
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
-            for device_id in new_devices:
+            for device_id in sorted(new_devices):
                 device = coordinator.data[device_id]
                 async_add_entity(
                     PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
