@@ -46,7 +46,7 @@ async def test_websocket_connect_called_once(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_websocket_api_instance.connect.call_count == 1
+    mock_websocket_api_instance.connect.assert_awaited_once()
 
 
 async def test_entry_unload(
@@ -64,7 +64,7 @@ async def test_entry_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_websocket_api_instance.close.assert_called_once()
+    mock_websocket_api_instance.close.assert_awaited_once()
 
 
 async def test_setup_failure_cleans_up_websocket(
