@@ -32,7 +32,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ServiceNotSupported, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -929,16 +929,17 @@ async def test_set_cover_position_and_tilt_filtered_on_non_tilt_cover(
     """
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    await hass.services.async_call(
-        "overkiz",
-        "set_cover_position_and_tilt",
-        {
-            ATTR_ENTITY_ID: SHUTTER.entity_id,
-            ATTR_POSITION: 50,
-            ATTR_TILT_POSITION: 50,
-        },
-        blocking=True,
-    )
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            "overkiz",
+            "set_cover_position_and_tilt",
+            {
+                ATTR_ENTITY_ID: SHUTTER.entity_id,
+                ATTR_POSITION: 50,
+                ATTR_TILT_POSITION: 50,
+            },
+            blocking=True,
+        )
 
     assert mock_client.execute_command.await_count == 0
 
