@@ -1683,7 +1683,7 @@ async def test_list_serial_ports(
     """Test listing serial ports via websocket."""
     matchers = [
         {
-            "description": "*skyconnect v1.0*",
+            "description": "*cp2102*",
             "domain": "homeassistant_sky_connect",
             "pid": "EA60",
             "vid": "10C4",
@@ -1758,7 +1758,7 @@ async def test_list_serial_ports(
             "serial_number": None,
             "manufacturer": None,
             "description": "Unknown adapter",
-            "bcd_device": 257,
+            "bcd_device": None,
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": ["custom_component"],
@@ -1770,7 +1770,7 @@ async def test_list_serial_ports(
             "serial_number": None,
             "manufacturer": None,
             "description": "No matchers",
-            "bcd_device": 257,
+            "bcd_device": None,
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": [],
