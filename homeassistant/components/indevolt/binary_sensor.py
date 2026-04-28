@@ -1,6 +1,6 @@
 """Binary sensor platform for Indevolt integration."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Final
 
 from indevolt_api import IndevoltBattery, IndevoltGrid, IndevoltSystem
@@ -27,7 +27,7 @@ class IndevoltBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     on_value: int = 1
     off_value: int = 0
-    generation: list[int] = field(default_factory=lambda: [1, 2])
+    generation: tuple[int, ...] = (1, 2)
 
 
 BINARY_SENSORS: Final = (
@@ -44,49 +44,49 @@ BINARY_SENSORS: Final = (
     # Electric Heating States
     IndevoltBinarySensorEntityDescription(
         key=IndevoltSystem.HEATING_STATE,
-        generation=[1],
+        generation=(1,),
         translation_key="electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.MAIN_HEATING_STATE,
-        generation=[2],
+        generation=(2,),
         translation_key="main_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_1_HEATING_STATE,
-        generation=[2],
+        generation=(2,),
         translation_key="battery_pack_1_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_2_HEATING_STATE,
-        generation=[2],
+        generation=(2,),
         translation_key="battery_pack_2_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_3_HEATING_STATE,
-        generation=[2],
+        generation=(2,),
         translation_key="battery_pack_3_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_4_HEATING_STATE,
-        generation=[2],
+        generation=(2,),
         translation_key="battery_pack_4_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_5_HEATING_STATE,
-        generation=[2],
+        generation=(2,),
         translation_key="battery_pack_5_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
