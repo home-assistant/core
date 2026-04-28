@@ -62,6 +62,8 @@ def discover_mysensors_node(
     hass: HomeAssistant, gateway_id: GatewayId, node_id: int
 ) -> None:
     """Discover a MySensors node."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     discovered_nodes = hass.data[DOMAIN].setdefault(
         MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
     )

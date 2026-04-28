@@ -8,6 +8,7 @@ import logging
 from typing import Any, TypedDict
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -47,12 +49,21 @@ from tests.common import MockConfigEntry, mock_device_registry
 
 
 async def target_entities(
-    hass: HomeAssistant, domain: str, *, domain_excluded: str | None = None
+    hass: HomeAssistant,
+    domain: str,
+    *,
+    domain_excluded: str | None = None,
+    entity_category: EntityCategory | None = None,
 ) -> dict[str, list[str]]:
     """Create multiple entities associated with different targets.
 
     If `domain_excluded` is provided, entities in excluded_entities will have this
     domain, otherwise they will have the same domain as included_entities.
+
+    If `entity_category` is provided, all created registry entities (i.e. the
+    area-, device-, and label-associated entities) are created with that
+    entity category. Standalone entities are referenced directly by entity_id
+    and are unaffected.
 
     Returns a dict with the following keys:
     - included_entities: List of entity_ids meant to be targeted.
@@ -88,6 +99,7 @@ async def target_entities(
         platform="test",
         unique_id=f"{domain}_area",
         suggested_object_id=f"area_{domain}",
+        entity_category=entity_category,
     )
     entity_reg.async_update_entity(entity_area.entity_id, area_id=area.id)
     entity_area_excluded = entity_reg.async_get_or_create(
@@ -95,6 +107,7 @@ async def target_entities(
         platform="test",
         unique_id=f"{domain_excluded}_area_excluded",
         suggested_object_id=f"area_{domain_excluded}_excluded",
+        entity_category=entity_category,
     )
     entity_reg.async_update_entity(entity_area_excluded.entity_id, area_id=area.id)
 
@@ -105,6 +118,7 @@ async def target_entities(
         unique_id=f"{domain}_device",
         suggested_object_id=f"device_{domain}",
         device_id=device.id,
+        entity_category=entity_category,
     )
     entity_reg.async_get_or_create(
         domain=domain,
@@ -112,6 +126,7 @@ async def target_entities(
         unique_id=f"{domain}_device2",
         suggested_object_id=f"device2_{domain}",
         device_id=device.id,
+        entity_category=entity_category,
     )
     entity_reg.async_get_or_create(
         domain=domain_excluded,
@@ -119,6 +134,7 @@ async def target_entities(
         unique_id=f"{domain_excluded}_device_excluded",
         suggested_object_id=f"device_{domain_excluded}_excluded",
         device_id=device.id,
+        entity_category=entity_category,
     )
 
     # Entities associated with label
@@ -127,6 +143,7 @@ async def target_entities(
         platform="test",
         unique_id=f"{domain}_label",
         suggested_object_id=f"label_{domain}",
+        entity_category=entity_category,
     )
     entity_reg.async_update_entity(entity_label.entity_id, labels={label.label_id})
     entity_label_excluded = entity_reg.async_get_or_create(
@@ -134,6 +151,7 @@ async def target_entities(
         platform="test",
         unique_id=f"{domain_excluded}_label_excluded",
         suggested_object_id=f"label_{domain_excluded}_excluded",
+        entity_category=entity_category,
     )
     entity_reg.async_update_entity(
         entity_label_excluded.entity_id, labels={label.label_id}
@@ -1095,6 +1113,126 @@ async def assert_trigger_gated_by_labs_flag(
     ) in caplog.text
 
 
+async def _validate_condition_options(
+    hass: HomeAssistant,
+    condition: str,
+    options: dict[str, Any] | None,
+    *,
+    valid: bool,
+) -> None:
+    """Assert that a condition accepts or rejects the given options during validation."""
+    config: dict[str, Any] = {
+        CONF_CONDITION: condition,
+        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+    }
+    if options is not None:
+        config[CONF_OPTIONS] = options
+    if valid:
+        await async_validate_condition_config(hass, config)
+    else:
+        with pytest.raises(vol.Invalid):
+            await async_validate_condition_config(hass, config)
+
+
+async def assert_condition_options_supported(
+    hass: HomeAssistant,
+    condition: str,
+    base_options: dict[str, Any] | None,
+    *,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Assert which options a condition supports.
+
+    Tests that the condition:
+    - Accepts the minimal config (base_options)
+    - Accepts/rejects behavior depending on supports_behavior
+    - Accepts/rejects duration depending on supports_duration
+    - Rejects unknown options
+    """
+    # Minimal config should always be valid
+    await _validate_condition_options(hass, condition, base_options, valid=True)
+
+    def _merge(extra: dict[str, Any]) -> dict[str, Any]:
+        return {**(base_options or {}), **extra}
+
+    # Behavior
+    for behavior in ("any", "all"):
+        await _validate_condition_options(
+            hass, condition, _merge({"behavior": behavior}), valid=supports_behavior
+        )
+
+    # Duration
+    await _validate_condition_options(
+        hass, condition, _merge({"for": {"seconds": 5}}), valid=supports_duration
+    )
+
+    # Unknown option should always be rejected
+    await _validate_condition_options(
+        hass, condition, _merge({"unknown_option": True}), valid=False
+    )
+
+
+async def _validate_trigger_options(
+    hass: HomeAssistant,
+    trigger: str,
+    options: dict[str, Any] | None,
+    *,
+    valid: bool,
+) -> None:
+    """Assert that a trigger accepts or rejects the given options during validation."""
+    trigger_config: dict[str, Any] = {
+        CONF_PLATFORM: trigger,
+        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+    }
+    if options is not None:
+        trigger_config[CONF_OPTIONS] = options
+    if valid:
+        await async_validate_trigger_config(hass, [trigger_config])
+    else:
+        with pytest.raises(vol.Invalid):
+            await async_validate_trigger_config(hass, [trigger_config])
+
+
+async def assert_trigger_options_supported(
+    hass: HomeAssistant,
+    trigger: str,
+    base_options: dict[str, Any] | None,
+    *,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Assert which options a trigger supports.
+
+    Tests that the trigger:
+    - Accepts the minimal config (base_options)
+    - Accepts/rejects behavior depending on supports_behavior
+    - Accepts/rejects duration depending on supports_duration
+    - Rejects unknown options
+    """
+    # Minimal config should always be valid
+    await _validate_trigger_options(hass, trigger, base_options, valid=True)
+
+    def _merge(extra: dict[str, Any]) -> dict[str, Any]:
+        return {**(base_options or {}), **extra}
+
+    # Behavior
+    for behavior in ("any", "first", "last"):
+        await _validate_trigger_options(
+            hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
+        )
+
+    # Duration
+    await _validate_trigger_options(
+        hass, trigger, _merge({"for": {"seconds": 5}}), valid=supports_duration
+    )
+
+    # Unknown option should always be rejected
+    await _validate_trigger_options(
+        hass, trigger, _merge({"unknown_option": True}), valid=False
+    )
+
+
 async def assert_condition_behavior_any(
     hass: HomeAssistant,
     *,
@@ -1134,18 +1272,18 @@ async def assert_condition_behavior_any(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert cond(hass) is False
+        assert cond.async_check() is False
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert cond(hass) == state["condition_true"]
+        assert cond.async_check() == state["condition_true"]
 
         # Set other included entities to the included state to verify that
         # they don't change the condition evaluation
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert cond(hass) == state["condition_true"]
+        assert cond.async_check() == state["condition_true"]
 
 
 async def assert_condition_behavior_all(
@@ -1184,7 +1322,7 @@ async def assert_condition_behavior_all(
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert cond(hass) == state["condition_true_first_entity"]
+        assert cond.async_check() == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1193,7 +1331,7 @@ async def assert_condition_behavior_all(
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
 
-        assert cond(hass) == state["condition_true"]
+        assert cond.async_check() == state["condition_true"]
 
 
 async def assert_trigger_behavior_any(
@@ -1826,10 +1964,10 @@ async def assert_numerical_condition_unit_conversion(
         )
         for state in pass_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is True
+            assert cond.async_check() is True
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False
 
     # Test limits set by entity
     cond = await create_target_condition(
@@ -1844,10 +1982,10 @@ async def assert_numerical_condition_unit_conversion(
         set_or_remove_state(hass, limit_entities[1], limit_states[1])
         for state in pass_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is True
+            assert cond.async_check() is True
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False
 
     # Test invalid unit
     for limit_states in invalid_limit_entity_states:
@@ -1855,7 +1993,7 @@ async def assert_numerical_condition_unit_conversion(
         set_or_remove_state(hass, limit_entities[1], limit_states[1])
         for state in pass_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False

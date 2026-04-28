@@ -4,6 +4,11 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from satel_integra import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
@@ -98,8 +103,21 @@ async def test_setup_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SatelConnectFailedError, "cannot_connect"),
+        (SatelPanelBusyError, "panel_busy"),
+        (SatelConnectionInitializationError, "connection_initialization_failed"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_setup_connection_failed(
-    hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test the setup flow when connection fails."""
     user_input = MOCK_CONFIG_DATA
@@ -108,7 +126,7 @@ async def test_setup_connection_failed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.connect.return_value = False
+    mock_satel.connect.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -116,9 +134,9 @@ async def test_setup_connection_failed(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_satel.connect.return_value = True
+    mock_satel.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -428,13 +446,25 @@ async def test_reconfigure_flow_config_unchanged_not_loaded(
     assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SatelConnectFailedError, "cannot_connect"),
+        (SatelPanelBusyError, "panel_busy"),
+        (SatelConnectionInitializationError, "connection_initialization_failed"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_reconfigure_connection_failed(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Failure path for the reconfigure flow."""
-    mock_satel.connect.return_value = False
+
+    mock_satel.connect.side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
 
@@ -450,9 +480,9 @@ async def test_reconfigure_connection_failed(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_satel.connect.return_value = True
+    mock_satel.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

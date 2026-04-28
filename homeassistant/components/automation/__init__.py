@@ -83,7 +83,6 @@ from homeassistant.helpers.trace import (
     trace_path,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 from homeassistant.util.hass_dict import HassKey
 
@@ -170,6 +169,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "cover",
     "device_tracker",
     "door",
+    "doorbell",
     "event",
     "fan",
     "garage_door",
@@ -238,7 +238,6 @@ class IfAction(Protocol):
         """AND all conditions."""
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return true if specified automation entity_id is on.
 
@@ -1277,6 +1276,7 @@ async def _async_process_if(
 
 
 @websocket_api.websocket_command({"type": "automation/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
