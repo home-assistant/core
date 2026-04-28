@@ -7,12 +7,11 @@ from typing import Any
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN, GATEWAYS_KEY
+from . import XiaomiAqaraConfigEntry
 from .entity import XiaomiDevice
 
 FINGER_KEY = "fing_verified"
@@ -27,13 +26,11 @@ UNLOCK_MAINTAIN_TIME = 5
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     async_add_entities(
         XiaomiAqaraLock(device, "Lock", gateway, config_entry)
         for device in gateway.devices["lock"]
@@ -49,7 +46,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         device: dict[str, Any],
         name: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiAqaraLock."""
         self._attr_changed_by = "0"
