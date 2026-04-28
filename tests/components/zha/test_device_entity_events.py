@@ -305,3 +305,29 @@ async def test_handle_device_entity_removed_unknown_unique_id(
         registry = er.async_get(hass)
         assert registry.async_get(entity_id) is not None
         assert hass.states.get(entity_id) is not None
+
+
+async def test_remove_entity_reference_when_ieee_already_cleared(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test entity teardown when _ha_entity_refs already lost the ieee.
+
+    Simulates the race where ``handle_device_removed`` pops the ieee entry
+    before the entity finishes tearing down. The early-return guard must
+    keep the popped key out of the dict.
+    """
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    assert entity_id is not None
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    ieee = zha_device_proxy.device.ieee
+    gateway_proxy._ha_entity_refs.pop(ieee, None)
+
+    er.async_get(hass).async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert ieee not in gateway_proxy._ha_entity_refs
