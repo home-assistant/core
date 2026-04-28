@@ -548,7 +548,7 @@ async def test_reauth_2fa_flow_device_registration_check_fails(
                 CONF_DEVICE_NAME: DEVICE_NAME,
             },
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == PASSWORD
