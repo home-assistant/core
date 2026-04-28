@@ -88,11 +88,11 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
         # Do not register this listen-based entity with a device-specific
-        # coordinator context. Ring alerts are keyed by device_api_id
-        # (doorbot_id), but other RingListenCoordinator entities may still use
-        # a different context shape. Opting out of context filtering here keeps
-        # listener updates consistent while _get_coordinator_alert() continues
-        # to match incoming alerts by device_api_id.
+        # coordinator context. In RingListenCoordinator, setting
+        # coordinator_context to None does not opt out of context filtering;
+        # it means this entity will not receive device-specific listener
+        # updates. Any event delivery here therefore must not rely on None as
+        # a wildcard context.
         self.coordinator_context = None
 
     @callback
