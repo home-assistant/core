@@ -793,3 +793,121 @@ async def test_async_track_target_selector_state_change_event_filter(
     )
 
     unsub()
+
+
+async def test_async_track_target_selector_state_change_event_on_entities_update(
+    hass: HomeAssistant,
+) -> None:
+    """Test on_entities_update callback reports added and removed entities."""
+    entity_updates: list[tuple[set[str], set[str]]] = []
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData) -> None:
+        """Handle state change events."""
+
+    @callback
+    def on_entities_update(added: set[str], removed: set[str]) -> None:
+        """Track entity set changes."""
+        entity_updates.append((added, removed))
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    entity_reg = er.async_get(hass)
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Track Test")
+
+    entity_a = entity_reg.async_get_or_create(
+        domain="light", platform="test", unique_id="track_a"
+    )
+    entity_b = entity_reg.async_get_or_create(
+        domain="light", platform="test", unique_id="track_b"
+    )
+
+    # entity_a starts with the label
+    entity_reg.async_update_entity(entity_a.entity_id, labels={label.label_id})
+
+    hass.states.async_set(entity_a.entity_id, STATE_ON)
+    hass.states.async_set(entity_b.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    unsub = target.async_track_target_selector_state_change_event(
+        hass,
+        {ATTR_LABEL_ID: label.label_id},
+        state_change_callback,
+        on_entities_update=on_entities_update,
+    )
+
+    # Initial setup fires on_entities_update with all entities as "added"
+    assert len(entity_updates) == 1
+    assert entity_updates[-1] == ({entity_a.entity_id}, set())
+    entity_updates.clear()
+
+    # Add label to entity_b → added
+    entity_reg.async_update_entity(entity_b.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    assert len(entity_updates) == 1
+    assert entity_updates[-1] == ({entity_b.entity_id}, set())
+    entity_updates.clear()
+
+    # Remove label from entity_a → removed
+    entity_reg.async_update_entity(entity_a.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    assert len(entity_updates) == 1
+    assert entity_updates[-1] == (set(), {entity_a.entity_id})
+    entity_updates.clear()
+
+    # Remove label from entity_b → removed
+    entity_reg.async_update_entity(entity_b.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    assert len(entity_updates) == 1
+    assert entity_updates[-1] == (set(), {entity_b.entity_id})
+    entity_updates.clear()
+
+    # Re-add both labels at once — entity_a first, then entity_b
+    entity_reg.async_update_entity(entity_a.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+    entity_reg.async_update_entity(entity_b.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    assert len(entity_updates) == 2
+    assert entity_updates[0] == ({entity_a.entity_id}, set())
+    assert entity_updates[1] == ({entity_b.entity_id}, set())
+    entity_updates.clear()
+
+    # After unsubscribing, no more callbacks
+    unsub()
+    entity_reg.async_update_entity(entity_a.entity_id, labels=set())
+    await hass.async_block_till_done()
+    assert len(entity_updates) == 0
+
+
+async def test_async_track_target_selector_no_on_entities_update(
+    hass: HomeAssistant,
+) -> None:
+    """Test that on_entities_update is optional and defaults to no callback."""
+    events: list[target.TargetStateChangedData] = []
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData) -> None:
+        events.append(event)
+
+    entity_id = "light.test_no_callback"
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # No on_entities_update — should work without errors
+    unsub = target.async_track_target_selector_state_change_event(
+        hass,
+        {ATTR_ENTITY_ID: entity_id},
+        state_change_callback,
+    )
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    unsub()
