@@ -277,3 +277,27 @@ async def test_setup_auth_required_exception_from_devices_calls_reauth(
     assert account.api is None
     mock_logger.error.assert_called_once()
     mock_logger.warning.assert_not_called()
+
+
+def test_handle_auth_required_with_2fa_logs_warning(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test _handle_auth_required logs a warning (not error) when requires_2fa=True.
+
+    This covers the warning branch of the helper used by both
+    PyiCloudAuthRequiredException handlers when 2FA is required.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account._handle_auth_required(requires_2fa=True)
+
+    assert account.api is None
+    mock_reauth.assert_called_once()
+    mock_logger.warning.assert_called_once()
+    mock_logger.error.assert_not_called()
