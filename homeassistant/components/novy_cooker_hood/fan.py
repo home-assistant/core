@@ -124,7 +124,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         """Convert a percentage step into a number of hardware level presses."""
         if percentage_step is None:
             return 1
-        return max(1, math.ceil(percentage_step * SPEED_COUNT / 100))
+        return math.ceil(percentage_step * SPEED_COUNT / 100)
 
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
