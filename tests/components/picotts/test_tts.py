@@ -129,6 +129,7 @@ async def test_tts_service(
             )
             == HTTPStatus.OK
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_get_tts_audio_subprocess_error(

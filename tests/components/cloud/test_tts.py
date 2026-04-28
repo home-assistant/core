@@ -274,6 +274,7 @@ async def test_get_tts_audio(
 
         # Force streaming
         await client.get(response["path"])
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     if data.get("engine_id", "").startswith("tts."):
         # Streaming
