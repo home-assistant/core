@@ -7,12 +7,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
 
@@ -65,13 +63,11 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ONVIFConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a ONVIF switch platform."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    device = hass.data[DOMAIN][config_entry.unique_id]
+    device = config_entry.runtime_data
 
     async_add_entities(
         ONVIFSwitch(device, description)

@@ -83,19 +83,14 @@ class HassEnforceConfigFlowNoPollingChecker(BaseChecker):
 
 def _get_schema_field_name(node: nodes.Call) -> str | None:
     """Extract the field name from vol.Required(...) or vol.Optional(...)."""
-    if not isinstance(node.func, nodes.Attribute):
-        return None
-    if node.func.attrname not in {"Required", "Optional"}:
-        return None
-    if not node.args:
-        return None
-
-    first_arg = node.args[0]
-    if isinstance(first_arg, nodes.Const) and isinstance(first_arg.value, str):
-        return first_arg.value
-    if isinstance(first_arg, nodes.Name):
-        return str(first_arg.name)
-    return None
+    match node:
+        case nodes.Call(
+            func=nodes.Attribute(attrname="Required" | "Optional"),
+            args=[nodes.Name(name=val) | nodes.Const(value=str(val)), *_],
+        ):
+            return str(val)
+        case _:
+            return None
 
 
 def register(linter: PyLinter) -> None:

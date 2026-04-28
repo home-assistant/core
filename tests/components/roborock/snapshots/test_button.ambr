@@ -49,6 +49,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[button.roborock_s7_2_dock_reset_cleaning_brush_consumable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.roborock_s7_2_dock_reset_cleaning_brush_consumable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset cleaning brush consumable',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset cleaning brush consumable',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_dock_cleaning_brush_consumable',
+    'unique_id': 'reset_dock_cleaning_brush_consumable_device_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_s7_2_dock_reset_cleaning_brush_consumable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock S7 2 Dock Reset cleaning brush consumable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_s7_2_dock_reset_cleaning_brush_consumable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.roborock_s7_2_dock_reset_strainer_consumable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.roborock_s7_2_dock_reset_strainer_consumable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset strainer consumable',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset strainer consumable',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_dock_strainer_consumable',
+    'unique_id': 'reset_dock_strainer_consumable_device_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_s7_2_dock_reset_strainer_consumable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock S7 2 Dock Reset strainer consumable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_s7_2_dock_reset_strainer_consumable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[button.roborock_s7_2_reset_air_filter_consumable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -343,6 +443,106 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_sc2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset cleaning brush consumable',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset cleaning brush consumable',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_dock_cleaning_brush_consumable',
+    'unique_id': 'reset_dock_cleaning_brush_consumable_abc123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock S7 MaxV Dock Reset cleaning brush consumable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.roborock_s7_maxv_dock_reset_strainer_consumable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.roborock_s7_maxv_dock_reset_strainer_consumable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset strainer consumable',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset strainer consumable',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_dock_strainer_consumable',
+    'unique_id': 'reset_dock_strainer_consumable_abc123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_s7_maxv_dock_reset_strainer_consumable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock S7 MaxV Dock Reset strainer consumable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_s7_maxv_dock_reset_strainer_consumable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
