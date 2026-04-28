@@ -167,3 +167,16 @@ sensor_zone_trigger:
     entity:
       integration: elkm1
       domain: sensor
+
+switch_output_turn_on:
+  target:
+    entity:
+      integration: elkm1
+      domain: switch
+  fields:
+    value:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65536

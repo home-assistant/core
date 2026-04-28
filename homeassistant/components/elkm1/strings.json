@@ -204,6 +204,16 @@
         }
       },
       "name": "Speak word"
+    },
+    "switch_output_turn_on": {
+      "description": "Turns on an output for specified length of time.",
+      "fields": {
+        "value": {
+          "description": "Length of time to turn the output on for.",
+          "name": "Value"
+        }
+      },
+      "name": "Switch output turn on"
     }
   }
 }
