@@ -52,8 +52,8 @@ async def test_window_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("window.is_closed", {}, True, False),
-        ("window.is_open", {}, True, False),
+        ("window.is_closed", {}, True, True),
+        ("window.is_open", {}, True, True),
     ],
 )
 async def test_window_condition_options_validation(

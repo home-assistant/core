@@ -52,8 +52,8 @@ async def test_door_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("door.is_closed", {}, True, False),
-        ("door.is_open", {}, True, False),
+        ("door.is_closed", {}, True, True),
+        ("door.is_open", {}, True, True),
     ],
 )
 async def test_door_condition_options_validation(
