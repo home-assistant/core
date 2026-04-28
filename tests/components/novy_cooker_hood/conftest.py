@@ -41,11 +41,10 @@ def mock_get_codes() -> Iterator[MagicMock]:
 
 @pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> MockConfigEntry:
     """Return a mock config entry for Novy Cooker Hood."""
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
     assert entity_entry is not None
     return MockConfigEntry(

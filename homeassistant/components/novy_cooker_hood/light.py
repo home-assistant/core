@@ -41,17 +41,15 @@ async def async_setup_entry(
 class NovyCookerHoodLight(NovyCookerHoodEntity, LightEntity, RestoreEntity):
     """Novy cooker hood light toggled via a single RF press."""
 
-    _attr_assumed_state = True
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
-    _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the light."""
         super().__init__(entry)
         self._codes = get_codes_for_code(entry.data[CONF_CODE])
-        self._attr_unique_id = f"{entry.entry_id}_light"
+        self._attr_unique_id = entry.entry_id
 
     async def async_added_to_hass(self) -> None:
         """Restore the last known on/off state."""

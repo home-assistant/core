@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import Iterator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -27,13 +28,10 @@ from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 @pytest.fixture(autouse=True)
-def mock_toggle_sleep() -> AsyncMock:
-    """Skip the toggle gap during the test step."""
-    with patch(
-        "homeassistant.components.novy_cooker_hood.config_flow.asyncio.sleep",
-        AsyncMock(),
-    ) as mocked:
-        yield mocked
+def mock_toggle_gap() -> Iterator[None]:
+    """Set the toggle gap to 0 so the test step doesn't actually wait."""
+    with patch("homeassistant.components.novy_cooker_hood.config_flow._TOGGLE_GAP", 0):
+        yield
 
 
 async def _start_user_flow(hass: HomeAssistant, code: str = "1") -> dict:

@@ -20,7 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 class NovyCookerHoodEntity(Entity):
     """Novy Cooker Hood base entity."""
 
+    _attr_assumed_state = True
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the entity."""
@@ -29,7 +31,6 @@ class NovyCookerHoodEntity(Entity):
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Novy",
             model="Cooker Hood",
-            name=entry.title,
         )
 
     async def async_added_to_hass(self) -> None:
