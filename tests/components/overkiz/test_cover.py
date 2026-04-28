@@ -957,20 +957,22 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     """
     await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
 
-    with patch(
-        "homeassistant.components.overkiz.executor.OverkizExecutor.has_command",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.overkiz.executor.OverkizExecutor.has_command",
+            return_value=False,
+        ),
+        pytest.raises(ServiceValidationError),
     ):
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                "overkiz",
-                "set_cover_position_and_tilt",
-                {
-                    ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
-                    ATTR_POSITION: 50,
-                    ATTR_TILT_POSITION: 50,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            "overkiz",
+            "set_cover_position_and_tilt",
+            {
+                ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+                ATTR_POSITION: 50,
+                ATTR_TILT_POSITION: 50,
+            },
+            blocking=True,
+        )
 
     assert mock_client.execute_command.await_count == 0
