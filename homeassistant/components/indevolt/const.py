@@ -19,15 +19,6 @@ DEFAULT_PORT: Final = 8080
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_GENERATION: Final = "generation"
 
-# API write/read keys for energy and value for outdoor/portable mode
-ENERGY_MODE_READ_KEY: Final = "7101"
-ENERGY_MODE_WRITE_KEY: Final = "47005"
-PORTABLE_MODE: Final = 0
-
-# API write key and value for real-time control mode
-REALTIME_ACTION_KEY: Final = "47015"
-REALTIME_ACTION_MODE: Final = 4
-
 # API key fields
 SENSOR_KEYS: Final[dict[int, list[str]]] = {
     1: [

@@ -300,3 +300,67 @@ async def test_dhcp_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_fumis")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "5678"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_MAC] == "AABBCCDDEEFF"
+    assert mock_config_entry.data[CONF_PIN] == "5678"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (FumisAuthenticationError, {CONF_PIN: "invalid_auth"}),
+        (FumisStoveOfflineError, {"base": "device_offline"}),
+        (FumisConnectionError, {"base": "cannot_connect"}),
+        (Exception, {"base": "unknown"}),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_fumis: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_error: dict[str, str],
+) -> None:
+    """Test the reconfigure flow with errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_fumis.update_info.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "5678"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == expected_error
+
+    mock_fumis.update_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "5678"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
