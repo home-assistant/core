@@ -114,12 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
             entry, data=new_data, unique_id=unique_id
         )
 
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(entry.unique_id))},
-        manufacturer="Withings",
-    )
     session = async_get_clientsession(hass)
     client = WithingsClient(session=session)
     try:
@@ -160,6 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     for coordinator in withings_data.coordinators:
         await coordinator.async_config_entry_first_refresh()
 
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, str(entry.unique_id))},
+        manufacturer="Withings",
+    )
     entry.runtime_data = withings_data
 
     webhook_manager = WithingsWebhookManager(hass, entry)
