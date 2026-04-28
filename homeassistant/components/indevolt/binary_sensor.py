@@ -39,16 +39,14 @@ BINARY_SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    # Electric Heating State
+    # Electric Heating States
     IndevoltBinarySensorEntityDescription(
         key=IndevoltSystem.HEATING_STATE,
         generation=[1],
         translation_key="electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    # Electric Heating State
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.MAIN_HEATING_STATE,
         generation=[2],

@@ -24,7 +24,7 @@
     'object_id_base': 'Electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Electric heating',
     'platform': 'indevolt',
@@ -39,7 +39,6 @@
 # name: test_binary_sensor[1][binary_sensor.bk1600_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'BK1600 Electric heating',
     }),
     'context': <ANY>,
