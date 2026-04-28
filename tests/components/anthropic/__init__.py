@@ -382,43 +382,6 @@ model_list = [
         max_tokens=64000,
         type="model",
     ),
-    ModelInfo(
-        id="claude-3-haiku-20240307",
-        capabilities=ModelCapabilities(
-            batch=CapabilitySupport(supported=True),
-            citations=CapabilitySupport(supported=False),
-            code_execution=CapabilitySupport(supported=False),
-            context_management=ContextManagementCapability(
-                clear_thinking_20251015=CapabilitySupport(supported=False),
-                clear_tool_uses_20250919=CapabilitySupport(supported=False),
-                compact_20260112=CapabilitySupport(supported=False),
-                supported=False,
-            ),
-            effort=EffortCapability(
-                high=CapabilitySupport(supported=False),
-                low=CapabilitySupport(supported=False),
-                max=CapabilitySupport(supported=False),
-                medium=CapabilitySupport(supported=False),
-                supported=False,
-                xhigh=None,
-            ),
-            image_input=CapabilitySupport(supported=True),
-            pdf_input=CapabilitySupport(supported=False),
-            structured_outputs=CapabilitySupport(supported=False),
-            thinking=ThinkingCapability(
-                supported=False,
-                types=ThinkingTypes(
-                    adaptive=CapabilitySupport(supported=False),
-                    enabled=CapabilitySupport(supported=False),
-                ),
-            ),
-        ),
-        created_at=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.UTC),
-        display_name="Claude Haiku 3",
-        max_input_tokens=200000,
-        max_tokens=4096,
-        type="model",
-    ),
 ]
 
 

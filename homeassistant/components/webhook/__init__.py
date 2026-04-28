@@ -120,8 +120,11 @@ async def async_handle_webhook(
     handlers: dict[str, dict[str, Any]] = hass.data.setdefault(DOMAIN, {})
 
     content_stream: StreamReader | MockStreamReader
+    received_from: str | None
     if isinstance(request, MockRequest):
         received_from = request.mock_source
+        if request.remote is not None:
+            received_from += f" ({request.remote})"
         content_stream = request.content
         method_name = request.method
     else:
@@ -156,11 +159,11 @@ async def async_handle_webhook(
         )
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-    if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
-        is_local = not is_cloud_connection(hass)
+    if webhook["local_only"] in (True, None):
+        is_local = not (is_cloud_connection(hass) or request.remote is None)
+
         if is_local:
             if TYPE_CHECKING:
-                assert isinstance(request, Request)
                 assert request.remote is not None
 
             try:
@@ -273,6 +276,7 @@ async def websocket_handle(
         method=msg["method"],
         query_string=msg["query"],
         mock_source=f"{DOMAIN}/ws",
+        remote=connection.remote,
     )
 
     response = await async_handle_webhook(hass, msg["webhook_id"], request)

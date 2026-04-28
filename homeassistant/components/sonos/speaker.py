@@ -165,6 +165,8 @@ class SonosSpeaker:
         self.dialog_level_enum: int | None = None
         self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
+        self.tv_autoplay: str | None = None
+        self.tv_ungroup_autoplay: bool | None = None
         self.sub_enabled: bool | None = None
         self.sub_crossover: int | None = None
         self.sub_gain: int | None = None

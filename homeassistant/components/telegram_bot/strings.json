@@ -958,7 +958,7 @@
       }
     },
     "send_message_draft": {
-      "description": "Stream a partial message to a user while the message is being generated.",
+      "description": "Shows a partial message (draft) in Telegram while the full message is still being generated.",
       "fields": {
         "chat_id": {
           "description": "One or more pre-authorized chat IDs to send the message draft to.",
