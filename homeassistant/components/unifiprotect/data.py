@@ -19,6 +19,7 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    Relay,
     Siren,
     WSSubscriptionMessage,
 )
@@ -84,6 +85,9 @@ class ProtectData:
         self._subscriptions: defaultdict[
             str, set[Callable[[ProtectDeviceType], None]]
         ] = defaultdict(set)
+        self._relay_subscriptions: defaultdict[str, set[Callable[[Relay], None]]] = (
+            defaultdict(set)
+        )
         self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
             defaultdict(set)
         )
@@ -184,8 +188,10 @@ class ProtectData:
 
         The API client pre-filters messages to the model types listed in
         DEVICES_WS_SUBSCRIBED_MODELS. NVR messages signal the private NVR so
-        alarm entities pick up the new arm state. Siren messages dispatch
-        the merged Siren object by mac so siren entities can refresh.
+        alarm entities pick up the new arm state. Relay messages dispatch
+        the merged Relay object by mac so relay-output entities can refresh.
+        Siren messages dispatch the merged Siren object by mac so siren entities
+        can refresh.
         """
         new_obj = message.new_obj
         if new_obj is None:
@@ -196,6 +202,14 @@ class ProtectData:
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_device_update(self.api.bootstrap.nvr)
+            return
+        if new_obj.model is ModelType.RELAY:
+            relay = cast(Relay, new_obj)
+            mac = relay.mac
+            if subscriptions := self._relay_subscriptions.get(mac):
+                _LOGGER.debug("Updating relay: %s (%s)", relay.name, mac)
+                for update_callback in subscriptions:
+                    update_callback(relay)
             return
         if new_obj.model is ModelType.SIREN:
             self._async_signal_siren_update(cast(Siren, new_obj))
@@ -372,6 +386,10 @@ class ProtectData:
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
         if self.api.has_public_bootstrap:
+            for relay in self.api.public_bootstrap.relays.values():
+                if subscriptions := self._relay_subscriptions.get(relay.mac):
+                    for subscription_callback in subscriptions:
+                        subscription_callback(relay)
             for siren in self.api.public_bootstrap.sirens.values():
                 self._async_signal_siren_update(siren)
 
@@ -401,6 +419,23 @@ class ProtectData:
         self._subscriptions[mac].remove(update_callback)
         if not self._subscriptions[mac]:
             del self._subscriptions[mac]
+
+    @callback
+    def async_subscribe_relay(
+        self, mac: str, update_callback: Callable[[Relay], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for relay updates."""
+        self._relay_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_relay, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_relay(
+        self, mac: str, update_callback: Callable[[Relay], None]
+    ) -> None:
+        """Remove a relay callback subscriber."""
+        self._relay_subscriptions[mac].remove(update_callback)
+        if not self._relay_subscriptions[mac]:
+            del self._relay_subscriptions[mac]
 
     @callback
     def async_subscribe_siren(
