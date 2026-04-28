@@ -44,6 +44,9 @@ async def test_wind_coordinator_setup(
         stations=mock_stations_data,
     )
 
+    await mock_websocket_api.connect()
+    mock_websocket_api.connect.reset_mock()
+
     await coordinator.async_setup()
 
     mock_websocket_api.connect.assert_not_called()
@@ -74,6 +77,9 @@ async def test_observation_coordinator_setup(
         websocket_api=mock_websocket_api,
         stations=mock_stations_data,
     )
+
+    await mock_websocket_api.connect()
+    mock_websocket_api.connect.reset_mock()
 
     await coordinator.async_setup()
 
