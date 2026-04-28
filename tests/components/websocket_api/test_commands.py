@@ -184,8 +184,8 @@ async def target_entities(
         entity_category=EntityCategory.DIAGNOSTIC,
     )
     label2_device_config_sensor = MockEntity(
-        entity_id="sensor.test8",
-        unique_id="test8",
+        entity_id="sensor.potato",
+        unique_id="potato",
         device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
         entity_category=EntityCategory.CONFIG,
     )
@@ -265,7 +265,7 @@ async def target_entities(
         "switch.test2",
         "switch.test5",
         "sensor.test7",
-        "sensor.test8",
+        "sensor.potato",
         "light.component1_light",
         "light.component1_flash_light",
         "light.component1_effect_flash_light",
