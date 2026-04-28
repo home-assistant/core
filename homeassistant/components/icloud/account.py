@@ -99,6 +99,7 @@ class IcloudAccount:
 
     def setup(self) -> None:
         """Set up an iCloud account."""
+        self.api = None  # ensure no stale reference if construction raises below
         try:
             self.api = PyiCloudService(
                 self._username,
@@ -113,28 +114,20 @@ class IcloudAccount:
 
         except PyiCloudFailedLoginException:
             requires_2fa = self.api is not None and self.api.requires_2fa
-            self.api = None
             # Login failed, which can mean 2FA reauthentication is required or
             # that credentials need to be updated.
             if requires_2fa:
-                _LOGGER.warning(
-                    (
-                        "2FA authentication required for '%s'; Go to the "
-                        "Integrations menu and click on Configure on the iCloud "
-                        "card to enter your verification code"
-                    ),
-                    self._config_entry.data[CONF_USERNAME],
-                )
-            else:
-                _LOGGER.error(
-                    (
-                        "Your password for '%s' is no longer working; Go to the "
-                        "Integrations menu and click on Configure on the discovered Apple "
-                        "iCloud card to login again"
-                    ),
-                    self._config_entry.data[CONF_USERNAME],
-                )
-
+                self._handle_auth_required(True)
+                return
+            self.api = None
+            _LOGGER.error(
+                (
+                    "Your password for '%s' is no longer working; Go to the "
+                    "Integrations menu and click on Configure on the discovered Apple "
+                    "iCloud card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
             self._require_reauth()
             return
 
