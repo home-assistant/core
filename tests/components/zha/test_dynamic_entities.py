@@ -26,18 +26,27 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 
 @pytest.fixture(autouse=True)
-def switch_platform_only() -> Generator[None]:
-    """Only set up the switch platform to speed up tests."""
-    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SWITCH,)):
+def platforms_only() -> Generator[None]:
+    """Only set up the switch + binary_sensor platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (Platform.SWITCH, Platform.BINARY_SENSOR),
+    ):
         yield
 
 
-async def _create_switch_device(
+async def _create_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> ZHADeviceProxy:
-    """Create a basic switch device for testing."""
+    """Create a device exposing a switch and a binary_sensor that share a unique_id.
+
+    OnOff input on an occupancy-sensor device type yields a switch entity
+    and a binary_sensor entity (Opening) keyed on the same `(ieee, ep, 6)`
+    base unique_id but on different platforms - a useful collision shape
+    for verifying that runtime add/remove events are scoped per platform.
+    """
     await setup_zha()
     gateway = get_zha_gateway(hass)
     gateway_proxy = get_zha_gateway_proxy(hass)
@@ -50,8 +59,8 @@ async def _create_switch_device(
                     general.OnOff.cluster_id,
                     general.Groups.cluster_id,
                 ],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+                SIG_EP_TYPE: zha.DeviceType.OCCUPANCY_SENSOR,
                 SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         },
@@ -68,12 +77,14 @@ async def _create_switch_device(
     return zha_device_proxy
 
 
-def _get_switch_platform_entity(zha_device_proxy: ZHADeviceProxy) -> PlatformEntity:
-    """Return the underlying ZHA switch platform entity for the device."""
+def _get_platform_entity(
+    zha_device_proxy: ZHADeviceProxy, platform: Platform
+) -> PlatformEntity:
+    """Return the underlying ZHA platform entity for the given platform."""
     return next(
         entity
         for entity in zha_device_proxy.device.platform_entities.values()
-        if entity.PLATFORM == Platform.SWITCH
+        if platform == entity.PLATFORM
     )
 
 
@@ -82,11 +93,28 @@ async def test_dynamic_entity_lifecycle(
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test the full hard-remove -> re-add -> soft-remove cycle."""
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
-    platform_entity = _get_switch_platform_entity(zha_device_proxy)
+    """Test the full hard-remove -> re-add -> soft-remove cycle.
+
+    Also confirms that the binary_sensor sharing the same unique_id but on a
+    different platform is never disturbed - the (platform, unique_id) tuple
+    is the ZHA entity identity.
+    """
+    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
+    platform_entity = _get_platform_entity(zha_device_proxy, Platform.SWITCH)
+    binary_sensor_entity = _get_platform_entity(
+        zha_device_proxy, Platform.BINARY_SENSOR
+    )
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    binary_sensor_id = find_entity_id(Platform.BINARY_SENSOR, zha_device_proxy, hass)
     assert entity_id is not None
+    assert binary_sensor_id is not None
+
+    # Same unique_id, different platforms - the collision shape we care about.
+    assert platform_entity.unique_id == binary_sensor_entity.unique_id
+    assert platform_entity.PLATFORM != binary_sensor_entity.PLATFORM
+
+    binary_sensor_state_before = hass.states.get(binary_sensor_id)
+    assert binary_sensor_state_before is not None
 
     # Hard remove: state and registry entry both go away.
     zha_device_proxy.device.emit(
@@ -101,6 +129,9 @@ async def test_dynamic_entity_lifecycle(
     registry = er.async_get(hass)
     assert registry.async_get(entity_id) is None
     assert hass.states.get(entity_id) is None
+    # The binary_sensor with the same unique_id is untouched.
+    assert registry.async_get(binary_sensor_id) is not None
+    assert hass.states.get(binary_sensor_id) == binary_sensor_state_before
 
     ha_zha_data = get_zha_data(hass)
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
@@ -117,6 +148,7 @@ async def test_dynamic_entity_lifecycle(
     await hass.async_block_till_done()
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
     assert hass.states.get(entity_id) is not None
+    assert hass.states.get(binary_sensor_id) == binary_sensor_state_before
 
     # Exactly one entity reference is tracked; the remove + re-add cycle did
     # not leave a stale entry behind.
@@ -144,6 +176,8 @@ async def test_dynamic_entity_lifecycle(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    # The binary_sensor with the same unique_id is still untouched.
+    assert hass.states.get(binary_sensor_id) == binary_sensor_state_before
 
 
 async def test_handle_device_entity_added_unknown_unique_id(
@@ -152,7 +186,7 @@ async def test_handle_device_entity_added_unknown_unique_id(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that a DeviceEntityAddedEvent with unknown unique_id is a no-op."""
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
 
     ha_zha_data = get_zha_data(hass)
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
@@ -174,49 +208,13 @@ async def test_handle_device_entity_added_unknown_unique_id(
         mock_dispatch.assert_not_called()
 
 
-async def test_handle_device_entity_removed_other_platform_does_not_unload(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
-) -> None:
-    """Test that a soft remove for a different platform does not unload the switch.
-
-    The (platform, unique_id) tuple is the ZHA entity identity; entities on
-    different platforms can share a unique_id without colliding.
-    """
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
-
-    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
-    assert entity_id is not None
-    registry = er.async_get(hass)
-    entry = registry.async_get(entity_id)
-    assert entry is not None
-    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
-
-    # Soft-remove an entity on a different platform but reusing this
-    # unique_id; the switch must remain loaded and available.
-    zha_device_proxy.device.emit(
-        DeviceEntityRemovedEvent.event_type,
-        DeviceEntityRemovedEvent(
-            platform=ZhaPlatform.SENSOR,
-            unique_id=entry.unique_id,
-            remove=False,
-        ),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-
 async def test_handle_device_entity_removed_with_remove_flag(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that DeviceEntityRemovedEvent with remove=True deletes the registry entry."""
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
 
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
@@ -254,7 +252,7 @@ async def test_handle_device_entity_removed_unknown_unique_id(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that a DeviceEntityRemovedEvent with unknown unique_id is a no-op."""
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
 
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
@@ -287,7 +285,7 @@ async def test_remove_entity_reference_when_ieee_already_cleared(
     before the entity finishes tearing down. The early-return guard must
     keep the popped key out of the dict.
     """
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
 
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
