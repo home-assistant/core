@@ -1255,18 +1255,18 @@ async def assert_condition_behavior_any(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert cond(hass) is False
+        assert cond.async_check() is False
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert cond(hass) == state["condition_true"]
+        assert cond.async_check() == state["condition_true"]
 
         # Set other included entities to the included state to verify that
         # they don't change the condition evaluation
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert cond(hass) == state["condition_true"]
+        assert cond.async_check() == state["condition_true"]
 
 
 async def assert_condition_behavior_all(
@@ -1305,7 +1305,7 @@ async def assert_condition_behavior_all(
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert cond(hass) == state["condition_true_first_entity"]
+        assert cond.async_check() == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1314,7 +1314,7 @@ async def assert_condition_behavior_all(
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
 
-        assert cond(hass) == state["condition_true"]
+        assert cond.async_check() == state["condition_true"]
 
 
 async def assert_trigger_behavior_any(
@@ -1947,10 +1947,10 @@ async def assert_numerical_condition_unit_conversion(
         )
         for state in pass_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is True
+            assert cond.async_check() is True
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False
 
     # Test limits set by entity
     cond = await create_target_condition(
@@ -1965,10 +1965,10 @@ async def assert_numerical_condition_unit_conversion(
         set_or_remove_state(hass, limit_entities[1], limit_states[1])
         for state in pass_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is True
+            assert cond.async_check() is True
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False
 
     # Test invalid unit
     for limit_states in invalid_limit_entity_states:
@@ -1976,7 +1976,7 @@ async def assert_numerical_condition_unit_conversion(
         set_or_remove_state(hass, limit_entities[1], limit_states[1])
         for state in pass_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
-            assert cond(hass) is False
+            assert cond.async_check() is False

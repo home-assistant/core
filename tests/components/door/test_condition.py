@@ -372,7 +372,7 @@ async def test_door_condition_excludes_non_door_device_class(
     )
 
     # Matching entities in matching state - condition should be True
-    assert condition_any(hass) is True
+    assert condition_any.async_check() is True
 
     # Set matching entities to non-matching state
     hass.states.async_set(
@@ -386,4 +386,4 @@ async def test_door_condition_excludes_non_door_device_class(
     await hass.async_block_till_done()
 
     # Wrong device class entities still in matching state, but should be excluded
-    assert condition_any(hass) is False
+    assert condition_any.async_check() is False
