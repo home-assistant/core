@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-entry]
@@ -97,7 +97,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_1_electric_heating-entry]
@@ -147,7 +147,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_2_electric_heating-entry]
@@ -197,7 +197,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_3_electric_heating-entry]
@@ -247,7 +247,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_4_electric_heating-entry]
@@ -297,7 +297,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_5_electric_heating-entry]
@@ -347,7 +347,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-entry]
@@ -397,7 +397,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_meter_connected-entry]
