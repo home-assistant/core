@@ -739,6 +739,7 @@ FLOWS = {
         "thermobeacon",
         "thermopro",
         "thethingsnetwork",
+        "thomson",
         "thread",
         "tibber",
         "tile",
