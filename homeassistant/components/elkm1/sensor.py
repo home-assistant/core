@@ -32,6 +32,7 @@ from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
+SERVICE_SENSOR_ZONE_UPDATE_VOLTAGE = "sensor_zone_update_voltage"
 SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPERATURE = -40
@@ -80,6 +81,11 @@ async def async_setup_entry(
         "async_counter_set",
     )
     platform.async_register_entity_service(
+        SERVICE_SENSOR_ZONE_UPDATE_VOLTAGE,
+        None,
+        "async_zone_update_voltage",
+    )
+    platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_BYPASS,
         ELK_USER_CODE_SERVICE_SCHEMA,
         "async_zone_bypass",
@@ -113,6 +119,12 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
             raise HomeAssistantError("supported only on ElkM1 Counter sensors")
         if value is not None:
             self._element.set(value)
+
+    async def async_zone_update_voltage(self) -> None:
+        """Trigger zone."""
+        if not isinstance(self, ElkZone):
+            raise HomeAssistantError("supported only on ElkM1 Zone sensors")
+        self._element.get_voltage()
 
     async def async_zone_bypass(self, code: int | None = None) -> None:
         """Bypass zone."""
@@ -251,6 +263,7 @@ class ElkZone(ElkSensor):
         attrs["definition"] = self._element.definition.name.lower()
         attrs["area"] = self._element.area + 1
         attrs["triggered_alarm"] = self._element.triggered_alarm
+        attrs["voltage"] = self._element.voltage
         return attrs
 
     @property

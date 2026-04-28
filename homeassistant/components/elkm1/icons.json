@@ -40,6 +40,9 @@
     "sensor_zone_trigger": {
       "service": "mdi:shield"
     },
+    "sensor_zone_update_voltage": {
+      "service": "mdi:flash"
+    },
     "set_time": {
       "service": "mdi:clock-edit"
     },

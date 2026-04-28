@@ -163,6 +163,10 @@
       "description": "Triggers zone.",
       "name": "Sensor zone trigger"
     },
+    "sensor_zone_update_voltage": {
+      "description": "Update the voltage attribute for a zone.",
+      "name": "Sensor zone update voltage"
+    },
     "set_time": {
       "description": "Sets the time for the panel.",
       "fields": {
