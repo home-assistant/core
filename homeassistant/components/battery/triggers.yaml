@@ -33,16 +33,19 @@
   entity:
     - domain: binary_sensor
       device_class: battery
+  primary_entities_only: false
 
 .trigger_target_charging: &trigger_target_charging
   entity:
     - domain: binary_sensor
       device_class: battery_charging
+  primary_entities_only: false
 
 .trigger_target_percentage: &trigger_target_percentage
   entity:
     - domain: sensor
       device_class: battery
+  primary_entities_only: false
 
 low:
   fields:
