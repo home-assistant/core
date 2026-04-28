@@ -24,11 +24,9 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from homeassistant.components.http import (
     KEY_AUTHENTICATED,
-    KEY_HASS,
     KEY_HASS_USER,
     HomeAssistantView,
 )
-from homeassistant.components.onboarding import async_is_onboarded
 
 from .const import X_HASS_SOURCE
 
@@ -53,16 +51,7 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
-# fmt: off
-# Onboarding can upload backups and restore it
-PATHS_NOT_ONBOARDED = re.compile(
-    r"^(?:"
-    r"|backups/[a-f0-9]{8}(/info|/new/upload|/download|/restore/full|/restore/partial)?"
-    r"|backups/new/upload"
-    r")$"
-)
-
-# Authenticated users manage backups + download logs, changelog and documentation
+# Admin users manage backups + download logs, changelog and documentation
 PATHS_ADMIN = re.compile(
     r"^(?:"
     r"|backups/[a-f0-9]{8}(/info|/download|/restore/full|/restore/partial)?"
@@ -142,26 +131,18 @@ class HassIOView(HomeAssistantView):
         """Return a client request with proxy origin for Hass.io supervisor.
 
         Use cases:
-        - Onboarding allows restoring backups
         - Load Supervisor panel and add-on logo unauthenticated
-        - User upload/restore backups
+        - Admin users upload/restore backups and access logs
         """
         # No bullshit
         if path != unquote(path):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        hass = request.app[KEY_HASS]
         is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
         authorized = is_admin
 
         if is_admin:
             allowed_paths = PATHS_ADMIN
-
-        elif not async_is_onboarded(hass):
-            allowed_paths = PATHS_NOT_ONBOARDED
-
-            # During onboarding we need the user to manage backups
-            authorized = True
 
         else:
             # Either unauthenticated or not an admin

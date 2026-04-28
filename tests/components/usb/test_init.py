@@ -7,18 +7,17 @@ import os
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
-from serialx import SerialPortInfo
+from serialx import SerialPortInfo, create_serial_connection, serial_for_url
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.usb import DOMAIN
+from homeassistant.components.usb import DOMAIN, async_scan_serial_ports
 from homeassistant.components.usb.models import SerialDevice, USBDevice
-from homeassistant.components.usb.utils import (
-    async_scan_serial_ports,
-    usb_device_from_path,
-)
+from homeassistant.components.usb.serial_proxy_stub import HassESPHomeSerialStub
+from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1297,6 +1296,7 @@ async def test_register_port_event_callback_failure(
 
 async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
     """Test async_scan_serial_ports parsing."""
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
     with patch(
         "homeassistant.components.usb.utils.list_serial_ports",
         return_value=[
@@ -1342,8 +1342,97 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             serial_number="10B41DE589FC",
             manufacturer="Nabu Casa",
             description="ZBT-2",
+            bcd_device=257,
+            interface_description="Nabu Casa ZBT-2",
+            interface_num=0,
         ),
     ]
+
+
+async def test_async_scan_serial_ports_with_scanner(hass: HomeAssistant) -> None:
+    """Contributed ports are appended to, and override, real scan results."""
+    real_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    real_usb = USBDevice(
+        device="/dev/serial/by-id/usb-Real-Stick",
+        vid="303A",
+        pid="4001",
+        serial_number="ABC123",
+        manufacturer="Nabu Casa",
+        description="ZBT-2",
+    )
+    contributed_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+    extra_socket = SerialDevice(
+        device="socket://127.0.0.1:9999",
+        serial_number=None,
+        manufacturer="Test",
+        description="Extra",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+    unregister = usb.async_register_serial_port_scanner(
+        hass, lambda _hass: [contributed_amA1, extra_socket]
+    )
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [contributed_amA1, real_usb, extra_socket]
+
+    unregister()
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+
+async def test_async_scan_serial_ports_scanner_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A scanner raising does not prevent other scanners or real ports."""
+    real_port = SerialDevice(
+        device="/dev/ttyUSB0",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    contributed_port = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    def broken_scanner(_hass: HomeAssistant) -> list:
+        raise RuntimeError("scanner broke")
+
+    usb.async_register_serial_port_scanner(hass, broken_scanner)
+    usb.async_register_serial_port_scanner(hass, lambda _hass: [contributed_port])
+
+    with patch_scanned_serial_ports(return_value=[real_port]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_port, contributed_port]
+    assert "Error in USB scanner callback" in caplog.text
+    assert "scanner broke" in caplog.text
 
 
 def test_usb_device_from_path_finds_by_symlink() -> None:
@@ -1604,6 +1693,9 @@ async def test_list_serial_ports(
             serial_number="001234",
             manufacturer="Silicon Labs",
             description="CP2102 USB to UART",
+            bcd_device=257,
+            interface_description="CP2102 USB to UART Bridge",
+            interface_num=0,
         ),
         SerialDevice(
             device="/dev/ttyS0",
@@ -1621,19 +1713,26 @@ async def test_list_serial_ports(
     result = response["result"]
     assert len(result) == 2
 
-    assert result[0]["device"] == "/dev/ttyUSB0"
-    assert result[0]["vid"] == "10C4"
-    assert result[0]["pid"] == "EA60"
-    assert result[0]["serial_number"] == "001234"
-    assert result[0]["manufacturer"] == "Silicon Labs"
-    assert result[0]["description"] == "CP2102 USB to UART"
+    assert result[0] == {
+        "device": "/dev/ttyUSB0",
+        "vid": "10C4",
+        "pid": "EA60",
+        "serial_number": "001234",
+        "manufacturer": "Silicon Labs",
+        "description": "CP2102 USB to UART",
+        "bcd_device": 257,
+        "interface_description": "CP2102 USB to UART Bridge",
+        "interface_num": 0,
+    }
 
-    assert result[1]["device"] == "/dev/ttyS0"
-    assert result[1]["serial_number"] is None
-    assert result[1]["manufacturer"] is None
-    assert result[1]["description"] == "ttyS0"
-    assert "vid" not in result[1]
-    assert "pid" not in result[1]
+    assert result[1] == {
+        "device": "/dev/ttyS0",
+        "serial_number": None,
+        "manufacturer": None,
+        "description": "ttyS0",
+        "interface_description": None,
+        "interface_num": None,
+    }
 
 
 async def test_list_serial_ports_require_admin(
@@ -1668,3 +1767,20 @@ async def test_list_serial_ports_os_error(
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert "Permission denied" in response["error"]["message"]
+
+
+async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:
+    """Test ESPHome serial proxy stub."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    serial_cls = serial_for_url("esphome-hass-usb://192.0.2.1")
+    assert isinstance(serial_cls, HassESPHomeSerialStub)
+
+    # Nothing actually opens, it just throws an error
+    with pytest.raises(ConfigEntryNotReady):
+        await create_serial_connection(
+            loop=asyncio.get_running_loop(),
+            protocol_factory=asyncio.Protocol,
+            url="esphome-hass-usb://192.0.2.1",
+            baudrate=115200,
+        )
