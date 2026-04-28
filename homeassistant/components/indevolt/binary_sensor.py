@@ -113,11 +113,9 @@ async def async_setup_entry(
     device_gen = coordinator.generation
 
     excluded_keys: set[str] = set()
-    for pack_keys in BATTERY_PACK_SENSOR_KEYS:
-        sn_key = pack_keys[0]
-
+    for sn_key, heating_key in BATTERY_PACK_SENSOR_KEYS:
         if not coordinator.data.get(sn_key):
-            excluded_keys.update(pack_keys)
+            excluded_keys.add(heating_key)
 
     async_add_entities(
         IndevoltBinarySensorEntity(coordinator, description)
