@@ -181,47 +181,47 @@
     }
   },
   "services": {
-    "list_rfid_tokens": {
-      "name": "List RFID tokens",
-      "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
-      "fields": {
-        "config_entry_id": {
-          "name": "Config entry",
-          "description": "The Peblar EV charger to list RFID tokens for."
-        }
-      }
-    },
     "add_rfid_token": {
-      "name": "Add RFID token",
       "description": "Adds an RFID token to the charger's standalone authorization list.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry",
-          "description": "The Peblar EV charger to add the RFID token to."
-        },
-        "uid": {
-          "name": "UID",
-          "description": "The unique identifier of the RFID token."
+          "description": "The Peblar EV charger to add the RFID token to.",
+          "name": "Config entry"
         },
         "description": {
-          "name": "Description",
-          "description": "A human-readable label for this RFID token."
+          "description": "A human-readable label for this RFID token.",
+          "name": "Description"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token.",
+          "name": "UID"
         }
-      }
+      },
+      "name": "Add RFID token"
     },
     "delete_rfid_token": {
-      "name": "Delete RFID token",
       "description": "Deletes an RFID token from the charger's standalone authorization list.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry",
-          "description": "The Peblar EV charger to delete the RFID token from."
+          "description": "The Peblar EV charger to delete the RFID token from.",
+          "name": "Config entry"
         },
         "uid": {
-          "name": "UID",
-          "description": "The unique identifier of the RFID token to delete."
+          "description": "The unique identifier of the RFID token to delete.",
+          "name": "UID"
         }
-      }
+      },
+      "name": "Delete RFID token"
+    },
+    "list_rfid_tokens": {
+      "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to list RFID tokens for.",
+          "name": "Config entry"
+        }
+      },
+      "name": "List RFID tokens"
     }
   }
 }
