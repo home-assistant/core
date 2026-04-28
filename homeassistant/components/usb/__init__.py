@@ -35,6 +35,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .models import SerialDevice, USBDevice
+from .serial_proxy_stub import register_serialx_transport
 from .utils import (
     scan_serial_ports,
     usb_device_from_path,
@@ -186,6 +187,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
     return True
 
