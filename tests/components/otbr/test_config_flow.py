@@ -261,9 +261,7 @@ async def test_user_flow_additional_entry_same_address(
     assert result["errors"] == {"base": "already_configured"}
 
 
-@pytest.mark.parametrize(
-    "key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE], indirect=True
-)
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_user_flow_router_not_setup(
     hass: HomeAssistant,
@@ -695,9 +693,7 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.parametrize(
-    "key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE], indirect=True
-)
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
     hass: HomeAssistant,
@@ -813,9 +809,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.parametrize(
-    "key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE], indirect=True
-)
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,

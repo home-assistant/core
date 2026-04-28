@@ -49,14 +49,9 @@ def dataset_fixture() -> Any:
 
 
 @pytest.fixture(name="key_format")
-def key_format_fixture(request: pytest.FixtureRequest) -> KeyFormat:
-    """Override to control the OTBR JSON key format probe outcome.
-
-    Tests that don't depend on the wire format default to PascalCase, but
-    parametrized tests can override this (via ``indirect=True``) to also
-    exercise camelCase.
-    """
-    return getattr(request, "param", KeyFormat.PASCAL_CASE)
+def key_format_fixture() -> KeyFormat:
+    """Override to control the OTBR JSON key format probe outcome."""
+    return KeyFormat.PASCAL_CASE
 
 
 @pytest.fixture(autouse=True)
