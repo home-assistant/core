@@ -26,6 +26,7 @@ class IndevoltBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Custom entity description class for Indevolt binary sensors."""
 
     on_value: int = 1
+    off_value: int = 0
     generation: list[int] = field(default_factory=lambda: [1, 2])
 
 
@@ -35,6 +36,7 @@ BINARY_SENSORS: Final = (
         key=IndevoltGrid.METER_CONNECTED,
         translation_key="meter_connected",
         on_value=1000,
+        off_value=1001,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -144,7 +146,11 @@ class IndevoltBinarySensorEntity(IndevoltEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return on/active state of the binary sensor."""
         raw_value = self.coordinator.data.get(self.entity_description.key)
-        if raw_value is None:
-            return None
 
-        return raw_value == self.entity_description.on_value
+        if raw_value == self.entity_description.on_value:
+            return True
+
+        if raw_value == self.entity_description.off_value:
+            return False
+
+        return None
