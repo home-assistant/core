@@ -205,6 +205,42 @@ async def test_handle_device_entity_removed(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_handle_device_entity_removed_other_platform_does_not_unload(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test that a soft remove for a different platform does not unload the switch.
+
+    The (platform, unique_id) tuple is the ZHA entity identity; entities on
+    different platforms can share a unique_id without colliding.
+    """
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    assert entity_id is not None
+    registry = er.async_get(hass)
+    entry = registry.async_get(entity_id)
+    assert entry is not None
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # Soft-remove an entity on a different platform but reusing this
+    # unique_id; the switch must remain loaded and available.
+    zha_device_proxy.device.emit(
+        DeviceEntityRemovedEvent.event_type,
+        DeviceEntityRemovedEvent(
+            platform=ZhaPlatform.SENSOR,
+            unique_id=entry.unique_id,
+            remove=False,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
 async def test_handle_device_entity_removed_with_remove_flag(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],

@@ -519,10 +519,12 @@ class ZHADeviceProxy(EventBase):
         """Handle an entity being removed from a device at runtime."""
         if not event.remove:
             # Soft removal: signal the entity to unload itself; the registry
-            # entry is kept so the user can manually delete it.
+            # entry is kept so the user can manually delete it. The signal is
+            # keyed by (platform, unique_id) since that is the ZHA entity
+            # identity tuple - a unique_id can repeat across platforms.
             async_dispatcher_send(
                 self.gateway_proxy.hass,
-                f"{SIGNAL_REMOVE_ENTITY}_{event.unique_id}",
+                f"{SIGNAL_REMOVE_ENTITY}_{event.platform}_{event.unique_id}",
             )
             return
 

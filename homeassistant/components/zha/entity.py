@@ -171,7 +171,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self._unsubs.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_REMOVE_ENTITY}_{self.unique_id}",
+                (
+                    f"{SIGNAL_REMOVE_ENTITY}_"
+                    f"{self.entity_data.entity.PLATFORM}_{self.unique_id}"
+                ),
                 self.async_remove,
             )
         )
