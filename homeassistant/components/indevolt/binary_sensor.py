@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Final
 
-from indevolt_api import IndevoltBattery, IndevoltGrid
+from indevolt_api import IndevoltBattery, IndevoltGrid, IndevoltSystem
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -41,10 +41,18 @@ BINARY_SENSORS: Final = (
     ),
     # Electric Heating State
     IndevoltBinarySensorEntityDescription(
+        key=IndevoltSystem.HEATING_STATE,
+        generation=[1],
+        translation_key="electric_heating_state",
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Electric Heating State
+    IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.MAIN_HEATING_STATE,
         generation=[2],
         translation_key="main_electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -52,7 +60,6 @@ BINARY_SENSORS: Final = (
         key=IndevoltBattery.PACK_1_HEATING_STATE,
         generation=[2],
         translation_key="battery_pack_1_electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -60,7 +67,6 @@ BINARY_SENSORS: Final = (
         key=IndevoltBattery.PACK_2_HEATING_STATE,
         generation=[2],
         translation_key="battery_pack_2_electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -68,7 +74,6 @@ BINARY_SENSORS: Final = (
         key=IndevoltBattery.PACK_3_HEATING_STATE,
         generation=[2],
         translation_key="battery_pack_3_electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -76,7 +81,6 @@ BINARY_SENSORS: Final = (
         key=IndevoltBattery.PACK_4_HEATING_STATE,
         generation=[2],
         translation_key="battery_pack_4_electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -84,19 +88,18 @@ BINARY_SENSORS: Final = (
         key=IndevoltBattery.PACK_5_HEATING_STATE,
         generation=[2],
         translation_key="battery_pack_5_electric_heating_state",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
 )
 
-# Sensor per battery pack (heating state)
+# Sensor per battery pack: (serial_number_key, heating_state_key)
 BATTERY_PACK_SENSOR_KEYS = [
-    (IndevoltBattery.PACK_1_HEATING_STATE),
-    (IndevoltBattery.PACK_2_HEATING_STATE),
-    (IndevoltBattery.PACK_3_HEATING_STATE),
-    (IndevoltBattery.PACK_4_HEATING_STATE),
-    (IndevoltBattery.PACK_5_HEATING_STATE),
+    (IndevoltBattery.PACK_1_SERIAL_NUMBER, IndevoltBattery.PACK_1_HEATING_STATE),
+    (IndevoltBattery.PACK_2_SERIAL_NUMBER, IndevoltBattery.PACK_2_HEATING_STATE),
+    (IndevoltBattery.PACK_3_SERIAL_NUMBER, IndevoltBattery.PACK_3_HEATING_STATE),
+    (IndevoltBattery.PACK_4_SERIAL_NUMBER, IndevoltBattery.PACK_4_HEATING_STATE),
+    (IndevoltBattery.PACK_5_SERIAL_NUMBER, IndevoltBattery.PACK_5_HEATING_STATE),
 ]
 
 
@@ -111,9 +114,9 @@ async def async_setup_entry(
 
     excluded_keys: set[str] = set()
     for pack_keys in BATTERY_PACK_SENSOR_KEYS:
-        first_key = pack_keys[0]
+        sn_key = pack_keys[0]
 
-        if not coordinator.data.get(first_key):
+        if not coordinator.data.get(sn_key):
             excluded_keys.update(pack_keys)
 
     async_add_entities(

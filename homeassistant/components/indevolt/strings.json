@@ -51,6 +51,9 @@
       "battery_pack_5_electric_heating_state": {
         "name": "Battery pack 5 electric heating"
       },
+      "electric_heating_state": {
+        "name": "Electric heating"
+      },
       "main_electric_heating_state": {
         "name": "Main electric heating"
       },
