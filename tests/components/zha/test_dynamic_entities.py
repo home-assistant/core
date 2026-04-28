@@ -17,7 +17,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -113,8 +113,12 @@ async def test_dynamic_entity_lifecycle(
     assert platform_entity.unique_id == binary_sensor_entity.unique_id
     assert platform_entity.PLATFORM != binary_sensor_entity.PLATFORM
 
+    switch_state_before = hass.states.get(entity_id)
     binary_sensor_state_before = hass.states.get(binary_sensor_id)
+    assert switch_state_before is not None
+    assert switch_state_before.state == STATE_OFF
     assert binary_sensor_state_before is not None
+    assert binary_sensor_state_before.state == STATE_OFF
 
     # Hard remove: state and registry entry both go away.
     zha_device_proxy.device.emit(
@@ -146,8 +150,11 @@ async def test_dynamic_entity_lifecycle(
         ),
     )
     await hass.async_block_till_done()
+    # The platform listener drained the queue when SIGNAL_ADD_ENTITIES fired.
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
-    assert hass.states.get(entity_id) is not None
+    switch_state_after = hass.states.get(entity_id)
+    assert switch_state_after is not None
+    assert switch_state_after.state == switch_state_before.state
     assert hass.states.get(binary_sensor_id) == binary_sensor_state_before
 
     # Exactly one entity reference is tracked; the remove + re-add cycle did
@@ -206,44 +213,6 @@ async def test_handle_device_entity_added_unknown_unique_id(
         # Nothing should be added and no dispatcher signal is fired.
         assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
         mock_dispatch.assert_not_called()
-
-
-async def test_handle_device_entity_removed_with_remove_flag(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
-) -> None:
-    """Test that DeviceEntityRemovedEvent with remove=True deletes the registry entry."""
-    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
-
-    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
-    assert entity_id is not None
-
-    registry = er.async_get(hass)
-    entry = registry.async_get(entity_id)
-    assert entry is not None
-    assert hass.states.get(entity_id) is not None
-
-    zha_device_proxy.device.emit(
-        DeviceEntityRemovedEvent.event_type,
-        DeviceEntityRemovedEvent(
-            platform=ZhaPlatform.SWITCH,
-            unique_id=entry.unique_id,
-            remove=True,
-        ),
-    )
-    await hass.async_block_till_done()
-
-    # Registry entry and state are both gone.
-    assert registry.async_get(entity_id) is None
-    assert hass.states.get(entity_id) is None
-
-    # No stale entity reference is left in the gateway proxy.
-    gateway_proxy = get_zha_gateway_proxy(hass)
-    assert all(
-        ref.ha_entity_id != entity_id
-        for ref in gateway_proxy.ha_entity_refs[zha_device_proxy.device.ieee]
-    )
 
 
 async def test_handle_device_entity_removed_unknown_unique_id(
