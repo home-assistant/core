@@ -7070,8 +7070,8 @@ async def test_update_entry_and_reload_with_listener_logs(
             return self.async_update_reload_and_abort(entry, data={"vendor": "data2"})
 
     message = (
-        "Detected code that has an update listener and will reload twice."
-        " This will stop working in Home Assistant 2026.11.0, please report this issue"
+        "Detected that integration 'comp' has an update listener and should use it"
+        " for scheduling a reload. This will stop working in Home Assistant 2026.11.0"
     )
 
     with mock_config_flow("comp", MockFlowHandler):

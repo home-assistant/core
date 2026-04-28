@@ -3097,9 +3097,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
             should_reload = True
             if entry.update_listeners:
                 report_usage(
-                    "has an update listener and will reload twice",
+                    "has an update listener and should use it for scheduling a reload",
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2026.11.0",
+                    integration_domain=self.handler,
                 )
         elif (
             self.source in DISCOVERY_SOURCES
@@ -3502,9 +3503,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if reload_even_if_entry_is_unchanged or result:
             if entry.update_listeners:
                 report_usage(
-                    "has an update listener and will reload twice",
+                    "has an update listener and should use it for scheduling a reload",
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2026.11.0",
+                    integration_domain=self.handler,
                 )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         if reason is UNDEFINED:
