@@ -75,6 +75,7 @@
         "state": {
           "high": "High",
           "low": "Low",
+          "low_medium": "Low medium",
           "medium": "Medium",
           "off": "Off"
         }
