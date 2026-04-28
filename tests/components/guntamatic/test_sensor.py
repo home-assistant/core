@@ -9,13 +9,11 @@ import requests
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.guntamatic.const import SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import MOCK_PARSE_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -33,12 +31,12 @@ async def test_all_entities(
         [Platform.SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
-        await snapshot_platform(
-            hass,
-            entity_registry,
-            snapshot,
-            mock_config_entry.entry_id,
-        )
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+    )
 
 
 @pytest.mark.parametrize(
@@ -57,10 +55,7 @@ async def test_state_unavailable(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors handle failures."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    await setup_integration(hass, mock_config_entry)
 
     mock_heater.parse_data.side_effect = side_effect
     freezer.tick(SCAN_INTERVAL)
@@ -72,7 +67,7 @@ async def test_state_unavailable(
 
     # Recovery
     mock_heater.parse_data.side_effect = None
-    mock_heater.parse_data.return_value = MOCK_PARSE_DATA
+
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

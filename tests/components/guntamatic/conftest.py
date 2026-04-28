@@ -36,10 +36,9 @@ def mock_heater() -> Generator[MagicMock]:
     """Mock the Heater class."""
     with (
         patch(
-            "guntamatic.heater.Heater",
+            "homeassistant.components.guntamatic.coordinator.Heater",
             autospec=True,
         ) as mock,
-        patch("homeassistant.components.guntamatic.coordinator.Heater", new=mock),
         patch("homeassistant.components.guntamatic.config_flow.Heater", new=mock),
     ):
         instance = mock.return_value
