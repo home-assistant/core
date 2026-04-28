@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     DOMAIN as FAN_DOMAIN,
     SERVICE_DECREASE_SPEED,
     SERVICE_INCREASE_SPEED,
@@ -198,6 +199,51 @@ async def test_decrease_speed_sends_single_minus(
     assert state is not None
     assert state.attributes[ATTR_PERCENTAGE] == 25
     assert len(mock_rf_entity.send_command_calls) == 1
+
+
+async def test_increase_speed_with_step_sends_n_presses(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    init_novy_cooker_hood: MockConfigEntry,
+) -> None:
+    """increase_speed with percentage_step sends N plus presses (no recalibration)."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE_STEP: 50},
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert len(mock_rf_entity.send_command_calls) == 2
+
+
+async def test_decrease_speed_with_step_sends_n_presses(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """decrease_speed with percentage_step sends N minus presses (no recalibration)."""
+    mock_restore_cache(
+        hass, [State(ENTITY_ID, STATE_ON, attributes={ATTR_PERCENTAGE: 100})]
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_DECREASE_SPEED,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE_STEP: 50},
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert len(mock_rf_entity.send_command_calls) == 2
 
 
 async def test_decrease_speed_clamps_at_off(

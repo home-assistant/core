@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -72,7 +72,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         last = await self.async_get_last_state()
         if last is None:
             return
-        last_pct = last.attributes.get("percentage")
+        last_pct = last.attributes.get(ATTR_PERCENTAGE)
         if isinstance(last_pct, (int, float)) and last_pct > 0:
             self._level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, last_pct))
 
@@ -102,18 +102,29 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         await self._async_set_level(level)
 
     async def async_increase_speed(self, percentage_step: int | None = None) -> None:
-        """Bump speed up by one hardware level (single plus, no recalibration)."""
+        """Bump speed up by N hardware levels (no recalibration)."""
+        steps = self._steps_from_percentage(percentage_step)
         plus = await self._codes.async_load_command(COMMAND_PLUS)
-        await self._async_send(plus)
-        self._level = min(SPEED_COUNT, self._level + 1)
+        for _ in range(steps):
+            await self._async_send(plus)
+        self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
 
     async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
-        """Bump speed down by one hardware level (single minus, no recalibration)."""
+        """Bump speed down by N hardware levels (no recalibration)."""
+        steps = self._steps_from_percentage(percentage_step)
         minus = await self._codes.async_load_command(COMMAND_MINUS)
-        await self._async_send(minus)
-        self._level = max(0, self._level - 1)
+        for _ in range(steps):
+            await self._async_send(minus)
+        self._level = max(0, self._level - steps)
         self.async_write_ha_state()
+
+    @staticmethod
+    def _steps_from_percentage(percentage_step: int | None) -> int:
+        """Convert a percentage step into a number of hardware level presses."""
+        if percentage_step is None:
+            return 1
+        return max(1, math.ceil(percentage_step * SPEED_COUNT / 100))
 
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
