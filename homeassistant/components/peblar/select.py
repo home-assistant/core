@@ -6,19 +6,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
+from peblar import LedBrightness, Peblar, PeblarUserConfiguration, SmartChargingMode, SoundVolume
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    HOME_ASSISTANT_TO_LED_BRIGHTNESS,
-    HOME_ASSISTANT_TO_SOUND_VOLUME,
-    PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT,
-    PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT,
-)
 from .coordinator import (
     PeblarConfigEntry,
     PeblarRuntimeData,
@@ -59,10 +53,10 @@ DESCRIPTIONS = [
         translation_key="buzzer_volume",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_buzzer,
-        options=list(PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.values()),
-        current_fn=lambda x: PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.get(x.buzzer_volume),
+        options=[v.name.lower() for v in SoundVolume],
+        current_fn=lambda x: x.buzzer_volume.name.lower() if x.buzzer_volume else None,
         select_fn=lambda x, option: x.set_buzzer_volume(
-            volume=HOME_ASSISTANT_TO_SOUND_VOLUME[option]
+            volume=SoundVolume[option.upper()]
         ),
     ),
     PeblarSelectEntityDescription(
@@ -70,14 +64,12 @@ DESCRIPTIONS = [
         translation_key="led_brightness",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_led,
-        options=list(PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.values()),
+        options=[v.name.lower() for v in LedBrightness],
         current_fn=lambda x: (
-            PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.get(x.led_brightness)
-            if x.led_brightness is not None
-            else None
+            x.led_brightness.name.lower() if x.led_brightness is not None else None
         ),
         select_fn=lambda x, option: x.set_led_brightness(
-            brightness=HOME_ASSISTANT_TO_LED_BRIGHTNESS[option]
+            brightness=LedBrightness[option.upper()]
         ),
     ),
 ]

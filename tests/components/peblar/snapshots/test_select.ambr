@@ -9,6 +9,7 @@
       'options': list([
         'off',
         'low',
+        'low_medium',
         'medium',
         'high',
       ]),
@@ -50,6 +51,7 @@
       'options': list([
         'off',
         'low',
+        'low_medium',
         'medium',
         'high',
       ]),

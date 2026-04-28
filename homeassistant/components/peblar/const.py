@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from peblar import ChargeLimiter, CPState, LedBrightness, SoundVolume
+from peblar import ChargeLimiter, CPState
 
 DOMAIN: Final = "peblar"
 
@@ -41,25 +41,3 @@ PEBLAR_CP_STATE_TO_HOME_ASSISTANT = {
     CPState.NO_EV_CONNECTED: "no_ev_connected",
 }
 
-PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT = {
-    LedBrightness.AUTOMATIC: "automatic",
-    LedBrightness.OFF: "off",
-    LedBrightness.DIM: "dim",
-    LedBrightness.MEDIUM: "medium",
-    LedBrightness.BRIGHT: "bright",
-}
-
-HOME_ASSISTANT_TO_LED_BRIGHTNESS: dict[str, LedBrightness] = {
-    v: k for k, v in PEBLAR_LED_BRIGHTNESS_TO_HOME_ASSISTANT.items()
-}
-
-PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT = {
-    SoundVolume.OFF: "off",
-    SoundVolume.LOW: "low",
-    SoundVolume.MEDIUM: "medium",
-    SoundVolume.HIGH: "high",
-}
-
-HOME_ASSISTANT_TO_SOUND_VOLUME: dict[str, SoundVolume] = {
-    v: k for k, v in PEBLAR_SOUND_VOLUME_TO_HOME_ASSISTANT.items()
-}
