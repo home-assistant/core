@@ -6,7 +6,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from peblar import LedBrightness, Peblar, PeblarUserConfiguration, SmartChargingMode, SoundVolume
+from peblar import (
+    LedBrightness,
+    Peblar,
+    PeblarUserConfiguration,
+    SmartChargingMode,
+    SoundVolume,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory

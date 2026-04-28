@@ -40,4 +40,3 @@ PEBLAR_CP_STATE_TO_HOME_ASSISTANT = {
     CPState.INVALID: "invalid",
     CPState.NO_EV_CONNECTED: "no_ev_connected",
 }
-
