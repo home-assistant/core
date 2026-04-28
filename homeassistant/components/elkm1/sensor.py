@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import time as time_sys
 from typing import Any
 
 from elkm1_lib.const import SettingFormat, ZoneType
@@ -23,6 +24,7 @@ from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
@@ -32,6 +34,7 @@ from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
+SERVICE_SENSOR_SETTING_SET = "sensor_setting_set"
 SERVICE_SENSOR_ZONE_UPDATE_VOLTAGE = "sensor_zone_update_voltage"
 SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
@@ -49,6 +52,12 @@ _STATE_CLASS_MAP: dict[ZoneType, SensorStateClass] = {
 
 ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
+}
+
+ELK_SET_SETTING_SERVICE_SCHEMA: VolDictType = {
+    vol.Required("value"): vol.Any(
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)), cv.time
+    )
 }
 
 
@@ -79,6 +88,11 @@ async def async_setup_entry(
         SERVICE_SENSOR_COUNTER_SET,
         ELK_SET_COUNTER_SERVICE_SCHEMA,
         "async_counter_set",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SENSOR_SETTING_SET,
+        ELK_SET_SETTING_SERVICE_SCHEMA,
+        "async_setting_set",
     )
     platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_UPDATE_VOLTAGE,
@@ -214,6 +228,16 @@ class ElkSetting(ElkSensor):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
+
+    async def async_setting_set(self, value: int | time_sys | None = None) -> None:
+        """Set the value of a counter on the panel."""
+        if not isinstance(self, ElkSetting):
+            raise HomeAssistantError("supported only on ElkM1 Setting sensors")
+        if value is not None:
+            if isinstance(value, int):
+                self._element.set(value)
+            else:
+                self._element.set((value.hour, value.minute))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
