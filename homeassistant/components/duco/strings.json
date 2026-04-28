@@ -87,6 +87,9 @@
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Duco instance: {error}"
     },
+    "connection_error": {
+      "message": "Could not connect to the Duco device."
+    },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state: {error}"
     },
