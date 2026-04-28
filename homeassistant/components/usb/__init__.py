@@ -562,7 +562,9 @@ async def websocket_usb_list_serial_ports(
 
         if isinstance(port, USBDevice):
             matchers = async_get_usb_matchers_for_device(hass, port)
-            entry["matching_integrations"] = [matcher["domain"] for matcher in matchers]
+            entry["matching_integrations"] = list(
+                dict.fromkeys(matcher["domain"] for matcher in matchers)
+            )
         else:
             entry["matching_integrations"] = []
 
