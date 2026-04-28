@@ -471,6 +471,7 @@ async def test_simple_option_flow(
                 CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
             },
         )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
