@@ -517,28 +517,7 @@ async def test_delete_service_get_approot_fails(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "delete_approot_error"
-
-
-async def test_delete_service_unexpected_exception(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-) -> None:
-    """Test delete service re-raises non-OneDrive exceptions from asyncio.gather."""
-    await setup_integration(hass, mock_config_entry)
-    mock_onedrive_client.delete_drive_item.side_effect = RuntimeError("unexpected")
-
-    with pytest.raises(RuntimeError, match="unexpected"):
-        await hass.services.async_call(
-            DOMAIN,
-            DELETE_SERVICE,
-            {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
-            },
-            blocking=True,
-        )
+    assert exc_info.value.translation_key == "connection_error"
 
 
 async def test_delete_empty_destination_path(

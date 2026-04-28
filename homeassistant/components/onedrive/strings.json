@@ -90,11 +90,11 @@
     "authentication_failed": {
       "message": "Authentication failed"
     },
+    "connection_error": {
+      "message": "Failed to connect to OneDrive"
+    },
     "create_folder_error": {
       "message": "Failed to create folder: {message}"
-    },
-    "delete_approot_error": {
-      "message": "Failed to connect to OneDrive to delete files"
     },
     "delete_error": {
       "message": "Failed to delete the following files from OneDrive: {paths}"

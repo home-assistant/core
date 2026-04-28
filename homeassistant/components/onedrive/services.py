@@ -169,7 +169,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         except OneDriveException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="delete_approot_error",
+                translation_key="connection_error",
             ) from err
 
         results = await asyncio.gather(
