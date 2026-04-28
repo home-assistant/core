@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from deebot_client import const
 from deebot_client.command import DeviceCommandResult
@@ -112,10 +112,21 @@ def mock_mqtt_client(mock_authenticator: Mock) -> Generator[Mock]:
             "homeassistant.components.ecovacs.config_flow.MqttClient",
             new=mock,
         ),
+        patch(
+            "homeassistant.components.ecovacs.controller.KvsMqttListener",
+            autospec=True,
+        ) as mock_kvs,
     ):
         client = mock.return_value
         client._authenticator = mock_authenticator
         client.subscribe.return_value = lambda: None
+
+        kvs_instance = mock_kvs.return_value
+        kvs_instance.start = AsyncMock()
+        kvs_instance.stop = AsyncMock()
+        kvs_instance.send_p2p_data_resp = AsyncMock()
+        mock_kvs.return_value = kvs_instance
+
         yield client
 
 
@@ -200,3 +211,48 @@ async def init_integration(
 def controller(init_integration: MockConfigEntry) -> EcovacsController:
     """Get the controller for the config entry."""
     return init_integration.runtime_data
+
+
+@pytest.fixture
+def mock_kvs_stream_session():
+    """Mock KvsStreamSession so no real WebRTC occurs in camera tests."""
+    with patch(
+        "homeassistant.components.ecovacs.camera.KvsStreamSession",
+        autospec=True,
+    ) as mock_cls:
+        instance = MagicMock()
+        instance.latest_jpeg = b"\xff\xd8\xff" + b"\x00" * 100  # minimal JPEG header
+        instance.is_done.return_value = False
+        instance.start = AsyncMock()
+        instance.stop = AsyncMock()
+        mock_cls.return_value = instance
+        yield mock_cls, instance
+
+
+@pytest.fixture
+def mock_kvs_api():
+    """Mock KVS HTTP API calls (verify_video_pwd, start_watch_v2)."""
+    with (
+        patch(
+            "homeassistant.components.ecovacs.camera.verify_video_pwd",
+            new_callable=AsyncMock,
+            return_value={"ret": "ok"},
+        ) as mock_verify,
+        patch(
+            "homeassistant.components.ecovacs.camera.start_watch_v2",
+            new_callable=AsyncMock,
+            return_value={
+                "ret": "ok",
+                "credentials": {
+                    "AccessKeyId": "AKID",
+                    "SecretAccessKey": "SECRET",
+                    "SessionToken": "TOKEN",
+                },
+                "region": "eu-central-1",
+                "channel": "test-channel",
+                "client_id": "viewer-abc",
+                "session": "sess-123",
+            },
+        ) as mock_start,
+    ):
+        yield mock_verify, mock_start

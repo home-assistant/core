@@ -58,6 +58,11 @@
         "default": "mdi:delete-restore"
       }
     },
+    "camera": {
+      "camera": {
+        "default": "mdi:cctv"
+      }
+    },
     "event": {
       "last_job": {
         "default": "mdi:history"
@@ -168,6 +173,9 @@
       },
       "border_switch": {
         "default": "mdi:land-fields"
+      },
+      "camera_stream_switch": {
+        "default": "mdi:video-switch"
       },
       "carpet_auto_fan_boost": {
         "default": "mdi:fan-auto"

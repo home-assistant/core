@@ -174,7 +174,12 @@ async def test_switch_entities(
     device = controller.devices[0]
     event_bus = device.events
 
-    assert hass.states.async_entity_ids() == [test.entity_id for test in tests]
+    # Camera stream switches are also enabled by entity_registry_enabled_by_default but
+    # are not capability-based; exclude them from the capability-switch assertion.
+    capability_entity_ids = [
+        e for e in hass.states.async_entity_ids() if "camera_stream" not in e
+    ]
+    assert capability_entity_ids == [test.entity_id for test in tests]
     for test_case in tests:
         entity_id = test_case.entity_id
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
@@ -222,6 +227,7 @@ async def test_switch_entities(
                 "switch.ozmo_950_advanced_mode",
                 "switch.ozmo_950_continuous_cleaning",
                 "switch.ozmo_950_carpet_auto_boost_suction",
+                "switch.ozmo_950_camera_stream",
             ],
         ),
         (
@@ -234,12 +240,14 @@ async def test_switch_entities(
                 "switch.goat_g1_move_up_warning",
                 "switch.goat_g1_cross_map_border_warning",
                 "switch.goat_g1_safe_protect",
+                "switch.goat_g1_camera_stream",
             ],
         ),
         (
             "55uoqe",
             [
                 "switch.dbmini_border_spin",
+                "switch.dbmini_camera_stream",
             ],
         ),
     ],
@@ -257,3 +265,104 @@ async def test_disabled_by_default_switch_entities(
         )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+# ── CameraStreamSwitch functional tests ──────────────────────────────────────
+
+
+class TestCameraStreamSwitch:
+    """Functional tests for CameraStreamSwitch — requires both SWITCH and CAMERA platforms."""
+
+    @pytest.fixture
+    def platforms(self) -> list[Platform]:
+        """Override platforms to load both switch and camera."""
+        return [Platform.SWITCH, Platform.CAMERA]
+
+    @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+    @pytest.mark.parametrize("device_fixture", ["yna5x1"])
+    async def test_turn_on_starts_stream(
+        self,
+        hass: HomeAssistant,
+        mock_kvs_stream_session,
+        mock_kvs_api,
+    ) -> None:
+        """Turning the switch ON delegates to camera entity and starts the stream."""
+        _, session_instance = mock_kvs_stream_session
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.ozmo_950_camera_stream"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.ozmo_950_camera_stream")
+        assert state is not None
+        assert state.state == STATE_ON
+        session_instance.start.assert_called_once()
+
+    @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+    @pytest.mark.parametrize("device_fixture", ["yna5x1"])
+    async def test_turn_off_stops_stream(
+        self,
+        hass: HomeAssistant,
+        mock_kvs_stream_session,
+        mock_kvs_api,
+    ) -> None:
+        """Turning the switch OFF stops the stream."""
+        _, session_instance = mock_kvs_stream_session
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.ozmo_950_camera_stream"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.ozmo_950_camera_stream"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.ozmo_950_camera_stream")
+        assert state is not None
+        assert state.state == STATE_OFF
+        session_instance.stop.assert_called_once()
+
+    @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+    @pytest.mark.parametrize("device_fixture", ["yna5x1"])
+    async def test_syncs_with_camera_service(
+        self,
+        hass: HomeAssistant,
+        mock_kvs_stream_session,
+        mock_kvs_api,
+    ) -> None:
+        """Switch state mirrors camera state when stream started via camera service."""
+        await hass.services.async_call(
+            "camera",
+            "turn_on",
+            {ATTR_ENTITY_ID: "camera.ozmo_950_camera"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.ozmo_950_camera_stream")
+        assert state is not None
+        assert state.state == STATE_ON
+
+        await hass.services.async_call(
+            "camera",
+            "turn_off",
+            {ATTR_ENTITY_ID: "camera.ozmo_950_camera"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.ozmo_950_camera_stream")
+        assert state is not None
+        assert state.state == STATE_OFF
