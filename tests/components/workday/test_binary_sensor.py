@@ -35,6 +35,7 @@ from . import (
     TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE,
     TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN,
     TEST_CONFIG_NO_COUNTRY,
+    TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
     TEST_CONFIG_NO_LANGUAGE_CONFIGURED,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
@@ -68,6 +69,7 @@ from tests.common import async_fire_time_changed
         (TEST_CONFIG_DAY_AFTER_TOMORROW, "off", "off"),
         (TEST_CONFIG_YESTERDAY, "on", "off"),  # Friday was good Friday
         (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off", "off"),
+        (TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY, "off", "off"),
     ],
 )
 async def test_setup(
