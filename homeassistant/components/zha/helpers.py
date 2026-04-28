@@ -121,10 +121,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
-from homeassistant.helpers.entity_platform import (
-    DATA_DOMAIN_ENTITIES,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.logging import HomeAssistantQueueHandler
 
@@ -211,6 +208,7 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY, DEBUG_LIB_ZHA]
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
+SIGNAL_REMOVE_ENTITY = "zha_remove_entity"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
 ENTITIES = "entities"
@@ -519,28 +517,24 @@ class ZHADeviceProxy(EventBase):
         self, event: DeviceEntityRemovedEvent
     ) -> None:
         """Handle an entity being removed from a device at runtime."""
+        if not event.remove:
+            # Soft removal: signal the entity to unload itself; the registry
+            # entry is kept so the user can manually delete it.
+            async_dispatcher_send(
+                self.gateway_proxy.hass,
+                f"{SIGNAL_REMOVE_ENTITY}_{event.unique_id}",
+            )
+            return
+
+        # Hard removal: deleting the registry entry triggers the entity's
+        # registry-update listener which removes the state. Done here (not in
+        # the entity) so it works even when no live entity is loaded.
         entity_registry = er.async_get(self.gateway_proxy.hass)
         domain = Platform(event.platform)
-        entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, event.unique_id)
-        if entity_id is None:
-            return
-
-        if event.remove:
-            # Fully remove the entity: deleting the registry entry triggers
-            # the entity's registry-update listener which removes the state.
+        if entity_id := entity_registry.async_get_entity_id(
+            domain, DOMAIN, event.unique_id
+        ):
             entity_registry.async_remove(entity_id)
-            return
-
-        # Otherwise, only unload the live entity so it shows as unavailable;
-        # the registry entry is kept so the user can manually delete it.
-        domain_entities = self.gateway_proxy.hass.data.get(
-            DATA_DOMAIN_ENTITIES, {}
-        ).get(domain, {})
-        if (entity := domain_entities.get(entity_id)) is not None:
-            self.gateway_proxy.hass.async_create_task(
-                entity.async_remove(),
-                f"ZHA remove entity {entity_id}",
-            )
 
 
 class EntityReference(NamedTuple):

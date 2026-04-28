@@ -27,7 +27,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
-from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
+from .helpers import (
+    SIGNAL_REMOVE_ENTITIES,
+    SIGNAL_REMOVE_ENTITY,
+    EntityData,
+    convert_zha_error_to_ha_error,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +166,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 self.hass,
                 remove_signal,
                 partial(self.async_remove, force_remove=True),
+            )
+        )
+        self._unsubs.append(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_REMOVE_ENTITY}_{self.unique_id}",
+                self.async_remove,
             )
         )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
