@@ -20,7 +20,7 @@
           "password": "[%key:component::iaqualink::config::step::user::data_description::password%]",
           "username": "[%key:component::iaqualink::config::step::user::data_description::username%]"
         },
-        "description": "Please enter the username and password for your iAquaLink account.",
+        "description": "[%key:component::iaqualink::config::step::user::description%]",
         "title": "Reauthenticate iAquaLink"
       },
       "reconfigure": {
@@ -32,7 +32,7 @@
           "password": "[%key:component::iaqualink::config::step::user::data_description::password%]",
           "username": "[%key:component::iaqualink::config::step::user::data_description::username%]"
         },
-        "description": "Please enter the username and password for your iAquaLink account.",
+        "description": "[%key:component::iaqualink::config::step::user::description%]",
         "title": "Reconnect iAquaLink"
       },
       "user": {
