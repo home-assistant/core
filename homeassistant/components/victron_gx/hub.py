@@ -89,11 +89,15 @@ class Hub:
             await self._hub.connect()
         except AuthenticationError as auth_error:
             raise ConfigEntryAuthFailed(
-                f"Authentication failed for {self.host}: {auth_error}"
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={"host": self.host},
             ) from auth_error
         except CannotConnectError as connect_error:
             raise ConfigEntryNotReady(
-                f"Cannot connect to the hub at {self.host}: {connect_error}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.host},
             ) from connect_error
 
     async def stop(self) -> None:
