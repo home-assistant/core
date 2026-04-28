@@ -73,7 +73,7 @@ async def test_meter_connected_off_state(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    # Verify updated state (unavailable)
+    # Verify updated state (off)
     assert (state := hass.states.get(ENTITY_ID_GEN2)) is not None
     assert state.state == STATE_OFF
 
