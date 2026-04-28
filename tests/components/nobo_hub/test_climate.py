@@ -26,7 +26,7 @@ from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
     OVERRIDE_TYPE_NOW,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -184,6 +184,17 @@ async def test_set_preset_with_override_type_now(
         nobo.API.OVERRIDE_TARGET_ZONE,
         "1",
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_removed_marks_unavailable(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+) -> None:
+    """A zone removed via the Nobø app must not crash and goes unavailable."""
+    mock_nobo_hub.zones.pop("1")
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert hass.states.get(CLIMATE_ENTITY).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
