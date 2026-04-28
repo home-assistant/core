@@ -104,9 +104,14 @@ async def async_setup_entry(
             translation_key="device_disconnected",
         )
 
-    if ApplicationType(
-        entry.data[FIRMWARE]
-    ) is ApplicationType.CPC or await multi_pan_addon_using_device(hass, device_path):
+    uses_multi_pan = ApplicationType(entry.data[FIRMWARE]) is ApplicationType.CPC
+    if not uses_multi_pan:
+        try:
+            uses_multi_pan = await multi_pan_addon_using_device(hass, device_path)
+        except HomeAssistantError as err:
+            raise ConfigEntryNotReady from err
+
+    if uses_multi_pan:
         async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
     else:
         async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)

@@ -78,7 +78,10 @@ async def async_setup_entry(
     firmware = ApplicationType(entry.data[FIRMWARE])
 
     # Auto start the multiprotocol addon if it is in use
-    multipan_using_device = await multi_pan_addon_using_device(hass, RADIO_DEVICE)
+    try:
+        multipan_using_device = await multi_pan_addon_using_device(hass, RADIO_DEVICE)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
     if firmware is ApplicationType.CPC:
         try:
             await check_multi_pan_addon(hass)
