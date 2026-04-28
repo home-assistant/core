@@ -12,8 +12,8 @@ from nacl.secret import SecretBox
 import pytest
 
 from homeassistant.components import owntracks
-from homeassistant.components.owntracks.const import ATTR_UPDATE_TIMESTAMP
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.owntracks.const import ATTR_UPDATE_TIMESTAMP
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
