@@ -34,7 +34,7 @@
             "data": {
               "disable_multi_pan": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::data::disable_multi_pan%]"
             },
-            "description": "Multiprotocol support for the IEEE 802.15.4 radio in your {hardware_name} has been deprecated. Migrate the radio back to Zigbee-only firmware to keep it working in the future.\n\nDisabling multiprotocol support will disable Thread support provided by the {hardware_name}. Your Thread devices will continue working only if you have another Thread border router nearby.\n\nIt will take a few minutes to install the Zigbee firmware and restoring a backup.",
+            "description": "Multiprotocol support for the IEEE 802.15.4 radio in your {hardware_name} has been deprecated. Migrate the radio back to Zigbee-only firmware to keep it working in the future.\n\nDisabling multiprotocol support will disable Thread support provided by the {hardware_name}. Your Thread devices will continue working only if you have another Thread border router nearby.\n\nIt will take a few minutes to install the Zigbee firmware and restore a backup.",
             "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
           }
         }
