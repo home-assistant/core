@@ -2426,7 +2426,7 @@ reolink-aio==0.19.1
 
 # homeassistant.components.honeywell_string_lights
 # homeassistant.components.radio_frequency
-rf-protocols==2.1.0
+rf-protocols==2.2.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
