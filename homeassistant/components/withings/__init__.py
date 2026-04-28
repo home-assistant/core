@@ -113,7 +113,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         hass.config_entries.async_update_entry(
             entry, data=new_data, unique_id=unique_id
         )
-
     session = async_get_clientsession(hass)
     client = WithingsClient(session=session)
     try:
