@@ -17,11 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-from tests.components.radio_frequency.conftest import (
+from tests.components.radio_frequency.common import (
     MockRadioFrequencyCommand,
     MockRadioFrequencyEntity,
-    init_integration,  # noqa: F401
-    mock_rf_entity,  # noqa: F401
 )
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
@@ -50,7 +48,7 @@ def mock_get_codes() -> Iterator[MagicMock]:
 @pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant,
-    mock_rf_entity: MockRadioFrequencyEntity,  # noqa: F811
+    mock_rf_entity: MockRadioFrequencyEntity,
 ) -> MockConfigEntry:
     """Return a mock config entry for Novy Cooker Hood."""
     entity_registry = er.async_get(hass)
@@ -58,7 +56,7 @@ def mock_config_entry(
     assert entity_entry is not None
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Novy Cooker Hood (code 1)",
+        title="Novy Cooker Hood",
         data={CONF_TRANSMITTER: entity_entry.id, CONF_CODE: 1},
         unique_id=f"{entity_entry.id}_1",
     )

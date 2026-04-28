@@ -5,10 +5,14 @@
       "no_compatible_transmitters": "No radio frequency transmitter supports 433.92 MHz OOK transmissions. Please add a compatible transmitter first.",
       "no_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first."
     },
-    "error": {
-      "transmit_failed": "Failed to send the test command. Check the transmitter and try again."
-    },
     "step": {
+      "test_failed": {
+        "description": "Could not send the test command for code {code}. Check that your radio frequency transmitter is online, then press Retry.",
+        "menu_options": {
+          "retry": "Retry"
+        },
+        "title": "Test failed"
+      },
       "test_light": {
         "description": "Toggled the hood light on and off using code {code}. Did you see it react? Press Finish to save, or Retry to pick a different code.",
         "menu_options": {

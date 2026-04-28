@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_CODE, CONF_TRANSMITTER, DOMAIN
+from .const import CONF_TRANSMITTER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,13 +24,12 @@ class NovyCookerHoodEntity(Entity):
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the entity."""
-        code = entry.data[CONF_CODE]
         self._transmitter = entry.data[CONF_TRANSMITTER]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_code_{code}")},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Novy",
             model="Cooker Hood",
-            name="Novy Cooker Hood",
+            name=entry.title,
         )
 
     async def async_added_to_hass(self) -> None:

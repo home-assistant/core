@@ -23,7 +23,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import TRANSMITTER_ENTITY_ID
 
 from tests.common import MockConfigEntry
-from tests.components.radio_frequency.conftest import MockRadioFrequencyEntity
+from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 @pytest.fixture(autouse=True)
@@ -75,7 +75,7 @@ async def test_user_flow_test_then_finish(
 
     entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Novy Cooker Hood (code 3)"
+    assert result["title"] == "Novy Cooker Hood"
     assert result["data"] == {
         CONF_TRANSMITTER: entity_entry.id,
         CONF_CODE: 3,
@@ -124,16 +124,15 @@ async def test_user_flow_test_transmit_failure(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
-    """A transmit failure surfaces as a `transmit_failed` form error."""
+    """A transmit failure surfaces as a `test_failed` menu with a Retry option."""
     with patch(
         "homeassistant.components.novy_cooker_hood.config_flow.async_send_command",
         side_effect=HomeAssistantError("nope"),
     ):
         result = await _start_user_flow(hass)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "test_light"
-    assert result["errors"] == {"base": "transmit_failed"}
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "test_failed"
 
 
 async def test_unique_id_already_configured(

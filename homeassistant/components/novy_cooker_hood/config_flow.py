@@ -90,15 +90,24 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
             await asyncio.sleep(_TOGGLE_GAP)
             await async_send_command(self.hass, self._transmitter_entity_id, command)
         except HomeAssistantError:
-            return self.async_show_form(
-                step_id="test_light",
-                data_schema=vol.Schema({}),
+            return self.async_show_menu(
+                step_id="test_failed",
+                menu_options=["retry"],
                 description_placeholders={"code": str(self._code)},
-                errors={"base": "transmit_failed"},
             )
         return self.async_show_menu(
             step_id="test_light",
             menu_options=["finish", "retry"],
+            description_placeholders={"code": str(self._code)},
+        )
+
+    async def async_step_test_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-show the failure menu (only Retry available)."""
+        return self.async_show_menu(
+            step_id="test_failed",
+            menu_options=["retry"],
             description_placeholders={"code": str(self._code)},
         )
 
@@ -114,7 +123,7 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the config entry."""
         assert self._transmitter_id is not None
         return self.async_create_entry(
-            title=f"Novy Cooker Hood (code {self._code})",
+            title="Novy Cooker Hood",
             data={
                 CONF_TRANSMITTER: self._transmitter_id,
                 CONF_CODE: self._code,
