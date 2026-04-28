@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import nullcontext
-import json
 from unittest.mock import MagicMock, patch
 
 from peblar import (
@@ -46,8 +45,9 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_peblar() -> Generator[MagicMock]:
+def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Peblar client."""
+    system_info_fixture = getattr(request, "param", "system_information.json")
     with (
         patch("homeassistant.components.peblar.Peblar", autospec=True) as peblar_mock,
         patch("homeassistant.components.peblar.config_flow.Peblar", new=peblar_mock),
@@ -63,7 +63,7 @@ def mock_peblar() -> Generator[MagicMock]:
             load_fixture("user_configuration.json", DOMAIN)
         )
         peblar.system_information.return_value = PeblarSystemInformation.from_json(
-            load_fixture("system_information.json", DOMAIN)
+            load_fixture(system_info_fixture, DOMAIN)
         )
 
         api = peblar.rest_api.return_value
@@ -78,76 +78,6 @@ def mock_peblar() -> Generator[MagicMock]:
         )
 
         yield peblar
-
-
-@pytest.fixture
-def mock_peblar_without_buzzer(mock_peblar: MagicMock) -> MagicMock:
-    """Return a mocked Peblar client with buzzer hardware disabled."""
-    mock_peblar.system_information.return_value = PeblarSystemInformation.from_json(
-        json.dumps(
-            {
-                **json.loads(load_fixture("system_information.json", DOMAIN)),
-                "HwHasBuzzer": False,
-            }
-        )
-    )
-    return mock_peblar
-
-
-@pytest.fixture
-def mock_peblar_without_led(mock_peblar: MagicMock) -> MagicMock:
-    """Return a mocked Peblar client with LED hardware disabled."""
-    mock_peblar.system_information.return_value = PeblarSystemInformation.from_json(
-        json.dumps(
-            {
-                **json.loads(load_fixture("system_information.json", DOMAIN)),
-                "HwHasLed": False,
-            }
-        )
-    )
-    return mock_peblar
-
-
-@pytest.fixture
-async def init_integration_without_buzzer(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_peblar_without_buzzer: MagicMock,
-    request: pytest.FixtureRequest,
-) -> MockConfigEntry:
-    """Set up the Peblar integration with buzzer hardware disabled for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    context = nullcontext()
-    if platform := getattr(request, "param", None):
-        context = patch("homeassistant.components.peblar.PLATFORMS", [platform])
-
-    with context:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
-
-
-@pytest.fixture
-async def init_integration_without_led(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_peblar_without_led: MagicMock,
-    request: pytest.FixtureRequest,
-) -> MockConfigEntry:
-    """Set up the Peblar integration with LED hardware disabled for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    context = nullcontext()
-    if platform := getattr(request, "param", None):
-        context = patch("homeassistant.components.peblar.PLATFORMS", [platform])
-
-    with context:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
 
 
 @pytest.fixture
