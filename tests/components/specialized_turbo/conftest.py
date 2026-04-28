@@ -95,7 +95,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_ble_connection() -> Generator[MagicMock]:
+def mock_ble_connection() -> Generator[AsyncMock]:
     """Mock BLE connection for config flow tests."""
     mock_client = MagicMock()
     mock_client.disconnect = AsyncMock()
