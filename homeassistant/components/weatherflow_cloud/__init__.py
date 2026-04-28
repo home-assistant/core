@@ -10,6 +10,7 @@ from weatherflow4py.ws import WeatherFlowWebsocketAPI
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import client_context
 
 from .const import LOGGER
 from .coordinator import (
@@ -69,7 +70,13 @@ async def async_setup_entry(
         stations=stations,
     )
 
-    # Run setup method
+    # Connect the websocket once before setting up coordinators.
+    # Both coordinators share this single instance; calling connect() inside
+    # each coordinator's async_setup() would open two listen tasks on the same
+    # socket, causing ConnectionClosedOK errors (issue #164441).
+    await websocket_api.connect(client_context())
+
+    # Register callbacks and subscribe each coordinator to its device messages
     await asyncio.gather(
         websocket_wind_coordinator.async_setup(),
         websocket_observation_coordinator.async_setup(),
