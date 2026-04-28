@@ -18,6 +18,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 from .coordinator import PeblarConfigEntry
@@ -62,16 +63,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def _handle_list_rfid_tokens(call: ServiceCall) -> ServiceResponse:
         peblar = _get_peblar(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         tokens = await peblar.rfid_tokens()
-        return LIST_RESPONSE_SCHEMA(
-            {
-                "tokens": [
-                    {
-                        "uid": t.rfid_token_uid,
-                        CONF_DESCRIPTION: t.rfid_token_description,
-                    }
-                    for t in tokens
-                ]
-            }
+        return cast(
+            dict[str, JsonValueType],
+            LIST_RESPONSE_SCHEMA(
+                {
+                    "tokens": [
+                        {
+                            "uid": t.rfid_token_uid,
+                            CONF_DESCRIPTION: t.rfid_token_description,
+                        }
+                        for t in tokens
+                    ]
+                }
+            ),
         )
 
     async def _handle_add_rfid_token(call: ServiceCall) -> None:
