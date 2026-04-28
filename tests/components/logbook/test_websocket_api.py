@@ -3634,3 +3634,84 @@ async def test_logbook_stream_live_parent_service_call_only(
     assert len(heater_entries) == 1
     assert heater_entries[0]["state"] == "on"
     assert heater_entries[0]["context_user_id"] == user_id
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_image_entity_filtered_from_subscription(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that image entities are filtered from logbook entity subscriptions.
+
+    Image entities use timestamps as state values and should be treated
+    as continuous domains to filter out redundant state change events.
+    This verifies the fix for https://github.com/home-assistant/core/issues/161039
+    where Roborock map image entities spammed Activity with frequent state changes.
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+    await hass.async_block_till_done()
+
+    # Set up image entity and other entities for comparison
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("image.roborock_map", "2026-01-01T00:00:00+00:00")
+    hass.states.async_set("sensor.temperature", "20.0")
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    now = dt_util.utcnow()
+    websocket_client = await hass_ws_client()
+    end_time = now + timedelta(hours=3)
+
+    # Subscribe to logbook events for these entities
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "entity_ids": ["light.kitchen", "image.roborock_map", "sensor.temperature"],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Drain historical backfill
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["event"]["partial"] is True
+
+    # Update image entity state (should be filtered as continuous)
+    hass.states.async_set(
+        "image.roborock_map", "2026-01-01T00:00:15+00:00"
+    )
+    await hass.async_block_till_done()
+
+    # Update light entity state (should NOT be filtered)
+    hass.states.async_set("light.kitchen", "off")
+    await hass.async_block_till_done()
+
+    # Receive events
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+
+    events = msg["event"]["events"]
+    # Image entity should be filtered out (continuous domain)
+    image_events = [e for e in events if e.get("entity_id") == "image.roborock_map"]
+    assert len(image_events) == 0, "Image entity state changes should be filtered"
+
+    # Light entity should appear (not a continuous domain)
+    light_events = [e for e in events if e.get("entity_id") == "light.kitchen"]
+    assert len(light_events) > 0, "Light entity state changes should appear"
+
+
+def test_image_in_always_continuous_domains() -> None:
+    """Test that image domain is in ALWAYS_CONTINUOUS_DOMAINS."""
+    from homeassistant.components.logbook.const import ALWAYS_CONTINUOUS_DOMAINS
+    assert "image" in ALWAYS_CONTINUOUS_DOMAINS
