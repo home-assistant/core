@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(autouse=True)
 async def ensure_homeassistant_loaded(hass: HomeAssistant) -> None:
-    """Override async_setup_entry."""
+    """Ensure homeassistant component is loaded."""
     assert await async_setup_component(hass, "homeassistant", {})
 
 
