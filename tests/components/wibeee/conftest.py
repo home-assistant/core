@@ -114,87 +114,71 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
-def mock_wibeee_api_global() -> Generator[MagicMock]:
-    """Globally mock WibeeeAPI to prevent socket errors."""
-    with (
-        patch("homeassistant.components.wibeee.config_flow.WibeeeAPI", autospec=True),
-        patch("homeassistant.components.wibeee.WibeeeAPI", autospec=True),
-    ):
-        yield
+def _setup_mock_api(api: MagicMock) -> None:
+    """Configure common mock API behavior."""
+    api.async_check_connection = AsyncMock(return_value=True)
+    api.async_fetch_device_info = AsyncMock(
+        return_value=MagicMock(
+            wibeee_id=MOCK_WIBEEE_ID,
+            mac_addr=MOCK_MAC,
+            mac_addr_formatted=MOCK_MAC.upper(),
+            mac_addr_short="2233",
+            model=MOCK_MODEL,
+            firmware_version=MOCK_FIRMWARE,
+            ip_addr=MOCK_HOST,
+        )
+    )
+    api.async_fetch_sensors_data = AsyncMock(
+        return_value={
+            "fase1": {
+                "vrms": "230.5",
+                "p_activa": "277",
+            },
+            "fase4": {
+                "vrms": "230.5",
+                "p_activa": "277",
+            },
+        }
+    )
+    api.async_configure_push_server = AsyncMock(return_value=True)
+    api.async_get_push_server_config = AsyncMock(return_value={"mac": MOCK_MAC})
+    api.async_fetch_device_diagnostics = AsyncMock(return_value={"host": MOCK_HOST})
+    api.async_fetch_status = AsyncMock(
+        return_value={
+            "fase1_vrms": "230.50",
+            "fase1_irms": "2.30",
+            "fase1_p_activa": "277.00",
+            "fase1_energia_activa": "12345",
+            "model": MOCK_MODEL,
+            "webversion": MOCK_FIRMWARE,
+        }
+    )
+    api.host = MOCK_HOST
 
 
 @pytest.fixture
 def mock_wibeee_api() -> Generator[MagicMock]:
-    """Mock the WibeeeAPI class."""
+    """Mock the WibeeeAPI class in __init__."""
     with patch(
         "homeassistant.components.wibeee.WibeeeAPI",
         autospec=True,
     ) as mock_cls:
         api = MagicMock()
-        api.async_check_connection = AsyncMock(return_value=True)
-        api.async_fetch_device_info = AsyncMock(
-            return_value=MagicMock(
-                wibeee_id=MOCK_WIBEEE_ID,
-                mac_addr=MOCK_MAC,
-                mac_addr_formatted=MOCK_MAC.upper(),
-                mac_addr_short="2233",
-                model=MOCK_MODEL,
-                firmware_version=MOCK_FIRMWARE,
-                ip_addr=MOCK_HOST,
-            )
-        )
-        api.async_fetch_sensors_data = AsyncMock(
-            return_value={
-                "fase1": {
-                    "vrms": "230.5",
-                    "p_activa": "277",
-                },
-                "fase4": {
-                    "vrms": "230.5",
-                    "p_activa": "277",
-                },
-            }
-        )
-        api.async_configure_push_server = AsyncMock(return_value=True)
-        api.async_fetch_status = AsyncMock(
-            return_value={
-                "fase1_vrms": "230.50",
-                "fase1_irms": "2.30",
-                "fase1_p_activa": "277.00",
-                "fase1_energia_activa": "12345",
-                "model": MOCK_MODEL,
-                "webversion": MOCK_FIRMWARE,
-            }
-        )
-        api.host = MOCK_HOST
-
+        _setup_mock_api(api)
         mock_cls.return_value = api
         yield api
 
 
 @pytest.fixture
 def mock_wibeee_api_config_flow() -> Generator[MagicMock]:
-    """Mock the WibeeeAPI class for config flow tests."""
-    with patch(
-        "homeassistant.components.wibeee.config_flow.WibeeeAPI",
-        autospec=True,
-    ) as mock_cls:
-        api = MagicMock()
-        api.async_check_connection = AsyncMock(return_value=True)
-        api.async_fetch_device_info = AsyncMock(
-            return_value=MagicMock(
-                wibeee_id=MOCK_WIBEEE_ID,
-                mac_addr=MOCK_MAC,
-                mac_addr_formatted=MOCK_MAC.upper(),
-                mac_addr_short="2233",
-                model=MOCK_MODEL,
-                firmware_version=MOCK_FIRMWARE,
-                ip_addr=MOCK_HOST,
-            )
-        )
-        api.async_configure_push_server = AsyncMock(return_value=True)
-        api.host = MOCK_HOST
+    """Mock the WibeeeAPI class for config flow tests.
 
-        mock_cls.return_value = api
+    Patches both locations to ensure no real API is ever instantiated.
+    """
+    with patch("homeassistant.components.wibeee.config_flow.WibeeeAPI", autospec=True) as mock_cls_cf, \
+         patch("homeassistant.components.wibeee.WibeeeAPI", autospec=True) as mock_cls_init:
+        api = MagicMock()
+        _setup_mock_api(api)
+        mock_cls_cf.return_value = api
+        mock_cls_init.return_value = api
         yield api
