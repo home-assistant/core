@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[1][binary_sensor.bk1600_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_1_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -123,7 +126,7 @@
     'object_id_base': 'Battery pack 1 electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery pack 1 electric heating',
     'platform': 'indevolt',
@@ -138,7 +141,6 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_1_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'CMS-SF2000 Battery pack 1 electric heating',
     }),
     'context': <ANY>,
@@ -151,8 +153,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_2_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -173,7 +176,7 @@
     'object_id_base': 'Battery pack 2 electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery pack 2 electric heating',
     'platform': 'indevolt',
@@ -188,7 +191,6 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_2_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'CMS-SF2000 Battery pack 2 electric heating',
     }),
     'context': <ANY>,
@@ -201,8 +203,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_3_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -223,7 +226,7 @@
     'object_id_base': 'Battery pack 3 electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery pack 3 electric heating',
     'platform': 'indevolt',
@@ -238,7 +241,6 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_3_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'CMS-SF2000 Battery pack 3 electric heating',
     }),
     'context': <ANY>,
@@ -251,8 +253,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_4_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -273,7 +276,7 @@
     'object_id_base': 'Battery pack 4 electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery pack 4 electric heating',
     'platform': 'indevolt',
@@ -288,7 +291,6 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_4_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'CMS-SF2000 Battery pack 4 electric heating',
     }),
     'context': <ANY>,
@@ -301,8 +303,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_5_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -323,7 +326,7 @@
     'object_id_base': 'Battery pack 5 electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery pack 5 electric heating',
     'platform': 'indevolt',
@@ -338,7 +341,6 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_5_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'CMS-SF2000 Battery pack 5 electric heating',
     }),
     'context': <ANY>,
@@ -351,8 +353,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -373,7 +376,7 @@
     'object_id_base': 'Main electric heating',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main electric heating',
     'platform': 'indevolt',
@@ -388,7 +391,6 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'CMS-SF2000 Main electric heating',
     }),
     'context': <ANY>,
@@ -401,8 +403,9 @@
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_meter_connected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
