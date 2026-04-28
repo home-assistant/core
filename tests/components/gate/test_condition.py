@@ -247,7 +247,7 @@ async def test_gate_condition_excludes_non_gate_device_class(
     )
 
     # Matching entity in matching state - condition should be True
-    assert condition_any(hass) is True
+    assert condition_any.async_check() is True
 
     # Set matching entity to non-matching state
     hass.states.async_set(
@@ -258,4 +258,4 @@ async def test_gate_condition_excludes_non_gate_device_class(
     await hass.async_block_till_done()
 
     # Wrong device class entity still in matching state, but should be excluded
-    assert condition_any(hass) is False
+    assert condition_any.async_check() is False

@@ -1342,6 +1342,9 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             serial_number="10B41DE589FC",
             manufacturer="Nabu Casa",
             description="ZBT-2",
+            bcd_device=257,
+            interface_description="Nabu Casa ZBT-2",
+            interface_num=0,
         ),
     ]
 
@@ -1690,6 +1693,9 @@ async def test_list_serial_ports(
             serial_number="001234",
             manufacturer="Silicon Labs",
             description="CP2102 USB to UART",
+            bcd_device=257,
+            interface_description="CP2102 USB to UART Bridge",
+            interface_num=0,
         ),
         SerialDevice(
             device="/dev/ttyS0",
@@ -1707,19 +1713,26 @@ async def test_list_serial_ports(
     result = response["result"]
     assert len(result) == 2
 
-    assert result[0]["device"] == "/dev/ttyUSB0"
-    assert result[0]["vid"] == "10C4"
-    assert result[0]["pid"] == "EA60"
-    assert result[0]["serial_number"] == "001234"
-    assert result[0]["manufacturer"] == "Silicon Labs"
-    assert result[0]["description"] == "CP2102 USB to UART"
+    assert result[0] == {
+        "device": "/dev/ttyUSB0",
+        "vid": "10C4",
+        "pid": "EA60",
+        "serial_number": "001234",
+        "manufacturer": "Silicon Labs",
+        "description": "CP2102 USB to UART",
+        "bcd_device": 257,
+        "interface_description": "CP2102 USB to UART Bridge",
+        "interface_num": 0,
+    }
 
-    assert result[1]["device"] == "/dev/ttyS0"
-    assert result[1]["serial_number"] is None
-    assert result[1]["manufacturer"] is None
-    assert result[1]["description"] == "ttyS0"
-    assert "vid" not in result[1]
-    assert "pid" not in result[1]
+    assert result[1] == {
+        "device": "/dev/ttyS0",
+        "serial_number": None,
+        "manufacturer": None,
+        "description": "ttyS0",
+        "interface_description": None,
+        "interface_num": None,
+    }
 
 
 async def test_list_serial_ports_require_admin(
