@@ -37,7 +37,6 @@ async def async_setup_entry(
 class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     """Calibration-based fan: each change resets to off then climbs to target."""
 
-    _attr_assumed_state = True
     _attr_name = None
     _attr_speed_count = SPEED_COUNT
     _attr_supported_features = (
@@ -45,14 +44,13 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.SET_SPEED
     )
-    _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the fan."""
         super().__init__(entry)
         self._codes = get_codes_for_code(entry.data[CONF_CODE])
         self._level = 0
-        self._attr_unique_id = f"{entry.entry_id}_fan"
+        self._attr_unique_id = entry.entry_id
 
     @property
     def is_on(self) -> bool:
