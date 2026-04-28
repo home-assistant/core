@@ -88,7 +88,6 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
     _attributes_extra_blocked = MQTT_DATETIME_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format = datetime.ENTITY_ID_FORMAT
-    _timezone_config: str | None = None
     _zone_info: ZoneInfo | None = None
     _time_zone_delta: datetime_library.timedelta | None
 
@@ -119,10 +118,10 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
         self._attr_assumed_state = bool(self._optimistic)
 
-    async def mqtt_async_added_to_hass(self) -> None:
-        """Finish configuration."""
+    async def _async_finish_update_config(self) -> None:
+        """Called after added to hass and after discovery update."""
         self._zone_info = None
-        if timezone := self._timezone_config:
+        if timezone := self._config.get(CONF_TIMEZONE):
             self._zone_info = await async_get_time_zone(timezone)
             if not self._zone_info:
                 _LOGGER.warning(
