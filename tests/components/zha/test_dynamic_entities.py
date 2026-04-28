@@ -77,18 +77,18 @@ def _get_switch_platform_entity(zha_device_proxy: ZHADeviceProxy) -> PlatformEnt
     )
 
 
-async def test_handle_device_entity_added(
+async def test_dynamic_entity_lifecycle(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test that DeviceEntityAddedEvent re-creates a previously removed entity."""
+    """Test the full hard-remove -> re-add -> soft-remove cycle."""
     zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
     platform_entity = _get_switch_platform_entity(zha_device_proxy)
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
 
-    # Remove first so the re-add has visible side effects (state reappears).
+    # Hard remove: state and registry entry both go away.
     zha_device_proxy.device.emit(
         DeviceEntityRemovedEvent.event_type,
         DeviceEntityRemovedEvent(
@@ -98,13 +98,15 @@ async def test_handle_device_entity_added(
         ),
     )
     await hass.async_block_till_done()
+    registry = er.async_get(hass)
+    assert registry.async_get(entity_id) is None
     assert hass.states.get(entity_id) is None
 
     ha_zha_data = get_zha_data(hass)
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
 
-    # Fire the entity-added event through the device emitter to exercise
-    # the on_all_events -> _handle_event_protocol -> handler wiring.
+    # Re-add: emitter exercises the on_all_events -> _handle_event_protocol
+    # -> handler wiring; the entity reappears as a HA state.
     zha_device_proxy.device.emit(
         DeviceEntityAddedEvent.event_type,
         DeviceEntityAddedEvent(
@@ -113,15 +115,11 @@ async def test_handle_device_entity_added(
         ),
     )
     await hass.async_block_till_done()
-
-    # The platform list is drained by SIGNAL_ADD_ENTITIES handler.
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
-
-    # The entity is back and reachable as a HA state.
     assert hass.states.get(entity_id) is not None
 
-    # Exactly one entity reference is recorded for this entity_id (no stale
-    # leftovers from the remove + re-add cycle).
+    # Exactly one entity reference is tracked; the remove + re-add cycle did
+    # not leave a stale entry behind.
     gateway_proxy = get_zha_gateway_proxy(hass)
     matching_refs = [
         ref
@@ -129,6 +127,23 @@ async def test_handle_device_entity_added(
         if ref.ha_entity_id == entity_id
     ]
     assert len(matching_refs) == 1
+
+    # Soft remove: registry entry is kept, state goes unavailable.
+    entry = registry.async_get(entity_id)
+    assert entry is not None
+    zha_device_proxy.device.emit(
+        DeviceEntityRemovedEvent.event_type,
+        DeviceEntityRemovedEvent(
+            platform=ZhaPlatform.SWITCH,
+            unique_id=entry.unique_id,
+            remove=False,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert registry.async_get(entity_id) is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_handle_device_entity_added_unknown_unique_id(
@@ -157,42 +172,6 @@ async def test_handle_device_entity_added_unknown_unique_id(
         # Nothing should be added and no dispatcher signal is fired.
         assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
         mock_dispatch.assert_not_called()
-
-
-async def test_handle_device_entity_removed(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
-) -> None:
-    """Test that DeviceEntityRemovedEvent with remove=False only unloads the entity."""
-    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
-
-    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
-    assert entity_id is not None
-
-    registry = er.async_get(hass)
-    entry = registry.async_get(entity_id)
-    assert entry is not None
-    assert hass.states.get(entity_id) is not None
-
-    # Fire through the device emitter so the on_all_events wiring is exercised.
-    zha_device_proxy.device.emit(
-        DeviceEntityRemovedEvent.event_type,
-        DeviceEntityRemovedEvent(
-            platform=ZhaPlatform.SWITCH,
-            unique_id=entry.unique_id,
-            remove=False,
-        ),
-    )
-    await hass.async_block_till_done()
-
-    # Registry entry preserved so the user can manually delete it.
-    assert registry.async_get(entity_id) is not None
-
-    # State is set to unavailable.
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_handle_device_entity_removed_other_platform_does_not_unload(
