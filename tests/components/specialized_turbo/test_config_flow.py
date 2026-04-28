@@ -8,6 +8,7 @@ from bleak import BleakError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.specialized_turbo.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -196,7 +197,7 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
 async def test_bluetooth_discovery_by_generation(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    service_info: object,
+    service_info: BluetoothServiceInfoBleak,
     expected_address: str,
     expected_unique_id: str,
 ) -> None:
