@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -47,21 +46,19 @@ def test_needs_poll_when_connected_and_never_polled(hass: HomeAssistant) -> None
 
 
 def test_needs_poll_when_interval_elapsed(hass: HomeAssistant) -> None:
-    """Test _needs_poll returns True when poll interval has elapsed."""
+    """Test _needs_poll returns True when poll attempt interval has elapsed."""
     coordinator = _create_coordinator(hass)
     coordinator._client = MagicMock(is_connected=True)
-    coordinator._last_poll_time = time.monotonic() - _POLL_INTERVAL - 1
 
-    assert coordinator._needs_poll(TCX_SERVICE_INFO, None) is True
+    assert coordinator._needs_poll(TCX_SERVICE_INFO, _POLL_INTERVAL) is True
 
 
 def test_needs_poll_when_interval_not_elapsed(hass: HomeAssistant) -> None:
-    """Test _needs_poll returns False when poll interval hasn't elapsed."""
+    """Test _needs_poll returns False when a recent poll attempt exists."""
     coordinator = _create_coordinator(hass)
     coordinator._client = MagicMock(is_connected=True)
-    coordinator._last_poll_time = time.monotonic()
 
-    assert coordinator._needs_poll(TCX_SERVICE_INFO, None) is False
+    assert coordinator._needs_poll(TCX_SERVICE_INFO, _POLL_INTERVAL - 1) is False
 
 
 def test_needs_poll_detects_generation(hass: HomeAssistant) -> None:

@@ -8,7 +8,6 @@ specialized-turbo library.
 from __future__ import annotations
 
 import logging
-import time
 
 from bleak import BleakClient, BleakError
 from bleak.backends.characteristic import BleakGATTCharacteristic
@@ -71,7 +70,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         self._char_notify: str = CHAR_NOTIFY
         self._char_request_write: str | None = None
         self._char_request_read: str | None = None
-        self._last_poll_time: float = 0
         self._uses_tcx_messages: bool | None = None
         self._logged_unresolved_chars = False
 
@@ -90,9 +88,10 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         if self._client is None or not self._client.is_connected:
             return True
 
-        if self._last_poll_time == 0:
-            return True
-        return (time.monotonic() - self._last_poll_time) >= _POLL_INTERVAL
+        return (
+            seconds_since_last_update is None
+            or seconds_since_last_update >= _POLL_INTERVAL
+        )
 
     async def _do_poll(
         self,
@@ -152,7 +151,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
                 self._char_request_read,
                 self.snapshot,
             )
-        self._last_poll_time = time.monotonic()
 
     async def _ensure_connected(
         self,
