@@ -37,12 +37,10 @@ class ThomsonConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_connection, user_input
                 )
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, EOFError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except EOFError:
-                errors["base"] = "cannot_connect"
-            except TimeoutError:
-                errors["base"] = "cannot_connect"
+            except OSError:
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=f"{DEFAULT_NAME} ({user_input[CONF_HOST]})",

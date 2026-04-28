@@ -86,6 +86,24 @@ async def test_user_flow_timeout(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test config flow when an unexpected OS error occurs."""
+    with patch(
+        "homeassistant.components.thomson.coordinator.telnetlib.Telnet",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONFIG,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_telnet_validate: MagicMock
 ) -> None:

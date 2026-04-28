@@ -22,19 +22,6 @@ MOCK_CONFIG = {
     CONF_PASSWORD: MOCK_PASSWORD,
 }
 
-MOCK_DEVICE_DATA = {
-    "AA:BB:CC:DD:EE:FF": {
-        "mac": "AA:BB:CC:DD:EE:FF",
-        "ip": "192.168.1.100",
-        "host": "my-phone",
-    },
-    "11:22:33:44:55:66": {
-        "mac": "11:22:33:44:55:66",
-        "ip": "192.168.1.101",
-        "host": "my-laptop",
-    },
-}
-
 MOCK_TELNET_OUTPUT = (
     b"aa:bb:cc:dd:ee:ff 192.168.1.100  C     dynamic  nas  eth0  my-phone\r\n"
     b"11:22:33:44:55:66 192.168.1.101  C     dynamic  nas  eth0  my-laptop\r\n"

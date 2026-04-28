@@ -63,14 +63,17 @@ class ThomsonDataUpdateCoordinator(
         """Retrieve connected devices from the Thomson router via telnet."""
         try:
             telnet = telnetlib.Telnet(self._host)
-            telnet.read_until(b"Username : ")
-            telnet.write((self._username + "\r\n").encode("ascii"))
-            telnet.read_until(b"Password : ")
-            telnet.write((self._password + "\r\n").encode("ascii"))
-            telnet.read_until(b"=>")
-            telnet.write(b"hostmgr list\r\n")
-            devices_result = telnet.read_until(b"=>").split(b"\r\n")
-            telnet.write(b"exit\r\n")
+            try:
+                telnet.read_until(b"Username : ")
+                telnet.write((self._username + "\r\n").encode("ascii"))
+                telnet.read_until(b"Password : ")
+                telnet.write((self._password + "\r\n").encode("ascii"))
+                telnet.read_until(b"=>")
+                telnet.write(b"hostmgr list\r\n")
+                devices_result = telnet.read_until(b"=>").split(b"\r\n")
+                telnet.write(b"exit\r\n")
+            finally:
+                telnet.close()
         except EOFError:
             _LOGGER.exception("Unexpected response from Thomson router")
             return None
@@ -99,9 +102,12 @@ def validate_connection(data: dict[str, Any]) -> None:
     Raises ConnectionRefusedError or EOFError on failure.
     """
     telnet = telnetlib.Telnet(data[CONF_HOST])
-    telnet.read_until(b"Username : ")
-    telnet.write((data[CONF_USERNAME] + "\r\n").encode("ascii"))
-    telnet.read_until(b"Password : ")
-    telnet.write((data[CONF_PASSWORD] + "\r\n").encode("ascii"))
-    telnet.read_until(b"=>")
-    telnet.write(b"exit\r\n")
+    try:
+        telnet.read_until(b"Username : ")
+        telnet.write((data[CONF_USERNAME] + "\r\n").encode("ascii"))
+        telnet.read_until(b"Password : ")
+        telnet.write((data[CONF_PASSWORD] + "\r\n").encode("ascii"))
+        telnet.read_until(b"=>")
+        telnet.write(b"exit\r\n")
+    finally:
+        telnet.close()
