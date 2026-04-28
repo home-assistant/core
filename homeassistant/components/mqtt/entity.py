@@ -1476,6 +1476,7 @@ class MqttEntity(
             self._update_registry_entity_id = None
 
         await super().async_added_to_hass()
+        await self._async_finish_update_config()
         self._subscriptions = {}
         self._prepare_subscribe_topics()
         if self._subscriptions:
@@ -1493,6 +1494,12 @@ class MqttEntity(
         To be extended by subclasses.
         """
 
+    async def _async_finish_update_config(self) -> None:
+        """Called after added to hass and after discovery update.
+
+        To be extended by subclasses.
+        """
+
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
         try:
@@ -1503,6 +1510,7 @@ class MqttEntity(
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
+        await self._async_finish_update_config()
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
