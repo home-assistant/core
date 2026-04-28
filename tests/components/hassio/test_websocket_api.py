@@ -95,11 +95,11 @@ def mock_all(
 
 @pytest.mark.usefixtures("hassio_env")
 async def test_ws_subscription(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_supervisor_ws_client: WebSocketGenerator
 ) -> None:
     """Test websocket subscription."""
     assert await async_setup_component(hass, "hassio", {})
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     await client.send_json({WS_ID: 5, WS_TYPE: WS_TYPE_SUBSCRIBE})
     response = await client.receive_json()
     assert response["success"]
@@ -149,7 +149,7 @@ async def test_non_admin_publish_supervisor_event_failure(
     )
     msg = await client.receive_json()
     assert msg["success"] is False
-    assert msg["error"]["message"] == "Unauthorized"
+    assert msg["error"]["message"] == "Only allowed as Supervisor"
 
 
 @pytest.mark.usefixtures("hassio_env")
