@@ -15,9 +15,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
+
+from .conftest import TRANSMITTER_ENTITY_ID
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.radio_frequency.common import MockRadioFrequencyEntity
@@ -86,3 +89,28 @@ async def test_restore_state(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_entity_follows_transmitter_availability(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    init_novy_cooker_hood: MockConfigEntry,
+) -> None:
+    """The light becomes unavailable when the transmitter does, and back."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    hass.states.async_set(TRANSMITTER_ENTITY_ID, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(TRANSMITTER_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE

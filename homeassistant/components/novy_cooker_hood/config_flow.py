@@ -90,11 +90,7 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
             await asyncio.sleep(_TOGGLE_GAP)
             await async_send_command(self.hass, self._transmitter_entity_id, command)
         except HomeAssistantError:
-            return self.async_show_menu(
-                step_id="test_failed",
-                menu_options=["retry"],
-                description_placeholders={"code": str(self._code)},
-            )
+            return await self.async_step_test_failed()
         return self.async_show_menu(
             step_id="test_light",
             menu_options=["finish", "retry"],
