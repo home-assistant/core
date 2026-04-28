@@ -776,7 +776,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         """Firmware flashing failed."""
         return self.async_abort(
             reason="fw_install_failed",
-            description_placeholders={"hardware_name": self._hardware_name()},
+            description_placeholders={"firmware_name": "Zigbee"},
         )
 
     async def async_step_flashing_complete(
