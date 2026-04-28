@@ -174,7 +174,7 @@
       "message": "An error occurred while communicating with the Peblar EV charger: {error}"
     },
     "invalid_config_entry": {
-      "message": "Config entry {config_entry_id} is not a valid Peblar config entry."
+      "message": "Config entry {config_entry_id} is not a valid Peblar config entry or is not loaded."
     },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Peblar EV charger: {error}"

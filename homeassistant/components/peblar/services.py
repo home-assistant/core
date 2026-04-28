@@ -89,7 +89,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         peblar = _get_peblar(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         await peblar.delete_rfid_token(uid=call.data[CONF_UID])
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "list_rfid_tokens",
         _handle_list_rfid_tokens,
