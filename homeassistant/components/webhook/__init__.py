@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import network as network_util
 from homeassistant.util.aiohttp import MockRequest, MockStreamReader, serialize_response
 
@@ -36,7 +35,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @callback
-@bind_hass
 def async_register(
     hass: HomeAssistant,
     domain: str,
@@ -72,7 +70,6 @@ def async_register(
 
 
 @callback
-@bind_hass
 def async_unregister(hass: HomeAssistant, webhook_id: str) -> None:
     """Remove a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
@@ -86,7 +83,6 @@ def async_generate_id() -> str:
 
 
 @callback
-@bind_hass
 def async_generate_url(
     hass: HomeAssistant,
     webhook_id: str,
@@ -117,7 +113,6 @@ def async_generate_path(webhook_id: str) -> str:
     return URL_WEBHOOK_PATH.format(webhook_id=webhook_id)
 
 
-@bind_hass
 async def async_handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request | MockRequest
 ) -> Response:
@@ -125,8 +120,11 @@ async def async_handle_webhook(
     handlers: dict[str, dict[str, Any]] = hass.data.setdefault(DOMAIN, {})
 
     content_stream: StreamReader | MockStreamReader
+    received_from: str | None
     if isinstance(request, MockRequest):
         received_from = request.mock_source
+        if request.remote is not None:
+            received_from += f" ({request.remote})"
         content_stream = request.content
         method_name = request.method
     else:
@@ -161,11 +159,11 @@ async def async_handle_webhook(
         )
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-    if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
-        is_local = not is_cloud_connection(hass)
+    if webhook["local_only"] in (True, None):
+        is_local = not (is_cloud_connection(hass) or request.remote is None)
+
         if is_local:
             if TYPE_CHECKING:
-                assert isinstance(request, Request)
                 assert request.remote is not None
 
             try:
@@ -278,6 +276,7 @@ async def websocket_handle(
         method=msg["method"],
         query_string=msg["query"],
         mock_source=f"{DOMAIN}/ws",
+        remote=connection.remote,
     )
 
     response = await async_handle_webhook(hass, msg["webhook_id"], request)

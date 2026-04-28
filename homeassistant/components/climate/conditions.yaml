@@ -39,7 +39,16 @@
   - domain: number
     device_class: temperature
 
-is_off: *condition_common
+is_off:
+  target: *condition_climate_target
+  fields:
+    behavior: *condition_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
 is_on: *condition_common
 is_cooling: *condition_common
 is_drying: *condition_common

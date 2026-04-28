@@ -19,7 +19,12 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.WATER_HEATER,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:

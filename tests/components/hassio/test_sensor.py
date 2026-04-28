@@ -11,8 +11,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import DOMAIN, HASSIO_UPDATE_INTERVAL
-from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.hassio.const import (
+    HASSIO_STATS_UPDATE_INTERVAL,
+    REQUEST_REFRESH_DELAY,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -176,14 +179,14 @@ async def test_stats_addon_sensor(
     assert hass.states.get(entity_id) is None
 
     addon_stats.side_effect = SupervisorError
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Could not fetch stats" not in caplog.text
 
     addon_stats.side_effect = None
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -199,13 +202,13 @@ async def test_stats_addon_sensor(
     assert entity_registry.async_get(entity_id).disabled_by is None
 
     # The config entry just reloaded, so we need to wait for the next update
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id) is not None
 
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Verify that the entity have the expected state.
@@ -213,10 +216,29 @@ async def test_stats_addon_sensor(
     assert state.state == expected
 
     addon_stats.side_effect = SupervisorError
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
     assert "Could not fetch stats" in caplog.text
+
+    # Disable the entity again and verify stats API calls stop
+    addon_stats.side_effect = None
+    addon_stats.reset_mock()
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # After reload with entity disabled, stats should not be fetched
+    addon_stats.reset_mock()
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    addon_stats.assert_not_called()

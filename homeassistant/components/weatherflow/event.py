@@ -7,12 +7,12 @@ from dataclasses import dataclass
 from pyweatherflowudp.device import EVENT_RAIN_START, EVENT_STRIKE, WeatherFlowDevice
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import WeatherFlowConfigEntry
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
@@ -42,7 +42,7 @@ EVENT_DESCRIPTIONS: list[WeatherFlowEventEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeatherFlowConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow event entities using config entry."""

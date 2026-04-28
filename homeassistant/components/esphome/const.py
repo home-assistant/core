@@ -1,10 +1,19 @@
 """ESPHome constants."""
 
-from typing import Final
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Final
 
 from awesomeversion import AwesomeVersion
 
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .domain_data import DomainData
+
 DOMAIN = "esphome"
+
+ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
 CONF_ALLOW_SERVICE_CALLS = "allow_service_calls"
 CONF_SUBSCRIBE_LOGS = "subscribe_logs"

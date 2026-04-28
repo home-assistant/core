@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_closed": {
@@ -96,6 +97,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::valve::common::trigger_for_name%]"
         }
       },
       "name": "Valve closed"
@@ -105,6 +109,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::valve::common::trigger_for_name%]"
         }
       },
       "name": "Valve opened"

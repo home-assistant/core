@@ -38,8 +38,8 @@ class BrightnessCondition(EntityNumericalConditionBase):
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_brightness": BrightnessCondition,
-    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF),
-    "is_on": make_entity_state_condition(DOMAIN, STATE_ON),
+    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF, support_duration=True),
+    "is_on": make_entity_state_condition(DOMAIN, STATE_ON, support_duration=True),
 }
 
 

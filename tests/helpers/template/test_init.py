@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_ON,
     STATE_UNAVAILABLE,
     UnitOfArea,
     UnitOfLength,
@@ -27,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, template, translation
-from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
@@ -38,7 +36,7 @@ from homeassistant.util.unit_system import UnitSystem
 
 from .helpers import assert_result_info, render, render_to_info
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 def _set_up_units(hass: HomeAssistant) -> None:
@@ -2259,24 +2257,6 @@ async def test_undefined_symbol_warnings(
     )
 
 
-async def test_template_states_blocks_setitem(hass: HomeAssistant) -> None:
-    """Test we cannot setitem on TemplateStates."""
-    hass.states.async_set("light.new", STATE_ON)
-    state = hass.states.get("light.new")
-    template_state = template.TemplateState(hass, state, True)
-    with pytest.raises(RuntimeError):
-        template_state["any"] = "any"
-
-
-async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
-    """Test TemplateState is serializable."""
-    hass.states.async_set("light.new", STATE_ON)
-    state = hass.states.get("light.new")
-    template_state = template.TemplateState(hass, state, True)
-    assert template_state.as_dict() is template_state.as_dict()
-    assert json_dumps(template_state) == json_dumps(template_state)
-
-
 async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
     """Test info is still available if the template has an exception."""
     hass.states.async_set("test_domain.object", "dog")
@@ -2286,49 +2266,6 @@ async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
 
     assert info.all_states is False
     assert info.entities == {"test_domain.object"}
-
-
-async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
-    """Test that the template internal LRU cache increases with many entities."""
-    # We do not actually want to record 4096 entities so we mock the entity count
-    mock_entity_count = 16
-
-    assert template.CACHED_TEMPLATE_LRU.get_size() == template.CACHED_TEMPLATE_STATES
-    assert (
-        template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size()
-        == template.CACHED_TEMPLATE_STATES
-    )
-    template.CACHED_TEMPLATE_LRU.set_size(8)
-    template.CACHED_TEMPLATE_NO_COLLECT_LRU.set_size(8)
-
-    template.async_setup(hass)
-    for i in range(mock_entity_count):
-        hass.states.async_set(f"sensor.sensor{i}", "on")
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done()
-
-    assert template.CACHED_TEMPLATE_LRU.get_size() == int(
-        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
-    )
-    assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
-        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
-    )
-
-    await hass.async_stop()
-
-    for i in range(mock_entity_count):
-        hass.states.async_set(f"sensor.sensor_add_{i}", "on")
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
-    await hass.async_block_till_done()
-
-    assert template.CACHED_TEMPLATE_LRU.get_size() == int(
-        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
-    )
-    assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
-        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
-    )
 
 
 async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
