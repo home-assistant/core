@@ -10,6 +10,7 @@ from typing import Any
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
+    NVR,
     Camera,
     ChimeType,
     DoorbellMessageType,
@@ -26,18 +27,22 @@ from uiprotect.data import (
     Sensor,
     Viewer,
 )
+from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import TYPE_EMPTY_VALUE
+from .const import DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
+    ProtectNVREntity,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
@@ -379,6 +384,14 @@ async def async_setup_entry(
             patrols = data.ptz_patrols.get(camera.id, [])
             entities.append(ProtectPTZPatrolSelect(data, camera, patrols))
 
+    api = data.api
+    if (
+        api.has_public_bootstrap
+        and api.public_bootstrap.arm_mode is not None
+        and api.public_bootstrap.arm_profiles
+    ):
+        entities.append(ProtectNVRArmProfileSelect(data, device=api.bootstrap.nvr))
+
     async_add_entities(entities)
 
 
@@ -500,3 +513,56 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         unifi_value = self._hass_to_unifi_options[option]
         await _set_ptz_patrol(self.device, unifi_value)
         # State will be updated via websocket when active_patrol_slot changes
+
+
+class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
+    """UniFi Protect NVR arm profile select entity."""
+
+    _attr_translation_key = "nvr_arm_profile"
+    _attr_current_option: str | None = None
+    _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
+
+    def __init__(self, data: ProtectData, device: NVR) -> None:
+        """Initialize the NVR arm profile select entity."""
+        self._id_to_name: dict[str, str] = {}
+        self._name_to_id: dict[str, str] = {}
+        super().__init__(data, device, EntityDescription(key="nvr_arm_profile"))
+        self._refresh_arm_profile_state()
+
+    @callback
+    def _refresh_arm_profile_state(self) -> None:
+        """Update options and current option from the public bootstrap cache."""
+        api = self.data.api
+        pb = api.public_bootstrap if api.has_public_bootstrap else None
+        arm_mode = pb.arm_mode if pb is not None else None
+
+        if pb is None or arm_mode is None:
+            self._attr_available = False
+            self._attr_options = []
+            self._attr_current_option = None
+            return
+
+        self._id_to_name = {pid: p.name for pid, p in pb.arm_profiles.items()}
+        self._name_to_id = {p.name: pid for pid, p in pb.arm_profiles.items()}
+        self._attr_options = list(self._name_to_id)
+        profile_id = arm_mode.arm_profile_id
+        self._attr_current_option = (
+            self._id_to_name.get(profile_id) if profile_id else None
+        )
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        self._refresh_arm_profile_state()
+
+    @async_ufp_instance_command
+    async def async_select_option(self, option: str) -> None:
+        """Change the currently active arm profile."""
+        profile_id = self._name_to_id[option]
+        try:
+            await self.data.api.set_current_arm_profile_public(profile_id)
+        except GlobalAlarmManagerError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="global_alarm_manager",
+            ) from err
