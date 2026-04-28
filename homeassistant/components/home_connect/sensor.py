@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util, slugify
 from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_DELAYED_START,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
@@ -624,6 +625,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         """Return whether a program is running, paused or finished."""
         status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
         return status is not None and status.value in [
+            BSH_OPERATION_STATE_DELAYED_START,
             BSH_OPERATION_STATE_RUN,
             BSH_OPERATION_STATE_PAUSE,
             BSH_OPERATION_STATE_FINISHED,

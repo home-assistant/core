@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from afsapi import ConnectionError, InvalidPinException, NotImplementedException
+from afsapi import FSConnectionError, FSNotImplementedError, InvalidPinError
 import pytest
 
 from homeassistant import config_entries
@@ -42,7 +42,7 @@ INVALID_MOCK_DISCOVERY = SsdpServiceInfo(
 
 @pytest.mark.parametrize(
     ("radio_id_return_value", "radio_id_side_effect"),
-    [("mock_radio_id", None), (None, NotImplementedException)],
+    [("mock_radio_id", None), (None, FSNotImplementedError)],
 )
 async def test_form_default_pin(
     hass: HomeAssistant,
@@ -80,7 +80,7 @@ async def test_form_default_pin(
 
 @pytest.mark.parametrize(
     ("radio_id_return_value", "radio_id_side_effect"),
-    [("mock_radio_id", None), (None, NotImplementedException)],
+    [("mock_radio_id", None), (None, FSNotImplementedError)],
 )
 async def test_form_nondefault_pin(
     hass: HomeAssistant,
@@ -98,7 +98,7 @@ async def test_form_nondefault_pin(
 
     with patch(
         "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinException,
+        side_effect=InvalidPinError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -133,8 +133,8 @@ async def test_form_nondefault_pin(
 @pytest.mark.parametrize(
     ("friendly_name_error", "result_error"),
     [
-        (ConnectionError, "cannot_connect"),
-        (InvalidPinException, "invalid_auth"),
+        (FSConnectionError, "cannot_connect"),
+        (InvalidPinError, "invalid_auth"),
         (ValueError, "unknown"),
     ],
 )
@@ -154,7 +154,7 @@ async def test_form_nondefault_pin_invalid(
 
     with patch(
         "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinException,
+        side_effect=InvalidPinError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -198,7 +198,7 @@ async def test_form_nondefault_pin_invalid(
 @pytest.mark.parametrize(
     ("webfsapi_endpoint_error", "result_error"),
     [
-        (ConnectionError, "cannot_connect"),
+        (FSConnectionError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
@@ -247,7 +247,7 @@ async def test_invalid_device_url(
 
 @pytest.mark.parametrize(
     ("radio_id_return_value", "radio_id_side_effect"),
-    [("mock_radio_id", None), (None, NotImplementedException)],
+    [("mock_radio_id", None), (None, FSNotImplementedError)],
 )
 async def test_ssdp(
     hass: HomeAssistant,
@@ -321,7 +321,7 @@ async def test_ssdp_already_configured(
 
 @pytest.mark.parametrize(
     ("webfsapi_endpoint_error", "result_error"),
-    [(ValueError, "unknown"), (ConnectionError, "cannot_connect")],
+    [(ValueError, "unknown"), (FSConnectionError, "cannot_connect")],
 )
 async def test_ssdp_fail(
     hass: HomeAssistant, webfsapi_endpoint_error: Exception, result_error: str
@@ -346,7 +346,7 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinException,
+        side_effect=InvalidPinError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -379,8 +379,8 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
-        (ConnectionError, "cannot_connect"),
-        (InvalidPinException, "invalid_auth"),
+        (FSConnectionError, "cannot_connect"),
+        (InvalidPinError, "invalid_auth"),
         (ValueError, "unknown"),
     ],
 )

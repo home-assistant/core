@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
+import shlex
+import sys
 import tempfile
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -184,12 +187,16 @@ async def test_non_text_stdout_capture(
     mock_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test handling of non-text output."""
+    non_utf8_cmd = (
+        f"{shlex.quote(sys.executable)} -c"
+        ' "import sys; sys.stdout.buffer.write(bytes([0x80, 0x81, 0x82]))"'
+    )
     assert await async_setup_component(
         hass,
         shell_command.DOMAIN,
         {
             shell_command.DOMAIN: {
-                "output_image": "curl -o - https://raw.githubusercontent.com/home-assistant/assets/master/misc/loading-screen.gif"
+                "output_image": non_utf8_cmd,
             }
         },
     )
@@ -205,7 +212,9 @@ async def test_non_text_stdout_capture(
     # Non-text output throws with 'return_response'
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to handle non-utf8 output of command: `curl -o - https://raw.githubusercontent.com/home-assistant/assets/master/misc/loading-screen.gif`",
+        match=re.escape(
+            f"Unable to handle non-utf8 output of command: `{non_utf8_cmd}`"
+        ),
     ):
         response = await hass.services.async_call(
             "shell_command", "output_image", blocking=True, return_response=True

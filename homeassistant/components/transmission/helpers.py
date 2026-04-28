@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from awesomeversion import AwesomeVersion
 from transmission_rpc.torrent import Torrent
 
 
@@ -43,3 +44,8 @@ def format_torrents(
         value[torrent.name] = format_torrent(torrent)
 
     return value
+
+
+def create_version(version: str) -> AwesomeVersion:
+    """Convert versions, transmission has x.x.x (build)."""
+    return AwesomeVersion(version.split(" ", 1)[0])

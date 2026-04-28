@@ -12,6 +12,7 @@ ATTR_AMOUNT = "amount"
 ATTR_PRODUCT_IDENTIFIERS = "product_identifiers"
 
 COUNTRY_CODES = ["NL", "DE", "BE", "FR"]
+TWO_FA_CHANNELS = ["sms", "email"]
 ATTRIBUTION = "Data provided by Picnic"
 ADDRESS = "address"
 CART_DATA = "cart_data"

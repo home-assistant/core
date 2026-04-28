@@ -3,12 +3,13 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
-from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -25,6 +26,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
@@ -94,7 +96,7 @@ async def test_device_updates(
     hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
 ) -> None:
     """Test the update_items function with some devices."""
-    device_1_state = hass.states.get("update.device_1")
+    device_1_state = hass.states.get("update.device_1_firmware")
     assert device_1_state.state == STATE_ON
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
 
@@ -104,7 +106,7 @@ async def test_device_updates(
     device_1["state"] = 4
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
 
-    device_1_state = hass.states.get("update.device_1")
+    device_1_state = hass.states.get("update.device_1_firmware")
     assert device_1_state.state == STATE_ON
     assert device_1_state.attributes[ATTR_INSTALLED_VERSION] == "4.0.42.10433"
     assert device_1_state.attributes[ATTR_LATEST_VERSION] == "4.3.17.11279"
@@ -118,7 +120,7 @@ async def test_device_updates(
     del device_1["upgrade_to_firmware"]
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
 
-    device_1_state = hass.states.get("update.device_1")
+    device_1_state = hass.states.get("update.device_1_firmware")
     assert device_1_state.state == STATE_OFF
     assert device_1_state.attributes[ATTR_INSTALLED_VERSION] == "4.3.17.11279"
     assert device_1_state.attributes[ATTR_LATEST_VERSION] == "4.3.17.11279"
@@ -132,7 +134,7 @@ async def test_install(
     config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test the device update install call."""
-    device_state = hass.states.get("update.device_1")
+    device_state = hass.states.get("update.device_1_firmware")
     assert device_state.state == STATE_ON
 
     url = (
@@ -145,7 +147,7 @@ async def test_install(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.device_1"},
+        {ATTR_ENTITY_ID: "update.device_1_firmware"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -165,12 +167,36 @@ async def test_hub_state_change(
     hass: HomeAssistant, mock_websocket_state: WebsocketStateManager
 ) -> None:
     """Verify entities state reflect on hub becoming unavailable."""
-    assert hass.states.get("update.device_1").state == STATE_ON
+    assert hass.states.get("update.device_1_firmware").state == STATE_ON
 
     # Controller unavailable
     await mock_websocket_state.disconnect()
-    assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("update.device_1_firmware").state == STATE_UNAVAILABLE
 
     # Controller available
     await mock_websocket_state.reconnect()
-    assert hass.states.get("update.device_1").state == STATE_ON
+    assert hass.states.get("update.device_1_firmware").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
+async def test_install_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when install API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.device_1_firmware"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"

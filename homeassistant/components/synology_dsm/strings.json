@@ -9,7 +9,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "missing_data": "Missing data: please retry later or an other configuration",
+      "missing_data": "Missing data: please retry later or try a different configuration",
       "otp_failed": "Two-step authentication failed, retry with a new passcode",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

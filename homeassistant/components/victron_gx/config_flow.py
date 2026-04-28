@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -51,6 +52,16 @@ STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         vol.Optional(CONF_SSL, default=False): selector.BooleanSelector(),
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_SSL): selector.BooleanSelector(),
     }
 )
 
@@ -270,5 +281,108 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_SSDP_AUTH_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders={"host": self.hostname},
+            description_placeholders={CONF_HOST: self.hostname},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a Victron GX device."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            data = {
+                **reconfigure_entry.data,
+                **user_input,
+            }
+            if CONF_USERNAME in user_input:
+                data[CONF_USERNAME] = user_input[CONF_USERNAME] or None
+            if CONF_PASSWORD in user_input:
+                data[CONF_PASSWORD] = user_input[CONF_PASSWORD] or None
+            try:
+                installation_id = await validate_input(data)
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(installation_id)
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    title=ENTRY_TITLE_FORMAT.format(
+                        installation_id=installation_id,
+                        host=user_input[CONF_HOST],
+                        port=user_input[CONF_PORT],
+                    ),
+                    data_updates=data,
+                )
+
+        suggested_values = {
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            CONF_PORT: reconfigure_entry.data[CONF_PORT],
+            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+            CONF_SSL: reconfigure_entry.data.get(CONF_SSL, False),
+        }
+        if user_input is not None:
+            suggested_values.update(user_input)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            updates = {
+                CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
+                CONF_SSL: user_input.get(
+                    CONF_SSL, reauth_entry.data.get(CONF_SSL, False)
+                ),
+            }
+            try:
+                await validate_input({**reauth_entry.data, **updates})
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error during reauthentication")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=updates,
+                )
+
+        suggested_values = {
+            CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME, None),
+            CONF_SSL: reauth_entry.data.get(CONF_SSL, False),
+        }
+        if user_input is not None:
+            suggested_values.update(user_input)
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA, suggested_values
+            ),
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            errors=errors,
         )

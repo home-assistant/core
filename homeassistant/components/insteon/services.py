@@ -35,6 +35,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
     CONF_CAT,
@@ -231,11 +232,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
         await async_srv_save_devices()
 
-    hass.services.async_register(
-        DOMAIN, SRV_ADD_ALL_LINK, async_srv_add_all_link, schema=ADD_ALL_LINK_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SRV_ADD_ALL_LINK,
+        async_srv_add_all_link,
+        schema=ADD_ALL_LINK_SCHEMA,
     )
-    hass.services.async_register(
-        DOMAIN, SRV_DEL_ALL_LINK, async_srv_del_all_link, schema=DEL_ALL_LINK_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SRV_DEL_ALL_LINK,
+        async_srv_del_all_link,
+        schema=DEL_ALL_LINK_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN, SRV_LOAD_ALDB, async_srv_load_aldb, schema=LOAD_ALDB_SCHEMA
@@ -269,7 +278,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN, SRV_SCENE_OFF, async_srv_scene_off, schema=TRIGGER_SCENE_SCHEMA
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SRV_ADD_DEFAULT_LINKS,
         async_add_default_links,

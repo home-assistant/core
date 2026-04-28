@@ -5,7 +5,21 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .common import TEST_BRIGHTNESS, TEST_DEVICE_DATA, TEST_DEVICE_INFO
+from homeassistant.components.airq.const import DOMAIN
+
+from .common import TEST_BRIGHTNESS, TEST_DEVICE_DATA, TEST_DEVICE_INFO, TEST_USER_DATA
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Create a mock config entry for air-Q."""
+    return MockConfigEntry(
+        data=TEST_USER_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DEVICE_INFO["id"],
+    )
 
 
 @pytest.fixture

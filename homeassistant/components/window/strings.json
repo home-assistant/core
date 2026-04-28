@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_closed": {
@@ -45,6 +46,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::window::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::window::common::trigger_for_name%]"
         }
       },
       "name": "Window closed"
@@ -54,6 +58,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::window::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::window::common::trigger_for_name%]"
         }
       },
       "name": "Window opened"
