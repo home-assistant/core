@@ -431,24 +431,21 @@ async def test_conditions_from_config_has_and_semantics(
     """Test that async_conditions_from_config returns a callable with AND semantics."""
     hass.states.async_set("binary_sensor.test_one", STATE_ON)
     hass.states.async_set("binary_sensor.test_two", STATE_ON)
-    configs = [
-        await condition.async_validate_condition_config(
-            hass,
+    configs = await condition.async_validate_conditions_config(
+        hass,
+        [
             {
                 "condition": "state",
                 "entity_id": "binary_sensor.test_one",
                 "state": STATE_ON,
             },
-        ),
-        await condition.async_validate_condition_config(
-            hass,
             {
                 "condition": "state",
                 "entity_id": "binary_sensor.test_two",
                 "state": STATE_ON,
             },
-        ),
-    ]
+        ],
+    )
     test = await condition.async_conditions_from_config(
         hass, configs, logging.getLogger(__name__), "test"
     )
