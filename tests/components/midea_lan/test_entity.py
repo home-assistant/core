@@ -29,6 +29,7 @@ class DummyDevice:
         self.available = available
         self.attributes = attributes or {}
         self._callbacks: list[Callable] = []
+        self._updates: list[Callable] = self._callbacks
 
     def register_update(self, callback: Callable) -> None:
         """Record update callback registration."""
@@ -57,3 +58,22 @@ def test_midea_entity_basics_and_update_state() -> None:
     ent.hass = MagicMock(is_stopping=False)
     ent.update_state({"legacy": 1})
     ent.schedule_update_ha_state.assert_called_once()
+
+
+async def test_async_added_to_hass_registers_callback() -> None:
+    """Test async_added_to_hass registers the update callback."""
+    dev = DummyDevice(DeviceType.AC)
+    ent = entity_module.MideaEntity(dev, "k")
+
+    await ent.async_added_to_hass()
+
+    assert ent.update_state in dev._callbacks
+
+
+async def test_async_will_remove_from_hass_unregisters_callback() -> None:
+    """Test async_will_remove_from_hass removes the update callback."""
+    dev = DummyDevice(DeviceType.AC)
+    ent = entity_module.MideaEntity(dev, "k")
+    await ent.async_added_to_hass()
+    await ent.async_will_remove_from_hass()
+    assert ent.update_state not in dev._updates

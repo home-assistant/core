@@ -150,8 +150,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         """
         for entry in self._async_current_entries():
-            if device_id == entry.data.get(
-                CONF_DEVICE_ID,
+            if str(device_id) == str(
+                entry.data.get(CONF_DEVICE_ID)
             ) or ip_address == entry.data.get(CONF_IP_ADDRESS):
                 return True
         return False
@@ -474,7 +474,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 key=value["key"],
                 device_protocol=ProtocolVersion.V3,
                 model=device.get(CONF_MODEL),
-                subtype=0,
+                subtype=device.get(CONF_SUBTYPE, 0),
                 attributes={},
             )
             if await self.hass.async_add_executor_job(dm.connect):
@@ -485,6 +485,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.async_add_executor_job(dm.close_socket)
                 except SocketException:
                     _LOGGER.debug("Socket closed")
+                    await self.hass.async_add_executor_job(dm.close_socket)
                 else:
                     await self.hass.async_add_executor_job(dm.close_socket)
                     return value
@@ -732,22 +733,24 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 key=user_input[CONF_KEY],
                 device_protocol=user_input[CONF_PROTOCOL],
                 model=user_input[CONF_MODEL],
-                subtype=0,
+                subtype=user_input[CONF_SUBTYPE],
                 attributes={},
             )
             if await self.hass.async_add_executor_job(dm.connect):
+                authenticated = False
                 try:
                     if user_input[CONF_PROTOCOL] == ProtocolVersion.V3:
                         await self.hass.async_add_executor_job(dm.authenticate)
+                    authenticated = True
                 except SocketException:
                     _LOGGER.exception("Socket closed")
                 except AuthException:
                     _LOGGER.exception(
                         "Unable to authenticate with provided key and token",
                     )
+                finally:
                     await self.hass.async_add_executor_job(dm.close_socket)
-                else:
-                    await self.hass.async_add_executor_job(dm.close_socket)
+                if authenticated:
                     device_id = user_input[CONF_DEVICE_ID]
                     data = {
                         CONF_NAME: user_input[CONF_NAME],
