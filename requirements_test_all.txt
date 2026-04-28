@@ -56,7 +56,7 @@ PyFlume==0.6.5
 PyFronius==0.8.2
 
 # homeassistant.components.pyload
-PyLoadAPI==2.0.0
+PyLoadAPI==2.1.0
 
 # homeassistant.components.met_eireann
 PyMetEireann==2024.11.0
@@ -124,7 +124,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.5
+actron-neo-api==0.5.6
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -200,7 +200,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.3
+aioautomower==2.7.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -215,7 +215,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==2.0.2
+aiocomelit==2.0.3
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -324,7 +324,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.4
+aiontfy==0.8.5
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -910,7 +910,7 @@ foobot_async==1.0.0
 forecast-solar==5.0.0
 
 # homeassistant.components.freebox
-freebox-api==1.3.0
+freebox-api==1.3.1
 
 # homeassistant.components.fressnapf_tracker
 fressnapftracker==0.2.2
@@ -1014,7 +1014,7 @@ google_air_quality_api==3.0.1
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
-gotailwind==0.3.0
+gotailwind==0.4.0
 
 # homeassistant.components.govee_ble
 govee-ble==1.2.0
@@ -1106,7 +1106,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.94
+holidays==0.95
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260325.8
@@ -1142,7 +1142,7 @@ hyperion-py==0.7.6
 hyponcloud==0.9.3
 
 # homeassistant.components.iaqualink
-iaqualink==0.6.0
+iaqualink==0.7.0
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
@@ -1181,7 +1181,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.4.3
+indevolt-api==1.6.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2204,7 +2204,7 @@ python-citybikes==0.3.3
 python-dropbox-api==0.1.3
 
 # homeassistant.components.duco
-python-duco-client==0.3.6
+python-duco-client==0.3.9
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2748,7 +2748,7 @@ vallox-websocket-api==6.0.0
 vegehub==0.1.26
 
 # homeassistant.components.rdw
-vehicle==2.2.2
+vehicle==3.0.0
 
 # homeassistant.components.velbus
 velbus-aio==2026.4.1
@@ -2867,7 +2867,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.6.3
+yolink-api==0.6.5
 
 # homeassistant.components.youless
 youless-api==2.2.0
