@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN
+from .const import ATTR_UPDATE_TIMESTAMP, DOMAIN
 
 
 async def async_setup_entry(
@@ -147,6 +147,9 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
             "gps_accuracy": attr.get(ATTR_GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
             "source_type": attr.get(ATTR_SOURCE_TYPE),
+            "attributes": {ATTR_UPDATE_TIMESTAMP: attr[ATTR_UPDATE_TIMESTAMP]}
+            if ATTR_UPDATE_TIMESTAMP in attr
+            else {},
         }
 
     @callback
