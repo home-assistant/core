@@ -5,8 +5,7 @@
 # Copilot code review instructions
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
-- Do comment on code style, formatting or linting issues.
-- When reviewing an integration, follow the instructions in .claude/skills/ha-integration-knowledge/SKILL.md
+- Do not comment on code style, formatting or linting issues.
 
 # GitHub Copilot & Claude Code Instructions
 

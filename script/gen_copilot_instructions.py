@@ -15,14 +15,52 @@ GENERATED_MESSAGE = (
 
 AGENTS_FILE = Path("AGENTS.md")
 OUTPUT_FILE = Path(".github/copilot-instructions.md")
+INTEGRATION_SKILL_FILE = Path(".claude/skills/ha-integration-knowledge/SKILL.md")
+INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE = Path(
+    ".github/instructions/integrations.instructions.md"
+)
 
 COPILOT_SPECIFIC_INSTRUCTIONS = """
 # Copilot code review instructions
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
-- Do comment on code style, formatting or linting issues.
-- When reviewing an integration, follow the instructions in .claude/skills/ha-integration-knowledge/SKILL.md
+- Do not comment on code style, formatting or linting issues.
 """
+
+INTEGRATION_PATH_SPECIFIC_INSTRUCTIONS = """---
+applyTo: "homeassistant/components/**, tests/components/**"
+excludeAgent: "cloud-agent"
+---
+"""
+
+
+def _strip_frontmatter(text: str) -> str:
+    """Strip YAML frontmatter from the start of a markdown document."""
+    if not text.startswith("---\n"):
+        return text
+
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return text
+
+    return text[end + len("\n---\n") :].lstrip("\n")
+
+
+def generate_integration_path_specific_instructions() -> str:
+    """Generate instructions for integration paths."""
+    if not INTEGRATION_SKILL_FILE.exists():
+        print(f"Error: {INTEGRATION_SKILL_FILE} not found")
+        sys.exit(1)
+
+    skill_content = _strip_frontmatter(INTEGRATION_SKILL_FILE.read_text())
+
+    return (
+        INTEGRATION_PATH_SPECIFIC_INSTRUCTIONS
+        + "\n"
+        + GENERATED_MESSAGE
+        + "\n"
+        + skill_content
+    )
 
 
 def generate_output() -> str:
@@ -41,30 +79,44 @@ def generate_output() -> str:
     return "\n".join(output_parts)
 
 
+def check_file(path: Path, expected_content: str):
+    """Check if the file exists and has the expected content."""
+    if not path.exists():
+        print(f"Error: {path} does not exist")
+        sys.exit(1)
+
+    existing = path.read_text()
+    if existing != expected_content:
+        print(f"Error: {path} is out of date")
+        print("Please run: python -m script.gen_copilot_instructions")
+        sys.exit(1)
+
+    print(f"{path} is up to date")
+
+
 def main(validate: bool = False) -> int:
     """Run the script."""
     if not Path("homeassistant").is_dir():
         print("Run this from HA root dir")
         return 1
 
-    content = generate_output()
+    main_content = generate_output()
+    integration_path_specific_content = (
+        generate_integration_path_specific_instructions()
+    )
 
     if validate:
-        if not OUTPUT_FILE.exists():
-            print(f"Error: {OUTPUT_FILE} does not exist")
-            return 1
-
-        existing = OUTPUT_FILE.read_text()
-        if existing != content:
-            print(f"Error: {OUTPUT_FILE} is out of date")
-            print("Please run: python -m script.gen_copilot_instructions")
-            return 1
-
-        print(f"{OUTPUT_FILE} is up to date")
+        check_file(OUTPUT_FILE, main_content)
+        check_file(
+            INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE, integration_path_specific_content
+        )
         return 0
 
-    OUTPUT_FILE.write_text(content)
+    OUTPUT_FILE.write_text(main_content)
     print(f"Generated {OUTPUT_FILE}")
+
+    INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE.write_text(integration_path_specific_content)
+    print(f"Generated {INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE}")
     return 0
 
 
