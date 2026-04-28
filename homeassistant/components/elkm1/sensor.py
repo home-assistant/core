@@ -134,8 +134,18 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
         if value is not None:
             self._element.set(value)
 
+    async def async_setting_set(self, value: int | time_sys | None = None) -> None:
+        """Set the value of a counter on the panel."""
+        if not isinstance(self, ElkSetting):
+            raise HomeAssistantError("supported only on ElkM1 Setting sensors")
+        if value is not None:
+            if isinstance(value, int):
+                self._element.set(value)
+            else:
+                self._element.set((value.hour, value.minute))
+
     async def async_zone_update_voltage(self) -> None:
-        """Trigger zone."""
+        """Refresh the voltage of a zone from the panel."""
         if not isinstance(self, ElkZone):
             raise HomeAssistantError("supported only on ElkM1 Zone sensors")
         self._element.get_voltage()
@@ -228,16 +238,6 @@ class ElkSetting(ElkSensor):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
-
-    async def async_setting_set(self, value: int | time_sys | None = None) -> None:
-        """Set the value of a counter on the panel."""
-        if not isinstance(self, ElkSetting):
-            raise HomeAssistantError("supported only on ElkM1 Setting sensors")
-        if value is not None:
-            if isinstance(value, int):
-                self._element.set(value)
-            else:
-                self._element.set((value.hour, value.minute))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -153,7 +153,7 @@
       "description": "Sets the value of a setting (custom value).",
       "fields": {
         "value": {
-          "description": "Value to set the counter to. Can be either an integer (0-65535) or a 24-hour formatted time (hh:mm).",
+          "description": "Value to set the setting to. Can be either an integer (0-65535) or a 24-hour formatted time (hh:mm).",
           "name": "Value"
         }
       },
@@ -216,7 +216,7 @@
       "name": "Speak word"
     },
     "switch_output_turn_on": {
-      "description": "Turns on an output for specified length of time.",
+      "description": "Turns on an output for a specified length of time.",
       "fields": {
         "value": {
           "description": "Length of time to turn the output on for.",

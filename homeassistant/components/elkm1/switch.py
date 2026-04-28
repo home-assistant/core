@@ -73,9 +73,7 @@ class ElkOutput(ElkAttachedEntity, SwitchEntity):
         self._element.turn_off()
 
     async def async_switch_output_turn_on(self, value: int | None = None) -> None:
-        """Set the value of a counter on the panel."""
-        if not isinstance(self, ElkOutput):
-            raise HomeAssistantError("supported only on ElkM1 Outputs")
+        """Turn on an output for specified length of time."""
         if value is not None:
             self._element.turn_on(value)
 
@@ -107,3 +105,7 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the output."""
         self._elk_set(ThermostatMode.EMERGENCY_HEAT)
+
+    async def async_switch_output_turn_on(self, value: int | None = None) -> None:
+        """Turn on an output for specified length of time: not supported for thermostat."""
+        raise HomeAssistantError("supported only on ElkM1 Output sensors")
