@@ -458,6 +458,46 @@ SENSORS: Final = (
     ),
     # Battery Pack Temperature
     IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_INVERTER_TEMPERATURE,
+        generation=[1],
+        translation_key="inverter_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_PACK_1_TEMPERATURE,
+        generation=[1],
+        translation_key="battery_pack_1_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_PACK_2_TEMPERATURE,
+        generation=[1],
+        translation_key="battery_pack_2_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_PACK_3_TEMPERATURE,
+        generation=[1],
+        translation_key="battery_pack_3_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
         key=IndevoltBattery.MAIN_TEMPERATURE,
         generation=[2],
         translation_key="main_temperature",
@@ -649,35 +689,35 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_1_TEMPERATURE,
         IndevoltBattery.PACK_1_VOLTAGE,
         IndevoltBattery.PACK_1_CURRENT,
-    ),  # Battery Pack 1
+    ),
     (
         IndevoltBattery.PACK_2_SERIAL_NUMBER,
         IndevoltBattery.PACK_2_SOC,
         IndevoltBattery.PACK_2_TEMPERATURE,
         IndevoltBattery.PACK_2_VOLTAGE,
         IndevoltBattery.PACK_2_CURRENT,
-    ),  # Battery Pack 2
+    ),
     (
         IndevoltBattery.PACK_3_SERIAL_NUMBER,
         IndevoltBattery.PACK_3_SOC,
         IndevoltBattery.PACK_3_TEMPERATURE,
         IndevoltBattery.PACK_3_VOLTAGE,
         IndevoltBattery.PACK_3_CURRENT,
-    ),  # Battery Pack 3
+    ),
     (
         IndevoltBattery.PACK_4_SERIAL_NUMBER,
         IndevoltBattery.PACK_4_SOC,
         IndevoltBattery.PACK_4_TEMPERATURE,
         IndevoltBattery.PACK_4_VOLTAGE,
         IndevoltBattery.PACK_4_CURRENT,
-    ),  # Battery Pack 4
+    ),
     (
         IndevoltBattery.PACK_5_SERIAL_NUMBER,
         IndevoltBattery.PACK_5_SOC,
         IndevoltBattery.PACK_5_TEMPERATURE,
         IndevoltBattery.PACK_5_VOLTAGE,
         IndevoltBattery.PACK_5_CURRENT,
-    ),  # Battery Pack 5
+    ),
 ]
 
 

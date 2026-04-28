@@ -241,6 +241,9 @@
       "grid_voltage": {
         "name": "Grid voltage"
       },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
+      },
       "main_current": {
         "name": "Main current"
       },
