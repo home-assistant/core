@@ -12,7 +12,6 @@ from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.helpers import (
-    SIGNAL_ADD_ENTITIES,
     ZHADeviceProxy,
     get_zha_data,
     get_zha_gateway,
@@ -155,10 +154,9 @@ async def test_handle_device_entity_added_unknown_unique_id(
         )
         await hass.async_block_till_done()
 
-        # Nothing should be added and SIGNAL_ADD_ENTITIES is never dispatched.
+        # Nothing should be added and no dispatcher signal is fired.
         assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
-        for call in mock_dispatch.call_args_list:
-            assert call.args != (hass, SIGNAL_ADD_ENTITIES)
+        mock_dispatch.assert_not_called()
 
 
 async def test_handle_device_entity_removed(
