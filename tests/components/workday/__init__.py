@@ -25,7 +25,7 @@ async def init_integration(
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:
-    """Set up the Scrape integration in Home Assistant."""
+    """Set up the Workday integration in Home Assistant."""
 
     name = DEFAULT_NAME
     if config.get("country"):
