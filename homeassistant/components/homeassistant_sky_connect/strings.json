@@ -121,8 +121,8 @@
         },
         "progress": {
           "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
-          "install_zigbee_firmware": "Please wait while Zigbee-only firmware is installed on your {hardware_name}. This can take several minutes.",
-          "uninstall_multiprotocol_addon": "Please wait while the {addon_name} app is uninstalled."
+          "install_zigbee_firmware": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_zigbee_firmware%]",
+          "uninstall_multiprotocol_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::uninstall_multiprotocol_addon%]"
         },
         "step": {
           "uninstall_addon": {
@@ -161,8 +161,10 @@
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
       "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]",
       "install_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_otbr_addon%]",
+      "install_zigbee_firmware": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_zigbee_firmware%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]"
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]",
+      "uninstall_multiprotocol_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::uninstall_multiprotocol_addon%]"
     },
     "step": {
       "addon_installed_other_device": {
