@@ -187,17 +187,21 @@ async def test_dynamic_entity_lifecycle(
     assert hass.states.get(binary_sensor_id) == binary_sensor_state_before
 
 
-async def test_handle_device_entity_added_unknown_unique_id(
+async def test_unknown_unique_id_is_noop(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test that a DeviceEntityAddedEvent with unknown unique_id is a no-op."""
+    """Test that add/remove events with an unknown unique_id are no-ops."""
     zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
 
-    ha_zha_data = get_zha_data(hass)
-    assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
+    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    assert entity_id is not None
 
+    ha_zha_data = get_zha_data(hass)
+    registry = er.async_get(hass)
+
+    # Added: nothing queued, no dispatcher signal fired.
     with patch(
         "homeassistant.components.zha.helpers.async_dispatcher_send"
     ) as mock_dispatch:
@@ -210,22 +214,10 @@ async def test_handle_device_entity_added_unknown_unique_id(
         )
         await hass.async_block_till_done()
 
-        # Nothing should be added and no dispatcher signal is fired.
         assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
         mock_dispatch.assert_not_called()
 
-
-async def test_handle_device_entity_removed_unknown_unique_id(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
-) -> None:
-    """Test that a DeviceEntityRemovedEvent with unknown unique_id is a no-op."""
-    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
-
-    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
-    assert entity_id is not None
-
+    # Removed (both flag values): the existing entity is untouched.
     for remove in (False, True):
         zha_device_proxy.device.emit(
             DeviceEntityRemovedEvent.event_type,
@@ -237,8 +229,6 @@ async def test_handle_device_entity_removed_unknown_unique_id(
         )
         await hass.async_block_till_done()
 
-        # The original entity is untouched.
-        registry = er.async_get(hass)
         assert registry.async_get(entity_id) is not None
         assert hass.states.get(entity_id) is not None
 
