@@ -12,8 +12,8 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_websocket_api_cls():
-    """Mock WeatherFlowWebsocketAPI to track connect() calls."""
+def mock_websocket_api_instance():
+    """Mock WeatherFlowWebsocketAPI instance to track connect() calls."""
     mock_ws_instance = AsyncMock(spec=WeatherFlowWebsocketAPI)
     mock_ws_instance.connect = AsyncMock()
     mock_ws_instance.send_message = AsyncMock()
@@ -37,7 +37,7 @@ def mock_websocket_api_cls():
 async def test_websocket_connect_called_once(
     hass: HomeAssistant,
     mock_rest_api: AsyncMock,
-    mock_websocket_api_cls: AsyncMock,
+    mock_websocket_api_instance: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the shared websocket is connected exactly once during setup."""
@@ -46,13 +46,13 @@ async def test_websocket_connect_called_once(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_websocket_api_cls.connect.call_count == 1
+    assert mock_websocket_api_instance.connect.call_count == 1
 
 
 async def test_entry_unload(
     hass: HomeAssistant,
     mock_rest_api: AsyncMock,
-    mock_websocket_api_cls: AsyncMock,
+    mock_websocket_api_instance: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that unloading an entry closes the websocket."""
@@ -64,4 +64,4 @@ async def test_entry_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_websocket_api_cls.close.assert_called_once()
+    mock_websocket_api_instance.close.assert_called_once()
