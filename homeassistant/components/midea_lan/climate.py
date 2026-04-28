@@ -190,7 +190,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Midea Climate hvac mode."""
         if self._device.get_attribute("power"):
-            mode = cast("int", self._device.get_attribute("mode"))
+            mode = cast("int", self._device.get_attribute("mode") or 0)
             if 0 <= mode < len(self.hvac_modes):
                 return self.hvac_modes[mode]
         return HVACMode.OFF
@@ -265,17 +265,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
         elif old_attr := _PRESET_TO_ATTR.get(old_mode):
             # preset_mode is PRESET_NONE or unknown; clear the current active preset
             self._device.set_attribute(attr=old_attr, value=False)
-
-    def update_state(self, status: Any) -> None:
-        """Midea Climate update state."""
-        if not self.hass:
-            _LOGGER.debug(
-                "Climate update_state skipped for %s [%s]: HASS is None",
-                self.name,
-                type(self),
-            )
-            return
-        self.schedule_update_ha_state()
 
 
 class MideaACClimate(MideaClimate):
