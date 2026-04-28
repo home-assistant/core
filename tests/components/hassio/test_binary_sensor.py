@@ -210,7 +210,7 @@ async def test_mount_refresh_after_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     supervisor_client: AsyncMock,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test hassio mount state is refreshed after an issue was send by the supervisor."""
     # Add a mount.
@@ -255,7 +255,7 @@ async def test_mount_refresh_after_issue(
 
     # Change mount state to failed, issue a repair, and verify entity's state.
     mock_mounts[0] = replace(mock_mounts[0], state=MountState.FAILED)
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     issue_uuid = uuid4().hex
     await client.send_json(
         {
