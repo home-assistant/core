@@ -334,10 +334,12 @@ async def test_stream_retries(
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
         await stream.start()
+        # Capture the thread reference before yielding to the event loop, since
+        # worker_finished() may clear stream._thread once the worker exits.
+        worker_thread = stream._thread
         await open_future1
         await open_future2
-        await hass.async_add_executor_job(stream._thread.join)
-        stream._thread = None
+        await hass.async_add_executor_job(worker_thread.join)
         assert av_open.call_count == 2
         await hass.async_block_till_done()
 
