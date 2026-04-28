@@ -87,13 +87,10 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
-        # Do not register this listen-based entity with a device-specific
-        # coordinator context. In RingListenCoordinator, setting
-        # coordinator_context to None does not opt out of context filtering;
-        # it means this entity will not receive device-specific listener
-        # updates. Any event delivery here therefore must not rely on None as
-        # a wildcard context.
-        self.coordinator_context = None
+        # Register this listen-based entity with the device-specific Ring
+        # API identifier so coordinator updates for this doorbot are
+        # delivered to the entity.
+        self.coordinator_context = device.device_api_id
 
     @callback
     def _async_handle_event(self, event: str) -> None:
