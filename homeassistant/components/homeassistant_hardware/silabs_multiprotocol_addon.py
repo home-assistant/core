@@ -41,8 +41,13 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 
-from .const import LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
-from .util import ApplicationType, WaitingAddonManager, async_flash_silabs_firmware
+from .const import DOMAIN, LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
+from .util import (
+    ApplicationType,
+    WaitingAddonManager,
+    async_firmware_flashing_context,
+    async_flash_silabs_firmware,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -724,25 +729,28 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                 serial_port_settings = await self._async_serial_port_settings()
                 device = serial_port_settings.device
 
-                session = async_get_clientsession(self.hass)
-                client = FirmwareUpdateClient(self._firmware_update_url(), session)
+                # For the duration of firmware flashing, hint to other integrations
+                # (i.e. ZHA) that the hardware is in use and should not be accessed.
+                async with async_firmware_flashing_context(self.hass, device, DOMAIN):
+                    session = async_get_clientsession(self.hass)
+                    client = FirmwareUpdateClient(self._firmware_update_url(), session)
 
-                manifest = await client.async_update_data()
-                fw_manifest = next(
-                    fw
-                    for fw in manifest.firmwares
-                    if fw.filename.startswith(self._zigbee_firmware_type())
-                )
+                    manifest = await client.async_update_data()
+                    fw_manifest = next(
+                        fw
+                        for fw in manifest.firmwares
+                        if fw.filename.startswith(self._zigbee_firmware_type())
+                    )
 
-                fw_data = await client.async_fetch_firmware(fw_manifest)
+                    fw_data = await client.async_fetch_firmware(fw_manifest)
 
-                await async_flash_silabs_firmware(
-                    hass=self.hass,
-                    device=device,
-                    fw_data=fw_data,
-                    flasher_cls=self._flasher_cls,
-                    expected_installed_firmware_type=ApplicationType.EZSP,
-                )
+                    await async_flash_silabs_firmware(
+                        hass=self.hass,
+                        device=device,
+                        fw_data=fw_data,
+                        flasher_cls=self._flasher_cls,
+                        expected_installed_firmware_type=ApplicationType.EZSP,
+                    )
 
             self.install_task = self.hass.async_create_task(
                 _flash_firmware(),
