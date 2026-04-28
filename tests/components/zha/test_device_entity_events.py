@@ -129,6 +129,16 @@ async def test_handle_device_entity_added(
     # The entity is back and reachable as a HA state.
     assert hass.states.get(entity_id) is not None
 
+    # Exactly one entity reference is recorded for this entity_id (no stale
+    # leftovers from the remove + re-add cycle).
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    matching_refs = [
+        ref
+        for ref in gateway_proxy.ha_entity_refs[zha_device_proxy.device.ieee]
+        if ref.ha_entity_id == entity_id
+    ]
+    assert len(matching_refs) == 1
+
 
 async def test_handle_device_entity_added_unknown_unique_id(
     hass: HomeAssistant,
@@ -224,6 +234,13 @@ async def test_handle_device_entity_removed_with_remove_flag(
     # Registry entry and state are both gone.
     assert registry.async_get(entity_id) is None
     assert hass.states.get(entity_id) is None
+
+    # No stale entity reference is left in the gateway proxy.
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    assert all(
+        ref.ha_entity_id != entity_id
+        for ref in gateway_proxy.ha_entity_refs[zha_device_proxy.device.ieee]
+    )
 
 
 async def test_handle_device_entity_removed_unknown_unique_id(

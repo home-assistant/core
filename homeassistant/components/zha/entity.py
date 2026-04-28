@@ -201,6 +201,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)
+        self.entity_data.device_proxy.gateway_proxy.remove_entity_reference(self)
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 

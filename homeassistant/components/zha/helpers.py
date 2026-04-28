@@ -855,13 +855,12 @@ class ZHAGatewayProxy(EventBase):
 
     def remove_entity_reference(self, entity: ZHAEntity) -> None:
         """Remove entity reference for given entity_id if found."""
-        if entity.zha_device.ieee in self.ha_entity_refs:
-            entity_refs = self.ha_entity_refs.get(entity.zha_device.ieee)
-            self.ha_entity_refs[entity.zha_device.ieee] = [
-                e
-                for e in entity_refs  # type: ignore[union-attr]
-                if e.ha_entity_id != entity.entity_id
-            ]
+        ieee = entity.entity_data.device_proxy.device.ieee
+        if (entity_refs := self._ha_entity_refs.get(ieee)) is None:
+            return
+        self._ha_entity_refs[ieee] = [
+            e for e in entity_refs if e.ha_entity_id != entity.entity_id
+        ]
 
     def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
