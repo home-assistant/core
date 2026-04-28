@@ -80,41 +80,32 @@ class MobileAppNotifyEntity(NotifyEntity):
 
         self._attr_unique_id = entry.data[ATTR_DEVICE_ID]
         self._attr_device_info = device_info(entry.data)
-        self.entry = entry
-        self.session = session
+        self._config_entry = entry
+        self._session = session
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
-        await self._async_send_remote_message(message=message, title=title)
-
-    async def _async_send_remote_message(
-        self,
-        message: str | None = None,
-        title: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Send the push notification."""
-        placeholders = {"device_name": self.entry.title}
+        placeholders = {"device_name": self._config_entry.title}
 
         data: dict[str, Any] = {}
-        if message is not None:
-            data[ATTR_MESSAGE] = message
+        data[ATTR_MESSAGE] = message
         if title is not None:
             data[ATTR_TITLE] = title
 
-        if (
-            self.entry.data[ATTR_WEBHOOK_ID]
-            in self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
-        ):
+        # Sends notification via local push if available and fallback to cloud push if fails
+        if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[
+            DOMAIN
+        ][DATA_PUSH_CHANNEL]:
             push_channel: PushChannel = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL][
-                self.entry.data[ATTR_WEBHOOK_ID]
+                webhook_id
             ]
             push_channel.async_send_notification(
                 data,
-                partial(_send_message, self.session, self.entry),
+                partial(_send_message, self._session, self._config_entry),
             )
-        elif ATTR_PUSH_URL in self.entry.data[ATTR_APP_DATA]:
-            await _send_message(self.session, self.entry, data)
+        # Sends notification via cloud push notification service
+        elif ATTR_PUSH_URL in self._config_entry.data[ATTR_APP_DATA]:
+            await _send_message(self._session, self._config_entry, data)
         else:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -234,10 +225,9 @@ class MobileAppNotificationService(BaseNotificationService):
 
 
 async def _send_message(
-    session: ClientSession,
-    entry: ConfigEntry,
-    data: dict[str, Any],
+    session: ClientSession, entry: ConfigEntry, data: dict[str, Any]
 ) -> None:
+    """Shared internal helper to send messages via cloud push notification services."""
     reg_info = {
         ATTR_APP_ID: entry.data[ATTR_APP_ID],
         ATTR_APP_VERSION: entry.data[ATTR_APP_VERSION],
