@@ -121,10 +121,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_REAUTH:
                     try:
                         device_registered = await self.hive_auth.is_device_registered()
-                    except HiveApiError:
+                    except HiveApiError as err:
                         _LOGGER.debug(
-                            "Failed to check whether the Hive device is registered during reauthentication",
-                            exc_info=True,
+                            "Failed to check whether the Hive device is registered during reauthentication: %s", err
                         )
                         device_registered = False
                     if device_registered:
