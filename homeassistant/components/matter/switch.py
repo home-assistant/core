@@ -15,13 +15,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 EVSE_SUPPLY_STATE_MAP = {
@@ -34,11 +33,11 @@ EVSE_SUPPLY_STATE_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
@@ -316,5 +315,15 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.EnergyEvse.Commands.EnableCharging.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="EveChildLock",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="child_lock",
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.EveCluster.Attributes.ChildLock,),
     ),
 ]

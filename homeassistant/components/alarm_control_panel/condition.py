@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR,
     Condition,
     EntityStateConditionBase,
     make_entity_state_condition,
@@ -25,6 +26,7 @@ class EntityStateRequiredFeaturesCondition(EntityStateConditionBase):
     """State condition."""
 
     _required_features: int
+    _schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain with the required features."""
@@ -82,9 +84,11 @@ CONDITIONS: dict[str, type[Condition]] = {
         AlarmControlPanelState.ARMED_VACATION,
         AlarmControlPanelEntityFeature.ARM_VACATION,
     ),
-    "is_disarmed": make_entity_state_condition(DOMAIN, AlarmControlPanelState.DISARMED),
+    "is_disarmed": make_entity_state_condition(
+        DOMAIN, AlarmControlPanelState.DISARMED, support_duration=True
+    ),
     "is_triggered": make_entity_state_condition(
-        DOMAIN, AlarmControlPanelState.TRIGGERED
+        DOMAIN, AlarmControlPanelState.TRIGGERED, support_duration=True
     ),
 }
 

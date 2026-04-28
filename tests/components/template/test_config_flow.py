@@ -708,6 +708,7 @@ async def test_config_flow_device(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "device_class": "distance",
                 "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
@@ -719,7 +720,8 @@ async def test_config_flow_device(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
-                "unit_of_measurement": "cm",
+                "device_class": "current",
+                "unit_of_measurement": "mA",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -727,7 +729,7 @@ async def test_config_flow_device(
                 },
             },
             "state",
-            None,
+            "distance",
         ),
         (
             "alarm_control_panel",
@@ -901,27 +903,76 @@ async def test_options(
     )
 
 
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "old_state_template",
+        "new_state_template",
+        "input_states",
+        "extra_options",
+        "suggested_device_class",
+    ),
+    [
+        (
+            "binary_sensor",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+            },
+            {"one": "on", "two": "off"},
+            {"device_class": "motion"},
+            "motion",
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {"state": "{{ states('number.two') }}"},
+            {"one": "30.0", "two": "20.0"},
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "device_class": "distance",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            "distance",
+        ),
+    ],
+)
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
-async def test_options_binary_sensor_remove_device_class(hass: HomeAssistant) -> None:
-    """Test removing the binary sensor device class in options."""
-    hass.states.async_set("binary_sensor.one", "on", {})
-    hass.states.async_set("binary_sensor.two", "off", {})
+async def test_options_remove_device_class(
+    hass: HomeAssistant,
+    template_type: str,
+    old_state_template: dict[str, Any],
+    new_state_template: dict[str, Any],
+    input_states: dict[str, Any],
+    extra_options: dict[str, Any],
+    suggested_device_class: str | None,
+) -> None:
+    """Test removing the device class in options."""
 
-    old_state_template = {
-        "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
-    }
-    new_state_template = {
-        "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
-    }
+    input_entities = ["one", "two"]
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[input_entity], {}
+        )
 
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "My template",
-            "template_type": "binary_sensor",
+            "template_type": template_type,
             **old_state_template,
-            "device_class": "motion",
+            **extra_options,
         },
         title="My template",
     )
@@ -932,28 +983,32 @@ async def test_options_binary_sensor_remove_device_class(hass: HomeAssistant) ->
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "binary_sensor"
+    assert result["step_id"] == template_type
     assert (
         get_schema_suggested_value(result["data_schema"].schema, "device_class")
-        == "motion"
+        == suggested_device_class
     )
 
+    extra_options.pop("device_class")
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             **new_state_template,
+            **extra_options,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My template",
-        "template_type": "binary_sensor",
+        "template_type": template_type,
         **new_state_template,
+        **extra_options,
     }
     assert config_entry.options == {
         "name": "My template",
-        "template_type": "binary_sensor",
+        "template_type": template_type,
         **new_state_template,
+        **extra_options,
     }
     assert "device_class" not in config_entry.options
 

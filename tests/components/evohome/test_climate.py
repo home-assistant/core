@@ -57,7 +57,10 @@ async def test_setup_platform(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    for x in hass.states.async_all(CLIMATE_DOMAIN):
+    climate_states = hass.states.async_all(CLIMATE_DOMAIN)
+    assert climate_states
+
+    for x in climate_states:
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 

@@ -1771,19 +1771,19 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-class SerialSelectorConfig(BaseSelectorConfig):
-    """Class to represent a serial selector config."""
+class SerialPortSelectorConfig(BaseSelectorConfig):
+    """Class to represent a serial port selector config."""
 
 
-@SELECTORS.register("serial")
-class SerialSelector(Selector[SerialSelectorConfig]):
+@SELECTORS.register("serial_port")
+class SerialPortSelector(Selector[SerialPortSelectorConfig]):
     """Selector for a serial port."""
 
-    selector_type = "serial"
+    selector_type = "serial_port"
 
     CONFIG_SCHEMA = make_selector_config_schema()
 
-    def __init__(self, config: SerialSelectorConfig | None = None) -> None:
+    def __init__(self, config: SerialPortSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1878,6 +1878,7 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    primary_entities_only: bool
 
 
 @SELECTORS.register("target")
@@ -1899,6 +1900,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
+            vol.Optional("primary_entities_only"): cv.boolean,
         }
     )
 
