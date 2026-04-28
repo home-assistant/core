@@ -39,6 +39,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
@@ -52,7 +53,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2
                 ),
             ) as client:
-                return {}, client._user_id
+                return {}, client.user_id
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}, None
         except AqualinkServiceException, httpx.HTTPError:
@@ -71,7 +72,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             errors, account_id = await self._async_validate_credentials(user_input)
@@ -101,7 +102,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle confirmation of reauthentication."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         config_entry = (
             self._get_reconfigure_entry()

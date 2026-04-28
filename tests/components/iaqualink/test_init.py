@@ -203,7 +203,7 @@ async def test_setup_backfills_unique_id(
     system.get_devices = AsyncMock(return_value={})
 
     async def mock_login(aqualink_client: AqualinkClient) -> None:
-        aqualink_client._user_id = "account-123"
+        aqualink_client.user_id = "account-123"
 
     with (
         patch(
@@ -218,6 +218,46 @@ async def test_setup_backfills_unique_id(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    assert config_entry.unique_id == "account-123"
+
+
+async def test_migrate_legacy_unique_id(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    client: AqualinkClient,
+) -> None:
+    """Test setup migrates legacy username unique IDs to account IDs."""
+    config_entry = MockConfigEntry(
+        domain="iaqualink",
+        title=config_data["username"],
+        data=config_data,
+        unique_id=config_data["username"].casefold(),
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    system.get_devices = AsyncMock(return_value={})
+
+    async def mock_login(aqualink_client: AqualinkClient) -> None:
+        aqualink_client.user_id = "account-123"
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
     assert config_entry.unique_id == "account-123"
 
 

@@ -66,6 +66,55 @@ class AqualinkRuntimeData:
     thermostats: list[AqualinkThermostat]
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entries using username-based unique IDs."""
+    if entry.version == 1 and entry.minor_version < 2:
+        account_id = entry.unique_id
+
+        username = entry.data[CONF_USERNAME]
+        if account_id == username.casefold():
+            aqualink = AqualinkClient(
+                username,
+                entry.data[CONF_PASSWORD],
+                httpx_client=get_async_client(
+                    hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2
+                ),
+            )
+            try:
+                await aqualink.login()
+            except AqualinkServiceUnauthorizedException as auth_exception:
+                await aqualink.close()
+                raise ConfigEntryAuthFailed(
+                    "Invalid credentials for iAquaLink"
+                ) from auth_exception
+            except (
+                AqualinkServiceException,
+                TimeoutError,
+                httpx.HTTPError,
+            ) as aio_exception:
+                await aqualink.close()
+                raise ConfigEntryNotReady(
+                    f"Error while attempting login: {aio_exception}"
+                ) from aio_exception
+
+            account_id = aqualink.user_id
+            await aqualink.close()
+
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=account_id,
+            minor_version=2,
+        )
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
@@ -89,8 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             f"Error while attempting login: {aio_exception}"
         ) from aio_exception
 
-    if entry.unique_id != aqualink._user_id:
-        hass.config_entries.async_update_entry(entry, unique_id=aqualink._user_id)
+    account_id = aqualink.user_id
+    if entry.unique_id != account_id:
+        hass.config_entries.async_update_entry(entry, unique_id=account_id)
 
     try:
         systems = await aqualink.get_systems()
