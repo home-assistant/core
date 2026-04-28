@@ -194,7 +194,7 @@ async def test_filename_does_not_exist(
 ) -> None:
     """Test upload service call with a filename path that does not exist."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="does not exist"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -206,6 +206,33 @@ async def test_filename_does_not_exist(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "filenames_do_not_exist"
+    assert TEST_FILENAME in exc_info.value.translation_placeholders["filenames"]
+
+
+@pytest.mark.parametrize("upload_file", [MockUploadFile(exists=False)])
+async def test_multiple_filenames_do_not_exist(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test upload service reports all missing files, not just the first one."""
+    await setup_integration(hass, mock_config_entry)
+    second_filename = "other_snapshot.jpg"
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_FILENAME: [TEST_FILENAME, second_filename],
+                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "filenames_do_not_exist"
+    assert TEST_FILENAME in exc_info.value.translation_placeholders["filenames"]
+    assert second_filename in exc_info.value.translation_placeholders["filenames"]
 
 
 async def test_upload_service_fails_upload(
