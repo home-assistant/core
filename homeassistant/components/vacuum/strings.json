@@ -102,6 +102,9 @@
   "exceptions": {
     "area_mapping_not_configured": {
       "message": "Area mapping is not configured for `{entity_id}`. Configure the segment-to-area mapping before using this action."
+    },
+    "areas_not_mapped": {
+      "message": "The following areas are not mapped to any segments of targeted vacuums: {areas}"
     }
   },
   "issues": {

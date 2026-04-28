@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Final
 
+from indevolt_api import IndevoltConfig, IndevoltEnergyMode
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -23,8 +25,8 @@ class IndevoltSelectEntityDescription(SelectEntityDescription):
 
     read_key: str
     write_key: str
-    value_to_option: dict[int, str]
-    unavailable_values: list[int] = field(default_factory=list)
+    value_to_option: dict[IndevoltEnergyMode, str]
+    unavailable_values: list[IndevoltEnergyMode] = field(default_factory=list)
     generation: list[int] = field(default_factory=lambda: [1, 2])
 
 
@@ -32,14 +34,14 @@ SELECTS: Final = (
     IndevoltSelectEntityDescription(
         key="energy_mode",
         translation_key="energy_mode",
-        read_key="7101",
-        write_key="47005",
+        read_key=IndevoltConfig.READ_ENERGY_MODE,
+        write_key=IndevoltConfig.WRITE_ENERGY_MODE,
         value_to_option={
-            1: "self_consumed_prioritized",
-            4: "real_time_control",
-            5: "charge_discharge_schedule",
+            IndevoltEnergyMode.SELF_CONSUMED_PRIORITIZED: "self_consumed_prioritized",
+            IndevoltEnergyMode.REAL_TIME_CONTROL: "real_time_control",
+            IndevoltEnergyMode.CHARGE_DISCHARGE_SCHEDULE: "charge_discharge_schedule",
         },
-        unavailable_values=[0],
+        unavailable_values=[IndevoltEnergyMode.OUTDOOR_PORTABLE],
     ),
 )
 

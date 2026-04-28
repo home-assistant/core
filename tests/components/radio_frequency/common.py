@@ -1,8 +1,9 @@
-"""Common fixtures for the Radio Frequency tests."""
+"""Common test tools for the Radio Frequency integration."""
+
+from __future__ import annotations
 
 from typing import NamedTuple, override
 
-import pytest
 from rf_protocols import ModulationType, RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import (
@@ -12,13 +13,6 @@ from homeassistant.components.radio_frequency import (
 from homeassistant.components.radio_frequency.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-
-@pytest.fixture
-async def init_integration(hass: HomeAssistant) -> None:
-    """Set up the Radio Frequency integration for testing."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
 
 class MockCommand(NamedTuple):
@@ -81,11 +75,16 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
         )
 
 
-@pytest.fixture
-async def mock_rf_entity(
-    hass: HomeAssistant, init_integration: None
+async def init_radio_frequency_fixture_helper(hass: HomeAssistant) -> None:
+    """Set up the Radio Frequency integration for testing."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+
+async def mock_rf_entity_fixture_helper(
+    hass: HomeAssistant,
 ) -> MockRadioFrequencyEntity:
-    """Return a mock radio frequency entity."""
+    """Add a mock radio frequency entity to the running integration."""
     entity = MockRadioFrequencyEntity("test_rf_transmitter")
     component = hass.data[DATA_COMPONENT]
     await component.async_add_entities([entity])
