@@ -31,7 +31,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.midea_lan import climate
-from homeassistant.components.midea_lan.const import DEVICES, DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 
@@ -390,26 +389,16 @@ async def test_climate_async_setup_entry(hass: HomeAssistant) -> None:
     """Test async_setup_entry creates entities for each supported device type."""
     add_entities = MagicMock()
     config_entry = MagicMock(data={CONF_DEVICE_ID: 123}, options={})
+    config_entry.runtime_data = DummyDevice(DeviceType.AC)
 
     with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
-        hass.data[DOMAIN] = {DEVICES: {123: DummyDevice(DeviceType.AC)}}
-
-        # Ensure optional entities (default=False) are skipped unless explicitly enabled.
+        # Ensure optional entities (default=False) are still created (enabled_default
+        # only affects the UI toggle, not creation).
         with patch.object(
             climate, "MideaACClimate", side_effect=lambda *_: "ac"
         ) as ac_ctor:
             await climate.async_setup_entry(hass, config_entry, add_entities)
         assert ac_ctor.call_count == 2
-
-        with (
-            patch.object(climate, "MideaACClimate", side_effect=lambda *_: "ac"),
-            patch.object(climate, "MideaCCClimate", side_effect=lambda *_: "cc"),
-            patch.object(climate, "MideaCFClimate", side_effect=lambda *_: "cf"),
-            patch.object(climate, "MideaC3Climate", side_effect=lambda *_: "c3"),
-            patch.object(climate, "MideaFBClimate", side_effect=lambda *_: "fb"),
-        ):
-            await climate.async_setup_entry(hass, config_entry, add_entities)
-        assert add_entities.called
 
         for dev_type in (
             DeviceType.CC,
@@ -418,7 +407,7 @@ async def test_climate_async_setup_entry(hass: HomeAssistant) -> None:
             DeviceType.FB,
         ):
             add_entities.reset_mock()
-            hass.data[DOMAIN][DEVICES][123] = DummyDevice(dev_type)
+            config_entry.runtime_data = DummyDevice(dev_type)
             with (
                 patch.object(climate, "MideaACClimate", side_effect=lambda *_: "ac"),
                 patch.object(climate, "MideaCCClimate", side_effect=lambda *_: "cc"),
@@ -428,3 +417,15 @@ async def test_climate_async_setup_entry(hass: HomeAssistant) -> None:
             ):
                 await climate.async_setup_entry(hass, config_entry, add_entities)
             assert add_entities.called
+
+
+async def test_climate_async_setup_entry_no_device(hass: HomeAssistant) -> None:
+    """Test async_setup_entry logs a warning and returns when runtime_data is None."""
+    add_entities = MagicMock()
+    config_entry = MagicMock(data={CONF_DEVICE_ID: 123}, options={})
+    config_entry.runtime_data = None
+
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
+        await climate.async_setup_entry(hass, config_entry, add_entities)
+
+    add_entities.assert_not_called()

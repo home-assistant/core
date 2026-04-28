@@ -1,4 +1,4 @@
-"""Tests for the Midea LAN config flow."""
+"""Tests for the Midea LAN config mock_config_flow."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -55,36 +55,6 @@ TEST_TOKEN = "aa" * 16
 TEST_KEY = "bb" * 16
 
 
-@pytest.fixture
-def flow(hass: HomeAssistant) -> MideaLanConfigFlow:
-    """Return a configured config flow instance."""
-    config_flow = MideaLanConfigFlow()
-    config_flow.hass = hass
-    return config_flow
-
-
-@pytest.fixture
-def mock_device_config_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, dict]:
-    """Mock config-flow storage I/O in memory without creating files."""
-    storage: dict[str, dict] = {}
-
-    async def fake_async_save(self, data: dict) -> None:
-        storage[self.key] = data.copy()
-
-    async def fake_async_load(self) -> dict | None:
-        return storage.get(self.key)
-
-    monkeypatch.setattr(
-        "homeassistant.components.midea_lan.config_flow.Store.async_save",
-        fake_async_save,
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.midea_lan.config_flow.Store.async_load",
-        fake_async_load,
-    )
-    return storage
-
-
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent loading the integration during config flow tests."""
@@ -125,7 +95,7 @@ def _manual_user_input() -> dict:
 
 
 async def test_manual_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful manual configuration flow."""
+    """Test a successful manual configuration mock_config_flow."""
     with (
         patch(
             "homeassistant.components.midea_lan.config_flow.discover",
@@ -250,7 +220,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
 
 
 async def test_storage_helpers(
-    flow: MideaLanConfigFlow,
+    mock_config_flow: MideaLanConfigFlow,
     mock_device_config_storage: dict[str, dict],
 ) -> None:
     """Test saving and loading device config from storage."""
@@ -260,14 +230,14 @@ async def test_storage_helpers(
         CONF_TYPE: TEST_TYPE,
     }
 
-    await flow._save_device_config(data)
+    await mock_config_flow._save_device_config(data)
 
-    loaded = await flow._load_device_config(str(TEST_DEVICE_ID))
+    loaded = await mock_config_flow._load_device_config(str(TEST_DEVICE_ID))
     assert loaded[CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert loaded[CONF_NAME] == TEST_NAME
     assert len(mock_device_config_storage) == 1
 
-    assert await flow._load_device_config("does_not_exist") == {}
+    assert await mock_config_flow._load_device_config("does_not_exist") == {}
 
 
 def test_check_storage_device() -> None:
@@ -286,43 +256,61 @@ def test_check_storage_device() -> None:
     )
 
 
-async def test_step_user_routes(flow: MideaLanConfigFlow) -> None:
+async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test step_user routes actions to the expected next steps."""
     with (
-        patch.object(flow, "async_step_discovery", AsyncMock(return_value={"step": 1})),
-        patch.object(flow, "async_step_manually", AsyncMock(return_value={"step": 2})),
-        patch.object(flow, "async_step_cache", AsyncMock(return_value={"step": 3})),
-        patch.object(flow, "async_step_list", AsyncMock(return_value={"step": 4})),
+        patch.object(
+            mock_config_flow,
+            "async_step_discovery",
+            AsyncMock(return_value={"step": 1}),
+        ),
+        patch.object(
+            mock_config_flow, "async_step_manually", AsyncMock(return_value={"step": 2})
+        ),
+        patch.object(
+            mock_config_flow, "async_step_cache", AsyncMock(return_value={"step": 3})
+        ),
+        patch.object(
+            mock_config_flow, "async_step_list", AsyncMock(return_value={"step": 4})
+        ),
     ):
-        assert await flow.async_step_user({"action": "discovery"}) == {"step": 1}
-        flow.found_device = {"x": 1}
-        assert await flow.async_step_user({"action": "manually"}) == {"step": 2}
-        assert flow.found_device == {}
-        assert await flow.async_step_user({"action": "cache"}) == {"step": 3}
-        assert await flow.async_step_user({"action": "list"}) == {"step": 4}
+        assert await mock_config_flow.async_step_user({"action": "discovery"}) == {
+            "step": 1
+        }
+        mock_config_flow.found_device = {"x": 1}
+        assert await mock_config_flow.async_step_user({"action": "manually"}) == {
+            "step": 2
+        }
+        assert mock_config_flow.found_device == {}
+        assert await mock_config_flow.async_step_user({"action": "cache"}) == {
+            "step": 3
+        }
+        assert await mock_config_flow.async_step_user({"action": "list"}) == {"step": 4}
 
-    result = await flow.async_step_user()
+    result = await mock_config_flow.async_step_user()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-async def test_step_cache(flow: MideaLanConfigFlow) -> None:
+async def test_step_cache(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test cache step clears login cache and displays form."""
-    flow.hass.data[DOMAIN] = {
+    mock_config_flow.hass.data[DOMAIN] = {
         "login_data": {CONF_ACCOUNT: "a", CONF_SERVER: "s", CONF_PASSWORD: "p"},
         "login_mode": "input",
     }
-    with patch.object(flow, "async_step_user", AsyncMock(return_value={"done": True})):
-        result = await flow.async_step_cache({"action": "remove"})
+    with patch.object(
+        mock_config_flow, "async_step_user", AsyncMock(return_value={"done": True})
+    ):
+        result = await mock_config_flow.async_step_cache({"action": "remove"})
     assert result == {"done": True}
-    assert flow.hass.data[DOMAIN] == {}
+    assert mock_config_flow.hass.data[DOMAIN] == {}
 
-    result = await flow.async_step_cache()
+    result = await mock_config_flow.async_step_cache()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cache"
 
 
-async def test_step_list(flow: MideaLanConfigFlow) -> None:
+async def test_step_list(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test list step for discovered and empty-device results."""
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover",
@@ -334,7 +322,7 @@ async def test_step_list(flow: MideaLanConfigFlow) -> None:
             }
         },
     ):
-        result = await flow.async_step_list()
+        result = await mock_config_flow.async_step_list()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "list"
     assert "Appliance code" in result["description_placeholders"]["table"]
@@ -342,13 +330,13 @@ async def test_step_list(flow: MideaLanConfigFlow) -> None:
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover", return_value={}
     ):
-        result = await flow.async_step_list()
+        result = await mock_config_flow.async_step_list()
     assert result["description_placeholders"]["table"] == "Not found"
 
 
-async def test_step_discovery(flow: MideaLanConfigFlow) -> None:
+async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test discovery step form and auto route."""
-    result = await flow.async_step_discovery()
+    result = await mock_config_flow.async_step_discovery()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery"
 
@@ -358,10 +346,10 @@ async def test_step_discovery(flow: MideaLanConfigFlow) -> None:
             return_value=_discovery_result(),
         ),
         patch.object(
-            flow, "async_step_auto", AsyncMock(return_value={"ok": True})
+            mock_config_flow, "async_step_auto", AsyncMock(return_value={"ok": True})
         ) as mock_auto,
     ):
-        result = await flow.async_step_discovery({CONF_IP_ADDRESS: "auto"})
+        result = await mock_config_flow.async_step_discovery({CONF_IP_ADDRESS: "auto"})
     assert result == {"ok": True}
     assert mock_auto.called
 
@@ -370,21 +358,27 @@ async def test_step_discovery(flow: MideaLanConfigFlow) -> None:
             "homeassistant.components.midea_lan.config_flow.discover",
             return_value=_discovery_result(),
         ),
-        patch.object(flow, "async_step_auto", AsyncMock(return_value={"ok": "ip"})),
+        patch.object(
+            mock_config_flow, "async_step_auto", AsyncMock(return_value={"ok": "ip"})
+        ),
     ):
-        result = await flow.async_step_discovery({CONF_IP_ADDRESS: TEST_IP_ADDRESS})
+        result = await mock_config_flow.async_step_discovery(
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS}
+        )
     assert result == {"ok": "ip"}
 
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover",
         return_value={},
     ):
-        result = await flow.async_step_discovery({CONF_IP_ADDRESS: TEST_IP_ADDRESS})
+        result = await mock_config_flow.async_step_discovery(
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS}
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_devices"}
 
 
-async def test_check_cloud_login(flow: MideaLanConfigFlow) -> None:
+async def test_check_cloud_login(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test cloud login helper for success and failure."""
     cloud = MagicMock()
     cloud.login = AsyncMock(return_value=True)
@@ -398,14 +392,14 @@ async def test_check_cloud_login(flow: MideaLanConfigFlow) -> None:
             return_value=cloud,
         ),
     ):
-        assert await flow._check_cloud_login("s", "a", "p", True)
+        assert await mock_config_flow._check_cloud_login("s", "a", "p", True)
 
     cloud.login = AsyncMock(return_value=False)
     with patch(
         "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
         return_value=cloud,
     ):
-        assert not await flow._check_cloud_login("s", "a", "p", True)
+        assert not await mock_config_flow._check_cloud_login("s", "a", "p", True)
 
     cloud.login = AsyncMock(return_value=True)
     with (
@@ -418,14 +412,14 @@ async def test_check_cloud_login(flow: MideaLanConfigFlow) -> None:
             return_value=cloud,
         ),
     ):
-        assert await flow._check_cloud_login()
+        assert await mock_config_flow._check_cloud_login()
 
 
-async def test_check_key_from_cloud(flow: MideaLanConfigFlow) -> None:
+async def test_check_key_from_cloud(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test key/token retrieval helper."""
-    flow.devices = _discovery_result()
-    flow.cloud = MagicMock()
-    flow.cloud.get_cloud_keys = AsyncMock(
+    mock_config_flow.devices = _discovery_result()
+    mock_config_flow.cloud = MagicMock()
+    mock_config_flow.cloud.get_cloud_keys = AsyncMock(
         return_value={1: {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
 
@@ -443,20 +437,22 @@ async def test_check_key_from_cloud(flow: MideaLanConfigFlow) -> None:
             return_value=dm,
         ),
     ):
-        result = await flow._check_key_from_cloud(TEST_DEVICE_ID)
+        result = await mock_config_flow._check_key_from_cloud(TEST_DEVICE_ID)
 
     assert result == {"token": TEST_TOKEN, "key": TEST_KEY}
 
 
-async def test_check_key_from_cloud_edge_cases(flow: MideaLanConfigFlow) -> None:
+async def test_check_key_from_cloud_edge_cases(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
     """Test key helper branches for cloud missing and all-key failures."""
-    flow.devices = _discovery_result()
-    flow.cloud = None
-    result = await flow._check_key_from_cloud(TEST_DEVICE_ID)
+    mock_config_flow.devices = _discovery_result()
+    mock_config_flow.cloud = None
+    result = await mock_config_flow._check_key_from_cloud(TEST_DEVICE_ID)
     assert result == {"error": "cloud_none"}
 
-    flow.cloud = MagicMock()
-    flow.cloud.get_cloud_keys = AsyncMock(
+    mock_config_flow.cloud = MagicMock()
+    mock_config_flow.cloud.get_cloud_keys = AsyncMock(
         return_value={
             1: {"token": TEST_TOKEN, "key": TEST_KEY},
             2: {"token": TEST_TOKEN, "key": TEST_KEY},
@@ -472,17 +468,19 @@ async def test_check_key_from_cloud_edge_cases(flow: MideaLanConfigFlow) -> None
             return_value=MagicMock(connect=MagicMock(return_value=False)),
         ),
     ):
-        result = await flow._check_key_from_cloud(TEST_DEVICE_ID, default_key=False)
+        result = await mock_config_flow._check_key_from_cloud(
+            TEST_DEVICE_ID, default_key=False
+        )
     assert result == {"error": "connect_error"}
 
 
 async def test_check_key_from_cloud_auth_and_socket_exceptions(
-    flow: MideaLanConfigFlow,
+    mock_config_flow: MideaLanConfigFlow,
 ) -> None:
     """Test key helper handles device auth and socket exceptions."""
-    flow.devices = _discovery_result()
-    flow.cloud = MagicMock()
-    flow.cloud.get_cloud_keys = AsyncMock(
+    mock_config_flow.devices = _discovery_result()
+    mock_config_flow.cloud = MagicMock()
+    mock_config_flow.cloud.get_cloud_keys = AsyncMock(
         return_value={
             1: {"token": "t1", "key": "k1"},
             2: {"token": "t2", "key": "k2"},
@@ -507,11 +505,11 @@ async def test_check_key_from_cloud_auth_and_socket_exceptions(
             side_effect=[auth_dm, socket_dm],
         ),
     ):
-        result = await flow._check_key_from_cloud(TEST_DEVICE_ID)
+        result = await mock_config_flow._check_key_from_cloud(TEST_DEVICE_ID)
     assert result == {"error": "connect_error"}
 
 
-async def test_step_login_branches(flow: MideaLanConfigFlow) -> None:
+async def test_step_login_branches(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test login step form, skip-login, input-login, and failure branches."""
     with (
         patch(
@@ -519,7 +517,7 @@ async def test_step_login_branches(flow: MideaLanConfigFlow) -> None:
             AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
         ),
     ):
-        result = await flow.async_step_login()
+        result = await mock_config_flow.async_step_login()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "login"
 
@@ -528,134 +526,168 @@ async def test_step_login_branches(flow: MideaLanConfigFlow) -> None:
             "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
             AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
         ),
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=True)),
-        patch.object(flow, "async_step_auto", AsyncMock(return_value={"auto": True})),
+        patch.object(
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=True)
+        ),
+        patch.object(
+            mock_config_flow, "async_step_auto", AsyncMock(return_value={"auto": True})
+        ),
     ):
-        result = await flow.async_step_login(
+        result = await mock_config_flow.async_step_login(
             {CONF_SERVER: INVALID_SERVER_ID, CONF_ACCOUNT: "a", CONF_PASSWORD: "p"}
         )
     assert result == {"auto": True}
-    assert flow.hass.data[DOMAIN]["login_mode"] == "preset"
+    assert mock_config_flow.hass.data[DOMAIN]["login_mode"] == "preset"
 
     with (
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
             AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
         ),
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=False)),
+        patch.object(
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=False)
+        ),
     ):
-        result = await flow.async_step_login(
+        result = await mock_config_flow.async_step_login(
             {CONF_SERVER: 1, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "login_failed"}
 
 
-async def test_step_auto_cached_login_failure(flow: MideaLanConfigFlow) -> None:
+async def test_step_auto_cached_login_failure(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
     """Test auto step clears invalid cached login and routes to login step."""
-    flow.devices = _discovery_result()
-    flow.available_device = {TEST_DEVICE_ID: "Device"}
-    flow.hass.data[DOMAIN] = {
+    mock_config_flow.devices = _discovery_result()
+    mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
+    mock_config_flow.hass.data[DOMAIN] = {
         "login_mode": "input",
         "login_data": {CONF_SERVER: "CN", CONF_ACCOUNT: "u", CONF_PASSWORD: "p"},
     }
-    flow.cloud = None
+    mock_config_flow.cloud = None
 
     with (
-        patch.object(flow, "_load_device_config", return_value={}),
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=False)),
-        patch.object(flow, "async_step_login", AsyncMock(return_value={"login": True})),
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
+        patch.object(
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=False)
+        ),
+        patch.object(
+            mock_config_flow,
+            "async_step_login",
+            AsyncMock(return_value={"login": True}),
+        ),
     ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"login": True}
-    assert flow.hass.data[DOMAIN] == {}
+    assert mock_config_flow.hass.data[DOMAIN] == {}
 
 
-async def test_step_auto_v3_key_retrieval_paths(flow: MideaLanConfigFlow) -> None:
+async def test_step_auto_v3_key_retrieval_paths(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
     """Test auto step V3 key retrieval fallback and success branches."""
-    flow.devices = _discovery_result()
-    flow.available_device = {TEST_DEVICE_ID: "Device"}
-    flow.hass.data[DOMAIN] = {
+    mock_config_flow.devices = _discovery_result()
+    mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
+    mock_config_flow.hass.data[DOMAIN] = {
         "login_mode": "preset",
         "login_data": {CONF_SERVER: "CN", CONF_ACCOUNT: "u", CONF_PASSWORD: "p"},
     }
-    flow.cloud = MagicMock()
-    flow.cloud.get_device_info = AsyncMock(
+    mock_config_flow.cloud = MagicMock()
+    mock_config_flow.cloud.get_device_info = AsyncMock(
         return_value={"name": TEST_NAME, "model_number": 7}
     )
 
     with (
-        patch.object(flow, "_load_device_config", return_value={}),
-        patch.object(flow, "_check_key_from_cloud", AsyncMock(return_value={})),
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
+        patch.object(
+            mock_config_flow, "_check_key_from_cloud", AsyncMock(return_value={})
+        ),
     ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auto"
 
-    flow.hass.data[DOMAIN]["login_mode"] = "input"
+    mock_config_flow.hass.data[DOMAIN]["login_mode"] = "input"
     with (
-        patch.object(flow, "_load_device_config", return_value={}),
-        patch.object(flow, "_check_key_from_cloud", AsyncMock(side_effect=[{}, {}])),
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=False)),
-    ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
-    assert result["type"] is FlowResultType.FORM
-
-    with (
-        patch.object(flow, "_load_device_config", return_value={}),
-        patch.object(flow, "_check_key_from_cloud", AsyncMock(side_effect=[{}, {}])),
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=True)),
-    ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
-    assert result["type"] is FlowResultType.FORM
-
-    with (
-        patch.object(flow, "_load_device_config", return_value={}),
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
-            flow,
+            mock_config_flow, "_check_key_from_cloud", AsyncMock(side_effect=[{}, {}])
+        ),
+        patch.object(
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=False)
+        ),
+    ):
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
+        patch.object(
+            mock_config_flow, "_check_key_from_cloud", AsyncMock(side_effect=[{}, {}])
+        ),
+        patch.object(
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=True)
+        ),
+    ):
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
+        patch.object(
+            mock_config_flow,
             "_check_key_from_cloud",
             AsyncMock(return_value={"token": TEST_TOKEN, "key": TEST_KEY}),
         ),
         patch.object(
-            flow, "async_step_manually", AsyncMock(return_value={"manual": True})
+            mock_config_flow,
+            "async_step_manually",
+            AsyncMock(return_value={"manual": True}),
         ),
     ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"manual": True}
 
 
-async def test_step_auto_non_v3_goes_manual(flow: MideaLanConfigFlow) -> None:
+async def test_step_auto_non_v3_goes_manual(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
     """Test auto step routes non-V3 devices directly to manual step."""
-    flow.devices = {
+    mock_config_flow.devices = {
         TEST_DEVICE_ID: {
             **_discovery_result()[TEST_DEVICE_ID],
             CONF_PROTOCOL: ProtocolVersion.V2,
         }
     }
-    flow.available_device = {TEST_DEVICE_ID: "Device"}
-    flow.hass.data[DOMAIN] = {
+    mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
+    mock_config_flow.hass.data[DOMAIN] = {
         "login_mode": "input",
         "login_data": {CONF_SERVER: "CN", CONF_ACCOUNT: "u", CONF_PASSWORD: "p"},
     }
     with (
-        patch.object(flow, "_load_device_config", return_value={}),
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=True)),
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
-            flow, "async_step_manually", AsyncMock(return_value={"manual": True})
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=True)
+        ),
+        patch.object(
+            mock_config_flow,
+            "async_step_manually",
+            AsyncMock(return_value={"manual": True}),
         ),
     ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"manual": True}
 
 
-async def test_step_auto_routes(flow: MideaLanConfigFlow) -> None:
+async def test_step_auto_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test auto step routes to manually or login depending on state."""
-    flow.devices = _discovery_result()
-    flow.available_device = {TEST_DEVICE_ID: "Device"}
+    mock_config_flow.devices = _discovery_result()
+    mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
 
     with (
         patch.object(
-            flow,
+            mock_config_flow,
             "_load_device_config",
             return_value={
                 CONF_NAME: TEST_NAME,
@@ -665,28 +697,34 @@ async def test_step_auto_routes(flow: MideaLanConfigFlow) -> None:
             },
         ),
         patch.object(
-            flow, "async_step_manually", AsyncMock(return_value={"manual": True})
+            mock_config_flow,
+            "async_step_manually",
+            AsyncMock(return_value={"manual": True}),
         ),
     ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"manual": True}
 
     with (
-        patch.object(flow, "_load_device_config", return_value={}),
-        patch.object(flow, "async_step_login", AsyncMock(return_value={"login": True})),
+        patch.object(mock_config_flow, "_load_device_config", return_value={}),
+        patch.object(
+            mock_config_flow,
+            "async_step_login",
+            AsyncMock(return_value={"login": True}),
+        ),
     ):
-        result = await flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
+        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"login": True}
 
 
-async def test_manual_step_validations(flow: MideaLanConfigFlow) -> None:
+async def test_manual_step_validations(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test manual step validation branches."""
     user_input = _manual_user_input()
 
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover", return_value={}
     ):
-        result = await flow.async_step_manually(user_input)
+        result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_device_ip"}
 
@@ -694,52 +732,62 @@ async def test_manual_step_validations(flow: MideaLanConfigFlow) -> None:
         "homeassistant.components.midea_lan.config_flow.discover",
         return_value={TEST_DEVICE_ID + 1: _discovery_result()[TEST_DEVICE_ID]},
     ):
-        result = await flow.async_step_manually(user_input)
+        result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
 
-    flow.devices = {
+    mock_config_flow.devices = {
         TEST_DEVICE_ID: {
             **_discovery_result()[TEST_DEVICE_ID],
             CONF_IP_ADDRESS: "10.0.0.1",
         }
     }
-    result = await flow.async_step_manually(user_input)
+    result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
 
-    flow.devices = {
+    mock_config_flow.devices = {
         TEST_DEVICE_ID: {
             **_discovery_result()[TEST_DEVICE_ID],
             CONF_PROTOCOL: ProtocolVersion.V2,
         }
     }
-    result = await flow.async_step_manually(user_input)
+    result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
 
 
-async def test_manual_step_token_fetch_paths(flow: MideaLanConfigFlow) -> None:
+async def test_manual_step_token_fetch_paths(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
     """Test manual step token/key fetch branches for empty credentials."""
     user_input = _manual_user_input()
     user_input[CONF_TOKEN] = ""
     user_input[CONF_KEY] = ""
-    flow.devices = _discovery_result()
+    mock_config_flow.devices = _discovery_result()
 
-    with patch.object(flow, "_check_cloud_login", AsyncMock(return_value=False)):
-        result = await flow.async_step_manually(user_input)
+    with patch.object(
+        mock_config_flow, "_check_cloud_login", AsyncMock(return_value=False)
+    ):
+        result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
 
     with (
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=True)),
-        patch.object(flow, "_check_key_from_cloud", AsyncMock(return_value={})),
+        patch.object(
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=True)
+        ),
+        patch.object(
+            mock_config_flow, "_check_key_from_cloud", AsyncMock(return_value={})
+        ),
     ):
-        result = await flow.async_step_manually(user_input)
+        result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
 
     dm = MagicMock()
     dm.connect.return_value = False
     with (
-        patch.object(flow, "_check_cloud_login", AsyncMock(return_value=True)),
         patch.object(
-            flow,
+            mock_config_flow, "_check_cloud_login", AsyncMock(return_value=True)
+        ),
+        patch.object(
+            mock_config_flow,
             "_check_key_from_cloud",
             AsyncMock(return_value={"token": TEST_TOKEN, "key": TEST_KEY}),
         ),
@@ -748,13 +796,13 @@ async def test_manual_step_token_fetch_paths(flow: MideaLanConfigFlow) -> None:
             return_value=dm,
         ),
     ):
-        result = await flow.async_step_manually(user_input)
+        result = await mock_config_flow.async_step_manually(user_input)
     assert result["type"] is FlowResultType.FORM
 
 
-async def test_manual_step_auth_failure(flow: MideaLanConfigFlow) -> None:
+async def test_manual_step_auth_failure(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test manual step handles authentication failure."""
-    flow.devices = _discovery_result()
+    mock_config_flow.devices = _discovery_result()
     dm = MagicMock()
     dm.connect.return_value = True
     dm.authenticate.side_effect = AuthException("bad")
@@ -762,15 +810,17 @@ async def test_manual_step_auth_failure(flow: MideaLanConfigFlow) -> None:
     with patch(
         "homeassistant.components.midea_lan.config_flow.MideaDevice", return_value=dm
     ):
-        result = await flow.async_step_manually(_manual_user_input())
+        result = await mock_config_flow.async_step_manually(_manual_user_input())
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "device_auth_failed"}
 
 
-async def test_manual_step_socket_exception(flow: MideaLanConfigFlow) -> None:
+async def test_manual_step_socket_exception(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
     """Test manual step handles socket exception during authentication."""
-    flow.devices = _discovery_result()
+    mock_config_flow.devices = _discovery_result()
     dm = MagicMock()
     dm.connect.return_value = True
     dm.authenticate.side_effect = SocketException("closed")
@@ -778,13 +828,13 @@ async def test_manual_step_socket_exception(flow: MideaLanConfigFlow) -> None:
     with patch(
         "homeassistant.components.midea_lan.config_flow.MideaDevice", return_value=dm
     ):
-        result = await flow.async_step_manually(_manual_user_input())
+        result = await mock_config_flow.async_step_manually(_manual_user_input())
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "device_auth_failed"}
 
 
-async def test_options_flow(flow: MideaLanConfigFlow) -> None:
+async def test_options_flow(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test options flow abort/create/form branches."""
     account_entry = MockConfigEntry(domain=DOMAIN, data={CONF_TYPE: CONF_ACCOUNT})
     account_options = MideaLanOptionsFlowHandler(account_entry)
@@ -844,14 +894,14 @@ def test_options_flow_type_defaults_to_device_type_ac() -> None:
     assert options_flow._device_type == DeviceType.AC
 
 
-def test_already_configured_helper(flow: MideaLanConfigFlow) -> None:
+def test_already_configured_helper(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test _already_configured helper true/false branches."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_DEVICE_ID: str(TEST_DEVICE_ID), CONF_IP_ADDRESS: TEST_IP_ADDRESS},
+        data={CONF_DEVICE_ID: TEST_DEVICE_ID, CONF_IP_ADDRESS: TEST_IP_ADDRESS},
     )
-    flow._async_current_entries = MagicMock(return_value=[entry])
+    mock_config_flow._async_current_entries = MagicMock(return_value=[entry])
 
-    assert flow._already_configured(str(TEST_DEVICE_ID), "198.51.100.1")
-    assert flow._already_configured("999", TEST_IP_ADDRESS)
-    assert not flow._already_configured("999", "198.51.100.2")
+    assert mock_config_flow._already_configured(str(TEST_DEVICE_ID), "198.51.100.1")
+    assert mock_config_flow._already_configured("999", TEST_IP_ADDRESS)
+    assert not mock_config_flow._already_configured("999", "198.51.100.2")

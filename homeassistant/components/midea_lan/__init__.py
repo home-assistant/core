@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
@@ -25,7 +23,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_KEY, CONF_MODEL, CONF_SUBTYPE, DEVICES, DOMAIN
+from .const import CONF_KEY, CONF_MODEL, CONF_SUBTYPE, DOMAIN
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
@@ -39,9 +37,8 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS),
     )
-    device_id: int = cast("int", entry.data.get(CONF_DEVICE_ID))
     customize = entry.options.get(CONF_CUSTOMIZE, "")
-    dev: MideaDevice = hass.data[DOMAIN][DEVICES].get(device_id)
+    dev: MideaDevice | None = entry.runtime_data
     if dev:
         dev.set_customize(customize)
 
@@ -61,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_type: int = data.get(CONF_TYPE, DeviceType.AC)
     device_id: int = data[CONF_DEVICE_ID]
     name: str = data.get(CONF_NAME, f"{device_id}")
-    token: str = data.get(CONF_TOKEN) or ""
-    key: str = data.get(CONF_KEY) or ""
+    token: str = data.get(CONF_TOKEN, "")
+    key: str = data.get(CONF_KEY, "")
     ip_address: str = data[CONF_IP_ADDRESS]
     port: int = data[CONF_PORT]
     model: str = data[CONF_MODEL]
@@ -71,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     customize: str = options.get(CONF_CUSTOMIZE, "")
     if protocol == ProtocolVersion.V3 and (key == "" or token == ""):
         raise ConfigEntryError("For V3 devices, the key and token are required")
-    device = await hass.async_add_import_executor_job(
+    device = await hass.async_add_executor_job(
         device_selector,
         name,
         device_id,
@@ -87,11 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if device:
         await hass.async_add_executor_job(device.open)
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = {}
-        if DEVICES not in hass.data[DOMAIN]:
-            hass.data[DOMAIN][DEVICES] = {}
-        hass.data[DOMAIN][DEVICES][device_id] = device
         entry.runtime_data = device
 
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -104,4 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if not unload_ok:
+        return False
+    device: MideaDevice | None = getattr(entry, "runtime_data", None)
+    if device is not None:
+        await hass.async_add_executor_job(device.close)
+    return True

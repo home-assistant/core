@@ -1,5 +1,6 @@
 """Base entity for Midea Lan."""
 
+import contextlib
 import logging
 from typing import Any
 
@@ -23,10 +24,18 @@ class MideaEntity(Entity):
     def __init__(self, device: MideaDevice, entity_key: str) -> None:
         """Initialize Midea base entity."""
         self._device = device
-        self._device.register_update(self.update_state)
         self._entity_key = entity_key
         self._unique_id = f"{self._device.device_id}_{entity_key}"
         self._device_name = self._device.name
+
+    async def async_added_to_hass(self) -> None:
+        """Register update callback when entity is added."""
+        self._device.register_update(self.update_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister update callback when entity is removed."""
+        with contextlib.suppress(AttributeError, ValueError):
+            self._device._updates.remove(self.update_state)  # noqa: SLF001
 
     @property
     def device(self) -> MideaDevice:
@@ -52,7 +61,7 @@ class MideaEntity(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Return true is integration should poll."""
+        """Return False as the integration does not poll."""
         return False
 
     @property
