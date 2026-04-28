@@ -108,6 +108,16 @@ async def test_heiman_temporary_mute_button(
 
 
 @pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
+@pytest.mark.parametrize("attributes", [{"1/302775297/65529": []}])
+@pytest.mark.usefixtures("matter_node")
+async def test_heiman_temporary_mute_button_not_discovered_without_muting_command(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the temporary mute button is not created when MutingSensor is absent from AcceptedCommandList."""
+    assert hass.states.get("button.smoke_sensor_temporary_mute") is None
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
 async def test_smoke_detector_self_test(
     hass: HomeAssistant,
     matter_client: MagicMock,
