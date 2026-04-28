@@ -498,6 +498,7 @@ FLOWS = {
         "nobo_hub",
         "nordpool",
         "notion",
+        "novy_cooker_hood",
         "nrgkick",
         "ntfy",
         "nuheat",

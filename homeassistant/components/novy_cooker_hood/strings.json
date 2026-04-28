@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "No radio frequency transmitter supports 433.92 MHz OOK transmissions. Please add a compatible transmitter first.",
+      "no_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first."
+    },
+    "step": {
+      "test_failed": {
+        "description": "Could not send the test command for code {code}. Check that your radio frequency transmitter is online, then press Retry.",
+        "menu_options": {
+          "retry": "Retry"
+        },
+        "title": "Test failed"
+      },
+      "test_light": {
+        "description": "Toggled the hood light on and off using code {code}. Did you see it react? Press Finish to save, or Retry to pick a different code.",
+        "menu_options": {
+          "finish": "Finish",
+          "retry": "Retry"
+        },
+        "title": "Verify the code"
+      },
+      "user": {
+        "data": {
+          "code": "Code",
+          "transmitter": "Radio frequency transmitter"
+        },
+        "data_description": {
+          "code": "The code your hood is paired with (1-10). Code 1 is the factory default.",
+          "transmitter": "The radio frequency transmitter used to control the Novy cooker hood."
+        },
+        "description": "After you submit, Home Assistant will toggle the hood light on and off to verify the code works."
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    }
+  },
+  "selector": {
+    "code": {
+      "options": {
+        "1": "Code 1",
+        "2": "Code 2",
+        "3": "Code 3",
+        "4": "Code 4",
+        "5": "Code 5",
+        "6": "Code 6",
+        "7": "Code 7",
+        "8": "Code 8",
+        "9": "Code 9",
+        "10": "Code 10"
+      }
+    }
+  }
+}

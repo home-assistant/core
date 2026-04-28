@@ -1,0 +1,12 @@
+{
+  "domain": "novy_cooker_hood",
+  "name": "Novy Cooker Hood",
+  "codeowners": ["@piitaya"],
+  "config_flow": true,
+  "dependencies": ["radio_frequency"],
+  "documentation": "https://www.home-assistant.io/integrations/novy_cooker_hood",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze",
+  "requirements": ["rf-protocols==2.2.0"]
+}
