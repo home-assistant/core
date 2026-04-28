@@ -52,12 +52,6 @@ def _read_file_contents(
             )
         if not Path(filename).exists():
             missing.append(filename)
-    if len(missing) == 1:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="filename_does_not_exist",
-            translation_placeholders={"filename": missing[0]},
-        )
     if missing:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
