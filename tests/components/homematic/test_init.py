@@ -43,7 +43,9 @@ async def test_set_install_mode_admin_allowed(
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
     )
-    hass.data[DATA_HOMEMATIC].setInstallMode.assert_called_once()
+    hass.data[DATA_HOMEMATIC].setInstallMode.assert_called_once_with(
+        "ccu2", t=60, mode=1, address=None
+    )
 
 
 async def test_set_install_mode_non_admin_rejected(
