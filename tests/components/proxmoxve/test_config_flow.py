@@ -694,7 +694,6 @@ async def test_form_offline_node_skipped(
     mock_proxmox_client: MagicMock,
 ) -> None:
     """Test that offline nodes are skipped during config flow and don't cause setup failure."""
-    # Use all nodes from fixture, which includes pve3 as offline
     mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
 
     result = await hass.config_entries.flow.async_init(
