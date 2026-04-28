@@ -189,17 +189,15 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        # Adds a sensor to the existing HAP device.
-        # Name must be set explicitly for has_entity_name to work correctly.
-        home_name = getattr(self._home, "name", None)
+        # Merges into the existing HAP device registered in __init__.py.
+        # Name must match __init__.py logic for has_entity_name to work.
         label = self._home.label or ""
-        name = f"{home_name} {label}" if home_name else label
         return DeviceInfo(
             identifiers={
                 # Serial numbers of Homematic IP device
                 (DOMAIN, self._home.id)
             },
-            name=name,
+            name=label,
         )
 
     @property
