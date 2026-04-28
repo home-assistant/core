@@ -713,6 +713,6 @@ async def test_form_offline_node_skipped(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    nodes_in_result = [n[CONF_NODE] for n in result["data"][CONF_NODES]]
+    nodes_in_result = [node[CONF_NODE] for node in result["data"][CONF_NODES]]
     assert "pve3" not in nodes_in_result
     assert "pve1" in nodes_in_result
