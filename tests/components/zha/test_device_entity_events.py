@@ -157,7 +157,7 @@ async def test_handle_device_entity_removed(
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test that a runtime DeviceEntityRemovedEvent marks the entity as no longer provided."""
+    """Test that DeviceEntityRemovedEvent with remove=False only unloads the entity."""
     zha_device_proxy, _, _ = await _create_switch_device(
         hass, setup_zha, zigpy_device_mock
     )
@@ -171,11 +171,12 @@ async def test_handle_device_entity_removed(
     assert entry is not None
     assert hass.states.get(entity_id) is not None
 
-    # Fire the entity removed event
+    # Fire the entity removed event with remove=False
     zha_device_proxy.handle_zha_device_entity_removed_event(
         DeviceEntityRemovedEvent(
             platform=ZhaPlatform.SWITCH,
             unique_id=entry.unique_id,
+            remove=False,
         )
     )
     await hass.async_block_till_done()
@@ -187,6 +188,41 @@ async def test_handle_device_entity_removed(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_handle_device_entity_removed_with_remove_flag(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test that DeviceEntityRemovedEvent with remove=True deletes the registry entry."""
+    zha_device_proxy, _, _ = await _create_switch_device(
+        hass, setup_zha, zigpy_device_mock
+    )
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    assert entity_id is not None
+
+    registry = er.async_get(hass)
+    entry = registry.async_get(entity_id)
+    assert entry is not None
+    assert hass.states.get(entity_id) is not None
+
+    # Fire the entity removed event with remove=True
+    zha_device_proxy.handle_zha_device_entity_removed_event(
+        DeviceEntityRemovedEvent(
+            platform=ZhaPlatform.SWITCH,
+            unique_id=entry.unique_id,
+            remove=True,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The registry entry is removed
+    assert registry.async_get(entity_id) is None
+
+    # The entity state is also gone
+    assert hass.states.get(entity_id) is None
 
 
 async def test_handle_device_entity_removed_unknown_unique_id(

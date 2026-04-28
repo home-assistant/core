@@ -521,17 +521,26 @@ class ZHADeviceProxy(EventBase):
         """Handle an entity being removed from a device at runtime."""
         entity_registry = er.async_get(self.gateway_proxy.hass)
         domain = Platform(event.platform)
-        if entity_id := entity_registry.async_get_entity_id(
-            domain, DOMAIN, event.unique_id
-        ):
-            domain_entities = self.gateway_proxy.hass.data.get(
-                DATA_DOMAIN_ENTITIES, {}
-            ).get(domain, {})
-            if (entity := domain_entities.get(entity_id)) is not None:
-                self.gateway_proxy.hass.async_create_task(
-                    entity.async_remove(),
-                    f"ZHA remove entity {entity_id}",
-                )
+        entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, event.unique_id)
+        if entity_id is None:
+            return
+
+        if event.remove:
+            # Fully remove the entity: deleting the registry entry triggers
+            # the entity's registry-update listener which removes the state.
+            entity_registry.async_remove(entity_id)
+            return
+
+        # Otherwise, only unload the live entity so it shows as unavailable;
+        # the registry entry is kept so the user can manually delete it.
+        domain_entities = self.gateway_proxy.hass.data.get(
+            DATA_DOMAIN_ENTITIES, {}
+        ).get(domain, {})
+        if (entity := domain_entities.get(entity_id)) is not None:
+            self.gateway_proxy.hass.async_create_task(
+                entity.async_remove(),
+                f"ZHA remove entity {entity_id}",
+            )
 
 
 class EntityReference(NamedTuple):
