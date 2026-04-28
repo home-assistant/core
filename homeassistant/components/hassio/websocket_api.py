@@ -52,7 +52,7 @@ RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
 WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
 WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:"
-    r"|/ingress/(session|validate_session)"
+    r"/ingress/(session|validate_session)"
     f"|{RE_ADDONS_INFO_ENDPOINT}"
     r")$"
 )
@@ -92,7 +92,7 @@ def websocket_subscribe(
 
 
 @callback
-@websocket_api.require_admin
+@websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
         vol.Required(WS_TYPE): WS_TYPE_EVENT,
