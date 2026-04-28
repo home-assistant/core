@@ -564,3 +564,36 @@ async def test_nested_unique_id(
     await setup_and_test_nested_unique_id(
         hass, TEST_NUMBER, style, entity_registry, TEST_REQUIRED, "{{ 0 }}"
     )
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "expected_device_class"),
+    [
+        (
+            {
+                **TEST_REQUIRED,
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+            },
+            "temperature",
+        ),
+        (
+            TEST_REQUIRED,
+            None,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_setup_valid_device_class(
+    hass: HomeAssistant, expected_device_class: str | None
+) -> None:
+    """Test setup with valid device_class."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "75")
+    assert (
+        hass.states.get(TEST_NUMBER.entity_id).attributes.get("device_class")
+        == expected_device_class
+    )
