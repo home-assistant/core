@@ -65,3 +65,25 @@ async def test_entry_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_websocket_api_instance.close.assert_called_once()
+
+
+async def test_setup_failure_cleans_up_websocket(
+    hass: HomeAssistant,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api_instance: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test partial setup failure stops listeners and closes the websocket."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("setup failed"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    mock_websocket_api_instance.stop_all_listeners.assert_awaited_once()
+    mock_websocket_api_instance.close.assert_awaited_once()
