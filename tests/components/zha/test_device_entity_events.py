@@ -14,7 +14,6 @@ from zigpy.zcl.clusters import general
 from homeassistant.components.zha.helpers import (
     SIGNAL_ADD_ENTITIES,
     ZHADeviceProxy,
-    ZHAGatewayProxy,
     get_zha_data,
     get_zha_gateway,
     get_zha_gateway_proxy,
@@ -46,7 +45,7 @@ async def _create_switch_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
-) -> tuple[ZHADeviceProxy, ZHAGatewayProxy, Device]:
+) -> ZHADeviceProxy:
     """Create a basic switch device for testing."""
     await setup_zha()
     gateway = get_zha_gateway(hass)
@@ -75,7 +74,7 @@ async def _create_switch_device(
 
     zha_device_proxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
     assert zha_device_proxy is not None
-    return zha_device_proxy, gateway_proxy, zigpy_device
+    return zha_device_proxy
 
 
 def _get_switch_platform_entity(zha_device_proxy: ZHADeviceProxy) -> PlatformEntity:
@@ -93,9 +92,7 @@ async def test_handle_device_entity_added(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that DeviceEntityAddedEvent re-creates a previously removed entity."""
-    zha_device_proxy, _, _ = await _create_switch_device(
-        hass, setup_zha, zigpy_device_mock
-    )
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
     platform_entity = _get_switch_platform_entity(zha_device_proxy)
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
@@ -139,9 +136,7 @@ async def test_handle_device_entity_added_unknown_unique_id(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that a DeviceEntityAddedEvent with unknown unique_id is a no-op."""
-    zha_device_proxy, _, _ = await _create_switch_device(
-        hass, setup_zha, zigpy_device_mock
-    )
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
 
     ha_zha_data = get_zha_data(hass)
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
@@ -170,9 +165,7 @@ async def test_handle_device_entity_removed(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that DeviceEntityRemovedEvent with remove=False only unloads the entity."""
-    zha_device_proxy, _, _ = await _create_switch_device(
-        hass, setup_zha, zigpy_device_mock
-    )
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
 
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
@@ -208,9 +201,7 @@ async def test_handle_device_entity_removed_with_remove_flag(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that DeviceEntityRemovedEvent with remove=True deletes the registry entry."""
-    zha_device_proxy, _, _ = await _create_switch_device(
-        hass, setup_zha, zigpy_device_mock
-    )
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
 
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
@@ -241,9 +232,7 @@ async def test_handle_device_entity_removed_unknown_unique_id(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that a DeviceEntityRemovedEvent with unknown unique_id is a no-op."""
-    zha_device_proxy, _, _ = await _create_switch_device(
-        hass, setup_zha, zigpy_device_mock
-    )
+    zha_device_proxy = await _create_switch_device(hass, setup_zha, zigpy_device_mock)
 
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
