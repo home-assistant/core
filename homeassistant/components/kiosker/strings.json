@@ -48,6 +48,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "blackout_state": {
+        "name": "Blackout"
+      },
+      "screensaver_state": {
+        "name": "Screensaver"
+      }
+    },
     "sensor": {
       "ambient_light": {
         "name": "Ambient light"

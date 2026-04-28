@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Final, cast
 
 from aioshelly.block_device import Block
@@ -41,6 +42,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
 from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -62,7 +64,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_device_uptime,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
@@ -467,8 +468,8 @@ REST_SENSORS: Final = {
     "uptime": RestSensorDescription(
         key="uptime",
         translation_key="last_restart",
-        value=lambda status, last: get_device_uptime(status["uptime"], last),
-        device_class=SensorDeviceClass.TIMESTAMP,
+        value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -1243,8 +1244,8 @@ RPC_SENSORS: Final = {
         key="sys",
         sub_key="uptime",
         translation_key="last_restart",
-        value=get_device_uptime,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
+        value=lambda status, _: utcnow() - timedelta(seconds=status),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,

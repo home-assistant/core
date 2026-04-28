@@ -54,17 +54,17 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     is_hassio_ = is_hassio(hass)
 
     info_object = {
-        "installation_type": "Unknown",
-        "version": current_version,
-        "dev": "dev" in current_version,
-        "hassio": is_hassio_,
-        "virtualenv": is_virtual_env(),
-        "python_version": platform.python_version(),
-        "docker": False,
         "arch": platform.machine(),
-        "timezone": str(hass.config.time_zone),
+        "dev": "dev" in current_version,
+        "docker": False,
+        "hassio": is_hassio_,
+        "installation_type": "Unknown",
         "os_name": platform.system(),
         "os_version": platform.release(),
+        "python_version": platform.python_version(),
+        "timezone": str(hass.config.time_zone),
+        "version": current_version,
+        "virtualenv": is_virtual_env(),
     }
 
     try:
