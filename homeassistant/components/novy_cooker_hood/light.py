@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from rf_protocols import CodeCollection, ModulationType, get_codes
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
@@ -14,19 +12,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .commands import COMMAND_LIGHT, get_codes_for_code
 from .const import CONF_CODE
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1
-
-FREQUENCY = 433_920_000
-MODULATION = ModulationType.OOK
-COMMAND_LIGHT = "light"
-
-
-def get_codes_for_code(code: int) -> CodeCollection:
-    """Return the bundled `rf-protocols` collection for a Novy cooker hood code."""
-    return get_codes(f"novy/cooker_hood/code_{code}")
 
 
 async def async_setup_entry(

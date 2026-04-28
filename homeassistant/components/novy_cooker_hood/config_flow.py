@@ -15,8 +15,17 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from .const import CODE_MAX, CODE_MIN, CONF_CODE, CONF_TRANSMITTER, DEFAULT_CODE, DOMAIN
-from .light import COMMAND_LIGHT, FREQUENCY, MODULATION, get_codes_for_code
+from .commands import COMMAND_LIGHT, get_codes_for_code
+from .const import (
+    CODE_MAX,
+    CODE_MIN,
+    CONF_CODE,
+    CONF_TRANSMITTER,
+    DEFAULT_CODE,
+    DOMAIN,
+    FREQUENCY,
+    MODULATION,
+)
 
 _CODE_OPTIONS = [str(code) for code in range(CODE_MIN, CODE_MAX + 1)]
 _TOGGLE_GAP = 1.5
