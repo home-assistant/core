@@ -78,6 +78,7 @@ def _make_public_bootstrap(relay: Mock | None) -> Mock:
     pb.relays = {relay.id: relay} if relay is not None else {}
     pb.arm_mode = None
     pb.arm_profiles = {}
+    pb.sirens = {}
     return pb
 
 
