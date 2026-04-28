@@ -299,6 +299,47 @@ async def test_total_increasing_clamp_after_reload(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_total_increasing_restore_when_vehicle_asleep(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Regression: keep restored TOTAL_INCREASING value when vehicle is asleep.
+
+    After restart the coordinator may receive VehicleOffline before the first
+    successful refresh, so the source key is absent from coordinator.data. The
+    restored native value must survive that path instead of being reset to None
+    by the seeding hook.
+    """
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    entity_id = "sensor.test_odometer"
+
+    # Seed RestoreSensor with a known odometer reading.
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["vehicle_state"]["odometer"] = 9999.0
+    mock_vehicle_data.return_value = initial_data
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    expected_km = DistanceConverter.convert(
+        9999.0, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+    )
+    assert float(state.state) == pytest.approx(expected_km)
+
+    # Reload with the vehicle asleep so coordinator.data has no odometer key.
+    mock_vehicle_data.side_effect = VehicleOffline
+
+    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(expected_km)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_history_last_reset(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,

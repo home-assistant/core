@@ -543,7 +543,12 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
                 if self._previous_value is not None
                 else restored
             )
-            self._async_update_attrs()
+            # Only refresh attrs from the coordinator when the key is present.
+            # If the vehicle is asleep/offline the coordinator data does not
+            # include this sensor and re-running _async_update_attrs would
+            # discard the restored native value via the has=False branch.
+            if self.has:
+                self._async_update_attrs()
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
