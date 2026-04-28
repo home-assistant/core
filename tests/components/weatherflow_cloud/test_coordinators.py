@@ -34,11 +34,7 @@ async def test_wind_coordinator_setup(
     mock_websocket_api: AsyncMock,
     mock_stations_data: Mock,
 ) -> None:
-    """Test wind coordinator setup.
-
-    connect() is called once by async_setup_entry before coordinators are set up,
-    so async_setup() must NOT call connect() itself.
-    """
+    """Test wind coordinator setup registers callbacks without connecting."""
 
     coordinator = WeatherFlowWindCoordinator(
         hass=hass,
@@ -50,16 +46,12 @@ async def test_wind_coordinator_setup(
 
     await coordinator.async_setup()
 
-    # connect() must not be called inside async_setup() — it is the caller's
-    # responsibility to connect once before setting up coordinators (issue #164441)
     mock_websocket_api.connect.assert_not_called()
     mock_websocket_api.register_callback.assert_called_once_with(
         message_type=EventType.RAPID_WIND,
         callback=coordinator._handle_websocket_message,
     )
     assert mock_websocket_api.send_message.called
-
-    # Verify at least one message is of the correct type
     call_args_list = mock_websocket_api.send_message.call_args_list
     assert any(
         isinstance(call.args[0], RapidWindListenStartMessage) for call in call_args_list
@@ -73,11 +65,7 @@ async def test_observation_coordinator_setup(
     mock_websocket_api: AsyncMock,
     mock_stations_data: Mock,
 ) -> None:
-    """Test observation coordinator setup.
-
-    connect() is called once by async_setup_entry before coordinators are set up,
-    so async_setup() must NOT call connect() itself.
-    """
+    """Test observation coordinator setup registers callbacks without connecting."""
 
     coordinator = WeatherFlowObservationCoordinator(
         hass=hass,
@@ -89,16 +77,12 @@ async def test_observation_coordinator_setup(
 
     await coordinator.async_setup()
 
-    # connect() must not be called inside async_setup() — it is the caller's
-    # responsibility to connect once before setting up coordinators (issue #164441)
     mock_websocket_api.connect.assert_not_called()
     mock_websocket_api.register_callback.assert_called_once_with(
         message_type=EventType.OBSERVATION,
         callback=coordinator._handle_websocket_message,
     )
     assert mock_websocket_api.send_message.called
-
-    # Verify at least one message is of the correct type
     call_args_list = mock_websocket_api.send_message.call_args_list
     assert any(isinstance(call.args[0], ListenStartMessage) for call in call_args_list)
 
