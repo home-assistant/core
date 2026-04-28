@@ -87,10 +87,13 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
-        # Override the coordinator context to use device_api_id (doorbot_id)
-        # so that _async_update_listeners correctly matches incoming Ring events,
-        # which are keyed by doorbot_id, not the local device.id.
-        self.coordinator_context = device.device_api_id
+        # Do not register this listen-based entity with a device-specific
+        # coordinator context. Ring alerts are keyed by device_api_id
+        # (doorbot_id), but other RingListenCoordinator entities may still use
+        # a different context shape. Opting out of context filtering here keeps
+        # listener updates consistent while _get_coordinator_alert() continues
+        # to match incoming alerts by device_api_id.
+        self.coordinator_context = None
 
     @callback
     def _async_handle_event(self, event: str) -> None:
