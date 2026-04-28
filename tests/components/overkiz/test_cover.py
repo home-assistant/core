@@ -79,7 +79,7 @@ TILTED_WINDOW = FixtureDevice(
 DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
     "io://1234-5678-6508/4877511",
-    "cover.dining_room_blinds",
+    "cover.office_blinds",
 )
 # Device with ClosureState=124
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
