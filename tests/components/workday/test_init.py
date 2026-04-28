@@ -72,8 +72,8 @@ async def test_workday_subdiv_aliases() -> None:
     assert subdiv_aliases["6AE"] == ["Alsace"]
 
 
-async def test_migrate_to_1_1(hass: HomeAssistant) -> None:
-    """Test migrates to version 1.1."""
+async def test_migrate_minor_version_1_to_2(hass: HomeAssistant) -> None:
+    """Test migrates to version 1.2."""
     config = {
         "name": "Test sensor",
         "country": "US",
@@ -101,5 +101,6 @@ async def test_migrate_to_1_1(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.test_sensor")
     assert state
 
+    assert config_entry.version == 1
     assert config_entry.minor_version == 2
     assert config_entry.options == config
