@@ -1,6 +1,7 @@
 """Config flow for izone."""
 
 import asyncio
+from collections.abc import Iterable
 from contextlib import suppress
 import logging
 import socket
@@ -18,6 +19,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import DATA_DISCOVERY_SERVICE, IZONE, TIMEOUT_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
+HOMEKIT_DISCOVERY_LOCK_ID = f"{IZONE}_homekit_discovery"
+SOURCE_IZONE_RESOLVED = "izone_resolved"
 
 
 class _ControllerDiscoveryListener(pizone.Listener):
@@ -129,10 +132,156 @@ async def _async_get_controller_uid(hass: HomeAssistant, host: str) -> str | Non
 class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     """Handle iZone config flow."""
 
-    VERSION = 1
+    VERSION = 2
     _discovered_host: str | None = None
     _discovered_controller_uid: str | None = None
     _user_discovered_controllers: dict[str, pizone.Controller] | None = None
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        return await self.async_step_user(import_data or {})
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user-initiated setup."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=vol.Schema({vol.Optional(CONF_HOST): str})
+            )
+        host = user_input.get(CONF_HOST)
+        if host:
+            if not (uid := await _async_get_controller_uid(self.hass, host)):
+                errors: dict[str, str] = {}
+                errors["base"] = "cannot_connect"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
+                    errors=errors,
+                )
+            await self.async_set_unique_id(uid)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+            return self.async_create_entry(title=f"iZone {uid}", data={CONF_HOST: host})
+
+        # Shared UDP discovery should only be driven by one active iZone flow.
+        if self._async_in_progress(include_uninitialized=True):
+            return self.async_abort(reason="already_in_progress")
+
+        controllers = await _async_discover_controllers(self.hass)
+        if not controllers:
+            _LOGGER.debug("No controllers found")
+            return self.async_abort(reason="no_devices_found")
+
+        self._user_discovered_controllers = self._async_get_unconfigured_controllers(
+            controllers
+        )
+        if not self._user_discovered_controllers:
+            return self.async_abort(reason="already_configured")
+        if len(self._user_discovered_controllers) > 1:
+            return await self.async_step_select_controller()
+
+        return await self._async_create_controller_entry(
+            next(iter(self._user_discovered_controllers.values()))
+        )
+
+    async def async_step_select_controller(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select a controller when multiple unconfigured controllers are discovered."""
+        if not self._user_discovered_controllers:
+            return self.async_abort(reason="no_devices_found")
+
+        if user_input is not None:
+            controller = self._user_discovered_controllers.get(user_input[CONF_HOST])
+            if controller is None:
+                return self.async_abort(reason="no_devices_found")
+
+            # Fan out additional config flows for other discovered controllers so
+            # they are surfaced in discovered devices without requiring another scan.
+            self._async_fan_out_discovered_controllers(
+                self._user_discovered_controllers.values(),
+                selected_uid=controller.device_uid,
+            )
+
+            return await self._async_create_controller_entry(controller)
+
+        sorted_controllers = sorted(
+            self._user_discovered_controllers.items(),
+            key=lambda item: (item[1].device_uid, item[0]),
+        )
+
+        return self.async_show_form(
+            step_id="select_controller",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): vol.In(
+                        {
+                            host: f"{controller.device_uid} ({host})"
+                            for host, controller in sorted_controllers
+                        }
+                    )
+                }
+            ),
+        )
+
+    async def async_step_homekit(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle HomeKit discovery."""
+        self._discovered_host = None
+
+        # HomeKit discovery is used as a trigger and UID source only.
+        # Controller connectivity details come from iZone discovery.
+        model = discovery_info.properties.get("md", "")
+        if not model.startswith("iZone "):
+            return self.async_abort(reason="no_devices_found")
+
+        self._discovered_controller_uid = model.split(" ", 1)[1]
+
+        # Can abort early without any network activity if the discovered HomeKit UID is already configured by another flow.
+        if self.hass.config_entries.async_entry_for_domain_unique_id(
+            IZONE, self._discovered_controller_uid
+        ):
+            return self.async_abort(reason="already_configured")
+
+        # Hold a temporary lock while resolving HomeKit discovery through iZone
+        # discovery so additional HomeKit packets do not start competing flows.
+        await self.async_set_unique_id(HOMEKIT_DISCOVERY_LOCK_ID)
+
+        controllers = await _async_discover_controllers(self.hass)
+        if controller := controllers.get(self._discovered_controller_uid):
+            self._discovered_host = controller.device_ip
+
+        # Fan out additional config flows for other discovered controllers so
+        # they are surfaced in discovered devices without requiring another scan.
+        self._async_fan_out_discovered_controllers(
+            controllers.values(),
+            selected_uid=self._discovered_controller_uid,
+        )
+
+        # Restore the discovered UID after using the temporary lock ID.
+        await self.async_set_unique_id(self._discovered_controller_uid)
+        self._abort_if_unique_id_configured()
+
+        self.context["title_placeholders"] = {"name": model}
+
+        return await self.async_step_confirm()
+
+    async def async_step_izone_resolved(
+        self, resolved_info: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle internally resolved controller fan-out flows."""
+        uid = resolved_info.get("uid")
+        host = resolved_info.get("host")
+        if not isinstance(uid, str) or not isinstance(host, str):
+            return self.async_abort(reason="no_devices_found")
+
+        self._discovered_controller_uid = uid
+        self._discovered_host = host
+        await self.async_set_unique_id(uid)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self.context["title_placeholders"] = {"name": f"iZone {uid}"}
+        return await self.async_step_confirm()
 
     @callback
     def _async_get_unconfigured_controllers(
@@ -157,117 +306,37 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             data={CONF_HOST: controller.device_ip},
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        return await self.async_step_user(import_data or {})
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle user-initiated setup."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            host = user_input.get(CONF_HOST)
-            if host:
-                if not (uid := await _async_get_controller_uid(self.hass, host)):
-                    errors["base"] = "cannot_connect"
-                else:
-                    await self.async_set_unique_id(uid)
-                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                    return self.async_create_entry(
-                        title=f"iZone {uid}", data={CONF_HOST: host}
-                    )
-            else:
-                controllers = await _async_discover_controllers(self.hass)
-                if not controllers:
-                    _LOGGER.debug("No controllers found")
-                    return self.async_abort(reason="no_devices_found")
-
-                self._user_discovered_controllers = (
-                    self._async_get_unconfigured_controllers(controllers)
-                )
-                if not self._user_discovered_controllers:
-                    return self.async_abort(reason="already_configured")
-                if len(self._user_discovered_controllers) > 1:
-                    return await self.async_step_select_controller()
-
-                return await self._async_create_controller_entry(
-                    next(iter(self._user_discovered_controllers.values()))
-                )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
-            errors=errors,
-        )
-
-    async def async_step_select_controller(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select a controller when multiple unconfigured controllers are discovered."""
-        if not self._user_discovered_controllers:
-            return self.async_abort(reason="no_devices_found")
-
-        if user_input is not None:
-            controller = self._user_discovered_controllers.get(user_input[CONF_HOST])
-            if controller is None:
-                return self.async_abort(reason="no_devices_found")
-            return await self._async_create_controller_entry(controller)
-
-        return self.async_show_form(
-            step_id="select_controller",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): vol.In(
-                        {
-                            host: f"{controller.device_uid} ({host})"
-                            for host, controller in self._user_discovered_controllers.items()
-                        }
-                    )
-                }
-            ),
-        )
-
-    async def async_step_homekit(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle HomeKit discovery."""
-        host = getattr(discovery_info, "host", None)
-        if host is None and isinstance(discovery_info, dict):
-            host = discovery_info.get("host")
-        self._discovered_host = None
-
-        # Extract UID from HomeKit discovery model in properties (format: "iZone 000025841")
-        properties = getattr(discovery_info, "properties", None)
-        if properties is None and isinstance(discovery_info, dict):
-            properties = discovery_info.get("properties", {})
-        properties = properties or {}
-        model = properties.get("md", "")
-        if isinstance(model, str) and model.startswith("iZone "):
-            self._discovered_controller_uid = model.split(" ", 1)[1]
-            await self.async_set_unique_id(self._discovered_controller_uid)
-
-            controllers = await _async_discover_controllers(self.hass)
-            if controller := controllers.get(self._discovered_controller_uid):
-                self._discovered_host = controller.device_ip
-            elif (
-                host
-                and await _async_get_controller_uid(self.hass, host)
-                == self._discovered_controller_uid
+    @callback
+    def _async_fan_out_discovered_controllers(
+        self,
+        controllers: Iterable[pizone.Controller],
+        *,
+        selected_uid: str,
+    ) -> None:
+        """Start resolved flows for discovered controllers except the selected UID."""
+        current_ids = self._async_current_ids()
+        in_progress_ids = {
+            flow["context"].get("unique_id")
+            for flow in self._async_in_progress(include_uninitialized=True)
+        }
+        for candidate in controllers:
+            if candidate.device_uid == selected_uid:
+                continue
+            if (
+                candidate.device_uid in current_ids
+                or candidate.device_uid in in_progress_ids
             ):
-                self._discovered_host = host
-
-            discovered_host = self._discovered_host or host
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: discovered_host}
-                if discovered_host is not None
-                else {}
+                continue
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    IZONE,
+                    context={"source": SOURCE_IZONE_RESOLVED},
+                    data={
+                        "uid": candidate.device_uid,
+                        "host": candidate.device_ip,
+                    },
+                )
             )
-            self.context["title_placeholders"] = {"name": model}
-        else:
-            self._discovered_host = host
-
-        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -283,11 +352,9 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             )
 
         if self._discovered_host:
-            # Use already-discovered UID if available, otherwise query device
-            uid = self._discovered_controller_uid or await _async_get_controller_uid(
-                self.hass, self._discovered_host
-            )
-            if uid:
+            # Fast path when iZone discovery already resolved the HomeKit UID.
+            uid = self._discovered_controller_uid
+            if uid is not None:
                 await self.async_set_unique_id(uid)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: self._discovered_host}

@@ -87,9 +87,6 @@ async def _async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    if entry.unique_id == IZONE:
-        await _async_migrate_legacy_entry(hass, entry)
-
     had_loaded_entries = any(
         config_entry.state
         in (
@@ -107,6 +104,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await async_stop_discovery_service(hass)
         raise
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry to new version."""
+    if entry.version == 1:
+        # Migrate legacy config entry that still uses the domain as unique_id
+        from . import config_flow as izone_config_flow  # noqa: PLC0415
+
+        controllers = await izone_config_flow._async_discover_controllers(hass)  # noqa: SLF001
+        conf: ConfigType | None = hass.data.get(DATA_CONFIG)
+        excluded_uids: set[str] = set(conf[CONF_EXCLUDE]) if conf else set()
+        configured_uids = {
+            config_entry.unique_id
+            for config_entry in hass.config_entries.async_entries(IZONE)
+            if config_entry.entry_id != entry.entry_id
+            and config_entry.unique_id not in (None, IZONE)
+        }
+        eligible_controllers = [
+            controller
+            for controller in controllers.values()
+            if controller.device_uid not in excluded_uids
+            and controller.device_uid not in configured_uids
+        ]
+
+        if not eligible_controllers:
+            raise ConfigEntryNotReady(
+                "No eligible iZone controller found to migrate legacy config entry"
+            )
+
+        if len(eligible_controllers) > 1:
+            raise ConfigEntryError(
+                "Multiple eligible iZone controllers found for a legacy config entry"
+            )
+
+        controller = eligible_controllers[0]
+        hass.config_entries.async_update_entry(
+            entry,
+            version=2,
+            unique_id=controller.device_uid,
+            data={**entry.data, CONF_HOST: controller.device_ip},
+            title=f"iZone {controller.device_uid}",
+        )
+        return True
+    return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
