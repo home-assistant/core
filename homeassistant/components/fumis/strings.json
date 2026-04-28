@@ -53,6 +53,11 @@
     }
   },
   "entity": {
+    "button": {
+      "sync_clock": {
+        "name": "Sync clock"
+      }
+    },
     "sensor": {
       "combustion_chamber_temperature": {
         "name": "Combustion chamber"

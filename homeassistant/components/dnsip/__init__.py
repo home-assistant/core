@@ -30,12 +30,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         return False
 
     if config_entry.version < 2 and config_entry.minor_version < 2:
-        version = config_entry.version
-        minor_version = config_entry.minor_version
         _LOGGER.debug(
             "Migrating configuration from version %s.%s",
-            version,
-            minor_version,
+            config_entry.version,
+            config_entry.minor_version,
         )
 
         new_options = {**config_entry.options}
@@ -46,10 +44,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry, options=new_options, minor_version=2
         )
 
+        _LOGGER.debug("Migration to configuration version %s.%s successful", 1, 2)
+
+    if config_entry.version < 2 and config_entry.minor_version < 3:
         _LOGGER.debug(
-            "Migration to configuration version %s.%s successful",
-            1,
-            2,
+            "Migrating configuration from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
         )
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=None, minor_version=3
+        )
+
+        _LOGGER.debug("Migration to configuration version %s.%s successful", 1, 3)
 
     return True

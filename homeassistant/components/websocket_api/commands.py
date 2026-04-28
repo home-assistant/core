@@ -1028,10 +1028,13 @@ async def handle_test_condition(
     # Do static + dynamic validation of the condition
     config = await async_validate_condition_config(hass, msg["condition"])
     # Test the condition
-    check_condition = await async_condition_from_config(hass, config)
-    connection.send_result(
-        msg["id"], {"result": check_condition(hass, msg.get("variables"))}
-    )
+    condition = await async_condition_from_config(hass, config)
+    try:
+        connection.send_result(
+            msg["id"], {"result": condition.async_check(variables=msg.get("variables"))}
+        )
+    finally:
+        condition.async_unload()
 
 
 @decorators.websocket_command(
