@@ -343,8 +343,7 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
                 translation_placeholders={
                     "program": program,
                     "error": (
-                        f"Option {option_key} is not writable for the current"
-                        " program"
+                        f"Option {option_key} is not writable for the current program"
                     ),
                 },
             )
