@@ -2,16 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
+from indevolt_api import IndevoltConfig, IndevoltEnergyMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.indevolt.const import (
-    ENERGY_MODE_READ_KEY,
-    ENERGY_MODE_WRITE_KEY,
-    PORTABLE_MODE,
-    REALTIME_ACTION_MODE,
-)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -64,7 +59,7 @@ async def test_button_press_standby(
 
     # Verify set_data was called for mode switch and stop() was called
     mock_indevolt.set_data.assert_called_once_with(
-        ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE
+        IndevoltConfig.WRITE_ENERGY_MODE, IndevoltEnergyMode.REAL_TIME_CONTROL
     )
     mock_indevolt.stop.assert_called_once()
 
@@ -78,7 +73,9 @@ async def test_button_press_standby_already_in_realtime_mode(
     """Test pressing standby when already in real-time mode skips the mode switch."""
 
     # Force real-time control mode
-    mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = REALTIME_ACTION_MODE
+    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
+        IndevoltEnergyMode.REAL_TIME_CONTROL
+    )
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
@@ -130,7 +127,9 @@ async def test_button_press_standby_portable_mode_error(
     """Test pressing standby raises HomeAssistantError when device is in outdoor/portable mode."""
 
     # Force outdoor/portable mode
-    mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = PORTABLE_MODE
+    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
+        IndevoltEnergyMode.OUTDOOR_PORTABLE
+    )
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
