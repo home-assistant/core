@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
+from dataclasses import dataclass, field
 from datetime import timedelta
 import io
 import logging
@@ -23,6 +24,7 @@ from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
     CONF_DEVICE_ID,
@@ -43,6 +45,7 @@ from homeassistant.helpers import (
     condition,
     config_validation as cv,
     entity_registry as er,
+    label_registry as lr,
     trace,
 )
 from homeassistant.helpers.automation import (
@@ -4580,3 +4583,488 @@ async def test_conditions_from_config_nested_forwards_async_unload(
 
     test._conditions[0]._conditions[0].async_unload.assert_called_once()
     test._conditions[1].async_unload.assert_called_once()
+
+
+_ATTR_DOMAIN_SPECS: Mapping[str, DomainSpec] = {
+    "test": DomainSpec(value_source="test_attr")
+}
+
+
+async def _setup_attr_state_condition(
+    hass: HomeAssistant,
+    entity_ids: str | list[str],
+    states: str | bool | set[str | bool],
+    condition_options: dict[str, Any] | None = None,
+) -> condition.ConditionChecker:
+    """Set up an attribute-based state condition and return the checker."""
+    condition_cls = make_entity_state_condition(
+        _ATTR_DOMAIN_SPECS,
+        states,
+        support_duration=True,
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: condition_options or {},
+    }
+
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+    return test
+
+
+async def test_state_condition_attr_duration_not_met(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test attribute-based condition with duration: not met yet."""
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 10}},
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # Just set — duration not met
+    assert test(hass) is False
+
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is False
+
+
+async def test_state_condition_attr_duration_met(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test attribute-based condition with duration: met after waiting."""
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 10}},
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is True
+
+
+async def test_state_condition_attr_duration_reset_on_attr_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test attribute-based condition: timer resets when attribute changes.
+
+    This is the key difference from state-based duration: the tracked value
+    is in an attribute, so state.last_changed does not capture it. The
+    _valid_since tracking in async_setup handles this correctly.
+    """
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 10}},
+    )
+
+    # Set attribute to True
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # After 8s, change attribute to False (state stays the same)
+    freezer.tick(timedelta(seconds=8))
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": False})
+    await hass.async_block_till_done()
+
+    # Set attribute back to True
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # 5s after re-set — not enough (timer was reset)
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is False
+
+    # 6 more seconds (11 from re-set) — now met
+    freezer.tick(timedelta(seconds=6))
+    assert test(hass) is True
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [(BEHAVIOR_ANY, True), (BEHAVIOR_ALL, False)],
+)
+async def test_state_condition_attr_duration_behavior(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    one_match_expected: bool,
+) -> None:
+    """Test attribute-based condition with duration and behavior any/all."""
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2"],
+        states={True},
+        condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True})
+    hass.states.async_set("test.entity_2", STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # Both matching but duration not met
+    assert test(hass) is False
+
+    # Advance past duration — both matching long enough
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is True
+
+    # Change entity_2 attribute — only one matching for duration
+    hass.states.async_set("test.entity_2", STATE_ON, {"test_attr": False})
+    await hass.async_block_till_done()
+    assert test(hass) is one_match_expected
+
+
+@dataclass
+class _AttrInitStep:
+    """A state update step before the condition is created."""
+
+    state: str
+    attrs: dict[str, Any] = field(default_factory=dict)
+    delay_before: int = 0
+
+
+@pytest.mark.parametrize(
+    ("steps", "duration", "initially_met"),
+    [
+        # Attribute set to valid 10s ago, no further changes → met (10 >= 5)
+        (
+            [_AttrInitStep(STATE_ON, {"test_attr": True})],
+            10,
+            True,
+        ),
+        # Attribute set to valid 3s ago → not met (3 < 5)
+        (
+            [_AttrInitStep(STATE_ON, {"test_attr": True})],
+            3,
+            False,
+        ),
+        # Attribute set to valid, then main state changes 2s later
+        # (attribute stays valid). last_updated is bumped by the state change,
+        # so the effective duration is only 2s from the second update → not met
+        (
+            [
+                _AttrInitStep(STATE_ON, {"test_attr": True}),
+                _AttrInitStep(STATE_OFF, {"test_attr": True}, delay_before=8),
+            ],
+            2,
+            False,
+        ),
+        # Same as above but enough time after the state change → met
+        (
+            [
+                _AttrInitStep(STATE_ON, {"test_attr": True}),
+                _AttrInitStep(STATE_OFF, {"test_attr": True}, delay_before=2),
+            ],
+            8,
+            True,
+        ),
+        # Attribute was invalid, then set to valid 4s ago → not met (4 < 5)
+        (
+            [
+                _AttrInitStep(STATE_ON, {"test_attr": False}),
+                _AttrInitStep(STATE_ON, {"test_attr": True}, delay_before=6),
+            ],
+            4,
+            False,
+        ),
+        # Attribute was invalid, then set to valid 6s ago → met (6 >= 5)
+        (
+            [
+                _AttrInitStep(STATE_ON, {"test_attr": False}),
+                _AttrInitStep(STATE_ON, {"test_attr": True}, delay_before=4),
+            ],
+            6,
+            True,
+        ),
+        # Attribute valid → invalid → valid 3s ago → not met (3 < 5)
+        (
+            [
+                _AttrInitStep(STATE_ON, {"test_attr": True}),
+                _AttrInitStep(STATE_ON, {"test_attr": False}, delay_before=5),
+                _AttrInitStep(STATE_ON, {"test_attr": True}, delay_before=2),
+            ],
+            3,
+            False,
+        ),
+    ],
+    ids=[
+        "valid_long_enough",
+        "valid_too_short",
+        "state_change_bumps_last_updated_not_met",
+        "state_change_bumps_last_updated_met",
+        "invalid_then_valid_not_met",
+        "invalid_then_valid_met",
+        "valid_invalid_valid_not_met",
+    ],
+)
+async def test_state_condition_attr_duration_initial_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    steps: list[_AttrInitStep],
+    duration: int,
+    initially_met: bool,
+) -> None:
+    """Test attribute-based condition initialization from existing state.
+
+    The condition uses last_updated (not last_changed) to determine how long
+    an attribute-based condition has been true. This is conservative: when
+    the main state changes but the tracked attribute stays the same,
+    last_updated is bumped and the effective duration resets.
+    """
+    for step in steps:
+        freezer.tick(timedelta(seconds=step.delay_before))
+        hass.states.async_set("test.entity_1", step.state, step.attrs)
+        await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=duration))
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 5}},
+    )
+
+    assert test(hass) is initially_met
+
+
+async def _setup_attr_state_condition_with_target(
+    hass: HomeAssistant,
+    target: dict[str, Any],
+    states: str | bool | set[str | bool],
+    condition_options: dict[str, Any] | None = None,
+) -> condition.ConditionChecker:
+    """Set up an attribute-based state condition with a custom target."""
+    condition_cls = make_entity_state_condition(
+        _ATTR_DOMAIN_SPECS,
+        states,
+        support_duration=True,
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: target,
+        CONF_OPTIONS: condition_options or {},
+    }
+
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+    return test
+
+
+async def test_state_condition_attr_duration_entity_added_to_target(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that _valid_since is primed when an entity is added to the tracked set.
+
+    When targeting by label, adding a label to an entity should make it
+    tracked, and if it's already in a valid state, its duration should be
+    primed from the state timestamps.
+    """
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Test Duration")
+
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get_or_create(
+        domain="test", platform="test", unique_id="duration_add"
+    )
+
+    # Entity starts valid but without the label
+    hass.states.async_set(entry.entity_id, STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # Create condition targeting the label
+    test = await _setup_attr_state_condition_with_target(
+        hass,
+        target={ATTR_LABEL_ID: label.label_id},
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 5}},
+    )
+
+    # No entities have the label yet — condition has no entities to check,
+    # behavior "any" with no matching entities returns False
+    assert test(hass) is False
+
+    # Add the label to the entity — entity is already in valid state
+    freezer.tick(timedelta(seconds=1))
+    entity_reg.async_update_entity(entry.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    # Just added — duration not met yet
+    assert test(hass) is False
+
+    # Wait past the duration from when entity was last_updated
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is True
+
+
+async def test_state_condition_attr_duration_entity_removed_from_target(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that _valid_since is evicted when an entity is removed from the tracked set."""
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Test Duration Remove")
+
+    entity_reg = er.async_get(hass)
+    entry1 = entity_reg.async_get_or_create(
+        domain="test", platform="test", unique_id="duration_remove_1"
+    )
+    entry2 = entity_reg.async_get_or_create(
+        domain="test", platform="test", unique_id="duration_remove_2"
+    )
+    # Both entities start with the label
+    entity_reg.async_update_entity(entry1.entity_id, labels={label.label_id})
+    entity_reg.async_update_entity(entry2.entity_id, labels={label.label_id})
+
+    # Both entities in valid state
+    hass.states.async_set(entry1.entity_id, STATE_ON, {"test_attr": True})
+    hass.states.async_set(entry2.entity_id, STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    test = await _setup_attr_state_condition_with_target(
+        hass,
+        target={ATTR_LABEL_ID: label.label_id},
+        states={True},
+        condition_options={
+            ATTR_BEHAVIOR: BEHAVIOR_ALL,
+            CONF_FOR: {"seconds": 5},
+        },
+    )
+
+    # Wait past duration — both valid
+    freezer.tick(timedelta(seconds=6))
+    assert test(hass) is True
+
+    # Remove label from entry2
+    entity_reg.async_update_entity(entry2.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    # Condition should still be True — only entry1 is tracked now, and it's valid
+    assert test(hass) is True
+
+    # Now remove label from entry1 too
+    entity_reg.async_update_entity(entry1.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    # No entities tracked — "all" with empty set is vacuously True
+    assert test(hass) is True
+
+    # Change entry1 to invalid state and re-add its label
+    hass.states.async_set(entry1.entity_id, STATE_ON, {"test_attr": False})
+    await hass.async_block_till_done()
+    entity_reg.async_update_entity(entry1.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    # entry1 is now tracked again but invalid — "all" fails
+    freezer.tick(timedelta(seconds=10))
+    assert test(hass) is False
+
+
+async def test_state_condition_attr_duration_entity_added_then_state_changes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that a newly added entity's state changes are properly tracked."""
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Test Duration Track")
+
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get_or_create(
+        domain="test", platform="test", unique_id="duration_track"
+    )
+
+    # Entity starts in invalid state
+    hass.states.async_set(entry.entity_id, STATE_ON, {"test_attr": False})
+    await hass.async_block_till_done()
+
+    # Create condition targeting the label
+    test = await _setup_attr_state_condition_with_target(
+        hass,
+        target={ATTR_LABEL_ID: label.label_id},
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 5}},
+    )
+
+    # Add the label — entity is invalid, so no priming
+    entity_reg.async_update_entity(entry.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+    assert test(hass) is False
+
+    # Now change to valid state
+    freezer.tick(timedelta(seconds=1))
+    hass.states.async_set(entry.entity_id, STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # Just became valid — not long enough
+    freezer.tick(timedelta(seconds=3))
+    assert test(hass) is False
+
+    # Now past the duration
+    freezer.tick(timedelta(seconds=3))
+    assert test(hass) is True
+
+
+async def test_state_condition_attr_duration_unrelated_attr_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that unrelated attribute updates don't reset the duration timer.
+
+    When the tracked attribute stays valid but another attribute changes,
+    _update_valid_since must not overwrite the existing timestamp.
+    """
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 10}},
+    )
+
+    # Set tracked attribute to True
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True, "other": "a"})
+    await hass.async_block_till_done()
+
+    # After 6s, change an unrelated attribute (tracked attr stays True)
+    freezer.tick(timedelta(seconds=6))
+    hass.states.async_set("test.entity_1", STATE_ON, {"test_attr": True, "other": "b"})
+    await hass.async_block_till_done()
+
+    # After 5 more seconds (11 total from initial set), the duration
+    # should be met — the unrelated attribute change must NOT have
+    # reset the timer.
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is True
