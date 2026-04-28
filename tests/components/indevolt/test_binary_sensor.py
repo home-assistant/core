@@ -123,9 +123,10 @@ async def test_battery_pack_heating_filtering(
         "9218": None,
     }
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BINARY_SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     # Get all binary sensor entities
     entity_entries = er.async_entries_for_config_entry(
