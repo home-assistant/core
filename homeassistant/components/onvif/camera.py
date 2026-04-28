@@ -86,6 +86,8 @@ async def async_setup_entry(
         "async_perform_ptz",
     )
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     device = hass.data[DOMAIN][config_entry.unique_id]
     async_add_entities(
         [ONVIFCameraEntity(device, profile) for profile in device.profiles]

@@ -7,8 +7,7 @@ import logging
 from typing import Any, Concatenate
 
 import switchbot
-from switchbot import Switchbot, SwitchbotDevice
-from switchbot.devices.device import SwitchbotOperationError
+from switchbot import Switchbot, SwitchbotDevice, SwitchbotOperationError
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,

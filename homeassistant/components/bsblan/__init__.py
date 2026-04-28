@@ -32,7 +32,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PASSKEY, DOMAIN
+from .const import CONF_PASSKEY, DOMAIN, LOGGER
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
@@ -52,7 +52,7 @@ class BSBLanData:
     client: BSBLAN
     device: Device
     info: Info
-    static: StaticState
+    static: StaticState | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -82,11 +82,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         # the connection by fetching firmware version
         await bsblan.initialize()
 
-        # Fetch device metadata in parallel for faster startup
-        device, info, static = await asyncio.gather(
+        # Fetch required device metadata in parallel for faster startup
+        device, info = await asyncio.gather(
             bsblan.device(),
             bsblan.info(),
-            bsblan.static_values(),
         )
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
@@ -110,6 +109,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="setup_general_error",
         ) from err
+
+    try:
+        static = await bsblan.static_values()
+    except (BSBLANError, TimeoutError) as err:
+        LOGGER.debug(
+            "Static values not available for %s: %s",
+            entry.data[CONF_HOST],
+            err,
+        )
+        static = None
 
     # Create coordinators with the already-initialized client
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan)

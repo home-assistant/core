@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_valves[mock_valve][mock_valve][valve.mock_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -40,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Mock Valve',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,

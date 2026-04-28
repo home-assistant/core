@@ -21,15 +21,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import ATTR_ADDON, ATTR_UUID, DOMAIN
-from .handler import HassIO, get_supervisor_client
+from .handler import get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_discovery_view(hass: HomeAssistant, hassio: HassIO) -> None:
+def async_setup_discovery_view(hass: HomeAssistant) -> None:
     """Discovery setup."""
-    hassio_discovery = HassIODiscovery(hass, hassio)
+    hassio_discovery = HassIODiscovery(hass)
     supervisor_client = get_supervisor_client(hass)
     hass.http.register_view(hassio_discovery)
 
@@ -77,10 +77,9 @@ class HassIODiscovery(HomeAssistantView):
     name = "api:hassio_push:discovery"
     url = "/api/hassio_push/discovery/{uuid}"
 
-    def __init__(self, hass: HomeAssistant, hassio: HassIO) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize WebView."""
         self.hass = hass
-        self.hassio = hassio
         self._supervisor_client = get_supervisor_client(hass)
 
     async def post(self, request: web.Request, uuid: str) -> web.Response:

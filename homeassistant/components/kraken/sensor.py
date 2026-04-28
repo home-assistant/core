@@ -149,6 +149,8 @@ async def async_setup_entry(
             entities.extend(
                 [
                     KrakenSensor(
+                        # Uses legacy hass.data[DOMAIN] pattern
+                        # pylint: disable-next=hass-use-runtime-data
                         hass.data[DOMAIN],
                         tracked_asset_pair,
                         description,

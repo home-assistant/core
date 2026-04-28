@@ -70,11 +70,12 @@ def mock_window() -> AsyncMock:
     window.name = "Test Window"
     window.rain_sensor = True
     window.serial_number = "123456789"
-    window.get_limitation.return_value = MagicMock(min_value=0)
+    window.get_limitation_min.return_value = MagicMock(position_percent=0)
     window.device_updated_cbs = []
     window.is_opening = False
     window.is_closing = False
     window.position = MagicMock(position_percent=30, closed=False)
+    window.wink = AsyncMock()
     window.pyvlx = MagicMock()
     return window
 
@@ -213,7 +214,6 @@ def mock_pyvlx(
             mock_blind,
             mock_window,
             mock_exterior_heating,
-            mock_cover_type,
         ]
 
     pyvlx.scenes = [mock_scene]

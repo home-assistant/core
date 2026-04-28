@@ -1,5 +1,7 @@
 """Base class for pilight."""
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -10,8 +12,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, EVENT, SERVICE_NAME
 from .const import (
@@ -60,19 +64,19 @@ class PilightBaseDevice(RestoreEntity):
     _attr_assumed_state = True
     _attr_should_poll = False
 
-    def __init__(self, hass, name, config):
+    def __init__(self, hass: HomeAssistant, name: str, config: ConfigType) -> None:
         """Initialize a device."""
         self._hass = hass
         self._attr_name = config.get(CONF_NAME, name)
-        self._attr_is_on = False
+        self._attr_is_on: bool | None = False
         self._code_on = config.get(CONF_ON_CODE)
         self._code_off = config.get(CONF_OFF_CODE)
 
         code_on_receive = config.get(CONF_ON_CODE_RECEIVE, [])
         code_off_receive = config.get(CONF_OFF_CODE_RECEIVE, [])
 
-        self._code_on_receive = []
-        self._code_off_receive = []
+        self._code_on_receive: list[_ReceiveHandle] = []
+        self._code_off_receive: list[_ReceiveHandle] = []
 
         for code_list, conf in (
             (self._code_on_receive, code_on_receive),
@@ -85,7 +89,7 @@ class PilightBaseDevice(RestoreEntity):
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(EVENT, self._handle_code)
 
-        self._brightness = 255
+        self._brightness: int | None = 255
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -147,18 +151,18 @@ class PilightBaseDevice(RestoreEntity):
 
 
 class _ReceiveHandle:
-    def __init__(self, config, echo):
+    def __init__(self, config: dict[str, Any], echo: bool) -> None:
         """Initialize the handle."""
         self.config_items = config.items()
         self.echo = echo
 
-    def match(self, code):
+    def match(self, code: dict[str, Any]) -> bool:
         """Test if the received code matches the configured values.
 
         The received values have to be a subset of the configured options.
         """
         return self.config_items <= code.items()
 
-    def run(self, switch, turn_on):
+    def run(self, switch: PilightBaseDevice, turn_on: bool) -> None:
         """Change the state of the switch."""
         switch.set_state(turn_on=turn_on, send_code=self.echo)

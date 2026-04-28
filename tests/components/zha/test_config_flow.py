@@ -17,7 +17,6 @@ from unittest.mock import (
 import uuid
 
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
 from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
@@ -33,7 +32,7 @@ import zigpy.types
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
@@ -66,9 +65,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-type RadioPicker = Callable[
-    [RadioType], Coroutine[Any, Any, tuple[ConfigFlowResult, ListPortInfo]]
-]
+type RadioPicker = Callable[[RadioType], Coroutine[Any, Any, ConfigFlowResult]]
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
 
 
@@ -168,15 +165,14 @@ def mock_detect_radio_type(
     return detect
 
 
-def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
+def com_port(device="/dev/ttyUSB1234") -> SerialDevice:
     """Mock of a serial port."""
-    port = ListPortInfo(device)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = device
-    port.description = "Some serial port"
-
-    return port
+    return SerialDevice(
+        device=device,
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+    )
 
 
 def usb_port(device="/dev/ttyUSB1234") -> USBDevice:
@@ -1129,7 +1125,7 @@ async def test_user_flow_not_detected(hass: HomeAssistant) -> None:
     """Test user flow, radio not detected."""
 
     port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    port_select = f"{port.device} - {port.description}, s/n: {port.serial_number} - {port.manufacturer}"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1700,14 +1696,12 @@ def test_prevent_overwrite_ezsp_ieee() -> None:
 
 
 @pytest.fixture
-def advanced_pick_radio(
-    hass: HomeAssistant,
-) -> Generator[RadioPicker]:
+def advanced_pick_radio(hass: HomeAssistant) -> Generator[RadioPicker]:
     """Fixture for the first step of the config flow (where a radio is picked)."""
 
-    async def wrapper(radio_type: RadioType) -> tuple[ConfigFlowResult, ListPortInfo]:
+    async def wrapper(radio_type: RadioType) -> ConfigFlowResult:
         port = com_port()
-        port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+        port_select = f"{port.device} - {port.description}, s/n: {port.serial_number} - {port.manufacturer}"
 
         with patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
@@ -2844,7 +2838,7 @@ async def test_config_flow_port_yellow_port_name(
     with (
         patch("homeassistant.components.zha.config_flow.yellow_hardware.async_info"),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[port],
         ),
     ):
@@ -2866,7 +2860,7 @@ async def test_config_flow_ports_no_hassio(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2884,7 +2878,7 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
             "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
         ) as async_get_addon_info,
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2909,13 +2903,99 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
             side_effect=AddonError,
         ),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
         ports = await config_flow.list_serial_ports(hass)
 
     assert ports == []
+
+
+async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
+    """Test that list_serial_ports filters out ignored non-Zigbee devices."""
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="303A",
+            pid="4001",
+            serial_number="1234",
+            manufacturer="Nabu Casa",
+            description="ZWA-2",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="303A",
+            pid="4001",
+            serial_number="1235",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="10C4",
+            pid="EA60",
+            serial_number="1236",
+            manufacturer="Nabu Casa",
+            description="Home Assistant Connect ZBT-1",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="10C4",
+            pid="EA60",
+            serial_number="1237",
+            manufacturer="Nabu Casa",
+            description="SkyConnect v1.0",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="1234",
+            pid="5678",
+            serial_number="1238",
+            manufacturer="Another Manufacturer",
+            description="Zigbee USB Adapter",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB5",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        ),
+    ]
+
+    with (
+        patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
+        patch(
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
+            return_value=mock_ports,
+        ),
+    ):
+        ports = await config_flow.list_serial_ports(hass)
+
+    # ZWA-2 should be filtered out, others should remain
+    assert len(ports) == 5
+
+    assert ports[0].device == "/dev/ttyUSB1"
+    assert ports[0].manufacturer == "Nabu Casa"
+    assert ports[0].description == "ZBT-2"
+
+    assert ports[1].device == "/dev/ttyUSB2"
+    assert ports[1].manufacturer == "Nabu Casa"
+    assert ports[1].description == "Home Assistant Connect ZBT-1"
+
+    assert ports[2].device == "/dev/ttyUSB3"
+    assert ports[2].manufacturer == "Nabu Casa"
+    assert ports[2].description == "SkyConnect v1.0"
+
+    assert ports[3].device == "/dev/ttyUSB4"
+    assert ports[3].manufacturer == "Another Manufacturer"
+    assert ports[3].description == "Zigbee USB Adapter"
+
+    assert ports[4].device == "/dev/ttyUSB5"
+    assert ports[4].manufacturer is None
+    assert ports[4].description is None
 
 
 @patch(

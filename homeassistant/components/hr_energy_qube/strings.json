@@ -1,0 +1,94 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_qube_device": "Could not verify this is a Qube heat pump. Check the host address."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Qube heat pump."
+        },
+        "description": "Enter the IP address or hostname of your Qube heat pump."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "compressor_speed": {
+        "name": "Compressor speed"
+      },
+      "cop_calc": {
+        "name": "COP"
+      },
+      "energy_total_electric": {
+        "name": "Total electric consumption"
+      },
+      "energy_total_thermic": {
+        "name": "Total thermal yield"
+      },
+      "flow_rate": {
+        "name": "Measured PVT flow"
+      },
+      "power_electric": {
+        "name": "Electric power"
+      },
+      "power_thermic": {
+        "name": "Thermal power"
+      },
+      "setpoint_room_cool_day": {
+        "name": "Room setpoint cooling (day)"
+      },
+      "setpoint_room_cool_night": {
+        "name": "Room setpoint cooling (night)"
+      },
+      "setpoint_room_heat_day": {
+        "name": "Room setpoint heating (day)"
+      },
+      "setpoint_room_heat_night": {
+        "name": "Room setpoint heating (night)"
+      },
+      "status_heatpump": {
+        "name": "Heat pump status",
+        "state": {
+          "alarm": "Alarm",
+          "compressor_shutdown": "Compressor stopping",
+          "compressor_startup": "Compressor startup",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "heating_dhw": "Heating DHW",
+          "keyboard_off": "Keyboard off",
+          "standby": "[%key:common::state::standby%]",
+          "start_fail": "Start failed"
+        }
+      },
+      "temp_dhw": {
+        "name": "DHW temperature"
+      },
+      "temp_outside": {
+        "name": "Outside temperature"
+      },
+      "temp_return": {
+        "name": "Return temperature"
+      },
+      "temp_room": {
+        "name": "Room temperature"
+      },
+      "temp_source_in": {
+        "name": "Source temperature in"
+      },
+      "temp_source_out": {
+        "name": "Source temperature out"
+      },
+      "temp_supply": {
+        "name": "Supply temperature CH"
+      }
+    }
+  }
+}

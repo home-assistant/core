@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[2][number.cms_sf2000_discharge_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -61,8 +62,9 @@
 # ---
 # name: test_number[2][number.cms_sf2000_feed_in_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2400,
@@ -121,8 +123,9 @@
 # ---
 # name: test_number[2][number.cms_sf2000_inverter_input_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2400,
@@ -181,8 +184,9 @@
 # ---
 # name: test_number[2][number.cms_sf2000_max_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2400,

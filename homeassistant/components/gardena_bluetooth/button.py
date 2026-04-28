@@ -30,7 +30,7 @@ class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
 
 DESCRIPTIONS = (
     GardenaBluetoothButtonEntityDescription(
-        key=Reset.factory_reset.uuid,
+        key=Reset.factory_reset.unique_id,
         translation_key="factory_reset",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -49,7 +49,7 @@ async def async_setup_entry(
     entities = [
         GardenaBluetoothButton(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
     async_add_entities(entities)
 

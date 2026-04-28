@@ -5,7 +5,14 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
-from aioesphomeapi import EntityInfo, WaterHeaterInfo, WaterHeaterMode, WaterHeaterState
+from aioesphomeapi import (
+    EntityInfo,
+    WaterHeaterFeature,
+    WaterHeaterInfo,
+    WaterHeaterMode,
+    WaterHeaterState,
+    WaterHeaterStateFlag,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -54,6 +61,7 @@ class EsphomeWaterHeater(
         static_info = self._static_info
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
+        self._attr_target_temperature_step = static_info.target_temperature_step
         features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
         if static_info.supported_modes:
             features |= WaterHeaterEntityFeature.OPERATION_MODE
@@ -63,6 +71,10 @@ class EsphomeWaterHeater(
             ]
         else:
             self._attr_operation_list = None
+        if static_info.supported_features & WaterHeaterFeature.SUPPORTS_ON_OFF:
+            features |= WaterHeaterEntityFeature.ON_OFF
+        if static_info.supported_features & WaterHeaterFeature.SUPPORTS_AWAY_MODE:
+            features |= WaterHeaterEntityFeature.AWAY_MODE
         self._attr_supported_features = features
 
     @property
@@ -83,6 +95,12 @@ class EsphomeWaterHeater(
         """Return current operation mode."""
         return _WATER_HEATER_MODES.from_esphome(self._state.mode)
 
+    @property
+    @esphome_state_property
+    def is_away_mode_on(self) -> bool | None:
+        """Return true if away mode is on."""
+        return bool(self._state.state & WaterHeaterStateFlag.AWAY)
+
     @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -98,6 +116,42 @@ class EsphomeWaterHeater(
         self._client.water_heater_command(
             key=self._key,
             mode=_WATER_HEATER_MODES.from_hass(operation_mode),
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        self._client.water_heater_command(
+            key=self._key,
+            on=True,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        self._client.water_heater_command(
+            key=self._key,
+            on=False,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_away_mode_on(self) -> None:
+        """Turn away mode on."""
+        self._client.water_heater_command(
+            key=self._key,
+            away=True,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_away_mode_off(self) -> None:
+        """Turn away mode off."""
+        self._client.water_heater_command(
+            key=self._key,
+            away=False,
             device_id=self._static_info.device_id,
         )
 

@@ -21,12 +21,11 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EVENT_TURN_ON
+from .const import EVENT_TURN_ON
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
+from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,14 +39,7 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data.coordinators
 
     async_add_entities(
-        [
-            ArcamFmj(
-                config_entry.title,
-                coordinators[zone],
-                config_entry.unique_id or config_entry.entry_id,
-            )
-            for zone in (1, 2)
-        ],
+        [ArcamFmj(coordinators[zone]) for zone in (1, 2)],
     )
 
 
@@ -68,21 +60,13 @@ def convert_exception[**_P, _R](
     return _convert_exception
 
 
-class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
+class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     """Representation of a media device."""
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        device_name: str,
-        coordinator: ArcamFmjCoordinator,
-        uuid: str,
-    ) -> None:
+    def __init__(self, coordinator: ArcamFmjCoordinator) -> None:
         """Initialize device."""
         super().__init__(coordinator)
         self._state = coordinator.state
-        self._attr_name = f"Zone {self._state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -95,16 +79,6 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
         )
         if self._state.zn == 1:
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
-        self._attr_unique_id = f"{uuid}-{self._state.zn}"
-        self._attr_entity_registry_enabled_default = self._state.zn == 1
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, uuid),
-            },
-            manufacturer="Arcam",
-            model="Arcam FMJ AVR",
-            name=device_name,
-        )
 
     @property
     def state(self) -> MediaPlayerState:

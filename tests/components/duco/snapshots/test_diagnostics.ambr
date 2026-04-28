@@ -1,0 +1,110 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'board_info': dict({
+      'box_name': 'SILENT_CONNECT',
+      'box_sub_type_name': 'Eu',
+      'serial_board_box': '**REDACTED**',
+      'serial_board_comm': '**REDACTED**',
+      'serial_duco_box': '**REDACTED**',
+      'serial_duco_comm': '**REDACTED**',
+    }),
+    'duco_diagnostics': list([
+      dict({
+        'component': 'Ventilation',
+        'status': 'Ok',
+      }),
+    ]),
+    'entry_data': dict({
+      'host': '**REDACTED**',
+    }),
+    'lan_info': dict({
+      'default_gateway': '192.168.1.1',
+      'dns': '8.8.8.8',
+      'host_name': '**REDACTED**',
+      'ip': '192.168.1.100',
+      'mac': '**REDACTED**',
+      'mode': 'WIFI_CLIENT',
+      'net_mask': '255.255.255.0',
+      'rssi_wifi': -60,
+    }),
+    'nodes': dict({
+      '1': dict({
+        'general': dict({
+          'asso': 0,
+          'identify': 0,
+          'name': 'Living',
+          'network_type': 'VIRT',
+          'node_type': 'BOX',
+          'parent': 0,
+          'sub_type': 1,
+        }),
+        'node_id': 1,
+        'sensor': dict({
+          'co2': None,
+          'iaq_co2': None,
+          'iaq_rh': None,
+          'rh': None,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': 0,
+          'mode': 'AUTO',
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
+      '113': dict({
+        'general': dict({
+          'asso': 1,
+          'identify': 0,
+          'name': 'Bathroom RH',
+          'network_type': 'RF',
+          'node_type': 'BSRH',
+          'parent': 1,
+          'sub_type': 0,
+        }),
+        'node_id': 113,
+        'sensor': dict({
+          'co2': None,
+          'iaq_co2': None,
+          'iaq_rh': 85,
+          'rh': 42.0,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': None,
+          'mode': '-',
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
+      '2': dict({
+        'general': dict({
+          'asso': 1,
+          'identify': 0,
+          'name': 'Office CO2',
+          'network_type': 'RF',
+          'node_type': 'UCCO2',
+          'parent': 1,
+          'sub_type': 0,
+        }),
+        'node_id': 2,
+        'sensor': dict({
+          'co2': 405,
+          'iaq_co2': 80,
+          'iaq_rh': None,
+          'rh': None,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': None,
+          'mode': '-',
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
+    }),
+    'write_requests_remaining': 100,
+  })
+# ---

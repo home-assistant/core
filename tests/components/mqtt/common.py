@@ -2634,7 +2634,7 @@ async def help_test_reload_with_config(
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
 
-    def _write_yaml_config() -> None:
+    def _write_yaml_config() -> str:
         new_yaml_config = yaml.dump(config)
         new_yaml_config_file.write_text(new_yaml_config)
         assert new_yaml_config_file.read_text() == new_yaml_config

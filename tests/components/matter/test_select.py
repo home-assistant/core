@@ -86,15 +86,12 @@ async def test_attribute_select_entities(
     matter_node: MatterNode,
 ) -> None:
     """Test select entities are created for attribute based discovery schema(s)."""
-    entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
+    entity_id = "select.mock_dimmable_light_power_on_behavior"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "previous"
     assert state.attributes["options"] == ["on", "off", "toggle", "previous"]
-    assert (
-        state.attributes["friendly_name"]
-        == "Mock Dimmable Light Power-on behavior on startup"
-    )
+    assert state.attributes["friendly_name"] == "Mock Dimmable Light Power-on behavior"
     set_node_attribute(matter_node, 1, 6, 16387, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)

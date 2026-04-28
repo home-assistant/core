@@ -10,6 +10,7 @@ from bsblan import (
     BSBLAN,
     BSBLANAuthError,
     BSBLANConnectionError,
+    BSBLANError,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -50,7 +51,7 @@ class BSBLanFastData:
 
     state: State
     sensor: Sensor
-    dhw: HotWaterState
+    dhw: HotWaterState | None = None
 
 
 @dataclass
@@ -111,7 +112,6 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             # This reduces response time significantly (~0.2s per parameter)
             state = await self.client.state(include=STATE_INCLUDE)
             sensor = await self.client.sensor(include=SENSOR_INCLUDE)
-            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
@@ -125,6 +125,19 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                 translation_key="coordinator_connection_error",
                 translation_placeholders={"host": host},
             ) from err
+
+        # Fetch DHW state separately - device may not support hot water
+        dhw: HotWaterState | None = None
+        try:
+            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
+        except BSBLANError:
+            # Preserve last known DHW state if available (entity may depend on it)
+            if self.data:
+                dhw = self.data.dhw
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) state not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
 
         return BSBLanFastData(
             state=state,
@@ -159,13 +172,6 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
             dhw_schedule = await self.client.hot_water_schedule()
 
-        except AttributeError:
-            # Device does not support DHW functionality
-            LOGGER.debug(
-                "DHW (Domestic Hot Water) not available on device at %s",
-                self.config_entry.data[CONF_HOST],
-            )
-            return BSBLanSlowData()
         except (BSBLANConnectionError, BSBLANAuthError) as err:
             # If config update fails, keep existing data
             LOGGER.debug(
@@ -176,6 +182,13 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             if self.data:
                 return self.data
             # First fetch failed, return empty data
+            return BSBLanSlowData()
+        except BSBLANError, AttributeError:
+            # Device does not support DHW functionality
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
             return BSBLanSlowData()
 
         return BSBLanSlowData(

@@ -51,6 +51,9 @@
   "exceptions": {
     "missing_from_for_alias": {
       "message": "Missing 'from' email when setting an alias to show. You have to provide a 'from' email"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "services": {

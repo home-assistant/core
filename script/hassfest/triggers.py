@@ -245,8 +245,8 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                     f"Trigger {trigger_name} has no description {error_msg_suffix}",
                 )
 
-        # The same check is done for the description in each of the fields of the
-        # trigger schema.
+        # The same check is done for each of the fields of the trigger schema,
+        # except that we don't enforce that fields have a description.
         for field_name, field_schema in trigger_schema.get("fields", {}).items():
             if "fields" in field_schema:
                 # This is a section
@@ -260,20 +260,6 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                         (
                             f"Trigger {trigger_name} has a field {field_name} with no "
                             f"name {error_msg_suffix}"
-                        ),
-                    )
-
-            if "description" not in field_schema and integration.core:
-                try:
-                    strings["triggers"][trigger_name]["fields"][field_name][
-                        "description"
-                    ]
-                except KeyError:
-                    integration.add_error(
-                        "triggers",
-                        (
-                            f"Trigger {trigger_name} has a field {field_name} with no "
-                            f"description {error_msg_suffix}"
                         ),
                     )
 

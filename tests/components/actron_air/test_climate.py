@@ -6,9 +6,15 @@ from actron_neo_api import ActronAirAPIError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.actron_air.climate import (
+    ActronSystemClimate,
+    ActronZoneClimate,
+)
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -17,7 +23,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -36,7 +42,6 @@ async def test_climate_entities(
     """Test climate entities."""
     status = mock_actron_api.state_manager.get_status.return_value
     status.remote_zone_info = [mock_zone]
-    status.zones = {1: mock_zone}
 
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
@@ -87,6 +92,29 @@ async def test_system_set_temperature_api_error(
             {ATTR_ENTITY_ID: "climate.test_system", ATTR_TEMPERATURE: 22.5},
             blocking=True,
         )
+
+
+async def test_system_set_temperature_missing_temperature(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test validation when temperature is not provided for system entity."""
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = next(
+        iter(mock_config_entry.runtime_data.system_coordinators.values())
+    )
+    entity = ActronSystemClimate(coordinator)
+    status = mock_actron_api.state_manager.get_status.return_value
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_set_temperature(
+            **{ATTR_TARGET_TEMP_HIGH: 24, ATTR_TARGET_TEMP_LOW: 18}
+        )
+
+    status.user_aircon_settings.set_temperature.assert_not_awaited()
 
 
 async def test_system_set_fan_mode(
@@ -208,6 +236,26 @@ async def test_zone_set_temperature_api_error(
         )
 
 
+async def test_zone_set_temperature_missing_temperature(
+    hass: HomeAssistant,
+    init_integration_with_zone: None,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test validation when temperature is not provided for zone entity."""
+    coordinator = next(
+        iter(mock_config_entry.runtime_data.system_coordinators.values())
+    )
+    entity = ActronZoneClimate(coordinator, mock_zone)
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_set_temperature(
+            **{ATTR_TARGET_TEMP_HIGH: 24, ATTR_TARGET_TEMP_LOW: 18}
+        )
+
+    mock_zone.set_temperature.assert_not_awaited()
+
+
 async def test_zone_set_hvac_mode_on(
     hass: HomeAssistant,
     init_integration_with_zone: None,
@@ -258,3 +306,59 @@ async def test_zone_set_hvac_mode_api_error(
             {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
+
+
+async def test_system_hvac_mode_unmapped(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test system climate entity returns None for unmapped HVAC mode."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.is_on = True
+    status.user_aircon_settings.mode = "UNKNOWN_MODE"
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.test_system")
+    assert state.state == "unknown"
+
+
+async def test_zone_hvac_mode_unmapped(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zone climate entity returns None for unmapped HVAC mode."""
+    mock_zone.is_active = True
+    mock_zone.hvac_mode = "UNKNOWN_MODE"
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.remote_zone_info = [mock_zone]
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room")
+    assert state.state == "unknown"
+
+
+async def test_zone_hvac_mode_inactive(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zone climate entity returns OFF when zone is inactive."""
+    mock_zone.is_active = False
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.remote_zone_info = [mock_zone]
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room")
+    assert state.state == "off"

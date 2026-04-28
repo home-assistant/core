@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from pylutron import OccupancyGroup
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -10,6 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def setup_platforms():
+    """Patch PLATFORMS for all tests in this file."""
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
 
 
 async def test_binary_sensor_setup(
@@ -25,9 +33,8 @@ async def test_binary_sensor_setup(
     occ_group = mock_lutron.areas[0].occupancy_group
     occ_group.state = OccupancyGroup.State.VACANT
 
-    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.BINARY_SENSOR]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

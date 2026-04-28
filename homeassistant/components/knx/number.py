@@ -109,16 +109,19 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX number."""
+        self._device = NumericValue(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            value_type=config[CONF_TYPE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=NumericValue(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                value_type=config[CONF_TYPE],
-            ),
+            unique_id=str(self._device.sensor_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]
@@ -131,7 +134,6 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
                 dpt_info["sensor_device_class"],
             ),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_mode = config[CONF_MODE]
         self._attr_native_max_value = config.get(
             NumberConf.MAX,
@@ -149,7 +151,6 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
             CONF_UNIT_OF_MEASUREMENT,
             dpt_info["unit"],
         )
-        self._attr_unique_id = str(self._device.sensor_value.group_address)
 
         self._device.sensor_value.value = max(0, self._attr_native_min_value)
 

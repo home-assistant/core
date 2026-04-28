@@ -868,11 +868,16 @@ def url(
 ) -> str:
     """Validate an URL."""
     url_in = str(value)
+    parsed = urlparse(url_in)
 
-    if urlparse(url_in).scheme in _schema_list:
-        return cast(str, vol.Schema(vol.Url())(url_in))
+    if parsed.scheme not in _schema_list:
+        raise vol.Invalid("invalid url")
 
-    raise vol.Invalid("invalid url")
+    try:
+        _port = parsed.port
+    except ValueError as err:
+        raise vol.Invalid("invalid url") from err
+    return cast(str, vol.Schema(vol.Url())(url_in))
 
 
 def configuration_url(value: Any) -> str:

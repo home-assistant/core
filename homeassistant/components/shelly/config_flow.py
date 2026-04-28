@@ -807,7 +807,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         ssid_options = [network["ssid"] for network in sorted_networks]
 
-        # Pre-select SSID if returning from failed provisioning attempt
+        # Preselect SSID if returning from failed provisioning attempt
         suggested_values: dict[str, Any] = {}
         if self.selected_ssid:
             suggested_values[CONF_SSID] = self.selected_ssid
@@ -1086,7 +1086,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle failed provisioning - allow retry."""
         if user_input is not None:
-            # User wants to retry - keep selected_ssid so it's pre-selected
+            # User wants to retry - keep selected_ssid so it's preselected
             self.wifi_networks = []
             return await self.async_step_wifi_scan()
 

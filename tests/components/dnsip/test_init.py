@@ -1,4 +1,4 @@
-"""Test for DNS IP component Init."""
+"""Test for DNS IP integration Init."""
 
 from __future__ import annotations
 

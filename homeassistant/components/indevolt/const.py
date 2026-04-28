@@ -1,5 +1,7 @@
 """Constants for the Indevolt integration."""
 
+from typing import Final
+
 from indevolt_api import (
     IndevoltBattery,
     IndevoltConfig,
@@ -8,17 +10,26 @@ from indevolt_api import (
     IndevoltSystem,
 )
 
-DOMAIN = "indevolt"
+DOMAIN: Final = "indevolt"
+
+# Default configurations
+DEFAULT_PORT: Final = 8080
 
 # Config entry fields
-CONF_SERIAL_NUMBER = "serial_number"
-CONF_GENERATION = "generation"
+CONF_SERIAL_NUMBER: Final = "serial_number"
+CONF_GENERATION: Final = "generation"
 
-# Default values
-DEFAULT_PORT = 8080
+# API write/read keys for energy and value for outdoor/portable mode
+ENERGY_MODE_READ_KEY: Final = "7101"
+ENERGY_MODE_WRITE_KEY: Final = "47005"
+PORTABLE_MODE: Final = 0
+
+# API write key and value for real-time control mode
+REALTIME_ACTION_KEY: Final = "47015"
+REALTIME_ACTION_MODE: Final = 4
 
 # API key fields
-SENSOR_KEYS = {
+SENSOR_KEYS: Final[dict[int, list[str]]] = {
     1: [
         IndevoltSystem.OPERATING_MODE,
         IndevoltConfig.READ_ENERGY_MODE,

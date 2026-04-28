@@ -80,6 +80,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     # Matter server.
     _attr_should_poll = True
     _software_update: MatterSoftwareVersion | None = None
+    _installed_software_version: int | None = None
     _cancel_update: CALLBACK_TYPE | None = None
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
@@ -92,6 +93,9 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
 
+        self._installed_software_version = self.get_matter_attribute_value(
+            clusters.BasicInformation.Attributes.SoftwareVersion
+        )
         self._attr_installed_version = self.get_matter_attribute_value(
             clusters.BasicInformation.Attributes.SoftwareVersionString
         )
@@ -123,6 +127,22 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         else:
             self._attr_update_percentage = None
 
+    def _format_latest_version(
+        self, update_information: MatterSoftwareVersion
+    ) -> str | None:
+        """Return the version string to expose in Home Assistant."""
+        latest_version = update_information.software_version_string
+        if self._installed_software_version is None:
+            return latest_version
+
+        if update_information.software_version == self._installed_software_version:
+            return self._attr_installed_version or latest_version
+
+        if latest_version == self._attr_installed_version:
+            return f"{latest_version} ({update_information.software_version})"
+
+        return latest_version
+
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
         try:
@@ -130,11 +150,13 @@ class MatterUpdate(MatterEntity, UpdateEntity):
                 node_id=self._endpoint.node.node_id
             )
             if not update_information:
+                self._software_update = None
                 self._attr_latest_version = self._attr_installed_version
+                self._attr_release_url = None
                 return
 
             self._software_update = update_information
-            self._attr_latest_version = update_information.software_version_string
+            self._attr_latest_version = self._format_latest_version(update_information)
             self._attr_release_url = update_information.release_notes_url
 
         except UpdateCheckError as err:
@@ -212,7 +234,12 @@ class MatterUpdate(MatterEntity, UpdateEntity):
 
         software_version: str | int | None = version
         if self._software_update is not None and (
-            version is None or version == self._software_update.software_version_string
+            version is None
+            or version
+            in {
+                self._software_update.software_version_string,
+                self._attr_latest_version,
+            }
         ):
             # Update to the version previously fetched and shown.
             # We can pass the integer version directly to speedup download.
