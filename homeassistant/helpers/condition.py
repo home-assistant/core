@@ -482,10 +482,12 @@ class EntityConditionBase(Condition):
     def _needs_duration_tracking(self) -> bool:
         """Whether this condition needs active state change tracking for duration.
 
-        Conditions that are true for a single main state value can use
-        state.last_changed directly. Conditions that track attributes or
-        match multiple states need active tracking because last_changed
-        does not capture those transitions.
+        The base implementation intentionally defaults to always tracking
+        duration and should be overridden by subclasses that can safely use
+        state.last_changed directly. For example, conditions that are true
+        for a single main state value may not need active tracking, while
+        conditions that track attributes or match multiple states do because
+        last_changed does not capture those transitions.
         """
         return True
 
