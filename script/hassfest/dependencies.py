@@ -13,6 +13,10 @@ from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 from . import ast_parse_module
 from .model import Config, Integration
 
+# Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
+# eager component pre-imports) into hassfest. Kept in sync via test_dependencies.
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
+
 
 class ImportCollector(ast.NodeVisitor):
     """Collect all integrations referenced."""
@@ -86,6 +90,7 @@ class ImportCollector(ast.NodeVisitor):
 
 
 ALLOWED_USED_COMPONENTS = {
+    *CORE_INTEGRATIONS,
     *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
@@ -95,7 +100,6 @@ ALLOWED_USED_COMPONENTS = {
     "device_automation",
     "frontend",
     "group",
-    "homeassistant",
     "input_boolean",
     "input_button",
     "input_datetime",
@@ -106,7 +110,6 @@ ALLOWED_USED_COMPONENTS = {
     "media_source",
     "onboarding",
     "panel_custom",
-    "persistent_notification",
     "person",
     "script",
     "shopping_list",
@@ -330,6 +333,13 @@ def _validate_dependencies(
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
+                )
+
+            if dep in CORE_INTEGRATIONS:
+                integration.add_error(
+                    "dependencies",
+                    f"Dependency {dep} is a core integration and is "
+                    "unconditionally loaded",
                 )
 
 

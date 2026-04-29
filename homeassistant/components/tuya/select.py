@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tuya_device_handlers.definition.select import (
-    TuyaSelectDefinition,
+    SelectDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
@@ -390,7 +390,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        definition: TuyaSelectDefinition,
+        definition: SelectDefinition,
     ) -> None:
         """Initialize a Tuya select entity."""
         super().__init__(device, device_manager, description)
