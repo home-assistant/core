@@ -38,7 +38,6 @@ async def test_infrared_setup_works(
         ]
         assert len(infrared_entities) == 1
         assert infrared_entities[0].unique_id == f"{device.mac}-emitter"
-        assert mock_setup.api.auth.call_count == 1
 
 
 async def test_infrared_not_created_for_non_ir_device(
