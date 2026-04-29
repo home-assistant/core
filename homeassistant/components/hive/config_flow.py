@@ -127,6 +127,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                             err,
                         )
                         device_registered = False
+
                     if device_registered:
                         return await self.async_setup_hive_entry()
 
