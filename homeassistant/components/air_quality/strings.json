@@ -237,21 +237,6 @@
       "name": "Volatile organic compounds value"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "title": "Air Quality",
   "triggers": {
     "co2_changed": {

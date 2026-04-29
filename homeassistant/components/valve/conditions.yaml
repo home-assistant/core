@@ -7,11 +7,8 @@
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
 
 is_open: *condition_common
 is_closed: *condition_common

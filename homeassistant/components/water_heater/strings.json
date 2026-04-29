@@ -122,21 +122,6 @@
       "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "set_away_mode": {
       "description": "Sets the away mode of a water heater.",

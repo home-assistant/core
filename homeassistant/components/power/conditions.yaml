@@ -2,11 +2,8 @@
   required: true
   default: any
   selector:
-    select:
-      translation_key: condition_behavior
-      options:
-        - all
-        - any
+    automation_behavior:
+      mode: condition
 
 .power_units: &power_units
   - "mW"

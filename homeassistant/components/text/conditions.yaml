@@ -8,11 +8,8 @@ is_equal_to:
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
     value:
       required: true
       selector:

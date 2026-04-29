@@ -8,12 +8,8 @@
       required: true
       default: any
       selector:
-        select:
-          options:
-            - first
-            - last
-            - any
-          translation_key: trigger_behavior
+        automation_behavior:
+          mode: trigger
     for:
       required: true
       default: 00:00:00

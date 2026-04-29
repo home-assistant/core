@@ -7,11 +7,8 @@
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
 
 .condition_common_with_for: &condition_common_with_for
   target: *condition_media_player_target

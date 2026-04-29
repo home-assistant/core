@@ -51,14 +51,6 @@
       "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    }
-  },
   "services": {
     "select_first": {
       "description": "Selects the first option of a select.",

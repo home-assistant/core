@@ -48,14 +48,6 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    }
-  },
   "services": {
     "set_value": {
       "description": "Sets the value of a text entity.",
