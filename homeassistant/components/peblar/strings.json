@@ -73,11 +73,11 @@
       "buzzer_volume": {
         "name": "Buzzer volume",
         "state": {
-          "high": "High",
-          "low": "Low",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
           "low_medium": "Low medium",
-          "medium": "Medium",
-          "off": "Off"
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "led_brightness": {
@@ -86,8 +86,8 @@
           "automatic": "Automatic",
           "bright": "Bright",
           "dim": "Dim",
-          "medium": "Medium",
-          "off": "Off"
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "smart_charging": {
