@@ -63,6 +63,16 @@
         "finishes_at": {
           "name": "Finishes at"
         },
+        "last_transition": {
+          "name": "Last transition",
+          "state": {
+            "cancelled": "Cancelled",
+            "finished": "Finished",
+            "paused": "Paused",
+            "restarted": "Restarted",
+            "started": "Started"
+          }
+        },
         "remaining": {
           "name": "Remaining"
         },
