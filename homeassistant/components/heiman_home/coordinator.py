@@ -20,8 +20,7 @@ from heimanconnect import (
     HeimanMQTTError,
     HeimanUser,
 )
-
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -155,6 +154,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 self.data.user_info = await cloud_wrapper.async_get_user_info()
             except HeimanConnectionError as err:
                 raise UpdateFailed(f"Connection error: {err}") from err
+            except ConfigEntryAuthFailed:
+                # Re-raise authentication errors to trigger re-auth flow
+                raise
             except Exception as err:
                 _LOGGER.error("Failed to fetch user info: %s", err)
                 raise UpdateFailed(f"Failed to fetch user info: {err}") from err
@@ -207,6 +209,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             self.data.errors["devices"] = str(err)
             if not self.data.devices:
                 raise UpdateFailed(f"Connection error fetching devices: {err}") from err
+        except ConfigEntryAuthFailed:
+            # Re-raise authentication errors to trigger re-auth flow
+            raise
         except Exception as err:
             _LOGGER.exception("Failed to fetch devices")
             self.data.errors["devices"] = str(err)
@@ -409,7 +414,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     )
 
         # Schedule entity update if coordinator is set up
-        # IMPORTANT: Must be called from the event loop thread for thread safety
+        # hass.add_job is thread-safe and uses call_soon_threadsafe internally
         if hasattr(self, "async_set_updated_data") and self.hass:
             # Use hass.add_job to schedule the update in the event loop
             # Pass the coroutine function and data as arguments
@@ -457,7 +462,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                             )
 
                 # Trigger entity update
-                # IMPORTANT: Must be called from the event loop thread for thread safety
+                # hass.add_job is thread-safe and uses call_soon_threadsafe internally
                 if hasattr(self, "async_set_updated_data") and self.hass:
                     # Use hass.add_job to schedule the update in the event loop
                     # Pass the coroutine function and data as arguments

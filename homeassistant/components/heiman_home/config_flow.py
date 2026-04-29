@@ -112,8 +112,8 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         schema = self._get_home_selection_schema()
         if not schema.schema:  # Empty schema means no valid homes
             _LOGGER.error(
-                "All homes returned from API have invalid home_id. "
-                "This indicates an API issue or data structure change."
+                "All homes returned from API have invalid home_id; "
+                "this indicates an API issue or data structure change"
             )
             return self.async_abort(reason="invalid_home_data")
 

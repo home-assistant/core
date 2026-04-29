@@ -104,28 +104,31 @@ async def async_setup_entry(
 
     # Track existing entities to avoid duplicates
     existing_entities: set[str] = set()
-    # Track device and property counts to detect structural changes
-    last_device_count: int = 0
-    last_property_count: int = 0
+    # Track device and property identifiers to detect structural changes
+    last_structure_signature: (
+        tuple[tuple[str, ...], frozenset[tuple[str, str]]] | None
+    ) = None
 
     def _check_structure_changed() -> bool:
         """Check if device/property structure has changed.
 
-        Uses device and property counts as a lightweight heuristic to detect
-        when new devices or properties are added, without iterating all properties.
+        Uses device and property identifiers so added, removed, or replaced
+        properties are detected even when overall counts stay the same.
         """
-        nonlocal last_device_count, last_property_count
+        nonlocal last_structure_signature
 
         devices = coordinator.get_all_devices()
-        current_device_count = len(devices)
-        current_property_count = sum(len(d.properties) for d in devices)
+        current_structure_signature = (
+            tuple(sorted(device.device_id for device in devices)),
+            frozenset(
+                (device.device_id, property_id)
+                for device in devices
+                for property_id in device.properties
+            ),
+        )
 
-        if (
-            current_device_count != last_device_count
-            or current_property_count != last_property_count
-        ):
-            last_device_count = current_device_count
-            last_property_count = current_property_count
+        if current_structure_signature != last_structure_signature:
+            last_structure_signature = current_structure_signature
             return True
         return False
 
