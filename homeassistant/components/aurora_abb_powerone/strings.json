@@ -5,17 +5,33 @@
       "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate."
     },
     "error": {
-      "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
+      "cannot_connect": "Unable to connect, please check connection settings, electrical connection and that inverter is on (in daylight)",
       "cannot_open_serial_port": "Cannot open serial port, please check and try again",
       "invalid_serial_port": "Serial port is not a valid device or could not be opened"
     },
     "step": {
-      "user": {
+      "configure_serial": {
         "data": {
           "address": "Inverter address",
           "port": "RS485 or USB-RS485 adaptor port"
         },
-        "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel"
+        "description": "The inverter must be connected via an RS485 adaptor, please select the serial port and the inverter's address as configured on the LCD panel"
+      },
+      "configure_tcp": {
+        "data": {
+          "address": "Inverter address",
+          "tcp_host": "Gateway IP address or hostname",
+          "tcp_port": "Gateway TCP port"
+        },
+        "description": "Connect via an Ethernet-to-RS485 gateway. Please enter the gateway's network address, TCP port, and the inverter's address as configured on the LCD panel"
+      },
+      "user": {
+        "description": "Select the transport used to communicate with the inverter",
+        "menu_options": {
+          "configure_serial": "Serial (RS485)",
+          "configure_tcp": "TCP (Ethernet gateway)"
+        },
+        "title": "Aurora ABB PowerOne configuration"
       }
     }
   },

@@ -158,7 +158,7 @@ SENSOR_TYPES = [
         translation_key="power_output",
     ),
     SensorEntityDescription(
-        key="temp",
+        key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -224,4 +224,6 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
     @property
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
-        return self.coordinator.data.get(self.entity_description.key)
+        if self.coordinator.data is None:
+            return None
+        return getattr(self.coordinator.data, self.entity_description.key)
