@@ -45,7 +45,23 @@ class MockPyViCare:
                     "Online",
                 )
             )
-        self.all_devices = self.devices
+        # Simulate a device with an unsupported deviceType that PyViCare's
+        # `devices` filter would drop but should still appear in `all_devices`
+        # (used by diagnostics).
+        self.all_devices = [
+            *self.devices,
+            PyViCareDeviceConfig(
+                MockViCareService(
+                    "installation_unsupported",
+                    "gateway_unsupported",
+                    "device_unsupported",
+                    Fixture(set(), "vicare/dummy-device-no-serial.json"),
+                ),
+                "deviceId_unsupported",
+                "unsupported_model",
+                "Online",
+            ),
+        ]
 
 
 class MockViCareService:
