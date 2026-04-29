@@ -594,7 +594,7 @@ class _ScriptRun:
             raise exception
 
         # Mark the step as having an error, but continue running the script.
-        trace_element.set_error(exception.__cause__ or exception)
+        trace_element.set_error(exception)
 
     def _log_exception(self, exception: Exception) -> None:
         action_type = cv.determine_script_action(self._action)
