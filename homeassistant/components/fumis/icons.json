@@ -5,6 +5,14 @@
         "default": "mdi:clock-sync"
       }
     },
+    "number": {
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "power_level": {
+        "default": "mdi:fire"
+      }
+    },
     "sensor": {
       "combustion_chamber_temperature": {
         "default": "mdi:thermometer-high"
