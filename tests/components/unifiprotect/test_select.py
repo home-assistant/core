@@ -861,8 +861,8 @@ async def test_select_nvr_arm_profile_created(
 
     state = hass.states.get(ARM_PROFILE_ENTITY_ID)
     assert state is not None
-    assert state.state == "Away"
-    assert set(state.attributes[ATTR_OPTIONS]) == {"Home", "Away"}
+    assert state.state == "Away (p2)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -884,12 +884,12 @@ async def test_select_nvr_arm_profile_duplicate_names(
 
     state = hass.states.get(ARM_PROFILE_ENTITY_ID)
     assert state is not None
-    # Duplicates get the last 6 chars of the id appended; uniques stay plain.
+    # All labels always include the last 6 chars of the id for stability.
     assert state.state == "Home (111111)"
     assert set(state.attributes[ATTR_OPTIONS]) == {
         "Home (111111)",
         "Home (222222)",
-        "Away",
+        "Away (333333)",
     }
 
 
@@ -938,7 +938,7 @@ async def test_select_nvr_arm_profile_select_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Away"},
+        {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Away (p2)"},
         blocking=True,
     )
 
@@ -966,7 +966,7 @@ async def test_select_nvr_arm_profile_global_alarm_error(
         await hass.services.async_call(
             "select",
             "select_option",
-            {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Home"},
+            {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Home (p1)"},
             blocking=True,
         )
     assert exc_info.value.translation_key == "global_alarm_manager"
@@ -990,7 +990,7 @@ async def test_select_nvr_arm_profile_ws_update(
 
     state = hass.states.get(ARM_PROFILE_ENTITY_ID)
     assert state is not None
-    assert state.state == "Home"
+    assert state.state == "Home (p1)"
 
     # Simulate the NVR arm_profile_id changing via the public devices websocket
     arm_mode.arm_profile_id = "p2"
@@ -1005,4 +1005,4 @@ async def test_select_nvr_arm_profile_ws_update(
 
     state = hass.states.get(ARM_PROFILE_ENTITY_ID)
     assert state is not None
-    assert state.state == "Away"
+    assert state.state == "Away (p2)"

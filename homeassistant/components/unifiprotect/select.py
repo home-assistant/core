@@ -542,21 +542,12 @@ class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
             self._attr_current_option = None
             return
 
-        # Profile names are not guaranteed to be unique on the Protect side.
-        # Disambiguate duplicates by appending a short id suffix so every
-        # option is unique and stable across reloads.
-        name_counts: dict[str, int] = {}
-        for profile in pb.arm_profiles.values():
-            name_counts[profile.name] = name_counts.get(profile.name, 0) + 1
-
+        # Always append a short id suffix so every option label is unique
+        # and stable even if another profile with the same name is added later.
         self._id_to_name = {}
         self._name_to_id = {}
         for pid, profile in pb.arm_profiles.items():
-            label = (
-                f"{profile.name} ({pid[-6:]})"
-                if name_counts[profile.name] > 1
-                else profile.name
-            )
+            label = f"{profile.name} ({pid[-6:]})"
             self._id_to_name[pid] = label
             self._name_to_id[label] = pid
         self._attr_options = sorted(self._name_to_id)
