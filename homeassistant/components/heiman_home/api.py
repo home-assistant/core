@@ -113,7 +113,7 @@ class HeimanApiClient:
 
     async def initialize(self) -> None:
         """Initialize the API client.
-        
+
         This method ensures the internal wrapper is created and ready to use.
         It should be called before accessing the cloud_client property.
         """

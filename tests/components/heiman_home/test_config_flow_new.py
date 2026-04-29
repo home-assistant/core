@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from heimanconnect import HeimanAuthError, HeimanTokenExpiredError
 import voluptuous as vol
 
-from homeassistant.components.heiman_home.config_flow import AuthInfo, HeimanConfigFlow
+from homeassistant.components.heiman_home.config_flow import (
+    AuthInfo,
+    HeimanConfigFlow,
+)
 from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_ID
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -486,7 +489,9 @@ async def test_get_home_selection_schema_home_without_id() -> None:
     assert CONF_HOME_ID in schema.schema
 
 
-async def test_get_home_selection_schema_all_homes_without_id(hass: HomeAssistant) -> None:
+async def test_get_home_selection_schema_all_homes_without_id(
+    hass: HomeAssistant,
+) -> None:
     """Test home selection schema when all homes lack ID."""
     flow = HeimanConfigFlow()
     flow.hass = hass
@@ -503,8 +508,43 @@ async def test_get_home_selection_schema_all_homes_without_id(hass: HomeAssistan
 
     flow._auth_info.homes = [mock_home1, mock_home2]
 
-    # Should abort with invalid_home_data reason
+    # Should return empty schema when no valid homes found
     result = flow._get_home_selection_schema()
-    assert isinstance(result, dict)
+    assert isinstance(result, vol.Schema)
+    # Empty schema indicates no valid homes
+    assert not result.schema
+
+
+async def test_select_home_all_homes_without_id_aborts(
+    hass: HomeAssistant,
+) -> None:
+    """Test that select_home step aborts when all homes lack valid ID."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    # Create auth info with homes that have no valid home_id
+    mock_user_info = MagicMock()
+    mock_user_info.user_id = "test_user"
+    mock_user_info.email = "test@example.com"
+    mock_user_info.get_display_name.return_value = "Test User"
+
+    mock_home1 = MagicMock()
+    mock_home1.home_id = ""
+    mock_home1.home_name = "Home 1"
+    mock_home1.device_count = 5
+
+    mock_home2 = MagicMock()
+    mock_home2.home_id = None
+    mock_home2.home_name = "Home 2"
+    mock_home2.device_count = 10
+
+    flow._auth_info.user_info = mock_user_info
+    flow._auth_info.homes = [mock_home1, mock_home2]
+    flow._auth_info.auth_data = {"token": "test_token"}
+
+    # Call async_step_select_home without user_input (showing form)
+    result = await flow.async_step_select_home()
+
+    # Should abort because all homes have invalid home_id
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_home_data"

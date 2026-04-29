@@ -1159,12 +1159,10 @@ async def test_sensor_skip_scan_on_no_structure_change(
     hass: HomeAssistant,
 ) -> None:
     """Test that sensor setup skips scanning when structure hasn't changed (line 137).
-    
+
     This tests the optimization path where _create_sensors_for_devices returns early
     if no structural changes are detected and entities already exist.
     """
-    from unittest.mock import AsyncMock
-    
     # Create mock coordinator with device
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1191,14 +1189,14 @@ async def test_sensor_skip_scan_on_no_structure_change(
     mock_coordinator.get_all_devices.return_value = [mock_device]
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
-    
+
     # Track listener calls
     listener_callback = None
-    
+
     def mock_add_listener(callback):
         nonlocal listener_callback
         listener_callback = callback
-    
+
     mock_coordinator.async_add_listener = mock_add_listener
 
     # Create a mock config entry and set runtime_data
@@ -1218,11 +1216,11 @@ async def test_sensor_skip_scan_on_no_structure_change(
     # Verify initial sensor was created
     assert len(added_entities) == 1
     assert added_entities[0].unique_id == "device-1_temperature_sensor"
-    
+
     # Now trigger the listener again without changing structure
     # This should hit line 137 (early return due to no structure change)
     assert listener_callback is not None
     listener_callback()  # This should return early without creating new entities
-    
+
     # Verify no new entities were created (structure didn't change)
     assert len(added_entities) == 1

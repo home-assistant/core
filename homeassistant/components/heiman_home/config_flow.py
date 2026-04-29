@@ -108,9 +108,18 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data=config_data,
             )
 
+        # Check if all homes have invalid home_id before showing form
+        schema = self._get_home_selection_schema()
+        if not schema.schema:  # Empty schema means no valid homes
+            _LOGGER.error(
+                "All homes returned from API have invalid home_id. "
+                "This indicates an API issue or data structure change."
+            )
+            return self.async_abort(reason="invalid_home_data")
+
         return self.async_show_form(
             step_id="select_home",
-            data_schema=self._get_home_selection_schema(),
+            data_schema=schema,
             description_placeholders={
                 "user_email": self._auth_info.user_info.email or "User",
             },
@@ -135,13 +144,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             home_options[home_id] = display_text
 
         if not home_options:
-            # All homes have invalid home_id, this should not happen in normal scenarios
-            # as Heiman API always returns valid home IDs for user's homes
-            _LOGGER.error(
-                "All homes returned from API have invalid home_id. "
-                "This indicates an API issue or data structure change."
-            )
-            return self.async_abort(reason="invalid_home_data")
+            # Return empty schema when no valid homes found
+            # Caller should handle this case appropriately
+            return vol.Schema({})
 
         return vol.Schema(
             {
