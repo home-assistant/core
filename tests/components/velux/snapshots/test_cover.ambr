@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_blind_entity_setup[mock_blind][cover.test_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -42,6 +43,7 @@
       'current_tilt_position': 75,
       'device_class': 'blind',
       'friendly_name': 'Test Blind',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-Awning][cover.test_awning-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,6 +97,7 @@
       'current_position': 70,
       'device_class': 'awning',
       'friendly_name': 'Test Awning',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -106,8 +110,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -146,6 +151,7 @@
       'current_position': 70,
       'device_class': 'shutter',
       'friendly_name': 'Test DualRollerShutter',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -158,8 +164,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter_lower_shutter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -198,6 +205,7 @@
       'current_position': 70,
       'device_class': 'shutter',
       'friendly_name': 'Test DualRollerShutter Lower shutter',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -210,8 +218,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter_upper_shutter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,6 +259,7 @@
       'current_position': 70,
       'device_class': 'shutter',
       'friendly_name': 'Test DualRollerShutter Upper shutter',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -262,8 +272,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-GarageDoor][cover.test_garagedoor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -302,6 +313,7 @@
       'current_position': 70,
       'device_class': 'garage',
       'friendly_name': 'Test GarageDoor',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -314,8 +326,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-Gate][cover.test_gate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -354,6 +367,7 @@
       'current_position': 70,
       'device_class': 'gate',
       'friendly_name': 'Test Gate',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -366,8 +380,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-RollerShutter][cover.test_rollershutter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -406,6 +421,7 @@
       'current_position': 70,
       'device_class': 'shutter',
       'friendly_name': 'Test RollerShutter',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -418,8 +434,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-Window][cover.test_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -458,6 +475,7 @@
       'current_position': 70,
       'device_class': 'window',
       'friendly_name': 'Test Window',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

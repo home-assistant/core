@@ -43,6 +43,10 @@ async def async_setup_entry(
         for component in device.status
         if component in ("cooler", "freezer", "onedoor")
         and Capability.THERMOSTAT_COOLING_SETPOINT in device.status[component]
+        and device.status[component][Capability.THERMOSTAT_COOLING_SETPOINT][
+            Attribute.COOLING_SETPOINT_RANGE
+        ].value
+        is not None
     )
     async_add_entities(entities)
 

@@ -45,13 +45,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: |
-      New vehicles/energy sites added to user's Tesla account after initial setup
-      are not detected. Need to periodically poll teslemetry.products() and add
-      new TeslemetryVehicleData/TeslemetryEnergyData to runtime_data, then trigger
-      entity creation via coordinator listeners in each platform.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done

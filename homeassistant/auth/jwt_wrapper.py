@@ -7,23 +7,31 @@ to speed up the process.
 
 from __future__ import annotations
 
+from collections.abc import Container, Iterable, Sequence
 from datetime import timedelta
-from functools import lru_cache, partial
-from typing import Any
+from functools import lru_cache
+from typing import Any, override
 
-from jwt import DecodeError, PyJWS, PyJWT
+from jwt import DecodeError, PyJWK, PyJWS, PyJWT
+from jwt.algorithms import AllowedPublicKeys
+from jwt.types import Options
 
 from homeassistant.util.json import json_loads
 
 JWT_TOKEN_CACHE_SIZE = 16
 MAX_TOKEN_SIZE = 8192
 
-_VERIFY_KEYS = ("signature", "exp", "nbf", "iat", "aud", "iss", "sub", "jti")
-
-_VERIFY_OPTIONS: dict[str, Any] = {f"verify_{key}": True for key in _VERIFY_KEYS} | {
-    "require": []
-}
-_NO_VERIFY_OPTIONS = {f"verify_{key}": False for key in _VERIFY_KEYS}
+_NO_VERIFY_OPTIONS = Options(
+    verify_signature=False,
+    verify_exp=False,
+    verify_nbf=False,
+    verify_iat=False,
+    verify_aud=False,
+    verify_iss=False,
+    verify_sub=False,
+    verify_jti=False,
+    require=[],
+)
 
 
 class _PyJWSWithLoadCache(PyJWS):
@@ -36,9 +44,6 @@ class _PyJWSWithLoadCache(PyJWS):
     def _load(self, jwt: str | bytes) -> tuple[bytes, bytes, dict, bytes]:
         """Load a JWS."""
         return super()._load(jwt)
-
-
-_jws = _PyJWSWithLoadCache()
 
 
 @lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)
@@ -56,21 +61,12 @@ def _decode_payload(json_payload: str) -> dict[str, Any]:
 class _PyJWTWithVerify(PyJWT):
     """PyJWT with a fast decode implementation."""
 
-    def decode_payload(
-        self, jwt: str, key: str, options: dict[str, Any], algorithms: list[str]
-    ) -> dict[str, Any]:
-        """Decode a JWT's payload."""
-        if len(jwt) > MAX_TOKEN_SIZE:
-            # Avoid caching impossible tokens
-            raise DecodeError("Token too large")
-        return _decode_payload(
-            _jws.decode_complete(
-                jwt=jwt,
-                key=key,
-                algorithms=algorithms,
-                options=options,
-            )["payload"]
-        )
+    def __init__(self) -> None:
+        """Initialize the PyJWT instance."""
+        # We require exp and iat claims to be present
+        super().__init__(Options(require=["exp", "iat"]))
+        # Override the _jws instance with our cached version
+        self._jws = _PyJWSWithLoadCache()
 
     def verify_and_decode(
         self,
@@ -79,37 +75,70 @@ class _PyJWTWithVerify(PyJWT):
         algorithms: list[str],
         issuer: str | None = None,
         leeway: float | timedelta = 0,
-        options: dict[str, Any] | None = None,
+        options: Options | None = None,
     ) -> dict[str, Any]:
         """Verify a JWT's signature and claims."""
-        merged_options = {**_VERIFY_OPTIONS, **(options or {})}
-        payload = self.decode_payload(
+        return self.decode(
             jwt=jwt,
             key=key,
-            options=merged_options,
             algorithms=algorithms,
-        )
-        # These should never be missing since we verify them
-        # but this is an additional safeguard to make sure
-        # nothing slips through.
-        assert "exp" in payload, "exp claim is required"
-        assert "iat" in payload, "iat claim is required"
-        self._validate_claims(
-            payload=payload,
-            options=merged_options,
             issuer=issuer,
             leeway=leeway,
+            options=options,
         )
-        return payload
+
+    @override
+    def decode(
+        self,
+        jwt: str | bytes,
+        key: AllowedPublicKeys | PyJWK | str | bytes = "",
+        algorithms: Sequence[str] | None = None,
+        options: Options | None = None,
+        verify: bool | None = None,
+        detached_payload: bytes | None = None,
+        audience: str | Iterable[str] | None = None,
+        subject: str | None = None,
+        issuer: str | Container[str] | None = None,
+        leeway: float | timedelta = 0,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Decode a JWT, verifying the signature and claims."""
+        if len(jwt) > MAX_TOKEN_SIZE:
+            # Avoid caching impossible tokens
+            raise DecodeError("Token too large")
+        return super().decode(
+            jwt=jwt,
+            key=key,
+            algorithms=algorithms,
+            options=options,
+            verify=verify,
+            detached_payload=detached_payload,
+            audience=audience,
+            subject=subject,
+            issuer=issuer,
+            leeway=leeway,
+            **kwargs,
+        )
+
+    @override
+    def _decode_payload(self, decoded: dict[str, Any]) -> dict[str, Any]:
+        return _decode_payload(decoded["payload"])
 
 
 _jwt = _PyJWTWithVerify()
 verify_and_decode = _jwt.verify_and_decode
-unverified_hs256_token_decode = lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)(
-    partial(
-        _jwt.decode_payload, key="", algorithms=["HS256"], options=_NO_VERIFY_OPTIONS
+
+
+@lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)
+def unverified_hs256_token_decode(jwt: str) -> dict[str, Any]:
+    """Decode a JWT without verifying the signature."""
+    return _jwt.decode(
+        jwt=jwt,
+        key="",
+        algorithms=["HS256"],
+        options=_NO_VERIFY_OPTIONS,
     )
-)
+
 
 __all__ = [
     "unverified_hs256_token_decode",

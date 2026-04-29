@@ -38,9 +38,9 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
-from .util import async_redact_data
+from .util import async_redact_data, entity_entry_as_dict
 
-__all__ = ["REDACTED", "async_redact_data"]
+__all__ = ["REDACTED", "async_redact_data", "entity_entry_as_dict"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -245,6 +245,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
+    @http.require_admin
     async def get(
         self,
         request: web.Request,

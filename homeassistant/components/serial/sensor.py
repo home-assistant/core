@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import Task
 import json
 import logging
 
-from serial import SerialException
-import serial_asyncio_fast as serial_asyncio
+from serialx import Parity, SerialException, StopBits, open_serial_connection
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,6 +18,7 @@ from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSIST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,9 +34,9 @@ CONF_DSRDTR = "dsrdtr"
 
 DEFAULT_NAME = "Serial Sensor"
 DEFAULT_BAUDRATE = 9600
-DEFAULT_BYTESIZE = serial_asyncio.serial.EIGHTBITS
-DEFAULT_PARITY = serial_asyncio.serial.PARITY_NONE
-DEFAULT_STOPBITS = serial_asyncio.serial.STOPBITS_ONE
+DEFAULT_BYTESIZE = 8
+DEFAULT_PARITY = Parity.NONE
+DEFAULT_STOPBITS = StopBits.ONE
 DEFAULT_XONXOFF = False
 DEFAULT_RTSCTS = False
 DEFAULT_DSRDTR = False
@@ -46,28 +47,21 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.In(
-            [
-                serial_asyncio.serial.FIVEBITS,
-                serial_asyncio.serial.SIXBITS,
-                serial_asyncio.serial.SEVENBITS,
-                serial_asyncio.serial.EIGHTBITS,
-            ]
-        ),
+        vol.Optional(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.In([5, 6, 7, 8]),
         vol.Optional(CONF_PARITY, default=DEFAULT_PARITY): vol.In(
             [
-                serial_asyncio.serial.PARITY_NONE,
-                serial_asyncio.serial.PARITY_EVEN,
-                serial_asyncio.serial.PARITY_ODD,
-                serial_asyncio.serial.PARITY_MARK,
-                serial_asyncio.serial.PARITY_SPACE,
+                Parity.NONE,
+                Parity.EVEN,
+                Parity.ODD,
+                Parity.MARK,
+                Parity.SPACE,
             ]
         ),
         vol.Optional(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.In(
             [
-                serial_asyncio.serial.STOPBITS_ONE,
-                serial_asyncio.serial.STOPBITS_ONE_POINT_FIVE,
-                serial_asyncio.serial.STOPBITS_TWO,
+                StopBits.ONE,
+                StopBits.ONE_POINT_FIVE,
+                StopBits.TWO,
             ]
         ),
         vol.Optional(CONF_XONXOFF, default=DEFAULT_XONXOFF): cv.boolean,
@@ -84,28 +78,17 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Serial sensor platform."""
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_SERIAL_PORT)
-    baudrate = config.get(CONF_BAUDRATE)
-    bytesize = config.get(CONF_BYTESIZE)
-    parity = config.get(CONF_PARITY)
-    stopbits = config.get(CONF_STOPBITS)
-    xonxoff = config.get(CONF_XONXOFF)
-    rtscts = config.get(CONF_RTSCTS)
-    dsrdtr = config.get(CONF_DSRDTR)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-
     sensor = SerialSensor(
-        name,
-        port,
-        baudrate,
-        bytesize,
-        parity,
-        stopbits,
-        xonxoff,
-        rtscts,
-        dsrdtr,
-        value_template,
+        name=config[CONF_NAME],
+        port=config[CONF_SERIAL_PORT],
+        baudrate=config[CONF_BAUDRATE],
+        bytesize=config[CONF_BYTESIZE],
+        parity=config[CONF_PARITY],
+        stopbits=config[CONF_STOPBITS],
+        xonxoff=config[CONF_XONXOFF],
+        rtscts=config[CONF_RTSCTS],
+        dsrdtr=config[CONF_DSRDTR],
+        value_template=config.get(CONF_VALUE_TEMPLATE),
     )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read)
@@ -119,17 +102,17 @@ class SerialSensor(SensorEntity):
 
     def __init__(
         self,
-        name,
-        port,
-        baudrate,
-        bytesize,
-        parity,
-        stopbits,
-        xonxoff,
-        rtscts,
-        dsrdtr,
-        value_template,
-    ):
+        name: str,
+        port: str,
+        baudrate: int,
+        bytesize: int,
+        parity: Parity,
+        stopbits: StopBits,
+        xonxoff: bool,
+        rtscts: bool,
+        dsrdtr: bool,
+        value_template: Template | None,
+    ) -> None:
         """Initialize the Serial sensor."""
         self._attr_name = name
         self._port = port
@@ -140,12 +123,12 @@ class SerialSensor(SensorEntity):
         self._xonxoff = xonxoff
         self._rtscts = rtscts
         self._dsrdtr = dsrdtr
-        self._serial_loop_task = None
+        self._serial_loop_task: Task[None] | None = None
         self._template = value_template
 
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
-        self._serial_loop_task = self.hass.loop.create_task(
+        self._serial_loop_task = self.hass.async_create_background_task(
             self.serial_read(
                 self._port,
                 self._baudrate,
@@ -155,26 +138,31 @@ class SerialSensor(SensorEntity):
                 self._xonxoff,
                 self._rtscts,
                 self._dsrdtr,
-            )
+            ),
+            "Serial reader",
         )
 
     async def serial_read(
         self,
-        device,
-        baudrate,
-        bytesize,
-        parity,
-        stopbits,
-        xonxoff,
-        rtscts,
-        dsrdtr,
+        device: str,
+        baudrate: int,
+        bytesize: int,
+        parity: Parity,
+        stopbits: StopBits,
+        xonxoff: bool,
+        rtscts: bool,
+        dsrdtr: bool,
         **kwargs,
     ):
         """Read the data from the port."""
         logged_error = False
+
         while True:
+            reader = None
+            writer = None
+
             try:
-                reader, _ = await serial_asyncio.open_serial_connection(
+                reader, writer = await open_serial_connection(
                     url=device,
                     baudrate=baudrate,
                     bytesize=bytesize,
@@ -185,8 +173,7 @@ class SerialSensor(SensorEntity):
                     dsrdtr=dsrdtr,
                     **kwargs,
                 )
-
-            except SerialException:
+            except OSError, SerialException, TimeoutError:
                 if not logged_error:
                     _LOGGER.exception(
                         "Unable to connect to the serial device %s. Will retry", device
@@ -197,15 +184,15 @@ class SerialSensor(SensorEntity):
                 _LOGGER.debug("Serial device %s connected", device)
                 while True:
                     try:
-                        line = await reader.readline()
-                    except SerialException:
+                        line_bytes = await reader.readline()
+                    except OSError, SerialException:
                         _LOGGER.exception(
                             "Error while reading serial device %s", device
                         )
                         await self._handle_error()
                         break
                     else:
-                        line = line.decode("utf-8").strip()
+                        line = line_bytes.decode("utf-8").strip()
 
                         try:
                             data = json.loads(line)
@@ -223,6 +210,10 @@ class SerialSensor(SensorEntity):
                         _LOGGER.debug("Received: %s", line)
                         self._attr_native_value = line
                         self.async_write_ha_state()
+            finally:
+                if writer is not None:
+                    writer.close()
+                    await writer.wait_closed()
 
     async def _handle_error(self):
         """Handle error for serial connection."""

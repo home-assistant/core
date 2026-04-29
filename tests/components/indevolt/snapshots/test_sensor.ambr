@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[1][sensor.bk1600_ac_input_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -58,8 +59,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_battery_charge_discharge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -176,8 +179,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_battery_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -233,8 +237,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_battery_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -287,8 +292,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_cumulative_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -347,8 +353,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_daily_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -404,8 +411,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_dc_input_power_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -461,8 +469,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_dc_input_power_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -518,8 +527,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_dc_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -575,8 +585,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -634,10 +645,62 @@
     'state': 'main',
   })
 # ---
+# name: test_sensor[1][sensor.bk1600_discharge_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bk1600_discharge_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discharge limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Discharge limit',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discharge_limit',
+    'unique_id': 'BK1600-12345678_6105',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_discharge_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BK1600 Discharge limit',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bk1600_discharge_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_sensor[1][sensor.bk1600_energy_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -699,8 +762,9 @@
 # ---
 # name: test_sensor[1][sensor.bk1600_meter_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -754,67 +818,11 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_rated_capacity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bk1600_rated_capacity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Rated capacity',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Rated capacity',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rated_capacity',
-    'unique_id': 'BK1600-12345678_6105',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensor[1][sensor.bk1600_rated_capacity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Rated capacity',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bk1600_rated_capacity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5',
-  })
-# ---
 # name: test_sensor[1][sensor.bk1600_total_ac_input_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -870,8 +878,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_ac_input_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -927,8 +936,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -984,8 +994,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_charge_discharge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1045,8 +1056,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_daily_charging_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1102,8 +1114,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_daily_discharging_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1159,8 +1172,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1216,8 +1230,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_sn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1265,8 +1280,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1319,8 +1335,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1376,8 +1393,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1433,8 +1451,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1490,8 +1509,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_sn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1539,8 +1559,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1593,8 +1614,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1650,8 +1672,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1707,8 +1730,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1764,8 +1788,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_sn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1813,8 +1838,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1867,8 +1893,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1924,8 +1951,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1981,8 +2009,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2038,8 +2067,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_sn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2087,8 +2117,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2141,8 +2172,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2198,8 +2230,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2255,8 +2288,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2312,8 +2346,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_sn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2361,8 +2396,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2415,8 +2451,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2472,8 +2509,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2529,8 +2567,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2586,8 +2625,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2640,8 +2680,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_total_charging_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2697,8 +2738,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_total_discharging_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2754,8 +2796,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_bypass_input_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2811,8 +2854,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_bypass_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2866,10 +2910,72 @@
     'state': '0',
   })
 # ---
+# name: test_sensor[2][sensor.cms_sf2000_cumulative_production-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cms_sf2000_cumulative_production',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cumulative production',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Cumulative production',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cumulative_production',
+    'unique_id': 'SolidFlex2000-87654321_1505',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_cumulative_production-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'CMS-SF2000 Cumulative production',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cms_sf2000_cumulative_production',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '553.673',
+  })
+# ---
 # name: test_sensor[2][sensor.cms_sf2000_daily_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2925,8 +3031,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2982,8 +3089,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3039,8 +3147,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3096,8 +3205,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3153,8 +3263,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3210,8 +3321,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3267,8 +3379,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3324,8 +3437,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3381,8 +3495,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3438,8 +3553,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3495,8 +3611,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3552,8 +3669,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3609,8 +3727,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_dc_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3666,8 +3785,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3727,8 +3847,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_energy_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3790,8 +3911,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_grid_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3847,8 +3969,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_grid_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3904,8 +4027,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_main_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3961,8 +4085,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_main_serial_number-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4010,8 +4135,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_main_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4064,8 +4190,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_main_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4121,8 +4248,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_main_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4178,8 +4306,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_meter_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4235,8 +4364,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_off_grid_output_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4292,8 +4422,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_rated_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4349,8 +4480,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_total_ac_input_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4406,8 +4538,9 @@
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_total_ac_output_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,

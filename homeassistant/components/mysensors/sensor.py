@@ -185,7 +185,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_PH": SensorEntityDescription(
         key="V_PH",
-        native_unit_of_measurement="pH",
+        device_class=SensorDeviceClass.PH,
     ),
     "V_ORP": SensorEntityDescription(
         key="V_ORP",
@@ -230,6 +230,8 @@ async def async_setup_entry(
         """Add battery sensor for each MySensors node."""
         gateway_id = discovery_info[ATTR_GATEWAY_ID]
         node_id = discovery_info[ATTR_NODE_ID]
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
         async_add_entities([MyBatterySensor(gateway_id, gateway, node_id)])
 

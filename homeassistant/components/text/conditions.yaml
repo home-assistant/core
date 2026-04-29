@@ -1,0 +1,16 @@
+is_equal_to:
+  target:
+    entity:
+      - domain: text
+      - domain: input_text
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    value:
+      required: true
+      selector:
+        text:

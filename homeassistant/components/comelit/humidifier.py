@@ -9,7 +9,6 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
 
 from homeassistant.components.humidifier import (
-    DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     MODE_NORMAL,
     HumidifierAction,
@@ -68,7 +67,7 @@ async def async_setup_entry(
 
     entities: list[ComelitHumidifierEntity] = []
     for device in coordinator.data[CLIMATE].values():
-        values = load_api_data(device, HUMIDIFIER_DOMAIN)
+        values = load_api_data(device, "humidifier")
         if values[0] == 0 and values[4] == 0:
             # No humidity data, device is only a climate
 
@@ -142,7 +141,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
     def _update_attributes(self) -> None:
         """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
-        values = load_api_data(device, HUMIDIFIER_DOMAIN)
+        values = load_api_data(device, "humidifier")
 
         _active = values[1]
         _mode = values[2]  # Values from API: "O", "L", "U"

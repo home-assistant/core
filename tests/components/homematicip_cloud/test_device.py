@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 350
+    assert len(mock_hap.hmip_device_by_entity_id) == 351
 
 
 async def test_hmip_remove_device(
@@ -212,8 +212,8 @@ async def test_hap_with_name(
 ) -> None:
     """Test hap with name."""
     home_name = "TestName"
-    entity_id = f"light.{home_name.lower()}_treppe_ch"
-    entity_name = f"{home_name} Treppe CH"
+    entity_id = "light.treppe_testname_treppe_ch"
+    entity_name = "Treppe TestName Treppe CH"
     device_model = "HmIP-BSL"
 
     hmip_config_entry.add_to_hass(hass)

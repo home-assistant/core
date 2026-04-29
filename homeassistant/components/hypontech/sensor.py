@@ -21,11 +21,17 @@ from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 from .entity import HypontechEntity, HypontechPlantEntity
 
 
+def _power_unit(data: OverviewData | PlantData) -> str:
+    """Return the unit of measurement for power based on the API unit."""
+    return UnitOfPower.KILO_WATT if data.company.upper() == "KW" else UnitOfPower.WATT
+
+
 @dataclass(frozen=True, kw_only=True)
 class HypontechSensorDescription(SensorEntityDescription):
     """Describes Hypontech overview sensor entity."""
 
     value_fn: Callable[[OverviewData], float | None]
+    unit_fn: Callable[[OverviewData], str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,15 +39,16 @@ class HypontechPlantSensorDescription(SensorEntityDescription):
     """Describes Hypontech plant sensor entity."""
 
     value_fn: Callable[[PlantData], float | None]
+    unit_fn: Callable[[PlantData], str] | None = None
 
 
 OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
     HypontechSensorDescription(
         key="pv_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.power,
+        unit_fn=_power_unit,
     ),
     HypontechSensorDescription(
         key="lifetime_energy",
@@ -64,10 +71,10 @@ OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
 PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
     HypontechPlantSensorDescription(
         key="pv_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.power,
+        unit_fn=_power_unit,
     ),
     HypontechPlantSensorDescription(
         key="lifetime_energy",
@@ -125,6 +132,13 @@ class HypontechOverviewSensor(HypontechEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.account_id}_{description.key}"
 
     @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        if self.entity_description.unit_fn is not None:
+            return self.entity_description.unit_fn(self.coordinator.data.overview)
+        return super().native_unit_of_measurement
+
+    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.overview)
@@ -145,6 +159,13 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
         super().__init__(coordinator, plant_id)
         self.entity_description = description
         self._attr_unique_id = f"{plant_id}_{description.key}"
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        if self.entity_description.unit_fn is not None:
+            return self.entity_description.unit_fn(self.plant)
+        return super().native_unit_of_measurement
 
     @property
     def native_value(self) -> float | None:

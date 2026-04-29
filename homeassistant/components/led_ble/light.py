@@ -19,13 +19,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_EFFECT_SPEED
-from .models import LEDBLEConfigEntry
+from .coordinator import LEDBLEConfigEntry, LEDBLECoordinator
 
 
 async def async_setup_entry(
@@ -38,7 +35,7 @@ async def async_setup_entry(
     async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
 
-class LEDBLEEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
+class LEDBLEEntity(CoordinatorEntity[LEDBLECoordinator], LightEntity):
     """Representation of LEDBLE device."""
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.WHITE}
@@ -47,7 +44,7 @@ class LEDBLEEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[None], device: LEDBLE, name: str
+        self, coordinator: LEDBLECoordinator, device: LEDBLE, name: str
     ) -> None:
         """Initialize an ledble light."""
         super().__init__(coordinator)

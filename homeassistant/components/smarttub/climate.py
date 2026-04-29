@@ -102,12 +102,12 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         return PRESET_MODES[self.spa_status.heat_mode]
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current water temperature."""
         return self.spa_status.water.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 

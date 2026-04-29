@@ -21,7 +21,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_AGREEMENT_ID, CONF_MIGRATE, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .coordinator import ToonDataUpdateCoordinator
+from .coordinator import ToonConfigEntry, ToonDataUpdateCoordinator
 from .oauth2 import register_oauth2_implementations
 
 PLATFORMS = [
@@ -94,7 +94,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
     """Set up Toon from a config entry."""
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
@@ -111,8 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Register device for the Meter Adapter, since it will have no entities.
     device_registry = dr.async_get(hass)
@@ -145,17 +144,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
     """Unload Toon config entry."""
 
     # Remove webhooks registration
-    await hass.data[DOMAIN][entry.entry_id].unregister_webhook()
+    await entry.runtime_data.unregister_webhook()
 
     # Unload entities for this entry/device.
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Cleanup
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

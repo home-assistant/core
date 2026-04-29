@@ -66,7 +66,7 @@ async def test_browse_media_categories(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_id"), [("01J5TX5A0FF6G5V0QJX6HBC94T"), ("32oesphrnacjcf7vw5bf6odx3")]
+    "config_entry_id", ["01J5TX5A0FF6G5V0QJX6HBC94T", "32oesphrnacjcf7vw5bf6odx3"]
 )
 @pytest.mark.usefixtures("setup_credentials")
 async def test_browse_media_playlists(
@@ -112,7 +112,6 @@ async def test_browse_media_playlists(
         ("current_user_recently_played", "current_user_recently_played"),
         ("current_user_top_artists", "current_user_top_artists"),
         ("current_user_top_tracks", "current_user_top_tracks"),
-        ("new_releases", "new_releases"),
         ("playlist", "spotify:playlist:3cEYpjA9oz9GiPac4AsH4n"),
         ("album", "spotify:album:3IqzqH6ShrRtie9Yd2ODyG"),
         ("artist", "spotify:artist:0TnOYISbd1XYRBk9myaseg"),
@@ -138,13 +137,7 @@ async def test_browsing(
     assert response.as_dict() == snapshot
 
 
-@pytest.mark.parametrize(
-    ("media_content_id"),
-    [
-        "artist",
-        None,
-    ],
-)
+@pytest.mark.parametrize("media_content_id", ["artist", None])
 @pytest.mark.usefixtures("setup_credentials")
 async def test_invalid_spotify_url(
     hass: HomeAssistant,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.gasopti_avg_gas_hourly_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_avg_gas_hourly_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -109,8 +111,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_gas_consumption_energy_this_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -163,8 +166,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_gas_consumption_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -220,8 +224,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_gas_consumption_this_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -274,8 +279,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_gas_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -331,8 +337,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_gas_cost_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -388,8 +395,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_max_gas_hourly_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -442,8 +450,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_max_gas_hourly_cost_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -496,8 +505,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_max_gas_hourly_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -550,8 +560,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_min_gas_hourly_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -604,8 +615,9 @@
 # ---
 # name: test_all_sensors[sensor.gasopti_min_gas_hourly_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -658,8 +670,9 @@
 # ---
 # name: test_all_sensors[sensor.heatopti_delta_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -712,8 +725,9 @@
 # ---
 # name: test_all_sensors[sensor.heatopti_delta_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -766,8 +780,9 @@
 # ---
 # name: test_all_sensors[sensor.heatopti_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -823,8 +838,9 @@
 # ---
 # name: test_all_sensors[sensor.heatopti_total_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -880,8 +896,9 @@
 # ---
 # name: test_all_sensors[sensor.poweropti_energy_return-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -937,8 +954,9 @@
 # ---
 # name: test_all_sensors[sensor.poweropti_energy_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -994,8 +1012,9 @@
 # ---
 # name: test_all_sensors[sensor.poweropti_energy_usage_high_tariff-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1051,8 +1070,9 @@
 # ---
 # name: test_all_sensors[sensor.poweropti_energy_usage_low_tariff-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1108,8 +1128,9 @@
 # ---
 # name: test_all_sensors[sensor.poweropti_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1165,8 +1186,9 @@
 # ---
 # name: test_all_sensors[sensor.wateropti_cold_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1222,8 +1244,9 @@
 # ---
 # name: test_all_sensors[sensor.wateropti_warm_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,

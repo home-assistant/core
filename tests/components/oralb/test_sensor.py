@@ -47,10 +47,10 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 9
 
-    toothbrush_sensor = hass.states.get("sensor.smart_series_7000_48be")
+    toothbrush_sensor = hass.states.get("sensor.triumph_d36_48be")
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor.state == "running"
-    assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "Smart Series 7000 48BE"
+    assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "Triumph D36 48BE"
     assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -76,7 +76,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # All of these devices are sleepy so we should still be available
-    toothbrush_sensor = hass.states.get("sensor.smart_series_7000_48be")
+    toothbrush_sensor = hass.states.get("sensor.triumph_d36_48be")
     assert toothbrush_sensor.state == "running"
 
 
@@ -155,9 +155,9 @@ async def test_sensors_battery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 7
 
-    bat_sensor = hass.states.get("sensor.io_series_6_7_1dcf_battery")
+    bat_sensor = hass.states.get("sensor.io_series_1dcf_battery")
     assert bat_sensor.state == "49"
-    assert bat_sensor.name == "IO Series 6/7 1DCF Battery"
+    assert bat_sensor.name == "IO Series 1DCF Battery"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

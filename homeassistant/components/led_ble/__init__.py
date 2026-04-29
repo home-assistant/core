@@ -3,24 +3,19 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
-import logging
 
-from led_ble import BLEAK_EXCEPTIONS, LEDBLE
+from led_ble import LEDBLE
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_TIMEOUT, UPDATE_SECONDS
-from .models import LEDBLEConfigEntry, LEDBLEData
+from .const import DEVICE_TIMEOUT
+from .coordinator import LEDBLEConfigEntry, LEDBLECoordinator, LEDBLEData
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bool:
@@ -53,23 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bo
         )
     )
 
-    async def _async_update() -> None:
-        """Update the device state."""
-        try:
-            await led_ble.update()
-        except BLEAK_EXCEPTIONS as ex:
-            raise UpdateFailed(str(ex)) from ex
-
     startup_event = asyncio.Event()
     cancel_first_update = led_ble.register_callback(lambda *_: startup_event.set())
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=led_ble.name,
-        update_method=_async_update,
-        update_interval=timedelta(seconds=UPDATE_SECONDS),
-    )
+    coordinator = LEDBLECoordinator(hass, entry, led_ble)
 
     try:
         await coordinator.async_config_entry_first_refresh()

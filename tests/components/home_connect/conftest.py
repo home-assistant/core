@@ -195,7 +195,7 @@ def _get_set_program_side_effect(
                                     value=str(option.key),
                                 )
                                 for option in cast(
-                                    list[Option], kwargs.get("options", [])
+                                    list[Option], kwargs.get("options") or []
                                 )
                             ],
                         ]
@@ -241,8 +241,6 @@ def _get_set_setting_side_effect(
 def _get_set_program_options_side_effect(
     event_queue: asyncio.Queue[list[EventMessage | Exception]],
 ):
-    """Set programs side effect."""
-
     async def set_program_options_side_effect(ha_id: str, *_, **kwargs) -> None:
         await event_queue.put(
             [
@@ -289,25 +287,9 @@ def _get_specific_appliance_side_effect(
     pytest.fail(f"Mock didn't include appliance with id {ha_id}")
 
 
-@pytest.fixture(name="client")
-def mock_client(
-    appliances: list[HomeAppliance],
-    appliance: HomeAppliance | None,
-    request: pytest.FixtureRequest,
-) -> MagicMock:
-    """Fixture to mock Client from HomeConnect."""
-
-    mock = MagicMock(
-        autospec=HomeConnectClient,
-    )
-
-    event_queue: asyncio.Queue[list[EventMessage | Exception]] = asyncio.Queue()
-
-    async def add_events(events: list[EventMessage | Exception]) -> None:
-        await event_queue.put(events)
-
-    mock.add_events = add_events
-
+def _get_set_program_option_side_effect(
+    event_queue: asyncio.Queue[list[EventMessage]],
+):
     async def set_program_option_side_effect(ha_id: str, *_, **kwargs) -> None:
         event_key = EventKey(kwargs["option_key"])
         await event_queue.put(
@@ -330,6 +312,28 @@ def mock_client(
                 ),
             ]
         )
+
+    return set_program_option_side_effect
+
+
+@pytest.fixture(name="client")
+def mock_client(
+    appliances: list[HomeAppliance],
+    appliance: HomeAppliance | None,
+    request: pytest.FixtureRequest,
+) -> MagicMock:
+    """Fixture to mock Client from HomeConnect."""
+
+    mock = MagicMock(
+        autospec=HomeConnectClient,
+    )
+
+    event_queue: asyncio.Queue[list[EventMessage | Exception]] = asyncio.Queue()
+
+    async def add_events(events: list[EventMessage | Exception]) -> None:
+        await event_queue.put(events)
+
+    mock.add_events = add_events
 
     appliances = [appliance] if appliance else appliances
 
@@ -408,13 +412,7 @@ def mock_client(
         ),
     )
     mock.stop_program = AsyncMock()
-    mock.set_active_program_option = AsyncMock(
-        side_effect=_get_set_program_options_side_effect(event_queue),
-    )
     mock.set_active_program_options = AsyncMock(
-        side_effect=_get_set_program_options_side_effect(event_queue),
-    )
-    mock.set_selected_program_option = AsyncMock(
         side_effect=_get_set_program_options_side_effect(event_queue),
     )
     mock.set_selected_program_options = AsyncMock(
@@ -437,10 +435,10 @@ def mock_client(
     mock.get_active_program_options = AsyncMock(return_value=ArrayOfOptions([]))
     mock.get_selected_program_options = AsyncMock(return_value=ArrayOfOptions([]))
     mock.set_active_program_option = AsyncMock(
-        side_effect=set_program_option_side_effect
+        side_effect=_get_set_program_option_side_effect(event_queue)
     )
     mock.set_selected_program_option = AsyncMock(
-        side_effect=set_program_option_side_effect
+        side_effect=_get_set_program_option_side_effect(event_queue)
     )
 
     mock.side_effect = mock

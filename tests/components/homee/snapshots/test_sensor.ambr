@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_snapshot[sensor.test_multisensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_current_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -112,8 +114,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_current_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -169,8 +172,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_dawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -223,8 +227,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_device_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -280,8 +285,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_energy_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -337,8 +343,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_energy_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -394,8 +401,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_exhaust_motor_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -447,8 +455,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_external_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -504,8 +513,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_floor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -561,8 +571,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -615,8 +626,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -668,8 +680,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -722,8 +735,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -776,8 +790,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -830,8 +845,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_indoor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -884,8 +900,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_indoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -941,8 +958,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_intake_motor_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -994,8 +1012,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1051,8 +1070,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_link_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1103,8 +1123,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_node_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1186,8 +1207,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_operating_hours-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1243,8 +1265,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_outdoor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1297,8 +1320,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1354,8 +1378,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1407,8 +1432,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1472,8 +1498,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1529,8 +1556,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1586,8 +1614,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1643,8 +1672,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1700,8 +1730,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1757,8 +1788,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_ultraviolet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1809,8 +1841,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_voltage_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1866,8 +1899,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_voltage_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1923,8 +1957,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_wind_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1983,8 +2018,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_window_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

@@ -659,26 +659,34 @@ def _get_exposed_entities(
             continue
 
         entity_entry = entity_registry.async_get(state.entity_id)
-        names = [state.name]
+        device_entry = (
+            device_registry.async_get(entity_entry.device_id)
+            if entity_entry is not None and entity_entry.device_id is not None
+            else None
+        )
+        names = intent.async_get_entity_aliases(hass, entity_entry, state=state)
         area_names = []
 
         if entity_entry is not None:
-            names.extend(entity_entry.aliases)
-            if entity_entry.area_id and (
-                area := area_registry.async_get_area(entity_entry.area_id)
+            if (
+                entity_entry.area_id is not None
+                and (area_entry := area_registry.async_get_area(entity_entry.area_id))
+                is not None
             ):
                 # Entity is in area
-                area_names.append(area.name)
-                area_names.extend(area.aliases)
-            elif entity_entry.device_id and (
-                device := device_registry.async_get(entity_entry.device_id)
-            ):
+                area_names.append(area_entry.name)
+                area_names.extend(area_entry.aliases)
+            elif device_entry is not None:
                 # Check device area
-                if device.area_id and (
-                    area := area_registry.async_get_area(device.area_id)
+                if (
+                    device_entry.area_id is not None
+                    and (
+                        area_entry := area_registry.async_get_area(device_entry.area_id)
+                    )
+                    is not None
                 ):
-                    area_names.append(area.name)
-                    area_names.extend(area.aliases)
+                    area_names.append(area_entry.name)
+                    area_names.extend(area_entry.aliases)
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -919,12 +927,10 @@ def _get_cached_action_parameters(
             entity_registry = er.async_get(hass)
             if (
                 entity_id := entity_registry.async_get_entity_id(domain, domain, action)
-            ) and (entity_entry := entity_registry.async_get(entity_id)):
-                aliases: list[str] = []
-                if entity_entry.name:
-                    aliases.append(entity_entry.name)
-                if entity_entry.aliases:
-                    aliases.extend(entity_entry.aliases)
+            ) is not None and (
+                entity_entry := entity_registry.async_get(entity_id)
+            ) is not None:
+                aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
                         description = description + ". Aliases: " + str(list(aliases))
@@ -1154,6 +1160,26 @@ class TodoGetItemsTool(Tool):
         return {"success": True, "result": items}
 
 
+def _live_context_match_error(
+    match_result: intent.MatchTargetsResult,
+    name_filter: str | None,
+    area_filter: str | None,
+    domain_filter: list[str] | None,
+) -> str:
+    """Build an actionable error message for a failed GetLiveContext match."""
+    reason = match_result.no_match_reason
+    if reason is intent.MatchFailedReason.INVALID_AREA:
+        return f"Area '{match_result.no_match_name}' does not exist"
+    if reason is intent.MatchFailedReason.NAME:
+        return f"No exposed entities matched name '{name_filter}'"
+    if reason is intent.MatchFailedReason.AREA:
+        return f"No exposed entities found in area '{area_filter}'"
+    if reason is intent.MatchFailedReason.DOMAIN:
+        domains = ", ".join(domain_filter) if domain_filter else ""
+        return f"No exposed entities found in domain(s): {domains}"
+    return "No entities matched the provided filter"
+
+
 class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
@@ -1167,7 +1193,25 @@ class GetLiveContextTool(Tool):
         "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
         "Use this tool for: "
         "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
-        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
+        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first). "
+        "You may filter for devices by name, domain, and area, including combining those filters. "
+        "Prefer filtering by domain when searching for multiple devices of the same type."
+    )
+    parameters = vol.Schema(
+        {
+            vol.Optional(
+                "name",
+                description="Filter entities by name or alias (case-insensitive).",
+            ): cv.string,
+            vol.Optional(
+                "domain",
+                description="Filter entities by domain (e.g. 'light', 'sensor'). Accepts a single domain or a list.",
+            ): vol.Any(cv.string, [cv.string]),
+            vol.Optional(
+                "area",
+                description="Filter entities by area name or alias (case-insensitive).",
+            ): cv.string,
+        }
     )
 
     async def async_call(
@@ -1182,12 +1226,62 @@ class GetLiveContextTool(Tool):
             # exposed if no assistant is configured.
             return {"success": False, "error": "No assistant configured"}
 
+        args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
+
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
+
+        name_filter = args.get("name")
+        area_filter = args.get("area")
+        domain_filter = args.get("domain")
+
+        if isinstance(domain_filter, str):
+            domain_filter = [domain_filter]
+
+        if domain_filter is not None:
+            domain_filter = [
+                normalized_domain
+                for domain in domain_filter
+                if (normalized_domain := domain.strip().lower())
+            ]
+
+        if name_filter or area_filter or domain_filter:
+            exposed_states = [
+                state
+                for entity_id in exposed_entities["entities"]
+                if (state := hass.states.get(entity_id)) is not None
+            ]
+            match_result = intent.async_match_targets(
+                hass,
+                intent.MatchTargetsConstraints(
+                    name=name_filter,
+                    area_name=area_filter,
+                    domains=domain_filter,
+                ),
+                states=exposed_states,
+            )
+
+            if not match_result.is_match:
+                return {
+                    "success": False,
+                    "error": _live_context_match_error(
+                        match_result, name_filter, area_filter, domain_filter
+                    ),
+                }
+
+            matched_ids = {state.entity_id for state in match_result.states}
+            entities = [
+                info
+                for entity_id, info in exposed_entities["entities"].items()
+                if entity_id in matched_ids
+            ]
+        else:
+            entities = list(exposed_entities["entities"].values())
+
         prompt = [
             "Live Context: An overview of the areas and the devices in this smart home:",
-            yaml_util.dump(list(exposed_entities["entities"].values())),
+            yaml_util.dump(entities),
         ]
         return {
             "success": True,

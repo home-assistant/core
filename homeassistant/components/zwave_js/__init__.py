@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import (
@@ -94,7 +93,6 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
@@ -110,6 +108,8 @@ from .const import (
     DOMAIN,
     ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_METADATA_UPDATED,
+    EVENT_VALUE_ADDED,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
@@ -138,16 +138,8 @@ from .services import async_setup_services
 CONNECT_TIMEOUT = 10
 DRIVER_READY_TIMEOUT = 60
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_INSTALLER_MODE, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
 PLATFORMS = [
@@ -171,7 +163,6 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    hass.data[DOMAIN] = config.get(DOMAIN, {})
     for entry in hass.config_entries.async_entries(DOMAIN):
         if not isinstance(entry.unique_id, str):
             hass.config_entries.async_update_entry(
@@ -610,6 +601,7 @@ class ControllerEvents:
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
 
+        self.node_events.value_updates_disc_info.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
@@ -767,6 +759,9 @@ class NodeEvents:
         self.dev_reg = controller_events.dev_reg
         self.ent_reg = er.async_get(hass)
         self.hass = hass
+        self.value_updates_disc_info: dict[
+            int, dict[str, PlatformZwaveDiscoveryInfo]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -777,29 +772,23 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
+        # Store the discovery info so it can be reused when re-discovering entities
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
+        self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_node_values(
-                    node, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_node_values(
+            node, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # add listeners to handle new values that get added later
-        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
+        for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
-                    lambda event: self.hass.async_create_task(
-                        self.async_on_value_added(
-                            value_updates_disc_info, event["value"]
-                        )
+                    lambda event: self.async_on_value_added(
+                        value_updates_disc_info, event["value"]
                     ),
                 )
             )
@@ -863,7 +852,8 @@ class NodeEvents:
                 # an upstream bug, or the change has been reverted.
                 async_delete_issue(self.hass, DOMAIN, issue_id)
 
-    async def async_handle_discovery_info(
+    @callback
+    def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
         disc_info: PlatformZwaveDiscoveryInfo,
@@ -908,15 +898,17 @@ class NodeEvents:
             )
         )
 
-    async def async_on_value_added(
+    @callback
+    def async_on_value_added(
         self,
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
         value: Value,
     ) -> None:
-        """Fire value updated event."""
-        # If node isn't ready or a device for this node doesn't already exist, we can
-        # let the node ready event handler perform discovery. If a value has already
-        # been processed, we don't need to do it again
+        """Run discovery when a value is added, updated or its metadata is changed."""
+        # If node isn't ready or a device for this node doesn't already
+        # exist, we can let the node ready event handler perform discovery.
+        # If a value has already been processed, we don't need to do it
+        # again
         device_id = get_device_id(
             self.controller_events.driver_events.driver, value.node
         )
@@ -928,16 +920,10 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_single_value(
-                    value, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_single_value(
+            value, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
     def async_on_value_notification(self, notification: ValueNotification) -> None:

@@ -52,7 +52,7 @@ async def test_change_api_5_to_6(
 
         # Now trigger the update
         with pytest.raises(homeassistant.exceptions.ConfigEntryAuthFailed):
-            await pihole_data.coordinator.update_method()
+            await pihole_data.coordinator._async_update_data()
         assert pihole_data.api.data == {
             "error": VERSION_6_RESPONSE_TO_5_ERROR,
             "took": 0.0001430511474609375,
