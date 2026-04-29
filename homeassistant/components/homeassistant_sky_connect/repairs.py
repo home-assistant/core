@@ -39,7 +39,7 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create a fix flow for a SkyConnect repair issue."""
     if issue_id.startswith(ISSUE_MULTI_PAN_MIGRATION) and data is not None:
-        entry_id = cast(str, data.get("entry_id"))
+        entry_id = cast(str, data["entry_id"])
         if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
             return SkyConnectMultiPanMigrationRepairFlow(entry)
 
