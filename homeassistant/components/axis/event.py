@@ -19,8 +19,7 @@ from . import AxisConfigEntry
 from .entity import AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
-DOORBELL_MODEL = "I8116-E"
-DOORBELL_PORT = "0"
+DOORBELL_CONFIG = ("I8116-E", "0")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,7 +30,7 @@ class AxisEventPlatformDescription(AxisEventDescription, EventEntityDescription)
 @callback
 def doorbell_supported_fn(hub: AxisHub, event: Event) -> bool:
     """Validate event is from the configured doorbell button input."""
-    return hub.config.model == DOORBELL_MODEL and event.id == DOORBELL_PORT
+    return (hub.config.model, event.id) == DOORBELL_CONFIG
 
 
 ENTITY_DESCRIPTIONS = (
