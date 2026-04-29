@@ -147,6 +147,10 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
                         "cannot use integer value to set a time of day setting"
                     )
             elif isinstance(value, time_sys):
+                if value.second != 0:
+                    raise HomeAssistantError(
+                        "can only specify hour and minutes for time of day setting"
+                    )
                 self._element.set((value.hour, value.minute))
             else:
                 raise HomeAssistantError(
