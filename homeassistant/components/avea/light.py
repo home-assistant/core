@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -79,6 +80,9 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
                 err,
             )
             continue
+        finally:
+            with suppress(*UPDATE_EXCEPTIONS):
+                bulb.close()
 
         if brightness is None:
             _LOGGER.warning(

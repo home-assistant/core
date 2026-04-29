@@ -21,14 +21,15 @@ AVEA_EXCEPTIONS = (BleakError, OSError, RuntimeError)
 
 async def async_setup_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool:
     """Set up Avea from a config entry."""
-    if not async_ble_device_from_address(
+    ble_device = async_ble_device_from_address(
         hass, entry.data[CONF_ADDRESS], connectable=True
-    ):
+    )
+    if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Avea device with address {entry.data[CONF_ADDRESS]}"
         )
 
-    entry.runtime_data = avea.Bulb(entry.data[CONF_ADDRESS])
+    entry.runtime_data = avea.Bulb(ble_device)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

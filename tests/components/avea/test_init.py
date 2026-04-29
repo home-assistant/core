@@ -99,6 +99,8 @@ async def test_yaml_import_creates_entries_for_discovered_bulbs(
         ("AA:BB:CC:DD:EE:FF", "Bedroom"),
         ("11:22:33:44:55:66", "Desk"),
     }
+    for bulb in bulbs:
+        bulb.close.assert_called_once()
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -124,6 +126,8 @@ async def test_yaml_import_skips_bulbs_that_fail_validation(
     assert len(entries) == 1
     assert entries[0].unique_id == "11:22:33:44:55:66"
     assert entries[0].title == "Desk"
+    for bulb in bulbs:
+        bulb.close.assert_called_once()
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
