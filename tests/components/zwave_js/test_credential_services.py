@@ -182,7 +182,7 @@ async def test_set_user_no_slots(
         )
 
 
-async def test_clear_user(
+async def test_delete_user(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -190,12 +190,12 @@ async def test_clear_user(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test clear_user deletes a single user."""
+    """Test delete_user deletes a single user."""
     api = _mock_access_control(lock_schlage_be469)
 
     await hass.services.async_call(
         DOMAIN,
-        "clear_user",
+        "delete_user",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -208,7 +208,7 @@ async def test_clear_user(
     api.async_delete_user.assert_called_once_with(3)
 
 
-async def test_clear_all_users(
+async def test_delete_all_users(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -216,12 +216,12 @@ async def test_clear_all_users(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test clear_all_users deletes all users."""
+    """Test delete_all_users deletes all users."""
     api = _mock_access_control(lock_schlage_be469)
 
     await hass.services.async_call(
         DOMAIN,
-        "clear_all_users",
+        "delete_all_users",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -603,7 +603,7 @@ async def test_set_credential_no_available_slots(
         )
 
 
-async def test_clear_credential(
+async def test_delete_credential(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -611,12 +611,12 @@ async def test_clear_credential(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test clear_credential deletes a single credential."""
+    """Test delete_credential deletes a single credential."""
     api = _mock_access_control(lock_schlage_be469)
 
     await hass.services.async_call(
         DOMAIN,
-        "clear_credential",
+        "delete_credential",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -631,7 +631,7 @@ async def test_clear_credential(
     api.async_delete_credential.assert_called_once()
 
 
-async def test_clear_all_credentials(
+async def test_delete_all_credentials(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -639,7 +639,7 @@ async def test_clear_all_credentials(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test clear_all_credentials deletes all credentials for a user."""
+    """Test delete_all_credentials deletes all credentials for a user."""
     api = _mock_access_control(lock_schlage_be469)
 
     cred1 = MagicMock()
@@ -652,7 +652,7 @@ async def test_clear_all_credentials(
 
     await hass.services.async_call(
         DOMAIN,
-        "clear_all_credentials",
+        "delete_all_credentials",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -700,7 +700,7 @@ async def test_set_credential_id_range_validation(
         )
 
 
-async def test_clear_user_rejects_oversize_user_id(
+async def test_delete_user_rejects_oversize_user_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -708,13 +708,13 @@ async def test_clear_user_rejects_oversize_user_id(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Reject user_id above uint16 max on clear_user."""
+    """Reject user_id above uint16 max on delete_user."""
     _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            "clear_user",
+            "delete_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -734,13 +734,13 @@ async def test_mutation_supports_multi_target(
     lock_august_pro: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """clear_user across multiple devices dispatches to each node."""
+    """delete_user across multiple devices dispatches to each node."""
     api1 = _mock_access_control(lock_schlage_be469)
     api2 = _mock_access_control(lock_august_pro)
 
     await hass.services.async_call(
         DOMAIN,
-        "clear_user",
+        "delete_user",
         {
             ATTR_ENTITY_ID: [
                 _lock_entity_id(

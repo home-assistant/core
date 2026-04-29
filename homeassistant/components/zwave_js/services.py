@@ -100,19 +100,19 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         const.DOMAIN,
-        const.SERVICE_CLEAR_USER,
+        const.SERVICE_DELETE_USER,
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
-        func="async_clear_user",
+        func="async_delete_user",
     )
 
     async_register_platform_entity_service(
         hass,
         const.DOMAIN,
-        const.SERVICE_CLEAR_ALL_USERS,
+        const.SERVICE_DELETE_ALL_USERS,
         entity_domain=LOCK_DOMAIN,
         schema={},
-        func="async_clear_all_users",
+        func="async_delete_all_users",
     )
 
     async_register_platform_entity_service(
@@ -155,7 +155,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         const.DOMAIN,
-        const.SERVICE_CLEAR_CREDENTIAL,
+        const.SERVICE_DELETE_CREDENTIAL,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(const.ATTR_USER_ID): uint16_id,
@@ -164,16 +164,16 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
             ),
             vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
         },
-        func="async_clear_credential",
+        func="async_delete_credential",
     )
 
     async_register_platform_entity_service(
         hass,
         const.DOMAIN,
-        const.SERVICE_CLEAR_ALL_CREDENTIALS,
+        const.SERVICE_DELETE_ALL_CREDENTIALS,
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
-        func="async_clear_all_credentials",
+        func="async_delete_all_credentials",
     )
 
 

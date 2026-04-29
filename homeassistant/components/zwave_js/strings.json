@@ -295,20 +295,8 @@
     "access_control_not_supported": {
       "message": "Access control is not supported on this device"
     },
-    "clear_all_credentials_failed": {
-      "message": "Failed to clear all credentials for user {user_id}: {error}"
-    },
-    "clear_all_users_failed": {
-      "message": "Failed to clear all users: {error}"
-    },
-    "clear_credential_failed": {
-      "message": "Failed to clear credential: {error}"
-    },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
-    },
-    "clear_user_failed": {
-      "message": "Failed to clear user {user_id}: {error}"
     },
     "credential_rejected_add_occupied": {
       "message": "Cannot add credential: the target slot is already in use."
@@ -333,6 +321,18 @@
     },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
+    },
+    "delete_all_credentials_failed": {
+      "message": "Failed to delete all credentials for user {user_id}: {error}"
+    },
+    "delete_all_users_failed": {
+      "message": "Failed to delete all users: {error}"
+    },
+    "delete_credential_failed": {
+      "message": "Failed to delete credential: {error}"
+    },
+    "delete_user_failed": {
+      "message": "Failed to delete user {user_id}: {error}"
     },
     "get_credential_capabilities_failed": {
       "message": "Failed to get credential capabilities: {error}"
@@ -451,21 +451,31 @@
       },
       "name": "Bulk set partial configuration parameters (advanced)"
     },
-    "clear_all_credentials": {
+    "clear_lock_usercode": {
+      "description": "Clears a user code from a lock.",
+      "fields": {
+        "code_slot": {
+          "description": "Code slot to clear code from.",
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
+        }
+      },
+      "name": "Clear lock user code"
+    },
+    "delete_all_credentials": {
       "description": "Deletes all credentials for a user on a lock.",
       "fields": {
         "user_id": {
-          "description": "User slot index to clear all credentials for.",
+          "description": "User slot index to delete all credentials for.",
           "name": "User index"
         }
       },
-      "name": "Clear all credentials"
+      "name": "Delete all credentials"
     },
-    "clear_all_users": {
+    "delete_all_users": {
       "description": "Deletes all access-control users from a lock.",
-      "name": "Clear all users"
+      "name": "Delete all users"
     },
-    "clear_credential": {
+    "delete_credential": {
       "description": "Deletes a single credential from a lock.",
       "fields": {
         "credential_slot": {
@@ -481,19 +491,9 @@
           "name": "User index"
         }
       },
-      "name": "Clear credential"
+      "name": "Delete credential"
     },
-    "clear_lock_usercode": {
-      "description": "Clears a user code from a lock.",
-      "fields": {
-        "code_slot": {
-          "description": "Code slot to clear code from.",
-          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
-        }
-      },
-      "name": "Clear lock user code"
-    },
-    "clear_user": {
+    "delete_user": {
       "description": "Deletes a single access-control user from a lock.",
       "fields": {
         "user_id": {
@@ -501,7 +501,7 @@
           "name": "User index"
         }
       },
-      "name": "Clear user"
+      "name": "Delete user"
     },
     "get_credential_capabilities": {
       "description": "Queries the credential management capabilities of a lock.",

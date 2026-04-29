@@ -60,19 +60,19 @@
     "bulk_set_partial_config_parameters": {
       "service": "mdi:cogs"
     },
-    "clear_all_credentials": {
-      "service": "mdi:eraser-variant"
-    },
-    "clear_all_users": {
-      "service": "mdi:account-remove"
-    },
-    "clear_credential": {
-      "service": "mdi:eraser"
-    },
     "clear_lock_usercode": {
       "service": "mdi:eraser"
     },
-    "clear_user": {
+    "delete_all_credentials": {
+      "service": "mdi:eraser-variant"
+    },
+    "delete_all_users": {
+      "service": "mdi:account-remove"
+    },
+    "delete_credential": {
+      "service": "mdi:eraser"
+    },
+    "delete_user": {
       "service": "mdi:account-remove"
     },
     "get_credential_capabilities": {

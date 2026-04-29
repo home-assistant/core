@@ -262,22 +262,22 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         except BaseZwaveJSServerError as err:
             raise _credential_service_error("set_user_failed", err) from err
 
-    async def async_clear_user(self, **kwargs: Any) -> None:
+    async def async_delete_user(self, **kwargs: Any) -> None:
         """Delete a single access-control user."""
         user_id: int = kwargs[const.ATTR_USER_ID]
         try:
-            await access_control_helpers.async_clear_user(self.info.node, user_id)
+            await access_control_helpers.async_delete_user(self.info.node, user_id)
         except BaseZwaveJSServerError as err:
             raise _credential_service_error(
-                "clear_user_failed", err, user_id=str(user_id)
+                "delete_user_failed", err, user_id=str(user_id)
             ) from err
 
-    async def async_clear_all_users(self) -> None:
+    async def async_delete_all_users(self) -> None:
         """Delete all access-control users."""
         try:
-            await access_control_helpers.async_clear_all_users(self.info.node)
+            await access_control_helpers.async_delete_all_users(self.info.node)
         except BaseZwaveJSServerError as err:
-            raise _credential_service_error("clear_all_users_failed", err) from err
+            raise _credential_service_error("delete_all_users_failed", err) from err
 
     async def async_get_credential_capabilities(
         self,
@@ -313,10 +313,10 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         except BaseZwaveJSServerError as err:
             raise _credential_service_error("set_credential_failed", err) from err
 
-    async def async_clear_credential(self, **kwargs: Any) -> None:
+    async def async_delete_credential(self, **kwargs: Any) -> None:
         """Delete a single credential."""
         try:
-            await access_control_helpers.async_clear_credential(
+            await access_control_helpers.async_delete_credential(
                 self.info.node,
                 user_id=kwargs[const.ATTR_USER_ID],
                 credential_type=CREDENTIAL_TYPE_REVERSE_MAP[
@@ -325,16 +325,16 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 credential_slot=kwargs[const.ATTR_CREDENTIAL_SLOT],
             )
         except BaseZwaveJSServerError as err:
-            raise _credential_service_error("clear_credential_failed", err) from err
+            raise _credential_service_error("delete_credential_failed", err) from err
 
-    async def async_clear_all_credentials(self, **kwargs: Any) -> None:
+    async def async_delete_all_credentials(self, **kwargs: Any) -> None:
         """Delete all credentials for a user."""
         user_id: int = kwargs[const.ATTR_USER_ID]
         try:
-            await access_control_helpers.async_clear_all_credentials(
+            await access_control_helpers.async_delete_all_credentials(
                 self.info.node, user_id
             )
         except BaseZwaveJSServerError as err:
             raise _credential_service_error(
-                "clear_all_credentials_failed", err, user_id=str(user_id)
+                "delete_all_credentials_failed", err, user_id=str(user_id)
             ) from err

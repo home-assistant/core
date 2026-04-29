@@ -130,7 +130,7 @@ set_user:
       selector:
         boolean:
 
-clear_user:
+delete_user:
   target:
     entity:
       domain: lock
@@ -145,7 +145,7 @@ clear_user:
           step: 1
           mode: box
 
-clear_all_users:
+delete_all_users:
   target:
     entity:
       domain: lock
@@ -196,7 +196,7 @@ set_credential:
           step: 1
           mode: box
 
-clear_credential:
+delete_credential:
   target:
     entity:
       domain: lock
@@ -226,7 +226,7 @@ clear_credential:
           step: 1
           mode: box
 
-clear_all_credentials:
+delete_all_credentials:
   target:
     entity:
       domain: lock

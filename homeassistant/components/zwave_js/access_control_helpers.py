@@ -335,7 +335,7 @@ async def async_set_user(
     return SetUserReturn(user_id=user_id)
 
 
-async def async_clear_user(node: Node, user_id: int) -> None:
+async def async_delete_user(node: Node, user_id: int) -> None:
     """Delete a single access-control user."""
     if not await node.access_control.async_is_supported():
         raise HomeAssistantError(
@@ -347,7 +347,7 @@ async def async_clear_user(node: Node, user_id: int) -> None:
     _raise_on_set_user_error(status)
 
 
-async def async_clear_all_users(node: Node) -> None:
+async def async_delete_all_users(node: Node) -> None:
     """Delete all access-control users."""
     if not await node.access_control.async_is_supported():
         raise HomeAssistantError(
@@ -425,7 +425,7 @@ async def async_set_credential(
     )
 
 
-async def async_clear_credential(
+async def async_delete_credential(
     node: Node,
     user_id: int,
     credential_type: UserCredentialType,
@@ -444,7 +444,7 @@ async def async_clear_credential(
     _raise_on_set_credential_error(status)
 
 
-async def async_clear_all_credentials(node: Node, user_id: int) -> None:
+async def async_delete_all_credentials(node: Node, user_id: int) -> None:
     """Delete all credentials for a user."""
     if not await node.access_control.async_is_supported():
         raise HomeAssistantError(
