@@ -85,7 +85,6 @@ class MobileAppNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
-        placeholders = {"device_name": self._config_entry.title}
 
         data: dict[str, Any] = {}
         data[ATTR_MESSAGE] = message
@@ -110,7 +109,7 @@ class MobileAppNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_connected_for_local_push_notifications",
-                translation_placeholders=placeholders,
+                translation_placeholders={"device_name": self._config_entry.title},
             )
 
 
