@@ -125,7 +125,9 @@ class MatterEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
-        self._attr_available = self._endpoint.node.available
+        self._attr_available = (
+            self._endpoint.node.available and self._get_bridged_reachable()
+        )
         # mark endpoint postfix if the device has the primary attribute on multiple endpoints
         if not self._endpoint.node.is_bridge_device and any(
             ep
@@ -212,6 +214,24 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
+        # Subscribe to BridgedDeviceBasicInformation Reachable attribute (AttributeId: 17)
+        # for devices connected via a Matter bridge, to reflect real reachability status.
+        if self._endpoint.has_attribute(
+            None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        ):
+            reachable_attr_path = self.get_matter_attribute_path(
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+            )
+            if reachable_attr_path not in sub_paths:
+                sub_paths.append(reachable_attr_path)
+                self._unsubscribes.append(
+                    self.matter_client.subscribe_events(
+                        callback=self._on_matter_event,
+                        event_filter=EventType.ATTRIBUTE_UPDATED,
+                        node_filter=self._endpoint.node.node_id,
+                        attr_path_filter=reachable_attr_path,
+                    )
+                )
         # subscribe to FeatureMap attribute (as that can dynamically change)
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -238,9 +258,21 @@ class MatterEntity(Entity):
         return name
 
     @callback
+    def _get_bridged_reachable(self) -> bool:
+        """Return reachability state for bridged endpoints, True if not applicable."""
+        reachable = self.get_matter_attribute_value(
+            clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        )
+        if reachable is None:
+            return True
+        return bool(reachable)
+
+    @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update from the device."""
-        self._attr_available = self._endpoint.node.available
+        self._attr_available = (
+            self._endpoint.node.available and self._get_bridged_reachable()
+        )
         self._update_from_device()
         self.async_write_ha_state()
 
