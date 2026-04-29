@@ -15,6 +15,7 @@ from homeassistant.components.heiman_home.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
@@ -1084,8 +1085,6 @@ async def test_coordinator_get_device_property_success(hass: HomeAssistant) -> N
 
 async def test_coordinator_fetch_user_info_auth_failed(hass: HomeAssistant) -> None:
     """Test _fetch_user_and_home_info re-raises ConfigEntryAuthFailed (line 161)."""
-    from homeassistant.exceptions import ConfigEntryAuthFailed
-
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -1116,8 +1115,6 @@ async def test_coordinator_fetch_user_info_auth_failed(hass: HomeAssistant) -> N
 
 async def test_coordinator_fetch_devices_auth_failed(hass: HomeAssistant) -> None:
     """Test _fetch_and_process_devices re-raises ConfigEntryAuthFailed (line 216)."""
-    from homeassistant.exceptions import ConfigEntryAuthFailed
-
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
