@@ -125,7 +125,7 @@ TOTAL_ENERGY_DESCRIPTION = SensorEntityDescription(
     key="totalEnergy",
     device_class=SensorDeviceClass.ENERGY,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    state_class=SensorStateClass.TOTAL,
+    state_class=SensorStateClass.TOTAL_INCREASING,
 )
 
 _MAX_ELAPSED_S = 30

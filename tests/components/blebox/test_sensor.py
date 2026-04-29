@@ -207,7 +207,7 @@ async def test_power_consumption_state_class(hass: HomeAssistant) -> None:
 
 
 async def test_energy_sensor_init(switchbox, hass: HomeAssistant) -> None:
-    """Test energy sensor initial state is 0.0 with TOTAL state class."""
+    """Test energy sensor initial state is 0.0 with TOTAL_INCREASING state class."""
     feature_mock, power_entity_id, energy_entity_id = switchbox
 
     feature_mock.native_value = 0.0
@@ -216,7 +216,7 @@ async def test_energy_sensor_init(switchbox, hass: HomeAssistant) -> None:
     state = hass.states.get(energy_entity_id)
     assert state is not None
     assert state.state == "0.0"
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
+    assert state.attributes.get("state_class") == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
 
