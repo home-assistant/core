@@ -292,25 +292,18 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                     "byte",
                     "number",
                 ]
-                # Exclude string/enum types
-                non_numeric_data_types = [
-                    "string",
-                    "text",
-                    "enum",
-                    "bool",
-                ]
                 # Check if value is numeric
                 value_is_numeric = (
                     prop.value is not None
                     and isinstance(prop.value, (int, float))
                     and not isinstance(prop.value, bool)
                 )
-                # Check if data_type indicates numeric
-                data_type_is_numeric = (
-                    prop.data_type is not None
-                    and prop.data_type in numeric_data_types
-                    and prop.data_type not in non_numeric_data_types
+                # Normalize data_type to lowercase string for comparison
+                normalized_data_type = (
+                    prop.data_type.lower() if isinstance(prop.data_type, str) else ""
                 )
+                # Check if data_type indicates numeric
+                data_type_is_numeric = normalized_data_type in numeric_data_types
                 if not (value_is_numeric or data_type_is_numeric):
                     # Skip applying signal_strength device class for non-numeric values
                     matched_key = None

@@ -20,7 +20,6 @@ from heimanconnect import (
     HeimanMQTTError,
     HeimanUser,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -238,14 +237,19 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         )
 
     def _merge_device_states(self, devices: dict[str, HeimanDevice]) -> None:
-        """Merge old device states with new device data."""
-        old_devices = self.data.devices.copy()
-        self.data.devices = devices
+        """Preserve the devices mapping identity while merging refreshed data.
 
+        Any consumer that keeps a reference to ``self.data.devices`` (such as the
+        MQTT client) must continue to see updates after coordinator refreshes, so
+        update the existing dict in place instead of rebinding it.
+        """
+        old_devices = self.data.devices.copy()
         # Use the SDK's merge_from method to handle property merging
         for device_id, new_device in devices.items():
             if device_id in old_devices:
                 new_device.merge_from(old_devices[device_id])
+        self.data.devices.clear()
+        self.data.devices.update(devices)
 
     def get_device(self, device_id: str) -> HeimanDevice | None:
         """Get device by ID.

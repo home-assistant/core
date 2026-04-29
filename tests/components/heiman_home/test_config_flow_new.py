@@ -618,8 +618,8 @@ async def test_async_step_select_home_reauth_wrong_account(
             flow,
             "_abort_if_unique_id_mismatch",
             side_effect=lambda reason="unique_id_mismatch", description_placeholders=None: (
-                _ for _ in ()
-            ).throw(Exception(f"Aborted: {reason}")),
+                (_ for _ in ()).throw(Exception(f"Aborted: {reason}"))
+            ),
         ),
         pytest.raises(Exception, match="reauth_account_mismatch"),
     ):
