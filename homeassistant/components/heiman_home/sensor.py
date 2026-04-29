@@ -138,7 +138,7 @@ async def async_setup_entry(
     def _create_sensors_for_devices() -> None:
         """Create sensors for all devices and add new ones."""
         # Check if structure has changed (new devices or properties)
-        if not _check_structure_changed() and existing_entities:
+        if not _check_structure_changed():
             # No structural changes, skip expensive scan
             return
         devices = coordinator.get_all_devices()

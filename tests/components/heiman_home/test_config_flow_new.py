@@ -1,5 +1,6 @@
 """Tests for Heiman Home config flow - comprehensive coverage."""
 
+import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import HeimanAuthError, HeimanTokenExpiredError
@@ -613,17 +614,15 @@ async def test_async_step_select_home_reauth_wrong_account(
 
     # Mock _abort_if_unique_id_mismatch to raise AbortFlow
     with patch.object(
-            flow,
-            "_abort_if_unique_id_mismatch",
-            side_effect=lambda reason="unique_id_mismatch", description_placeholders=None: (
-                _ for _ in ()
-            ).throw(Exception(f"Aborted: {reason}")),
+        flow,
+        "_abort_if_unique_id_mismatch",
+        side_effect=lambda reason="unique_id_mismatch", description_placeholders=None: (
+            _ for _ in ()
+        ).throw(Exception(f"Aborted: {reason}")),
     ):
         # Select a home - should call _abort_if_unique_id_mismatch
-        try:
+        with pytest.raises(Exception, match="reauth_account_mismatch"):
             await flow.async_step_select_home({CONF_HOME_ID: "home-1"})
-        except Exception as e:
-            assert "reauth_account_mismatch" in str(e)
 
 
 async def test_async_step_select_home_reauth_success(

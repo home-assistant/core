@@ -328,17 +328,15 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             with contextlib.suppress(RuntimeError):
                 cloud_client = self.api_client.cloud_client
 
-            # Get devices dictionary for child device detection
-            devices_dict = dict(self.data.devices) if self.data.devices else {}
-
             # Create and connect MQTT client
+            # Pass live devices mapping reference so new devices are detected
             self.mqtt_client = HeimanMqttClient(
                 hass=self.hass,
                 access_token=access_token,
                 user_id=user_id,
                 user_display_name=user_display_name,
                 cloud_client=cloud_client,
-                devices=devices_dict,  # Pass devices dictionary
+                devices=self.data.devices,  # Pass live reference, not snapshot
             )
 
             await self.mqtt_client.connect()
