@@ -7,8 +7,7 @@ from collections import deque
 import multiprocessing
 from pathlib import Path
 
-from homeassistant.bootstrap import CORE_INTEGRATIONS
-from homeassistant.const import Platform
+from homeassistant.const import CORE_INTEGRATIONS, Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
 from . import ast_parse_module

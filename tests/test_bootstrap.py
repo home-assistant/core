@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
     CONF_DEBUG,
+    CORE_INTEGRATIONS,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
@@ -203,7 +204,7 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
 async def test_empty_setup(hass: HomeAssistant) -> None:
     """Test an empty set up loads the core."""
     await bootstrap.async_from_config_dict({}, hass)
-    for domain in bootstrap.CORE_INTEGRATIONS:
+    for domain in CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
 
 
