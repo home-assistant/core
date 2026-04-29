@@ -1203,6 +1203,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/notify_events/ @matrozov @papajojo
 /homeassistant/components/notion/ @bachya
 /tests/components/notion/ @bachya
+/homeassistant/components/novy_cooker_hood/ @piitaya
+/tests/components/novy_cooker_hood/ @piitaya
 /homeassistant/components/nrgkick/ @andijakl
 /tests/components/nrgkick/ @andijakl
 /homeassistant/components/nsw_fuel_station/ @nickw444

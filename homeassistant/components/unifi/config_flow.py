@@ -1,8 +1,8 @@
 """Config flow for UniFi Network integration.
 
 Provides user initiated configuration flow.
-Discovery of UniFi Network instances hosted on UDM and UDM Pro devices
-through SSDP. Reauthentication when issue with credentials are reported.
+Discovery of UniFi Network instances through unifi_discovery.
+Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 
@@ -13,7 +13,6 @@ import operator
 import socket
 from types import MappingProxyType
 from typing import Any
-from urllib.parse import urlparse
 
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
@@ -35,11 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.service_info.ssdp import (
-    ATTR_UPNP_MODEL_DESCRIPTION,
-    ATTR_UPNP_SERIAL,
-    SsdpServiceInfo,
-)
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import UnifiConfigEntry
 from .const import (
@@ -64,12 +59,6 @@ from .hub import UnifiHub, get_unifi_api
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
-
-
-MODEL_PORTS = {
-    "UniFi Dream Machine": 443,
-    "UniFi Dream Machine Pro": 443,
-}
 
 
 class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -144,7 +133,10 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             vol.Optional(
                 CONF_PORT, default=self.config.get(CONF_PORT, DEFAULT_PORT)
             ): int,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+            vol.Optional(
+                CONF_VERIFY_SSL,
+                default=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            ): bool,
         }
 
         return self.async_show_form(
@@ -215,33 +207,34 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_ssdp(
-        self, discovery_info: SsdpServiceInfo
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
-        """Handle a discovered UniFi device."""
-        parsed_url = urlparse(discovery_info.ssdp_location)
-        model_description = discovery_info.upnp[ATTR_UPNP_MODEL_DESCRIPTION]
-        mac_address = format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL])
+        """Handle discovery via unifi_discovery."""
+        source_ip = discovery_info["source_ip"]
+        if not source_ip:
+            return self.async_abort(reason="cannot_connect")
+        mac_address = format_mac(discovery_info["hw_addr"])
+        direct_connect_domain = discovery_info.get("direct_connect_domain")
+        host = direct_connect_domain or source_ip
 
         self.config = {
-            CONF_HOST: parsed_url.hostname,
+            CONF_HOST: host,
+            CONF_VERIFY_SSL: bool(direct_connect_domain),
         }
 
-        self._async_abort_entries_match({CONF_HOST: self.config[CONF_HOST]})
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_HOST) in (source_ip, direct_connect_domain):
+                return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config)
 
         self.context["title_placeholders"] = {
-            CONF_HOST: self.config[CONF_HOST],
+            CONF_HOST: host,
             CONF_SITE_ID: DEFAULT_SITE_ID,
         }
-
-        if (port := MODEL_PORTS.get(model_description)) is not None:
-            self.config[CONF_PORT] = port
-            self.context["configuration_url"] = (
-                f"https://{self.config[CONF_HOST]}:{port}"
-            )
+        self.context["configuration_url"] = f"https://{host}"
 
         return await self.async_step_user()
 

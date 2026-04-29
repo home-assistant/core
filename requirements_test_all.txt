@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.59.0
+PyViCare==2.60.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -124,7 +124,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.5
+actron-neo-api==0.5.6
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -200,7 +200,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.3
+aioautomower==2.7.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -324,7 +324,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.4
+aiontfy==0.8.5
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -384,7 +384,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.24.0
+aioshelly==13.24.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -552,7 +552,7 @@ autoskope_client==1.4.1
 av==16.0.1
 
 # homeassistant.components.axis
-axis==68
+axis==69
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -910,7 +910,7 @@ foobot_async==1.0.0
 forecast-solar==5.0.0
 
 # homeassistant.components.freebox
-freebox-api==1.3.0
+freebox-api==1.3.1
 
 # homeassistant.components.fressnapf_tracker
 fressnapftracker==0.2.2
@@ -1014,7 +1014,7 @@ google_air_quality_api==3.0.1
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
-gotailwind==0.3.0
+gotailwind==0.4.0
 
 # homeassistant.components.govee_ble
 govee-ble==1.2.0
@@ -1142,7 +1142,7 @@ hyperion-py==0.7.6
 hyponcloud==0.9.3
 
 # homeassistant.components.iaqualink
-iaqualink==0.6.0
+iaqualink==0.7.0
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
@@ -1181,7 +1181,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.4.3
+indevolt-api==1.6.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1905,7 +1905,7 @@ pyisy==3.4.1
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.5
+pyjvcprojector==2.0.6
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.1.5
@@ -2259,7 +2259,7 @@ python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.9.0
+python-otbr-api==2.10.0
 
 # homeassistant.components.overseerr
 python-overseerr==0.9.0
@@ -2425,8 +2425,9 @@ renson-endura-delta==1.7.2
 reolink-aio==0.19.1
 
 # homeassistant.components.honeywell_string_lights
+# homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==2.1.0
+rf-protocols==2.2.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2626,7 +2627,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.4.5
+tesla-fleet-api==1.4.7
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2867,7 +2868,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.6.3
+yolink-api==0.6.5
 
 # homeassistant.components.youless
 youless-api==2.2.0
