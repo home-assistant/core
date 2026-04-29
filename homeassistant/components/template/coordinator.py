@@ -64,8 +64,10 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Signal that the entities need to remove themselves."""
         if self._unsub_start:
             self._unsub_start()
+            self._unsub_start = None
         if self._unsub_trigger:
             self._unsub_trigger()
+            self._unsub_trigger = None
 
     async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
@@ -157,6 +159,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def async_shutdown(self) -> None:
         """Shut down the coordinator and clean up resources."""
         await super().async_shutdown()
+        self.async_remove()
         if self._script is not None:
             await self._script.async_stop()
             self._script.async_unload()
