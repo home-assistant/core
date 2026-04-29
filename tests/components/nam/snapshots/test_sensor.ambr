@@ -753,57 +753,6 @@
     'state': '7.95',
   })
 # ---
-# name: test_sensor[sensor.nettigo_air_monitor_last_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nettigo_air_monitor_last_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last restart',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last restart',
-    'platform': 'nam',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_restart',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.nettigo_air_monitor_last_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nettigo Air Monitor Last restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nettigo_air_monitor_last_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-04-15T05:03:33+00:00',
-  })
-# ---
 # name: test_sensor[sensor.nettigo_air_monitor_mh_z14a_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1904,5 +1853,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.72',
+  })
+# ---
+# name: test_sensor[sensor.nettigo_air_monitor_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nettigo_air_monitor_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'nam',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff-uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nettigo_air_monitor_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'uptime',
+      'friendly_name': 'Nettigo Air Monitor Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nettigo_air_monitor_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-04-15T05:03:33+00:00',
   })
 # ---
