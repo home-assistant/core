@@ -32,6 +32,9 @@ class TemplateFunction:
         True  # Whether this function is available in limited environments
     )
     requires_hass: bool = False  # Whether this function requires hass to be available
+    pass_context: bool = (
+        True  # Whether to wrap with pass_context when requires_hass is True
+    )
 
 
 def _pass_context[**_P, _R](
@@ -91,7 +94,7 @@ class BaseTemplateExtension(Extension):
 
                 func = template_func.func
 
-                if template_func.requires_hass:
+                if template_func.requires_hass and template_func.pass_context:
                     # We wrap these as a context functions to ensure they get
                     # evaluated fresh with every execution, rather than executed
                     # at compile time and the value stored.

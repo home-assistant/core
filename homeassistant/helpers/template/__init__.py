@@ -5,40 +5,27 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 import collections.abc
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from datetime import timedelta
-from functools import lru_cache, partial, wraps
+from functools import lru_cache, partial
 import logging
 import pathlib
 import re
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, overload
 import weakref
 
 import jinja2
-from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_PERSONS,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfLength,
-)
-from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.util import convert, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -62,9 +49,6 @@ from .states import (
     StateTranslated,
     TemplateState as TemplateState,
     TemplateStateFromEntityId as TemplateStateFromEntityId,
-    _collect_state,
-    _get_state,
-    _resolve_state,
 )
 
 if TYPE_CHECKING:
@@ -613,217 +597,6 @@ class Template:
         return f"Template<template=({self.template}) renders={self._renders}>"
 
 
-def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
-    """Expand out any groups and zones into entity states."""
-    # circular import.
-    from homeassistant.helpers import entity as entity_helper  # noqa: PLC0415
-
-    search = list(args)
-    found = {}
-    sources = entity_helper.entity_sources(hass)
-    while search:
-        entity = search.pop()
-        if isinstance(entity, str):
-            entity_id = entity
-            if (entity := _get_state(hass, entity)) is None:
-                continue
-        elif isinstance(entity, State):
-            entity_id = entity.entity_id
-        elif isinstance(entity, collections.abc.Iterable):
-            search += entity
-            continue
-        else:
-            # ignore other types
-            continue
-
-        if entity_id in found:
-            continue
-
-        domain = entity.domain
-        if domain == "group" or (
-            (source := sources.get(entity_id)) and source["domain"] == "group"
-        ):
-            # Collect state will be called in here since it's wrapped
-            if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
-                search += group_entities
-        elif domain == "zone":
-            if zone_entities := entity.attributes.get(ATTR_PERSONS):
-                search += zone_entities
-        else:
-            _collect_state(hass, entity_id)
-            found[entity_id] = entity
-
-    return list(found.values())
-
-
-def closest(hass: HomeAssistant, *args: Any) -> State | None:
-    """Find closest entity.
-
-    Closest to home:
-        closest(states)
-        closest(states.device_tracker)
-        closest('group.children')
-        closest(states.group.children)
-
-    Closest to a point:
-        closest(23.456, 23.456, 'group.children')
-        closest('zone.school', 'group.children')
-        closest(states.zone.school, 'group.children')
-
-    As a filter:
-        states | closest
-        states.device_tracker | closest
-        ['group.children', states.device_tracker] | closest
-        'group.children' | closest(23.456, 23.456)
-        states.device_tracker | closest('zone.school')
-        'group.children' | closest(states.zone.school)
-
-    """
-    if len(args) == 1:
-        latitude = hass.config.latitude
-        longitude = hass.config.longitude
-        entities = args[0]
-
-    elif len(args) == 2:
-        point_state = _resolve_state(hass, args[0])
-
-        if point_state is None:
-            _LOGGER.warning("Closest:Unable to find state %s", args[0])
-            return None
-        if not loc_helper.has_location(point_state):
-            _LOGGER.warning(
-                "Closest:State does not contain valid location: %s", point_state
-            )
-            return None
-
-        latitude = point_state.attributes[ATTR_LATITUDE]
-        longitude = point_state.attributes[ATTR_LONGITUDE]
-
-        entities = args[1]
-
-    else:
-        latitude_arg = convert(args[0], float)
-        longitude_arg = convert(args[1], float)
-
-        if latitude_arg is None or longitude_arg is None:
-            _LOGGER.warning(
-                "Closest:Received invalid coordinates: %s, %s", args[0], args[1]
-            )
-            return None
-
-        latitude = latitude_arg
-        longitude = longitude_arg
-
-        entities = args[2]
-
-    states = expand(hass, entities)
-
-    # state will already be wrapped here
-    return loc_helper.closest(latitude, longitude, states)
-
-
-def closest_filter(hass: HomeAssistant, *args: Any) -> State | None:
-    """Call closest as a filter. Need to reorder arguments."""
-    new_args = list(args[1:])
-    new_args.append(args[0])
-    return closest(hass, *new_args)
-
-
-def distance(hass: HomeAssistant, *args: Any) -> float | None:
-    """Calculate distance.
-
-    Will calculate distance from home to a point or between points.
-    Points can be passed in using state objects or lat/lng coordinates.
-    """
-    locations: list[tuple[float, float]] = []
-
-    to_process = list(args)
-
-    while to_process:
-        value = to_process.pop(0)
-        if isinstance(value, str) and not valid_entity_id(value):
-            point_state = None
-        else:
-            point_state = _resolve_state(hass, value)
-
-        if point_state is None:
-            # We expect this and next value to be lat&lng
-            if not to_process:
-                _LOGGER.warning(
-                    "Distance:Expected latitude and longitude, got %s", value
-                )
-                return None
-
-            value_2 = to_process.pop(0)
-            latitude_to_process = convert(value, float)
-            longitude_to_process = convert(value_2, float)
-
-            if latitude_to_process is None or longitude_to_process is None:
-                _LOGGER.warning(
-                    "Distance:Unable to process latitude and longitude: %s, %s",
-                    value,
-                    value_2,
-                )
-                return None
-
-            latitude = latitude_to_process
-            longitude = longitude_to_process
-
-        else:
-            if not loc_helper.has_location(point_state):
-                _LOGGER.warning(
-                    "Distance:State does not contain valid location: %s", point_state
-                )
-                return None
-
-            latitude = point_state.attributes[ATTR_LATITUDE]
-            longitude = point_state.attributes[ATTR_LONGITUDE]
-
-        locations.append((latitude, longitude))
-
-    if len(locations) == 1:
-        return hass.config.distance(*locations[0])
-
-    return hass.config.units.length(
-        location_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
-    )
-
-
-def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
-    """Test if a state is a specific value."""
-    state_obj = _get_state(hass, entity_id)
-    return state_obj is not None and (
-        state_obj.state == state
-        or (isinstance(state, list) and state_obj.state in state)
-    )
-
-
-def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
-    """Test if a state's attribute is a specific value."""
-    if (state_obj := _get_state(hass, entity_id)) is not None:
-        attr = state_obj.attributes.get(name, _SENTINEL)
-        if attr is _SENTINEL:
-            return False
-        return bool(attr == value)
-    return False
-
-
-def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
-    """Get a specific attribute from a state."""
-    if (state_obj := _get_state(hass, entity_id)) is not None:
-        return state_obj.attributes.get(name)
-    return None
-
-
-def has_value(hass: HomeAssistant, entity_id: str) -> bool:
-    """Test if an entity has a valid value."""
-    state_obj = _get_state(hass, entity_id)
-
-    return state_obj is not None and (
-        state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    )
-
-
 def make_logging_undefined(
     strict: bool | None, log_fn: Callable[[int, str], None] | None
 ) -> type[jinja2.Undefined]:
@@ -974,106 +747,17 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(
             "homeassistant.helpers.template.extensions.SerializationExtension"
         )
+        self.add_extension("homeassistant.helpers.template.extensions.StateExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.TypeCastExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
 
-        if hass is None:
-            return
-
-        # This environment has access to hass, attach its loader to enable imports.
-        self.loader = _get_hass_loader(hass)
-
-        # We mark these as a context functions to ensure they get
-        # evaluated fresh with every execution, rather than executed
-        # at compile time and the value stored. The context itself
-        # can be discarded, we only need to get at the hass object.
-        def hassfunction[**_P, _R](
-            func: Callable[Concatenate[HomeAssistant, _P], _R],
-            jinja_context: Callable[
-                [Callable[Concatenate[Any, _P], _R]],
-                Callable[Concatenate[Any, _P], _R],
-            ] = pass_context,
-        ) -> Callable[Concatenate[Any, _P], _R]:
-            """Wrap function that depend on hass."""
-
-            @wraps(func)
-            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-                return func(hass, *args, **kwargs)
-
-            return jinja_context(wrapper)
-
-        if limited:
-
-            def unsupported(name: str) -> Callable[[], NoReturn]:
-                def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
-                    raise TemplateError(
-                        f"Use of '{name}' is not supported in limited templates"
-                    )
-
-                return warn_unsupported
-
-            hass_globals = [
-                "closest",
-                "distance",
-                "expand",
-                "has_value",
-                "is_state_attr",
-                "is_state",
-                "state_attr",
-                "state_attr_translated",
-                "state_translated",
-                "states",
-            ]
-            hass_filters = [
-                "closest",
-                "expand",
-                "has_value",
-                "state_attr",
-                "state_attr_translated",
-                "state_translated",
-                "states",
-            ]
-            hass_tests = [
-                "has_value",
-                "is_state_attr",
-                "is_state",
-            ]
-            for glob in hass_globals:
-                self.globals[glob] = unsupported(glob)
-            for filt in hass_filters:
-                self.filters[filt] = unsupported(filt)
-            for test in hass_tests:
-                self.tests[test] = unsupported(test)
-            return
-
-        self.globals["closest"] = hassfunction(closest)
-        self.globals["distance"] = hassfunction(distance)
-        self.globals["expand"] = hassfunction(expand)
-        self.globals["has_value"] = hassfunction(has_value)
-
-        self.filters["closest"] = hassfunction(closest_filter)
-        self.filters["expand"] = self.globals["expand"]
-        self.filters["has_value"] = self.globals["has_value"]
-
-        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
-
-        # State extensions
-
-        self.globals["is_state_attr"] = hassfunction(is_state_attr)
-        self.globals["is_state"] = hassfunction(is_state)
-        self.globals["state_attr"] = hassfunction(state_attr)
-        self.globals["state_attr_translated"] = StateAttrTranslated(hass)
-        self.globals["state_translated"] = StateTranslated(hass)
-        self.globals["states"] = AllStates(hass)
-        self.filters["state_attr"] = self.globals["state_attr"]
-        self.filters["state_attr_translated"] = self.globals["state_attr_translated"]
-        self.filters["state_translated"] = self.globals["state_translated"]
-        self.filters["states"] = self.globals["states"]
-        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
-        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
+        if hass is not None:
+            # This environment has access to hass, attach its loader
+            # to enable imports.
+            self.loader = _get_hass_loader(hass)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
