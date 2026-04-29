@@ -216,8 +216,8 @@ class BleBoxEnergySensor(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], RestoreS
         now = dt_util.utcnow()
 
         if power_w is None:
-            self._last_update = now
             self._last_power_w = None
+            self._last_update = None
             return
 
         if self._last_update is None:
