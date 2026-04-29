@@ -12,6 +12,7 @@ from homeassistant import exceptions
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.redact import REDACTED
 
 from tests.common import MockUser
 
@@ -137,3 +138,46 @@ async def test_binary_handler_registration() -> None:
     # Verify we reuse an unsubscribed prefix
     prefix, unsub = connection.async_register_binary_handler(None)
     assert prefix == 15
+
+
+async def test_credential_redaction(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test credential redaction."""
+    send_messages = []
+    user = MockUser()
+    refresh_token = Mock()
+    hass.data[DOMAIN] = {}
+    test_input = ["valid detail information", "secretpassword", "api-token-12345"]
+
+    connection = websocket_api.ActiveConnection(
+        logging.getLogger(__name__),
+        hass,
+        send_messages.append,
+        user,
+        refresh_token,
+        remote=None,
+    )
+
+    msg = {
+        "id": 5,
+        "detail": test_input[0],
+        "password": test_input[1],
+        "token": test_input[2],
+    }
+    connection.async_handle_exception(msg, vol.Invalid("bad input"))
+
+    assert len(send_messages) == 1
+    error_message = send_messages[0]["error"]["message"]
+    assert test_input[0] in error_message
+    assert test_input[1] not in error_message
+    assert test_input[2] not in error_message
+    assert REDACTED in error_message
+
+    msg = {"type": "auth", "access_token": test_input[2]}
+    connection.async_handle(msg)
+
+    assert len(send_messages) == 2
+    assert send_messages[1]["error"]["message"] == "Message incorrectly formatted."
+    assert test_input[2] not in caplog.text
+    assert REDACTED in caplog.text

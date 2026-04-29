@@ -13,6 +13,7 @@ from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers.http import current_request
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -31,6 +32,15 @@ if TYPE_CHECKING:
 current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
+
+REDACT_KEYS = {
+    "access_token",
+    "password",
+    "api_password",
+    "refresh_token",
+    "token",
+    "auth_token",
+}
 
 type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
@@ -201,6 +211,7 @@ class ActiveConnection:
                 or type(type_) is not str
             )
         ):
+            msg = async_redact_data(msg, REDACT_KEYS)
             self.logger.error("Received invalid command: %s", msg)
             id_ = msg.get("id") if isinstance(msg, dict) else 0
             self.send_message(
@@ -264,6 +275,7 @@ class ActiveConnection:
         self, msg: bytes | str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
+        msg = async_redact_data(msg, REDACT_KEYS)
         self.logger.debug("Tried to send message %s on closed connection", msg)
 
     @callback
@@ -276,6 +288,8 @@ class ActiveConnection:
         translation_domain: str | None = None
         translation_key: str | None = None
         translation_placeholders: dict[str, Any] | None = None
+
+        msg = async_redact_data(msg, REDACT_KEYS)
 
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
