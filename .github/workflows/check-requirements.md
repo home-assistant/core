@@ -293,16 +293,16 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 **Always** post a review comment using `add-comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
-> **Note on deduplication**: The workflow automatically deletes any previous
-> requirements-check comment on the PR before posting this new one, so there
-> will always be at most one such comment. You do not need to search for or
-> delete previous comments yourself.
+> **Note on deduplication**: The workflow automatically updates any previous
+> requirements-check comment on the PR in place (preserving its position in the
+> thread). If no previous comment exists, the newly created comment is kept as-is.
+> You do not need to search for or update previous comments yourself.
 
 ### Comment structure
 
 Begin every comment with the HTML marker `<!-- requirements-check -->` on its
-own line (this is used by the workflow to find and remove the previous comment
-on the next run).
+own line (this is used by the workflow to find the previous comment and update
+it on the next run).
 
 ### 7a — Overall summary line
 
@@ -398,4 +398,5 @@ Collapsed example (all checks passed):
   before/after SHAs of the push, not the entire PR diff). Members can manually
   retrigger the workflow via `workflow_dispatch` with the PR number to re-run
   the check after updating the PR description or fixing issues without changing
-  any requirements files.
+  any requirements files. On a retrigger the existing comment is updated in
+  place so there is always exactly one requirements-check comment in the PR.

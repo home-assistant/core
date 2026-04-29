@@ -1199,7 +1199,8 @@ jobs:
           GH_HOST="${GITHUB_SERVER_URL#https://}"
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - name: Delete previous requirements-check comment
+      - name: Find previous requirements-check comment
+        id: find-existing-comment
         continue-on-error: true
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
@@ -1209,7 +1210,7 @@ jobs:
           script: |
             const prNumber = parseInt(process.env.PR_NUMBER, 10);
             if (!prNumber) {
-              console.log('No PR number available, skipping comment deletion');
+              console.log('No PR number available, skipping comment search');
               return;
             }
             const { data: comments } = await github.rest.issues.listComments({
@@ -1220,14 +1221,12 @@ jobs:
             });
             for (const comment of comments) {
               if (comment.body && comment.body.includes('<!-- requirements-check -->')) {
-                console.log(`Deleting previous requirements-check comment ${comment.id}`);
-                await github.rest.issues.deleteComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: comment.id,
-                });
+                console.log(`Found existing requirements-check comment ${comment.id}`);
+                core.setOutput('comment_id', String(comment.id));
+                return;
               }
             }
+            console.log('No existing requirements-check comment found');
       - name: Process Safe Outputs
         id: process_safe_outputs
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
@@ -1244,6 +1243,43 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/safe_output_handler_manager.cjs');
             await main();
+      - name: Update existing comment or keep new one
+        if: steps.process_safe_outputs.outputs.comment_id != ''
+        continue-on-error: true
+        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
+        env:
+          EXISTING_COMMENT_ID: ${{ steps.find-existing-comment.outputs.comment_id }}
+          NEW_COMMENT_ID: ${{ steps.process_safe_outputs.outputs.comment_id }}
+        with:
+          github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const existingCommentId = parseInt(process.env.EXISTING_COMMENT_ID, 10) || 0;
+            const newCommentId = parseInt(process.env.NEW_COMMENT_ID, 10) || 0;
+            if (!existingCommentId || !newCommentId || existingCommentId === newCommentId) {
+              console.log('No previous comment to update, new comment kept as-is');
+              return;
+            }
+            // Fetch the body of the newly posted comment
+            const { data: newComment } = await github.rest.issues.getComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: newCommentId,
+            });
+            // Update the original comment in place (preserves its position in the thread)
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingCommentId,
+              body: newComment.body,
+            });
+            console.log(`Updated existing comment ${existingCommentId} with new content`);
+            // Delete the newly created comment so only the original remains
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: newCommentId,
+            });
+            console.log(`Deleted new comment ${newCommentId} (content merged into existing)`);
       - name: Upload Safe Outputs Items
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
