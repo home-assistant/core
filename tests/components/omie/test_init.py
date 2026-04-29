@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from . import spot_price_fetcher
 
@@ -56,7 +55,7 @@ async def test_coordinator_unavailability_logging(
     # Trigger refresh with API failure
     mock_pyomie.spot_price.side_effect = aiohttp.ClientError("Connection timeout")
     freezer.move_to("2024-01-15T12:16:02Z")
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 2
@@ -66,7 +65,7 @@ async def test_coordinator_unavailability_logging(
     # Second failure should not log again
     caplog.clear()
     freezer.move_to("2024-01-15T12:31:02Z")
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 3
@@ -75,7 +74,7 @@ async def test_coordinator_unavailability_logging(
     # Trigger recovery
     mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
     freezer.move_to("2024-01-15T12:46:02Z")
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 4
@@ -98,22 +97,22 @@ async def test_update_interval(
 
     # The next update should be scheduled for 10:30:01Z (11:30:01 CET, 15-minute boundary + 1 second)
     freezer.move_to("2025-11-11T10:30:00.000000Z")
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_pyomie.spot_price.call_count == 0
 
     freezer.tick(1)  # Move to 10:30:01
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_pyomie.spot_price.call_count == 1
     mock_pyomie.spot_price.reset_mock()
 
     freezer.tick(14 * 60)  # Move to 10:44:01
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_pyomie.spot_price.call_count == 0
 
     freezer.tick(60)  # Move to 10:45:01
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_pyomie.spot_price.call_count == 1

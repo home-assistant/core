@@ -11,7 +11,6 @@ import pytest
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import spot_price_fetcher
 
@@ -70,7 +69,7 @@ async def test_sensor_state_lisbon_timezone(
     # Step 2: 3 PM CET - verify listeners update with existing data, no new API calls
     mock_pyomie.spot_price.reset_mock()
     with freeze_time("2024-01-15T14:01:00Z"):  # 14:01 UTC = 14:01 Lisbon = 15:01 CET
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_pyomie.spot_price.call_count == 0
 
@@ -84,7 +83,7 @@ async def test_sensor_state_lisbon_timezone(
     # 23 UTC = 23 Lisbon = 00 CET (+1 day)
     mock_pyomie.spot_price.reset_mock()
     with freeze_time("2024-01-15T23:01:00Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         # CET has rolled over to the next date, one additional call to OMIE must be made.
@@ -97,7 +96,7 @@ async def test_sensor_state_lisbon_timezone(
     # 00 UTC (+1 day) = 00 Lisbon (+1 day) = 01 CET (+1 day)
     mock_pyomie.spot_price.reset_mock()
     with freeze_time("2024-01-16T00:31:00Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         # No additional API calls should be made, was already fetched at 00 PM CET
@@ -135,7 +134,7 @@ async def test_sensor_state_madrid_timezone(
     # Step 2: 2 PM CET (after 13:30 CET publication) - Jan 16 data now available
     mock_pyomie.spot_price.reset_mock()
     with freeze_time("2024-01-15T13:01:00Z"):  # 13:00 UTC = 2 PM CET (Madrid)
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         # No additional call needed - Madrid only needs Jan 15 for the full day
@@ -144,7 +143,7 @@ async def test_sensor_state_madrid_timezone(
     # Step 3: 3 PM CET - verify listeners update with existing data, no new API calls
     mock_pyomie.spot_price.reset_mock()
     with freeze_time("2024-01-15T14:23:00Z"):  # 14:23 UTC = 3:23 PM CET (Madrid)
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         # Still no additional call - Madrid doesn't need Jan 16 for Jan 15 prices
@@ -183,7 +182,7 @@ async def test_sensor_unavailable_when_pyomie_throws(
     # Advance to 23:16 UTC (00:16 CET Jan 16) — new CET day forces a fresh fetch
     mock_pyomie.spot_price.side_effect = raise_exc
     with freeze_time("2024-01-15T23:16:02Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     pt_state = hass.states.get("sensor.omie_portugal_spot_price")
@@ -216,7 +215,7 @@ async def test_sensor_unavailable_when_pyomie_returns_incomplete_data(
         await hass.async_block_till_done()
 
     with freeze_time("2024-01-15T12:16:02Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     # Both sensors should be unavailable
