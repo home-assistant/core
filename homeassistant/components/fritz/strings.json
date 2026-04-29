@@ -120,9 +120,6 @@
       "cpu_temperature": {
         "name": "CPU temperature"
       },
-      "device_uptime": {
-        "name": "Last restart"
-      },
       "external_ip": {
         "name": "External IP"
       },
