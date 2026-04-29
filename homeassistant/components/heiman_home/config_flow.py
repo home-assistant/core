@@ -1,12 +1,13 @@
 """Config flow to configure Heiman."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlowResult
+from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -92,6 +93,17 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
 
             await self.async_set_unique_id(self._auth_info.user_info.user_id)
+            if self.source == SOURCE_REAUTH:
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        **self._auth_info.auth_data,
+                        CONF_HOME_ID: selected_home_id,
+                        CONF_USER_ID: self._auth_info.user_info.user_id,
+                    },
+                )
+
             self._abort_if_unique_id_configured()
 
             config_data = {
@@ -124,6 +136,21 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 "user_email": self._auth_info.user_info.email or "User",
             },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-auth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-auth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        # Re-start the OAuth2 flow to get a new token
+        return await self.async_step_user()
 
     def _get_home_selection_schema(self) -> vol.Schema:
         """Get home selection schema."""

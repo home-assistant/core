@@ -1196,6 +1196,7 @@ async def test_sensor_skip_scan_on_no_structure_change(
     def mock_add_listener(callback):
         nonlocal listener_callback
         listener_callback = callback
+        return lambda: None
 
     mock_coordinator.async_add_listener = mock_add_listener
 

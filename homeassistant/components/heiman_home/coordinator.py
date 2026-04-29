@@ -325,9 +325,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Get cloud client reference for child device detection
             cloud_client = None
-            wrapper = getattr(self.api_client, "_wrapper", None)
-            if wrapper:
-                cloud_client = wrapper.cloud_client
+            with contextlib.suppress(RuntimeError):
+                cloud_client = self.api_client.cloud_client
 
             # Get devices dictionary for child device detection
             devices_dict = dict(self.data.devices) if self.data.devices else {}

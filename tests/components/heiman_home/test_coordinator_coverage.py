@@ -425,7 +425,7 @@ async def test_coordinator_mqtt_init_with_user_info(hass: HomeAssistant) -> None
 async def test_coordinator_mqtt_init_cloud_client_access_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init handles missing _wrapper gracefully."""
+    """Test MQTT init handles missing cloud_client gracefully."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -435,8 +435,10 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
-    # Set _wrapper to None so getattr returns None deterministically.
-    mock_api_client._wrapper = None
+    # Configure cloud_client property to raise RuntimeError when accessed
+    type(mock_api_client).cloud_client = property(
+        lambda self: (_ for _ in ()).throw(RuntimeError("Client not initialized"))
+    )
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
