@@ -1778,17 +1778,17 @@ class Script:
         started_action: Callable[..., Any] | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
-        if context is None:
-            self._log(
-                "Running script requires passing in a context", level=logging.WARNING
-            )
-            context = Context()
-
         # Prevent running an unloaded script
         if self._unloaded:
             raise RuntimeError(
                 f"Cannot run script '{self.name}' after it has been unloaded"
             )
+
+        if context is None:
+            self._log(
+                "Running script requires passing in a context", level=logging.WARNING
+            )
+            context = Context()
 
         # Prevent spawning new script runs when Home Assistant is shutting down
         if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
