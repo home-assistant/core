@@ -175,8 +175,14 @@ def mock_wibeee_api_config_flow() -> Generator[MagicMock]:
 
     Patches both locations to ensure no real API is ever instantiated.
     """
-    with patch("homeassistant.components.wibeee.config_flow.WibeeeAPI", autospec=True) as mock_cls_cf, \
-         patch("homeassistant.components.wibeee.WibeeeAPI", autospec=True) as mock_cls_init:
+    with (
+        patch(
+            "homeassistant.components.wibeee.config_flow.WibeeeAPI", autospec=True
+        ) as mock_cls_cf,
+        patch(
+            "homeassistant.components.wibeee.WibeeeAPI", autospec=True
+        ) as mock_cls_init,
+    ):
         api = MagicMock()
         _setup_mock_api(api)
         mock_cls_cf.return_value = api
