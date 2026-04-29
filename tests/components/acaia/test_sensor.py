@@ -61,3 +61,37 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "65"
+
+
+async def test_battery_available_within_session_after_disconnect(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test battery stays available on disconnect when no recorder data exists.
+
+    Regression test: a freshly-paired scale with no prior recorder history
+    should retain its last-known battery value when it disconnects, rather
+    than going unavailable. Before the fix, AcaiaRestoreSensor.available
+    returned False in this case because _restored_data was never populated.
+    """
+    entity_id = "sensor.lunar_ddeeff_battery"
+
+    # No mock_restore_cache_with_extra_data: simulates a freshly-paired
+    # scale with no prior recorder history.
+    await setup_integration(hass, mock_config_entry)
+
+    # Initial state: scale connected, battery 42 (from mock_scale fixture).
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "42"
+
+    # Simulate the scale disconnecting.
+    mock_scale.connected = False
+    mock_config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Battery sensor should retain its last-known value, not go unavailable.
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "42"
