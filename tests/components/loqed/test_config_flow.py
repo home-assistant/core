@@ -249,6 +249,62 @@ async def test_cannot_connect(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_no_locks(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we handle a situation where the account has no locks."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+        return_value={"data": []},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_locks"}
+
+
+async def test_cannot_connect_during_validation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we handle cannot connect when validation refresh fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
+
+    with patch(
+        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+        side_effect=[all_locks_response, aiohttp.ClientError],
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
 async def test_invalid_auth_when_lock_not_found(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
