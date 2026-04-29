@@ -1,5 +1,6 @@
 """BleBox sensor entities."""
 
+from contextlib import suppress
 from datetime import datetime, timedelta
 
 import blebox_uniapi.sensor
@@ -125,7 +126,7 @@ TOTAL_ENERGY_DESCRIPTION = SensorEntityDescription(
     key="totalEnergy",
     device_class=SensorDeviceClass.ENERGY,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    state_class=SensorStateClass.TOTAL_INCREASING,
+    state_class=SensorStateClass.TOTAL,
 )
 
 _MAX_ELAPSED_S = 30
@@ -201,7 +202,8 @@ class BleBoxEnergySensor(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], RestoreS
         await super().async_added_to_hass()
         if last_data := await self.async_get_last_sensor_data():
             if last_data.native_value is not None:
-                self._energy = float(str(last_data.native_value))
+                with suppress(ValueError, TypeError):
+                    self._energy = float(str(last_data.native_value))
 
     @property
     def native_value(self) -> StateType:
@@ -227,7 +229,7 @@ class BleBoxEnergySensor(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], RestoreS
 
         elapsed_s = (now - self._last_update).total_seconds()
 
-        if elapsed_s > _MAX_ELAPSED_S:
+        if elapsed_s <= 0 or elapsed_s > _MAX_ELAPSED_S:
             self._last_power_w = power_w
             self._last_update = now
             return
