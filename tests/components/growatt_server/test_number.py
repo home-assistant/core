@@ -53,7 +53,9 @@ async def test_set_number_value_api_error(
     """Test handling API error when setting number value."""
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError(
-        "API Error", GrowattV1ApiErrorCode.NO_PRIVILEGE, "API Error"
+        message="API Error",
+        error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="API Error",
     )
 
     with pytest.raises(HomeAssistantError) as excinfo:

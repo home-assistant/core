@@ -67,9 +67,9 @@ async def test_device_info(
     [
         (
             growattServer.GrowattV1ApiError(
-                "API Error",
-                growattServer.GrowattV1ApiErrorCode.WRONG_DOMAIN,
-                "Invalid JSON",
+                message="API Error",
+                error_code=growattServer.GrowattV1ApiErrorCode.WRONG_DOMAIN,
+                error_msg="Invalid JSON",
             ),
             ConfigEntryState.SETUP_ERROR,
         ),
@@ -107,9 +107,9 @@ async def test_coordinator_update_failed(
 
     # Cause coordinator update to fail
     mock_growatt_v1_api.min_detail.side_effect = growattServer.GrowattV1ApiError(
-        "Connection timeout",
-        growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
-        "dummy error",
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
 
     # Trigger coordinator refresh
@@ -156,7 +156,9 @@ async def test_coordinator_total_non_auth_api_error(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     error = growattServer.GrowattV1ApiError(
-        "Rate limited", growattServer.GrowattV1ApiErrorCode.RATE_LIMITED, "dummy error"
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
     mock_growatt_v1_api.plant_energy_overview.side_effect = error
 
@@ -177,9 +179,9 @@ async def test_setup_auth_failed_on_permission_denied(
 ) -> None:
     """Test that error 10011 (no privilege) from device_list triggers reauth during setup."""
     error = growattServer.GrowattV1ApiError(
-        "Permission denied",
-        growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
-        "dummy error",
+        message="Permission denied",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="dummy error",
     )
     mock_growatt_v1_api.device_list.side_effect = error
 
@@ -206,9 +208,9 @@ async def test_coordinator_auth_failed_triggers_reauth(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     error = growattServer.GrowattV1ApiError(
-        "Permission denied",
-        growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
-        "dummy error",
+        message="Permission denied",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="dummy error",
     )
     mock_growatt_v1_api.min_detail.side_effect = error
 

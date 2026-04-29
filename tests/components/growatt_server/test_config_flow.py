@@ -371,7 +371,9 @@ async def test_token_auth_api_error(
         result["flow_id"], {"next_step_id": "token_auth"}
     )
 
-    error = growattServer.GrowattV1ApiError("API error", error_code, "API error")
+    error = growattServer.GrowattV1ApiError(
+        message="API error", error_code=error_code, error_msg="API error"
+    )
     mock_growatt_v1_api.plant_list.side_effect = error
 
     result = await hass.config_entries.flow.async_configure(
@@ -882,9 +884,9 @@ async def test_reauth_token_success(
 
 def _make_no_privilege_error() -> growattServer.GrowattV1ApiError:
     return growattServer.GrowattV1ApiError(
-        "No privilege access",
-        growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
-        "No privilege access",
+        message="No privilege access",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="No privilege access",
     )
 
 
@@ -944,9 +946,9 @@ async def test_reauth_token_non_auth_api_error(
     assert result["step_id"] == "reauth_confirm"
 
     error = growattServer.GrowattV1ApiError(
-        "Rate limit exceeded",
-        growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
-        "Rate limit exceeded",
+        message="Rate limit exceeded",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Rate limit exceeded",
     )
     mock_growatt_v1_api.plant_list.side_effect = error
     result = await hass.config_entries.flow.async_configure(

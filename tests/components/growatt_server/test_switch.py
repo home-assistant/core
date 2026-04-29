@@ -90,7 +90,9 @@ async def test_switch_service_call_api_error(
     """Test handling API error when calling switch services."""
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError(
-        "API Error", GrowattV1ApiErrorCode.NO_PRIVILEGE, "API Error"
+        message="API Error",
+        error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="API Error",
     )
 
     with pytest.raises(HomeAssistantError) as excinfo:
