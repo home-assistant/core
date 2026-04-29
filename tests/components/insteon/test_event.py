@@ -125,7 +125,7 @@ async def test_event_entity_handles_button_event(hass: HomeAssistant) -> None:
 
     assert entity_id is not None
 
-    event_component = hass.data["event"]
+    event_component = hass.data[DATA_COMPONENT]
     entity = event_component.get_entity(entity_id)
 
     listeners = getattr(entity, "_insteon_event_listeners", [])
