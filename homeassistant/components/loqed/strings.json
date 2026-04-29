@@ -5,14 +5,21 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_locks": "No locks found in your LOQED account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "LOQED Touch Smartlock setup",
     "step": {
+      "pick_lock": {
+        "data": {
+          "lock_id": "Select your lock"
+        },
+        "description": "Multiple locks found. Please select the lock you want to configure."
+      },
       "user": {
         "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]",
-          "name": "Name of your lock in the LOQED app."
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "description": "Log in at LOQED's [personal access tokens portal]({config_url}) and: \n* Create an API key by clicking 'Create' \n* Copy the created access token."
       }

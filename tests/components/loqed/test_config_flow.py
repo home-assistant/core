@@ -9,7 +9,7 @@ from loqedAPI import loqed
 
 from homeassistant import config_entries
 from homeassistant.components.loqed.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -79,7 +79,7 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
     found_lock = all_locks_response["data"][0]
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "LOQED Touch Smart Lock"
+    assert result2["title"] == "MyLock"
     assert result2["data"] == {
         "id": "Foo",
         "lock_key_key": found_lock["key_secret"],
@@ -106,7 +106,6 @@ async def test_create_entry_user(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = "Webhook_ID"
     all_locks_response = json.loads(
@@ -131,18 +130,15 @@ async def test_create_entry_user(
             "homeassistant.components.webhook.async_generate_id",
             return_value=webhook_id,
         ),
-        patch(
-            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_result
-        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "LOQED Touch Smart Lock"
+    assert result2["title"] == "MyLock"
     assert result2["data"] == {
         "id": "Foo",
         "lock_key_key": found_lock["key_secret"],
@@ -151,6 +147,78 @@ async def test_create_entry_user(
         "bridge_mdns_hostname": found_lock["bridge_hostname"],
         "bridge_ip": found_lock["bridge_ip"],
         "name": found_lock["name"],
+        "lock_id": found_lock["id"],
+        CONF_WEBHOOK_ID: webhook_id,
+        CONF_API_TOKEN: "eyadiuyfasiuasf",
+    }
+    mock_lock.getWebhooks.assert_awaited()
+
+
+async def test_create_entry_user_with_pick_lock(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we can create a lock via manual entry when multiple locks exist."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    mock_lock = Mock(spec=loqed.Lock, id="Foo")
+    webhook_id = "Webhook_ID"
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
+    second_lock = all_locks_response["data"][0].copy()
+    second_lock["id"] = "Bar"
+    second_lock["name"] = "MyOtherLock"
+    all_locks_response["data"].append(second_lock)
+
+    with (
+        patch(
+            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+            return_value=all_locks_response,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock",
+            return_value=mock_lock,
+        ),
+        patch(
+            "homeassistant.components.loqed.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.webhook.async_generate_id",
+            return_value=webhook_id,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+        )
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "pick_lock"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"lock_id": second_lock["id"]},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == second_lock["name"]
+    assert result3["data"] == {
+        "id": second_lock["id"],
+        "lock_key_key": second_lock["key_secret"],
+        "bridge_key": second_lock["bridge_key"],
+        "lock_key_local_id": second_lock["local_id"],
+        "bridge_mdns_hostname": second_lock["bridge_hostname"],
+        "bridge_ip": second_lock["bridge_ip"],
+        "name": second_lock["name"],
+        "lock_id": second_lock["id"],
         CONF_WEBHOOK_ID: webhook_id,
         CONF_API_TOKEN: "eyadiuyfasiuasf",
     }
@@ -175,7 +243,7 @@ async def test_cannot_connect(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
@@ -186,7 +254,7 @@ async def test_cannot_connect(
 async def test_invalid_auth_when_lock_not_found(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we handle a situation where the user enters an invalid lock name."""
+    """Test we handle a situation where the user selects an invalid lock id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -198,14 +266,16 @@ async def test_invalid_auth_when_lock_not_found(
     all_locks_response = json.loads(
         await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
     )
+    initial_locks_response = {"data": [all_locks_response["data"][0]]}
+    changed_locks_response = {"data": []}
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        return_value=all_locks_response,
+        side_effect=[initial_locks_response, changed_locks_response],
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock2"},
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
@@ -216,7 +286,7 @@ async def test_invalid_auth_when_lock_not_found(
 async def test_cannot_connect_when_lock_not_reachable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we handle a situation where the user enters an invalid lock name."""
+    """Test we handle a situation where the lock is not reachable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -240,7 +310,7 @@ async def test_cannot_connect_when_lock_not_reachable(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
