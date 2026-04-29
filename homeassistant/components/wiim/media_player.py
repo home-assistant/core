@@ -800,6 +800,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self.entity_id,
                 url,
             )
+            return await super().async_get_media_image()
 
         return content, content_type
 
