@@ -4090,6 +4090,19 @@ async def test_get_triggers_conditions_for_target(
             ["component2.non_primary_sensor"],
         )
 
+        # Test directly targeting a non-primary entity combined
+        # with an indirect device that ONLY contains non-primary entities.
+        # The direct entity must still produce sensor.turned_on and match
+        # primary_entities_only=True components (e.g. component2.match_all).
+        await assert_command(
+            {"entity_id": ["sensor.test7"], "device_id": ["diag_only_device"]},
+            [
+                "component2.match_all",
+                "component2.non_primary_sensor",
+                "sensor.turned_on",
+            ],
+        )
+
         # Test mixed target types
         await assert_command(
             {
@@ -4375,6 +4388,19 @@ async def test_get_services_for_target(
     await assert_services(
         {"label_id": ["label_3"]},
         ["component2.non_primary_sensor"],
+    )
+
+    # Test directly targeting a non-primary entity combined
+    # with an indirect device that ONLY contains non-primary entities.
+    # The direct entity must still produce sensor.turned_on and match
+    # primary_entities_only=True services (e.g. component2.match_all).
+    await assert_services(
+        {"entity_id": ["sensor.test7"], "device_id": ["diag_only_device"]},
+        [
+            "component2.match_all",
+            "component2.non_primary_sensor",
+            "sensor.turn_on",
+        ],
     )
 
     # Test mixed target types
