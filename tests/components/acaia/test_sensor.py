@@ -69,11 +69,6 @@ async def test_battery_available_within_session_after_disconnect(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test battery stays available on disconnect when no recorder data exists.
-
-    Regression test: a freshly-paired scale with no prior recorder history
-    should retain its last-known battery value when it disconnects, rather
-    than going unavailable. Before the fix, AcaiaRestoreSensor.available
-    returned False in this case because _restored_data was never populated.
     """
     entity_id = "sensor.lunar_ddeeff_battery"
 
