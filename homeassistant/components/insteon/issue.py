@@ -1,6 +1,7 @@
 """Issues for Insteon integration."""
 
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
@@ -10,19 +11,22 @@ from .const import DOMAIN
 def deprecated_event_bus(hass: HomeAssistant, event: str) -> None:
     """Raise a deprecation issue for listeners on the event bus."""
 
-    if listeners := hass.bus.async_listeners().get(event):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_event_bus_{event}",
-            breaks_in_ha_version="2026.12.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_event_bus",
-            translation_placeholders={
-                "event": event,
-                "listeners": str(listeners),
-                "example_yaml": """
+    issue_id = f"deprecated_event_bus_{event}"
+
+    if ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None:
+      if listeners := hass.bus.async_listeners().get(event):
+          async_create_issue(
+              hass,
+              DOMAIN,
+              issue_id,
+              breaks_in_ha_version="2026.12.0",
+              is_fixable=False,
+              severity=IssueSeverity.WARNING,
+              translation_key="deprecated_event_bus",
+              translation_placeholders={
+                  "event": event,
+                  "listeners": str(listeners),
+                  "example_yaml": """
 ```yaml
 triggers:
   - trigger: state
@@ -33,7 +37,7 @@ triggers:
       - on_fast
 ```
 """,
-                "example_yaml_trigger": """
+                  "example_yaml_trigger": """
 ```yaml
 triggers:
   - trigger: event.received
