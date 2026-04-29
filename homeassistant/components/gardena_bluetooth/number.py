@@ -88,17 +88,6 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=AquaContourWatering.remaining_watering_time.unique_id,
-        translation_key="remaining_watering_time",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        native_min_value=0.0,
-        native_max_value=24 * 60 * 60,
-        native_step=60.0,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        char=AquaContourWatering.remaining_watering_time,
-        device_class=NumberDeviceClass.DURATION,
-    ),
-    GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.rain_pause.unique_id,
         translation_key="rain_pause",
         native_unit_of_measurement=UnitOfTime.MINUTES,
