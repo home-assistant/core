@@ -45,6 +45,7 @@ class MockPyViCare:
                     "Online",
                 )
             )
+        self.all_devices = self.devices
 
 
 class MockViCareService:
