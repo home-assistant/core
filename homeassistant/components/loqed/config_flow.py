@@ -89,11 +89,11 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 "name": selected_lock["name"],
                 "id": selected_lock["id"],
             }
-        except StopIteration:
-            raise InvalidAuth from StopIteration
-        except aiohttp.ClientError:
+        except StopIteration as err:
+            raise InvalidAuth from err
+        except aiohttp.ClientError as err:
             _LOGGER.error("HTTP Connection error to loqed lock")
-            raise CannotConnect from aiohttp.ClientError
+            raise CannotConnect from err
 
     @override
     async def async_step_zeroconf(
