@@ -202,21 +202,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if parsed_url.scheme != "https" or not parsed_url.hostname:
             return False
 
-        metadata_device = self._metadata_device
-        valid_hosts = {
-            host
-            for host in (
-                metadata_device.ip_address,
-                urlparse(metadata_device.presentation_url).hostname
-                if metadata_device.presentation_url
-                else None,
-                urlparse(metadata_device.http_api_url).hostname
-                if metadata_device.http_api_url
-                else None,
-            )
-            if host
-        }
-        return parsed_url.hostname in valid_hosts
+        return parsed_url.hostname == self._metadata_device.ip_address
 
     @callback
     def _clear_media_metadata(self) -> None:
