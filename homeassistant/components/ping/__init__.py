@@ -71,6 +71,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool
 
     entry.runtime_data = coordinator
 
+    # Ensure the device exists before forwarding to platforms, so that the
+    # device tracker (which looks up the device on init) is not racing the
+    # binary sensor / sensor platforms that create the device via DeviceInfo.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Ping",
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
