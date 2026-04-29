@@ -4,7 +4,10 @@ import ast
 
 import pytest
 
-from script.hassfest.dependencies import ImportCollector
+from script.hassfest.dependencies import ImportCollector, _validate_dependencies
+from script.hassfest.model import Config
+
+from . import get_integration
 
 
 @pytest.fixture
@@ -90,3 +93,37 @@ import homeassistant.components.renamed_absolute as hue
         "child_import_field",
         "renamed_absolute",
     }
+
+
+def test_dependency_on_core_integration_rejected(config: Config) -> None:
+    """Test that depending on a core integration is rejected."""
+    consumer = get_integration("consumer", config)
+    consumer.manifest["dependencies"] = ["persistent_notification"]
+
+    integrations = {
+        "consumer": consumer,
+        "persistent_notification": get_integration("persistent_notification", config),
+    }
+
+    _validate_dependencies(integrations)
+
+    assert len(consumer.errors) == 1
+    assert (
+        "Dependency persistent_notification is a core integration"
+        in consumer.errors[0].error
+    )
+
+
+def test_dependency_on_non_core_integration_allowed(config: Config) -> None:
+    """Test that depending on a non-core integration is not rejected."""
+    consumer = get_integration("consumer", config)
+    consumer.manifest["dependencies"] = ["other"]
+
+    integrations = {
+        "consumer": consumer,
+        "other": get_integration("other", config),
+    }
+
+    _validate_dependencies(integrations)
+
+    assert consumer.errors == []

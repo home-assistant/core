@@ -7,6 +7,7 @@ from collections import deque
 import multiprocessing
 from pathlib import Path
 
+from homeassistant.bootstrap import CORE_INTEGRATIONS
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
@@ -330,6 +331,13 @@ def _validate_dependencies(
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
+                )
+
+            if dep in CORE_INTEGRATIONS:
+                integration.add_error(
+                    "dependencies",
+                    f"Dependency {dep} is a core integration and is "
+                    "unconditionally loaded",
                 )
 
 
