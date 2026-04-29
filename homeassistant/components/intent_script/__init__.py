@@ -80,6 +80,7 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
 
     for intent_type, conf in existing_intents.items():
         if isinstance(conf.get(CONF_ACTION), script.Script):
+            await conf[CONF_ACTION].async_stop()
             conf[CONF_ACTION].async_unload()
         intent.async_remove(hass, intent_type)
 

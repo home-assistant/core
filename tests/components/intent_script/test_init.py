@@ -487,10 +487,14 @@ async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
     with (
         patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
         patch.object(
+            action_script, "async_stop", wraps=action_script.async_stop
+        ) as stop_mock,
+        patch.object(
             action_script, "async_unload", wraps=action_script.async_unload
         ) as unload_mock,
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
 
+    stop_mock.assert_called_once()
     unload_mock.assert_called_once()
