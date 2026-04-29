@@ -6,6 +6,7 @@ from ast import literal_eval
 import asyncio
 import collections.abc
 from collections.abc import Callable, Iterable
+import contextlib
 from datetime import timedelta
 from functools import lru_cache, partial, wraps
 import logging
@@ -468,7 +469,8 @@ class Template:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
             if template_render_thread.is_alive():
-                template_render_thread.raise_exc(TimeoutError)
+                with contextlib.suppress(SystemError):
+                    template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
             template_render_thread.join()

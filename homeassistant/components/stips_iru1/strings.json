@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This STIPS account/API host is already configured"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to STIPS API",
+      "invalid_auth": "Invalid username/password",
+      "no_areas": "No areas found for this account",
+      "no_catalog_permission": "Login succeeded, but this account has no permission to read IR catalog endpoints",
+      "no_devices": "No IR devices found in selected area",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_host": "API host",
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "api_host": "The STIPS API host (e.g., stips.api.staging.visionalization.net)",
+          "password": "Your STIPS account password",
+          "username": "Your STIPS account username"
+        },
+        "description": "Login is used only to download your full IR catalog (all areas/devices/remotes). Control runs locally over LAN, so internet is not required for normal IR sends after setup.",
+        "title": "Connect STIPS account"
+      }
+    }
+  }
+}

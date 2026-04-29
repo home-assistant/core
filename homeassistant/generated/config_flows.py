@@ -697,6 +697,7 @@ FLOWS = {
         "steam_online",
         "steamist",
         "stiebel_eltron",
+        "stips_iru1",
         "stookwijzer",
         "streamlabswater",
         "subaru",

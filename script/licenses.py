@@ -200,6 +200,7 @@ EXCEPTIONS = {
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
+    "stips-api-bridge",  # License metadata is currently missing on PyPI
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
