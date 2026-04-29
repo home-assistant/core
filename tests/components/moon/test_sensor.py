@@ -4,10 +4,21 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import ephem
 import pytest
 
-from homeassistant.components.moon.const import PHASE_OPTIONS
-from homeassistant.components.moon.coordinator import moon_phase_state
+from homeassistant.components.moon.const import (
+    PHASE_OPTIONS,
+    STATE_FIRST_QUARTER,
+    STATE_FULL_MOON,
+    STATE_LAST_QUARTER,
+    STATE_NEW_MOON,
+    STATE_WANING_CRESCENT,
+    STATE_WANING_GIBBOUS,
+    STATE_WAXING_CRESCENT,
+    STATE_WAXING_GIBBOUS,
+)
+from homeassistant.components.moon.coordinator import _get_next_event, moon_phase_state
 from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -19,14 +30,14 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("moon_value", "native_value"),
     [
-        (0, "new_moon"),
-        (5, "waxing_crescent"),
-        (7, "first_quarter"),
-        (12, "waxing_gibbous"),
-        (14.3, "full_moon"),
-        (20.1, "waning_gibbous"),
-        (20.8, "last_quarter"),
-        (23, "waning_crescent"),
+        (0, STATE_NEW_MOON),
+        (5, STATE_WAXING_CRESCENT),
+        (7, STATE_FIRST_QUARTER),
+        (12, STATE_WAXING_GIBBOUS),
+        (14.3, STATE_FULL_MOON),
+        (20.1, STATE_WANING_GIBBOUS),
+        (20.8, STATE_LAST_QUARTER),
+        (23, STATE_WANING_CRESCENT),
     ],
 )
 def test_moon_phase_state(moon_value: float, native_value: str) -> None:
@@ -37,22 +48,22 @@ def test_moon_phase_state(moon_value: float, native_value: str) -> None:
 @pytest.mark.parametrize(
     ("moon_value", "native_value"),
     [
-        (0.4, "new_moon"),
-        (0.5, "waxing_crescent"),
-        (6.49, "waxing_crescent"),
-        (6.5, "first_quarter"),
-        (7.49, "first_quarter"),
-        (7.5, "waxing_gibbous"),
-        (13.49, "waxing_gibbous"),
-        (13.5, "full_moon"),
-        (14.49, "full_moon"),
-        (14.5, "waning_gibbous"),
-        (20.49, "waning_gibbous"),
-        (20.5, "last_quarter"),
-        (21.49, "last_quarter"),
-        (21.5, "waning_crescent"),
-        (27.5, "waning_crescent"),
-        (27.51, "new_moon"),
+        (0.4, STATE_NEW_MOON),
+        (0.5, STATE_WAXING_CRESCENT),
+        (6.49, STATE_WAXING_CRESCENT),
+        (6.5, STATE_FIRST_QUARTER),
+        (7.49, STATE_FIRST_QUARTER),
+        (7.5, STATE_WAXING_GIBBOUS),
+        (13.49, STATE_WAXING_GIBBOUS),
+        (13.5, STATE_FULL_MOON),
+        (14.49, STATE_FULL_MOON),
+        (14.5, STATE_WANING_GIBBOUS),
+        (20.49, STATE_WANING_GIBBOUS),
+        (20.5, STATE_LAST_QUARTER),
+        (21.49, STATE_LAST_QUARTER),
+        (21.5, STATE_WANING_CRESCENT),
+        (27.5, STATE_WANING_CRESCENT),
+        (27.51, STATE_NEW_MOON),
     ],
 )
 async def test_moon_phase_sensor_boundary_values(
@@ -74,6 +85,18 @@ async def test_moon_phase_sensor_boundary_values(
     state = hass.states.get("sensor.moon_phase")
     assert state
     assert state.state == native_value
+
+
+@pytest.mark.parametrize("error", [ephem.AlwaysUpError, ephem.NeverUpError])
+def test_get_next_event_returns_none_on_ephem_error(
+    error: type[ephem.AlwaysUpError | ephem.NeverUpError],
+) -> None:
+    """Test next moon event calculation handles missing events."""
+
+    def raise_error(_moon: ephem.Moon) -> ephem.Date:
+        raise error
+
+    assert _get_next_event(ephem.Moon(), raise_error) is None
 
 
 async def test_moon_sensor(

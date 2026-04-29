@@ -33,6 +33,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+_EPHEM_EVENT_ERRORS = (ephem.AlwaysUpError, ephem.NeverUpError)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -107,12 +108,12 @@ def ephem_date_to_datetime(value: ephem.Date) -> datetime:
 
 
 def _get_next_event(
-    observer: ephem.Observer, event: Callable[[ephem.Moon], ephem.Date]
+    moon: ephem.Moon, event: Callable[..., ephem.Date]
 ) -> datetime | None:
     """Safely fetch the next moon event."""
     try:
-        return ephem_date_to_datetime(event(ephem.Moon()))
-    except ephem.AlwaysUpError, ephem.NeverUpError:
+        return ephem_date_to_datetime(event(moon))
+    except _EPHEM_EVENT_ERRORS:
         return None
 
 
@@ -138,9 +139,9 @@ def _get_moon_data(
         illumination=round(current_moon.phase, 1),
         elevation=round(degrees(float(current_moon.alt)), 2),
         azimuth=round(degrees(float(current_moon.az)), 2),
-        next_rising=_get_next_event(observer, observer.next_rising),
-        next_setting=_get_next_event(observer, observer.next_setting),
-        next_transit=ephem_date_to_datetime(observer.next_transit(ephem.Moon())),
+        next_rising=_get_next_event(current_moon, observer.next_rising),
+        next_setting=_get_next_event(current_moon, observer.next_setting),
+        next_transit=ephem_date_to_datetime(observer.next_transit(current_moon)),
         next_new_moon=ephem_date_to_datetime(ephem.next_new_moon(observer.date)),
         next_first_quarter_moon=ephem_date_to_datetime(
             ephem.next_first_quarter_moon(observer.date)
