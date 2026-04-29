@@ -96,5 +96,10 @@
     "rate_limit_exceeded": {
       "message": "The Duco device has reached its daily write limit. Try again tomorrow."
     }
+  },
+  "system_health": {
+    "info": {
+      "write_requests_remaining": "Remaining write requests"
+    }
   }
 }
