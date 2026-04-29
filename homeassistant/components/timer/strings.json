@@ -82,14 +82,6 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    }
-  },
   "services": {
     "cancel": {
       "description": "Resets a timer's duration to the last known initial value without firing the timer finished event.",
