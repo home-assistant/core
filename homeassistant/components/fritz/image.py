@@ -2,25 +2,22 @@
 
 from __future__ import annotations
 
-from io import BytesIO
 import logging
-
-from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import DOMAIN, Platform
 from .coordinator import AvmWrapper, FritzConfigEntry
-from .entity import FritzBoxBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
@@ -73,13 +70,13 @@ async def async_setup_entry(
     )
 
 
-class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
+class FritzGuestWifiQRImage(CoordinatorEntity[AvmWrapper], ImageEntity):
     """Implementation of the FritzBox guest wifi QR code image entity."""
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_should_poll = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -91,41 +88,41 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
         """Initialize the image entity."""
         self._attr_name = ssid
         self._attr_unique_id = f"{avm_wrapper.unique_id}-guest_wifi_qr_code"
+        self._device_name = device_friendly_name
         self._current_qr_bytes: bytes | None = None
-        super().__init__(avm_wrapper, device_friendly_name)
+        CoordinatorEntity.__init__(self, avm_wrapper)
         ImageEntity.__init__(self, hass)
 
-    def _fetch_image(self) -> bytes:
-        """Fetch the QR code from the Fritz!Box."""
-        qr_stream: BytesIO = self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code(
-            "png", border=2
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac)},
+            identifiers={(DOMAIN, self.coordinator.unique_id)},
         )
-        qr_bytes = qr_stream.getvalue()
-        _LOGGER.debug("fetched %s bytes", len(qr_bytes))
-
-        return qr_bytes
 
     async def async_added_to_hass(self) -> None:
-        """Fetch and set initial data and state."""
-        self._current_qr_bytes = await self.hass.async_add_executor_job(
-            self._fetch_image
-        )
-        self._attr_image_last_updated = dt_util.utcnow()
+        """Set initial data and register coordinator update listener."""
+        await super().async_added_to_hass()
+        qr_bytes = self.coordinator.data.get("guest_wifi_qr_bytes")
+        if qr_bytes is not None:
+            self._current_qr_bytes = qr_bytes
+            self._attr_image_last_updated = dt_util.utcnow()
 
-    async def async_update(self) -> None:
-        """Update the image entity data."""
-        try:
-            qr_bytes = await self.hass.async_add_executor_job(self._fetch_image)
-        except RequestException:
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        qr_bytes = self.coordinator.data.get("guest_wifi_qr_bytes")
+
+        if qr_bytes is None:
             self._current_qr_bytes = None
             self._attr_image_last_updated = None
             self.async_write_ha_state()
             return
 
         if self._current_qr_bytes != qr_bytes:
-            dt_now = dt_util.utcnow()
             _LOGGER.debug("qr code has changed, reset image last updated property")
-            self._attr_image_last_updated = dt_now
+            self._attr_image_last_updated = dt_util.utcnow()
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()
 

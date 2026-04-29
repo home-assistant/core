@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from io import BytesIO
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -87,6 +88,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
+    guest_wifi_qr_bytes: bytes | None
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -303,6 +305,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
+            "guest_wifi_qr_bytes": None,
         }
         self.connection.clear_cache()
         try:
@@ -319,6 +322,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_data[
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
+
+            entity_data[
+                "guest_wifi_qr_bytes"
+            ] = await self.async_fetch_guest_wifi_qr_bytes()
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
@@ -658,6 +665,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     new_device = True
 
         await self.async_send_signal_device_update(new_device)
+
+    def _fetch_guest_wifi_qr(self) -> bytes | None:
+        """Fetch the guest WiFi QR code bytes from the FRITZ!Box."""
+        try:
+            qr_stream: BytesIO = self.fritz_guest_wifi.get_wifi_qr_code("png", border=2)
+            return qr_stream.getvalue()
+        except Exception:  # noqa: BLE001
+            return None
+
+    async def async_fetch_guest_wifi_qr_bytes(self) -> bytes | None:
+        """Fetch the guest WiFi QR code bytes asynchronously."""
+        return await self.hass.async_add_executor_job(self._fetch_guest_wifi_qr)
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
