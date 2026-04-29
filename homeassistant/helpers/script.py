@@ -1458,7 +1458,7 @@ class Script:
 
         enabled attribute is only used for non-top-level scripts.
         """
-        if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
+        if (all_scripts := hass.data.get(DATA_SCRIPTS)) is None:
             all_scripts = hass.data[DATA_SCRIPTS] = {}
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
