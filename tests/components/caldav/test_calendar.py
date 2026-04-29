@@ -350,8 +350,9 @@ def get_api_events(
         client = await hass_client()
         response = await client.get(
             # Use a date range that includes all test events (mostly from 2017-11-27)
-            # Note: the mock calendar returns all events but all-day events are
-            # filtered by the coordinator based on the date range
+            # Note: the mock calendar returns all events regardless of the search
+            # window, but the coordinator filters both timed and all-day events
+            # based on the requested date range
             f"/api/calendars/{entity_id}?start=2015-01-01&end=2023-01-01"
         )
         assert response.status == HTTPStatus.OK
