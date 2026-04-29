@@ -83,7 +83,7 @@
       "led_brightness": {
         "name": "LED brightness",
         "state": {
-          "automatic": "Automatic",
+          "automatic": "[%key:common::state::auto%]",
           "bright": "Bright",
           "dim": "Dim",
           "medium": "[%key:common::state::medium%]",
