@@ -89,6 +89,21 @@ class InsteonBaseEntity(Entity):
             configuration_url=f"homeassistant://insteon/device/config/{self._insteon_device.id}",
         )
 
+
+class InsteonEntity(InsteonBaseEntity):
+    """INSTEON abstract device entity."""
+
+    @property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the node (used for Entity_ID)."""
+        # Set a base description
+        if (description := self._insteon_device.description) is None:
+            description = "Unknown Device"
+        # Get an extension label if there is one
+        if extension := self._get_label():
+            extension = f" {extension}"
+        return f"{description} {self._insteon_device.address}{extension}"
+
     @callback
     def async_entity_update(self, name, address, value, group):
         """Receive notification from transport that new data exists."""
@@ -167,18 +182,3 @@ class InsteonBaseEntity(Entity):
     async def _async_add_default_links(self):
         """Add default links between the device and the modem."""
         await self._insteon_device.async_add_default_links()
-
-
-class InsteonEntity(InsteonBaseEntity):
-    """INSTEON abstract device entity."""
-
-    @property
-    def name(self) -> str | UndefinedType | None:
-        """Return the name of the node (used for Entity_ID)."""
-        # Set a base description
-        if (description := self._insteon_device.description) is None:
-            description = "Unknown Device"
-        # Get an extension label if there is one
-        if extension := self._get_label():
-            extension = f" {extension}"
-        return f"{description} {self._insteon_device.address}{extension}"

@@ -149,8 +149,6 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
             event.subscribe(async_fire_button_event, force_strong_ref=True)
             self._insteon_event_listeners.append((event, async_fire_button_event))
 
-        return await super().async_added_to_hass()
-
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe any registered Insteon event listeners."""
         for event, listener in self._insteon_event_listeners:
@@ -163,5 +161,3 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                     getattr(event, "group", "?"),
                     err,
                 )
-
-        await super().async_will_remove_from_hass()
