@@ -537,6 +537,7 @@ FLOWS = {
         "orvibo",
         "osoenergy",
         "otbr",
+        "ouman_eh_800",
         "ourgroceries",
         "overkiz",
         "overseerr",

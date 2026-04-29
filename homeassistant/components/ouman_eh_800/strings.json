@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the Ouman EH-800 web interface",
+          "url": "The URL of the Ouman EH-800 web interface",
+          "username": "Username for the Ouman EH-800 web interface"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "l1_circuit_name": { "name": "H1 circuit name" },
+      "l1_curve_supply_water_temperature": {
+        "name": "H1 curve supply water temperature"
+      },
+      "l1_delayed_room_temperature": { "name": "H1 delayed room temperature" },
+      "l1_fine_adjustment_effect": { "name": "H1 fine adjustment effect" },
+      "l1_room_sensor_installed": { "name": "H1 room sensor installed" },
+      "l1_room_sensor_potentiometer": {
+        "name": "H1 room sensor potentiometer"
+      },
+      "l1_room_temperature": { "name": "H1 room temperature" },
+      "l1_room_temperature_setpoint": {
+        "name": "H1 room temperature setpoint"
+      },
+      "l1_supply_water_temperature": { "name": "H1 supply water temperature" },
+      "l1_supply_water_temperature_setpoint": {
+        "name": "H1 supply water temperature setpoint"
+      },
+      "l1_temperature_level_status_text": {
+        "name": "H1 temperature level status"
+      },
+      "l1_valve_position": { "name": "H1 valve position" },
+      "l2_circuit_name": { "name": "H2 circuit name" },
+      "l2_curve_supply_water_temperature": {
+        "name": "H2 curve supply water temperature"
+      },
+      "l2_delayed_outdoor_temperature_effect": {
+        "name": "H2 delayed outdoor temperature effect"
+      },
+      "l2_delayed_room_temperature": { "name": "H2 delayed room temperature" },
+      "l2_installed_status": { "name": "H2 installed status" },
+      "l2_room_sensor_installed": { "name": "H2 room sensor installed" },
+      "l2_room_temperature": { "name": "H2 room temperature" },
+      "l2_room_temperature_setpoint": {
+        "name": "H2 room temperature setpoint"
+      },
+      "l2_supply_water_temperature": { "name": "H2 supply water temperature" },
+      "l2_supply_water_temperature_setpoint": {
+        "name": "H2 supply water temperature setpoint"
+      },
+      "l2_temperature_level_status_text": {
+        "name": "H2 temperature level status"
+      },
+      "l2_valve_position": { "name": "H2 valve position" },
+      "outside_temperature": { "name": "Outside temperature" },
+      "relay_configuration_type": { "name": "Relay configuration type" },
+      "relay_status_text": { "name": "Relay status" }
+    }
+  }
+}

@@ -5127,6 +5127,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ouman_eh_800": {
+      "name": "Ouman EH-800",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ourgroceries": {
       "name": "OurGroceries",
       "integration_type": "service",

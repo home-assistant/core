@@ -420,6 +420,7 @@ homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.otp.*
+homeassistant.components.ouman_eh_800.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
