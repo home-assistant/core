@@ -385,10 +385,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
-    if DOMAIN not in config:
-        return True
-
-    for device in config[DOMAIN]:
+    for device in config.get(DOMAIN, []):
         name: str = device[CONF_NAME]
         username: str = device[CONF_USERNAME]
         password: str = device[CONF_PASSWORD]
