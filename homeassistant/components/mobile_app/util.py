@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_APP_DATA,
@@ -24,6 +25,29 @@ from .const import (
 
 if TYPE_CHECKING:
     from .notify import MobileAppNotificationService
+
+
+@callback
+def sub_device_id_for_entry(
+    device_registry: dr.DeviceRegistry,
+    entry_id: str,
+    primary_device_id: str,
+    ha_device_id: str | None,
+) -> str | None:
+    """Return the mobile_app sub-device id for an entity registry entry.
+
+    Returns ``None`` when the entity is linked to the primary device or when
+    the device cannot be resolved to a sub-device of the given config entry.
+    """
+    if ha_device_id is None:
+        return None
+    device = device_registry.async_get(ha_device_id)
+    if device is None or entry_id not in device.config_entries:
+        return None
+    for domain, identifier in device.identifiers:
+        if domain == DOMAIN and identifier != primary_device_id:
+            return identifier
+    return None
 
 
 @callback

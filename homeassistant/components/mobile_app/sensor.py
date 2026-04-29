@@ -7,9 +7,14 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_WEBHOOK_ID,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -30,6 +35,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MobileAppEntity
+from .util import sub_device_id_for_entry
 from .webhook import _extract_sensor_unique_id
 
 
@@ -42,8 +48,10 @@ async def async_setup_entry(
     entities = []
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    primary_device_id = config_entry.data[ATTR_DEVICE_ID]
 
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
@@ -58,6 +66,12 @@ async def async_setup_entry(
             ATTR_SENSOR_UNIQUE_ID: entry.unique_id,
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
+            ATTR_DEVICE_ID: sub_device_id_for_entry(
+                device_registry,
+                config_entry.entry_id,
+                primary_device_id,
+                entry.device_id,
+            ),
         }
         if capabilities := entry.capabilities:
             config[ATTR_SENSOR_STATE_CLASS] = capabilities.get(ATTR_SENSOR_STATE_CLASS)

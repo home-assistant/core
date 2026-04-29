@@ -63,6 +63,53 @@ async def test_remove_entry(
     assert len(entity_registry.entities) == 0
 
 
+async def test_remove_entry_with_sub_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client,
+) -> None:
+    """Test that sub-devices are removed when the config entry is removed."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    url = f"/api/webhook/{webhook_id}"
+
+    await webhook_client.post(
+        url,
+        json={
+            "type": "register_device",
+            "data": {"device_id": "mock-device-id_watch", "name": "Apple Watch"},
+        },
+    )
+    await webhook_client.post(
+        url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Level",
+                "state": 87,
+                "type": "sensor",
+                "unique_id": "watch_battery",
+                "device_id": "mock-device-id_watch",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, "mock-device-id_watch")}
+        )
+        is not None
+    )
+
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert len(device_registry.devices) == 0
+    assert len(entity_registry.entities) == 0
+
+
 async def _test_create_cloud_hook(
     hass: HomeAssistant,
     hass_admin_user: MockUser,

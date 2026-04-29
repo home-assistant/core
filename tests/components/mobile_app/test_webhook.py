@@ -1303,3 +1303,357 @@ async def test_sending_sensor_state(
     state = hass.states.get("sensor.test_1_battery_health")
     assert state is not None
     assert state.state == "okay-ish"
+
+
+async def test_webhook_register_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test registering a sub-device under an existing config entry."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    primary = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+    assert primary is not None
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "register_device",
+            "data": {
+                "device_id": "mock-device-id_watch",
+                "name": "Apple Watch",
+                "manufacturer": "Apple",
+                "model": "Apple Watch Series 9",
+                "os_name": "watchOS",
+                "os_version": "11.2",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.CREATED
+
+    sub_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-device-id_watch")}
+    )
+    assert sub_device is not None
+    assert sub_device.via_device_id == primary.id
+    assert sub_device.manufacturer == "Apple"
+    assert sub_device.model == "Apple Watch Series 9"
+    assert sub_device.name == "Apple Watch"
+    assert sub_device.sw_version == "11.2"
+
+
+async def test_webhook_register_device_idempotent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that re-registering a sub-device updates it instead of duplicating."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    url = f"/api/webhook/{webhook_id}"
+
+    payload: dict[str, Any] = {
+        "type": "register_device",
+        "data": {
+            "device_id": "mock-device-id_watch",
+            "name": "Apple Watch",
+            "model": "Apple Watch Series 9",
+            "os_version": "11.2",
+        },
+    }
+
+    resp = await webhook_client.post(url, json=payload)
+    assert resp.status == HTTPStatus.CREATED
+    sub_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-device-id_watch")}
+    )
+    assert sub_device is not None
+    original_id = sub_device.id
+
+    payload["data"]["os_version"] = "11.3"
+    payload["data"]["model"] = "Apple Watch Series 10"
+    resp = await webhook_client.post(url, json=payload)
+    assert resp.status == HTTPStatus.CREATED
+
+    sub_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-device-id_watch")}
+    )
+    assert sub_device is not None
+    assert sub_device.id == original_id
+    assert sub_device.sw_version == "11.3"
+    assert sub_device.model == "Apple Watch Series 10"
+
+
+async def test_webhook_register_device_unknown_via_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that an unknown via_device_id is rejected and no device is created."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "register_device",
+            "data": {
+                "device_id": "mock-device-id_watch",
+                "name": "Apple Watch",
+                "via_device_id": "does-not-exist",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    body = await resp.json()
+    assert body["success"] is False
+    assert body["error"]["code"] == "invalid_device_id"
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, "mock-device-id_watch")}
+        )
+        is None
+    )
+
+
+async def test_webhook_register_device_rejects_primary_id(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that registering a sub-device using the primary id is rejected."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "register_device",
+            "data": {"device_id": "mock-device-id", "name": "iPhone"},
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    body = await resp.json()
+    assert body["error"]["code"] == "invalid_device_id"
+
+
+async def test_webhook_register_sensor_with_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that a sensor can be linked to a sub-device on registration."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        url,
+        json={
+            "type": "register_device",
+            "data": {"device_id": "mock-device-id_watch", "name": "Apple Watch"},
+        },
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    sub_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-device-id_watch")}
+    )
+    assert sub_device is not None
+
+    reg_resp = await webhook_client.post(
+        url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Level",
+                "state": 87,
+                "type": "sensor",
+                "unique_id": "watch_battery",
+                "device_id": "mock-device-id_watch",
+                "device_class": "battery",
+                "unit_of_measurement": "%",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("sensor.test_1_battery_level")
+    assert entry is not None
+    assert entry.device_id == sub_device.id
+
+
+async def test_webhook_register_sensor_migrates_to_sub_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that re-registering a sensor with a device_id migrates the entity."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    url = f"/api/webhook/{webhook_id}"
+    primary = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+    assert primary is not None
+
+    # Initial registration without device_id - lives on the primary device.
+    reg_resp = await webhook_client.post(
+        url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Level",
+                "state": 50,
+                "type": "sensor",
+                "unique_id": "watch_battery",
+            },
+        },
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.test_1_battery_level"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == primary.id
+
+    # Now register the watch sub-device and re-register the sensor under it.
+    reg_resp = await webhook_client.post(
+        url,
+        json={
+            "type": "register_device",
+            "data": {"device_id": "mock-device-id_watch", "name": "Apple Watch"},
+        },
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    sub_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-device-id_watch")}
+    )
+    assert sub_device is not None
+
+    reg_resp = await webhook_client.post(
+        url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Level",
+                "state": 87,
+                "type": "sensor",
+                "unique_id": "watch_battery",
+                "device_id": "mock-device-id_watch",
+            },
+        },
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    migrated = entity_registry.async_get(entity_id)
+    assert migrated is not None
+    assert migrated.entity_id == entity_id
+    assert migrated.device_id == sub_device.id
+
+
+async def test_webhook_register_sensor_unknown_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that register_sensor rejects a device_id we don't know about."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Level",
+                "state": 87,
+                "type": "sensor",
+                "unique_id": "watch_battery",
+                "device_id": "does-not-exist",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    body = await resp.json()
+    assert body["success"] is False
+    assert body["error"]["code"] == "invalid_device_id"
+    assert entity_registry.async_get("sensor.test_1_battery_level") is None
+
+
+async def test_webhook_unregister_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test unregistering a sub-device removes it and cleans up its entities."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    url = f"/api/webhook/{webhook_id}"
+
+    await webhook_client.post(
+        url,
+        json={
+            "type": "register_device",
+            "data": {"device_id": "mock-device-id_watch", "name": "Apple Watch"},
+        },
+    )
+    await webhook_client.post(
+        url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Level",
+                "state": 87,
+                "type": "sensor",
+                "unique_id": "watch_battery",
+                "device_id": "mock-device-id_watch",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_1_battery_level") is not None
+
+    resp = await webhook_client.post(
+        url,
+        json={"type": "unregister_device", "data": {"device_id": "mock-device-id_watch"}},
+    )
+    assert resp.status == HTTPStatus.OK
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, "mock-device-id_watch")}
+        )
+        is None
+    )
+    assert entity_registry.async_get("sensor.test_1_battery_level") is None
+
+
+async def test_webhook_unregister_device_refuses_primary(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that unregister_device refuses to remove the primary device."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={"type": "unregister_device", "data": {"device_id": "mock-device-id"}},
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    body = await resp.json()
+    assert body["error"]["code"] == "invalid_device_id"
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+        is not None
+    )

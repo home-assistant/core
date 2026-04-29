@@ -70,6 +70,7 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
+    ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
@@ -88,6 +89,7 @@ from .const import (
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
     ATTR_VERTICAL_ACCURACY,
+    ATTR_VIA_DEVICE_ID,
     ATTR_WEBHOOK_DATA,
     ATTR_WEBHOOK_ENCRYPTED,
     ATTR_WEBHOOK_ENCRYPTED_DATA,
@@ -103,6 +105,7 @@ from .const import (
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
+    ERR_INVALID_DEVICE_ID,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
     SCHEMA_APP_DATA,
@@ -533,6 +536,7 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
             vol.Required(ATTR_SENSOR_NAME): cv.string,
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+            vol.Optional(ATTR_DEVICE_ID): vol.Any(None, cv.string),
             vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
             vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
                 None, bool, int, float, str
@@ -558,6 +562,25 @@ async def webhook_register_sensor(
     entity_type: str = data[ATTR_SENSOR_TYPE]
     unique_id: str = data[ATTR_SENSOR_UNIQUE_ID]
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
+    primary_device_id: str = config_entry.data[ATTR_DEVICE_ID]
+
+    sub_device_id = data.get(ATTR_DEVICE_ID)
+    if sub_device_id is not None and sub_device_id != primary_device_id:
+        device_registry = dr.async_get(hass)
+        target_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, sub_device_id)}
+        )
+        if target_device is None or config_entry.entry_id not in (
+            target_device.config_entries
+        ):
+            return error_response(
+                ERR_INVALID_DEVICE_ID,
+                f"Device {sub_device_id} is not registered for this config entry",
+            )
+    else:
+        # Normalize: an explicit primary device_id behaves like omitting it.
+        sub_device_id = None
+    data[ATTR_DEVICE_ID] = sub_device_id
 
     unique_store_key = _gen_unique_id(config_entry.data[CONF_WEBHOOK_ID], unique_id)
     entity_registry = er.async_get(hass)
@@ -600,6 +623,12 @@ async def webhook_register_sensor(
             if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
                 changes[ent_reg_key] = data[data_key]
 
+        new_ha_device_id = _resolve_target_ha_device_id(
+            hass, config_entry, primary_device_id, sub_device_id
+        )
+        if new_ha_device_id is not None and entry.device_id != new_ha_device_id:
+            changes["device_id"] = new_ha_device_id
+
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
@@ -620,6 +649,125 @@ async def webhook_register_sensor(
         registration=config_entry.data,
         status=HTTPStatus.CREATED,
     )
+
+
+def _resolve_target_ha_device_id(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    primary_device_id: str,
+    sub_device_id: str | None,
+) -> str | None:
+    """Resolve the HA core device id for the given mobile_app device id."""
+    target_id = sub_device_id if sub_device_id is not None else primary_device_id
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, target_id)})
+    if device is None or config_entry.entry_id not in device.config_entries:
+        return None
+    return device.id
+
+
+@WEBHOOK_COMMANDS.register("register_device")
+@validate_schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_DEVICE_NAME): cv.string,
+        vol.Optional(ATTR_MANUFACTURER): vol.Any(None, cv.string),
+        vol.Optional(ATTR_MODEL): vol.Any(None, cv.string),
+        vol.Optional(ATTR_OS_NAME): vol.Any(None, cv.string),
+        vol.Optional(ATTR_OS_VERSION): vol.Any(None, cv.string),
+        vol.Optional(ATTR_APP_VERSION): vol.Any(None, cv.string),
+        vol.Optional(ATTR_VIA_DEVICE_ID): vol.Any(None, cv.string),
+    }
+)
+async def webhook_register_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle a register sub-device webhook."""
+    device_id: str = data[ATTR_DEVICE_ID]
+    primary_device_id: str = config_entry.data[ATTR_DEVICE_ID]
+
+    if device_id == primary_device_id:
+        return error_response(
+            ERR_INVALID_DEVICE_ID,
+            "Cannot register sub-device with the same id as the primary device",
+        )
+
+    device_registry = dr.async_get(hass)
+
+    # Resolve the parent (via_device). Defaults to the primary device.
+    via_device_id = data.get(ATTR_VIA_DEVICE_ID) or primary_device_id
+    if via_device_id == device_id:
+        return error_response(
+            ERR_INVALID_DEVICE_ID,
+            "via_device_id cannot reference the device being registered",
+        )
+    via_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, via_device_id)}
+    )
+    if via_device is None or config_entry.entry_id not in via_device.config_entries:
+        return error_response(
+            ERR_INVALID_DEVICE_ID,
+            f"via_device_id {via_device_id} is not registered for this config entry",
+        )
+
+    # Reject if the device id already exists for a different config entry.
+    existing = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    if existing is not None and config_entry.entry_id not in existing.config_entries:
+        return error_response(
+            ERR_INVALID_DEVICE_ID,
+            f"Device {device_id} is already registered to another config entry",
+        )
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, device_id)},
+        via_device=(DOMAIN, via_device_id),
+        manufacturer=data.get(ATTR_MANUFACTURER),
+        model=data.get(ATTR_MODEL),
+        name=data[ATTR_DEVICE_NAME],
+        sw_version=data.get(ATTR_OS_VERSION),
+    )
+
+    return webhook_response(
+        {"success": True},
+        registration=config_entry.data,
+        status=HTTPStatus.CREATED,
+    )
+
+
+@WEBHOOK_COMMANDS.register("unregister_device")
+@validate_schema({vol.Required(ATTR_DEVICE_ID): cv.string})
+async def webhook_unregister_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle an unregister sub-device webhook."""
+    device_id: str = data[ATTR_DEVICE_ID]
+    primary_device_id: str = config_entry.data[ATTR_DEVICE_ID]
+
+    if device_id == primary_device_id:
+        return error_response(
+            ERR_INVALID_DEVICE_ID,
+            "Cannot unregister the primary device; remove the config entry instead",
+        )
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    if device is None or config_entry.entry_id not in device.config_entries:
+        return error_response(
+            ERR_INVALID_DEVICE_ID,
+            f"Device {device_id} is not registered for this config entry",
+        )
+
+    # Remove entities linked to this device first so they don't linger as
+    # orphans (mirrors the cleanup that happens on config-entry removal).
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    ):
+        entity_registry.async_remove(entity_entry.entity_id)
+
+    device_registry.async_remove_device(device.id)
+
+    return empty_okay_response()
 
 
 @WEBHOOK_COMMANDS.register("update_sensor_states")

@@ -6,6 +6,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -98,6 +99,8 @@ class MobileAppEntity(RestoreEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
+        if (sub_device_id := self._config.get(ATTR_DEVICE_ID)) is not None:
+            return DeviceInfo(identifiers={(DOMAIN, sub_device_id)})
         return device_info(self._registration)
 
     @callback
