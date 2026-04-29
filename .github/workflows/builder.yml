@@ -14,7 +14,7 @@ env:
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
-  BASE_IMAGE_VERSION: "2026.01.0"
+  BASE_IMAGE_VERSION: "2026.04.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
 
 permissions: {}
@@ -197,11 +197,11 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           build-args: |
-            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+            BUILD_FROM=ghcr.io/home-assistant/homeassistant-base:${{ needs.init.outputs.base_image_version }}
           cache-gha: false
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           cosign-base-identity: "https://github.com/home-assistant/docker/.*"
-          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          cosign-base-verify: ghcr.io/home-assistant/homeassistant-base:${{ needs.init.outputs.base_image_version }}
           image: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant
           image-tags: ${{ needs.init.outputs.version }}
           push: true
