@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import switch
+from homeassistant.components.wake_on_lan.switch import WolSwitch
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -256,3 +257,44 @@ async def test_no_hostname_state(
 
     state = hass.states.get("switch.wake_on_lan")
     assert state.state == STATE_OFF
+
+
+async def test_remove_unloads_off_script(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
+    """Test that removing the WOL switch unloads the off script."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "turn_off": {"service": "shell_command.turn_off_target"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[switch.DOMAIN].get_entity("switch.wake_on_lan")
+    assert isinstance(entity, WolSwitch)
+    assert entity._off_script is not None
+
+    with (
+        patch.object(
+            entity._off_script,
+            "async_stop",
+            wraps=entity._off_script.async_stop,
+        ) as stop_mock,
+        patch.object(
+            entity._off_script,
+            "async_unload",
+            wraps=entity._off_script.async_unload,
+        ) as unload_mock,
+    ):
+        await entity.async_remove()
+        await hass.async_block_till_done()
+
+    stop_mock.assert_called_once()
+    unload_mock.assert_called_once()
