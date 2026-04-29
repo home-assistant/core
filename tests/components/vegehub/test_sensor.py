@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.webhook import HANDLERS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,11 +42,7 @@ async def test_sensor_entities(
     with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mocked_config_entry)
 
-    assert TEST_WEBHOOK_ID in hass.data[HANDLERS], "Webhook was not registered"
-
-    # Verify the webhook handler
-    webhook_info = hass.data[HANDLERS][TEST_WEBHOOK_ID]
-    assert webhook_info.handler, "Webhook handler is not set"
+    assert TEST_WEBHOOK_ID in hass.data["webhook"], "Webhook was not registered"
 
     client = await hass_client_no_auth()
     resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)

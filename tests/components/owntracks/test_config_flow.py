@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
-from homeassistant.components.webhook import HANDLERS
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -139,7 +138,7 @@ async def test_unload(hass: HomeAssistant) -> None:
     entry = result["result"]
 
     mock_forward.assert_called_once_with(entry, ["device_tracker"])
-    assert entry.data["webhook_id"] in hass.data[HANDLERS]
+    assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
@@ -149,7 +148,7 @@ async def test_unload(hass: HomeAssistant) -> None:
 
     assert len(mock_unload.mock_calls) == 1
     mock_forward.assert_called_once_with(entry, ["device_tracker"])
-    assert entry.data["webhook_id"] not in hass.data[HANDLERS]
+    assert entry.data["webhook_id"] not in hass.data["webhook"]
 
 
 async def test_with_cloud_sub(hass: HomeAssistant) -> None:
