@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.const import DEGREE, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,7 +28,7 @@ from .coordinator import MoonData, MoonUpdateCoordinator
 class MoonSensorEntityDescription(SensorEntityDescription):
     """Description for a moon sensor entity."""
 
-    value_fn: Callable[[MoonData], StateType]
+    value_fn: Callable[[MoonData], StateType | datetime | None]
 
 
 SENSOR_TYPES: tuple[MoonSensorEntityDescription, ...] = (
@@ -35,6 +38,84 @@ SENSOR_TYPES: tuple[MoonSensorEntityDescription, ...] = (
         options=PHASE_OPTIONS,
         translation_key="phase",
         value_fn=lambda data: data.phase,
+    ),
+    MoonSensorEntityDescription(
+        key="illumination",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        translation_key="illumination",
+        value_fn=lambda data: data.illumination,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_rising",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_rising",
+        value_fn=lambda data: data.next_rising,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_setting",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_setting",
+        value_fn=lambda data: data.next_setting,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_new_moon",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_new_moon",
+        value_fn=lambda data: data.next_new_moon,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_first_quarter_moon",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_first_quarter_moon",
+        value_fn=lambda data: data.next_first_quarter_moon,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_full_moon",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_full_moon",
+        value_fn=lambda data: data.next_full_moon,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_last_quarter_moon",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_last_quarter_moon",
+        value_fn=lambda data: data.next_last_quarter_moon,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="next_transit",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="next_transit",
+        value_fn=lambda data: data.next_transit,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MoonSensorEntityDescription(
+        key="elevation",
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        translation_key="elevation",
+        value_fn=lambda data: data.elevation,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    MoonSensorEntityDescription(
+        key="azimuth",
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        translation_key="azimuth",
+        value_fn=lambda data: data.azimuth,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -80,6 +161,6 @@ class MoonSensorEntity(CoordinatorEntity[MoonUpdateCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
