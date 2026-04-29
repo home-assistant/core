@@ -13,6 +13,8 @@ class SerialDevice:
     serial_number: str | None
     manufacturer: str | None
     description: str | None
+    interface_description: str | None = None
+    interface_num: int | None = None
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -21,3 +23,6 @@ class USBDevice(SerialDevice):
 
     vid: str
     pid: str
+
+    # bcdDevice descriptor, often the firmware revision
+    bcd_device: int | None = None

@@ -5,13 +5,14 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import Discovery
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from homeassistant.config_entries import ConfigEntries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -21,6 +22,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    MockUser,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -194,7 +196,154 @@ async def test_hassio_discovery_webhook(
     )
 
 
+async def test_hassio_discovery_webhook_non_admin(
+    hass: HomeAssistant,
+    hassio_client: TestClient,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
+    get_discovery_message: AsyncMock,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test discovery webhook fails for non-admin users."""
+    addon_installed.return_value.name = "Mosquitto Test"
+
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass_admin_user.groups = []
+    get_discovery_message.reset_mock()
+    uuid = uuid4()
+
+    resp = await hassio_client.post(
+        f"/api/hassio_push/discovery/{uuid!s}",
+        json={"addon": "mosquitto", "service": "mqtt", "uuid": str(uuid)},
+    )
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    get_discovery_message.assert_not_called()
+    mock_mqtt.async_step_hassio.assert_not_called()
+
+
 TEST_UUID = str(uuid4())
+
+
+@pytest.mark.usefixtures("hassio_client", "addon_installed", "get_addon_discovery_info")
+async def test_delete_hassio_discovery(
+    hass: HomeAssistant, get_discovery_message: AsyncMock, hassio_client: TestClient
+) -> None:
+    """Test deleting a discovery item removes the config entry."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=MQTT_DOMAIN,
+        discovery_keys={
+            "hassio": (DiscoveryKey(domain="hassio", key=TEST_UUID, version=1),)
+        },
+        unique_id=(uuid := uuid4()).hex,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=config_entries.SOURCE_HASSIO,
+    )
+    entry.add_to_hass(hass)
+
+    get_discovery_message.side_effect = SupervisorNotFoundError()
+
+    with patch.object(ConfigEntries, "async_remove") as mock_remove:
+        resp = await hassio_client.delete(
+            f"/api/hassio_push/discovery/{uuid.hex}",
+            json={"service": "mqtt", "uuid": uuid.hex},
+        )
+        await hass.async_block_till_done()
+
+        assert resp.status == HTTPStatus.OK
+        get_discovery_message.assert_called_once_with(uuid)
+        mock_remove.assert_called_once_with(entry.entry_id)
+
+
+@pytest.mark.usefixtures("hassio_client", "addon_installed", "get_addon_discovery_info")
+async def test_delete_hassio_discovery_fails_when_discovery_exists(
+    hass: HomeAssistant,
+    get_discovery_message: AsyncMock,
+    hassio_client: TestClient,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deleting a discovery item fails when discovery exists."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=MQTT_DOMAIN,
+        discovery_keys={
+            "hassio": (DiscoveryKey(domain="hassio", key=TEST_UUID, version=1),)
+        },
+        unique_id=(uuid := uuid4()).hex,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=config_entries.SOURCE_HASSIO,
+    )
+    entry.add_to_hass(hass)
+
+    get_discovery_message.return_value = Discovery(
+        addon="mosquitto",
+        service="mqtt",
+        uuid=(uuid := uuid4()),
+        config={
+            "broker": "mock-broker",
+            "port": 1883,
+            "username": "mock-user",
+            "password": "mock-pass",
+            "protocol": "3.1.1",
+        },
+    )
+
+    with patch.object(ConfigEntries, "async_remove") as mock_remove:
+        resp = await hassio_client.delete(
+            f"/api/hassio_push/discovery/{uuid.hex}",
+            json={"service": "mqtt", "uuid": uuid.hex},
+        )
+        await hass.async_block_till_done()
+
+        assert resp.status == HTTPStatus.OK
+        get_discovery_message.assert_called_once_with(uuid)
+        mock_remove.assert_not_called()
+        assert "Retrieve wrong unload for mqtt" in caplog.text
+
+
+@pytest.mark.usefixtures("hassio_client", "addon_installed", "get_addon_discovery_info")
+async def test_delete_hassio_discovery_non_admin(
+    hass: HomeAssistant,
+    get_discovery_message: AsyncMock,
+    hassio_client: TestClient,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test deleting a discovery item fails for non-admin users."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=MQTT_DOMAIN,
+        discovery_keys={
+            "hassio": (DiscoveryKey(domain="hassio", key=TEST_UUID, version=1),)
+        },
+        unique_id=(uuid := uuid4()).hex,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=config_entries.SOURCE_HASSIO,
+    )
+    entry.add_to_hass(hass)
+
+    hass_admin_user.groups = []
+
+    with patch.object(ConfigEntries, "async_remove") as mock_remove:
+        resp = await hassio_client.delete(
+            f"/api/hassio_push/discovery/{uuid.hex}",
+            json={"service": "mqtt", "uuid": uuid.hex},
+        )
+        await hass.async_block_till_done()
+
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        get_discovery_message.assert_not_called()
+        mock_remove.assert_not_called()
 
 
 @pytest.mark.parametrize(

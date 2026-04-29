@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -29,6 +30,8 @@ ATTR_DYNAMIC = "dynamic"
 ATTR_SPEED = "speed"
 ATTR_BRIGHTNESS = "brightness"
 
+LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -49,10 +52,18 @@ async def async_setup_entry(
         event_type: EventType, resource: HueScene | HueSmartScene
     ) -> None:
         """Add entity from Hue resource."""
-        if isinstance(resource, HueSmartScene):
-            async_add_entities([HueSmartSceneEntity(bridge, api.scenes, resource)])
-        else:
-            async_add_entities([HueSceneEntity(bridge, api.scenes, resource)])
+        # Catch creation errors to continue adding other scenes even if one fails
+        try:
+            entity: HueSceneEntityBase
+            if isinstance(resource, HueSmartScene):
+                entity = HueSmartSceneEntity(bridge, api.scenes, resource)
+            else:
+                entity = HueSceneEntity(bridge, api.scenes, resource)
+        except KeyError, StopIteration:
+            LOGGER.exception("Unable to create Hue scene entity for %s", resource.id)
+            return
+
+        async_add_entities([entity])
 
     # add all current items in controller
     for item in api.scenes:
