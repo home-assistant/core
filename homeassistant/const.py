@@ -30,9 +30,6 @@ Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
-# Core integrations are unconditionally loaded
-CORE_INTEGRATIONS: Final = {"homeassistant", "persistent_notification"}
-
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL: Final = "*"

@@ -6,11 +6,11 @@ import sys
 import pytest
 
 from homeassistant.bootstrap import (
+    CORE_INTEGRATIONS,
     DEFAULT_INTEGRATIONS,
     STAGE_0_INTEGRATIONS,
     STAGE_1_INTEGRATIONS,
 )
-from homeassistant.const import CORE_INTEGRATIONS
 
 
 @pytest.mark.timeout(30)  # cloud can take > 9s

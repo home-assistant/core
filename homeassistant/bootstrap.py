@@ -65,7 +65,6 @@ from .components import (
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     BASE_PLATFORMS,
-    CORE_INTEGRATIONS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -143,6 +142,9 @@ STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
+
+# Core integrations are unconditionally loaded
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 # Integrations that are loaded right after the core is set up
 LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
