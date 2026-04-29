@@ -17,6 +17,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockUser
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context,
@@ -770,3 +771,44 @@ async def test_history_with_invalid_entity_ids(
     response_json = await response.json()
     assert response_contains1 in str(response_json)
     assert response_contains2 in str(response_json)
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_fetch_period_api_filters_unauthorized_entities(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test history is filtered by per-entity read permissions for non-admins."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"light.kitchen": True}}}
+    )
+    await async_setup_component(hass, "history", {})
+
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    await async_wait_recording_done(hass)
+
+    client = await hass_client(hass_read_only_access_token)
+
+    now = dt_util.utcnow().isoformat()
+    response = await client.get(
+        f"/api/history/period/{now}",
+        params={"filter_entity_id": "light.kitchen,light.cow"},
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert all(
+        state["entity_id"] == "light.kitchen"
+        for entity_states in response_json
+        for state in entity_states
+    )
+
+    response = await client.get(
+        f"/api/history/period/{now}",
+        params={"filter_entity_id": "light.cow"},
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == []
