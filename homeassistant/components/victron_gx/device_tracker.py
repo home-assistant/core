@@ -93,10 +93,7 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     def extra_state_attributes(self) -> dict[str, StateType]:
         """Return extra state attributes for altitude, course, and speed."""
         attrs: dict[str, StateType] = {}
-        if self._altitude is not None:
-            attrs[ATTR_ALTITUDE] = self._altitude
-        if self._course is not None:
-            attrs[ATTR_COURSE] = self._course
-        if self._speed is not None:
-            attrs[ATTR_SPEED] = self._speed
+        attrs[ATTR_ALTITUDE] = self._altitude
+        attrs[ATTR_COURSE] = self._course
+        attrs[ATTR_SPEED] = self._speed
         return attrs
