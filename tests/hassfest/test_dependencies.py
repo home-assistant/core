@@ -4,6 +4,8 @@ import ast
 
 import pytest
 
+from homeassistant import bootstrap
+from script.hassfest import dependencies as hassfest_dependencies
 from script.hassfest.dependencies import ImportCollector, _validate_dependencies
 from script.hassfest.model import Config
 
@@ -127,3 +129,8 @@ def test_dependency_on_non_core_integration_allowed(config: Config) -> None:
     _validate_dependencies(integrations)
 
     assert consumer.errors == []
+
+
+def test_core_integrations_in_sync_with_bootstrap() -> None:
+    """Test the duplicated CORE_INTEGRATIONS stays aligned with bootstrap."""
+    assert hassfest_dependencies.CORE_INTEGRATIONS == bootstrap.CORE_INTEGRATIONS

@@ -7,12 +7,15 @@ from collections import deque
 import multiprocessing
 from pathlib import Path
 
-from homeassistant.bootstrap import CORE_INTEGRATIONS
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
 from . import ast_parse_module
 from .model import Config, Integration
+
+# Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
+# eager component pre-imports) into hassfest. Kept in sync via test_dependencies.
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 
 class ImportCollector(ast.NodeVisitor):
