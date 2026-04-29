@@ -9,11 +9,6 @@
       selector:
         automation_behavior:
           mode: trigger
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
 
 docked: *trigger_common
 errored: *trigger_common

@@ -9,10 +9,5 @@
       selector:
         automation_behavior:
           mode: trigger
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
 
 update_became_available: *trigger_common

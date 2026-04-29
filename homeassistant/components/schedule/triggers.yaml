@@ -9,11 +9,6 @@
       selector:
         automation_behavior:
           mode: trigger
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
 
 turned_off: *trigger_common
 turned_on: *trigger_common
