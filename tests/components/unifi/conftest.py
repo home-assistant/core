@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine, Generator
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any, Protocol
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiounifi.models.message import MessageKey
 import orjson
@@ -69,10 +69,18 @@ class WebsocketMessageMock(Protocol):
 @pytest.fixture(autouse=True, name="mock_discovery")
 def fixture_discovery():
     """No real network traffic allowed."""
-    with patch(
-        "homeassistant.components.unifi.config_flow._async_discover_unifi",
-        return_value=None,
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.unifi.config_flow._async_discover_unifi",
+            return_value=None,
+        ) as mock,
+        patch(
+            "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
+            return_value=MagicMock(
+                async_scan=AsyncMock(return_value=[]), found_devices=[]
+            ),
+        ),
+    ):
         yield mock
 
 

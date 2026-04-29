@@ -80,12 +80,11 @@ async def test_template_render_info_collision(hass: HomeAssistant) -> None:
         template_obj.async_render_to_info()
 
 
-@pytest.mark.usefixtures("hass")
-def test_template_equality() -> None:
+def test_template_equality(hass: HomeAssistant) -> None:
     """Test template comparison and hashing."""
-    template_one = template.Template("{{ template_one }}")
-    template_one_1 = template.Template("{{ template_one }}")
-    template_two = template.Template("{{ template_two }}")
+    template_one = template.Template("{{ template_one }}", hass)
+    template_one_1 = template.Template("{{ template_one }}", hass)
+    template_two = template.Template("{{ template_two }}", hass)
 
     assert template_one == template_one_1
     assert template_one != template_two
@@ -95,7 +94,7 @@ def test_template_equality() -> None:
     assert str(template_one_1) == "Template<template=({{ template_one }}) renders=0>"
 
     with pytest.raises(TypeError):
-        template.Template(["{{ template_one }}"])
+        template.Template(["{{ template_one }}"], hass)
 
 
 def test_invalid_template(hass: HomeAssistant) -> None:
@@ -143,7 +142,7 @@ def test_invalid_entity_id(hass: HomeAssistant) -> None:
 def test_raise_exception_on_error(hass: HomeAssistant) -> None:
     """Test raising an exception on error."""
     with pytest.raises(TemplateError):
-        template.Template("{{ invalid_syntax").ensure_valid()
+        template.Template("{{ invalid_syntax", hass).ensure_valid()
 
 
 def test_iterating_all_states(hass: HomeAssistant) -> None:
@@ -1896,28 +1895,30 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     ) == {True: 1, False: 2}
 
 
-@pytest.mark.usefixtures("hass")
-async def test_cache_garbage_collection() -> None:
+async def test_cache_garbage_collection(hass: HomeAssistant) -> None:
     """Test caching a template."""
     template_string = (
         "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
     )
     tpl = template.Template(
         (template_string),
+        hass,
     )
     tpl.ensure_valid()
-    assert template._NO_HASS_ENV.template_cache.get(template_string)
+    env = tpl._env
+    assert env.template_cache.get(template_string)
 
     tpl2 = template.Template(
         (template_string),
+        hass,
     )
     tpl2.ensure_valid()
-    assert template._NO_HASS_ENV.template_cache.get(template_string)
+    assert env.template_cache.get(template_string)
 
     del tpl
-    assert template._NO_HASS_ENV.template_cache.get(template_string)
+    assert env.template_cache.get(template_string)
     del tpl2
-    assert not template._NO_HASS_ENV.template_cache.get(template_string)
+    assert not env.template_cache.get(template_string)
 
 
 def test_is_template_string() -> None:
@@ -2289,20 +2290,3 @@ def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
     """Test template output exceeds maximum size."""
     with pytest.raises(TemplateError):
         render(hass, "{{ 'a' * 1024 * 257 }}")
-
-
-def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecation warning when instantiating Template without hass."""
-
-    message = "Detected code that creates a template object without passing hass"
-    template.Template("blah")
-    assert message in caplog.text
-    caplog.clear()
-
-    template.Template("blah", None)
-    assert message in caplog.text
-    caplog.clear()
-
-    template.Template("blah", hass)
-    assert message not in caplog.text
-    caplog.clear()

@@ -267,26 +267,10 @@ class Template:
         "template",
     )
 
-    def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
-        """Instantiate a template.
-
-        Note: A valid hass instance should always be passed in. The hass parameter
-        will be non optional in Home Assistant Core 2025.10.
-        """
-        from homeassistant.helpers.frame import (  # noqa: PLC0415
-            ReportBehavior,
-            report_usage,
-        )
-
+    def __init__(self, template: str, hass: HomeAssistant) -> None:
+        """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
-
-        if not hass:
-            report_usage(
-                "creates a template object without passing hass",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2025.10",
-            )
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None
@@ -302,8 +286,6 @@ class Template:
 
     @property
     def _env(self) -> TemplateEnvironment:
-        if self.hass is None:
-            return _NO_HASS_ENV
         # Bypass cache if a custom log function is specified
         if self._log_fn is not None:
             return TemplateEnvironment(
@@ -1160,6 +1142,3 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         compiled = super().compile(source)
         self.template_cache[source] = compiled
         return compiled
-
-
-_NO_HASS_ENV = TemplateEnvironment(None)
