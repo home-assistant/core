@@ -140,6 +140,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload an Insteon config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, INSTEON_PLATFORMS)
+
+
 def create_insteon_device(hass, device, config_entry_id):
     """Create an Insteon device."""
     device_registry = dr.async_get(hass)

@@ -13,6 +13,7 @@ from homeassistant.components.insteon import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
@@ -20,6 +21,7 @@ from .mock_devices import MockDevices
 from tests.common import MockConfigEntry
 
 devices = MockDevices()
+EVENT_TEST_DEVICE_ADDRESS = "33.33.33"
 
 
 @pytest.fixture(autouse=True)
@@ -62,16 +64,17 @@ async def test_event_listeners_unsubscribed(hass: HomeAssistant) -> None:
 
     # Patch Event.unsubscribe to observe unsubscription calls during unload
     with patch("pyinsteon.events.Event.unsubscribe") as unsubscribe_mock:
-        # Explicitly unload the event component for this config entry which
-        # should remove entities and unsubscribe listeners.
-        event_component = hass.data[DATA_COMPONENT]
-        await event_component.async_unload_entry(config_entry)
+        # Unload via the integration/config-entry path so full cleanup runs.
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert unsubscribe_mock.call_count > 0
 
 
-async def test_event_entity_triggers_event(hass: HomeAssistant) -> None:
+async def test_event_entity_triggers_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that an Insteon event listener triggers the event entity."""
 
     config_entry = MockConfigEntry(domain=insteon.DOMAIN, data=MOCK_USER_INPUT_PLM)
@@ -80,12 +83,11 @@ async def test_event_entity_triggers_event(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Find any event entity created for the mock devices
-    entity_id = None
-    for state in hass.states.async_all():
-        if state.entity_id.startswith("event.device_33_33_33"):
-            entity_id = state.entity_id
-            break
+    # Locate the event entity via unique_id in the entity registry.
+    device = devices[EVENT_TEST_DEVICE_ADDRESS]
+    group = 1
+    unique_id = device.id if group == 1 else f"{device.id}_{group}"
+    entity_id = entity_registry.async_get_entity_id("event", insteon.DOMAIN, unique_id)
 
     assert entity_id is not None
 
@@ -107,7 +109,10 @@ async def test_event_entity_triggers_event(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EVENT_TYPE] == event_obj.name.removesuffix("_event")
 
 
-async def test_event_entity_handles_button_event(hass: HomeAssistant) -> None:
+async def test_event_entity_handles_button_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that the event entity handles a button event from _BUTTON_EVENT_NAMES."""
 
     config_entry = MockConfigEntry(domain=insteon.DOMAIN, data=MOCK_USER_INPUT_PLM)
@@ -116,12 +121,11 @@ async def test_event_entity_handles_button_event(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Locate an event entity for the mock device
-    entity_id = None
-    for state in hass.states.async_all():
-        if state.entity_id.startswith("event.device_33_33_33"):
-            entity_id = state.entity_id
-            break
+    # Locate the event entity via unique_id in the entity registry.
+    device = devices[EVENT_TEST_DEVICE_ADDRESS]
+    group = 1
+    unique_id = device.id if group == 1 else f"{device.id}_{group}"
+    entity_id = entity_registry.async_get_entity_id("event", insteon.DOMAIN, unique_id)
 
     assert entity_id is not None
 
