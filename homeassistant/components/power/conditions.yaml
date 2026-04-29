@@ -1,24 +1,49 @@
-.power_threshold_entity: &power_threshold_entity
-  - domain: input_number
-    unit_of_measurement:
-      - "mW"
-      - "W"
-      - "kW"
-      - "MW"
-      - "GW"
-      - "TW"
-      - "BTU/h"
-  - domain: sensor
-    device_class: power
-  - domain: number
-    device_class: power
+.number_or_entity_power: &number_or_entity_power
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "mW"
+                    - "W"
+                    - "kW"
+                    - "MW"
+                    - "GW"
+                    - "TW"
+                    - "BTU/h"
+                - domain: sensor
+                  device_class: power
+                - domain: number
+                  device_class: power
+      translation_key: number_or_entity
 
-.power_threshold_number: &power_threshold_number
-  mode: box
+.condition_unit_power: &condition_unit_power
+  required: false
+  selector:
+    select:
+      options:
+        - "mW"
+        - "W"
+        - "kW"
+        - "MW"
+        - "GW"
+        - "TW"
+        - "BTU/h"
 
 is_value:
   target:
     entity:
+      - domain: number
+        device_class: power
       - domain: sensor
         device_class: power
   fields:
@@ -29,10 +54,6 @@ is_value:
         automation_behavior:
           translation_key: condition_behavior
           mode: condition
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *power_threshold_entity
-          mode: is
-          number: *power_threshold_number
+    above: *number_or_entity_power
+    below: *number_or_entity_power
+    unit: *condition_unit_power

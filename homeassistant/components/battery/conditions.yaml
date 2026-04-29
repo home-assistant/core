@@ -37,6 +37,7 @@ is_charging:
         device_class: battery_charging
   fields:
     behavior: *condition_behavior
+    for: *condition_for
 
 is_not_charging:
   target:
@@ -45,6 +46,7 @@ is_not_charging:
         device_class: battery_charging
   fields:
     behavior: *condition_behavior
+    for: *condition_for
 
 is_level:
   target:

@@ -23,9 +23,11 @@ is_value:
       required: true
       default: any
       selector:
-        automation_behavior:
+        select:
           translation_key: condition_behavior
-          mode: condition
+          options:
+            - all
+            - any
     threshold:
       required: true
       selector:
