@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 from gardena_bluetooth.const import (
     AquaContourBattery,
+    AquaContourWatering,
     Battery,
     EventHistory,
     FlowStatistics,
@@ -51,6 +52,12 @@ def _get_distance_percentage(value: int | None) -> float | None:
     if value is None:
         return None
     return value / 10
+
+
+def _get_timestamp_from_remaining_time(value: int | None) -> datetime | None:
+    if value is None:
+        return None
+    return datetime.now(UTC) + timedelta(seconds=value)
 
 
 @dataclass(frozen=True)
@@ -218,7 +225,22 @@ async def async_setup_entry(
         if description.char.unique_id in coordinator.characteristics
     ]
     if Valve.remaining_open_time.unique_id in coordinator.characteristics:
-        entities.append(GardenaBluetoothRemainSensor(coordinator))
+        entities.append(
+            GardenaBluetoothRemainSensor(
+                coordinator, Valve.remaining_open_time, "remaining_open_timestamp"
+            )
+        )
+    if (
+        AquaContourWatering.remaining_watering_time.unique_id
+        in coordinator.characteristics
+    ):
+        entities.append(
+            GardenaBluetoothRemainSensor(
+                coordinator,
+                AquaContourWatering.remaining_watering_time,
+                "remaining_watering_timestamp",
+            )
+        )
     async_add_entities(entities)
 
 
@@ -245,18 +267,21 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_native_value: datetime | None = None
-    _attr_translation_key = "remaining_open_timestamp"
 
     def __init__(
         self,
         coordinator: GardenaBluetoothCoordinator,
+        char: Characteristic[int],
+        key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, {Valve.remaining_open_time.uuid})
-        self._attr_unique_id = f"{coordinator.address}-remaining_open_timestamp"
+        super().__init__(coordinator, {char.uuid})
+        self._attr_unique_id = f"{coordinator.address}-{key}"
+        self._attr_translation_key = key
+        self._char = char
 
     def _handle_coordinator_update(self) -> None:
-        value = self.coordinator.get_cached(Valve.remaining_open_time)
+        value = self.coordinator.get_cached(self._char)
         if not value:
             self._attr_native_value = None
             super()._handle_coordinator_update()
