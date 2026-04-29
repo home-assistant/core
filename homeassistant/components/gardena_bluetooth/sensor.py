@@ -54,12 +54,6 @@ def _get_distance_percentage(value: int | None) -> float | None:
     return value / 10
 
 
-def _get_timestamp_from_remaining_time(value: int | None) -> datetime | None:
-    if value is None:
-        return None
-    return datetime.now(UTC) + timedelta(seconds=value)
-
-
 @dataclass(frozen=True)
 class GardenaBluetoothSensorEntityDescription[T](SensorEntityDescription):
     """Description of entity."""
