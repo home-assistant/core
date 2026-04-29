@@ -2,12 +2,14 @@
 
 import asyncio
 from http import HTTPStatus
+import re
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
 import python_otbr_api
+from python_otbr_api import KeyFormat
 
 from homeassistant.components import otbr
 from homeassistant.components.homeassistant_hardware import (
@@ -56,6 +58,25 @@ HASSIO_DATA_OTBR = HassioServiceInfo(
     slug="core_openthread_border_router",
     uuid="c58ba80fc88548008776bf8da903ef21",
 )
+
+
+def _expected_dataset_body(pan_id: int, key_format: KeyFormat) -> dict[str, Any]:
+    """Return the expected JSON body for a default-channel dataset PUT.
+
+    python_otbr_api emits camelCase by default and rewrites to PascalCase only
+    when the /api/actions probe returns 404.
+    """
+    if key_format == KeyFormat.PASCAL_CASE:
+        return {
+            "Channel": 15,
+            "NetworkName": f"ha-thread-{pan_id:04x}",
+            "PanId": pan_id,
+        }
+    return {
+        "channel": 15,
+        "networkName": f"ha-thread-{pan_id:04x}",
+        "panId": pan_id,
+    }
 
 
 @pytest.fixture(name="otbr_addon_info")
@@ -153,6 +174,7 @@ async def test_user_flow_additional_entry_fail_get_address(
 
     # Do a user flow
     aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.NOT_FOUND)
     aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
     aioclient_mock.get(f"{url2}/node/ba-id", status=HTTPStatus.NOT_FOUND)
     await _finish_user_flow(hass)
@@ -239,9 +261,12 @@ async def test_user_flow_additional_entry_same_address(
     assert result["errors"] == {"base": "already_configured"}
 
 
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_user_flow_router_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    key_format: KeyFormat,
 ) -> None:
     """Test the user flow when the border router has no dataset.
 
@@ -278,12 +303,9 @@ async def test_user_flow_router_not_setup(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
-    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
-    assert aioclient_mock.mock_calls[-2][2] == {
-        "Channel": 15,
-        "NetworkName": f"ha-thread-{pan_id:04x}",
-        "PanId": pan_id,
-    }
+    body = aioclient_mock.mock_calls[-2][2]
+    pan_id = body["PanId" if key_format == KeyFormat.PASCAL_CASE else "panId"]
+    assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
@@ -671,12 +693,14 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     multiprotocol_addon_manager_mock,
     otbr_addon_info,
+    key_format: KeyFormat,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -704,12 +728,9 @@ async def test_hassio_discovery_flow_router_not_setup(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
-    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
-    assert aioclient_mock.mock_calls[-2][2] == {
-        "Channel": 15,
-        "NetworkName": f"ha-thread-{pan_id:04x}",
-        "PanId": pan_id,
-    }
+    body = aioclient_mock.mock_calls[-2][2]
+    pan_id = body["PanId" if key_format == KeyFormat.PASCAL_CASE else "panId"]
+    assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
@@ -788,12 +809,14 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     multiprotocol_addon_manager_mock,
     otbr_addon_info,
+    key_format: KeyFormat,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -824,12 +847,9 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
-    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
-    assert aioclient_mock.mock_calls[-2][2] == {
-        "Channel": 15,
-        "NetworkName": f"ha-thread-{pan_id:04x}",
-        "PanId": pan_id,
-    }
+    body = aioclient_mock.mock_calls[-2][2]
+    pan_id = body["PanId" if key_format == KeyFormat.PASCAL_CASE else "panId"]
+    assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
