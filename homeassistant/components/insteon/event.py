@@ -105,15 +105,18 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                 )
             ):
                 simple_button = False
+
             self._attr_translation_key = (
                 "simple" if simple_button else "labeled"
             ) + "_button"
 
-            self._attr_translation_placeholders = {
-                "button_label": self._insteon_device_group.name.rpartition("_")[
-                    -1
-                ].upper()
-            }
+            if not simple_button:
+                self._attr_translation_placeholders = {
+                    "button_label": self._insteon_device_group.name.rpartition("_")[
+                        -1
+                    ].upper()
+                }
+
             event_types.extend(
                 name.removesuffix("_event") for name in self._event_names
             )
