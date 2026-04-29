@@ -29,8 +29,13 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     DOMAIN = DOMAIN
     _host: str | None = None
-    _locks: list[dict[str, Any]] = []
+    _locks: list[dict[str, Any]]
     _api_token: str | None = None
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._locks = []
 
     async def validate_input(
         self, hass: HomeAssistant, data: dict[str, Any]
@@ -183,9 +188,11 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=info["name"],
-                data=(
-                    user_input | {CONF_WEBHOOK_ID: webhook.async_generate_id()} | info
-                ),
+                data={
+                    CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    CONF_WEBHOOK_ID: webhook.async_generate_id(),
+                    **info,
+                },
             )
 
         return self.async_show_form(
