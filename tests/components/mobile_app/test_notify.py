@@ -840,7 +840,7 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
 async def test_notify_live_activity_uses_stored_token(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
-"""Test that live_update notifications include live_activity_token in the relay payload."""
+    """Test that live_update notifications include live_activity_token in the relay payload."""
     # Simulate the iOS app having registered a per-activity token via webhook.
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "washer_cycle": "LIVE_ACTIVITY_TOKEN_HEX"
@@ -871,7 +871,7 @@ async def test_notify_live_activity_falls_back_to_push_to_start(
     aioclient_mock: AiohttpClientMocker,
     hass_admin_user: MockUser,
 ) -> None:
-"""Test that live_update without a stored token falls back to the push-to-start token."""
+    """Test that live_update without a stored token falls back to the push-to-start token."""
     push_url = "https://mobile-push.home-assistant.dev/push"
     now = datetime.now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
