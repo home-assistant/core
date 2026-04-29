@@ -940,12 +940,14 @@ class SonosSpeaker:
 
             for uid in group:
                 speaker = self.data.discovered.get(uid)
-                if speaker:
+                entity_id = (
+                    entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
+                    if speaker
+                    else None
+                )
+                if speaker and entity_id:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = cast(
-                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
-                    )
                     sonos_group_entities.append(entity_id)
                 else:
                     self._group_members_missing.add(uid)

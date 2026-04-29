@@ -125,6 +125,12 @@ class WolSwitch(SwitchEntity):
             self._state = True
             self.schedule_update_ha_state()
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up script when removing from Home Assistant."""
+        if self._off_script is not None:
+            await self._off_script.async_stop()
+            self._off_script.async_unload()
+
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:

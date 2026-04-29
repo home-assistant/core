@@ -422,6 +422,69 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
         return attribute
 
 
+class AutomationBehavior(StrEnum):
+    """Possible behaviors for an automation behavior selector."""
+
+    ALL = "all"
+    FIRST = "first"
+    LAST = "last"
+    ANY = "any"
+
+
+class AutomationBehaviorSelectorMode(StrEnum):
+    """Possible modes for an automation behavior selector."""
+
+    TRIGGER = "trigger"
+    CONDITION = "condition"
+
+
+_AUTOMATION_BEHAVIOR_MODES: dict[AutomationBehaviorSelectorMode, list[str]] = {
+    AutomationBehaviorSelectorMode.TRIGGER: [
+        AutomationBehavior.FIRST,
+        AutomationBehavior.LAST,
+        AutomationBehavior.ANY,
+    ],
+    AutomationBehaviorSelectorMode.CONDITION: [
+        AutomationBehavior.ALL,
+        AutomationBehavior.ANY,
+    ],
+}
+
+
+class AutomationBehaviorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an automation behavior selector config."""
+
+    mode: Required[AutomationBehaviorSelectorMode]
+    translation_key: str
+
+
+@SELECTORS.register("automation_behavior")
+class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
+    """Selector of an automation behavior."""
+
+    selector_type = "automation_behavior"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Required("mode"): vol.All(
+                vol.Coerce(AutomationBehaviorSelectorMode), lambda val: val.value
+            ),
+            vol.Optional("translation_key"): cv.string,
+        },
+    )
+
+    def __init__(self, config: AutomationBehaviorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
+        mode = AutomationBehaviorSelectorMode(self.config["mode"])
+        return vol.In(_AUTOMATION_BEHAVIOR_MODES[mode])(data)
+
+
 class BackupLocationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a backup location selector config."""
 

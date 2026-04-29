@@ -35,6 +35,32 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_pack_1_electric_heating_state": {
+        "name": "Battery pack 1 electric heating"
+      },
+      "battery_pack_2_electric_heating_state": {
+        "name": "Battery pack 2 electric heating"
+      },
+      "battery_pack_3_electric_heating_state": {
+        "name": "Battery pack 3 electric heating"
+      },
+      "battery_pack_4_electric_heating_state": {
+        "name": "Battery pack 4 electric heating"
+      },
+      "battery_pack_5_electric_heating_state": {
+        "name": "Battery pack 5 electric heating"
+      },
+      "electric_heating_state": {
+        "name": "Electric heating"
+      },
+      "main_electric_heating_state": {
+        "name": "Main electric heating"
+      },
+      "meter_connected": {
+        "name": "Meter connected"
+      }
+    },
     "button": {
       "stop": {
         "name": "Enable standby mode"

@@ -317,12 +317,6 @@
         "yellowgreen": "Yellow green"
       }
     },
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "flash": {
       "options": {
         "long": "Long",
@@ -333,13 +327,6 @@
       "options": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
