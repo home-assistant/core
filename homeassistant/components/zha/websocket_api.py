@@ -638,6 +638,14 @@ async def websocket_reconfigure_node(
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
 
+    if zha_gateway.get_device(ieee) is None:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
+            )
+        )
+        return
+
     async def forward_messages(data):
         """Forward events to websocket."""
         connection.send_message(websocket_api.event_message(msg["id"], data))

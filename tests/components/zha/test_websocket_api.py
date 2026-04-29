@@ -1257,3 +1257,22 @@ async def test_websocket_reconfigure(
         "zha_channel_bind",
         "zha_channel_cfg_done",
     }
+
+
+async def test_websocket_reconfigure_device_not_found(
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test websocket reconfigure returns ERR_NOT_FOUND for an unknown IEEE."""
+    await zha_client.send_json(
+        {
+            ID: 6,
+            TYPE: "zha/devices/reconfigure",
+            ATTR_IEEE: "28:6d:97:00:01:04:11:8c",
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
