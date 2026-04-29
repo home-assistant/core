@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AxisConfigEntry
 from .entity import AxisEventDescription, AxisEventEntity
-from .hub import AxisHub
 
 DOORBELL_CONFIG = ("I8116-E", "0")
 
@@ -27,12 +26,6 @@ class AxisEventPlatformDescription(AxisEventDescription, EventEntityDescription)
     """Axis event entity description."""
 
 
-@callback
-def doorbell_supported_fn(hub: AxisHub, event: Event) -> bool:
-    """Validate event is from the configured doorbell button input."""
-    return (hub.config.model, event.id) == DOORBELL_CONFIG
-
-
 ENTITY_DESCRIPTIONS = (
     AxisEventPlatformDescription(
         key="Input port state",
@@ -40,7 +33,7 @@ ENTITY_DESCRIPTIONS = (
         event_types=[DoorbellEventType.RING],
         event_topic=EventTopic.PORT_INPUT,
         name_fn=lambda _hub, _event: "Doorbell",
-        supported_fn=doorbell_supported_fn,
+        supported_fn=lambda hub, event: (hub.config.model, event.id) == DOORBELL_CONFIG,
     ),
 )
 
