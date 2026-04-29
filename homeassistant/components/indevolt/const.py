@@ -38,7 +38,9 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltSolar.DC_INPUT_POWER_4,
         IndevoltConfig.READ_DISCHARGE_LIMIT,
         IndevoltGrid.METER_POWER_GEN1,
+        IndevoltGrid.METER_CONNECTED,
         IndevoltSolar.CUMULATIVE_PRODUCTION,
+        IndevoltSystem.HEATING_STATE,
     ],
     2: [
         IndevoltSystem.OPERATING_MODE,
@@ -112,6 +114,13 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
         IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
         IndevoltConfig.READ_DISCHARGE_LIMIT,
+        IndevoltBattery.MAIN_HEATING_STATE,
+        IndevoltBattery.PACK_1_HEATING_STATE,
+        IndevoltBattery.PACK_2_HEATING_STATE,
+        IndevoltBattery.PACK_3_HEATING_STATE,
+        IndevoltBattery.PACK_4_HEATING_STATE,
+        IndevoltBattery.PACK_5_HEATING_STATE,
+        IndevoltGrid.METER_CONNECTED,
         IndevoltSolar.CUMULATIVE_PRODUCTION,
     ],
 }
