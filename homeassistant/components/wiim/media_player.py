@@ -796,11 +796,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if content is None:
             LOGGER.debug(
-                "Failed to fetch local HTTPS media image for %s from %s",
+                "Avoid retrying the default media-image fetch after a failed local HTTPS fetch for %s from %s",
                 self.entity_id,
                 url,
             )
-            return await super().async_get_media_image()
+            return None, None
 
         return content, content_type
 
