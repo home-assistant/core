@@ -1,9 +1,9 @@
 """Tests for Heiman Home config flow - comprehensive coverage."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import HeimanAuthError, HeimanTokenExpiredError
+import pytest
 import voluptuous as vol
 
 from homeassistant.components.heiman_home.config_flow import AuthInfo, HeimanConfigFlow
