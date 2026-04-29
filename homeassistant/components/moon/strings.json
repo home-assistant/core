@@ -7,6 +7,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "above_horizon": {
+        "name": "Above horizon"
+      }
+    },
     "sensor": {
       "phase": {
         "name": "Phase",

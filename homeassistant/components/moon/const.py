@@ -5,7 +5,7 @@ from typing import Final
 from homeassistant.const import Platform
 
 DOMAIN: Final = "moon"
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 DEFAULT_NAME: Final = "Moon"
 
