@@ -59,8 +59,8 @@
       "target_flow_level": {
         "name": "Target flow level"
       },
-      "time_state_remain": {
-        "name": "Mode time remaining"
+      "time_state_end": {
+        "name": "Mode end time"
       },
       "ventilation_state": {
         "name": "Ventilation state",

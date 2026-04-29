@@ -391,7 +391,7 @@
     'state': '27.9',
   })
 # ---
-# name: test_sensor_entities_state[sensor.living_mode_time_remaining-entry]
+# name: test_sensor_entities_state[sensor.living_mode_end_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -405,7 +405,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.living_mode_time_remaining',
+    'entity_id': 'sensor.living_mode_end_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -413,37 +413,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mode time remaining',
+    'object_id_base': 'Mode end time',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Mode time remaining',
+    'original_name': 'Mode end time',
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'time_state_remain',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_1_time_state_remain',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'translation_key': 'time_state_end',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_1_time_state_end',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_state[sensor.living_mode_time_remaining-state]
+# name: test_sensor_entities_state[sensor.living_mode_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Living Mode time remaining',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'device_class': 'timestamp',
+      'friendly_name': 'Living Mode end time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_mode_time_remaining',
+    'entity_id': 'sensor.living_mode_end_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_entities_state[sensor.living_signal_strength-entry]

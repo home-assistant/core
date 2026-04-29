@@ -10,7 +10,7 @@
       "target_flow_level": {
         "default": "mdi:gauge"
       },
-      "time_state_remain": {
+      "time_state_end": {
         "default": "mdi:timer-outline"
       },
       "ventilation_state": {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 
 from duco.models import Node, NodeType, VentilationState
@@ -20,11 +21,11 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -39,7 +40,7 @@ PARALLEL_UPDATES = 0
 class DucoSensorEntityDescription(SensorEntityDescription):
     """Duco sensor entity description."""
 
-    value_fn: Callable[[Node], int | float | str | None]
+    value_fn: Callable[[Node], datetime | int | float | str | None]
     node_types: tuple[NodeType, ...]
 
 
@@ -81,13 +82,15 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
-        key="time_state_remain",
-        translation_key="time_state_remain",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_display_precision=0,
+        key="time_state_end",
+        translation_key="time_state_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda node: (
-            node.ventilation.time_state_remain if node.ventilation else None
+            dt_util.utc_from_timestamp(node.ventilation.time_state_end).replace(
+                second=0, microsecond=0
+            )
+            if node.ventilation and node.ventilation.time_state_end != 0
+            else None
         ),
         node_types=(NodeType.BOX,),
     ),
@@ -233,7 +236,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | float | str | None:
+    def native_value(self) -> datetime | int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
 
