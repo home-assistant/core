@@ -5238,7 +5238,7 @@ async def test_state_condition_primary_entities_only_with_duration(
         diagnostic_id,
     ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
 
-    # Primary starts with valid attribute, diagnostic with invalid attribute
+    # Primary starts with matching attribute, diagnostic with non-matching attribute
     hass.states.async_set(primary_id, STATE_ON, {"test_attr": True})
     hass.states.async_set(diagnostic_id, STATE_ON, {"test_attr": False})
     await hass.async_block_till_done()
@@ -5256,21 +5256,21 @@ async def test_state_condition_primary_entities_only_with_duration(
         primary_entities_only=primary_entities_only,
     )
 
-    # 3s later, diagnostic transitions to valid. The state-change listener
+    # 3s later, diagnostic transitions to matching. The state-change listener
     freezer.tick(timedelta(seconds=3))
     hass.states.async_set(diagnostic_id, STATE_ON, {"test_attr": True})
     await hass.async_block_till_done()
 
-    # 3s after diagnostic became valid (6s total since primary became valid):
+    # 3s after diagnostic became matching (6s total since primary became matching):
     # - primary_entities_only=True: diagnostic is excluded from evaluation,
-    #   only primary is checked. Primary has been valid for 6s >= 5s → True.
+    #   only primary is checked. Primary has been matching for 6s >= 5s → True.
     # - primary_entities_only=False: diagnostic is included. Diagnostic has
-    #   only been valid for 3s < 5s → behavior=all is False.
+    #   only been matching for 3s < 5s → behavior=all is False.
     freezer.tick(timedelta(seconds=3))
     assert test(hass) is primary_entities_only
 
-    # 3 more seconds later (6s after diagnostic became valid). Now diagnostic
-    # has also been valid for >= 5s → True regardless of flag.
+    # 3 more seconds later (6s after diagnostic became matching). Now diagnostic
+    # has also been matching for >= 5s → True regardless of flag.
     freezer.tick(timedelta(seconds=3))
     assert test(hass) is True
 
