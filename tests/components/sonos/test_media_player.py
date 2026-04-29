@@ -137,9 +137,6 @@ async def test_device_registry_not_portable(
     assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
 
 
-@pytest.mark.skip(
-    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
-)
 async def test_entity_basic(
     hass: HomeAssistant,
     async_autosetup_sonos,
