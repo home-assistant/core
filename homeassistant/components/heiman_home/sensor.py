@@ -163,8 +163,9 @@ async def async_setup_entry(
     # Initial setup
     _create_sensors_for_devices()
 
-    # Listen for coordinator updates to add new devices dynamically
-    # Uses structure hash to avoid scanning on every MQTT property update
+    # Listen for coordinator updates so newly eligible sensor properties are
+    # discovered dynamically. Uses structure hash to avoid creating duplicate
+    # entities when no new sensor candidates are found.
     entry.async_on_unload(coordinator.async_add_listener(_create_sensors_for_devices))
 
 

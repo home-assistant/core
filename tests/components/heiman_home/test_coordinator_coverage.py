@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from heimanconnect import HeimanApiError, HeimanConnectionError, HeimanMQTTError
+from heimanconnect import (
+    HeimanApiError,
+    HeimanAuthError,
+    HeimanConnectionError,
+    HeimanMQTTError,
+)
 from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import DeviceProperty as SDKDeviceProperty, HeimanDevice
 import pytest
@@ -760,6 +765,118 @@ async def test_coordinator_fetch_home_info_with_matching_home(
     assert coordinator.data.home_info.home_id == "target-home-id"
 
 
+async def test_coordinator_fetch_home_info_home_not_found(
+    hass: HomeAssistant,
+) -> None:
+    """Test _fetch_user_and_home_info raises UpdateFailed when home_id not found (lines 175-178)."""
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.data = {CONF_HOME_ID: "non-existent-home-id"}
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    # Mock user info
+    mock_user = MagicMock()
+    mock_cloud_wrapper.async_get_user_info = AsyncMock(return_value=mock_user)
+
+    # Mock homes - return homes but none matching the configured home_id
+    mock_home1 = MagicMock()
+    mock_home1.home_id = "home-1"
+    mock_home2 = MagicMock()
+    mock_home2.home_id = "home-2"
+    mock_cloud_wrapper.async_get_homes = AsyncMock(
+        return_value=[mock_home1, mock_home2]
+    )
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData()
+
+    # Should raise UpdateFailed with clear error message
+    with pytest.raises(UpdateFailed, match="non-existent-home-id.*was not found"):
+        await coordinator._fetch_user_and_home_info()
+
+
+async def test_coordinator_fetch_home_info_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test _fetch_user_and_home_info raises ConfigEntryAuthFailed on HeimanAuthError (line 181)."""
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    # Mock user info - already exists so we skip the first try block
+    mock_user = MagicMock()
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData()
+    coordinator.data.user_info = mock_user  # Set user_info to skip first try block
+
+    # Mock async_get_homes to raise HeimanAuthError
+    mock_cloud_wrapper.async_get_homes = AsyncMock(
+        side_effect=HeimanAuthError("Token expired")
+    )
+
+    # Should raise ConfigEntryAuthFailed to trigger re-auth flow
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._fetch_user_and_home_info()
+
+
+async def test_coordinator_fetch_home_info_config_entry_auth_failed(
+    hass: HomeAssistant,
+) -> None:
+    """Test _fetch_user_and_home_info re-raises ConfigEntryAuthFailed (line 184)."""
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    # Mock user info - already exists so we skip the first try block
+    mock_user = MagicMock()
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData()
+    coordinator.data.user_info = mock_user  # Set user_info to skip first try block
+
+    # Mock async_get_homes to raise ConfigEntryAuthFailed directly
+    mock_cloud_wrapper.async_get_homes = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("Already authenticated failed")
+    )
+
+    # Should re-raise ConfigEntryAuthFailed unchanged
+    with pytest.raises(ConfigEntryAuthFailed, match="Already authenticated failed"):
+        await coordinator._fetch_user_and_home_info()
+
+
 async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> None:
     """Test _fetch_and_process_devices applies device filtering (lines 172-188)."""
     config_entry = MagicMock(spec=ConfigEntry)
@@ -1142,4 +1259,36 @@ async def test_coordinator_fetch_devices_auth_failed(hass: HomeAssistant) -> Non
 
     # Should re-raise ConfigEntryAuthFailed without wrapping it
     with pytest.raises(ConfigEntryAuthFailed, match="Token expired"):
+        await coordinator._fetch_and_process_devices("test-home-id")
+
+
+async def test_coordinator_fetch_devices_heiman_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test _fetch_and_process_devices raises ConfigEntryAuthFailed on HeimanAuthError (line 215)."""
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    # Simulate HeimanAuthError from SDK
+    mock_cloud_wrapper.async_get_devices = AsyncMock(
+        side_effect=HeimanAuthError("Token expired")
+    )
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData(devices={})
+
+    # Should raise ConfigEntryAuthFailed to trigger re-auth flow
+    with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._fetch_and_process_devices("test-home-id")

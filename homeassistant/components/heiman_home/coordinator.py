@@ -169,15 +169,21 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 homes = await cloud_wrapper.async_get_homes()
                 if homes:
                     home_id = self.config_entry.data.get(CONF_HOME_ID)
-                    self.data.home_info = next(
+                    home_info = next(
                         (h for h in homes if h.home_id == home_id),
-                        homes[0],
+                        None,
                     )
-            except (
-                HeimanConnectionError,
-                HeimanApiError,
-                HeimanAuthError,
-            ) as err:
+                    if home_info is None:
+                        raise UpdateFailed(
+                            f"Configured home_id '{home_id}' was not found in the account"
+                        )
+                    self.data.home_info = home_info
+            except HeimanAuthError as err:
+                raise ConfigEntryAuthFailed from err
+            except ConfigEntryAuthFailed:
+                # Re-raise authentication errors to trigger re-auth flow
+                raise
+            except (HeimanConnectionError, HeimanApiError) as err:
                 _LOGGER.warning("Failed to fetch home info: %s", err)
                 self.data.errors["home_info"] = str(err)
 
@@ -207,6 +213,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Update device data and merge old states
             self._merge_device_states(devices)
 
+        except HeimanAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except HeimanConnectionError as err:
             self.data.errors["devices"] = str(err)
             if not self.data.devices:
