@@ -99,7 +99,7 @@
   },
   "system_health": {
     "info": {
-      "write_requests_remaining": "Remaining write requests"
+      "write_requests_remaining": "Remaining write requests today"
     }
   }
 }
