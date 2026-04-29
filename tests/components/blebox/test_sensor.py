@@ -344,3 +344,35 @@ async def test_energy_sensor_restore(switchbox, hass: HomeAssistant) -> None:
     state = hass.states.get(energy_entity_id)
     delta = (500 + 500) / 2 * 5 / 3_600_000
     assert float(state.state) == pytest.approx(1.5 + delta, rel=1e-4)
+
+
+async def test_energy_sensor_none_to_numeric_transition(
+    switchbox, hass: HomeAssistant
+) -> None:
+    """Test that a None power reading followed by a numeric reading does not crash."""
+    feature_mock, power_entity_id, energy_entity_id = switchbox
+
+    t0 = utcnow()
+    t1 = t0 + timedelta(seconds=5)
+
+    feature_mock.native_value = None
+    feature_mock.async_update = AsyncMock()
+
+    with patch(
+        "homeassistant.components.blebox.sensor.dt_util.utcnow", return_value=t0
+    ):
+        await async_setup_entities(hass, [power_entity_id, energy_entity_id])
+
+    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES][("sensor", "blebox")]
+    energy_entity = entities[energy_entity_id]
+
+    feature_mock.native_value = 1000.0
+
+    with patch(
+        "homeassistant.components.blebox.sensor.dt_util.utcnow", return_value=t1
+    ):
+        await energy_entity.async_update()
+        energy_entity.async_write_ha_state()
+
+    state = hass.states.get(energy_entity_id)
+    assert state.state == "0.0"
