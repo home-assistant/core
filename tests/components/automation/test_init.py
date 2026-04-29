@@ -4050,3 +4050,53 @@ async def test_reload_when_labs_flag_changes(
         await hass.async_block_till_done()
         assert len(calls) == 1
         assert calls[-1].data.get("event") == "test_event2"
+
+
+async def test_remove_automation_unloads_condition_and_script(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that removing an automation unloads its condition and action script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "sun",
+                "alias": "test_unload",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "binary_sensor.test",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    entity = hass.data[automation.DATA_COMPONENT].get_entity("automation.test_unload")
+    assert entity is not None
+    assert isinstance(entity, AutomationEntity)
+
+    # Reload with empty config to remove the automation
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={automation.DOMAIN: []},
+        ),
+        patch.object(
+            entity._condition, "async_unload", wraps=entity._condition.async_unload
+        ) as condition_unload,
+        patch.object(
+            entity.action_script,
+            "async_unload",
+            wraps=entity.action_script.async_unload,
+        ) as script_unload,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    condition_unload.assert_called_once()
+    script_unload.assert_called_once()
