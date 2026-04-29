@@ -46,7 +46,7 @@ async def test_api_client_get_access_token_none(hass: HomeAssistant) -> None:
     assert token is None
 
 
-async def test_api_client_ensure_initialized_success(hass: HomeAssistant) -> None:
+async def test_api_clientinitialize_success(hass: HomeAssistant) -> None:
     """Test successful client initialization."""
     token_data = {"access_token": "test-token"}
     client = HeimanApiClient(hass, token_data=token_data)
@@ -57,21 +57,21 @@ async def test_api_client_ensure_initialized_success(hass: HomeAssistant) -> Non
         mock_wrapper = MagicMock()
         mock_wrapper_class.return_value = mock_wrapper
 
-        await client._ensure_initialized()
+        await client.initialize()
 
         assert client._wrapper is not None
         mock_wrapper_class.assert_called_once()
 
 
-async def test_api_client_ensure_initialized_no_token(hass: HomeAssistant) -> None:
+async def test_api_clientinitialize_no_token(hass: HomeAssistant) -> None:
     """Test initialization fails when no token available."""
     client = HeimanApiClient(hass)
 
     with pytest.raises(HeimanConnectionError, match="No access token available"):
-        await client._ensure_initialized()
+        await client.initialize()
 
 
-async def test_api_client_ensure_initialized_already_initialized(
+async def test_api_clientinitialize_already_initialized(
     hass: HomeAssistant,
 ) -> None:
     """Test that already initialized client is not re-initialized."""
@@ -85,11 +85,11 @@ async def test_api_client_ensure_initialized_already_initialized(
         mock_wrapper_class.return_value = mock_wrapper
 
         # First initialization
-        await client._ensure_initialized()
+        await client.initialize()
         first_call_count = mock_wrapper_class.call_count
 
         # Second call should not create new wrapper
-        await client._ensure_initialized()
+        await client.initialize()
 
         assert mock_wrapper_class.call_count == first_call_count
 
@@ -221,7 +221,7 @@ async def test_api_client_cloud_client_property(hass: HomeAssistant) -> None:
         mock_wrapper = MagicMock()
         mock_wrapper_class.return_value = mock_wrapper
 
-        await client._ensure_initialized()
+        await client.initialize()
 
         assert client.cloud_client is mock_wrapper
 
@@ -246,7 +246,7 @@ async def test_api_client_close(hass: HomeAssistant) -> None:
         mock_wrapper.close = AsyncMock()
         mock_wrapper_class.return_value = mock_wrapper
 
-        await client._ensure_initialized()
+        await client.initialize()
         await client.close()
 
         mock_wrapper.close.assert_called_once()

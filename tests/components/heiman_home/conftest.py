@@ -75,8 +75,8 @@ def mock_api_client() -> Generator[MagicMock]:
         mock_cloud.async_control_device = AsyncMock()
         client.cloud_client = mock_cloud
 
-        # Set up _ensure_initialized method
-        client._ensure_initialized = AsyncMock()
+        # Set up initialize method
+        client.initialize = AsyncMock()
 
         yield client
 

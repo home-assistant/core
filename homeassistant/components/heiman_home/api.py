@@ -111,6 +111,14 @@ class HeimanApiClient:
 
         raise HeimanAuthError("No token available for refresh")
 
+    async def initialize(self) -> None:
+        """Initialize the API client.
+        
+        This method ensures the internal wrapper is created and ready to use.
+        It should be called before accessing the cloud_client property.
+        """
+        await self._ensure_initialized()
+
     @property
     def cloud_client(self):
         """Get the underlying cloud client wrapper.

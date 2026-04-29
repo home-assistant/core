@@ -3,6 +3,7 @@
     "abort": {
       "account_info_failed": "Failed to fetch account information from Heiman Home.",
       "already_configured": "Account is already configured.",
+      "invalid_home_data": "Invalid home data received from Heiman Home API. Please contact support.",
       "missing_credentials": "OAuth2 credentials are not configured. Please set up application credentials first.",
       "no_homes": "No homes found in your Heiman Home account.",
       "reauth_account_mismatch": "Re-authentication failed: Account mismatch.",

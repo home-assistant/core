@@ -44,7 +44,7 @@ async def test_oauth_create_entry_token_expired(hass: HomeAssistant) -> None:
     )
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -71,7 +71,7 @@ async def test_oauth_create_entry_auth_error(hass: HomeAssistant) -> None:
     )
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -96,7 +96,7 @@ async def test_oauth_create_entry_user_info_exception(hass: HomeAssistant) -> No
     mock_wrapper.async_get_user_info = AsyncMock(side_effect=Exception("Network error"))
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -125,7 +125,7 @@ async def test_oauth_create_entry_no_homes(hass: HomeAssistant) -> None:
     mock_wrapper.async_get_homes = AsyncMock(return_value=[])
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -156,7 +156,7 @@ async def test_oauth_create_entry_homes_token_expired(hass: HomeAssistant) -> No
     )
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -185,7 +185,7 @@ async def test_oauth_create_entry_homes_auth_error(hass: HomeAssistant) -> None:
     mock_wrapper.async_get_homes = AsyncMock(side_effect=HeimanAuthError("Auth failed"))
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -214,7 +214,7 @@ async def test_oauth_create_entry_homes_exception(hass: HomeAssistant) -> None:
     mock_wrapper.async_get_homes = AsyncMock(side_effect=Exception("Network error"))
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -250,7 +250,7 @@ async def test_oauth_create_entry_success_single_home(hass: HomeAssistant) -> No
     mock_wrapper.async_get_homes = AsyncMock(return_value=[mock_home])
     mock_api_client.cloud_client = mock_wrapper
     mock_api_client.close = AsyncMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.heiman_home.config_flow.HeimanApiClient",
@@ -486,9 +486,10 @@ async def test_get_home_selection_schema_home_without_id() -> None:
     assert CONF_HOME_ID in schema.schema
 
 
-async def test_get_home_selection_schema_all_homes_without_id() -> None:
+async def test_get_home_selection_schema_all_homes_without_id(hass: HomeAssistant) -> None:
     """Test home selection schema when all homes lack ID."""
     flow = HeimanConfigFlow()
+    flow.hass = hass
 
     mock_home1 = MagicMock()
     mock_home1.home_id = ""
@@ -502,5 +503,8 @@ async def test_get_home_selection_schema_all_homes_without_id() -> None:
 
     flow._auth_info.homes = [mock_home1, mock_home2]
 
-    schema = flow._get_home_selection_schema()
-    assert schema.schema == {}
+    # Should abort with invalid_home_data reason
+    result = flow._get_home_selection_schema()
+    assert isinstance(result, dict)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_home_data"

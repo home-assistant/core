@@ -45,7 +45,7 @@ async def test_coordinator_async_update_data_no_home_id(hass: HomeAssistant) -> 
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -70,7 +70,7 @@ async def test_coordinator_fetch_user_info_connection_error(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Simulate connection error
     mock_cloud_wrapper.async_get_user_info = AsyncMock(
@@ -102,7 +102,7 @@ async def test_coordinator_fetch_user_info_general_exception(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Simulate general exception
     mock_cloud_wrapper.async_get_user_info = AsyncMock(
@@ -132,7 +132,7 @@ async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> Non
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # User info succeeds
     mock_user = MagicMock()
@@ -168,7 +168,7 @@ async def test_coordinator_fetch_devices_connection_error_no_previous_data(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Simulate connection error
     mock_cloud_wrapper.async_get_devices = AsyncMock(
@@ -200,7 +200,7 @@ async def test_coordinator_fetch_devices_general_exception_no_previous_data(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Simulate general exception
     mock_cloud_wrapper.async_get_devices = AsyncMock(
@@ -230,7 +230,7 @@ async def test_coordinator_update_device_details(hass: HomeAssistant) -> None:
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     mock_cloud_wrapper.async_fetch_and_process_device_details = AsyncMock()
 
@@ -260,7 +260,7 @@ async def test_coordinator_merge_device_states(hass: HomeAssistant) -> None:
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -316,7 +316,7 @@ async def test_coordinator_mqtt_init_oauth2_token_path(hass: HomeAssistant) -> N
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -362,7 +362,7 @@ async def test_coordinator_mqtt_init_no_user_id(hass: HomeAssistant) -> None:
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -391,7 +391,7 @@ async def test_coordinator_mqtt_init_with_user_info(hass: HomeAssistant) -> None
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -482,7 +482,7 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -532,7 +532,7 @@ async def test_coordinator_on_device_property_update_new_property(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     mock_device = MagicMock(spec=HeimanDevice)
     mock_device.device_id = "device-1"
@@ -570,7 +570,7 @@ async def test_coordinator_read_device_properties_no_properties_returned(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     mock_device = MagicMock(spec=HeimanDevice)
     mock_device.device_id = "device-1"
@@ -607,7 +607,7 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     online_device = MagicMock(spec=HeimanDevice)
     online_device.device_id = "device-1"
@@ -644,7 +644,7 @@ async def test_coordinator_get_device_property_not_found(hass: HomeAssistant) ->
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -677,7 +677,7 @@ async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> Non
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Mock user info
     mock_user = MagicMock()
@@ -727,7 +727,7 @@ async def test_coordinator_fetch_home_info_with_matching_home(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Mock user info
     mock_user = MagicMock()
@@ -766,7 +766,7 @@ async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> 
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     # Create mock device management
     mock_device_management = MagicMock()
@@ -822,7 +822,7 @@ async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -860,7 +860,7 @@ async def test_coordinator_mqtt_init_no_access_token_warning(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -892,7 +892,7 @@ async def test_coordinator_on_device_property_update_device_not_found(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -920,7 +920,7 @@ async def test_coordinator_on_device_property_update_existing_property(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     mock_device = MagicMock(spec=HeimanDevice)
     mock_device.device_id = "device-1"
@@ -962,7 +962,7 @@ async def test_coordinator_read_device_properties_mqtt_not_initialized(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -989,7 +989,7 @@ async def test_coordinator_read_device_properties_device_not_found(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -1018,7 +1018,7 @@ async def test_coordinator_read_device_properties_exception(
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     mock_device = MagicMock(spec=HeimanDevice)
     mock_device.device_id = "device-1"
@@ -1056,7 +1056,7 @@ async def test_coordinator_get_device_property_success(hass: HomeAssistant) -> N
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client._ensure_initialized = AsyncMock()
+    mock_api_client.initialize = AsyncMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,

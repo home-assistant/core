@@ -692,3 +692,41 @@ async def test_setup_first_refresh_failure_with_cleanup(
 
     # Verify API client was closed to prevent resource leak
     mock_api_client_instance.async_close.assert_called_once()
+
+
+async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:
+    """Test unload when entry has no runtime_data (line 153 coverage).
+    
+    This tests the edge case where async_unload_platforms succeeds but
+    coordinator is None because setup failed before runtime_data was set.
+    """
+    from homeassistant.components.heiman_home import async_unload_entry
+    
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_token",
+            },
+            "home_id": "test_home",
+            "user_id": "test_user",
+        },
+        unique_id="test_user",
+    )
+    entry.add_to_hass(hass)
+    
+    # Ensure runtime_data is not set by deleting it if it exists
+    if hasattr(entry, "runtime_data"):
+        object.__delattr__(entry, "runtime_data")
+    
+    # Mock async_unload_platforms to succeed
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        new=AsyncMock(return_value=True),
+    ):
+        result = await async_unload_entry(hass, entry)
+        
+    # Should return True without attempting cleanup
+    assert result is True

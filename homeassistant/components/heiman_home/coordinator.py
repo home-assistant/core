@@ -123,7 +123,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
     async def _async_update_data(self) -> HeimanData:
         """Update coordinator data."""
         # Ensure client is initialized
-        await self.api_client._ensure_initialized()  # noqa: SLF001
+        await self.api_client.initialize()
 
         # Get home ID
         home_id = self.config_entry.data.get(CONF_HOME_ID)

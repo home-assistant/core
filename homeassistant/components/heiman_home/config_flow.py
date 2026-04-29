@@ -48,16 +48,13 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Heiman."""
-        # Create API client to validate token and get user info
         api_client = HeimanApiClient(
             hass=self.hass, session=None, token_data=data[CONF_TOKEN]
         )
 
         try:
-            # Initialize the client before using cloud_client
-            await api_client._ensure_initialized()  # noqa: SLF001
+            await api_client.initialize()
 
-            # Get user info and homes
             try:
                 user_info = await api_client.cloud_client.async_get_user_info()
                 homes = await api_client.cloud_client.async_get_homes()
@@ -71,12 +68,10 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.error("Failed to fetch account information: %s", err)
                 return self.async_abort(reason="account_info_failed")
 
-            # Store temporary data for home selection
             self._auth_info.homes = homes if isinstance(homes, list) else []
             self._auth_info.user_info = user_info
             self._auth_info.auth_data = data
 
-            # Enter home selection step for new entries
             return await self.async_step_select_home()
         finally:
             # Always close the temporary API client to prevent resource leaks
@@ -87,7 +82,6 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle home selection step."""
         if user_input is not None:
-            # User selected a home
             selected_home_id = user_input.get(CONF_HOME_ID)
 
             if not selected_home_id:
@@ -100,14 +94,13 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             await self.async_set_unique_id(self._auth_info.user_info.user_id)
             self._abort_if_unique_id_configured()
 
-            # Build config data with single home ID
             config_data = {
                 **self._auth_info.auth_data,
                 CONF_HOME_ID: selected_home_id,
                 CONF_USER_ID: self._auth_info.user_info.user_id,
             }
 
-            # Get title from user info using SDK method
+            # Use SDK method to get display name for better localization
             title = self._auth_info.user_info.get_display_name() or "Heiman Home"
 
             return self.async_create_entry(
@@ -115,7 +108,6 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data=config_data,
             )
 
-        # Show home selection form
         return self.async_show_form(
             step_id="select_home",
             data_schema=self._get_home_selection_schema(),
@@ -143,7 +135,13 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             home_options[home_id] = display_text
 
         if not home_options:
-            return vol.Schema({})
+            # All homes have invalid home_id, this should not happen in normal scenarios
+            # as Heiman API always returns valid home IDs for user's homes
+            _LOGGER.error(
+                "All homes returned from API have invalid home_id. "
+                "This indicates an API issue or data structure change."
+            )
+            return self.async_abort(reason="invalid_home_data")
 
         return vol.Schema(
             {
