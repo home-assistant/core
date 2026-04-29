@@ -77,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Ping",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
