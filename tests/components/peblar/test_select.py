@@ -1,6 +1,6 @@
 """Tests for the Peblar select platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from peblar import (
     LedBrightness,
@@ -228,32 +228,21 @@ async def test_select_hardware_entity(
 
 
 @pytest.mark.parametrize(
-    ("entity_key", "hw_attr"),
+    ("mock_peblar", "entity_key"),
     [
-        ("buzzer_volume", "hardware_has_buzzer"),
-        ("led_brightness", "hardware_has_led"),
+        ("system_information_no_buzzer.json", "buzzer_volume"),
+        ("system_information_no_led.json", "led_brightness"),
     ],
+    indirect=["mock_peblar"],
 )
 async def test_hw_entity_absent_when_hw_flag_false(
     hass: HomeAssistant,
-    mock_peblar: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     entity_key: str,
-    hw_attr: str,
 ) -> None:
     """Test hardware select entity is absent when the hardware flag is false."""
     unique_id = f"{mock_config_entry.unique_id}_{entity_key}"
-    if existing := entity_registry.async_get_entity_id(
-        Platform.SELECT, DOMAIN, unique_id
-    ):
-        entity_registry.async_remove(existing)
-
-    setattr(mock_peblar.system_information.return_value, hw_attr, False)
-    with patch("homeassistant.components.peblar.PLATFORMS", [Platform.SELECT]):
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     assert (
         entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id) is None
     )
