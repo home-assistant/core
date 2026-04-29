@@ -251,12 +251,7 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
             if "fields" in field_schema:
                 # This is a section
                 continue
-            if (
-                "name" not in field_schema
-                and integration.core
-                # Fields using automation_behavior selector use generic frontend translations
-                and "automation_behavior" not in field_schema.get("selector", {})
-            ):
+            if "name" not in field_schema and integration.core:
                 try:
                     strings["triggers"][trigger_name]["fields"][field_name]["name"]
                 except KeyError:
