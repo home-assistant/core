@@ -225,10 +225,8 @@ async def test_bridged_entity_unavailable_when_reachable_false_at_startup(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
-    """Test _attr_available is False at __init__ when Reachable attribute is False.
+    """Test Entity.available is False when Reachable attribute is False.
 
-    _attr_available is initialised as:
-        self._endpoint.node.available and self._get_bridged_reachable()
     When BridgedDeviceBasicInformation.Reachable is False the entity must be
     unavailable from the moment it is created, even though the node itself is
     online.
@@ -322,8 +320,8 @@ async def test_bridged_entity_unavailable_when_node_goes_offline(
     """Test entity becomes unavailable when the bridge node goes offline.
 
     Even if BridgedDeviceBasicInformation.Reachable is True, the entity must
-    become unavailable when node.available is False, because _attr_available
-    is computed as node.available AND _get_bridged_reachable().
+    become unavailable when node.available is False, because Entity.available
+    is computed as node.available AND BridgedDeviceBasicInformation.Reachable.
     """
     matter_node = await setup_integration_with_node_fixture(
         hass, "atios_knx_bridge", matter_client
@@ -364,8 +362,7 @@ async def test_non_bridged_entity_availability_tracks_node(
     """Test non-bridged entity availability tracks node.available only.
 
     For an endpoint without BridgedDeviceBasicInformation.Reachable,
-    _get_bridged_reachable() always returns True, so _attr_available equals
-    node.available.
+    Entity.available equals node.available.
     """
     entity_id = "light.mock_onoff_light"
 
@@ -398,12 +395,12 @@ async def test_bridged_entity_subscribes_to_reachable_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
-    """Test that async_added_to_hass subscribes to BridgedDeviceBasicInformation.Reachable.
+    """Test that Entity subscribes to BridgedDeviceBasicInformation.Reachable.
 
     When an endpoint has the BridgedDeviceBasicInformation.Reachable attribute
-    (i.e. has_attribute returns True), async_added_to_hass must create an
+    (i.e. has_attribute returns True), the entity must create an
     ATTRIBUTE_UPDATED subscription for that attribute path so that reachability
-    changes trigger _on_matter_event and update _attr_available.
+    changes trigger the matter event callback and update Entity.available.
     """
     await setup_integration_with_node_fixture(hass, "atios_knx_bridge", matter_client)
 
@@ -425,7 +422,7 @@ async def test_non_bridged_entity_does_not_subscribe_to_reachable(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test that async_added_to_hass does NOT subscribe to Reachable for non-bridge.
+    """Test that Entity does NOT subscribe to Reachable for non-bridge.
 
     For an endpoint without BridgedDeviceBasicInformation.Reachable, no extra
     subscription must be created for attribute path "*/57/17".
