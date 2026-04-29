@@ -55,7 +55,7 @@
     "speak_word": {
       "service": "mdi:message-minus"
     },
-    "switch_output_turn_on": {
+    "switch_output_turn_on_for": {
       "service": "mdi:timer"
     }
   }

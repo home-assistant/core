@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from elkm1_lib.const import ThermostatMode, ThermostatSetting
@@ -15,18 +16,22 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
-from .const import ATTR_VALUE
+from .const import ATTR_DURATION
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
-SERVICE_SWITCH_OUTPUT_TURN_ON = "switch_output_turn_on"
+SERVICE_SWITCH_OUTPUT_TURN_ON_FOR = "switch_output_turn_on"
 
-ELK_OUTPUT_TURN_ON_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
+ELK_OUTPUT_TURN_ON_FOR_SERVICE_SCHEMA: VolDictType = {
+    vol.Required(ATTR_DURATION): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(seconds=0), max=timedelta(seconds=65535)),
+    ),
 }
 
 
@@ -48,9 +53,9 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        SERVICE_SWITCH_OUTPUT_TURN_ON,
-        ELK_OUTPUT_TURN_ON_SERVICE_SCHEMA,
-        "async_switch_output_turn_on",
+        SERVICE_SWITCH_OUTPUT_TURN_ON_FOR,
+        ELK_OUTPUT_TURN_ON_FOR_SERVICE_SCHEMA,
+        "async_switch_output_turn_on_for",
     )
 
 
@@ -72,10 +77,12 @@ class ElkOutput(ElkAttachedEntity, SwitchEntity):
         """Turn off the output."""
         self._element.turn_off()
 
-    async def async_switch_output_turn_on(self, value: int | None = None) -> None:
+    async def async_switch_output_turn_on_for(
+        self, duration: timedelta | None = None
+    ) -> None:
         """Turn on an output for specified length of time."""
-        if value is not None:
-            self._element.turn_on(value)
+        if duration is not None:
+            self._element.turn_on(int(duration.total_seconds()))
 
 
 class ElkThermostatEMHeat(ElkEntity, SwitchEntity):

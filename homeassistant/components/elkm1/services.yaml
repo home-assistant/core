@@ -179,15 +179,14 @@ sensor_zone_trigger:
       integration: elkm1
       domain: sensor
 
-switch_output_turn_on:
+switch_output_turn_on_for:
   target:
     entity:
       integration: elkm1
       domain: switch
   fields:
-    value:
+    duration:
+      example: "18:00"
       required: true
       selector:
-        number:
-          min: 0
-          max: 65535
+        duration:
