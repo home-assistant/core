@@ -98,8 +98,8 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     self.get_end_date(vevent), time.min, tzinfo=local_tz
                 )
             else:
-                event_start_dt = self.to_local(vevent.dtstart.value)
-                event_end_dt = self.to_local(self.get_end_date(vevent))
+                event_start_dt = dt_util.as_local(vevent.dtstart.value)
+                event_end_dt = dt_util.as_local(self.get_end_date(vevent))
             if event_end_dt <= start_date or event_start_dt >= end_date:
                 continue
             event_list.append(
