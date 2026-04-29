@@ -262,7 +262,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
-                configuration_url="https://teslemetry.com/console",
+                configuration_url=f"https://teslemetry.com/console/vehicle/{vin}",
                 name=product["display_name"],
                 model=vehicle.model,
                 model_id=vin[3],
@@ -324,7 +324,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
-                configuration_url="https://teslemetry.com/console",
+                configuration_url=f"https://teslemetry.com/console/energy/{site_id}",
                 name=product.get("site_name", "Energy Site"),
                 serial_number=str(site_id),
             )
