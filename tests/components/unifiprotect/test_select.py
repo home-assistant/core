@@ -18,6 +18,7 @@ from uiprotect.data import (
     LightModeType,
     Liveview,
     NvrArmMode,
+    NvrArmModeStatus,
     PTZPatrol,
     PublicBootstrap,
     RecordingMode,
@@ -767,9 +768,7 @@ async def test_select_ptz_camera_adopt(
     assert patrol_entity_id is not None
 
 
-# ---------------------------------------------------------------------------
-# NVR Arm Profile Select Tests
-# ---------------------------------------------------------------------------
+# --- NVR Arm Profile Select Tests ---
 
 ARM_PROFILE_ENTITY_ID = "select.unifiprotect_alarm_profile"
 
@@ -785,6 +784,7 @@ def _make_arm_profile(profile_id: str, name: str) -> Mock:
 def _make_nvr_arm_mode(profile_id: str | None = None) -> Mock:
     """Create an NvrArmMode mock for testing."""
     arm_mode = Mock(spec=NvrArmMode)
+    arm_mode.status = NvrArmModeStatus.DISABLED
     arm_mode.arm_profile_id = profile_id
     return arm_mode
 
@@ -864,6 +864,59 @@ async def test_select_nvr_arm_profile_created(
     assert state.state == "Away"
     assert set(state.attributes[ATTR_OPTIONS]) == {"Home", "Away"}
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+
+async def test_select_nvr_arm_profile_duplicate_names(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Duplicate profile names are disambiguated with an id suffix."""
+    profile_a = _make_arm_profile("aaaaaa111111", "Home")
+    profile_b = _make_arm_profile("bbbbbb222222", "Home")
+    profile_c = _make_arm_profile("cccccc333333", "Away")
+    profiles = {p.id: p for p in (profile_a, profile_b, profile_c)}
+    arm_mode = _make_nvr_arm_mode(profile_id="aaaaaa111111")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+
+    state = hass.states.get(ARM_PROFILE_ENTITY_ID)
+    assert state is not None
+    # Duplicates get the last 6 chars of the id appended; uniques stay plain.
+    assert state.state == "Home (111111)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {
+        "Home (111111)",
+        "Home (222222)",
+        "Away",
+    }
+
+
+async def test_select_nvr_arm_profile_duplicate_names_select_option(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Selecting a disambiguated duplicate name maps back to the correct id."""
+    profile_a = _make_arm_profile("aaaaaa111111", "Home")
+    profile_b = _make_arm_profile("bbbbbb222222", "Home")
+    profiles = {p.id: p for p in (profile_a, profile_b)}
+    arm_mode = _make_nvr_arm_mode(profile_id="aaaaaa111111")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+    ufp.api.set_current_arm_profile_public = AsyncMock()
+
+    await init_entry(hass, ufp, [])
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Home (222222)"},
+        blocking=True,
+    )
+
+    ufp.api.set_current_arm_profile_public.assert_called_once_with("bbbbbb222222")
 
 
 async def test_select_nvr_arm_profile_select_option(

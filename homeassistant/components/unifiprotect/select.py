@@ -542,9 +542,24 @@ class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
             self._attr_current_option = None
             return
 
-        self._id_to_name = {pid: p.name for pid, p in pb.arm_profiles.items()}
-        self._name_to_id = {p.name: pid for pid, p in pb.arm_profiles.items()}
-        self._attr_options = list(self._name_to_id)
+        # Profile names are not guaranteed to be unique on the Protect side.
+        # Disambiguate duplicates by appending a short id suffix so every
+        # option is unique and stable across reloads.
+        name_counts: dict[str, int] = {}
+        for profile in pb.arm_profiles.values():
+            name_counts[profile.name] = name_counts.get(profile.name, 0) + 1
+
+        self._id_to_name = {}
+        self._name_to_id = {}
+        for pid, profile in pb.arm_profiles.items():
+            label = (
+                f"{profile.name} ({pid[-6:]})"
+                if name_counts[profile.name] > 1
+                else profile.name
+            )
+            self._id_to_name[pid] = label
+            self._name_to_id[label] = pid
+        self._attr_options = sorted(self._name_to_id)
         profile_id = arm_mode.arm_profile_id
         self._attr_current_option = (
             self._id_to_name.get(profile_id) if profile_id else None
