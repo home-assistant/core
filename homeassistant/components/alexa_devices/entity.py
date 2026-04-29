@@ -2,9 +2,10 @@
 
 from aioamazondevices.structures import AmazonDevice
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import AmazonDevicesCoordinator
@@ -50,3 +51,32 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
             and self._serial_num in self.coordinator.data
             and self.device.online
         )
+
+
+class AmazonServiceEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
+    """Defines Alexa Devices entity for service device."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: AmazonDevicesCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the service entity."""
+
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_device_id(coordinator))},
+            manufacturer="Amazon",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{slugify(coordinator.config_entry.unique_id)}-{description.key}"
+        )
+
+
+def service_device_id(coordinator: AmazonDevicesCoordinator) -> str:
+    """Return service device id."""
+    return slugify(f"{coordinator.config_entry.unique_id}_service_device")
