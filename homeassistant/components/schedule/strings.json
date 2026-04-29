@@ -52,21 +52,6 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "get_schedule": {
       "description": "Retrieves the configured time ranges of one or multiple schedules.",

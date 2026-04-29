@@ -6239,6 +6239,7 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
+                    "error": "It is not working!",
                     "result": {
                         "params": {
                             "domain": "broken",

@@ -33,7 +33,7 @@ def mock_get_codes() -> Iterator[MagicMock]:
         side_effect=lambda name: MockRadioFrequencyCommand()
     )
     with patch(
-        "homeassistant.components.novy_cooker_hood.light.get_codes",
+        "homeassistant.components.novy_cooker_hood.commands.get_codes",
         return_value=fake_collection,
     ):
         yield fake_collection
