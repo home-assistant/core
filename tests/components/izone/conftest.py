@@ -99,6 +99,7 @@ async def mock_discovery(
         mock_disco.return_value.controllers = {
             mock_controller.device_uid: mock_controller
         }
+        mock_disco.return_value.close = AsyncMock()
         yield mock_disco
 
 

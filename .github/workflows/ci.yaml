@@ -366,7 +366,7 @@ jobs:
           echo "key=uv-${UV_CACHE_VERSION}-${uv_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           key: >-
@@ -374,7 +374,8 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        id: cache-uv
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -398,6 +399,7 @@ jobs:
         if: |
           steps.cache-venv.outputs.cache-hit != 'true'
           || steps.cache-apt-check.outputs.cache-hit != 'true'
+        id: install-os-deps
         timeout-minutes: 10
         env:
           APT_CACHE_HIT: ${{ steps.cache-apt-check.outputs.cache-hit }}
@@ -431,7 +433,10 @@ jobs:
             sudo chmod -R 755 ${APT_CACHE_BASE}
           fi
       - name: Save apt cache
-        if: steps.cache-apt-check.outputs.cache-hit != 'true'
+        if: |
+          always()
+          && steps.cache-apt-check.outputs.cache-hit != 'true'
+          && steps.install-os-deps.outcome == 'success'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
@@ -441,6 +446,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: create-venv
         run: |
           python -m venv venv
           . venv/bin/activate
@@ -471,6 +477,26 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Save uv wheel cache
+        if: |
+          (success() && steps.cache-venv.outputs.cache-hit != 'true')
+          || (always()
+            && steps.create-venv.outcome == 'success'
+            && steps.cache-uv.outputs.cache-matched-key == '')
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-uv-key.outputs.key }}
+      - name: Save base Python virtual environment
+        if: always() && steps.create-venv.outcome == 'success'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
 
   hassfest:
     name: Check hassfest

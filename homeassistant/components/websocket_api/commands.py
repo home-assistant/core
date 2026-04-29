@@ -1076,6 +1076,8 @@ async def handle_execute_script(
             translation_placeholders=err.translation_placeholders,
         )
         return
+    finally:
+        script_obj.async_unload()
     connection.send_result(
         msg["id"],
         {
