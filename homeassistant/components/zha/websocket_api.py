@@ -634,7 +634,7 @@ async def websocket_remove_group_members(
 async def websocket_reconfigure_node(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Re-interview a ZHA node by its ieee address."""
+    """Reconfigure a ZHA node by its ieee address (includes a re-interview)."""
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
 
@@ -661,7 +661,7 @@ async def websocket_reconfigure_node(
 
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    _LOGGER.debug("Re-interviewing node with ieee_address: %s", ieee)
+    _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
     hass.async_create_task(zha_gateway.async_reinterview_device(ieee))
 
 
