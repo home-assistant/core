@@ -514,6 +514,7 @@ class _ScriptRun:
                             enabled = enabled.async_render(limited=True)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
+                                trace_element,
                                 ex,
                                 continue_on_error,
                                 self._log_exceptions or log_exceptions,
@@ -531,7 +532,10 @@ class _ScriptRun:
                     await getattr(self, handler)()
                 except Exception as ex:  # noqa: BLE001
                     self._handle_exception(
-                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                        trace_element,
+                        ex,
+                        continue_on_error,
+                        self._log_exceptions or log_exceptions,
                     )
                 finally:
                     trace_element.update_variables(self._variables.non_parallel_scope)
@@ -554,7 +558,11 @@ class _ScriptRun:
             await self._stopped.wait()
 
     def _handle_exception(
-        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+        self,
+        trace_element: TraceElement,
+        exception: Exception,
+        continue_on_error: bool,
+        log_exceptions: bool,
     ) -> None:
         if not isinstance(exception, _HaltScript) and log_exceptions:
             self._log_exception(exception)
@@ -584,6 +592,9 @@ class _ScriptRun:
         # Only Home Assistant errors can be ignored.
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
+
+        # Mark the step as having an error, but continue running the script.
+        trace_element.set_error(exception)
 
     def _log_exception(self, exception: Exception) -> None:
         action_type = cv.determine_script_action(self._action)
