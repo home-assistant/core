@@ -13,9 +13,10 @@ from homeassistant.components.ai_task import (
     async_generate_data,
     async_generate_image,
 )
-from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
+from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE, DOMAIN
 from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
+from homeassistant.components.media_source.const import MEDIA_SOURCE_DATA
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -400,6 +401,9 @@ async def test_generate_image(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    # Until an image is generated the media source is not registered.
+    assert DOMAIN not in hass.data[MEDIA_SOURCE_DATA]
+
     with patch.object(
         hass.data[DATA_MEDIA_SOURCE],
         "async_upload_media",
@@ -412,6 +416,8 @@ async def test_generate_image(
             instructions="Test prompt",
         )
     mock_upload_media.assert_called_once()
+    # The first upload registers the source so URLs and browse listings work.
+    assert hass.data[MEDIA_SOURCE_DATA][DOMAIN] is hass.data[DATA_MEDIA_SOURCE]
     assert "image_data" not in result
     assert (
         result["media_source_id"]
