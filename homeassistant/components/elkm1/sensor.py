@@ -55,7 +55,7 @@ ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
 }
 
 ELK_SET_SETTING_SERVICE_SCHEMA: VolDictType = {
-    vol.Required("value"): vol.Any(
+    vol.Required(ATTR_VALUE): vol.Any(
         vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)), cv.time
     )
 }
@@ -135,7 +135,7 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
             self._element.set(value)
 
     async def async_setting_set(self, value: int | time_sys | None = None) -> None:
-        """Set the value of a counter on the panel."""
+        """Set the value of a setting on the panel."""
         if not isinstance(self, ElkSetting):
             raise HomeAssistantError("supported only on ElkM1 Setting sensors")
         if value is not None:
