@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 
+from pytradfri import Gateway
+from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
@@ -18,16 +21,30 @@ from .const import LOGGER
 
 SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
+type TradfriConfigEntry = ConfigEntry[TradfriData]
+
+
+@dataclass
+class TradfriData:
+    """Runtime data for a Tradfri config entry."""
+
+    factory: APIFactory
+    gateway: Gateway
+    api: Callable[[Command | list[Command]], Any]
+    coordinator_list: list[TradfriDeviceDataUpdateCoordinator] = field(
+        default_factory=list
+    )
+
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Coordinator to manage data for a specific Tradfri device."""
 
-    config_entry: ConfigEntry
+    config_entry: TradfriConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TradfriConfigEntry,
         api: Callable[[Command | list[Command]], Any],
         device: Device,
     ) -> None:

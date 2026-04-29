@@ -1771,6 +1771,34 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
+class SerialPortSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a serial port selector config."""
+
+    extra_recommended_domains: list[str]
+
+
+@SELECTORS.register("serial_port")
+class SerialPortSelector(Selector[SerialPortSelectorConfig]):
+    """Selector for a serial port."""
+
+    selector_type = "serial_port"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("extra_recommended_domains"): [str],
+        }
+    )
+
+    def __init__(self, config: SerialPortSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        serial: str = vol.Schema(str)(data)
+        return serial
+
+
 class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
@@ -1856,6 +1884,7 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    primary_entities_only: bool
 
 
 @SELECTORS.register("target")
@@ -1877,6 +1906,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
+            vol.Optional("primary_entities_only"): cv.boolean,
         }
     )
 

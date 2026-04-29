@@ -30,6 +30,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -90,6 +91,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
         vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
+        vol.Optional("frequency"): vol.In(FrequencyConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("nitrogen_dioxide"): vol.In(

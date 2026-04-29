@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "sync_time": {
+        "default": "mdi:calendar-clock"
+      }
+    }
+  }
+}

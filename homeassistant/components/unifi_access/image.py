@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import logging
 
-from unifi_access_api import Door
+from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -24,10 +27,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up image entities for UniFi Access doors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UnifiAccessDoorImageEntity(coordinator, hass, entry.data[CONF_VERIFY_SSL], door)
-        for door in coordinator.data.doors.values()
-    )
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_new_doors() -> None:
+        new_door_ids = sorted(set(coordinator.data.door_thumbnails) - added_doors)
+        if not new_door_ids:
+            return
+        async_add_entities(
+            UnifiAccessDoorImageEntity(
+                coordinator,
+                hass,
+                entry.data[CONF_VERIFY_SSL],
+                coordinator.data.doors[door_id],
+            )
+            for door_id in new_door_ids
+        )
+        added_doors.update(new_door_ids)
+
+    _async_add_new_doors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_doors))
 
 
 class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
@@ -56,7 +75,14 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return the door thumbnail image bytes."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
-            return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            try:
+                return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            except UnifiAccessError as err:
+                _LOGGER.warning(
+                    "Failed to fetch thumbnail for door %s: %s",
+                    self._door_id,
+                    err,
+                )
         return None
 
     def _handle_coordinator_update(self) -> None:

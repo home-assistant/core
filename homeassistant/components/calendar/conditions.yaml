@@ -12,3 +12,8 @@ is_event_active:
           options:
             - all
             - any
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:

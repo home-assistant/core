@@ -15,7 +15,6 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -23,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN
+from . import OSOEnergyConfigEntry
 from .entity import OSOEnergyEntity
 
 ATTR_DURATION_DAYS = "duration_days"
@@ -52,11 +51,11 @@ SERVICE_TURN_ON = "turn_on"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OSOEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OSO Energy heater based on a config entry."""
-    osoenergy = hass.data[DOMAIN][entry.entry_id]
+    osoenergy = entry.runtime_data
     devices = osoenergy.session.device_list.get("water_heater")
     if not devices:
         return

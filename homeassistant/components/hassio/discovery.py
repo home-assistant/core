@@ -13,7 +13,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
@@ -82,6 +82,7 @@ class HassIODiscovery(HomeAssistantView):
         self.hass = hass
         self._supervisor_client = get_supervisor_client(hass)
 
+    @require_admin
     async def post(self, request: web.Request, uuid: str) -> web.Response:
         """Handle new discovery requests."""
         # Fetch discovery data and prevent injections
@@ -94,6 +95,7 @@ class HassIODiscovery(HomeAssistantView):
         await self.async_process_new(data)
         return web.Response()
 
+    @require_admin
     async def delete(self, request: web.Request, uuid: str) -> web.Response:
         """Handle remove discovery requests."""
         data: dict[str, Any] = await request.json()

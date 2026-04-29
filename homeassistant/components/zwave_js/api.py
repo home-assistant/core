@@ -1753,16 +1753,21 @@ async def websocket_subscribe_rebuild_routes_progress(
         controller.on("rebuild routes done", partial(forward_event, "result")),
     ]
 
+    connection.send_result(msg[ID])
+
     if controller.rebuild_routes_progress:
-        connection.send_result(
-            msg[ID],
-            {
-                node.node_id: status
-                for node, status in controller.rebuild_routes_progress.items()
-            },
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "rebuild routes progress",
+                    "rebuild_routes_status": {
+                        node.node_id: status
+                        for node, status in controller.rebuild_routes_progress.items()
+                    },
+                },
+            )
         )
-    else:
-        connection.send_result(msg[ID], None)
 
 
 @websocket_api.require_admin

@@ -44,7 +44,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -76,9 +75,8 @@ from .const import (
     DEV_MODEL_TH_SENSOR_YS8014_UC,
     DEV_MODEL_TH_SENSOR_YS8017_EC,
     DEV_MODEL_TH_SENSOR_YS8017_UC,
-    DOMAIN,
 )
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
@@ -423,11 +421,11 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     sensor_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -452,7 +450,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
     ) -> None:

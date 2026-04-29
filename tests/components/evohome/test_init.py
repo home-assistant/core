@@ -7,7 +7,7 @@ import logging
 from unittest.mock import Mock, patch
 
 import aiohttp
-from evohomeasync2 import EvohomeClient, exceptions as exc
+from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -90,7 +90,7 @@ LOG_SETUP_FAILED = (
 EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
     "Connection error",
 )
-EXC_BAD_CREDENTIALS = exc.AuthenticationFailedError(
+EXC_BAD_CREDENTIALS = evo_exc.AuthenticationFailedError(
     "Authenticator response is invalid: {'error': 'invalid_grant'}",
     status=HTTPStatus.BAD_REQUEST,
 )
@@ -172,11 +172,8 @@ async def test_client_request_failure_v2(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_setup(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-    snapshot: SnapshotAssertion,
-) -> None:
+@pytest.mark.usefixtures("evohome")
+async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test services after setup of evohome.
 
     Registered services vary by the type of system.
