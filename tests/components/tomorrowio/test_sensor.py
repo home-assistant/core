@@ -63,6 +63,19 @@ WIND_GUST = "wind_gust"
 PRECIPITATION_TYPE = "precipitation_type"
 UV_INDEX = "uv_index"
 UV_HEALTH_CONCERN = "uv_radiation_health_concern"
+RAIN_INTENSITY = "rain_intensity"
+SNOW_INTENSITY = "snow_intensity"
+SLEET_INTENSITY = "sleet_intensity"
+FREEZING_RAIN_INTENSITY = "freezing_rain_intensity"
+PRECIPITATION_INTENSITY = "precipitation_intensity"
+PRECIPITATION_PROBABILITY = "precipitation_probability"
+TEMPERATURE = "temperature"
+HUMIDITY = "humidity"
+PRESSURE_SEA_LEVEL = "pressure_sea_level"
+WIND_SPEED = "wind_speed"
+WIND_DIRECTION = "wind_direction"
+VISIBILITY = "visibility"
+ALTIMETER_SETTING = "altimeter_setting"
 
 
 V3_FIELDS = [
@@ -97,6 +110,22 @@ V4_FIELDS = [
     PRECIPITATION_TYPE,
     UV_INDEX,
     UV_HEALTH_CONCERN,
+]
+
+NEW_V4_FIELDS = [
+    TEMPERATURE,
+    HUMIDITY,
+    PRESSURE_SEA_LEVEL,
+    WIND_SPEED,
+    WIND_DIRECTION,
+    VISIBILITY,
+    ALTIMETER_SETTING,
+    RAIN_INTENSITY,
+    SNOW_INTENSITY,
+    SLEET_INTENSITY,
+    FREEZING_RAIN_INTENSITY,
+    PRECIPITATION_INTENSITY,
+    PRECIPITATION_PROBABILITY,
 ]
 
 
@@ -218,3 +247,40 @@ async def test_entity_description() -> None:
     """Test improper entity description raises."""
     with pytest.raises(ValueError):
         TomorrowioSensorEntityDescription("a", unit_imperial="b")
+
+
+async def test_v4_new_sensors(hass: HomeAssistant) -> None:
+    """Test newly added v4 sensor data."""
+    await _setup(hass, NEW_V4_FIELDS, API_V4_ENTRY_DATA)
+    check_sensor_state(hass, TEMPERATURE, "44.1")
+    check_sensor_state(hass, HUMIDITY, "22.7")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.35")
+    check_sensor_state(hass, WIND_SPEED, "9.33")
+    check_sensor_state(hass, WIND_DIRECTION, "315")
+    check_sensor_state(hass, VISIBILITY, "8.15")
+    check_sensor_state(hass, ALTIMETER_SETTING, "1013.0")
+    check_sensor_state(hass, RAIN_INTENSITY, "2.5")
+    check_sensor_state(hass, SNOW_INTENSITY, "0.5")
+    check_sensor_state(hass, SLEET_INTENSITY, "0.1")
+    check_sensor_state(hass, FREEZING_RAIN_INTENSITY, "0.3")
+    check_sensor_state(hass, PRECIPITATION_INTENSITY, "3.4")
+    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "45")
+
+
+async def test_v4_new_sensors_imperial(hass: HomeAssistant) -> None:
+    """Test newly added v4 sensor data in imperial units."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await _setup(hass, NEW_V4_FIELDS, API_V4_ENTRY_DATA)
+    check_sensor_state(hass, TEMPERATURE, "111.4")
+    check_sensor_state(hass, HUMIDITY, "22.7")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "0.44")
+    check_sensor_state(hass, WIND_SPEED, "20.87")
+    check_sensor_state(hass, WIND_DIRECTION, "315")
+    check_sensor_state(hass, VISIBILITY, "5.06")
+    check_sensor_state(hass, ALTIMETER_SETTING, "14.69")
+    check_sensor_state(hass, RAIN_INTENSITY, "2.5")
+    check_sensor_state(hass, SNOW_INTENSITY, "0.5")
+    check_sensor_state(hass, SLEET_INTENSITY, "0.1")
+    check_sensor_state(hass, FREEZING_RAIN_INTENSITY, "0.3")
+    check_sensor_state(hass, PRECIPITATION_INTENSITY, "3.4")
+    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "45")
