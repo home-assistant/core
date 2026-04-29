@@ -34,19 +34,13 @@ def doorbell_supported_fn(hub: AxisHub, event: Event) -> bool:
     return hub.config.model == DOORBELL_MODEL and event.id == DOORBELL_PORT
 
 
-@callback
-def doorbell_name_fn(_hub: AxisHub, _event: Event) -> str:
-    """Return the doorbell entity name."""
-    return "Doorbell"
-
-
 ENTITY_DESCRIPTIONS = (
     AxisEventPlatformDescription(
         key="Input port state",
         device_class=EventDeviceClass.DOORBELL,
         event_types=[DoorbellEventType.RING],
         event_topic=EventTopic.PORT_INPUT,
-        name_fn=doorbell_name_fn,
+        name_fn=lambda _hub, _event: "Doorbell",
         supported_fn=doorbell_supported_fn,
     ),
 )
