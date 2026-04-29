@@ -158,7 +158,6 @@ class MockRepairsFlow(RepairsFlow):
         reason: str | None = None,
     ) -> RepairsFlowResult:
         """Must be implemented by subclasses."""
-        raise NotImplementedError
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -354,6 +353,7 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
                 FlowType.CONFIG_FLOW,
                 FlowType.OPTIONS_FLOW,
                 FlowType.CONFIG_SUBENTRIES_FLOW,
+                FlowType.REPAIRS_FLOW,
             ]:
                 return MockFixFlowAbort(flow_type=data["test"])
         if issue_id == "create_entry_issue1":
@@ -627,7 +627,7 @@ async def test_fix_issue_next_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    test,
+    test: FlowType | str,
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
@@ -923,13 +923,14 @@ async def test_list_issues(
         (FlowType.CONFIG_FLOW, ["fake_integration"]),
         (FlowType.OPTIONS_FLOW, ["fake_integration"]),
         (FlowType.CONFIG_SUBENTRIES_FLOW, ["fake_integration"]),
+        (FlowType.REPAIRS_FLOW, ["fake_integration"]),
     ],
 )
 async def test_fix_issue_aborted(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    test: str,
+    test: FlowType | str | None,
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
@@ -959,7 +960,7 @@ async def test_fix_issue_aborted(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
+    assert len(msg["result"]["issues"]) == (2 if test == FlowType.REPAIRS_FLOW else 1)
 
     first_issue = msg["result"]["issues"][0]
 
@@ -1016,21 +1017,19 @@ async def test_fix_issue_aborted(
         }
 
     if test == FlowType.REPAIRS_FLOW:
-        assert resp.status == HTTPStatus.OK
+        _, next_flow_id = data["next_flow"]
         assert data == {
             "description_placeholders": None,
             "flow_id": ANY,
             "handler": "fake_integration",
-            "description": None,
-            "type": "create_entry",
-            "issue": {
+            "reason": "fake_reason",
+            "type": "abort",
+            "result": {
                 **issues[1],
-                "active": True,
                 "created": ANY,
-                "data": None,
                 "dismissed_version": None,
-                "is_persistent": False,
                 "issue_domain": None,
+                "ignored": False,
             },
             "next_flow": [str(test), next_flow_id],
         }
@@ -1039,7 +1038,7 @@ async def test_fix_issue_aborted(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
+    assert len(msg["result"]["issues"]) == (2 if test == FlowType.REPAIRS_FLOW else 1)
     assert msg["result"]["issues"][0] == first_issue
 
 

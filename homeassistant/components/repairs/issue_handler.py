@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Protocol
 
 import voluptuous as vol
 
@@ -22,7 +22,6 @@ from homeassistant.helpers.integration_platform import (
 )
 
 from .const import DOMAIN, FlowType
-from .models import RepairsProtocol
 
 
 class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
@@ -79,7 +78,7 @@ class RepairsFlow(
         description_placeholders: Mapping[str, str] | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> RepairsFlowResult:
-        """Create an entry (fix an flow)."""
+        """Create an entry (fix a flow)."""
         result: RepairsFlowResult = super().async_create_entry(
             title=title,
             data=data,
@@ -192,6 +191,18 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
+class RepairsProtocol(Protocol):
+    """Define the format of repairs platforms."""
+
+    async def async_create_fix_flow(
+        self,
+        hass: HomeAssistant,
+        issue_id: str,
+        data: dict[str, str | int | float | None] | None,
+    ) -> RepairsFlow:
+        """Create a flow to fix a fixable issue."""
+
+
 class RepairsFlowManager(
     data_entry_flow.FlowManager[RepairsFlowContext, RepairsFlowResult, str]
 ):
@@ -210,8 +221,9 @@ class RepairsFlowManager(
             assert data and "issue_id" in data
             context["issue_id"] = data["issue_id"]
             report_usage(
-                'created a repair flow using data={"issue_id": issue_id} '
-                "instead of context=RepairFlowContext(issue_id=issue_id))",
+                'created a repair flow using data={"issue_id": <issue_id>} '
+                "instead of context=RepairsFlowContext(issue_id=<issue_id>))"
+                'or context={"issue_id": <issue_id>}',
                 integration_domain=handler,
                 core_behavior=ReportBehavior.LOG,
             )
