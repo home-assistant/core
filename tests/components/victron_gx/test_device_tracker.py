@@ -58,6 +58,9 @@ async def test_victron_device_tracker(
         "source_type": SourceType.GPS,
         "latitude": 52.1,
         "longitude": 4.3,
+        "altitude": None,
+        "course": None,
+        "speed": None,
         "gps_accuracy": 0,
         "friendly_name": "GPS Location",
         "in_zones": [],
@@ -100,6 +103,9 @@ async def test_victron_device_tracker(
         "source_type": SourceType.GPS,
         "latitude": 52.1,
         "longitude": 4.4,
+        "altitude": 11.0,
+        "course": 180.0,
+        "speed": 3.5,
         "gps_accuracy": 0,
         "friendly_name": "GPS Location",
         "in_zones": [],
@@ -118,6 +124,9 @@ async def test_victron_device_tracker(
     assert state is not None
     assert state.attributes == {
         "source_type": SourceType.GPS,
+        "altitude": None,
+        "course": None,
+        "speed": None,
         "friendly_name": "GPS Location",
         "in_zones": [],
     }
