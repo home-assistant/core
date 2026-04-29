@@ -558,6 +558,7 @@ class EntityConditionBase(Condition):
             _state_change_listener,
             self.entity_filter,
             _on_entities_update,
+            primary_entities_only=self._primary_entities_only,
         )
         self._on_unload.append(unsub)
 
