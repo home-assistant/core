@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.avea.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -247,3 +247,35 @@ async def test_import_step_success(hass: HomeAssistant) -> None:
     assert result["title"] == "Bedroom"
     assert result["data"] == {CONF_ADDRESS: AVEA_DISCOVERY_INFO.address}
     assert result["result"].unique_id == AVEA_DISCOVERY_INFO.address
+
+
+async def test_import_step_aborts_bluetooth_flow_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML import can complete while a Bluetooth flow is in progress."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=AVEA_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    with patch("homeassistant.components.avea.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_ADDRESS: AVEA_DISCOVERY_INFO.address,
+                CONF_NAME: "Bedroom",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bedroom"
+    assert result["data"] == {CONF_ADDRESS: AVEA_DISCOVERY_INFO.address}
+    assert result["result"].unique_id == AVEA_DISCOVERY_INFO.address
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
