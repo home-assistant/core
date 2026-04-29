@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
+from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
@@ -831,7 +832,7 @@ async def test_option_flow_firmware_flash_failure(
         patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_flash_silabs_firmware",
             new_callable=AsyncMock,
-            side_effect=Exception("Flash failed"),
+            side_effect=HomeAssistantError("Flash failed"),
         ),
     ):
         result = await hass.config_entries.options.async_configure(
@@ -892,11 +893,16 @@ async def test_option_flow_zigbee_firmware_fetch_failure(
     assert result["step_id"] == "uninstall_addon"
 
     mock_fw_client = AsyncMock()
-    mock_fw_client.async_update_data.side_effect = Exception("Network error")
+    mock_fw_client.async_update_data.side_effect = ClientError("Network error")
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.FirmwareUpdateClient",
-        return_value=mock_fw_client,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.FirmwareUpdateClient",
+            return_value=mock_fw_client,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_firmware_flashing_context"
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

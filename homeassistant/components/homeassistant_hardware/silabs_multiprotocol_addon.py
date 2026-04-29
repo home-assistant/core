@@ -8,7 +8,8 @@ import dataclasses
 import logging
 from typing import Any, Protocol
 
-from ha_silabs_firmware_client import FirmwareUpdateClient
+from aiohttp import ClientError
+from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
 import voluptuous as vol
 import yarl
 
@@ -735,14 +736,24 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                     session = async_get_clientsession(self.hass)
                     client = FirmwareUpdateClient(self._firmware_update_url(), session)
 
-                    manifest = await client.async_update_data()
-                    fw_manifest = next(
-                        fw
-                        for fw in manifest.firmwares
-                        if fw.filename.startswith(self._zigbee_firmware_type())
-                    )
-
-                    fw_data = await client.async_fetch_firmware(fw_manifest)
+                    try:
+                        manifest = await client.async_update_data()
+                        fw_manifest = next(
+                            fw
+                            for fw in manifest.firmwares
+                            if fw.filename.startswith(self._zigbee_firmware_type())
+                        )
+                        fw_data = await client.async_fetch_firmware(fw_manifest)
+                    except (
+                        StopIteration,
+                        TimeoutError,
+                        ClientError,
+                        ManifestMissing,
+                        ValueError,
+                    ) as err:
+                        raise HomeAssistantError(
+                            "Failed to fetch Zigbee firmware"
+                        ) from err
 
                     await async_flash_silabs_firmware(
                         hass=self.hass,
@@ -770,8 +781,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
         try:
             await self.install_task
-        except Exception:
-            _LOGGER.exception("Failed to flash Zigbee firmware")
+        except HomeAssistantError as err:
+            _LOGGER.error("Failed to flash Zigbee firmware: %s", err)
             return self.async_show_progress_done(next_step_id="firmware_flash_failed")
         finally:
             self.install_task = None
