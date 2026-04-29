@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.heiman_home import async_unload_entry
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -16,6 +15,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from tests.common import MockConfigEntry
+
+# Import async_unload_entry separately to avoid pylint W0404 warning
+from homeassistant.components.heiman_home import async_unload_entry
 
 __all__ = [
     "MockConfigEntry",
