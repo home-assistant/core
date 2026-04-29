@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -36,6 +36,7 @@ __all__ = [
     "PlayMedia",
     "Unresolvable",
     "async_browse_media",
+    "async_register_media_source",
     "async_resolve_media",
     "generate_media_source_id",
     "is_media_source_id",
@@ -48,8 +49,12 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 class MediaSourceProtocol(Protocol):
     """Define the format of media_source platforms."""
 
-    async def async_get_media_source(self, hass: HomeAssistant) -> MediaSource:
-        """Set up media source."""
+    async def async_get_media_source(self, hass: HomeAssistant) -> MediaSource | None:
+        """Set up media source.
+
+        Return ``None`` to defer registration; the integration can register
+        the source later via :func:`async_register_media_source`.
+        """
 
 
 def is_media_source_id(media_content_id: str) -> bool:
@@ -63,6 +68,22 @@ def generate_media_source_id(domain: str, identifier: str) -> str:
     if identifier:
         uri += f"/{identifier}"
     return uri
+
+
+@callback
+def async_register_media_source(hass: HomeAssistant, source: MediaSource) -> None:
+    """Register a media source.
+
+    Use this to register a source after integration setup, e.g. once content
+    becomes available. Calling this with a source whose domain is already
+    registered is a no-op.
+    """
+    sources = hass.data[MEDIA_SOURCE_DATA]
+    if source.domain in sources:
+        return
+    sources[source.domain] = source
+    if isinstance(source, local_source.LocalSource):
+        hass.http.register_view(local_source.LocalMediaView(hass, source))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -88,6 +109,6 @@ async def _process_media_source_platform(
 ) -> None:
     """Process a media source platform."""
     source = await platform.async_get_media_source(hass)
-    hass.data[MEDIA_SOURCE_DATA][domain] = source
-    if isinstance(source, local_source.LocalSource):
-        hass.http.register_view(local_source.LocalMediaView(hass, source))
+    if source is None:
+        return
+    async_register_media_source(hass, source)

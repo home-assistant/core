@@ -18,11 +18,8 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
     item = await media_source.async_browse_media(hass, "media-source://")
     assert not any(c.title == "AI generated images" for c in item.children)
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="AI Task has no images generated yet",
-    ):
-        await async_get_media_source(hass)
+    # async_get_media_source returns None to defer registration.
+    assert await async_get_media_source(hass) is None
 
     # The local source is still configured internally so image generation can
     # use it to upload new images.

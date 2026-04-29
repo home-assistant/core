@@ -14,8 +14,6 @@ import voluptuous as vol
 
 from homeassistant.components import camera, conversation, image, media_source
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_source import local_source
-from homeassistant.components.media_source.const import MEDIA_SOURCE_DATA
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
@@ -235,11 +233,9 @@ async def async_generate_image(
 
     # The folder is created on first upload, so register the source now that
     # there is content. async_get_media_source defers registration until the
-    # folder exists, so we must wire it up here for browse listings and URL
-    # serving to work without requiring a restart.
-    if DOMAIN not in hass.data[MEDIA_SOURCE_DATA]:
-        hass.data[MEDIA_SOURCE_DATA][DOMAIN] = source
-        hass.http.register_view(local_source.LocalMediaView(hass, source))
+    # folder exists, and the helper is a no-op if the source is already
+    # registered.
+    media_source.async_register_media_source(hass, source)
 
     item = media_source.MediaSourceItem.from_uri(
         hass, service_result["media_source_id"], None

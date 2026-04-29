@@ -11,8 +11,14 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR
 
 
-async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
-    """Set up local media source."""
+async def async_get_media_source(hass: HomeAssistant) -> MediaSource | None:
+    """Set up local media source.
+
+    The source is only exposed once an image has been generated. The local
+    source object is always created so that image generation can use it to
+    upload, and ``async_generate_image`` registers the source with media_source
+    after the first upload via :func:`media_source.async_register_media_source`.
+    """
     media_dirs = list(hass.config.media_dirs.values())
 
     if not media_dirs:
@@ -31,6 +37,6 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     )
 
     if not await hass.async_add_executor_job(media_dir.exists):
-        raise HomeAssistantError("AI Task has no images generated yet")
+        return None
 
     return source
