@@ -514,7 +514,7 @@ def async_setup_energy_device(
         *data.get("components_gateways", []),
         *data.get("components_batteries", []),
     ):
-        if part_name := component.get("part_name"):
+        if (part_name := component.get("part_name")) and part_name != "Unknown":
             models.add(part_name)
     if models:
         energysite.device["model"] = ", ".join(sorted(models))
