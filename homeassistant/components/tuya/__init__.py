@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
-from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import Manager
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -23,7 +20,7 @@ from .const import (
     PLATFORMS,
     TUYA_CLIENT_ID,
 )
-from .coordinator import DeviceListener, TokenListener, TuyaConfigEntry, create_manager
+from .coordinator import DeviceListener, TuyaConfigEntry
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -41,32 +38,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
-    await hass.async_add_executor_job(
-        register_tuya_quirks, str(Path(hass.config.config_dir, "tuya_quirks"))
-    )
-
-    token_listener = TokenListener(hass, entry)
-
-    # Move to executor as it makes blocking call to import_module
-    # with args ('.system', 'urllib3.contrib.resolver')
-    manager = await hass.async_add_executor_job(create_manager, entry, token_listener)
-
-    listener = DeviceListener(hass, manager)
-    manager.add_device_listener(listener)
-
-    # Get all devices from Tuya
-    try:
-        await hass.async_add_executor_job(manager.update_device_cache)
-    except Exception as exc:
-        # While in general, we should avoid catching broad exceptions,
-        # we have no other way of detecting this case.
-        if "sign invalid" in str(exc):
-            msg = "Authentication failed. Please re-authenticate"
-            raise ConfigEntryAuthFailed(msg) from exc
-        raise
+    listener = DeviceListener(hass, entry)
+    await hass.async_add_executor_job(listener.initialize)
 
     # Connection is successful, store the listener in runtime_data
     entry.runtime_data = listener
+    manager = listener.manager
 
     # Cleanup device registry
     await cleanup_device_registry(hass, manager, entry)
@@ -82,17 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             device.function,
             device.status_range,
         )
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Tuya",
-            name=device.name,
-            # Note: the model is overridden via entity.device_info property
-            # when the entity is created. If no entities are generated, it will
-            # stay as unsupported
-            model=f"{device.product_name} (unsupported)",
-            model_id=device.product_id,
-        )
+        # Register quirk, and add device to the device registry
+        listener.async_register_device(device_registry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # If the device does not register any entities, the device does not need to subscribe

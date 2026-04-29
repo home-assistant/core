@@ -7,7 +7,12 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from jvcprojector import JvcProjector, JvcProjectorTimeoutError, command as cmd
+from jvcprojector import (
+    JvcProjector,
+    JvcProjectorCommandError,
+    JvcProjectorTimeoutError,
+    command as cmd,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -144,7 +149,16 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self, command: type[Command], new_state: dict[type[Command], str]
     ) -> str | None:
         """Update state with the current value of a command."""
-        value = await self.device.get(command)
+        try:
+            value = await self.device.get(command)
+        except JvcProjectorCommandError as err:
+            _LOGGER.warning("Command %s failed: %s", command.name, err)
+            cached = self.state.get(command)
+            if command is cmd.Power and cached is None:
+                raise UpdateFailed(
+                    f"Failed to fetch {command.name} and no cached value is available"
+                ) from err
+            return cached
 
         if value != self.state.get(command):
             new_state[command] = value
