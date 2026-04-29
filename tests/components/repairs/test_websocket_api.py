@@ -180,7 +180,7 @@ class MockRepairsFlow(RepairsFlow):
             flow_manager = async_get(self.hass)
             assert flow_manager
             next_flow = await flow_manager.async_init(
-                "fake_integration", data={"issue_id": DEFAULT_ISSUES[0]["issue_id"]}
+                "fake_integration", context={"issue_id": DEFAULT_ISSUES[0]["issue_id"]}
             )
             return self._test_function(
                 next_flow=(FlowType.REPAIRS_FLOW, next_flow["flow_id"])

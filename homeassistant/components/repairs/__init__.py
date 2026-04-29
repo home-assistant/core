@@ -11,6 +11,7 @@ from .const import DOMAIN, FlowType
 from .issue_handler import (
     ConfirmRepairFlow,
     RepairsFlow,
+    RepairsFlowContext,
     RepairsFlowManager,
     RepairsFlowResult,
     async_get,
@@ -23,6 +24,7 @@ __all__ = [
     "ConfirmRepairFlow",
     "FlowType",
     "RepairsFlow",
+    "RepairsFlowContext",
     "RepairsFlowManager",
     "RepairsFlowResult",
     "async_get",

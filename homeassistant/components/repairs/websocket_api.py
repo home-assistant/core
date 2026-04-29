@@ -176,7 +176,7 @@ def _prepare_repairs_flow_result_json(
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
-    if ["next_flow", "result"] not in result:
+    if "result" not in result:
         return prepare_result_json(result)  # type: ignore[arg-type]
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
     if isinstance(result["result"], ConfigEntry):

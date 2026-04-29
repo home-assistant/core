@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.frame import report_usage
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -43,7 +43,7 @@ class RepairsFlowResult(
 
 
 class RepairsFlow(
-    data_entry_flow.FlowHandler[RepairsFlowContext, RepairsFlowResult, str]
+    data_entry_flow.FlowHandler[RepairsFlowContext, RepairsFlowResult, str],
 ):
     """Handle a flow for fixing an issue."""
 
@@ -51,8 +51,23 @@ class RepairsFlow(
 
     @property
     def issue_id(self) -> str:
-        """Return the issue ID."""
+        """Return the issue_id."""
         return self.context["issue_id"]
+
+    @issue_id.setter
+    def issue_id(self, issue_id: str) -> None:
+        """Warn that setting the issue_id directly is useless.
+
+        Even prior to changing the platform to pass issue_id via the RepairFlowContext,
+        the RepairFlowManager would overwrite any attempt of any integration implementing RepairFlow
+        setting issue_id in __init__().
+        """
+        report_usage(
+            "sets issue_id directly using self.issue_id = <issue_id> which is ignored by the repairs "
+            "platform and set by the RepairsFlowManager",
+            core_behavior=ReportBehavior.LOG,
+            integration_domain=self.handler,
+        )
 
     @callback
     def async_create_entry(
@@ -64,7 +79,7 @@ class RepairsFlow(
         description_placeholders: Mapping[str, str] | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> RepairsFlowResult:
-        """Finish a repair flow."""
+        """Create an entry (fix an flow)."""
         result: RepairsFlowResult = super().async_create_entry(
             title=title,
             data=data,
@@ -84,7 +99,7 @@ class RepairsFlow(
         description_placeholders: Mapping[str, str] | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> RepairsFlowResult:
-        """Abort the flow."""
+        """Abort the flow (leave the issue unrepaired)."""
         result: RepairsFlowResult = super().async_abort(
             reason=reason, description_placeholders=description_placeholders
         )
@@ -104,26 +119,28 @@ class RepairsFlow(
         flow_type, flow_id = next_flow
         if flow_type not in FlowType:
             raise data_entry_flow.FlowError("Invalid next_flow type")
-        flow: ConfigFlowResult | SubentryFlowResult | RepairsFlowResult
         entry_id: str | None = None
         if flow_type == FlowType.CONFIG_FLOW:
-            flow = self.hass.config_entries.flow.async_get(flow_id)
-            entry_id = flow["context"]["entry_id"]
+            config_flow: ConfigFlowResult = self.hass.config_entries.flow.async_get(
+                flow_id
+            )
+            entry_id = config_flow["context"]["entry_id"]
         elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
-            flow = self.hass.config_entries.subentries.async_get(flow_id)
-            entry_id, _ = flow["handler"]
+            subentry_flow: SubentryFlowResult = (
+                self.hass.config_entries.subentries.async_get(flow_id)
+            )
+            entry_id, _ = subentry_flow["handler"]
         elif flow_type == FlowType.OPTIONS_FLOW:
-            flow = self.hass.config_entries.options.async_get(flow_id)
-            entry_id = flow["handler"]
+            config_flow = self.hass.config_entries.options.async_get(flow_id)
+            entry_id = config_flow["handler"]
         else:  # FlowType.REPAIRS_FLOW
-            flow = async_get(self.hass).async_get(flow_id)
+            repair_flow: RepairsFlowResult = async_get(self.hass).async_get(flow_id)
             issue_registry: ir.IssueRegistry = ir.async_get(self.hass)
             if issue := issue_registry.async_get_issue(
-                flow["handler"], flow["context"]["issue_id"]
+                repair_flow["handler"], repair_flow["context"]["issue_id"]
             ):
                 result["result"] = issue
                 result["next_flow"] = next_flow
-            return
         if entry_id is not None:
             result["result"] = self.hass.config_entries.async_get_known_entry(entry_id)
             result["next_flow"] = next_flow
@@ -180,7 +197,26 @@ class RepairsFlowManager(
 ):
     """Manage repairs flows."""
 
-    _flow_result = RepairsFlowResult
+    async def async_init(
+        self,
+        handler: str,
+        *,
+        context: RepairsFlowContext | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> RepairsFlowResult:
+        """Start a RepairFlow."""
+        context = context or {}
+        if "issue_id" not in context:
+            assert data and "issue_id" in data
+            context["issue_id"] = data["issue_id"]
+            report_usage(
+                'created a repair flow using data={"issue_id": issue_id} '
+                "instead of context=RepairFlowContext(issue_id=issue_id))",
+                integration_domain=handler,
+                core_behavior=ReportBehavior.LOG,
+            )
+        assert context["issue_id"]
+        return await super().async_init(handler, context=context, data=data)
 
     async def async_create_flow(
         self,
@@ -190,16 +226,7 @@ class RepairsFlowManager(
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
-        context = context or {}
-        if "issue_id" not in context:
-            assert data and "issue_id" in data
-            context["issue_id"] = data["issue_id"]
-            report_usage(
-                'Created a repair flow using data={"issue_id": issue_id} '
-                'instead of context={"issue_id": issue_id}',
-                integration_domain=handler_key,
-            )
-        assert context["issue_id"]
+        assert context and "issue_id" in context
 
         issue_registry = ir.async_get(self.hass)
         issue = issue_registry.async_get_issue(handler_key, context["issue_id"])
@@ -218,7 +245,6 @@ class RepairsFlowManager(
                 self.hass, context["issue_id"], issue.data
             )
 
-        flow.context = context
         flow.handler = handler_key
         flow.data = issue.data
         return flow
