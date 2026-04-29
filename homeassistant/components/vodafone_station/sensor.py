@@ -24,7 +24,6 @@ from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 PARALLEL_UPDATES = 0
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
-UPTIME_DEVIATION = 60
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,24 +35,6 @@ class VodafoneStationEntityDescription(SensorEntityDescription):
         str | datetime | float | None,
     ] = lambda coordinator, last_value, key: coordinator.data.sensors[key]
     is_suitable: Callable[[dict], bool] = lambda val: True
-
-
-def _calculate_uptime(
-    coordinator: VodafoneStationRouter,
-    last_value: str | datetime | float | None,
-    key: str,
-) -> datetime:
-    """Calculate device uptime."""
-
-    delta_uptime = coordinator.api.convert_uptime(coordinator.data.sensors[key])
-
-    if (
-        not isinstance(last_value, datetime)
-        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
-    ):
-        return delta_uptime
-
-    return last_value
 
 
 def _line_connection(
@@ -135,10 +116,11 @@ SENSOR_TYPES: Final = (
     ),
     VodafoneStationEntityDescription(
         key="sys_uptime",
-        translation_key="sys_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=_calculate_uptime,
+        value=lambda coordinator, last_value, key: coordinator.api.convert_uptime(
+            coordinator.data.sensors[key]
+        ),
     ),
     VodafoneStationEntityDescription(
         key="sys_cpu_usage",
