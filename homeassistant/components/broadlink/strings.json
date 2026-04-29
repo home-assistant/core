@@ -84,8 +84,14 @@
     }
   },
   "exceptions": {
+    "frequency_not_supported": {
+      "message": "Broadlink devices cannot transmit on {frequency} MHz"
+    },
     "send_command_failed": {
       "message": "Failed to send IR command: {error}"
+    },
+    "transmit_failed": {
+      "message": "Failed to transmit RF command: {error}"
     }
   }
 }
