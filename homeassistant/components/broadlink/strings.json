@@ -49,6 +49,11 @@
     }
   },
   "entity": {
+    "infrared": {
+      "infrared_emitter": {
+        "name": "IR emitter"
+      }
+    },
     "select": {
       "day_of_week": {
         "name": "Day of week",
@@ -81,6 +86,9 @@
   "exceptions": {
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
+    },
+    "send_command_failed": {
+      "message": "Failed to send IR command: {error}"
     },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
