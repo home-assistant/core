@@ -248,7 +248,7 @@ class MobileAppNotificationService(BaseNotificationService):
         live_activity_tokens = self.hass.data[DOMAIN].get(DATA_LIVE_ACTIVITY_TOKENS, {})
         device_tokens = live_activity_tokens.get(webhook_id, {})
         if tag in device_tokens:
-            return device_tokens[tag]
+            return device_tokens[tag][ATTR_PUSH_TOKEN]
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
         app_data = entry.data[ATTR_APP_DATA]

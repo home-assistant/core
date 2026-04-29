@@ -843,7 +843,7 @@ async def test_notify_live_activity_uses_stored_token(
     """Test that live_update notifications include live_activity_token in the relay payload."""
     # Simulate the iOS app having registered a per-activity token via webhook.
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
-        "washer_cycle": "LIVE_ACTIVITY_TOKEN_HEX"
+        "washer_cycle": {"push_token": "LIVE_ACTIVITY_TOKEN_HEX"}
     }
 
     await hass.services.async_call(
@@ -964,7 +964,7 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     """Test that normal notifications don't route through live activity tokens."""
     # Store a live activity token — it should be ignored for non-live-activity pushes.
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
-        "some_tag": "SHOULD_NOT_USE_THIS"
+        "some_tag": {"push_token": "SHOULD_NOT_USE_THIS"}
     }
 
     await hass.services.async_call(
