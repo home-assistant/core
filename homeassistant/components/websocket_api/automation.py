@@ -129,7 +129,7 @@ class _AutomationComponentLookupData:
         """Return if entity matches ANY of the filters."""
         if check_entity_category and self.primary_entities_only:
             entry = er.async_get(hass).async_get(entity_id)
-            if entry is None or entry.entity_category is not None:
+            if entry is not None and entry.entity_category is not None:
                 return False
 
         if not self.filters:
