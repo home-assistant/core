@@ -146,6 +146,9 @@ def mock_firmware_client() -> Generator[tuple[AsyncMock, AsyncMock]]:
             return_value=mock_fw_client,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_firmware_flashing_context"
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_flash_silabs_firmware",
             new_callable=AsyncMock,
         ) as mock_flash,
@@ -821,6 +824,9 @@ async def test_option_flow_firmware_flash_failure(
         patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.FirmwareUpdateClient",
             return_value=mock_fw_client,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_firmware_flashing_context"
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_flash_silabs_firmware",
