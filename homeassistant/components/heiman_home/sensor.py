@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -105,7 +106,7 @@ async def async_setup_entry(
     existing_entities: set[str] = set()
     # Track device and property identifiers to detect structural changes
     last_structure_signature: (
-        tuple[tuple[str, ...], frozenset[tuple[str, str]]] | None
+        tuple[tuple[str, ...], frozenset[tuple[str, str, bool]]] | None
     ) = None
 
     def _check_structure_changed() -> bool:
@@ -325,7 +326,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             # Prefer property metadata so numeric sensors that initially report
             # None still get a stable state_class. Fall back to the current
             # value only when the metadata is absent or unrecognized.
-            data_type = prop.data_type.lower() if isinstance(prop.data_type, str) else ""
+            data_type = (
+                prop.data_type.lower() if isinstance(prop.data_type, str) else ""
+            )
             data_type_is_numeric = data_type in {
                 "int",
                 "integer",

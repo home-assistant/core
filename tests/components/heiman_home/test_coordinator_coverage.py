@@ -1080,3 +1080,67 @@ async def test_coordinator_get_device_property_success(hass: HomeAssistant) -> N
     # Get property value
     result = coordinator.get_device_property("device-1", "temperature")
     assert result == 25.5
+
+
+async def test_coordinator_fetch_user_info_auth_failed(hass: HomeAssistant) -> None:
+    """Test _fetch_user_and_home_info re-raises ConfigEntryAuthFailed (line 161)."""
+    from homeassistant.exceptions import ConfigEntryAuthFailed
+
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    # Simulate authentication failure
+    mock_cloud_wrapper.async_get_user_info = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("Token expired")
+    )
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData()
+
+    # Should re-raise ConfigEntryAuthFailed without wrapping it
+    with pytest.raises(ConfigEntryAuthFailed, match="Token expired"):
+        await coordinator._fetch_user_and_home_info()
+
+
+async def test_coordinator_fetch_devices_auth_failed(hass: HomeAssistant) -> None:
+    """Test _fetch_and_process_devices re-raises ConfigEntryAuthFailed (line 216)."""
+    from homeassistant.exceptions import ConfigEntryAuthFailed
+
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    # Simulate authentication failure
+    mock_cloud_wrapper.async_get_devices = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("Token expired")
+    )
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData(devices={})
+
+    # Should re-raise ConfigEntryAuthFailed without wrapping it
+    with pytest.raises(ConfigEntryAuthFailed, match="Token expired"):
+        await coordinator._fetch_and_process_devices("test-home-id")
