@@ -36,7 +36,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import TemplateError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
@@ -989,14 +989,6 @@ class TrackTemplateResultInfo:
         self._has_super_template = has_super_template
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
-
-        for track_template_ in track_templates:
-            if track_template_.template.hass:
-                continue
-
-            raise HomeAssistantError(
-                "Calls async_track_template_result with template without hass"
-            )
 
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}

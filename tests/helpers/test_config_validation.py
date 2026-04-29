@@ -747,36 +747,6 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
         schema(value)
 
 
-async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
-    """Test dynamic template validator."""
-    schema = vol.Schema(cv.dynamic_template)
-
-    for value in (
-        None,
-        1,
-        "{{ partial_print }",
-        "{% if True %}Hello",
-        ["test"],
-        "just a string",
-        # Filter added as an extension by Home Assistant
-        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
-    ):
-        with pytest.raises(vol.Invalid):
-            await hass.async_add_executor_job(schema, value)
-
-    options = (
-        "{{ beer }}",
-        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function 'expand' added as an extension by Home Assistant, no error
-        # because non existing functions are not detected by Jinja2
-        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Non existing function 'no_such_function' is not detected by Jinja2
-        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
-    )
-    for value in options:
-        await hass.async_add_executor_job(schema, value)
-
-
 @pytest.mark.usefixtures("hass")
 def test_template_complex() -> None:
     """Test template_complex validator."""

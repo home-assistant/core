@@ -2015,8 +2015,7 @@ async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
         )
 
 
-@pytest.mark.usefixtures("hass")
-async def test_extract_entities() -> None:
+async def test_extract_entities(hass: HomeAssistant) -> None:
     """Test extracting entities."""
     assert condition.async_extract_entities(
         {
@@ -2072,7 +2071,7 @@ async def test_extract_entities() -> None:
                     "entity_id": ["sensor.temperature_9", "sensor.temperature_10"],
                     "below": 110,
                 },
-                Template("{{ is_state('light.example', 'on') }}"),
+                Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {
@@ -2089,8 +2088,7 @@ async def test_extract_entities() -> None:
     }
 
 
-@pytest.mark.usefixtures("hass")
-async def test_extract_devices() -> None:
+async def test_extract_devices(hass: HomeAssistant) -> None:
     """Test extracting devices."""
     assert condition.async_extract_devices(
         {
@@ -2133,7 +2131,7 @@ async def test_extract_devices() -> None:
                         },
                     ],
                 },
-                Template("{{ is_state('light.example', 'on') }}"),
+                Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
