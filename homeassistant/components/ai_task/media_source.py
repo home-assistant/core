@@ -29,4 +29,8 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
         {IMAGE_DIR: str(media_dir)},
         f"/{DOMAIN}",
     )
+
+    if not await hass.async_add_executor_job(media_dir.exists):
+        raise HomeAssistantError("AI Task has no images generated yet")
+
     return source

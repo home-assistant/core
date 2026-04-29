@@ -1,20 +1,32 @@
 """Test ai_task media source."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import media_source
+from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
 from homeassistant.components.ai_task.media_source import async_get_media_source
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_local_media_source(hass: HomeAssistant, init_components: None) -> None:
-    """Test that the image media source is created."""
+    """Test the image media source is only registered once an image is generated."""
+    # The image folder does not exist yet, so the media source should not be
+    # listed as a top-level media source.
     item = await media_source.async_browse_media(hass, "media-source://")
+    assert not any(c.title == "AI generated images" for c in item.children)
 
-    assert any(c.title == "AI generated images" for c in item.children)
+    with pytest.raises(
+        HomeAssistantError,
+        match="AI Task has no images generated yet",
+    ):
+        await async_get_media_source(hass)
 
-    source = await async_get_media_source(hass)
+    # The local source is still configured internally so image generation can
+    # use it to upload new images.
+    source = hass.data[DATA_MEDIA_SOURCE]
     assert isinstance(source, media_source.local_source.LocalSource)
     assert source.name == "AI generated images"
     assert source.domain == "ai_task"
@@ -25,6 +37,16 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
         hass.config.path("media/ai_task/image"),
     )
     assert source.url_prefix == "/ai_task"
+
+    # Once an image has been generated and the folder exists, the source is
+    # returned.
+    with patch(
+        "homeassistant.components.ai_task.media_source.Path.exists",
+        return_value=True,
+    ):
+        result = await async_get_media_source(hass)
+    assert result is hass.data[DATA_MEDIA_SOURCE]
+    assert isinstance(result, media_source.local_source.LocalSource)
 
     hass.config.media_dirs = {}
 
