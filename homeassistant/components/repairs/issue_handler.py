@@ -117,7 +117,7 @@ class RepairsFlow(
             return
         flow_type, flow_id = next_flow
         if flow_type not in FlowType:
-            raise data_entry_flow.FlowError("Invalid next_flow type")
+            raise data_entry_flow.UnknownFlow("Invalid next_flow type")
         entry_id: str | None = None
         if flow_type == FlowType.CONFIG_FLOW:
             config_flow: ConfigFlowResult = self.hass.config_entries.flow.async_get(
@@ -222,7 +222,7 @@ class RepairsFlowManager(
             context["issue_id"] = data["issue_id"]
             report_usage(
                 'created a repair flow using data={"issue_id": <issue_id>} '
-                "instead of context=RepairsFlowContext(issue_id=<issue_id>))"
+                "instead of context=RepairsFlowContext(issue_id=<issue_id>)"
                 'or context={"issue_id": <issue_id>}',
                 integration_domain=handler,
                 core_behavior=ReportBehavior.LOG,

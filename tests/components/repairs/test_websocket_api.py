@@ -20,7 +20,6 @@ from homeassistant.components.repairs import (
 )
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlowResult,
     ConfigSubentry,
@@ -282,33 +281,19 @@ class MockRepairsFlow(RepairsFlow):
         mock_subentry_id = list(subentries.keys())[0]
 
         with mock_config_flow("comp", TestFlow):
-            next_flow: ConfigFlowResult = (
-                await mock_entry.start_reconfigure_flow(self.hass)
-                if self.flow_type
-                in [FlowType.CONFIG_FLOW, "fake"]  # to allow "fake" flow_type
-                else (
-                    await self.hass.config_entries.flow.async_init(
-                        "comp",
-                        context={
-                            "source": SOURCE_RECONFIGURE,
-                            "entry_id": mock_entry.entry_id,
-                        },
-                    )
-                    if self.flow_type == FlowType.CONFIG_FLOW
-                    else (
-                        await self.hass.config_entries.options.async_init(
-                            mock_entry.entry_id
-                        )
-                        if self.flow_type == FlowType.OPTIONS_FLOW
-                        # Subentry flow
-                        else (
-                            await mock_entry.start_subentry_reconfigure_flow(
-                                self.hass, mock_subentry_id
-                            )
-                        )
-                    )
+            if self.flow_type in [FlowType.CONFIG_FLOW, "fake"]:
+                next_flow: (
+                    ConfigFlowResult | SubentryFlowResult
+                ) = await mock_entry.start_reconfigure_flow(self.hass)
+            elif self.flow_type == FlowType.OPTIONS_FLOW:
+                next_flow = await self.hass.config_entries.options.async_init(
+                    mock_entry.entry_id
                 )
-            )
+            else:
+                # Subentry flow
+                next_flow = await mock_entry.start_subentry_reconfigure_flow(
+                    self.hass, mock_subentry_id
+                )
             return self._test_function(
                 data={},
                 next_flow=(
