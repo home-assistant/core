@@ -18,6 +18,7 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -153,7 +154,7 @@ def async_add_insteon_entities(
     """Add an Insteon group to a platform."""
     address = discovery_info["address"]
     device = devices[address]
-    new_entities: list[type[InsteonBaseEntity]] = []
+    new_entities: list[Entity] = []
     for group in discovery_info["groups"]:
         entity = entity_type(device=device, group=group)
         if isinstance(entity, EventEntity):
