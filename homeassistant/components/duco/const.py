@@ -6,4 +6,4 @@ from homeassistant.const import Platform
 
 DOMAIN = "duco"
 PLATFORMS = [Platform.FAN, Platform.SENSOR]
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=10)
