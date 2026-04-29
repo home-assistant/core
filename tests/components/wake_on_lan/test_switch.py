@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -298,3 +298,58 @@ async def test_remove_unloads_off_script(
 
     stop_mock.assert_called_once()
     unload_mock.assert_called_once()
+
+
+async def test_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_send_magic_packet: AsyncMock,
+) -> None:
+    """Test that the WOL switch still works after its entity_id is changed."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "turn_off": {"service": "shell_command.turn_off_target"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    calls = async_mock_service(hass, "shell_command", "turn_off_target")
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state is not None
+
+    # Turn off should work
+    with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=1):
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Change entity_id while loaded
+    entry = entity_registry.async_get("switch.wake_on_lan")
+    assert entry is not None
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="switch.custom_wol"
+    )
+    await hass.async_block_till_done()
+
+    # Turn off should still work after entity_id change
+    with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=1):
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.custom_wol"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert len(calls) == 2
