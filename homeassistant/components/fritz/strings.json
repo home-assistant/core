@@ -211,6 +211,10 @@
     "deprecated_cleanup_button": {
       "description": "The 'Cleanup' button is deprecated and will be removed in Home Assistant Core {removal_version}. Please update your automations and dashboards to remove any usage of this button. The action is now performed automatically at each data refresh.",
       "title": "'Cleanup' button is deprecated"
+    },
+    "deprecated_firmware_update_button": {
+      "description": "The 'Firmware update' button is deprecated and will be removed in Home Assistant Core {removal_version}. It has been superseded by an update entity. Please update your automations and dashboards to remove any usage of this button.",
+      "title": "'Firmware update' button is deprecated"
     }
   },
   "options": {

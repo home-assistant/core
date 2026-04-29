@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -94,7 +94,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title="",
                 data={
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
@@ -118,13 +118,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_NAME): str,
                         vol.Required(CONF_LATITUDE): cv.latitude,
                         vol.Required(CONF_LONGITUDE): cv.longitude,
                     }
                 ).extend(PLANE_SCHEMA.schema),
                 {
-                    CONF_NAME: self.hass.config.location_name,
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
                     CONF_DECLINATION: DEFAULT_DECLINATION,
