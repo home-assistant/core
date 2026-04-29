@@ -1,0 +1,453 @@
+# serializer version: 1
+# name: test_binary_sensor[1][binary_sensor.bk1600_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bk1600_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electric_heating_state',
+    'unique_id': 'BK1600-12345678_7121',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[1][binary_sensor.bk1600_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BK1600 Electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bk1600_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bk1600_meter_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meter connected',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Meter connected',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_connected',
+    'unique_id': 'BK1600-12345678_7120',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'BK1600 Meter connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bk1600_meter_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_1_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_1_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery pack 1 electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery pack 1 electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_pack_1_electric_heating_state',
+    'unique_id': 'SolidFlex2000-87654321_9096',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_1_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Battery pack 1 electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_1_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_2_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_2_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery pack 2 electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery pack 2 electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_pack_2_electric_heating_state',
+    'unique_id': 'SolidFlex2000-87654321_9112',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_2_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Battery pack 2 electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_2_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_3_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_3_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery pack 3 electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery pack 3 electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_pack_3_electric_heating_state',
+    'unique_id': 'SolidFlex2000-87654321_9128',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_3_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Battery pack 3 electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_3_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_4_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_4_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery pack 4 electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery pack 4 electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_pack_4_electric_heating_state',
+    'unique_id': 'SolidFlex2000-87654321_9144',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_4_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Battery pack 4 electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_4_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_5_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_5_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery pack 5 electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery pack 5 electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_pack_5_electric_heating_state',
+    'unique_id': 'SolidFlex2000-87654321_9279',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_5_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Battery pack 5 electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_battery_pack_5_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_main_electric_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Main electric heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Main electric heating',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'main_electric_heating_state',
+    'unique_id': 'SolidFlex2000-87654321_9079',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Main electric heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_main_electric_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_meter_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cms_sf2000_meter_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meter connected',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Meter connected',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_connected',
+    'unique_id': 'SolidFlex2000-87654321_7120',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[2][binary_sensor.cms_sf2000_meter_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'CMS-SF2000 Meter connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cms_sf2000_meter_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
