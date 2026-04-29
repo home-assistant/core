@@ -36,8 +36,13 @@ def _mock_access_control(node: Node) -> MagicMock:
     user_caps.supported_credential_rules = []
     api.async_get_user_capabilities_cached = AsyncMock(return_value=user_caps)
 
+    pin_cap = MagicMock()
+    pin_cap.number_of_credential_slots = 10
+    pin_cap.min_credential_length = 4
+    pin_cap.max_credential_length = 10
+
     cred_caps = MagicMock()
-    cred_caps.supported_credential_types = {}
+    cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
     cred_caps.supports_admin_code = False
     cred_caps.supports_admin_code_deactivation = False
     api.async_get_credential_capabilities_cached = AsyncMock(return_value=cred_caps)
@@ -60,7 +65,9 @@ def _mock_access_control(node: Node) -> MagicMock:
     return api
 
 
-def _device_id(device_registry: dr.DeviceRegistry, client, node: Node) -> str:
+def _device_id(
+    device_registry: dr.DeviceRegistry, client: MagicMock, node: Node
+) -> str:
     """Resolve the HA device_id for a mocked Z-Wave node."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, node)}
@@ -72,7 +79,7 @@ def _device_id(device_registry: dr.DeviceRegistry, client, node: Node) -> str:
 def _lock_entity_id(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     node: Node,
 ) -> str:
     """Resolve the HA lock entity_id for a mocked Z-Wave node."""
@@ -87,7 +94,7 @@ async def test_set_user_auto_find(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -120,7 +127,7 @@ async def test_set_user_explicit_index(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -152,7 +159,7 @@ async def test_set_user_no_slots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -186,7 +193,7 @@ async def test_delete_user(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -212,7 +219,7 @@ async def test_delete_all_users(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -237,7 +244,7 @@ async def test_get_credential_capabilities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -264,7 +271,7 @@ async def test_get_credential_capabilities_not_supported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -290,7 +297,7 @@ async def test_get_users(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -328,17 +335,12 @@ async def test_set_credential_auto_slot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test set_credential with explicit user_id and auto-find slot."""
     api = _mock_access_control(lock_schlage_be469)
-
-    pin_cap = MagicMock()
-    pin_cap.number_of_credential_slots = 10
-    cred_caps = api.async_get_credential_capabilities_cached.return_value
-    cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
 
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
@@ -366,7 +368,7 @@ async def test_set_credential_explicit_slot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -400,7 +402,7 @@ async def test_set_credential_multi_target(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     lock_august_pro: Node,
     integration: MockConfigEntry,
@@ -408,12 +410,6 @@ async def test_set_credential_multi_target(
     """set_credential across multiple devices returns per-device keyed result."""
     api1 = _mock_access_control(lock_schlage_be469)
     api2 = _mock_access_control(lock_august_pro)
-
-    pin_cap = MagicMock()
-    pin_cap.number_of_credential_slots = 10
-    for api in (api1, api2):
-        cred_caps = api.async_get_credential_capabilities_cached.return_value
-        cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
 
     entity_1 = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
@@ -445,7 +441,7 @@ async def test_set_credential_rejection_raises(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -477,7 +473,7 @@ async def test_set_user_rejection_raises(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -507,7 +503,7 @@ async def test_set_credential_requires_user_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -534,7 +530,7 @@ async def test_set_credential_type_not_supported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -565,17 +561,17 @@ async def test_set_credential_no_available_slots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test set_credential fails when no credential slots free (auto-slot)."""
     api = _mock_access_control(lock_schlage_be469)
 
-    pin_cap = MagicMock()
-    pin_cap.number_of_credential_slots = 2
     cred_caps = api.async_get_credential_capabilities_cached.return_value
-    cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
+    cred_caps.supported_credential_types[
+        UserCredentialType.PIN_CODE
+    ].number_of_credential_slots = 2
 
     # Fill all PIN slots
     cred1 = MagicMock()
@@ -603,11 +599,107 @@ async def test_set_credential_no_available_slots(
         )
 
 
+async def test_set_credential_pin_not_digits(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """PIN credential data containing non-digit characters is rejected locally."""
+    _mock_access_control(lock_schlage_be469)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_credential",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 1,
+                "credential_type": "pin_code",
+                "credential_data": "12ab",
+                "credential_slot": 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize("credential_data", ["12", "12345678901"])
+async def test_set_credential_length_validation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    credential_data: str,
+) -> None:
+    """Credential data outside the device-reported length range is rejected locally."""
+    _mock_access_control(lock_schlage_be469)
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_credential",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 1,
+                "credential_type": "pin_code",
+                "credential_data": credential_data,
+                "credential_slot": 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert exc.value.translation_key == "credential_data_invalid_length"
+
+
+async def test_set_credential_slot_out_of_range(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Explicit credential_slot above device capacity fails fast."""
+    api = _mock_access_control(lock_schlage_be469)
+    cred_caps = api.async_get_credential_capabilities_cached.return_value
+    cred_caps.supported_credential_types[
+        UserCredentialType.PIN_CODE
+    ].number_of_credential_slots = 5
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_credential",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 1,
+                "credential_type": "pin_code",
+                "credential_data": "1234",
+                "credential_slot": 6,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert exc.value.translation_key == "credential_slot_out_of_range"
+    api.async_set_credential.assert_not_called()
+
+
 async def test_delete_credential(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -635,7 +727,7 @@ async def test_delete_all_credentials(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -671,7 +763,7 @@ async def test_set_credential_id_range_validation(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
     field: str,
@@ -704,7 +796,7 @@ async def test_delete_user_rejects_oversize_user_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -729,7 +821,7 @@ async def test_mutation_supports_multi_target(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     lock_august_pro: Node,
     integration: MockConfigEntry,
@@ -763,7 +855,7 @@ async def test_get_users_supports_multi_target(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
     lock_schlage_be469: Node,
     lock_august_pro: Node,
     integration: MockConfigEntry,

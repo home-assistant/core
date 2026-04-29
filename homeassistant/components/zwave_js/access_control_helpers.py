@@ -379,19 +379,38 @@ async def async_set_credential(
             translation_key="access_control_not_supported",
         )
 
-    # Auto-find first available credential slot if not provided
+    cred_type_str = CREDENTIAL_TYPE_MAP.get(credential_type, str(credential_type))
+    cred_caps = await node.access_control.async_get_credential_capabilities_cached()
+    type_cap = cred_caps.supported_credential_types.get(credential_type)
+    if type_cap is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_type_not_supported",
+            translation_placeholders={"credential_type": cred_type_str},
+        )
+
+    # Validate credential_data length and format against device capabilities
+    if not (
+        type_cap.min_credential_length
+        <= len(credential_data)
+        <= type_cap.max_credential_length
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_data_invalid_length",
+            translation_placeholders={
+                "credential_type": cred_type_str,
+                "min_length": str(type_cap.min_credential_length),
+                "max_length": str(type_cap.max_credential_length),
+            },
+        )
+    if credential_type is UserCredentialType.PIN_CODE and not credential_data.isdigit():
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_data_pin_not_digits",
+        )
+
     if credential_slot is None:
-        cred_caps = await node.access_control.async_get_credential_capabilities_cached()
-        type_cap = cred_caps.supported_credential_types.get(credential_type)
-        if type_cap is None:
-            cred_type_str = CREDENTIAL_TYPE_MAP.get(
-                credential_type, str(credential_type)
-            )
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="credential_type_not_supported",
-                translation_placeholders={"credential_type": cred_type_str},
-            )
         existing = await node.access_control.async_get_credentials_by_type_cached(
             credential_type
         )
@@ -405,14 +424,20 @@ async def async_set_credential(
             None,
         )
         if credential_slot is None:
-            cred_type_str = CREDENTIAL_TYPE_MAP.get(
-                credential_type, str(credential_type)
-            )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_available_credential_slots",
                 translation_placeholders={"credential_type": cred_type_str},
             )
+    elif not 1 <= credential_slot <= type_cap.number_of_credential_slots:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_slot_out_of_range",
+            translation_placeholders={
+                "credential_type": cred_type_str,
+                "max_slot": str(type_cap.number_of_credential_slots),
+            },
+        )
 
     status = await node.access_control.async_set_credential(
         user_id, credential_type, credential_slot, credential_data

@@ -298,6 +298,12 @@
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     },
+    "credential_data_invalid_length": {
+      "message": "Credential of type {credential_type} must be between {min_length} and {max_length} characters long."
+    },
+    "credential_data_pin_not_digits": {
+      "message": "PIN code must contain only digits."
+    },
     "credential_rejected_add_occupied": {
       "message": "Cannot add credential: the target slot is already in use."
     },
@@ -318,6 +324,9 @@
     },
     "credential_rejected_wrong_uui": {
       "message": "The device rejected the credential because the user unique identifier does not match."
+    },
+    "credential_slot_out_of_range": {
+      "message": "Credential slot for {credential_type} must be between 1 and {max_slot}."
     },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
