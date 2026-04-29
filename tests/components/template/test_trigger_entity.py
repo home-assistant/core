@@ -243,10 +243,10 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
     assert state.attributes["current_tilt_position"] == 49
 
 
-async def test_shutdown_stops_script_and_unsubscribes_triggers(
+async def test_shutdown_stops_script_and_keeps_triggers_subscribed(
     hass: HomeAssistant,
 ) -> None:
-    """Test that HA shutdown stops coordinator scripts and unsubscribes triggers."""
+    """Test that HA shutdown stops coordinator scripts without unsubscribing triggers."""
     assert await async_setup_component(
         hass,
         "template",
