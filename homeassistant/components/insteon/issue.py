@@ -1,5 +1,7 @@
 """Issues for Insteon integration."""
 
+import re
+
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -11,7 +13,7 @@ from .const import DOMAIN
 def deprecated_event_bus(hass: HomeAssistant, event: str) -> None:
     """Raise a deprecation issue for listeners on the event bus."""
 
-    issue_id = f"deprecated_event_bus_{event}"
+    issue_id = f"deprecated_event_bus_{re.sub(r'[\W_]+', '_', event)}"
 
     if ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None:
         if listeners := hass.bus.async_listeners().get(event):
