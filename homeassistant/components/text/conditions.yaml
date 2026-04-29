@@ -8,9 +8,9 @@ is_equal_to:
       required: true
       default: any
       selector:
-        automation_behavior:
+        select:
           translation_key: condition_behavior
-          behavior:
+          options:
             - all
             - any
     value:

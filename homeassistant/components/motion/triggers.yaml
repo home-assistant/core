@@ -3,9 +3,9 @@
     required: true
     default: any
     selector:
-      automation_behavior:
+      select:
         translation_key: trigger_behavior
-        behavior:
+        options:
           - first
           - last
           - any

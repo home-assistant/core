@@ -7,12 +7,17 @@
       required: true
       default: any
       selector:
-        automation_behavior:
-          translation_key: trigger_behavior
-          behavior:
+        select:
+          options:
             - first
             - last
             - any
+          translation_key: trigger_behavior
+    for: &trigger_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .brightness_threshold_entity: &brightness_threshold_entity
   - domain: input_number
