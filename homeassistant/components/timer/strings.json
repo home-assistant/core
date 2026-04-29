@@ -1,11 +1,15 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least"
   },
   "conditions": {
     "is_active": {
       "description": "Tests if one or more timers are active.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::timer::common::condition_for_name%]"
         }
@@ -15,6 +19,9 @@
     "is_idle": {
       "description": "Tests if one or more timers are idle.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::timer::common::condition_for_name%]"
         }
@@ -24,6 +31,9 @@
     "is_paused": {
       "description": "Tests if one or more timers are paused.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::timer::common::condition_for_name%]"
         }
@@ -59,6 +69,14 @@
         "restore": {
           "name": "Restore"
         }
+      }
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
       }
     }
   },

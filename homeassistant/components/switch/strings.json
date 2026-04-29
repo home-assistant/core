@@ -1,12 +1,17 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more switches are off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::switch::common::condition_for_name%]"
         }
@@ -16,6 +21,9 @@
     "is_on": {
       "description": "Tests if one or more switches are on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::switch::common::condition_for_name%]"
         }
@@ -65,6 +73,21 @@
       }
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "toggle": {
       "description": "Toggles a switch on/off.",
@@ -84,6 +107,9 @@
     "turned_off": {
       "description": "Triggers after one or more switches turn off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::switch::common::trigger_for_name%]"
         }
@@ -93,6 +119,9 @@
     "turned_on": {
       "description": "Triggers after one or more switches turn on.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::switch::common::trigger_for_name%]"
         }

@@ -31,11 +31,29 @@
       "name": "Door is open"
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "title": "Door",
   "triggers": {
     "closed": {
       "description": "Triggers after one or more doors close.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::door::common::trigger_for_name%]"
         }
@@ -45,6 +63,9 @@
     "opened": {
       "description": "Triggers after one or more doors open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::door::common::trigger_for_name%]"
         }

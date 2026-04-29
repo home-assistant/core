@@ -1,26 +1,46 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
     "is_cooling": {
       "description": "Tests if one or more thermostats are cooling.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
       "name": "Thermostat is cooling"
     },
     "is_drying": {
       "description": "Tests if one or more thermostats are drying.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
       "name": "Thermostat is drying"
     },
     "is_heating": {
       "description": "Tests if one or more thermostats are heating.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
       "name": "Thermostat is heating"
     },
     "is_hvac_mode": {
       "description": "Tests if one or more thermostats are set to a specific HVAC mode.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
         "hvac_mode": {
           "description": "The HVAC modes to test for.",
           "name": "Modes"
@@ -31,6 +51,9 @@
     "is_off": {
       "description": "Tests if one or more thermostats are off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::condition_for_name%]"
         }
@@ -39,11 +62,19 @@
     },
     "is_on": {
       "description": "Tests if one or more thermostats are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
       "name": "Thermostat is on"
     },
     "target_humidity": {
       "description": "Tests the humidity setpoint of one or more thermostats.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
         "threshold": {
           "name": "[%key:component::climate::common::condition_threshold_name%]"
         }
@@ -53,6 +84,9 @@
     "target_temperature": {
       "description": "Tests the temperature setpoint of one or more thermostats.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
         "threshold": {
           "name": "[%key:component::climate::common::condition_threshold_name%]"
         }
@@ -237,6 +271,21 @@
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "set_fan_mode": {
       "description": "Sets the fan mode of a thermostat.",
@@ -338,6 +387,9 @@
     "hvac_mode_changed": {
       "description": "Triggers after the mode of one or more thermostats changes.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         },
@@ -351,6 +403,9 @@
     "started_cooling": {
       "description": "Triggers after one or more thermostats start cooling.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
@@ -360,6 +415,9 @@
     "started_drying": {
       "description": "Triggers after one or more thermostats start drying.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
@@ -369,6 +427,9 @@
     "started_heating": {
       "description": "Triggers after one or more thermostats start heating.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
@@ -387,6 +448,9 @@
     "target_humidity_crossed_threshold": {
       "description": "Triggers after the humidity setpoint of one or more thermostats crosses a threshold.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         },
@@ -408,6 +472,9 @@
     "target_temperature_crossed_threshold": {
       "description": "Triggers after the temperature setpoint of one or more thermostats crosses a threshold.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         },
@@ -420,6 +487,9 @@
     "turned_off": {
       "description": "Triggers after one or more thermostats turn off.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }
@@ -429,6 +499,9 @@
     "turned_on": {
       "description": "Triggers after one or more thermostats turn on, regardless of the mode.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::climate::common::trigger_for_name%]"
         }

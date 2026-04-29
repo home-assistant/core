@@ -8,6 +8,7 @@
       default: any
       selector:
         automation_behavior:
+          translation_key: trigger_behavior
           mode: trigger
 
 .temperature_units: &temperature_units

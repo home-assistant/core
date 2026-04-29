@@ -9,6 +9,7 @@
       default: any
       selector:
         automation_behavior:
+          translation_key: condition_behavior
           mode: condition
 
 .number_or_entity: &number_or_entity

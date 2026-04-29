@@ -1,12 +1,17 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_jammed": {
       "description": "Tests if one or more locks are jammed.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -16,6 +21,9 @@
     "is_locked": {
       "description": "Tests if one or more locks are locked.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -25,6 +33,9 @@
     "is_open": {
       "description": "Tests if one or more locks are open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -34,6 +45,9 @@
     "is_unlocked": {
       "description": "Tests if one or more locks are unlocked.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::condition_for_name%]"
         }
@@ -92,6 +106,21 @@
       "message": "The code for {entity_id} doesn't match pattern {code_format}."
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "lock": {
       "description": "Locks a lock.",
@@ -129,6 +158,9 @@
     "jammed": {
       "description": "Triggers after one or more locks jam.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }
@@ -138,6 +170,9 @@
     "locked": {
       "description": "Triggers after one or more locks lock.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }
@@ -147,6 +182,9 @@
     "opened": {
       "description": "Triggers after one or more locks open.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }
@@ -156,6 +194,9 @@
     "unlocked": {
       "description": "Triggers after one or more locks unlock.",
       "fields": {
+        "behavior": {
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
         "for": {
           "name": "[%key:component::lock::common::trigger_for_name%]"
         }

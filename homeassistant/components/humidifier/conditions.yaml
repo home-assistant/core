@@ -8,6 +8,7 @@
       default: any
       selector:
         automation_behavior:
+          translation_key: condition_behavior
           mode: condition
 
 .condition_common_for: &condition_common_for

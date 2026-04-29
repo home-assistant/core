@@ -9,6 +9,7 @@
       default: any
       selector:
         automation_behavior:
+          translation_key: condition_behavior
           mode: condition
 
 .battery_threshold_entity: &battery_threshold_entity

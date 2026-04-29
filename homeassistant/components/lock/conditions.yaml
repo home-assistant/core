@@ -8,6 +8,7 @@
       default: any
       selector:
         automation_behavior:
+          translation_key: condition_behavior
           mode: condition
 
 is_jammed: *condition_common

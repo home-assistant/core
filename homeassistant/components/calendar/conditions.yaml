@@ -8,4 +8,5 @@ is_event_active:
       default: any
       selector:
         automation_behavior:
+          translation_key: condition_behavior
           mode: condition
