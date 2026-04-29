@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.custom_clusters import HeimanCluster
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -167,5 +168,16 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.WaterHeaterManagement.Commands.CancelBoost.command_id,
         allow_multi=True,  # Also used in water_heater
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="HeimanSmokeCoAlarmTemporaryMuteRequest",
+            translation_key="temporary_mute_request",
+            command=HeimanCluster.Commands.MutingSensor,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(HeimanCluster.Attributes.AcceptedCommandList,),
+        value_contains=HeimanCluster.Commands.MutingSensor.command_id,
     ),
 ]

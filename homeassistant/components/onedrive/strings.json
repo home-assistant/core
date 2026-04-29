@@ -102,8 +102,8 @@
     "file_too_large": {
       "message": "`{filename}` is too large ({size} > {limit})"
     },
-    "filename_does_not_exist": {
-      "message": "`{filename}` does not exist"
+    "filenames_do_not_exist": {
+      "message": "The following files do not exist: {filenames}"
     },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
