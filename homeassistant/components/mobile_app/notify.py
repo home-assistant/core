@@ -286,7 +286,12 @@ async def _send_message(
             translation_placeholders={"device_name": entry.title},
         ) from e
     except ClientError as e:
-        _LOGGER.debug("Error sending notification to %s:", entry.title, exc_info=True)
+        _LOGGER.debug(
+            "Error sending notification to %s [%s]:",
+            entry.title,
+            entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
+            exc_info=True,
+        )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="error_sending_notification",
