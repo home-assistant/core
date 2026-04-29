@@ -11,9 +11,9 @@ from homeassistant.const import EVENT_CALL_SERVICE, EVENT_LOGBOOK_ENTRY
 # Domains that are always continuous
 #
 # These are hard coded here to avoid importing
-# the entire counter and proximity integrations
+# the entire counter, image, and proximity integrations
 # to get the name of the domain.
-ALWAYS_CONTINUOUS_DOMAINS = {"counter", "proximity"}
+ALWAYS_CONTINUOUS_DOMAINS = {"counter", "image", "proximity"}
 
 # Domains that are continuous if there is a UOM set on the entity
 CONDITIONALLY_CONTINUOUS_DOMAINS = {SENSOR_DOMAIN}

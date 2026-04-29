@@ -2559,6 +2559,7 @@ async def test_subscribe_all_entities_are_continuous(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
                 hass.states.async_set("counter.any", state)
+                hass.states.async_set("image.any", state)
                 hass.states.async_set("proximity.any", state)
 
     # We will compare event subscriptions after closing the websocket connection,
@@ -2573,7 +2574,7 @@ async def test_subscribe_all_entities_are_continuous(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
+            "entity_ids": ["sensor.uom", "counter.any", "image.any", "proximity.any"],
         }
     )
 
@@ -2908,6 +2909,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
                 hass.states.async_set("counter.any", state)
+                hass.states.async_set("image.any", state)
                 hass.states.async_set("proximity.any", state)
         hass.bus.async_fire("mock_event", {"device_id": device.id})
         hass.bus.async_fire("mock_event", {"device_id": device2.id})
@@ -2924,7 +2926,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
+            "entity_ids": ["sensor.uom", "counter.any", "image.any", "proximity.any"],
             "device_ids": [device.id, device2.id],
         }
     )
@@ -3112,6 +3114,11 @@ async def test_live_stream_with_changed_state_change(
             "counter.counter0",
             {},
             0,  # Counter is an always continuous domain
+        ),
+        (
+            "image.map0",
+            {},
+            0,  # Image is an always continuous domain
         ),
         (
             "zone.home",
