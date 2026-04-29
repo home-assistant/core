@@ -5,13 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Ignore the homeassistant config_entry_reauth issue translation
-# This is triggered when ConfigEntryAuthFailed is raised during setup
-pytestmark = pytest.mark.parametrize(
-    "ignore_missing_translations",
-    ["homeassistant:issues.config_entry_reauth.title"],
-)
-
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -21,6 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+# Ignore the homeassistant config_entry_reauth issue translation
+# This is triggered when ConfigEntryAuthFailed is raised during setup
+pytestmark = pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["homeassistant:issues.config_entry_reauth.title"],
+)
 
 __all__ = [
     "MockConfigEntry",
