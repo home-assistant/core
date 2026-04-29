@@ -428,7 +428,8 @@ SENSOR_TYPES = (
         translation_key="wind_direction",
         attribute=TMRW_ATTR_WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
