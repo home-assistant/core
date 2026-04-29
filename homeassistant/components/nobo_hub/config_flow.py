@@ -9,6 +9,7 @@ from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -16,7 +17,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+)
 
 from . import NoboHubConfigEntry
 from .const import (
@@ -105,6 +111,83 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing hub.
+
+        While the hub is connected, only the auto-discovery toggle is
+        editable, as we demonstrably have the correct IP address. While
+        disconnected, both fields are editable; the new IP is probed via
+        ``_test_connection`` only when auto-discovery is off.
+        """
+        reconfigure_entry = self._get_reconfigure_entry()
+        is_connected = reconfigure_entry.state == ConfigEntryState.LOADED
+        current_ip = reconfigure_entry.data[CONF_IP_ADDRESS]
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            new_ip = current_ip if is_connected else user_input[CONF_IP_ADDRESS]
+            new_auto_discovered = user_input[CONF_AUTO_DISCOVERED]
+            data_updates = {
+                CONF_IP_ADDRESS: new_ip,
+                CONF_AUTO_DISCOVERED: new_auto_discovered,
+            }
+            if is_connected:
+                # Only the auto-discovery flag can have changed; it is only
+                # consulted in async_setup_entry on connection failure, so
+                # persist the new value without forcing a reconnect.
+                self.hass.config_entries.async_update_entry(
+                    reconfigure_entry,
+                    data=reconfigure_entry.data | data_updates,
+                )
+                return self.async_abort(reason="reconfigure_successful")
+            # Disconnected: probe the new IP only when auto-discovery is
+            # off. With auto-discovery enabled, async_setup_entry will
+            # rediscover the IP itself; we still validate the format so
+            # garbage input doesn't get persisted.
+            try:
+                if new_auto_discovered:
+                    socket.inet_aton(new_ip)
+                else:
+                    await self._test_connection(
+                        reconfigure_entry.data[CONF_SERIAL], new_ip
+                    )
+            except OSError:
+                errors["base"] = "invalid_ip"
+            except NoboHubConnectError as error:
+                # The serial is fixed and read-only here, so blame the IP
+                # rather than the (uneditable) serial number.
+                errors["base"] = (
+                    "cannot_connect_ip" if error.msg == "cannot_connect" else error.msg
+                )
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data_updates
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_IP_ADDRESS, default=current_ip): TextSelector(
+                            TextSelectorConfig(read_only=is_connected)
+                        ),
+                        vol.Required(CONF_AUTO_DISCOVERED): bool,
+                    }
+                ),
+                user_input
+                or {
+                    CONF_AUTO_DISCOVERED: reconfigure_entry.data[CONF_AUTO_DISCOVERED],
+                },
+            ),
+            errors=errors,
+            description_placeholders={
+                CONF_SERIAL: reconfigure_entry.data[CONF_SERIAL],
+            },
+        )
+
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -155,7 +238,11 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         except OSError as err:
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
-        if not await hub.async_connect_hub(ip_address, serial):
+        try:
+            connected = await hub.async_connect_hub(ip_address, serial)
+        except OSError as err:
+            raise NoboHubConnectError("cannot_connect") from err
+        if not connected:
             raise NoboHubConnectError("cannot_connect")
         name = hub.hub_info["name"]
         await hub.close()

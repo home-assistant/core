@@ -1,10 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Failed to connect - check serial number",
+      "cannot_connect_ip": "Failed to connect - check IP address",
       "invalid_ip": "Invalid IP address",
       "invalid_serial": "Invalid serial number",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -20,6 +22,17 @@
           "serial": "The full 12-digit serial number printed on the back of your Nobø Ecohub."
         },
         "description": "Configure a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address."
+      },
+      "reconfigure": {
+        "data": {
+          "auto_discovered": "Discover IP address automatically",
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "auto_discovered": "If enabled, Home Assistant will rediscover the hub when its IP address changes.",
+          "ip_address": "[%key:component::nobo_hub::config::step::manual::data_description::ip_address%]"
+        },
+        "description": "Update the connection settings for Nobø Ecohub with serial number {serial}."
       },
       "selected": {
         "data": {
@@ -59,7 +72,7 @@
   },
   "exceptions": {
     "cannot_connect_manual": {
-      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}. If the hub has moved to a new IP address, remove and re-add the integration."
+      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}. If the hub has moved to a new IP address, reconfigure the integration with the new IP."
     },
     "cannot_connect_rediscovered": {
       "message": "Unable to connect to Nobø Ecohub at rediscovered IP {ip}; will retry."
