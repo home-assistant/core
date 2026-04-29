@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
-
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -114,6 +113,9 @@ async def async_setup_entry(
 
         Uses device and property identifiers so added, removed, or replaced
         properties are detected even when overall counts stay the same.
+
+        Also tracks property readability to detect when a property becomes
+        sensor-capable (e.g., from unreadable to readable).
         """
         nonlocal last_structure_signature
 
@@ -121,9 +123,9 @@ async def async_setup_entry(
         current_structure_signature = (
             tuple(sorted(device.device_id for device in devices)),
             frozenset(
-                (device.device_id, property_id)
+                (device.device_id, property_id, prop.readable)
                 for device in devices
-                for property_id in device.properties
+                for property_id, prop in device.properties.items()
             ),
         )
 
@@ -320,13 +322,25 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             if config.state_class:
                 self._attr_state_class = config.state_class
         elif prop:
-            # Only set state_class when the current value is numeric.
-            # Note: bool is a subclass of int, so we explicitly exclude it.
-            if (
+            # Prefer property metadata so numeric sensors that initially report
+            # None still get a stable state_class. Fall back to the current
+            # value only when the metadata is absent or unrecognized.
+            data_type = prop.data_type.lower() if isinstance(prop.data_type, str) else ""
+            data_type_is_numeric = data_type in {
+                "int",
+                "integer",
+                "float",
+                "double",
+                "number",
+                "numeric",
+                "decimal",
+            }
+            value_is_numeric = (
                 prop.value is not None
                 and isinstance(prop.value, (int, float))
                 and not isinstance(prop.value, bool)
-            ):
+            )
+            if data_type_is_numeric or value_is_numeric:
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
 
