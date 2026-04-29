@@ -94,12 +94,7 @@ async def async_setup_entry(
         )
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
-        try:
-            await _async_disconnect_websocket()
-        except Exception:
-            LOGGER.exception(
-                "Failed to clean up WeatherFlow websocket after setup failure"
-            )
+        await _async_disconnect_websocket()
         raise
 
     entry.async_on_unload(_async_disconnect_websocket)
