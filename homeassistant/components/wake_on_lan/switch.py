@@ -131,7 +131,7 @@ class WolSwitch(SwitchEntity):
             return
         await self._off_script.async_stop()
         if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script as it will  be reused.
+            # Entity ID change, do not unload the script as it will be reused.
             return
         self._off_script.async_unload()
 
