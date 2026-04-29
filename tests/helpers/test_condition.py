@@ -23,6 +23,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -37,11 +38,13 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     condition,
     config_validation as cv,
     entity_registry as er,
@@ -76,6 +79,35 @@ from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 from tests.typing import WebSocketGenerator
+
+
+async def _create_primary_and_diagnostic_entities_in_area(
+    hass: HomeAssistant, domain: str
+) -> tuple[str, str, str]:
+    """Create a primary and a diagnostic entity in the same area.
+
+    Returns a tuple of (area_id, primary_entity_id, diagnostic_entity_id).
+    """
+    area_reg = ar.async_get(hass)
+    area = area_reg.async_create("Test Area")
+
+    entity_reg = er.async_get(hass)
+    primary = entity_reg.async_get_or_create(
+        domain=domain,
+        platform="test",
+        unique_id=f"{domain}_primary",
+        suggested_object_id=f"primary_{domain}",
+    )
+    entity_reg.async_update_entity(primary.entity_id, area_id=area.id)
+    diagnostic = entity_reg.async_get_or_create(
+        domain=domain,
+        platform="test",
+        unique_id=f"{domain}_diagnostic",
+        suggested_object_id=f"diagnostic_{domain}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    entity_reg.async_update_entity(diagnostic.entity_id, area_id=area.id)
+    return area.id, primary.entity_id, diagnostic.entity_id
 
 
 def assert_element(trace_element, expected_element, path):
@@ -3167,13 +3199,16 @@ _DEFAULT_DOMAIN_SPECS = {"test": DomainSpec()}
 async def _setup_numerical_condition(
     hass: HomeAssistant,
     condition_options: dict[str, Any],
-    entity_ids: str | list[str],
+    target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
-        domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
+        domain_specs or _DEFAULT_DOMAIN_SPECS,
+        valid_unit,
+        primary_entities_only=primary_entities_only,
     )
 
     async def async_get_conditions(
@@ -3186,12 +3221,9 @@ async def _setup_numerical_condition(
         hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
     )
 
-    if isinstance(entity_ids, str):
-        entity_ids = [entity_ids]
-
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target_config,
         CONF_OPTIONS: condition_options,
     }
 
@@ -3280,7 +3312,7 @@ async def test_numerical_condition_thresholds(
     test = await _setup_numerical_condition(
         hass,
         condition_options=condition_options,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
@@ -3298,7 +3330,7 @@ async def test_numerical_condition_invalid_state(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
@@ -3313,7 +3345,7 @@ async def test_numerical_condition_attribute_value_source(
         hass,
         domain_specs={"test": DomainSpec(value_source="brightness")},
         condition_options={"threshold": {"type": "above", "value": {"number": 100}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
     )
 
     # Attribute above threshold -> True
@@ -3342,7 +3374,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         hass,
         domain_specs={"test": DomainSpec(value_source="humidity")},
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         valid_unit="%",
     )
 
@@ -3381,7 +3413,7 @@ async def test_numerical_condition_valid_unit(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         valid_unit=valid_unit,
     )
 
@@ -3409,7 +3441,7 @@ async def test_numerical_condition_behavior(
             "threshold": {"type": "above", "value": {"number": 50}},
             ATTR_BEHAVIOR: behavior,
         },
-        entity_ids=["test.entity_1", "test.entity_2"],
+        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
     )
 
     # Both above -> True for any and all
@@ -4015,17 +4047,19 @@ async def test_numerical_condition_with_unit_behavior(
 
 async def _setup_state_condition(
     hass: HomeAssistant,
-    entity_ids: str | list[str],
     states: str | bool | set[str | bool],
+    target_config: dict[str, Any],
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
     support_duration: bool = False,
+    primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,
         states,
         support_duration=support_duration,
+        primary_entities_only=primary_entities_only,
     )
 
     async def async_get_conditions(
@@ -4038,12 +4072,9 @@ async def _setup_state_condition(
         hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
     )
 
-    if isinstance(entity_ids, str):
-        entity_ids = [entity_ids]
-
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target_config,
         CONF_OPTIONS: condition_options or {},
     }
 
@@ -4056,7 +4087,7 @@ async def _setup_state_condition(
 async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
     """Test state condition with a single entity."""
     test = await _setup_state_condition(
-        hass, entity_ids="test.entity_1", states=STATE_ON
+        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4069,7 +4100,7 @@ async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
 async def test_state_condition_multiple_target_states(hass: HomeAssistant) -> None:
     """Test state condition matching any of multiple target states."""
     test = await _setup_state_condition(
-        hass, entity_ids="test.entity_1", states={"on", "heat"}
+        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states={"on", "heat"}
     )
 
     hass.states.async_set("test.entity_1", "on")
@@ -4099,7 +4130,7 @@ async def test_state_condition_unavailable_unknown(
     """
     # Single entity: unavailable/unknown → False
     test_single = await _setup_state_condition(
-        hass, entity_ids="test.entity_1", states=STATE_ON
+        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
     hass.states.async_set("test.entity_1", state_value)
     assert test_single.async_check() is False
@@ -4108,7 +4139,9 @@ async def test_state_condition_unavailable_unknown(
     # → True (entity_1 matches, entity_2 is skipped)
     test_any = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY},
     )
@@ -4126,7 +4159,9 @@ async def test_state_condition_unavailable_unknown(
     # → True (all *available* entities match, entity_2 is skipped)
     test_all = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
     )
@@ -4144,7 +4179,7 @@ async def test_state_condition_unavailable_unknown(
 async def test_state_condition_entity_not_found(hass: HomeAssistant) -> None:
     """Test state condition when entity does not exist."""
     test = await _setup_state_condition(
-        hass, entity_ids="test.nonexistent", states=STATE_ON
+        hass, target_config={CONF_ENTITY_ID: ["test.nonexistent"]}, states=STATE_ON
     )
 
     # Entity doesn't exist — condition should be false
@@ -4155,7 +4190,7 @@ async def test_state_condition_attribute_value_source(hass: HomeAssistant) -> No
     """Test state condition reads from attribute when value_source is set."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states="heat",
         domain_specs={"test": DomainSpec(value_source="hvac_action")},
     )
@@ -4181,7 +4216,7 @@ async def test_state_condition_behavior(
     """Test state condition with behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2"],
+        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior},
     )
@@ -4206,7 +4241,7 @@ async def test_state_condition_duration_not_met(
     """Test state condition with duration: entity hasn't been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -4229,7 +4264,7 @@ async def test_state_condition_duration_met(
     """Test state condition with duration: entity has been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -4254,7 +4289,7 @@ async def test_state_condition_duration_zero_behaves_like_no_duration(
     """
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 0}},
         support_duration=True,
@@ -4273,7 +4308,7 @@ async def test_state_condition_duration_wrong_state(
     """Test state condition with duration: entity in wrong state even after duration."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -4292,7 +4327,7 @@ async def test_state_condition_duration_reset_on_state_change(
     """Test state condition with duration: timer resets when state changes."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -4330,7 +4365,7 @@ async def test_state_condition_duration_behavior(
     """Test state condition with duration and behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2"],
+        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -4373,7 +4408,9 @@ async def test_state_condition_duration_unavailable_unknown(
     # → True (entity_1 matches and meets duration, entity_2 skipped)
     test_any = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -4390,7 +4427,9 @@ async def test_state_condition_duration_unavailable_unknown(
     # → True (all available entities match and meet duration)
     test_all = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
         support_duration=True,
@@ -5112,6 +5151,126 @@ async def test_state_condition_attr_duration_unrelated_attr_update(
     # reset the timer.
     freezer.tick(timedelta(seconds=5))
     assert test.async_check() is True
+
+
+@pytest.mark.parametrize(("primary_entities_only"), [True, False])
+async def test_state_condition_primary_entities_only(
+    hass: HomeAssistant, primary_entities_only: bool
+) -> None:
+    """Test make_entity_state_condition primary_entities_only flag."""
+    (
+        area_id,
+        primary_id,
+        diagnostic_id,
+    ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={ATTR_AREA_ID: area_id},
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
+        primary_entities_only=primary_entities_only,
+    )
+
+    # Primary on, diagnostic off
+    hass.states.async_set(primary_id, STATE_ON)
+    hass.states.async_set(diagnostic_id, STATE_OFF)
+    await hass.async_block_till_done()
+    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
+    # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
+    assert test(hass) is primary_entities_only
+
+    # Both on - true regardless of flag
+    hass.states.async_set(diagnostic_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert test(hass) is True
+
+
+@pytest.mark.parametrize(("primary_entities_only"), [True, False])
+async def test_numerical_condition_primary_entities_only(
+    hass: HomeAssistant,
+    primary_entities_only: bool,
+) -> None:
+    """Test make_entity_numerical_condition primary_entities_only flag."""
+    (
+        area_id,
+        primary_id,
+        diagnostic_id,
+    ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
+
+    test = await _setup_numerical_condition(
+        hass,
+        target_config={ATTR_AREA_ID: area_id},
+        condition_options={
+            "threshold": {"type": "above", "value": {"number": 50}},
+            ATTR_BEHAVIOR: BEHAVIOR_ALL,
+        },
+        primary_entities_only=primary_entities_only,
+    )
+
+    # Primary above threshold, diagnostic below
+    hass.states.async_set(primary_id, "75")
+    hass.states.async_set(diagnostic_id, "25")
+    await hass.async_block_till_done()
+    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
+    # the diagnostic value is below the threshold. If excluded, only the primary is
+    # checked and it's above.
+    assert test(hass) is primary_entities_only
+
+    # Both above threshold — true regardless of flag
+    hass.states.async_set(diagnostic_id, "75")
+    await hass.async_block_till_done()
+    assert test(hass) is True
+
+
+@pytest.mark.parametrize(("primary_entities_only"), [True, False])
+async def test_state_condition_primary_entities_only_with_duration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    primary_entities_only: bool,
+) -> None:
+    """Test make_entity_state_condition primary_entities_only flag with duration."""
+    (
+        area_id,
+        primary_id,
+        diagnostic_id,
+    ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
+
+    # Primary starts with matching attribute, diagnostic with non-matching attribute
+    hass.states.async_set(primary_id, STATE_ON, {"test_attr": True})
+    hass.states.async_set(diagnostic_id, STATE_ON, {"test_attr": False})
+    await hass.async_block_till_done()
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={ATTR_AREA_ID: area_id},
+        states={True},
+        domain_specs={"test": DomainSpec(value_source="test_attr")},
+        condition_options={
+            ATTR_BEHAVIOR: BEHAVIOR_ALL,
+            CONF_FOR: {"seconds": 5},
+        },
+        support_duration=True,
+        primary_entities_only=primary_entities_only,
+    )
+
+    # 3s later, diagnostic transitions to matching. The state-change listener
+    freezer.tick(timedelta(seconds=3))
+    hass.states.async_set(diagnostic_id, STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # 3s after diagnostic became matching (6s total since primary became matching):
+    # - primary_entities_only=True: diagnostic is excluded from evaluation,
+    #   only primary is checked. Primary has been matching for 6s >= 5s → True.
+    # - primary_entities_only=False: diagnostic is included. Diagnostic has
+    #   only been matching for 3s < 5s → behavior=all is False.
+    freezer.tick(timedelta(seconds=3))
+    assert test(hass) is primary_entities_only
+
+    # 3 more seconds later (6s after diagnostic became matching). Now diagnostic
+    # has also been matching for >= 5s → True regardless of flag.
+    freezer.tick(timedelta(seconds=3))
+    assert test(hass) is True
 
 
 async def test_async_from_config_calls_async_setup_on_checker(
