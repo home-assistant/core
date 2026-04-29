@@ -19,7 +19,6 @@ from homeassistant.components.growatt_server.const import (
     DEFAULT_PLANT_ID,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_NO_PRIVILEGE,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -109,7 +108,7 @@ async def test_coordinator_update_failed(
     # Cause coordinator update to fail
     mock_growatt_v1_api.min_detail.side_effect = growattServer.GrowattV1ApiError(
         "Connection timeout",
-        growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
         "dummy error",
     )
 
@@ -182,7 +181,6 @@ async def test_setup_auth_failed_on_permission_denied(
         growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
         "dummy error",
     )
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
     mock_growatt_v1_api.device_list.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
