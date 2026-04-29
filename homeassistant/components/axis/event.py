@@ -28,7 +28,7 @@ class AxisEventPlatformDescription(AxisEventDescription, EventEntityDescription)
 
 ENTITY_DESCRIPTIONS = (
     AxisEventPlatformDescription(
-        key="Input port state",
+        key="Doorbell",
         device_class=EventDeviceClass.DOORBELL,
         event_types=[DoorbellEventType.RING],
         event_topic=EventTopic.PORT_INPUT,
