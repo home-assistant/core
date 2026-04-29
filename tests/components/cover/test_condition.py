@@ -55,16 +55,16 @@ async def test_cover_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("cover.awning_is_closed", {}, True, False),
-        ("cover.awning_is_open", {}, True, False),
-        ("cover.blind_is_closed", {}, True, False),
-        ("cover.blind_is_open", {}, True, False),
-        ("cover.curtain_is_closed", {}, True, False),
-        ("cover.curtain_is_open", {}, True, False),
-        ("cover.shade_is_closed", {}, True, False),
-        ("cover.shade_is_open", {}, True, False),
-        ("cover.shutter_is_closed", {}, True, False),
-        ("cover.shutter_is_open", {}, True, False),
+        ("cover.awning_is_closed", {}, True, True),
+        ("cover.awning_is_open", {}, True, True),
+        ("cover.blind_is_closed", {}, True, True),
+        ("cover.blind_is_open", {}, True, True),
+        ("cover.curtain_is_closed", {}, True, True),
+        ("cover.curtain_is_open", {}, True, True),
+        ("cover.shade_is_closed", {}, True, True),
+        ("cover.shade_is_open", {}, True, True),
+        ("cover.shutter_is_closed", {}, True, True),
+        ("cover.shutter_is_open", {}, True, True),
     ],
 )
 async def test_cover_condition_options_validation(
