@@ -1181,7 +1181,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.6.3
+indevolt-api==1.6.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2425,8 +2425,9 @@ renson-endura-delta==1.7.2
 reolink-aio==0.19.1
 
 # homeassistant.components.honeywell_string_lights
+# homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==2.1.0
+rf-protocols==2.2.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2626,7 +2627,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.4.5
+tesla-fleet-api==1.4.7
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
