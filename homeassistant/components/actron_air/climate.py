@@ -38,6 +38,7 @@ HVAC_MODE_MAPPING_ACTRONAIR_TO_HA = {
     "HEAT": HVACMode.HEAT,
     "FAN": HVACMode.FAN_ONLY,
     "AUTO": HVACMode.AUTO,
+    "DRY": HVACMode.DRY,
     "OFF": HVACMode.OFF,
 }
 HVAC_MODE_MAPPING_HA_TO_ACTRONAIR = {
@@ -79,7 +80,6 @@ class ActronAirClimateEntity(ClimateEntity):
     )
     _attr_name = None
     _attr_fan_modes = list(FAN_MODE_MAPPING_ACTRONAIR_TO_HA.values())
-    _attr_hvac_modes = list(HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.values())
 
 
 class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
@@ -92,6 +92,17 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
         """Initialize an Actron Air unit."""
         super().__init__(coordinator)
         self._attr_unique_id = self._serial_number
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of supported HVAC modes."""
+        modes = [
+            HVAC_MODE_MAPPING_ACTRONAIR_TO_HA[mode]
+            for mode in self._status.user_aircon_settings.supported_modes
+            if mode in HVAC_MODE_MAPPING_ACTRONAIR_TO_HA
+        ]
+        modes.append(HVACMode.OFF)
+        return modes
 
     @property
     def min_temp(self) -> float:
@@ -178,6 +189,18 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
         """Initialize an Actron Air unit."""
         super().__init__(coordinator, zone)
         self._attr_unique_id: str = self._zone_identifier
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of supported HVAC modes."""
+        status = self.coordinator.data
+        modes = [
+            HVAC_MODE_MAPPING_ACTRONAIR_TO_HA[mode]
+            for mode in status.user_aircon_settings.supported_modes
+            if mode in HVAC_MODE_MAPPING_ACTRONAIR_TO_HA
+        ]
+        modes.append(HVACMode.OFF)
+        return modes
 
     @property
     def min_temp(self) -> float:
