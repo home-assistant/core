@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from io import BytesIO
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
+from io import BytesIO
 import logging
 import re
 from typing import Any, TypedDict, cast
