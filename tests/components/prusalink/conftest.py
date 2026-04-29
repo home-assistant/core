@@ -33,6 +33,7 @@ def mock_version_api() -> Generator[dict[str, str]]:
         "server": "2.1.2",
         "text": "PrusaLink",
         "hostname": "PrusaXL",
+        "firmware": "6.1.2+11023",
     }
     with patch("pyprusalink.PrusaLink.get_version", return_value=resp):
         yield resp
