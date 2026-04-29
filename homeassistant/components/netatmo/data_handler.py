@@ -33,14 +33,15 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     MANUFACTURER,
-    NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
     NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_FAN,
+    NETATMO_CREATE_LEGACY_SENSOR,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -372,13 +373,14 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
                 NETATMO_CREATE_SWITCH,
-                NETATMO_CREATE_SENSOR,
+                NETATMO_CREATE_LEGACY_SENSOR,
             ],
-            NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
+            NetatmoDeviceCategory.meter: [NETATMO_CREATE_LEGACY_SENSOR],
             NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
             NetatmoDeviceCategory.opening: [
                 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
                 NETATMO_CREATE_OPENING_BINARY_SENSOR,
+                NETATMO_CREATE_SENSOR,
             ],
         }
         for module in home.modules.values():
@@ -431,7 +433,7 @@ class NetatmoDataHandler:
                     if module.device_category is NetatmoDeviceCategory.climate:
                         async_dispatcher_send(
                             self.hass,
-                            NETATMO_CREATE_BATTERY,
+                            NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
                             NetatmoDevice(
                                 self,
                                 module,

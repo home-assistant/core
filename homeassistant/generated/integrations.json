@@ -3010,7 +3010,7 @@
     },
     "html5": {
       "name": "HTML5 Push Notifications",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -4771,6 +4771,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "novy_cooker_hood": {
+      "name": "Novy Cooker Hood",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "nrgkick": {
       "name": "NRGkick",
       "integration_type": "device",
@@ -5117,12 +5123,6 @@
     "otbr": {
       "name": "Open Thread Border Router",
       "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "otp": {
-      "name": "One-Time Password (OTP)",
-      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8321,6 +8321,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "otp": {
+      "name": "One-Time Password (OTP)",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "random": {
       "integration_type": "helper",
