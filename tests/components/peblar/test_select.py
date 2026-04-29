@@ -244,7 +244,9 @@ async def test_hw_entity_absent_when_hw_flag_false(
 ) -> None:
     """Test hardware select entity is absent when the hardware flag is false."""
     unique_id = f"{mock_config_entry.unique_id}_{entity_key}"
-    if existing := entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id):
+    if existing := entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, unique_id
+    ):
         entity_registry.async_remove(existing)
 
     setattr(mock_peblar.system_information.return_value, hw_attr, False)
@@ -252,4 +254,6 @@ async def test_hw_entity_absent_when_hw_flag_false(
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id) is None
+    assert (
+        entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id) is None
+    )
