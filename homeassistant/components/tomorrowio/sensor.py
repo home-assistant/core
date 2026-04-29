@@ -451,7 +451,7 @@ SENSOR_TYPES = (
         translation_key="altimeter_setting",
         attribute=TMRW_ATTR_ALTIMETER_SETTING,
         native_unit_of_measurement=UnitOfPressure.HPA,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
