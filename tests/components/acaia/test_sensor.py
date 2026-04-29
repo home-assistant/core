@@ -1,7 +1,9 @@
 """Test sensors for acaia integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import PERCENTAGE, Platform
@@ -12,6 +14,7 @@ from . import setup_integration
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
@@ -66,27 +69,23 @@ async def test_restore_state(
 async def test_battery_available_within_session_after_disconnect(
     hass: HomeAssistant,
     mock_scale: MagicMock,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test battery stays available on disconnect when no recorder data exists.
-    """
+    """Test battery stays available on disconnect when no restore data exists."""
     entity_id = "sensor.lunar_ddeeff_battery"
 
-    # No mock_restore_cache_with_extra_data: simulates a freshly-paired
-    # scale with no prior recorder history.
     await setup_integration(hass, mock_config_entry)
 
-    # Initial state: scale connected, battery 42 (from mock_scale fixture).
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "42"
 
-    # Simulate the scale disconnecting.
     mock_scale.connected = False
-    mock_config_entry.runtime_data.async_update_listeners()
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Battery sensor should retain its last-known value, not go unavailable.
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "42"
