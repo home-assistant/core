@@ -12,39 +12,39 @@
   },
   "services": {
     "cancel": {
-      "service": "mdi:cancel"
+      "service": "mdi:timer-cancel"
     },
     "change": {
-      "service": "mdi:pencil"
+      "service": "mdi:timer-edit"
     },
     "finish": {
-      "service": "mdi:check"
+      "service": "mdi:timer-check"
     },
     "pause": {
-      "service": "mdi:pause"
+      "service": "mdi:timer-pause"
     },
     "reload": {
       "service": "mdi:reload"
     },
     "start": {
-      "service": "mdi:play"
+      "service": "mdi:timer-play"
     }
   },
   "triggers": {
     "cancelled": {
-      "trigger": "mdi:cancel"
+      "trigger": "mdi:timer-cancel"
     },
     "finished": {
-      "trigger": "mdi:check"
+      "trigger": "mdi:timer-check"
     },
     "paused": {
       "trigger": "mdi:timer-pause"
     },
     "restarted": {
-      "trigger": "mdi:restart"
+      "trigger": "mdi:timer-refresh"
     },
     "started": {
-      "trigger": "mdi:play"
+      "trigger": "mdi:timer-play"
     }
   }
 }
