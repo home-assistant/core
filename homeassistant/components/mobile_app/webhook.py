@@ -120,6 +120,7 @@ from .helpers import (
     safe_registration,
     webhook_response,
 )
+from .known_sensors import get_translation_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -567,6 +568,8 @@ async def webhook_register_sensor(
 
     data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
 
+    translation_key = get_translation_key(entity_type, unique_id)
+
     # If sensor already is registered, update current state instead
     if existing_sensor:
         _LOGGER.debug(
@@ -577,10 +580,25 @@ async def webhook_register_sensor(
         assert entry is not None
         changes: dict[str, Any] = {}
 
-        if (
-            new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
-        ) != entry.original_name:
-            changes["original_name"] = new_name
+        if translation_key is not None:
+            # For known sensors HA owns the name and icon via translations,
+            # so we ignore the values supplied by the mobile app.
+            if entry.translation_key != translation_key:
+                changes["translation_key"] = translation_key
+            if entry.original_name is not None:
+                changes["original_name"] = None
+            if entry.original_icon is not None:
+                changes["original_icon"] = None
+        else:
+            if (
+                new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
+            ) != entry.original_name:
+                changes["original_name"] = new_name
+            if (
+                ATTR_SENSOR_ICON in data
+                and entry.original_icon != data[ATTR_SENSOR_ICON]
+            ):
+                changes["original_icon"] = data[ATTR_SENSOR_ICON]
 
         if (
             should_be_disabled := data.get(ATTR_SENSOR_DISABLED)
@@ -595,7 +613,6 @@ async def webhook_register_sensor(
             ("device_class", ATTR_SENSOR_DEVICE_CLASS),
             ("unit_of_measurement", ATTR_SENSOR_UOM),
             ("entity_category", ATTR_SENSOR_ENTITY_CATEGORY),
-            ("original_icon", ATTR_SENSOR_ICON),
         ):
             if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
                 changes[ent_reg_key] = data[data_key]

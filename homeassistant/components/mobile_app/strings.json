@@ -18,6 +18,47 @@
       "title": "Title"
     }
   },
+  "entity": {
+    "sensor": {
+      "audio_mode": {
+        "name": "Audio mode",
+        "state": {
+          "normal": "Normal",
+          "ringing": "Ringing",
+          "in_call": "In call",
+          "in_communication": "In communication",
+          "call_screening": "Call screening"
+        }
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging",
+          "full": "Full",
+          "not_charging": "Not charging",
+          "unknown": "Unknown"
+        }
+      },
+      "charger_type": {
+        "name": "Charger type",
+        "state": {
+          "ac": "AC",
+          "usb": "USB",
+          "wireless": "Wireless",
+          "none": "None"
+        }
+      },
+      "ringer_mode": {
+        "name": "Ringer mode",
+        "state": {
+          "normal": "Normal",
+          "silent": "Silent",
+          "vibrate": "Vibrate"
+        }
+      }
+    }
+  },
   "exceptions": {
     "device_not_connected_for_local_push_notifications": {
       "message": "Device {device_name} is not connected for local push notifications"

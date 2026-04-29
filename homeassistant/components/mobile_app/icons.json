@@ -4,6 +4,20 @@
       "notify": {
         "default": "mdi:cellphone-message"
       }
+    },
+    "sensor": {
+      "audio_mode": {
+        "default": "mdi:volume-high"
+      },
+      "battery_state": {
+        "default": "mdi:battery"
+      },
+      "charger_type": {
+        "default": "mdi:power-plug"
+      },
+      "ringer_mode": {
+        "default": "mdi:bell-ring"
+      }
     }
   }
 }

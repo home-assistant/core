@@ -26,11 +26,13 @@ from .const import (
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
+    ATTR_SENSOR_UNIQUE_ID,
     DATA_PENDING_UPDATES,
     DOMAIN,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import device_info
+from .known_sensors import get_translation_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +51,14 @@ class MobileAppEntity(RestoreEntity):
         self._attr_entity_registry_enabled_default = not config.get(
             ATTR_SENSOR_DISABLED
         )
-        self._attr_name = config[CONF_NAME]
+        translation_key = get_translation_key(
+            config[ATTR_SENSOR_TYPE], config[ATTR_SENSOR_UNIQUE_ID]
+        )
+        if translation_key is not None:
+            self._attr_has_entity_name = True
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = config[CONF_NAME]
         self._async_update_attr_from_config()
 
     @callback
@@ -59,7 +68,8 @@ class MobileAppEntity(RestoreEntity):
         self._attr_device_class = config.get(ATTR_SENSOR_DEVICE_CLASS)
         self._attr_state_class = config.get(ATTR_SENSOR_STATE_CLASS)
         self._attr_extra_state_attributes = config[ATTR_SENSOR_ATTRIBUTES]
-        self._attr_icon = config[ATTR_SENSOR_ICON]
+        if self._attr_translation_key is None:
+            self._attr_icon = config[ATTR_SENSOR_ICON]
         self._attr_entity_category = config.get(ATTR_SENSOR_ENTITY_CATEGORY)
         self._attr_available = config.get(ATTR_SENSOR_STATE) != STATE_UNAVAILABLE
 
