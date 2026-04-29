@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_device_handlers.definition.fan import (
-    TuyaFanDefinition,
-    get_default_definition,
-)
+from tuya_device_handlers.definition.fan import FanDefinition, get_default_definition
 from tuya_device_handlers.helpers.homeassistant import TuyaFanDirection
 from tuya_sharing import CustomerDevice, Manager
 
@@ -81,7 +78,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: FanEntityDescription,
-        definition: TuyaFanDefinition,
+        definition: FanDefinition,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager, description)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from tuya_device_handlers.definition.vacuum import (
-    TuyaVacuumDefinition,
+    VacuumDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -81,7 +81,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: StateVacuumEntityDescription,
-        definition: TuyaVacuumDefinition,
+        definition: VacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager, description)

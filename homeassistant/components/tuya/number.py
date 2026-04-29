@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tuya_device_handlers.definition.number import (
-    TuyaNumberDefinition,
+    NumberDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -487,7 +487,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
-        definition: TuyaNumberDefinition,
+        definition: NumberDefinition,
     ) -> None:
         """Initialize a Tuya number entity."""
         super().__init__(device, device_manager, description)

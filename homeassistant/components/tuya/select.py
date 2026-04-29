@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tuya_device_handlers.definition.select import (
-    TuyaSelectDefinition,
+    SelectDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -390,7 +390,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        definition: TuyaSelectDefinition,
+        definition: SelectDefinition,
     ) -> None:
         """Initialize a Tuya select entity."""
         super().__init__(device, device_manager, description)

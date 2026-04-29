@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tuya_device_handlers.definition.camera import (
-    TuyaCameraDefinition,
+    CameraDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -70,7 +70,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: CameraEntityDescription,
-        definition: TuyaCameraDefinition,
+        definition: CameraDefinition,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager, description)
