@@ -142,7 +142,7 @@ sensor_counter_set:
       selector:
         number:
           min: 0
-          max: 65535
+          max: 65536
 
 sensor_setting_set:
   target:
