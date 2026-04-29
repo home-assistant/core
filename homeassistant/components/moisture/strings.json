@@ -11,9 +11,6 @@
     "is_detected": {
       "description": "Tests if one or more moisture sensors are detecting moisture.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::moisture::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::moisture::common::condition_for_name%]"
         }
@@ -23,9 +20,6 @@
     "is_not_detected": {
       "description": "Tests if one or more moisture sensors are not detecting moisture.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::moisture::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::moisture::common::condition_for_name%]"
         }
@@ -35,9 +29,6 @@
     "is_value": {
       "description": "Tests the moisture level of one or more entities.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::moisture::common::condition_behavior_name%]"
-        },
         "threshold": {
           "name": "[%key:component::moisture::common::condition_threshold_name%]"
         }
@@ -59,9 +50,6 @@
     "cleared": {
       "description": "Triggers after one or more moisture sensors stop detecting moisture.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::moisture::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::moisture::common::trigger_for_name%]"
         }
@@ -71,9 +59,6 @@
     "crossed_threshold": {
       "description": "Triggers after one or more moisture content values cross a threshold.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::moisture::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::moisture::common::trigger_for_name%]"
         },
@@ -86,9 +71,6 @@
     "detected": {
       "description": "Triggers after one or more moisture sensors start detecting moisture.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::moisture::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::moisture::common::trigger_for_name%]"
         }

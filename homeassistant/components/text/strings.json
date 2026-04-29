@@ -6,9 +6,6 @@
     "is_equal_to": {
       "description": "Tests if one or more texts are equal to a specified value.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::text::common::condition_behavior_name%]"
-        },
         "value": {
           "description": "The value to compare the text to.",
           "name": "Value"

@@ -9,9 +9,6 @@
     "is_available": {
       "description": "Tests if one or more updates are available.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::update::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::update::common::condition_for_name%]"
         }
@@ -21,9 +18,6 @@
     "is_not_available": {
       "description": "Tests if one or more updates are not available.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::update::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::update::common::condition_for_name%]"
         }
@@ -116,9 +110,6 @@
     "update_became_available": {
       "description": "Triggers after one or more updates become available.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::update::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::update::common::trigger_for_name%]"
         }

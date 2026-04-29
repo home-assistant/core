@@ -10,9 +10,6 @@
     "is_value": {
       "description": "Tests if a relative humidity value is above a threshold, below a threshold, or in a range of values.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidity::common::condition_behavior_name%]"
-        },
         "threshold": {
           "name": "[%key:component::humidity::common::condition_threshold_name%]"
         }
@@ -34,9 +31,6 @@
     "crossed_threshold": {
       "description": "Triggers after one or more relative humidity values cross a threshold.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::humidity::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::humidity::common::trigger_for_name%]"
         },

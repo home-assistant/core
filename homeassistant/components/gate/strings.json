@@ -36,9 +36,6 @@
     "closed": {
       "description": "Triggers after one or more gates close.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::gate::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::gate::common::trigger_for_name%]"
         }
@@ -48,9 +45,6 @@
     "opened": {
       "description": "Triggers after one or more gates open.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::gate::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::gate::common::trigger_for_name%]"
         }

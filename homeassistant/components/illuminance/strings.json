@@ -11,9 +11,6 @@
     "is_detected": {
       "description": "Tests if light is currently detected.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::illuminance::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::illuminance::common::condition_for_name%]"
         }
@@ -23,9 +20,6 @@
     "is_not_detected": {
       "description": "Tests if light is currently not detected.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::illuminance::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::illuminance::common::condition_for_name%]"
         }
@@ -35,9 +29,6 @@
     "is_value": {
       "description": "Tests the illuminance value.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::illuminance::common::condition_behavior_name%]"
-        },
         "threshold": {
           "name": "[%key:component::illuminance::common::condition_threshold_name%]"
         }
@@ -59,9 +50,6 @@
     "cleared": {
       "description": "Triggers after one or more light sensors stop detecting light.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::illuminance::common::trigger_for_name%]"
         }
@@ -71,9 +59,6 @@
     "crossed_threshold": {
       "description": "Triggers after one or more illuminance values cross a threshold.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::illuminance::common::trigger_for_name%]"
         },
@@ -86,9 +71,6 @@
     "detected": {
       "description": "Triggers after one or more light sensors start detecting light.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::illuminance::common::trigger_for_name%]"
         }

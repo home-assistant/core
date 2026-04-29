@@ -9,9 +9,6 @@
     "is_off": {
       "description": "Tests if one or more switches are off.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::switch::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::switch::common::condition_for_name%]"
         }
@@ -21,9 +18,6 @@
     "is_on": {
       "description": "Tests if one or more switches are on.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::switch::common::condition_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::switch::common::condition_for_name%]"
         }
@@ -92,9 +86,6 @@
     "turned_off": {
       "description": "Triggers after one or more switches turn off.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::switch::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::switch::common::trigger_for_name%]"
         }
@@ -104,9 +95,6 @@
     "turned_on": {
       "description": "Triggers after one or more switches turn on.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::switch::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::switch::common::trigger_for_name%]"
         }

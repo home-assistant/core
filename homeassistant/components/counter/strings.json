@@ -7,9 +7,6 @@
     "is_value": {
       "description": "Tests the value of one or more counters.",
       "fields": {
-        "behavior": {
-          "name": "Condition passes if"
-        },
         "threshold": {
           "name": "Threshold type"
         }
@@ -80,9 +77,6 @@
     "maximum_reached": {
       "description": "Triggers after one or more counters reach their maximum value.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::counter::common::trigger_for_name%]"
         }
@@ -92,9 +86,6 @@
     "minimum_reached": {
       "description": "Triggers after one or more counters reach their minimum value.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::counter::common::trigger_for_name%]"
         }
@@ -104,9 +95,6 @@
     "reset": {
       "description": "Triggers after one or more counters are reset.",
       "fields": {
-        "behavior": {
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        },
         "for": {
           "name": "[%key:component::counter::common::trigger_for_name%]"
         }
