@@ -119,8 +119,10 @@ async def target_entities(
     kitchen_area = area_registry.async_create("Kitchen")
     living_room_area = area_registry.async_create("Living Room")
     label_area = area_registry.async_create("Bathroom")
+    garage_area = area_registry.async_create("Garage")
     label1 = label_registry.async_create("Label 1")
     label2 = label_registry.async_create("Label 2")
+    label3 = label_registry.async_create("Label 3")
 
     area_registry.async_update(label_area.id, labels={label1.label_id})
 
@@ -132,6 +134,12 @@ async def target_entities(
     label2_device = dr.DeviceEntry(
         id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
     )
+    diag_only_device = dr.DeviceEntry(
+        id="diag_only_device",
+        identifiers={("test", "device5")},
+        area_id=garage_area.id,
+        labels={label3.label_id},
+    )
     mock_device_registry(
         hass,
         {
@@ -139,6 +147,7 @@ async def target_entities(
             device2.id: device2,
             area_device.id: area_device,
             label2_device.id: label2_device,
+            diag_only_device.id: diag_only_device,
         },
     )
 
@@ -189,10 +198,20 @@ async def target_entities(
         device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
         entity_category=EntityCategory.CONFIG,
     )
+    diag_only_device_sensor = MockEntity(
+        entity_id="sensor.test9",
+        unique_id="test9",
+        device_info=dr.DeviceInfo(identifiers=diag_only_device.identifiers),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
     sensor_platform = MockEntityPlatform(hass, domain="sensor", platform_name="test")
     sensor_platform.config_entry = config_entry
     await sensor_platform.async_add_entities(
-        [area_device_diagnostic_sensor, label2_device_config_sensor]
+        [
+            area_device_diagnostic_sensor,
+            label2_device_config_sensor,
+            diag_only_device_sensor,
+        ]
     )
 
     component1_light = MockEntity(
@@ -266,6 +285,7 @@ async def target_entities(
         "switch.test5",
         "sensor.test7",
         "sensor.test8",
+        "sensor.test9",
         "light.component1_light",
         "light.component1_flash_light",
         "light.component1_effect_flash_light",
@@ -273,13 +293,14 @@ async def target_entities(
         "switch.component1_switch",
         "sensor.component1_sensor",
     }
-    assert set(label_registry.labels) == {"label_1", "label_2"}
-    assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom"}
+    assert set(label_registry.labels) == {"label_1", "label_2", "label_3"}
+    assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom", "garage"}
     assert set(dr.async_get(hass).devices) == {
         "device1",
         "device2",
         "area_device",
         "label_device",
+        "diag_only_device",
     }
 
 
@@ -4052,6 +4073,23 @@ async def test_get_triggers_conditions_for_target(
             ],
         )
 
+        # Test indirect targeting (device/area/label) with a target that only
+        # contains non-primary entities. Components with no entity filter and
+        # the default primary_entities_only=True (e.g. component2.match_all)
+        # must NOT match.
+        await assert_command(
+            {"device_id": ["diag_only_device"]},
+            ["component2.non_primary_sensor"],
+        )
+        await assert_command(
+            {"area_id": ["garage"]},
+            ["component2.non_primary_sensor"],
+        )
+        await assert_command(
+            {"label_id": ["label_3"]},
+            ["component2.non_primary_sensor"],
+        )
+
         # Test mixed target types
         await assert_command(
             {
@@ -4320,6 +4358,23 @@ async def test_get_services_for_target(
             "component2.non_primary_sensor",
             "sensor.turn_on",
         ],
+    )
+
+    # Test indirect targeting (device/area/label) with a target that only
+    # contains non-primary entities. Services with no entity filter and
+    # the default primary_entities_only=True (e.g. component2.match_all)
+    # must NOT match.
+    await assert_services(
+        {"device_id": ["diag_only_device"]},
+        ["component2.non_primary_sensor"],
+    )
+    await assert_services(
+        {"area_id": ["garage"]},
+        ["component2.non_primary_sensor"],
+    )
+    await assert_services(
+        {"label_id": ["label_3"]},
+        ["component2.non_primary_sensor"],
     )
 
     # Test mixed target types
