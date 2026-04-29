@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tuya_device_handlers.definition.alarm_control_panel import (
-    TuyaAlarmControlPanelDefinition,
+    AlarmControlPanelDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -91,7 +91,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: AlarmControlPanelEntityDescription,
-        definition: TuyaAlarmControlPanelDefinition,
+        definition: AlarmControlPanelDefinition,
     ) -> None:
         """Init Tuya Alarm."""
         super().__init__(device, device_manager, description)

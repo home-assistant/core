@@ -160,21 +160,6 @@
       "message": "Arming requires a code but none was given for {entity_id}."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "alarm_arm_away": {
       "description": "Arms an alarm in the away mode.",
