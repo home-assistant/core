@@ -112,6 +112,12 @@ class FritzGuestWifiQRImage(CoordinatorEntity[AvmWrapper], ImageEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            self._current_qr_bytes = None
+            self._attr_image_last_updated = None
+            self.async_write_ha_state()
+            return
+
         qr_bytes = self.coordinator.data.get("guest_wifi_qr_bytes")
 
         if qr_bytes is None:
