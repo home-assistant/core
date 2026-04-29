@@ -49,7 +49,7 @@ class WebhookData:
     allowed_methods: frozenset[str]
 
 
-_Handlers: HassKey[dict[str, WebhookData]] = HassKey(DOMAIN)
+HANDLERS: HassKey[dict[str, WebhookData]] = HassKey(DOMAIN)
 
 
 @callback
@@ -64,7 +64,7 @@ def async_register(
     allowed_methods: Iterable[str] | None = None,
 ) -> None:
     """Register a webhook."""
-    handlers = hass.data.setdefault(_Handlers, {})
+    handlers = hass.data.setdefault(HANDLERS, {})
 
     if webhook_id in handlers:
         raise ValueError("Handler is already defined!")
@@ -97,7 +97,7 @@ def async_register(
 @callback
 def async_unregister(hass: HomeAssistant, webhook_id: str) -> None:
     """Remove a webhook."""
-    handlers = hass.data.setdefault(_Handlers, {})
+    handlers = hass.data.setdefault(HANDLERS, {})
     handlers.pop(webhook_id, None)
 
 
@@ -142,7 +142,7 @@ async def async_handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request | MockRequest
 ) -> Response:
     """Handle a webhook."""
-    handlers = hass.data.setdefault(_Handlers, {})
+    handlers = hass.data.setdefault(HANDLERS, {})
 
     content_stream: StreamReader | MockStreamReader
     received_from: str | None
@@ -257,7 +257,7 @@ def websocket_list(
     msg: dict[str, Any],
 ) -> None:
     """Return a list of webhooks."""
-    handlers = hass.data.setdefault(_Handlers, {})
+    handlers = hass.data.setdefault(HANDLERS, {})
     result = [
         {
             "webhook_id": webhook_id,
