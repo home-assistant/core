@@ -253,7 +253,7 @@ async def test_v4_new_sensors(hass: HomeAssistant) -> None:
     """Test newly added v4 sensor data."""
     await _setup(hass, NEW_V4_FIELDS, API_V4_ENTRY_DATA)
     check_sensor_state(hass, TEMPERATURE, "44.1")
-    check_sensor_state(hass, HUMIDITY, "22.7")
+    check_sensor_state(hass, HUMIDITY, "22.71")
     check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.35")
     check_sensor_state(hass, WIND_SPEED, "9.33")
     check_sensor_state(hass, WIND_DIRECTION, "315")
@@ -272,7 +272,7 @@ async def test_v4_new_sensors_imperial(hass: HomeAssistant) -> None:
     hass.config.units = US_CUSTOMARY_SYSTEM
     await _setup(hass, NEW_V4_FIELDS, API_V4_ENTRY_DATA)
     check_sensor_state(hass, TEMPERATURE, "111.4")
-    check_sensor_state(hass, HUMIDITY, "22.7")
+    check_sensor_state(hass, HUMIDITY, "22.71")
     check_sensor_state(hass, PRESSURE_SEA_LEVEL, "0.44")
     check_sensor_state(hass, WIND_SPEED, "20.87")
     check_sensor_state(hass, WIND_DIRECTION, "315")
