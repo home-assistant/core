@@ -88,6 +88,7 @@ class ImportCollector(ast.NodeVisitor):
 
 ALLOWED_USED_COMPONENTS = {
     *{platform.value for platform in Platform},
+    *CORE_INTEGRATIONS,
     # Internal integrations
     "alert",
     "automation",
@@ -96,7 +97,6 @@ ALLOWED_USED_COMPONENTS = {
     "device_automation",
     "frontend",
     "group",
-    "homeassistant",
     "input_boolean",
     "input_button",
     "input_datetime",
@@ -107,7 +107,6 @@ ALLOWED_USED_COMPONENTS = {
     "media_source",
     "onboarding",
     "panel_custom",
-    "persistent_notification",
     "person",
     "script",
     "shopping_list",
