@@ -284,6 +284,11 @@ async def test_remove_unloads_off_script(
     with (
         patch.object(
             entity._off_script,
+            "async_stop",
+            wraps=entity._off_script.async_stop,
+        ) as stop_mock,
+        patch.object(
+            entity._off_script,
             "async_unload",
             wraps=entity._off_script.async_unload,
         ) as unload_mock,
@@ -291,4 +296,5 @@ async def test_remove_unloads_off_script(
         await entity.async_remove()
         await hass.async_block_till_done()
 
+    stop_mock.assert_called_once()
     unload_mock.assert_called_once()
