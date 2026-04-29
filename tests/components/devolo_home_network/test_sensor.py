@@ -59,9 +59,7 @@ async def test_sensor_setup(
     assert entity_registry.async_get(
         f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
-    assert entity_registry.async_get(
-        f"{SENSOR_DOMAIN}.{device_name}_last_restart_of_the_device"
-    ).disabled
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.{device_name}_uptime").disabled
 
 
 @pytest.mark.parametrize(
@@ -86,10 +84,10 @@ async def test_sensor_setup(
             "1",
         ),
         (
-            "last_restart_of_the_device",
+            "uptime",
             "async_uptime",
             SHORT_UPDATE_INTERVAL,
-            "2023-01-13T11:58:50+00:00",
+            "2023-01-13T11:58:20+00:00",
         ),
     ],
 )
