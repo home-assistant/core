@@ -104,90 +104,58 @@ async def async_setup_entry(
 
     # Track existing entities to avoid duplicates
     existing_entities: set[str] = set()
-    # Track device and property identifiers to detect structural changes
-    last_structure_signature: (
-        tuple[tuple[str, ...], frozenset[tuple[str, str, bool]]] | None
-    ) = None
+    # Track currently sensor-eligible properties so new sensor-capable
+    # properties are discovered when eligibility changes.
+    last_sensor_candidates: frozenset[tuple[str, str]] | None = None
 
-    def _check_structure_changed() -> bool:
-        """Check if device/property structure has changed.
-
-        Uses device and property identifiers so added, removed, or replaced
-        properties are detected even when overall counts stay the same.
-
-        Also tracks property readability to detect when a property becomes
-        sensor-capable (e.g., from unreadable to readable).
-        """
-        nonlocal last_structure_signature
-
-        devices = coordinator.get_all_devices()
-        current_structure_signature = (
-            tuple(sorted(device.device_id for device in devices)),
-            frozenset(
-                (device.device_id, property_id, prop.readable)
-                for device in devices
-                for property_id, prop in device.properties.items()
-            ),
-        )
-
-        if current_structure_signature != last_structure_signature:
-            last_structure_signature = current_structure_signature
+    def _property_is_sensor_eligible(prop: DeviceProperty) -> bool:
+        """Return True if a readable property should have a sensor entity."""
+        if not prop.readable:
+            return False
+        entity_platform = getattr(prop, "entity", None)
+        if entity_platform == "sensor":
             return True
-        return False
+        # Do not auto-create a sensor when the property is explicitly assigned
+        # to another entity platform.
+        if entity_platform is not None:
+            return False
+        # Skip values that cannot be represented by sensor native_value when
+        # auto-creating sensors, unless explicitly marked as entity="sensor".
+        if prop.data_type in {"bool", "array", "object"}:
+            return False
+        return (
+            prop.value is None
+            or DeviceProperty.validate_sensor_value(prop.value) is not None
+        )
 
     def _create_sensors_for_devices() -> None:
         """Create sensors for all devices and add new ones."""
-        # Check if structure has changed (new devices or properties)
-        if not _check_structure_changed():
-            # No structural changes, skip expensive scan
-            return
+        nonlocal last_sensor_candidates
         devices = coordinator.get_all_devices()
+        current_sensor_candidates: set[tuple[str, str]] = set()
         new_sensors = []
 
         for device in devices:
-            # Create sensor for each readable property of each device
             for property_id, prop in device.properties.items():
-                if not prop.readable:
+                if not _property_is_sensor_eligible(prop):
                     continue
+                current_sensor_candidates.add((device.device_id, property_id))
+                unique_id = f"{device.device_id}_{property_id}_sensor"
+                if unique_id in existing_entities:
+                    continue
+                new_sensors.append(
+                    HeimanSensorEntity(
+                        coordinator=coordinator,
+                        device=device,
+                        property_identifier=property_id,
+                    )
+                )
+                existing_entities.add(unique_id)
 
-                # Use entity field from DeviceProperty
-                if hasattr(prop, "entity") and prop.entity == "sensor":
-                    unique_id = f"{device.device_id}_{property_id}_sensor"
-                    if unique_id not in existing_entities:
-                        new_sensors.append(
-                            HeimanSensorEntity(
-                                coordinator=coordinator,
-                                device=device,
-                                property_identifier=property_id,
-                            )
-                        )
-                        existing_entities.add(unique_id)
-                # Create sensors for readable properties unless they are
-                # explicitly assigned to a different entity platform.
-                elif hasattr(prop, "entity") and prop.entity not in (None, "sensor"):
-                    continue
-                else:
-                    # Skip values that cannot be represented by sensor
-                    # native_value when auto-creating sensors (unless
-                    # explicitly marked as entity='sensor'), because they
-                    # create permanently-unknown, unusable entities.
-                    # Keep the data_type fast-path and reuse the same value
-                    # validation logic as native_value for non-None values.
-                    if prop.data_type in {"bool", "array", "object"} or (
-                        prop.value is not None
-                        and DeviceProperty.validate_sensor_value(prop.value) is None
-                    ):
-                        continue
-                    unique_id = f"{device.device_id}_{property_id}_sensor"
-                    if unique_id not in existing_entities:
-                        new_sensors.append(
-                            HeimanSensorEntity(
-                                coordinator=coordinator,
-                                device=device,
-                                property_identifier=property_id,
-                            )
-                        )
-                        existing_entities.add(unique_id)
+        current_sensor_candidates_frozen = frozenset(current_sensor_candidates)
+        if current_sensor_candidates_frozen == last_sensor_candidates:
+            return
+        last_sensor_candidates = current_sensor_candidates_frozen
 
         if new_sensors:
             async_add_entities(new_sensors)
@@ -280,31 +248,16 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 break
 
         if config and prop:
-            # For signal_strength properties, verify the value is numeric
-            # Some devices may have "SignalStrength" property with string values
+            # For signal_strength properties, require the current value to be
+            # numeric or None before applying the device class and dBm unit.
+            # Some devices report a numeric-looking data_type while the current
+            # value is actually a string or another incompatible type.
             if matched_key == "signal_strength":
-                numeric_data_types = [
-                    "int",
-                    "double",
-                    "float",
-                    "long",
-                    "short",
-                    "byte",
-                    "number",
-                ]
-                # Check if value is numeric
-                value_is_numeric = (
-                    prop.value is not None
-                    and isinstance(prop.value, (int, float))
+                value_is_numeric_or_none = prop.value is None or (
+                    isinstance(prop.value, (int, float))
                     and not isinstance(prop.value, bool)
                 )
-                # Normalize data_type to lowercase string for comparison
-                normalized_data_type = (
-                    prop.data_type.lower() if isinstance(prop.data_type, str) else ""
-                )
-                # Check if data_type indicates numeric
-                data_type_is_numeric = normalized_data_type in numeric_data_types
-                if not (value_is_numeric or data_type_is_numeric):
+                if not value_is_numeric_or_none:
                     # Skip applying signal_strength device class for non-numeric values
                     matched_key = None
                     config = None
