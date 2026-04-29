@@ -173,7 +173,9 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name = discovery_info.upnp["friendlyName"]
 
         await self.async_set_unique_id(self.installation_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.hostname},
+        )
 
         self.context["title_placeholders"] = {
             "name": self.friendly_name or self.hostname
