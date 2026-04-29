@@ -238,7 +238,7 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
 async def test_coordinator_shutdown_unloads_script_and_condition(
     hass: HomeAssistant,
 ) -> None:
-    """Test that coordinator shutdown unloads script and condition."""
+    """Test that coordinator shutdown stops and unloads script and condition."""
     coordinator = TriggerUpdateCoordinator(hass, {})
 
     mock_script = Mock(spec=Script)
@@ -248,6 +248,7 @@ async def test_coordinator_shutdown_unloads_script_and_condition(
 
     await coordinator.async_shutdown()
 
+    mock_script.async_stop.assert_called_once()
     mock_script.async_unload.assert_called_once()
     mock_cond.async_unload.assert_called_once()
 
@@ -277,16 +278,19 @@ async def test_template_entity_remove_unloads_action_scripts(
 
     entity = hass.data["light"].get_entity("light.test_light")
 
-    unload_mocks = {}
+    mocks: dict[str, dict[str, Mock]] = {}
     for script_id, action_script in entity._action_scripts.items():
-        mock_unload = Mock(wraps=action_script.async_unload)
-        action_script.async_unload = mock_unload
-        unload_mocks[script_id] = mock_unload
+        stop_mock = Mock(wraps=action_script.async_stop)
+        unload_mock = Mock(wraps=action_script.async_unload)
+        action_script.async_stop = stop_mock
+        action_script.async_unload = unload_mock
+        mocks[script_id] = {"stop": stop_mock, "unload": unload_mock}
 
-    assert set(unload_mocks.keys()) == {"turn_on", "turn_off"}
+    assert set(mocks.keys()) == {"turn_on", "turn_off"}
 
     await entity.async_remove()
     await hass.async_block_till_done()
 
-    for mock_unload in unload_mocks.values():
-        mock_unload.assert_called_once()
+    for script_mocks in mocks.values():
+        script_mocks["stop"].assert_called_once()
+        script_mocks["unload"].assert_called_once()

@@ -104,6 +104,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                 self.hass, self.config[CONF_CONDITIONS], _LOGGER, "template entity"
             )
 
+        if self._script or self._cond_func:
+            await self.async_register_shutdown()
+
         if start_event is not None:
             self._unsub_start = None
 
@@ -155,6 +158,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Shut down the coordinator and clean up resources."""
         await super().async_shutdown()
         if self._script is not None:
+            await self._script.async_stop()
             self._script.async_unload()
         if self._cond_func is not None:
             self._cond_func.async_unload()

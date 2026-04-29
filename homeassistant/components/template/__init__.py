@@ -207,6 +207,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     if coordinators:
         for coordinator in coordinators:
             coordinator.async_remove()
+            await coordinator.async_shutdown()
 
     async def init_coordinator(
         hass: HomeAssistant, conf_section: dict[str, Any]
