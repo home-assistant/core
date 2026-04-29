@@ -78,7 +78,10 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
     new_config = await async_integration_yaml_config(hass, DOMAIN)
     existing_intents = hass.data[DOMAIN]
 
-    for intent_type in existing_intents:
+    for intent_type, conf in existing_intents.items():
+        if isinstance(conf.get(CONF_ACTION), script.Script):
+            await conf[CONF_ACTION].async_stop()
+            conf[CONF_ACTION].async_unload()
         intent.async_remove(hass, intent_type)
 
     if not new_config or DOMAIN not in new_config:
