@@ -60,7 +60,9 @@ DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_buzzer,
         options=[v.name.lower() for v in SoundVolume],
-        current_fn=lambda x: x.buzzer_volume.name.lower() if x.buzzer_volume else None,
+        current_fn=lambda x: (
+            x.buzzer_volume.name.lower() if x.buzzer_volume is not None else None
+        ),
         select_fn=lambda x, option: x.set_buzzer_volume(
             volume=SoundVolume[option.upper()]
         ),
