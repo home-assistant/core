@@ -4,9 +4,11 @@ import ast
 
 import pytest
 
-from homeassistant import bootstrap
-from script.hassfest import dependencies as hassfest_dependencies
-from script.hassfest.dependencies import ImportCollector, _validate_dependencies
+from script.hassfest.dependencies import (
+    CORE_INTEGRATIONS,
+    ImportCollector,
+    _validate_dependencies,
+)
 from script.hassfest.model import Config
 
 from . import get_integration
@@ -133,4 +135,10 @@ def test_dependency_on_non_core_integration_allowed(config: Config) -> None:
 
 def test_core_integrations_in_sync_with_bootstrap() -> None:
     """Test the duplicated CORE_INTEGRATIONS stays aligned with bootstrap."""
-    assert hassfest_dependencies.CORE_INTEGRATIONS == bootstrap.CORE_INTEGRATIONS
+    # Imported here so the rest of the hassfest tests are not slowed down
+    # by bootstrap's eager component pre-imports.
+    from homeassistant.bootstrap import (  # noqa: PLC0415
+        CORE_INTEGRATIONS as bootstrap_core_integrations,
+    )
+
+    assert bootstrap_core_integrations == CORE_INTEGRATIONS

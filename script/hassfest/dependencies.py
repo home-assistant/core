@@ -90,8 +90,8 @@ class ImportCollector(ast.NodeVisitor):
 
 
 ALLOWED_USED_COMPONENTS = {
-    *{platform.value for platform in Platform},
     *CORE_INTEGRATIONS,
+    *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
     "automation",
