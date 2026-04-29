@@ -91,7 +91,7 @@ async def test_bridge_api_call_exceptions(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     key: str,
     error: dict[str, str] | None,
 ) -> None:

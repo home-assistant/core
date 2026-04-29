@@ -116,6 +116,7 @@ def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](
                 translation_placeholders={"error": repr(err)},
             ) from err
         except DeviceStorageFailureError as err:
+            self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_storage_failure",
