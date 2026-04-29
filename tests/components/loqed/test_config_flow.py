@@ -147,7 +147,6 @@ async def test_create_entry_user(
         "bridge_mdns_hostname": found_lock["bridge_hostname"],
         "bridge_ip": found_lock["bridge_ip"],
         "name": found_lock["name"],
-        "lock_id": found_lock["id"],
         CONF_WEBHOOK_ID: webhook_id,
         CONF_API_TOKEN: "eyadiuyfasiuasf",
     }
@@ -218,7 +217,6 @@ async def test_create_entry_user_with_pick_lock(
         "bridge_mdns_hostname": second_lock["bridge_hostname"],
         "bridge_ip": second_lock["bridge_ip"],
         "name": second_lock["name"],
-        "lock_id": second_lock["id"],
         CONF_WEBHOOK_ID: webhook_id,
         CONF_API_TOKEN: "eyadiuyfasiuasf",
     }
