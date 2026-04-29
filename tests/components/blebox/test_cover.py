@@ -300,6 +300,24 @@ async def test_update_inverted(feature, hass: HomeAssistant) -> None:
     assert state.state == CoverState.OPEN
 
 
+async def test_update_not_inverted(gatebox, hass: HomeAssistant) -> None:
+    """Test cover position is not inverted for gateBox."""
+
+    feature_mock, entity_id = gatebox
+
+    def initial_update():
+        feature_mock.current = 100  # fully open
+        feature_mock.state = 4  # open
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.state == CoverState.OPEN
+
+
 @pytest.mark.parametrize(
     "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
 )
