@@ -194,6 +194,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "switch",
     "temperature",
     "text",
+    "timer",
     "todo",
     "update",
     "vacuum",
