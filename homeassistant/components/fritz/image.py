@@ -109,6 +109,11 @@ class FritzGuestWifiQRImage(CoordinatorEntity[AvmWrapper], ImageEntity):
             self._current_qr_bytes = qr_bytes
             self._attr_image_last_updated = dt_util.utcnow()
 
+    @property
+    def available(self) -> bool:
+        """Return True; unknown image state is expressed via image_last_updated=None."""
+        return True
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
