@@ -137,7 +137,7 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 
-DATA_SCRIPTS: HassKey[list[ScriptData]] = HassKey("helpers.script")
+DATA_SCRIPTS: HassKey[dict[int, ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
     "helpers.script_breakpoints"
 )
@@ -1356,7 +1356,9 @@ async def _async_stop_scripts_after_shutdown(
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
-        script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
+        script
+        for script in hass.data[DATA_SCRIPTS].values()
+        if script["instance"].is_running
     ]
     if running_scripts:
         names = ", ".join([script["instance"].name for script in running_scripts])
@@ -1375,7 +1377,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
 
     running_scripts = [
         script
-        for script in hass.data[DATA_SCRIPTS]
+        for script in hass.data[DATA_SCRIPTS].values()
         if script["instance"].is_running and script["started_before_shutdown"]
     ]
     if running_scripts:
@@ -1457,15 +1459,16 @@ class Script:
         enabled attribute is only used for non-top-level scripts.
         """
         if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
-            all_scripts = hass.data[DATA_SCRIPTS] = []
+            all_scripts = hass.data[DATA_SCRIPTS] = {}
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
         self.top_level = top_level
         if top_level:
-            all_scripts.append(
-                {"instance": self, "started_before_shutdown": not hass.is_stopping}
-            )
+            all_scripts[id(self)] = {
+                "instance": self,
+                "started_before_shutdown": not hass.is_stopping,
+            }
         if DATA_SCRIPT_BREAKPOINTS not in hass.data:
             hass.data[DATA_SCRIPT_BREAKPOINTS] = {}
 
@@ -1781,6 +1784,12 @@ class Script:
             )
             context = Context()
 
+        # Prevent running an unloaded script
+        if self._unloaded:
+            raise RuntimeError(
+                f"Cannot run script '{self.name}' after it has been unloaded"
+            )
+
         # Prevent spawning new script runs when Home Assistant is shutting down
         if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
             self._log("Home Assistant is shutting down, starting script blocked")
@@ -1907,6 +1916,10 @@ class Script:
                 f"Cannot unload script '{self.name}' while it is running"
             )
         self._unloaded = True
+
+        # Remove from global script registry
+        if self.top_level:
+            del self._hass.data[DATA_SCRIPTS][id(self)]
 
         for cond in self._condition_cache.values():
             cond.async_unload()
