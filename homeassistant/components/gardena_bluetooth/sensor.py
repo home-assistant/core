@@ -290,8 +290,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         error = time - self._attr_native_value
         if abs(error.total_seconds()) > 10:
             self._attr_native_value = time
-            super()._handle_coordinator_update()
-            return
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
