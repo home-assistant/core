@@ -22,7 +22,7 @@ The following platforms have extra guidelines:
 
 ## Entity platforms
 
-- Ensure `async_added_to_hass()` and `async_will_remove_from_hass` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is teared down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
+- Ensure `async_added_to_hass()` and `async_will_remove_from_hass()` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is torn down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
 
 ## Integration Quality Scale
 
