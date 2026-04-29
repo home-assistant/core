@@ -260,9 +260,9 @@ async def test_v4_new_sensors(hass: HomeAssistant) -> None:
     check_sensor_state(hass, VISIBILITY, "8.15")
     check_sensor_state(hass, ALTIMETER_SETTING, "1013.00")
     check_sensor_state(hass, RAIN_INTENSITY, "2")
-    check_sensor_state(hass, SNOW_INTENSITY, "0.5")
-    check_sensor_state(hass, SLEET_INTENSITY, "0.1")
-    check_sensor_state(hass, FREEZING_RAIN_INTENSITY, "0.3")
+    check_sensor_state(hass, SNOW_INTENSITY, "0")
+    check_sensor_state(hass, SLEET_INTENSITY, "0")
+    check_sensor_state(hass, FREEZING_RAIN_INTENSITY, "0")
     check_sensor_state(hass, PRECIPITATION_INTENSITY, "3")
     check_sensor_state(hass, PRECIPITATION_PROBABILITY, "45")
 
