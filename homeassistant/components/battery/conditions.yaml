@@ -10,11 +10,6 @@
       selector:
         automation_behavior:
           mode: condition
-    for: &condition_for
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
 
 .battery_threshold_entity: &battery_threshold_entity
   - domain: input_number
@@ -41,7 +36,6 @@ is_charging:
         device_class: battery_charging
   fields:
     behavior: *condition_behavior
-    for: *condition_for
 
 is_not_charging:
   target:
@@ -50,7 +44,6 @@ is_not_charging:
         device_class: battery_charging
   fields:
     behavior: *condition_behavior
-    for: *condition_for
 
 is_level:
   target:

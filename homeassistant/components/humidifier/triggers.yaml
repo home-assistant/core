@@ -9,11 +9,6 @@
       selector:
         automation_behavior:
           mode: trigger
-    for: &trigger_for
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
 
 started_drying: *trigger_common
 started_humidifying: *trigger_common
@@ -24,7 +19,6 @@ mode_changed:
   target: *trigger_humidifier_target
   fields:
     behavior: *trigger_behavior
-    for: *trigger_for
     mode:
       context:
         filter_target: target
