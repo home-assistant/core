@@ -37,7 +37,7 @@ async def test_infrared_setup_works(
             entry for entry in entries if entry.domain == Platform.INFRARED
         ]
         assert len(infrared_entities) == 1
-        assert infrared_entities[0].unique_id == device.mac
+        assert infrared_entities[0].unique_id == f"{device.mac}-emitter"
         assert mock_setup.api.auth.call_count == 1
 
 

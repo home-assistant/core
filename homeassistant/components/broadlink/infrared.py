@@ -49,12 +49,12 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
     """Broadlink infrared transmitter entity."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "infrared"
+    _attr_translation_key = "infrared_emitter"
 
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the entity."""
         super().__init__(device)
-        self._attr_unique_id = device.unique_id
+        self._attr_unique_id = f"{device.unique_id}-emitter"
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via the Broadlink device."""

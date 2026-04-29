@@ -50,8 +50,8 @@
   },
   "entity": {
     "infrared": {
-      "infrared": {
-        "name": "IR transmitter"
+      "infrared_emitter": {
+        "name": "IR emitter"
       }
     },
     "select": {
