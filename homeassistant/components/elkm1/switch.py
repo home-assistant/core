@@ -108,4 +108,4 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
 
     async def async_switch_output_turn_on(self, value: int | None = None) -> None:
         """Turn on an output for specified length of time: not supported for thermostat."""
-        raise HomeAssistantError("supported only on ElkM1 Output sensors")
+        raise HomeAssistantError("supported only on ElkM1 output switch entities")
