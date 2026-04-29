@@ -702,7 +702,7 @@ class _ScriptRun:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if cond(hass, variables) is False:
+                            if cond.async_check(variables=variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
                 self._log(
@@ -753,7 +753,7 @@ class _ScriptRun:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:
                 trace_element.reuse_by_child = True
-            check = cond(self._hass, self._variables)
+            check = cond.async_check(variables=self._variables)
         except exceptions.ConditionError as ex:
             self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
