@@ -637,16 +637,19 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options.update(await self.get_options_definitions(resolved_program_key))
 
         for option in options.values():
-            option_value = option.constraints.default if option.constraints else None
-            if option_value is not None:
-                option_event_key = EventKey(option.key)
+            option_event_key = EventKey(option.key)
+            if (
+                option_event_key not in events
+                and option.constraints
+                and (option_default_value := option.constraints.default) is not None
+            ):
                 events[option_event_key] = Event(
                     option_event_key,
                     option.key.value,
                     0,
                     "",
                     "",
-                    option_value,
+                    option_default_value,
                     option.name,
                     unit=option.unit,
                 )
