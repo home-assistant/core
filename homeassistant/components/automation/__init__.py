@@ -902,6 +902,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
         await self._async_disable()
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script or conditions as they will
+            # be reused.
+            return
         self.action_script.async_unload()
         if self._condition is not None:
             self._condition.async_unload()
