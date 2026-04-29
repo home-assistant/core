@@ -151,9 +151,6 @@
       "laser_remaining_life": {
         "name": "Laser remaining lifetime"
       },
-      "last_restart": {
-        "name": "Last restart"
-      },
       "magenta_drum_page_counter": {
         "name": "Magenta drum page counter",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"

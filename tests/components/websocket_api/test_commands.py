@@ -4432,3 +4432,29 @@ async def test_get_automation_component_lookup_table_cache(
         _get_automation_component_lookup_table(hass, "services", services)
         is service_result1
     )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expect_success"),
+    [(Exception("error"), False), (None, True)],
+)
+async def test_execute_script_unloads_script(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    side_effect: Exception | None,
+    expect_success: bool,
+) -> None:
+    """Test that execute_script unloads the script after execution."""
+    with patch("homeassistant.helpers.script.Script", autospec=True) as script_mock:
+        script_mock.return_value.async_run.return_value = None
+        script_mock.return_value.async_run.side_effect = side_effect
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "execute_script",
+                "sequence": [{"service": "domain_test.test_service"}],
+            }
+        )
+        msg = await websocket_client.receive_json()
+        assert msg["success"] == expect_success
+
+    script_mock.return_value.async_unload.assert_called_once()

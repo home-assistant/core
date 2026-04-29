@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -13,6 +14,9 @@ from .models import PermissionLookup
 from .types import PolicyType
 from .util import test_all
 
+if TYPE_CHECKING:
+    from ..models import User
+
 POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
 __all__ = [
@@ -22,8 +26,19 @@ __all__ = [
     "PermissionLookup",
     "PolicyPermissions",
     "PolicyType",
+    "filter_entity_ids_by_permission",
     "merge_policies",
 ]
+
+
+def filter_entity_ids_by_permission(
+    user: User, entity_ids: Iterable[str], key: str
+) -> list[str]:
+    """Filter entity IDs to those the user can access for the given policy key."""
+    if user.is_admin or user.permissions.access_all_entities(key):
+        return list(entity_ids)
+    check_entity = user.permissions.check_entity
+    return [entity_id for entity_id in entity_ids if check_entity(entity_id, key)]
 
 
 class AbstractPermissions:
