@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'iaqualink',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'systems': dict({
+      'SN00001': dict({
+        'data': dict({
+          'name': 'Pool',
+          'serial_number': 'SN00001',
+        }),
+        'devices': dict({
+          'aux_1': dict({
+            'class': 'IaquaLightSwitch',
+            'data': dict({
+              'name': 'aux_1',
+              'state': '1',
+            }),
+          }),
+          'pool_temp': dict({
+            'class': 'IaquaSensor',
+            'data': dict({
+              'name': 'pool_temp',
+              'value': '82',
+            }),
+          }),
+        }),
+        'name': 'Pool',
+        'online': True,
+      }),
+    }),
+  })
+# ---
