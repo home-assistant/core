@@ -34,14 +34,13 @@ from .const import (
     CONF_MAC_ADDRESS,
     CONF_UPDATE_MODE,
     CONF_WIBEEE_ID,
+    DEFAULT_HA_PORT,
     DOMAIN,
     MODE_LOCAL_PUSH,
     MODE_POLLING,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_HA_PORT = 8123
 
 
 async def validate_input(
@@ -104,7 +103,7 @@ async def _async_configure_device(hass: HomeAssistant, host: str) -> bool:
                 "Auto-configured WiBeee at %s to push to %s:%d", host, local_ip, ha_port
             )
             return True
-    except TimeoutError, aiohttp.ClientError, OSError:
+    except (TimeoutError, aiohttp.ClientError, OSError):
         pass
     return False
 
@@ -131,7 +130,7 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
         ip = await async_get_source_ip(hass)
         if ip is not None:
             return ip
-    except ImportError, HomeAssistantError, OSError:
+    except (ImportError, HomeAssistantError, OSError):
         pass
 
     try:
@@ -146,7 +145,7 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
                     return host
             except ValueError:
                 pass
-    except ImportError, HomeAssistantError, OSError:
+    except (ImportError, HomeAssistantError, OSError):
         pass
 
     return await hass.async_add_executor_job(_get_local_ip_sync)
@@ -161,7 +160,7 @@ def _get_ha_port(hass: HomeAssistant) -> int:
         port = urlparse(url).port
         if port is not None:
             return port
-    except ImportError, HomeAssistantError, OSError:
+    except (ImportError, HomeAssistantError, OSError):
         pass
 
     return DEFAULT_HA_PORT
@@ -193,7 +192,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             is_wibeee = await api.async_check_connection()
             if not is_wibeee:
                 return self.async_abort(reason="not_wibeee_device")
-        except TimeoutError, aiohttp.ClientError:
+        except (TimeoutError, aiohttp.ClientError):
             return self.async_abort(reason="not_wibeee_device")
 
         self._discovered_host = host

@@ -105,6 +105,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
                 f"Could not fetch initial sensor data from Wibeee at {host}"
             )
 
+        if not isinstance(initial_data, dict):
+            raise ConfigEntryNotReady(
+                f"Invalid initial sensor data received from Wibeee at {host}"
+            )
+
         coordinator.async_set_updated_data(initial_data)
 
         # Register with push receiver
