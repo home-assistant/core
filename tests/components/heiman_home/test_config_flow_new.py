@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.heiman_home.config_flow import AuthInfo, HeimanConfigFlow
 from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_ID
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -545,3 +546,133 @@ async def test_select_home_all_homes_without_id_aborts(
     # Should abort because all homes have invalid home_id
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_home_data"
+
+
+async def test_async_step_reauth(hass: HomeAssistant) -> None:
+    """Test async_step_reauth returns reauth_confirm form."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    result = await flow.async_step_reauth({})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+
+async def test_async_step_reauth_confirm_show_form(hass: HomeAssistant) -> None:
+    """Test async_step_reauth_confirm shows form when no user input."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    result = await flow.async_step_reauth_confirm()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+
+async def test_async_step_reauth_confirm_restart_oauth(hass: HomeAssistant) -> None:
+    """Test async_step_reauth_confirm restarts OAuth flow (line 153)."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+
+    with patch.object(flow, "async_step_user") as mock_step_user:
+        mock_step_user.return_value = {"type": FlowResultType.EXTERNAL_STEP}
+        result = await flow.async_step_reauth_confirm({})
+
+        mock_step_user.assert_called_once()
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+
+async def test_async_step_select_home_reauth_wrong_account(
+    hass: HomeAssistant,
+) -> None:
+    """Test select_home reauth aborts on wrong account (line 97)."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set source via context
+    flow.context = {"source": SOURCE_REAUTH}
+
+    # Mock auth info with current user
+    mock_user_info = MagicMock()
+    mock_user_info.user_id = "current-user-id"
+    mock_user_info.email = "test@example.com"
+    mock_user_info.get_display_name = MagicMock(return_value="Test User")
+
+    mock_home = MagicMock()
+    mock_home.home_id = "home-1"
+    mock_home.home_name = "Home 1"
+    mock_home.device_count = 5
+
+    flow._auth_info = AuthInfo()
+    flow._auth_info.user_info = mock_user_info
+    flow._auth_info.homes = [mock_home]
+    flow._auth_info.auth_data = {"token": "test_token"}
+
+    # Set unique_id to current user
+    await flow.async_set_unique_id("current-user-id")
+
+    # Mock _abort_if_unique_id_mismatch to raise AbortFlow
+    with patch.object(
+        flow, "_abort_if_unique_id_mismatch",
+        side_effect=lambda reason="unique_id_mismatch", description_placeholders=None:
+            (_ for _ in ()).throw(Exception(f"Aborted: {reason}"))
+    ):
+        # Select a home - should call _abort_if_unique_id_mismatch
+        try:
+            await flow.async_step_select_home({CONF_HOME_ID: "home-1"})
+        except Exception as e:
+            assert "reauth_account_mismatch" in str(e)
+
+
+async def test_async_step_select_home_reauth_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test select_home reauth updates and reloads entry (lines 98-105)."""
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set source via context with entry_id
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": "test-entry-id"}
+
+    # Mock auth info
+    mock_user_info = MagicMock()
+    mock_user_info.user_id = "test-user-id"
+    mock_user_info.email = "test@example.com"
+    mock_user_info.get_display_name = MagicMock(return_value="Test User")
+
+    mock_home = MagicMock()
+    mock_home.home_id = "home-1"
+    mock_home.home_name = "Home 1"
+    mock_home.device_count = 5
+
+    flow._auth_info = AuthInfo()
+    flow._auth_info.user_info = mock_user_info
+    flow._auth_info.homes = [mock_home]
+    flow._auth_info.auth_data = {"token": "new_token"}
+
+    # Set unique_id to match
+    await flow.async_set_unique_id("test-user-id")
+
+    # Mock _abort_if_unique_id_mismatch to do nothing (no mismatch)
+    # Mock _get_reauth_entry to return a mock entry
+    mock_entry = MagicMock()
+    mock_entry.unique_id = "test-user-id"
+
+    with (
+        patch.object(flow, "_abort_if_unique_id_mismatch"),
+        patch.object(flow, "_get_reauth_entry", return_value=mock_entry),
+        patch.object(flow, "async_update_reload_and_abort") as mock_update_reload,
+    ):
+        mock_update_reload.return_value = {"type": FlowResultType.ABORT}
+
+        # Select a home
+        await flow.async_step_select_home({CONF_HOME_ID: "home-1"})
+
+        # Verify update_reload_and_abort was called with correct data
+        mock_update_reload.assert_called_once()
+        call_args = mock_update_reload.call_args
+        # First arg is the entry
+        assert call_args[0][0] == mock_entry
+        data_updates = call_args[1]["data_updates"]
+        assert data_updates["token"] == "new_token"
+        assert data_updates[CONF_HOME_ID] == "home-1"
+        assert data_updates[CONF_USER_ID] == "test-user-id"

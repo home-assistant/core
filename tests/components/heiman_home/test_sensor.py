@@ -1158,7 +1158,7 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
 async def test_sensor_skip_scan_on_no_structure_change(
     hass: HomeAssistant,
 ) -> None:
-    """Test that sensor setup skips scanning when structure hasn't changed (line 137).
+    """Test that sensor setup skips scanning when structure hasn't changed.
 
     This tests the optimization path where _create_sensors_for_devices returns early
     if no structural changes are detected and entities already exist.
@@ -1219,7 +1219,7 @@ async def test_sensor_skip_scan_on_no_structure_change(
     assert added_entities[0].unique_id == "device-1_temperature_sensor"
 
     # Now trigger the listener again without changing structure
-    # This should hit line 137 (early return due to no structure change)
+    # This should return early due to no structure change
     assert listener_callback is not None
     listener_callback()  # This should return early without creating new entities
 
