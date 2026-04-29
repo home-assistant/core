@@ -41,7 +41,7 @@ ATTR_REMAINING = "remaining"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_RESTORE = "restore"
 ATTR_FINISHED_AT = "finished_at"
-ATTR_LAST_ACTION = "last_action"
+ATTR_LAST_TRANSITION = "last_transition"
 
 CONF_DURATION = "duration"
 CONF_RESTORE = "restore"
@@ -203,7 +203,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     def __init__(self, config: ConfigType) -> None:
         """Initialize a timer."""
         self._config: dict = config
-        self._last_action: str | None = None
+        self._last_transition: str | None = None
         self._state: str = STATUS_IDLE
         self._configured_duration = cv.time_period_str(config[CONF_DURATION])
         self._running_duration: timedelta = self._configured_duration
@@ -251,7 +251,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         attrs: dict[str, Any] = {
             ATTR_DURATION: _format_timedelta(self._running_duration),
             ATTR_EDITABLE: self.editable,
-            ATTR_LAST_ACTION: self._last_action,
+            ATTR_LAST_TRANSITION: self._last_transition,
         }
         if self._end is not None:
             attrs[ATTR_FINISHES_AT] = self._end.isoformat()
@@ -277,7 +277,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Begin restoring state
         self._state = state.state
-        self._last_action = state.attributes.get(ATTR_LAST_ACTION)
+        self._last_transition = state.attributes.get(ATTR_LAST_TRANSITION)
 
         # Nothing more to do if the timer is idle
         if self._state == STATUS_IDLE:
@@ -353,7 +353,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end += duration
         self._remaining = new_remaining
         # We don't use _fire_event_and_write_state here because we don't want to
-        # update last_action
+        # update last_transition
         self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(
@@ -437,7 +437,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self, event: str, *, extra_attrs: dict[str, Any] | None = None
     ) -> None:
         """Fire the event and write state."""
-        self._last_action = event.partition(".")[2]
+        self._last_transition = event.partition(".")[2]
         self.async_write_ha_state()
         event_data = {ATTR_ENTITY_ID: self.entity_id}
         if extra_attrs:
