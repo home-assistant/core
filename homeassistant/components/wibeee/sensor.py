@@ -193,7 +193,7 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
             return None
         try:
             return float(value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -213,6 +213,6 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
             return False
         try:
             float(value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return False
         return True
