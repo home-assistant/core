@@ -187,42 +187,71 @@ async def test_select_option_authentication_error(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_select_buzzer_volume(
+@pytest.mark.parametrize(
+    ("entity_id", "method_name", "option", "expected_kwargs"),
+    [
+        (
+            "select.peblar_ev_charger_buzzer_volume",
+            "set_buzzer_volume",
+            "medium",
+            {"volume": SoundVolume.MEDIUM},
+        ),
+        (
+            "select.peblar_ev_charger_led_brightness",
+            "set_led_brightness",
+            "bright",
+            {"brightness": LedBrightness.BRIGHT},
+        ),
+    ],
+)
+async def test_select_hardware_entity(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
+    entity_id: str,
+    method_name: str,
+    option: str,
+    expected_kwargs: dict,
 ) -> None:
-    """Test the Peblar EV charger buzzer volume select."""
-    entity_id = "select.peblar_ev_charger_buzzer_volume"
-    mocked_method = mock_peblar.set_buzzer_volume
+    """Test the Peblar EV charger hardware select entities."""
+    mocked_method = getattr(mock_peblar, method_name)
     mocked_method.reset_mock()
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "medium"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
         blocking=True,
     )
 
     assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(volume=SoundVolume.MEDIUM)
+    mocked_method.assert_called_with(**expected_kwargs)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_select_led_brightness(
+@pytest.mark.parametrize(
+    ("entity_unique_id_suffix", "hw_attr"),
+    [
+        ("buzzer_volume", "hardware_has_buzzer"),
+        ("led_brightness", "hardware_has_led"),
+    ],
+)
+async def test_hw_entity_absent_when_hw_flag_false(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_unique_id_suffix: str,
+    hw_attr: str,
 ) -> None:
-    """Test the Peblar EV charger LED brightness select."""
-    entity_id = "select.peblar_ev_charger_led_brightness"
-    mocked_method = mock_peblar.set_led_brightness
-    mocked_method.reset_mock()
+    """Test hardware select entity is absent when the hardware flag is false."""
+    setattr(mock_peblar.system_information.return_value, hw_attr, False)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "bright"},
-        blocking=True,
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{mock_config_entry.unique_id}_{entity_unique_id_suffix}",
+        )
+        is None
     )
-
-    assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(brightness=LedBrightness.BRIGHT)
