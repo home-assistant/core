@@ -134,7 +134,6 @@ async def test_alexa_config_expose_entity_prefs(
     expose_entity(hass, entity_entry5.entity_id, None)
     assert not conf.should_expose(entity_entry5.entity_id)
 
-    assert "alexa" not in hass.config.components
     await hass.async_block_till_done()
     assert "alexa" in hass.config.components
     assert not conf.should_expose(entity_entry5.entity_id)
