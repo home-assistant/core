@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
 from functools import partial
 from http import HTTPStatus
 import logging
@@ -39,13 +38,13 @@ from .const import (
     ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
-    ATTR_PUSH_TAG,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
+    ATTR_PUSH_TAG,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_WEBHOOK_ID,

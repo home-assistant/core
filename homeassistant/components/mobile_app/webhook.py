@@ -825,7 +825,9 @@ async def webhook_update_live_activity_token(
     activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
 
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = data[ATTR_PUSH_TOKEN]
+    live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = data[
+        ATTR_PUSH_TOKEN
+    ]
 
     return empty_okay_response()
 
