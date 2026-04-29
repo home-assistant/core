@@ -14,11 +14,54 @@
       }
     },
     "sensor": {
+      "alert": {
+        "default": "mdi:alert",
+        "state": {
+          "airflow_malfunction": "mdi:fan-off",
+          "door_open": "mdi:door-open",
+          "flue_gas_warning": "mdi:thermometer-alert",
+          "low_battery": "mdi:battery-alert",
+          "low_fuel": "mdi:gauge-empty",
+          "none": "mdi:check-circle",
+          "service_due": "mdi:wrench-clock",
+          "speed_sensor_failure": "mdi:fan-alert"
+        }
+      },
       "combustion_chamber_temperature": {
         "default": "mdi:thermometer-high"
       },
       "detailed_stove_status": {
         "default": "mdi:fireplace"
+      },
+      "error": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "chimney_alarm": "mdi:broom",
+          "chimney_dirty": "mdi:broom",
+          "door_alarm": "mdi:door-open",
+          "fire_error": "mdi:fire-alert",
+          "flue_gas_overtemp": "mdi:thermometer-high",
+          "fuel_ignition_timeout": "mdi:fire-off",
+          "gas_alarm": "mdi:alert-circle",
+          "general_error": "mdi:alert-circle",
+          "grate_error": "mdi:alert-circle",
+          "ignition_failed": "mdi:fire-alert",
+          "mfdoor_alarm": "mdi:door-open",
+          "no_pellet_alarm": "mdi:gauge-empty",
+          "none": "mdi:check-circle",
+          "ntc1_alarm": "mdi:thermometer-alert",
+          "ntc2_alarm": "mdi:thermometer-alert",
+          "ntc3_alarm": "mdi:thermometer-alert",
+          "pressure_alarm": "mdi:gauge-empty",
+          "pressure_sensor_off": "mdi:gauge-empty",
+          "safety_switch": "mdi:shield-alert",
+          "sensor_t01_t02": "mdi:thermometer-alert",
+          "sensor_t01_t03": "mdi:thermometer-alert",
+          "sensor_t02": "mdi:thermometer-alert",
+          "sensor_t03_t05": "mdi:thermometer-alert",
+          "sensor_t04": "mdi:thermometer-alert",
+          "tc1_alarm": "mdi:thermometer-alert"
+        }
       },
       "fan_1_speed": {
         "default": "mdi:fan"

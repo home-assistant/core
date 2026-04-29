@@ -67,6 +67,19 @@
       }
     },
     "sensor": {
+      "alert": {
+        "name": "Alert",
+        "state": {
+          "airflow_malfunction": "Airflow sensor malfunction",
+          "door_open": "Door open",
+          "flue_gas_warning": "Flue gas temperature warning",
+          "low_battery": "Low battery",
+          "low_fuel": "Low fuel level",
+          "none": "No alert",
+          "service_due": "Service due",
+          "speed_sensor_failure": "Speed sensor failure"
+        }
+      },
       "combustion_chamber_temperature": {
         "name": "Combustion chamber"
       },
@@ -87,6 +100,36 @@
           "wood_burning_off": "Off (wood burning)",
           "wood_combustion": "Wood combustion",
           "wood_start": "Wood start"
+        }
+      },
+      "error": {
+        "name": "Error",
+        "state": {
+          "chimney_alarm": "Chimney alarm",
+          "chimney_dirty": "Chimney or burning pot dirty",
+          "door_alarm": "Door alarm",
+          "fire_error": "Fire error",
+          "flue_gas_overtemp": "Flue gas overtemperature",
+          "fuel_ignition_timeout": "Fuel ignition timeout",
+          "gas_alarm": "Gas alarm",
+          "general_error": "General error",
+          "grate_error": "Grate error",
+          "ignition_failed": "Ignition failed",
+          "mfdoor_alarm": "MFDoor alarm",
+          "no_pellet_alarm": "No pellet alarm",
+          "none": "No error",
+          "ntc1_alarm": "NTC1 alarm",
+          "ntc2_alarm": "NTC2 alarm",
+          "ntc3_alarm": "NTC3 alarm",
+          "pressure_alarm": "Pressure alarm",
+          "pressure_sensor_off": "Pressure sensor off",
+          "safety_switch": "Safety switch tripped",
+          "sensor_t01_t02": "Sensor T01/T02 malfunction",
+          "sensor_t01_t03": "Sensor T01/T03 malfunction",
+          "sensor_t02": "Sensor T02 malfunction",
+          "sensor_t03_t05": "Sensor T03/T05 malfunction",
+          "sensor_t04": "Sensor T04 malfunction",
+          "tc1_alarm": "TC1 alarm"
         }
       },
       "fan_1_speed": {
