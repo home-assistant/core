@@ -24,5 +24,5 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     config_entry: DucoConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
     return {
-        "write_requests_remaining": config_entry.runtime_data.client.async_get_write_req_remaining(),
+        "write_requests_remaining": await config_entry.runtime_data.client.async_get_write_req_remaining(),
     }
