@@ -5,7 +5,7 @@
 # Copilot code review instructions
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
-- Do not add comments about code style, formatting or linting issues.
+- Do not comment on code style, formatting or linting issues.
 
 # GitHub Copilot & Claude Code Instructions
 
@@ -21,7 +21,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Python Syntax Notes
 
-- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses.
+- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses. Never flag this as an issue since Home Assistant officially supports Python 3.14.
 
 ## Testing
 
@@ -34,8 +34,3 @@ Integrations with Platinum or Gold level in the Integration Quality Scale reflec
 
 When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
 When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.
-
-
-# Skills
-
-- ha-integration-knowledge: .claude/skills/ha-integration-knowledge/SKILL.md

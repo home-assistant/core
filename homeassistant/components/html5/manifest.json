@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/html5",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["http_ece", "py_vapid", "pywebpush"],
   "requirements": ["pywebpush==2.3.0", "py_vapid==1.9.4"],

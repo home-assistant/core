@@ -24,6 +24,12 @@
       "reset_air_filter_consumable": {
         "default": "mdi:air-filter"
       },
+      "reset_dock_cleaning_brush_consumable": {
+        "default": "mdi:brush"
+      },
+      "reset_dock_strainer_consumable": {
+        "default": "mdi:filter"
+      },
       "reset_main_brush_consumable": {
         "default": "mdi:brush"
       },
