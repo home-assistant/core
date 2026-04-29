@@ -248,37 +248,41 @@ def _async_get_automation_components_for_target(
         "Automation components per domain: %s", lookup_table.domain_components
     )
 
-    check_entity_category = len(extracted.indirectly_referenced) > 0
     entity_infos = entity_sources(hass)
     matched_components: set[str] = set()
-    for entity_id in extracted.referenced | extracted.indirectly_referenced:
-        if lookup_table.component_count == len(matched_components):
-            # All automation components matched already, so we don't need to iterate further
-            break
 
-        entity_info = entity_infos.get(entity_id)
-        if entity_info is None:
-            _LOGGER.debug("No entity source found for %s", entity_id)
-            continue
+    def _match_components(entities: set[str], check_entity_category: bool) -> None:
+        for entity_id in entities:
+            if lookup_table.component_count == len(matched_components):
+                # All automation components matched already, so we don't need to iterate further
+                break
 
-        entity_domain = entity_id.split(".")[0]
-        entity_integration = entity_info["domain"]
-        for domain in (entity_domain, entity_integration, None):
-            if not (
-                domain_component_data := lookup_table.domain_components.get(domain)
-            ):
+            entity_info = entity_infos.get(entity_id)
+            if entity_info is None:
+                _LOGGER.debug("No entity source found for %s", entity_id)
                 continue
-            for component_data in domain_component_data:
-                if component_data.component in matched_components:
-                    continue
-                if component_data.matches(
-                    hass,
-                    entity_id,
-                    entity_domain,
-                    entity_integration,
-                    check_entity_category,
+
+            entity_domain = entity_id.split(".")[0]
+            entity_integration = entity_info["domain"]
+            for domain in (entity_domain, entity_integration, None):
+                if not (
+                    domain_component_data := lookup_table.domain_components.get(domain)
                 ):
-                    matched_components.add(component_data.component)
+                    continue
+                for component_data in domain_component_data:
+                    if component_data.component in matched_components:
+                        continue
+                    if component_data.matches(
+                        hass,
+                        entity_id,
+                        entity_domain,
+                        entity_integration,
+                        check_entity_category,
+                    ):
+                        matched_components.add(component_data.component)
+
+    _match_components(extracted.referenced, check_entity_category=False)
+    _match_components(extracted.indirectly_referenced, check_entity_category=True)
 
     return matched_components
 
