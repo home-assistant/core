@@ -9,7 +9,9 @@
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          mode: condition
+          behavior:
+            - all
+            - any
 
 .temperature_units: &temperature_units
   - "°C"

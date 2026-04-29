@@ -9,6 +9,9 @@
       selector:
         automation_behavior:
           translation_key: trigger_behavior
-          mode: trigger
+          behavior:
+            - first
+            - last
+            - any
 
 update_became_available: *trigger_common

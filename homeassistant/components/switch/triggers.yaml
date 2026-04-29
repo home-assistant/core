@@ -10,7 +10,10 @@
       selector:
         automation_behavior:
           translation_key: trigger_behavior
-          mode: trigger
+          behavior:
+            - first
+            - last
+            - any
 
 turned_off: *trigger_common
 turned_on: *trigger_common

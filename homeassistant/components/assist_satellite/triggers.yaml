@@ -9,7 +9,10 @@
       selector:
         automation_behavior:
           translation_key: trigger_behavior
-          mode: trigger
+          behavior:
+            - first
+            - last
+            - any
 
 idle: *trigger_common
 listening: *trigger_common

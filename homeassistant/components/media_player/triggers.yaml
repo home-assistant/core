@@ -9,4 +9,18 @@
       selector:
         automation_behavior:
           translation_key: trigger_behavior
-          mode: trigger
+          behavior:
+            - first
+            - last
+            - any
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+paused_playing: *trigger_common
+started_playing: *trigger_common
+stopped_playing: *trigger_common
+turned_off: *trigger_common
+turned_on: *trigger_common

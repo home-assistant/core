@@ -9,7 +9,9 @@
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          mode: condition
+          behavior:
+            - all
+            - any
 
 is_open: *condition_common
 is_closed: *condition_common

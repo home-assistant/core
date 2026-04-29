@@ -10,7 +10,9 @@ is_equal_to:
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          mode: condition
+          behavior:
+            - all
+            - any
     value:
       required: true
       selector:
