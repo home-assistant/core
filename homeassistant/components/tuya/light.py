@@ -7,7 +7,7 @@ from typing import Any
 
 from tuya_device_handlers.definition.light import (
     FallbackColorDataMode,
-    TuyaLightDefinition,
+    LightDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -426,7 +426,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaLightEntityDescription,
-        definition: TuyaLightDefinition,
+        definition: LightDefinition,
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager, description)
