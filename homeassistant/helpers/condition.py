@@ -425,7 +425,7 @@ BEHAVIOR_ALL: Final = "all"
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): {
+        vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
@@ -436,7 +436,7 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
-            vol.Required(CONF_OPTIONS): {
+            vol.Required(CONF_OPTIONS, default={}): {
                 vol.Optional(CONF_FOR): cv.positive_time_period_dict,
             },
         }
