@@ -28,7 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -952,3 +952,113 @@ async def test_websocket_subscribe_debounces_rapid_updates(
 
     # The final message has all events
     assert len(messages[-1]["event"]["events"]) == 6
+
+
+async def test_events_http_api_unauthorized(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that the events HTTP API enforces per-entity read permission."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {"calendar.calendar_2": True}}}
+    )
+    client = await hass_client()
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    # Allowed entity still works
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_2?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.OK
+
+
+async def test_calendars_http_api_filters_unauthorized(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that the calendar list filters out entities the user cannot read."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {"calendar.calendar_2": True}}}
+    )
+    client = await hass_client()
+    response = await client.get("/api/calendars")
+    assert response.status == HTTPStatus.OK
+    data = await response.json()
+    assert data == [{"entity_id": "calendar.calendar_2", "name": "Calendar 2"}]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "calendar/event/create",
+            "entity_id": "calendar.calendar_1",
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+        {
+            "type": "calendar/event/delete",
+            "entity_id": "calendar.calendar_1",
+            "uid": "some-uid",
+        },
+        {
+            "type": "calendar/event/update",
+            "entity_id": "calendar.calendar_1",
+            "uid": "some-uid",
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    ],
+)
+async def test_websocket_event_mutate_unauthorized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    command: dict[str, Any],
+) -> None:
+    """Test that mutating event WS commands enforce per-entity control permission."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({})
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(command)
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
+async def test_websocket_subscribe_unauthorized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test calendar event subscription enforces per-entity read permission."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({})
+    client = await hass_ws_client(hass)
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
