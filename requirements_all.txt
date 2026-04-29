@@ -1257,7 +1257,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.8.0
+homematicip==2.9.0
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
