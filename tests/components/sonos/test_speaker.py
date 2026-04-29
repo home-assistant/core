@@ -101,6 +101,9 @@ async def _media_play(hass: HomeAssistant, entity: str) -> None:
     )
 
 
+@pytest.mark.skip(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_zgs_event_group_speakers(
     hass: HomeAssistant, sonos_setup_two_speakers: list[MockSoCo]
 ) -> None:
