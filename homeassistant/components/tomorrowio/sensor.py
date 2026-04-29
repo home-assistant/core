@@ -407,7 +407,7 @@ SENSOR_TYPES = (
         translation_key="pressure_sea_level",
         attribute=TMRW_ATTR_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as m/s, convert to mi/h for imperial
