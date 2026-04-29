@@ -7143,3 +7143,47 @@ async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
 
     # Should succeed now
     script_obj.async_unload()
+
+
+async def test_async_unload_removes_from_data_scripts(hass: HomeAssistant) -> None:
+    """Test that async_unload removes the script from hass.data[DATA_SCRIPTS]."""
+    sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    all_scripts = hass.data[script.DATA_SCRIPTS]
+    assert any(s["instance"] is script_obj for s in all_scripts.values())
+
+    script_obj.async_unload()
+
+    assert not any(s["instance"] is script_obj for s in all_scripts.values())
+
+
+async def test_async_unload_non_top_level_does_not_touch_data_scripts(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_unload on a non-top-level script doesn't touch DATA_SCRIPTS."""
+    sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
+    script_obj = script.Script(
+        hass, sequence, "Sub Script", "test_domain", top_level=False
+    )
+
+    all_scripts = hass.data[script.DATA_SCRIPTS]
+    count_before = len(all_scripts)
+
+    # Should not raise and should not modify DATA_SCRIPTS
+    script_obj.async_unload()
+
+    assert len(all_scripts) == count_before
+
+
+async def test_async_run_raises_if_unloaded(hass: HomeAssistant) -> None:
+    """Test that async_run raises RuntimeError if the script has been unloaded."""
+    sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    script_obj.async_unload()
+
+    with pytest.raises(
+        RuntimeError, match="Cannot run script.*after it has been unloaded"
+    ):
+        await script_obj.async_run(context=Context())
