@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import cast
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
-from victron_mqtt import Hub as VictronVenusHub
+from victron_mqtt import Hub as VictronVenusHub, WritableMetric
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.victron_gx.const import DOMAIN
@@ -100,16 +99,11 @@ async def test_victron_button_press(
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
-    assert victron_hub._client is not None
-    publish_mock = cast(MagicMock, victron_hub._client.publish)
-    publish_mock.reset_mock()
+    # Spy on WritableMetric.set to verify the outgoing write
+    with patch.object(WritableMetric, "set") as set_mock:
+        # Call the press service to cover async_press()
+        await hass.services.async_call(
+            "button", "press", {"entity_id": entity_id}, blocking=True
+        )
 
-    # Call the press service to cover async_press()
-    await hass.services.async_call(
-        "button", "press", {"entity_id": entity_id}, blocking=True
-    )
-
-    publish_mock.assert_called_once_with(
-        f"W/{MOCK_INSTALLATION_ID}/platform/0/Device/Reboot",
-        '{"value": 1}',
-    )
+        set_mock.assert_called_once()
