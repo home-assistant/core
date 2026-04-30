@@ -26,6 +26,8 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import EcoTrackerConfigEntry, EcoTrackerDataUpdateCoordinator
 from .entity import EcoTrackerEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EcoTrackerSensorEntityDescription(SensorEntityDescription):
