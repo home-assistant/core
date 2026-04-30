@@ -357,7 +357,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Generate partial uv restore key
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         id: generate-uv-key
         env:
           RUNNER_OS: ${{ runner.os }}
@@ -367,15 +376,7 @@ jobs:
         run: |
           partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
           echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
-          echo "full_key=${partial_key}-${HASH_FILES}" >> $GITHUB_OUTPUT
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          echo "full_key=${partial_key}${HASH_FILES}" >> $GITHUB_OUTPUT
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
         id: cache-uv
@@ -474,14 +475,14 @@ jobs:
           ./script/check_dirty
       - name: Prune uv cache
         if: |
-          (success() && steps.cache-venv.outputs.cache-hit != 'true')
-          || (always()
-            && steps.create-venv.outcome == 'success'
-            && steps.cache-uv.outputs.cache-matched-key == '')
+          steps.cache-hit.outputs.cache-hit != 'true'
+          && (
+            success()
+            || (always() && steps.create-venv.outcome == 'success'))
         id: prune-uv-cache
         run: |
           . venv/bin/activate
-          uv cache prune
+          uv cache prune --ci
       - name: Save uv wheel cache
         if: steps.prune-uv-cache.outcome == 'success'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
