@@ -166,16 +166,46 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery."""
-        self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
+        hostname = urlparse(discovery_info.ssdp_location).hostname
+        # Ensure we have a valid hostname before proceeding
+        if not hostname:
+            return self.async_abort(reason="cannot_connect")
+
+        self.hostname = str(hostname)
         self.serial = discovery_info.upnp["serialNumber"]
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
         self.model_name = discovery_info.upnp["modelName"]
         self.friendly_name = discovery_info.upnp["friendlyName"]
 
         await self.async_set_unique_id(self.installation_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.hostname},
+
+        # Check if we need to update the host for an existing entry
+        existing_entry = next(
+            (
+                entry
+                for entry in self._async_current_entries()
+                if entry.unique_id == self.installation_id
+            ),
+            None,
         )
+        if (
+            existing_entry is not None
+            and existing_entry.data[CONF_HOST] != self.hostname
+        ):
+            # Update the entry with the new host and title
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={**existing_entry.data, CONF_HOST: self.hostname},
+                title=ENTRY_TITLE_FORMAT.format(
+                    installation_id=self.installation_id,
+                    host=self.hostname,
+                    port=existing_entry.data[CONF_PORT],
+                ),
+            )
+            # Reload the entry to apply the changes
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+
+        self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {
             "name": self.friendly_name or self.hostname
