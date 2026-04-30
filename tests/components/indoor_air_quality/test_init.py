@@ -43,6 +43,8 @@ from homeassistant.components.indoor_air_quality.helpers import (
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -339,6 +341,31 @@ def test_convert_value_same_family() -> None:
     assert convert_value(1500, "ppb", UNIT_PPM) == pytest.approx(1.5)
     # mg/m³ -> µg/m³
     assert convert_value(0.01, "mg/m³", UNIT_UGM3) == pytest.approx(10)
+
+
+@pytest.mark.parametrize(
+    "source_unit",
+    [
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # canonical Greek mu
+        "µg/m³",  # micro sign alias
+        "ug/m³",  # ASCII alias
+    ],
+)
+def test_convert_value_ugm3_aliases(source_unit: str) -> None:
+    """Canonical and alias µg/m³ unit strings all hit the target unit."""
+    assert convert_value(7, source_unit, UNIT_UGM3) == pytest.approx(7)
+
+
+@pytest.mark.parametrize(
+    "source_unit",
+    [
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,  # canonical
+        "mg/m³",
+    ],
+)
+def test_convert_value_mgm3_aliases(source_unit: str) -> None:
+    """Canonical and alias mg/m³ unit strings all hit the target unit."""
+    assert convert_value(2, source_unit, UNIT_MGM3) == pytest.approx(2)
 
 
 def test_convert_value_molar_mass() -> None:
