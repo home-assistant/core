@@ -105,6 +105,9 @@ async def test_restoring_clients(
     assert state is not None
     assert state.state == STATE_NOT_HOME
 
+    restored_entity = entity_registry.async_get(entity_id)
+    assert restored_entity.device_id is not None
+
 
 async def test_multi_ap_clients_merged(
     hass: HomeAssistant,

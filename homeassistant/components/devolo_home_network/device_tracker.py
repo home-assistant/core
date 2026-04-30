@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -54,6 +54,7 @@ async def async_setup_entry(
     def restore_entities() -> None:
         """Restore clients that are not a part of active clients list."""
         missing = []
+        device_registry = dr.async_get(hass)
         for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
             if (
                 entity.platform == DOMAIN
@@ -65,6 +66,12 @@ async def async_setup_entry(
                 )
                 not in tracked
             ):
+                device_registry.async_get_or_create(
+                    config_entry_id=entry.entry_id,
+                    identifiers={(DOMAIN, mac_address)},
+                    connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+                    name=mac_address,
+                )
                 missing.append(
                     DevoloScannerEntity(
                         coordinators[CONNECTED_WIFI_CLIENTS], device, mac_address
@@ -100,7 +107,6 @@ class DevoloScannerEntity(
         super().__init__(coordinator)
         self._device = device
         self._attr_mac_address = mac
-        self._attr_name = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -125,6 +131,11 @@ class DevoloScannerEntity(
         """Return true if the device is connected to the network."""
         assert self.mac_address
         return self.coordinator.data.get(self.mac_address) is not None
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Suggest entity_id derived from the MAC address."""
+        return self.mac_address.lower().replace(":", "_") if self.mac_address else None
 
     @property
     def unique_id(self) -> str:

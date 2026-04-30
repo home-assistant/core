@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'band': '5 GHz',
-      'friendly_name': '00:00:5E:00:53:01 00:00:5E:00:53:01',
+      'friendly_name': '00:00:5E:00:53:01',
       'mac': '00:00:5E:00:53:01',
       'source_type': <SourceType.ROUTER: 'router'>,
       'wifi': 'Main',
