@@ -38,7 +38,6 @@ on:
 
 env:
   CACHE_VERSION: 3
-  UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2026.6"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
@@ -358,12 +357,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
-      - name: Generate partial uv restore key
-        id: generate-uv-key
-        run: |
-          uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
-          echo "version=${uv_version}" >> $GITHUB_OUTPUT
-          echo "key=uv-${UV_CACHE_VERSION}-${uv_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -372,19 +365,26 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
+      - name: Generate partial uv restore key
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: generate-uv-key
+        env:
+          RUNNER_OS: ${{ runner.os }}
+          RUNNER_ARCH: ${{ runner.arch }}
+          PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
+          HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt') }}
+        run: |
+          partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
+          echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
+          echo "full_key=${partial_key}${HASH_FILES}" >> $GITHUB_OUTPUT
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
         id: cache-uv
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.UV_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-uv-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
-            env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
-            env.HA_SHORT_VERSION }}-
+          key: ${{ steps.generate-uv-key.outputs.full_key }}
+          restore-keys: ${{ steps.generate-uv-key.outputs.partial_key }}
       - name: Check if apt cache exists
         id: cache-apt-check
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -473,18 +473,22 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
-      - name: Save uv wheel cache
+      - name: Prune uv cache
         if: |
-          (success() && steps.cache-venv.outputs.cache-hit != 'true')
-          || (always()
-            && steps.create-venv.outcome == 'success'
-            && steps.cache-uv.outputs.cache-matched-key == '')
+          steps.cache-uv.outputs.cache-hit != 'true'
+          && (
+            success()
+            || (always() && steps.create-venv.outcome == 'success'))
+        id: prune-uv-cache
+        run: |
+          . venv/bin/activate
+          uv cache prune --ci
+      - name: Save uv wheel cache
+        if: steps.prune-uv-cache.outcome == 'success'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.UV_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-uv-key.outputs.key }}
+          key: ${{ steps.generate-uv-key.outputs.full_key }}
       - name: Save base Python virtual environment
         if: always() && steps.create-venv.outcome == 'success'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5

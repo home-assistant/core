@@ -9,6 +9,11 @@
       selector:
         automation_behavior:
           mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 is_open: *condition_common
 is_closed: *condition_common

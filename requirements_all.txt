@@ -1694,7 +1694,7 @@ odp-amsterdam==6.1.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.7.1
+ohme==1.9.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -3298,7 +3298,7 @@ waterfurnace==1.7.1
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.2
+weatherflow4py==1.5.4
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.1

@@ -139,9 +139,12 @@ class Hub:
             model=device.model,
             serial_number=device.serial_number,
         )
-        # Don't set via_device for the GX device itself
-        if device.unique_id != "system_0":
-            device_info["via_device"] = (DOMAIN, f"{installation_id}_system_0")
+        # Set via_device based on parent_device relationship
+        if device.parent_device is not None:
+            device_info["via_device"] = (
+                DOMAIN,
+                f"{installation_id}_{device.parent_device.unique_id}",
+            )
         return device_info
 
     def is_device_connected(self, device_identifiers: set[tuple[str, str]]) -> bool:
