@@ -19,7 +19,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_SOFTWARE_VERSION,
-    CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
@@ -36,7 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
 
     serial = entry.data[CONF_SERIAL]
     stored_ip = entry.data[CONF_IP_ADDRESS]
-    auto_discovered = entry.data[CONF_AUTO_DISCOVERED]
 
     async def _connect(ip: str) -> nobo:
         hub = nobo(
@@ -52,14 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     try:
         hub = await _connect(stored_ip)
     except OSError as err:
-        if not auto_discovered:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect_manual",
-                translation_placeholders={"serial": serial, "ip": stored_ip},
-            ) from err
-        # Stored IP may be stale for an auto-discovered entry - try UDP
-        # rediscovery to pick up a new DHCP lease.
+        # Stored IP may be stale - try UDP rediscovery to pick up a new
+        # DHCP lease (or a hub that's been moved).
         discovered = await nobo.async_discover_hubs(serial=serial)
         if not discovered:
             raise ConfigEntryNotReady(
