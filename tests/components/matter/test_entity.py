@@ -1,7 +1,5 @@
 """Test Matter entity behavior."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode

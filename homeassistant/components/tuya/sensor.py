@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.sensor import (
-    TuyaSensorDefinition,
+    SensorDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
@@ -1681,7 +1681,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        definition: TuyaSensorDefinition,
+        definition: SensorDefinition,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager, description)

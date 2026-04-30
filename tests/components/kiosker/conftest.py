@@ -1,7 +1,5 @@
 """Common fixtures for the Kiosker tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch

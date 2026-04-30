@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration models."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import bleak
