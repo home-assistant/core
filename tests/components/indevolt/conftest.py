@@ -103,8 +103,15 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
         ),
     ):
         # Mock coordinator API (get_data)
+        # fetch_data filters by requested keys so that SENSOR_KEYS omissions
+        # cause test failures instead of silently returning extra fixture data.
+        # Tests that mutate fetch_data.return_value[key] to simulate state
+        # changes will still work because side_effect reads from return_value.
         client = mock_client.return_value
-        client.fetch_data.return_value = fixture_data
+        client.fetch_data.return_value = dict(fixture_data)
+        client.fetch_data.side_effect = lambda keys: {
+            k: v for k, v in client.fetch_data.return_value.items() if k in keys
+        }
         client.set_data.return_value = True
         client.stop.return_value = True
         client.charge.return_value = True

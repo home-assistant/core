@@ -429,11 +429,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
-            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
-
 
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
