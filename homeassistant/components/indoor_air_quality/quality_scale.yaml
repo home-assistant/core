@@ -55,8 +55,11 @@ rules:
   parallel-updates:
     status: done
     comment: |
-      All sensors are state-driven and write to Home Assistant in response to
-      source state-change events; ``PARALLEL_UPDATES = 0`` disables polling.
+      The sensor platform is push-based: entities set ``_attr_should_poll =
+      False`` and are written to Home Assistant from controller listeners
+      that fire on source state-change events. ``PARALLEL_UPDATES = 0`` is
+      set on the platform to document that no concurrent-update cap is
+      needed.
   reauthentication-flow:
     status: exempt
     comment: This integration does not authenticate against any service.
