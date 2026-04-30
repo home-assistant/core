@@ -441,9 +441,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.pop(CONF_VERBOSITY)
 
         if model.startswith(("o", "gpt-5")):
-            reasoning_summary_options = ["off", "auto", "detailed"]
-            if model.startswith("gpt-5"):
-                reasoning_summary_options = ["off", "auto", "concise", "detailed"]
+            reasoning_summary_options = ["off", "auto", "concise", "detailed"]
+            if model.startswith("o"):
+                reasoning_summary_options.remove("concise")
             stored_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
             )
