@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import AqualinkConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_USERNAME, "serial", "serial_number"}
+TO_REDACT = {"serial", "serial_number"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -32,7 +31,4 @@ async def async_get_config_entry_diagnostics(
             }
         )
 
-    return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "systems": async_redact_data(systems, TO_REDACT),
-    }
+    return {"systems": async_redact_data(systems, TO_REDACT)}
