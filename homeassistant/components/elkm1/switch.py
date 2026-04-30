@@ -1,5 +1,8 @@
 """Support for control of ElkM1 outputs (relays)."""
 
+from __future__ import annotations
+
+from datetime import timedelta
 from typing import Any
 
 from elkm1_lib.const import ThermostatMode, ThermostatSetting
