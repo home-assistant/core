@@ -1,5 +1,7 @@
 """Utility functions for SmartThings integration."""
 
+from pysmartthings import Category
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
@@ -10,7 +12,14 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .const import DOMAIN
+from . import FullDevice
+from .const import DOMAIN, MAIN
+
+
+def get_main_component_category(device: FullDevice) -> Category | str:
+    """Get the category of the main component of a device."""
+    main = device.device.components[MAIN]
+    return main.user_category or main.manufacturer_category
 
 
 def deprecate_entity(
