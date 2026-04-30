@@ -12,6 +12,7 @@ from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
     EVENT_OBSERVATION,
     EVENT_STATUS_UPDATE,
+    EVENT_STRIKE,
     WeatherFlowDevice,
     WeatherFlowSensorDevice,
 )
@@ -62,12 +63,13 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 
     raw_data_conv_fn: Callable[[Any], datetime | StateType]
 
+    device_attr: str | None = None
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: str | None = None
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
-        if (raw_sensor_data := getattr(device, self.key)) is None:
+        if (raw_sensor_data := getattr(device, self.device_attr or self.key)) is None:
             return None
         return self.raw_data_conv_fn(raw_sensor_data)
 
@@ -154,6 +156,33 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="lightning_count",
         state_class=SensorStateClass.TOTAL,
         raw_data_conv_fn=lambda raw_data: raw_data,
+    ),
+    WeatherFlowSensorEntityDescription(
+        key="lightning_strike_last_distance",
+        device_attr="last_lightning_strike_event",
+        translation_key="lightning_strike_last_distance",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        suggested_display_precision=2,
+        event_subscriptions=[EVENT_STRIKE],
+        raw_data_conv_fn=lambda raw_data: raw_data.distance.magnitude,
+    ),
+    WeatherFlowSensorEntityDescription(
+        key="lightning_strike_last_energy",
+        device_attr="last_lightning_strike_event",
+        translation_key="lightning_strike_last_energy",
+        state_class=SensorStateClass.MEASUREMENT,
+        event_subscriptions=[EVENT_STRIKE],
+        raw_data_conv_fn=lambda raw_data: raw_data.energy,
+    ),
+    WeatherFlowSensorEntityDescription(
+        key="lightning_strike_last_epoch",
+        device_attr="last_lightning_strike_event",
+        translation_key="lightning_strike_last_epoch",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        event_subscriptions=[EVENT_STRIKE],
+        raw_data_conv_fn=lambda raw_data: raw_data.timestamp,
     ),
     WeatherFlowSensorEntityDescription(
         key="precipitation_type",
@@ -312,7 +341,7 @@ async def async_setup_entry(
                 is_metric=(hass.config.units == METRIC_SYSTEM),
             )
             for description in SENSORS
-            if hasattr(device, description.key)
+            if hasattr(device, description.device_attr or description.key)
         ]
 
         async_add_entities(sensors)

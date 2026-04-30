@@ -15,6 +15,12 @@
       "lightning_count": {
         "default": "mdi:lightning-bolt"
       },
+      "lightning_strike_last_distance": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strike_last_energy": {
+        "default": "mdi:lightning-bolt"
+      },
       "precipitation_type": {
         "default": "mdi:weather-rainy"
       },
