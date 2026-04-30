@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
+import hashlib
 import logging
 from typing import Any
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
     AccessDeniedError,
+    ApiError,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
-    SiteInfoResponse,
 )
 import voluptuous as vol
 
@@ -32,6 +32,7 @@ from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
 from .const import CONFIG_ENTRY_COOKIE, DOMAIN
+from .helpers import is_api_404
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,14 +45,42 @@ ENTRY_FAILURE_STATES = {
 
 async def _login_and_fetch_site_info(
     power_wall: Powerwall, password: str
-) -> tuple[SiteInfoResponse, str]:
-    """Login to the powerwall and fetch the base info."""
+) -> tuple[str | None, str | None]:
+    """Login to the powerwall and return (title, gateway_din).
+
+    On the restricted PW3-style surface, ``/api/powerwalls`` and
+    ``/api/site_info`` return 404. Both ``None`` results signal that the caller
+    should synthesize a title and unique id from the host.
+    """
     if password is not None:
         await power_wall.login(password)
 
-    return await asyncio.gather(
-        power_wall.get_site_info(), power_wall.get_gateway_din()
-    )
+    try:
+        gateway_din = await power_wall.get_gateway_din()
+    except ApiError as err:
+        if not is_api_404(err):
+            raise
+        return None, None
+    try:
+        site_info = await power_wall.get_site_info()
+    except ApiError as err:
+        if not is_api_404(err):
+            raise
+        return f"Powerwall {gateway_din[-5:]}", gateway_din
+    return site_info.site_name, gateway_din
+
+
+def _is_synthetic_unique_id(unique_id: str) -> bool:
+    """Return True if the unique_id was synthesized by us.
+
+    Real Powerwall DINs are short alphanumeric strings; the synthetic forms we
+    produce are dotted IPs (legacy) or 64-character hex digests (restricted
+    PW3 gateways). Anything else is treated as a real DIN and must not be
+    silently overwritten by DHCP discovery.
+    """
+    if is_ip_address(unique_id):
+        return True
+    return len(unique_id) == 64 and all(c in "0123456789abcdef" for c in unique_id)
 
 
 async def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
@@ -78,16 +107,26 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         password = data[CONF_PASSWORD]
 
         try:
-            site_info, gateway_din = await _login_and_fetch_site_info(
-                power_wall, password
-            )
+            title, gateway_din = await _login_and_fetch_site_info(power_wall, password)
         except MissingAttributeError as err:
             # Only log the exception without the traceback
             _LOGGER.error(str(err))
             raise WrongVersion from err
 
+        ip_address = data[CONF_IP_ADDRESS]
+        if gateway_din is None:
+            # PW3-style restricted gateway — no DIN exposed via HTTP. Fall back
+            # to a hash of the password (gateway serial-derived) for a stable
+            # unique id that survives IP changes. DHCP discovery (which carries
+            # the real DIN as the hostname) can later upgrade the entry.
+            unique_id = hashlib.sha256(password.encode()).hexdigest()
+            return {
+                "title": f"Powerwall {ip_address}",
+                "unique_id": unique_id,
+            }
+        assert title is not None
         # Return info that you want to store in the config entry.
-        return {"title": site_info.site_name, "unique_id": gateway_din.upper()}
+        return {"title": title, "unique_id": gateway_din.upper()}
 
 
 class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -125,7 +164,11 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(gateway_din)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_IP_ADDRESS] == discovery_info.ip:
-                if entry.unique_id is not None and is_ip_address(entry.unique_id):
+                if (
+                    entry.unique_id is not None
+                    and entry.unique_id != gateway_din
+                    and _is_synthetic_unique_id(entry.unique_id)
+                ):
                     if self.hass.config_entries.async_update_entry(
                         entry, unique_id=gateway_din
                     ):
@@ -167,14 +210,16 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except (PowerwallUnreachableError, TimeoutError) as ex:
+            _LOGGER.debug("Cannot connect to powerwall", exc_info=ex)
             errors[CONF_IP_ADDRESS] = "cannot_connect"
-            description_placeholders = {"error": str(ex)}
+            description_placeholders = {"error": str(ex) or type(ex).__name__}
         except WrongVersion as ex:
             errors["base"] = "wrong_version"
-            description_placeholders = {"error": str(ex)}
+            description_placeholders = {"error": str(ex) or type(ex).__name__}
         except AccessDeniedError as ex:
+            _LOGGER.debug("Access denied to powerwall", exc_info=ex)
             errors[CONF_PASSWORD] = "invalid_auth"
-            description_placeholders = {"error": str(ex)}
+            description_placeholders = {"error": str(ex) or type(ex).__name__}
         except Exception as ex:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

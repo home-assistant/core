@@ -627,6 +627,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "1232100-*",
     },
     {
+        "domain": "powerwall",
+        "hostname": "teslapw_*",
+    },
+    {
         "domain": "prusalink",
         "macaddress": "109C70*",
     },
