@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import CommandResult, FanSpeed, Mode, VaneDirection
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -18,18 +19,14 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.mitsubishi_comfort.climate import MitsubishiComfortClimate
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNAVAILABLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import _make_device_status
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.living_room"
 
@@ -48,38 +45,15 @@ async def setup_climate(
     return mock_device
 
 
-async def test_climate_entity_registered(
+async def test_climate_entity(
     hass: HomeAssistant,
     setup_climate: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that a climate entity is created for an indoor unit."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == HVACMode.COOL
-
-
-async def test_temperature_unit(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test temperature unit is Celsius."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    # Verify via direct entity access
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.temperature_unit == UnitOfTemperature.CELSIUS
-
-
-async def test_hvac_mode_cool(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test HVAC mode returns COOL when device is in cool mode."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == HVACMode.COOL
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_hvac_mode_mappings(
@@ -118,17 +92,6 @@ async def test_hvac_mode_none_when_no_mode(
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
     assert entity.hvac_mode is None
-
-
-async def test_hvac_action_cooling(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test HVAC action is COOLING when in cool mode."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.hvac_action is HVACAction.COOLING
 
 
 async def test_hvac_action_idle_on_standby(
@@ -178,54 +141,6 @@ async def test_hvac_action_all_modes(
     for mode, expected_action in action_pairs:
         device.status = _make_device_status(mode=mode)
         assert entity.hvac_action is expected_action, f"Failed for mode {mode}"
-
-
-async def test_hvac_modes_list(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test hvac_modes returns supported modes."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    modes = entity.hvac_modes
-    assert HVACMode.OFF in modes
-    assert HVACMode.COOL in modes
-    assert HVACMode.HEAT in modes
-    assert HVACMode.DRY in modes
-    assert HVACMode.FAN_ONLY in modes
-    assert HVACMode.HEAT_COOL in modes
-
-
-async def test_current_temperature(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test current temperature returns room temperature."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("current_temperature") == 23.5
-
-
-async def test_current_humidity(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test current humidity returns device humidity."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.current_humidity == 45.0
-
-
-async def test_target_temperature_cool_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test target temperature in cool mode returns cool setpoint."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("temperature") == 24.0
 
 
 async def test_target_temperature_heat_mode(
@@ -289,94 +204,6 @@ async def test_target_temperature_high_auto_mode(
     assert entity.target_temperature_low == 21.0
 
 
-async def test_target_temperature_high_none_in_cool_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test target_temperature_high is None outside auto modes."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.target_temperature_high is None
-    assert entity.target_temperature_low is None
-
-
-async def test_fan_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test fan mode returns device fan speed."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("fan_mode") == "auto"
-
-
-async def test_fan_modes(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test fan modes returns supported fan speeds."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.fan_modes == ["quiet", "low", "auto"]
-
-
-async def test_swing_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test swing mode returns device vane direction."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("swing_mode") == "auto"
-
-
-async def test_swing_modes(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test swing modes returns supported vane directions."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.swing_modes == ["horizontal", "auto", "swing"]
-
-
-async def test_min_temp_cool_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test min temp in cool mode returns min_cool_setpoint."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.min_temp == 18.0
-
-
-async def test_min_temp_heat_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test min temp in heat mode returns min_heat_setpoint."""
-    setup_climate.status = _make_device_status(mode="heat")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.min_temp == 16.0
-
-
-async def test_max_temp_cool_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test max temp in cool mode returns max_cool_setpoint."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.max_temp == 30.0
-
-
 async def test_max_temp_heat_mode(
     hass: HomeAssistant,
     setup_climate: MagicMock,
@@ -422,23 +249,6 @@ async def test_min_temp_heat_setpoint_none_falls_to_cool(
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
     assert entity.min_temp == 18.0
     assert entity.max_temp == 30.0
-
-
-async def test_supported_features(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test supported features include expected capabilities."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    features = entity.supported_features
-
-    assert features & ClimateEntityFeature.TARGET_TEMPERATURE
-    assert features & ClimateEntityFeature.FAN_MODE
-    assert features & ClimateEntityFeature.TURN_OFF
-    assert features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-    assert features & ClimateEntityFeature.SWING_MODE
 
 
 async def test_supported_features_no_auto(

@@ -147,14 +147,13 @@ def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
             autospec=True,
-        ) as mock_init_cls,
+        ) as mock_cls,
         patch(
             "homeassistant.components.mitsubishi_comfort.config_flow.MitsubishiCloudAccount",
-            autospec=True,
-        ) as mock_cf_cls,
+            new=mock_cls,
+        ),
     ):
-        account = mock_init_cls.return_value
-        mock_cf_cls.return_value = account
+        account = mock_cls.return_value
         account.login.return_value = None
         account.discover_devices.return_value = {"SERIAL001": mock_device_info}
         account.get_passwords_via_websocket.return_value = {}
