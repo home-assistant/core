@@ -18,8 +18,22 @@ _LOGGER: Final = logging.getLogger(__name__)
 _WARNED_MISSING_ENTITIES: set[str] = set()
 
 
-_UGM3_UNITS: Final = frozenset({"µg/m³", "µg/m3", "µg/m^3", "ug/m³", "ug/m3", "ug/m^3"})
-_MGM3_UNITS: Final = frozenset({"mg/m³", "mg/m3", "mg/m^3"})
+_UGM3_UNITS: Final = frozenset(
+    {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # canonical "μg/m³" (Greek mu)
+        "µg/m³",  # micro sign (U+00B5)
+        "µg/m3",
+        "µg/m^3",
+        "μg/m3",  # Greek mu variants without superscript
+        "μg/m^3",
+        "ug/m³",
+        "ug/m3",
+        "ug/m^3",
+    }
+)
+_MGM3_UNITS: Final = frozenset(
+    {CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER, "mg/m3", "mg/m^3"}
+)
 
 
 def normalise_unit(unit: str | None) -> str | None:

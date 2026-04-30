@@ -2,6 +2,11 @@
 
 from typing import Final
 
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+)
+
 # Base component constants
 NAME: Final = "Indoor Air Quality"
 DOMAIN: Final = "indoor_air_quality"
@@ -63,23 +68,31 @@ UNIT_PPB: Final = {
     "ppm": 1000,
 }
 UNIT_UGM3: Final = {
-    "µg/m³": 1,  # Target unit -- conversion rate will be ignored
+    # First entry is the target unit; remaining entries are aliases / sibling
+    # units with their multiplicative factor to the target.
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1,  # "μg/m³" (Greek mu)
+    "µg/m³": 1,  # micro sign alias
     "µg/m3": 1,
     "µg/m^3": 1,
+    "μg/m3": 1,  # Greek mu alias variants
+    "μg/m^3": 1,
     "ug/m³": 1,
     "ug/m3": 1,
     "ug/m^3": 1,
-    "mg/m³": 1000,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000,
     "mg/m3": 1000,
     "mg/m^3": 1000,
 }
 UNIT_MGM3: Final = {
-    "mg/m³": 1,  # Target unit -- conversion rate will be ignored
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1,  # Target unit
     "mg/m3": 1,
     "mg/m^3": 1,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 0.001,
     "µg/m³": 0.001,
     "µg/m3": 0.001,
     "µg/m^3": 0.001,
+    "μg/m3": 0.001,
+    "μg/m^3": 0.001,
     "ug/m³": 0.001,
     "ug/m3": 0.001,
     "ug/m^3": 0.001,
