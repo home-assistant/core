@@ -800,7 +800,7 @@ async def test_send_message_exceptions(
     service: str,
     service_data: dict[str, Any],
 ) -> None:
-    """Test sending message via notify.send_message action with exceptions."""
+    """Test exception handling for notify.send_message and mobile_app.dismiss_message."""
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         "https://mobile-push.home-assistant.dev/push",
