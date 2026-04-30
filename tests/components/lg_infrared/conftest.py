@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.infrared import (
     DATA_COMPONENT as INFRARED_DATA_COMPONENT,
     DOMAIN as INFRARED_DOMAIN,
-    InfraredEntity,
+    InfraredEmitterEntity,
 )
 from homeassistant.components.lg_infrared import PLATFORMS
 from homeassistant.components.lg_infrared.const import (
@@ -29,8 +29,8 @@ from tests.common import MockConfigEntry
 MOCK_INFRARED_ENTITY_ID = "infrared.test_ir_transmitter"
 
 
-class MockInfraredEntity(InfraredEntity):
-    """Mock infrared entity for testing."""
+class MockInfraredEntity(InfraredEmitterEntity):
+    """Mock infrared emitter entity for testing."""
 
     _attr_has_entity_name = True
     _attr_name = "Test IR transmitter"

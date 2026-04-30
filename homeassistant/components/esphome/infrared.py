@@ -7,7 +7,7 @@ import logging
 
 from aioesphomeapi import EntityState, InfraredCapability, InfraredInfo
 
-from homeassistant.components.infrared import InfraredCommand, InfraredEntity
+from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
 from homeassistant.core import callback
 
 from .entity import (
@@ -21,8 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEntity):
-    """ESPHome infrared entity using native API."""
+class EsphomeInfraredEntity(
+    EsphomeEntity[InfraredInfo, EntityState], InfraredEmitterEntity
+):
+    """ESPHome infrared emitter entity using native API."""
 
     @callback
     def _on_device_update(self) -> None:
