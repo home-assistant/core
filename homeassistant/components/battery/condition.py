@@ -32,25 +32,21 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_low": make_entity_state_condition(
         BATTERY_DOMAIN_SPECS,
         STATE_ON,
-        support_duration=True,
         primary_entities_only=False,
     ),
     "is_not_low": make_entity_state_condition(
         BATTERY_DOMAIN_SPECS,
         STATE_OFF,
-        support_duration=True,
         primary_entities_only=False,
     ),
     "is_charging": make_entity_state_condition(
         BATTERY_CHARGING_DOMAIN_SPECS,
         STATE_ON,
-        support_duration=True,
         primary_entities_only=False,
     ),
     "is_not_charging": make_entity_state_condition(
         BATTERY_CHARGING_DOMAIN_SPECS,
         STATE_OFF,
-        support_duration=True,
         primary_entities_only=False,
     ),
     "is_level": make_entity_numerical_condition(

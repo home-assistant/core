@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from tuya_device_handlers.definition.siren import (
-    TuyaSirenDefinition,
+    SirenDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -93,7 +93,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
-        definition: TuyaSirenDefinition,
+        definition: SirenDefinition,
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager, description)

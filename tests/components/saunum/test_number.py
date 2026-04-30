@@ -1,7 +1,5 @@
 """Test the Saunum number platform."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 from unittest.mock import MagicMock
 

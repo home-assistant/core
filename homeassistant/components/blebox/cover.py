@@ -85,7 +85,9 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         if position == -1:  # possible for shutterBox
             return None
 
-        return None if position is None else 100 - position
+        if position is None:
+            return None
+        return 100 - position if self._feature.is_position_inverted else position
 
     @property
     def current_cover_tilt_position(self) -> int | None:
