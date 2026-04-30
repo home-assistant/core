@@ -14,6 +14,7 @@ import logging
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Final,
     Literal,
     Protocol,
@@ -334,16 +335,17 @@ BEHAVIOR_ANY: Final = "any"
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
 ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): {
+        vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
-            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
@@ -357,6 +359,9 @@ class EntityTriggerBase(Trigger):
         {STATE_UNAVAILABLE, STATE_UNKNOWN}
     )
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+    # When True, indirect target expansion (via device/area/floor) skips
+    # entities with an entity_category.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -519,7 +524,11 @@ class EntityTriggerBase(Trigger):
             )
 
         unsub = async_track_target_selector_state_change_event(
-            self._hass, self._target, state_change_listener, self.entity_filter
+            self._hass,
+            self._target,
+            state_change_listener,
+            self.entity_filter,
+            primary_entities_only=self._primary_entities_only,
         )
 
         @callback
@@ -892,6 +901,8 @@ def _normalize_domain_specs(
 def make_entity_target_state_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     to_states: str | set[str],
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a trigger for entity state changes to specific state(s).
 
@@ -910,6 +921,7 @@ def make_entity_target_state_trigger(
 
         _domain_specs = specs
         _to_states = to_states_set
+        _primary_entities_only = primary_entities_only
 
     return CustomTrigger
 
@@ -961,6 +973,8 @@ def make_entity_origin_state_trigger(
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
@@ -969,6 +983,7 @@ def make_entity_numerical_state_changed_trigger(
 
         _domain_specs = domain_specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomTrigger
 
@@ -976,6 +991,8 @@ def make_entity_numerical_state_changed_trigger(
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
@@ -984,6 +1001,7 @@ def make_entity_numerical_state_crossed_threshold_trigger(
 
         _domain_specs = domain_specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomTrigger
 

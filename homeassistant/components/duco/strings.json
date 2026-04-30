@@ -47,11 +47,20 @@
       }
     },
     "sensor": {
+      "box_temperature": {
+        "name": "Box temperature"
+      },
       "iaq_co2": {
         "name": "CO2 air quality index"
       },
       "iaq_rh": {
         "name": "Humidity air quality index"
+      },
+      "target_flow_level": {
+        "name": "Target flow level"
+      },
+      "time_state_end": {
+        "name": "Mode end time"
       },
       "ventilation_state": {
         "name": "Ventilation state",
@@ -83,6 +92,9 @@
     },
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Duco instance: {error}"
+    },
+    "connection_error": {
+      "message": "Could not connect to the Duco device."
     },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state: {error}"

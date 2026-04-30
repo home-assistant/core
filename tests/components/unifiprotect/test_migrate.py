@@ -1,7 +1,5 @@
 """Test the UniFi Protect setup flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from uiprotect.data import Camera

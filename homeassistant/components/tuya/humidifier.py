@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.definition.humidifier import (
-    TuyaHumidifierDefinition,
+    HumidifierDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -101,7 +101,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaHumidifierEntityDescription,
-        definition: TuyaHumidifierDefinition,
+        definition: HumidifierDefinition,
     ) -> None:
         """Init Tuya (de)humidifier."""
         super().__init__(device, device_manager, description)

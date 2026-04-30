@@ -20,7 +20,6 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import NoboHubConfigEntry
 from .const import (
-    CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
@@ -36,7 +35,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nobø Ecohub."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -85,7 +84,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             serial_suffix = user_input["serial_suffix"]
             serial = f"{serial_prefix}{serial_suffix}"
             try:
-                return await self._create_configuration(serial, self._hub, True)
+                return await self._create_configuration(serial, self._hub)
             except NoboHubConnectError as error:
                 errors["base"] = error.msg
 
@@ -114,7 +113,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             serial = user_input[CONF_SERIAL]
             ip_address = user_input[CONF_IP_ADDRESS]
             try:
-                return await self._create_configuration(serial, ip_address, False)
+                return await self._create_configuration(serial, ip_address)
             except NoboHubConnectError as error:
                 errors["base"] = error.msg
 
@@ -133,7 +132,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _create_configuration(
-        self, serial: str, ip_address: str, auto_discovered: bool
+        self, serial: str, ip_address: str
     ) -> ConfigFlowResult:
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
@@ -143,7 +142,6 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_SERIAL: serial,
                 CONF_IP_ADDRESS: ip_address,
-                CONF_AUTO_DISCOVERED: auto_discovered,
             },
         )
 

@@ -34,7 +34,7 @@
       'area_id': None,
       'config_entries': <ANY>,
       'config_entries_subentries': <ANY>,
-      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/ff31facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
       'disabled_by': None,
@@ -44,7 +44,7 @@
       'identifiers': set({
         tuple(
           'portainer',
-          'portainer_test_entry_123_1_funny_chatelet',
+          'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05',
         ),
       }),
       'labels': set({
@@ -52,7 +52,7 @@
       'manufacturer': 'Portainer',
       'model': 'Container',
       'model_id': None,
-      'name': 'funny_chatelet',
+      'name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -92,6 +92,35 @@
       'area_id': None,
       'config_entries': <ANY>,
       'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_funny_chatelet',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'funny_chatelet',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -111,6 +140,35 @@
       'model': 'Container',
       'model_id': None,
       'name': 'practical_morse',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_serene_banach',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'serene_banach',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -179,35 +237,6 @@
       'area_id': None,
       'config_entries': <ANY>,
       'config_entries_subentries': <ANY>,
-      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'portainer',
-          'portainer_test_entry_123_1_serene_banach',
-        ),
-      }),
-      'labels': set({
-      }),
-      'manufacturer': 'Portainer',
-      'model': 'Container',
-      'model_id': None,
-      'name': 'serene_banach',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'sw_version': None,
-      'via_device_id': <ANY>,
-    }),
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -237,36 +266,7 @@
       'area_id': None,
       'config_entries': <ANY>,
       'config_entries_subentries': <ANY>,
-      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/ff31facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'portainer',
-          'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05',
-        ),
-      }),
-      'labels': set({
-      }),
-      'manufacturer': 'Portainer',
-      'model': 'Container',
-      'model_id': None,
-      'name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'sw_version': None,
-      'via_device_id': <ANY>,
-    }),
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/myvolume',
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/dashy_config',
       'connections': set({
       }),
       'disabled_by': None,
@@ -276,7 +276,7 @@
       'identifiers': set({
         tuple(
           'portainer',
-          'portainer_test_entry_123_1_volume_myvolume',
+          'portainer_test_entry_123_1_volume_dashy_config',
         ),
       }),
       'labels': set({
@@ -284,7 +284,7 @@
       'manufacturer': 'Portainer',
       'model': 'Volume',
       'model_id': None,
-      'name': 'myvolume',
+      'name': 'dashy_config',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -324,7 +324,7 @@
       'area_id': None,
       'config_entries': <ANY>,
       'config_entries_subentries': <ANY>,
-      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/dashy_config',
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/myvolume',
       'connections': set({
       }),
       'disabled_by': None,
@@ -334,7 +334,7 @@
       'identifiers': set({
         tuple(
           'portainer',
-          'portainer_test_entry_123_1_volume_dashy_config',
+          'portainer_test_entry_123_1_volume_myvolume',
         ),
       }),
       'labels': set({
@@ -342,7 +342,7 @@
       'manufacturer': 'Portainer',
       'model': 'Volume',
       'model_id': None,
-      'name': 'dashy_config',
+      'name': 'myvolume',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,

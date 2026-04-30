@@ -1,7 +1,5 @@
 """Tests for the Duco sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
@@ -71,7 +69,10 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that diagnostic sensor entities are disabled by default."""
-    for entity_id in ("sensor.living_signal_strength",):
+    for entity_id in (
+        "sensor.living_signal_strength",
+        "sensor.living_box_temperature",
+    ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
@@ -168,6 +169,7 @@ async def test_new_node_added_dynamically(
             iaq_co2=None,
             rh=55.0,
             iaq_rh=70,
+            temp=21.0,
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [*mock_nodes, new_node]

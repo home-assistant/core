@@ -1,7 +1,5 @@
 """Tests for the Tuya component."""
 
-from __future__ import annotations
-
 import pathlib
 from typing import Any
 from unittest.mock import MagicMock, patch

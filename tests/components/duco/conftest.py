@@ -1,7 +1,5 @@
 """Fixtures for Duco tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -96,6 +94,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=None,
                 rh=None,
                 iaq_rh=None,
+                temp=27.9,
             ),
         ),
         Node(
@@ -121,6 +120,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=80,
                 rh=None,
                 iaq_rh=None,
+                temp=19.8,
             ),
         ),
         Node(
@@ -146,6 +146,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=None,
                 rh=42.0,
                 iaq_rh=85,
+                temp=27.9,
             ),
         ),
         Node(
@@ -171,6 +172,7 @@ def mock_nodes() -> list[Node]:
                 iaq_co2=None,
                 rh=61.0,
                 iaq_rh=90,
+                temp=22.5,
             ),
         ),
     ]
@@ -184,6 +186,12 @@ def mock_duco_client(
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
+        patch(
+            "homeassistant.components.duco.build_ssl_context",
+        ),
+        patch(
+            "homeassistant.components.duco.config_flow.build_ssl_context",
+        ),
         patch(
             "homeassistant.components.duco.DucoClient",
             autospec=True,
