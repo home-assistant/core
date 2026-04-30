@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pyvlx.exception import PyVLXException
 
-from homeassistant.components.velux.const import DOMAIN, PYVLX_FROM_CONFIG_FLOW
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.components.velux.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -89,35 +89,37 @@ async def test_setup_auth_error(
 
 
 async def test_setup_uses_preconnected_pyvlx_from_config_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx: AsyncMock
+    hass: HomeAssistant, mock_pyvlx: AsyncMock
 ) -> None:
-    """Test that setup uses the PyVLX instance stored by the config flow.
+    """Test that setup reuses the PyVLX instance from config flow without disconnecting.
 
-    When the config flow stores a connected instance in hass.data, setup should
-    reuse it instead of constructing a fresh one, preventing an unnecessary
-    disconnect/reboot cycle between connection validation and integration start.
+    The config flow connects once; setup should reuse that instance without
+    disconnecting and reconnecting, preventing an unnecessary disconnect/reboot
+    cycle between connection validation and integration start.
     """
-
-    hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})["127.0.0.1"] = mock_pyvlx
-
-    # A fresh instance must NOT have been used.
-    fresh = AsyncMock(name="fresh-not-used")
-    with patch("homeassistant.components.velux.PyVLX", return_value=fresh):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("homeassistant.components.velux.PLATFORMS", []):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "127.0.0.1",
+                CONF_PASSWORD: "NotAStrongPassword",
+            },
+        )
         await hass.async_block_till_done()
-    fresh.ensure_connected.assert_not_awaited()
-    fresh.load_scenes.assert_not_awaited()
-    fresh.load_nodes.assert_not_awaited()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
+
+    # connect was called exactly once (by config flow), setup must not call it again
+    mock_pyvlx.connect.assert_called_once()
+    # ensure_connected was called once (by async_setup_entry)
     mock_pyvlx.ensure_connected.assert_awaited_once()
+    # The gateway must not be disconnected between config flow and setup
     mock_pyvlx.disconnect.assert_not_awaited()
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_awaited_once()
-    # The pre-connected instance must be consumed.
-    assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
-    assert mock_config_entry.runtime_data is mock_pyvlx
 
 
 @pytest.fixture
