@@ -185,8 +185,12 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.is_closing = False
     cover.rain_sensor = False
     cover.position = MagicMock(position_percent=30, closed=False, known=True)
-    cover.position_upper_curtain = MagicMock(position_percent=30, closed=False, known=True)
-    cover.position_lower_curtain = MagicMock(position_percent=30, closed=False, known=True)
+    cover.position_upper_curtain = MagicMock(
+        position_percent=30, closed=False, known=True
+    )
+    cover.position_lower_curtain = MagicMock(
+        position_percent=30, closed=False, known=True
+    )
     cover.pyvlx = MagicMock()
     return cover
 
