@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RAPTBLEConfigEntry) -> b
     address = entry.unique_id
     assert address is not None
     data = RAPTPillBluetoothDeviceData()
-    coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
