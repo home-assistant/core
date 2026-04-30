@@ -219,6 +219,22 @@ SENSOR_DESCRIPTIONS = [
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "SCD4x"},
     ),
+    AltruistSensorEntityDescription(
+        device_class=SensorDeviceClass.TEMPERATURE,
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        key="SCD4x_temperature",
+        suggested_display_precision=2,
+        translation_placeholders={"sensor_name": "SCD4x"},
+    ),
+    AltruistSensorEntityDescription(
+        device_class=SensorDeviceClass.HUMIDITY,
+        translation_key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        key="SCD4x_humidity",
+        suggested_display_precision=2,
+        translation_placeholders={"sensor_name": "SCD4x"},
+    ),
 ]
 
 
