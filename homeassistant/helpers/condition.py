@@ -434,6 +434,7 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     }
 )
 
+
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
