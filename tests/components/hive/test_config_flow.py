@@ -1,6 +1,6 @@
 """Test the Hive config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from apyhiveapi.helper import hive_exceptions
 
@@ -401,8 +401,17 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    mock_coordinator = MagicMock()
+    mock_coordinator.hive.updateInterval = AsyncMock()
+
+    with patch(
+        "homeassistant.components.hive.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_setup.called
+
+    entry.runtime_data = mock_coordinator
 
     result = await hass.config_entries.options.async_init(
         entry.entry_id,

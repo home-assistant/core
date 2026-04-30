@@ -2,10 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Any
-
-from apyhiveapi import Hive
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,15 +16,13 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HiveConfigEntry
+from .coordinator import HiveDataUpdateCoordinator
 from .entity import HiveEntity
-
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=15)
 
 
 @dataclass(frozen=True)
@@ -93,13 +88,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
-    hive = entry.runtime_data
-    devices = hive.session.deviceList.get("sensor")
+    coordinator = entry.runtime_data
+    devices = coordinator.hive.session.deviceList.get("sensor")
     if not devices:
         return
     async_add_entities(
         (
-            HiveSensorEntity(hive, dev, description)
+            HiveSensorEntity(coordinator, dev, description)
             for dev in devices
             for description in SENSOR_TYPES
             if dev["hiveType"] == description.key
@@ -115,18 +110,17 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
 
     def __init__(
         self,
-        hive: Hive,
+        coordinator: HiveDataUpdateCoordinator,
         hive_device: dict[str, Any],
         entity_description: HiveSensorEntityDescription,
     ) -> None:
         """Initialise hive sensor."""
-        super().__init__(hive, hive_device)
+        super().__init__(coordinator, hive_device)
         self.entity_description = entity_description
 
-    async def async_update(self) -> None:
-        """Update all Node data from Hive."""
-        await self.hive.session.updateData(self.device)
-        self.device = await self.hive.sensor.getSensor(self.device)
+    @callback
+    def _update_state_from_device(self) -> None:
+        """Update sensor attributes from device data."""
         self._attr_native_value = self.entity_description.fn(
             self.device.get("status", {}).get("state")
         )
