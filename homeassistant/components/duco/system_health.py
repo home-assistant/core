@@ -23,6 +23,9 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     config_entry: DucoConfigEntry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
+    # Exposed via system_health rather than as a diagnostic entity because it
+    # reflects the state of how the integration communicates with the device
+    # (API quota), not a device-internal subsystem state.
     return {
         "write_requests_remaining": config_entry.runtime_data.client.async_get_write_req_remaining(),
     }
