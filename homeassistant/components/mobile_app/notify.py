@@ -86,11 +86,24 @@ class MobileAppNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
+        await self._async_send_remote_message(message=message, title=title)
 
+    async def async_dismiss_message(self, tag: str) -> None:
+        """Dismiss a message by tag."""
+        await self._async_send_remote_message(message="clear_notification", tag=tag)
+
+    async def _async_send_remote_message(
+        self, message: str | None = None, title: str | None = None, **kwargs: Any
+    ) -> None:
+        """Shared internal helper to send a message."""
         data: dict[str, Any] = {}
-        data[ATTR_MESSAGE] = message
+        if message is not None:
+            data[ATTR_MESSAGE] = message
         if title is not None:
             data[ATTR_TITLE] = title
+
+        if kwargs:
+            data[ATTR_DATA] = kwargs
 
         # Sends notification via local push if available and fallback to cloud push if fails
         if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[

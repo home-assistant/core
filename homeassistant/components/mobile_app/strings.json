@@ -32,5 +32,17 @@
       "message": "Timeout sending notification to {device_name}"
     }
   },
+  "services": {
+    "dismiss_message": {
+      "description": "Dismisses a previously sent message via Mobile App.",
+      "fields": {
+        "tag": {
+          "description": "The tag of the message to dismiss.",
+          "name": "Tag"
+        }
+      },
+      "name": "Dismiss message"
+    }
+  },
   "title": "Mobile App"
 }

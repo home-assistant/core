@@ -1,0 +1,11 @@
+dismiss_message:
+  target:
+    entity:
+      domain: notify
+      integration: mobile_app
+  fields:
+    tag:
+      required: true
+      selector:
+        text:
+      example: backyard-motion-detected
