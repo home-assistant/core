@@ -255,3 +255,79 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
     )
     assert device is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a node initially reported as UNKNOWN is retried on every update.
+
+    A node must not be added to known_nodes when its type is UNKNOWN, so that
+    entities are created automatically once the type resolves to a supported
+    value (e.g. after a firmware update or a library update).
+    """
+    node_id = 99
+
+    unknown_node = Node(
+        node_id=node_id,
+        general=NodeGeneralInfo(
+            node_type=NodeType.UNKNOWN,
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="Future sensor",
+            identify=0,
+        ),
+        ventilation=NodeVentilationInfo(
+            state="AUTO",
+            time_state_remain=0,
+            time_state_end=0,
+            mode="-",
+            flow_lvl_tgt=None,
+        ),
+        sensor=NodeSensorInfo(
+            co2=None,
+            iaq_co2=None,
+            rh=62.0,
+            iaq_rh=70,
+            temp=21.0,
+        ),
+    )
+
+    # First poll: node type is UNKNOWN, no entities should be created.
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.future_sensor_humidity") is None
+
+    # Second poll: the same node now reports a known type.
+    known_node = Node(
+        node_id=node_id,
+        general=NodeGeneralInfo(
+            node_type="BSRH",
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="Future sensor",
+            identify=0,
+        ),
+        ventilation=unknown_node.ventilation,
+        sensor=unknown_node.sensor,
+    )
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, known_node]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.future_sensor_humidity")
+    assert state is not None
+    assert state.state == "62.0"
