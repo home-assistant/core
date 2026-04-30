@@ -44,6 +44,8 @@ type DevoloHomeNetworkConfigEntry = ConfigEntry[DevoloHomeNetworkData]
 class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Class to manage fetching data from devolo Home Network devices."""
 
+    config_entry: DevoloHomeNetworkConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -234,6 +236,16 @@ class DevoloWifiConnectedStationsGetCoordinator(
         """Fetch data from API endpoint."""
         assert self.device.device
         clients = await self.device.device.async_get_wifi_connected_station()
+
+        device_registry = dr.async_get(self.hass)
+        for client in clients:
+            device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, client.mac_address)},
+                connections={(dr.CONNECTION_NETWORK_MAC, client.mac_address)},
+                name=client.mac_address,
+            )
+
         return {client.mac_address: client for client in clients}
 
 

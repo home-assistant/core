@@ -75,6 +75,7 @@ async def async_setup_entry(
         async_add_entities(missing)
 
     restore_entities()
+    new_device_callback()
     entry.async_on_unload(
         coordinators[CONNECTED_WIFI_CLIENTS].async_add_listener(new_device_callback)
     )
@@ -99,7 +100,6 @@ class DevoloScannerEntity(
         super().__init__(coordinator)
         self._device = device
         self._attr_mac_address = mac
-        self._attr_name = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
