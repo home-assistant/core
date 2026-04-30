@@ -716,3 +716,4 @@ async def test_form_offline_node_skipped(
     nodes_in_result = [node[CONF_NODE] for node in result["data"][CONF_NODES]]
     assert "pve3" not in nodes_in_result
     assert "pve1" in nodes_in_result
+    assert "pve2" in nodes_in_result
