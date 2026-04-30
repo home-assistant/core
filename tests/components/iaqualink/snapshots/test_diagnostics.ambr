@@ -22,11 +22,11 @@
       'unique_id': None,
       'version': 1,
     }),
-    'systems': dict({
-      'SN00001': dict({
+    'systems': list([
+      dict({
         'data': dict({
           'name': 'Pool',
-          'serial_number': 'SN00001',
+          'serial_number': '**REDACTED**',
         }),
         'devices': dict({
           'aux_1': dict({
@@ -46,7 +46,8 @@
         }),
         'name': 'Pool',
         'online': True,
+        'serial_number': '**REDACTED**',
       }),
-    }),
+    ]),
   })
 # ---
