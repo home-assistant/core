@@ -17,7 +17,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import FullDevice
-from .const import DOMAIN, MAIN
+from .const import APPLIANCE_CATEGORIES, DOMAIN, MAIN
+from .util import get_main_component_category
 
 
 class SmartThingsEntity(Entity):
@@ -48,7 +49,7 @@ class SmartThingsEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device.device_id)},
         )
-        self._attr_available = device.online
+        self._attr_available = device.online or self._is_appliance()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -69,8 +70,17 @@ class SmartThingsEntity(Entity):
         )
         self._update_attr()
 
+    def _is_appliance(self) -> bool:
+        """Return True if the device is an appliance that retains state when powered off."""
+        return get_main_component_category(self.device) in APPLIANCE_CATEGORIES
+
     def _availability_handler(self, event: DeviceHealthEvent) -> None:
-        self._attr_available = event.status != HealthStatus.OFFLINE
+        available = event.status == HealthStatus.ONLINE
+        if not available and self._is_appliance():
+            return
+        if available == self._attr_available:
+            return
+        self._attr_available = available
         self.async_write_ha_state()
 
     def _update_handler(self, event: DeviceEvent) -> None:

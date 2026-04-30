@@ -14,7 +14,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -158,21 +158,23 @@ async def test_select_option_without_remote_control(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
+@pytest.mark.parametrize("health_status", [HealthStatus.OFFLINE, HealthStatus.UNHEALTHY])
 async def test_availability(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    health_status: HealthStatus,
 ) -> None:
-    """Test availability."""
+    """Test that appliances retain their last state when powered off."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("select.dryer").state == "stop"
 
     await trigger_health_update(
-        hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", HealthStatus.OFFLINE
+        hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", health_status
     )
 
-    assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+    assert hass.states.get("select.dryer").state == "stop"
 
     await trigger_health_update(
         hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", HealthStatus.ONLINE
@@ -187,9 +189,9 @@ async def test_availability_at_start(
     unavailable_device: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unavailable at boot."""
+    """Test that appliances start with their last known state even when offline at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+    assert hass.states.get("select.dryer").state == "stop"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])

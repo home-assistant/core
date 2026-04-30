@@ -121,4 +121,15 @@ INVALID_SWITCH_CATEGORIES = {
     Category.DISHWASHER,
 }
 
+APPLIANCE_CATEGORIES = {
+    Category.CLOTHING_CARE_MACHINE,
+    Category.COOKTOP,
+    Category.DISHWASHER,
+    Category.DRYER,
+    Category.MICROWAVE,
+    Category.OVEN,
+    Category.RANGE,
+    Category.WASHER,
+}
+
 UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
