@@ -20,6 +20,9 @@ The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
 - **Repairs**: [`platform-repairs.md`](platform-repairs.md) for user-actionable repair issues
 
+## Entity platforms
+
+- Ensure `async_added_to_hass()` and `async_will_remove_from_hass()` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is torn down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
 
 ## Integration Quality Scale
 

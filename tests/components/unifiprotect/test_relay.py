@@ -1,7 +1,5 @@
 """Tests for the UniFi Protect relay (Public API) switch entities."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest

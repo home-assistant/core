@@ -468,7 +468,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.4
+airos==0.6.5
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -654,7 +654,7 @@ bleak-retry-connector==4.6.0
 bleak==2.1.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.1
+blebox-uniapi==2.5.2
 
 # homeassistant.components.blink
 blinkpy==0.25.2
@@ -1245,7 +1245,7 @@ hole==0.9.0
 holidays==0.95
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.8
+home-assistant-frontend==20260429.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1257,7 +1257,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.8.0
+homematicip==2.9.0
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
@@ -1329,7 +1329,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.6.4
+indevolt-api==1.6.5
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1402,7 +1402,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.4.25.155016
+knx-frontend==2026.4.30.60856
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -3222,7 +3222,7 @@ upcloud-api==2.9.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==2.2.1
+url-normalize==3.0.0
 
 # homeassistant.components.uvc
 uvcclient==0.12.1

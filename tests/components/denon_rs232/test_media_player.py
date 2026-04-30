@@ -1,7 +1,5 @@
 """Tests for the Denon RS232 media player platform."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Literal
 from unittest.mock import call
