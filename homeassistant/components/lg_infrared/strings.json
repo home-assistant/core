@@ -8,11 +8,13 @@
       "user": {
         "data": {
           "device_type": "Device type",
-          "infrared_entity_id": "Infrared transmitter"
+          "infrared_entity_id": "Infrared transmitter",
+          "infrared_receiver_entity_id": "Infrared receiver"
         },
         "data_description": {
           "device_type": "The type of LG device to control.",
-          "infrared_entity_id": "The infrared transmitter entity to use for sending commands."
+          "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
         "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
         "title": "Set up LG IR Remote"
@@ -104,6 +106,57 @@
       },
       "up": {
         "name": "Up"
+      }
+    },
+    "event": {
+      "received_command": {
+        "name": "Received command",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "back": "Back",
+              "channel_down": "Channel down",
+              "channel_up": "Channel up",
+              "exit": "Exit",
+              "fast_forward": "Fast forward",
+              "guide": "Guide",
+              "hdmi_1": "HDMI 1",
+              "hdmi_2": "HDMI 2",
+              "hdmi_3": "HDMI 3",
+              "hdmi_4": "HDMI 4",
+              "home": "Home",
+              "info": "Info",
+              "input": "Input",
+              "menu": "Menu",
+              "mute": "Mute",
+              "nav_down": "Navigate down",
+              "nav_left": "Navigate left",
+              "nav_right": "Navigate right",
+              "nav_up": "Navigate up",
+              "num_0": "Number 0",
+              "num_1": "Number 1",
+              "num_2": "Number 2",
+              "num_3": "Number 3",
+              "num_4": "Number 4",
+              "num_5": "Number 5",
+              "num_6": "Number 6",
+              "num_7": "Number 7",
+              "num_8": "Number 8",
+              "num_9": "Number 9",
+              "ok": "OK",
+              "pause": "Pause",
+              "play": "Play",
+              "power": "Power",
+              "power_off": "Power off",
+              "power_on": "Power on",
+              "rewind": "Rewind",
+              "stop": "Stop",
+              "unknown": "Unknown",
+              "volume_down": "Volume down",
+              "volume_up": "Volume up"
+            }
+          }
+        }
       }
     }
   },
