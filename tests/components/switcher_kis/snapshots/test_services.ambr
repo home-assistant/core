@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_get_schedules_service[mock_bridge0]
+  dict({
+    'switch.waterheater_fe12': dict({
+      'schedules': list([
+        dict({
+          'days': list([
+            'friday',
+            'monday',
+          ]),
+          'duration': '0:30:00',
+          'end_time': '07:30',
+          'recurring': True,
+          'schedule_id': '0',
+          'start_time': '07:00',
+        }),
+      ]),
+    }),
+  })
+# ---

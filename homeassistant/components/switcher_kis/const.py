@@ -1,6 +1,15 @@
 """Constants for the Switcher integration."""
 
+from enum import IntFlag
+
 DOMAIN = "switcher_kis"
+
+
+class SwitcherEntityFeature(IntFlag):
+    """Supported features of Switcher entities."""
+
+    SCHEDULES = 1
+
 
 API_CONTROL_BREEZE_DEVICE = "control_breeze_device"
 
@@ -13,6 +22,15 @@ CONF_AUTO_OFF = "auto_off"
 CONF_TIMER_MINUTES = "timer_minutes"
 SERVICE_SET_AUTO_OFF_NAME = "set_auto_off"
 SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
+SERVICE_GET_SCHEDULES_NAME = "get_schedules"
+SERVICE_CREATE_SCHEDULE_NAME = "create_schedule"
+SERVICE_DELETE_SCHEDULE_NAME = "delete_schedule"
+
+# Schedule service fields
+CONF_SCHEDULE_START_TIME = "start_time"
+CONF_SCHEDULE_END_TIME = "end_time"
+CONF_SCHEDULE_DAYS = "days"
+CONF_SCHEDULE_ID = "schedule_id"
 
 # Defines the maximum interval device must send an update before it marked unavailable
 MAX_UPDATE_INTERVAL_SEC = 30
