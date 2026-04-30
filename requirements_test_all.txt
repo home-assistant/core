@@ -591,7 +591,7 @@ bleak-retry-connector==4.6.0
 bleak==2.1.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.1
+blebox-uniapi==2.5.2
 
 # homeassistant.components.blink
 blinkpy==0.25.2
@@ -1242,7 +1242,7 @@ kiosker-python-api==1.2.9
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.4.25.155016
+knx-frontend==2026.4.30.60856
 
 # homeassistant.components.konnected
 konnected==1.2.0
