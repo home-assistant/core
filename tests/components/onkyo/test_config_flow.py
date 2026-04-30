@@ -507,6 +507,8 @@ async def test_reconfigure_error(
             "component.onkyo.options.step.names.sections.input_sources.data_description.TV",
             "component.onkyo.options.step.names.sections.listening_modes.data.STEREO",
             "component.onkyo.options.step.names.sections.listening_modes.data_description.STEREO",
+            # Legacy service uses media_player domain
+            "component.media_player.services.onkyo_select_hdmi_output.",
         ]
     ],
 )

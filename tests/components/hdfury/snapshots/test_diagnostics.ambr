@@ -15,6 +15,7 @@
       'cec1en': '1',
       'cec2en': '1',
       'cec3en': '1',
+      'earcunmutecnt': '0',
       'htpcmode0': '0',
       'htpcmode1': '0',
       'htpcmode2': '0',
@@ -29,6 +30,7 @@
       'relay': '0',
       'tx0plus5': '1',
       'tx1plus5': '1',
+      'unmutecnt': '500',
     }),
     'info': dict({
       'AUD0': 'bitstream 48kHz',

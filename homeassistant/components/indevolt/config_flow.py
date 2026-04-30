@@ -51,6 +51,38 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Indevolt device host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        # Attempt to setup from user input
+        if user_input is not None:
+            errors, device_data = await self._async_validate_input(user_input)
+
+            if not errors and device_data:
+                await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        **device_data,
+                    },
+                )
+
+        # Retrieve user input (prefilled form)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_HOST): str}),
+                reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
     async def _async_validate_input(
         self, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], dict[str, Any] | None]:

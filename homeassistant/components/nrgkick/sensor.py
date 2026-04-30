@@ -1,7 +1,5 @@
 """Sensor platform for NRGkick."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -45,20 +43,9 @@ from .const import (
     WARNING_CODE_MAP,
 )
 from .coordinator import NRGkickConfigEntry, NRGkickData, NRGkickDataUpdateCoordinator
-from .entity import NRGkickEntity
+from .entity import NRGkickEntity, get_nested_dict_value
 
 PARALLEL_UPDATES = 0
-
-
-def _get_nested_dict_value(data: Any, *keys: str) -> Any:
-    """Safely get a nested value from dict-like API responses."""
-    current: Any = data
-    for key in keys:
-        try:
-            current = current.get(key)
-        except AttributeError:
-            return None
-    return current
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -159,7 +146,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.info, "general", "rated_current"
         ),
     ),
@@ -167,7 +154,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="connector_phase_count",
         translation_key="connector_phase_count",
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.info, "connector", "phase_count"
         ),
     ),
@@ -178,7 +165,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.info, "connector", "max_current"
         ),
     ),
@@ -189,7 +176,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         options=_enum_options_from_mapping(CONNECTOR_TYPE_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _map_code_to_translation_key(
-            cast(StateType, _get_nested_dict_value(data.info, "connector", "type")),
+            cast(StateType, get_nested_dict_value(data.info, "connector", "type")),
             CONNECTOR_TYPE_MAP,
         ),
     ),
@@ -198,7 +185,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         translation_key="connector_serial",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "connector", "serial"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "connector", "serial"),
     ),
     # INFO - Grid
     NRGkickSensorEntityDescription(
@@ -208,7 +195,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "grid", "voltage"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "grid", "voltage"),
     ),
     NRGkickSensorEntityDescription(
         key="grid_frequency",
@@ -217,7 +204,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "grid", "frequency"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "grid", "frequency"),
     ),
     # INFO - Network
     NRGkickSensorEntityDescription(
@@ -225,7 +212,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         translation_key="network_ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "network", "ssid"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "network", "ssid"),
     ),
     NRGkickSensorEntityDescription(
         key="network_rssi",
@@ -234,7 +221,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "network", "rssi"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "network", "rssi"),
     ),
     # INFO - Cellular (optional, only if cellular module is available)
     NRGkickSensorEntityDescription(
@@ -246,7 +233,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         requires_sim_module=True,
         value_fn=lambda data: _map_code_to_translation_key(
-            cast(StateType, _get_nested_dict_value(data.info, "cellular", "mode")),
+            cast(StateType, get_nested_dict_value(data.info, "cellular", "mode")),
             CELLULAR_MODE_MAP,
         ),
     ),
@@ -259,7 +246,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         requires_sim_module=True,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "cellular", "rssi"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "cellular", "rssi"),
     ),
     NRGkickSensorEntityDescription(
         key="cellular_operator",
@@ -267,7 +254,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         requires_sim_module=True,
-        value_fn=lambda data: _get_nested_dict_value(data.info, "cellular", "operator"),
+        value_fn=lambda data: get_nested_dict_value(data.info, "cellular", "operator"),
     ),
     # VALUES - Energy
     NRGkickSensorEntityDescription(
@@ -278,7 +265,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_display_precision=3,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "energy", "total_charged_energy"
         ),
     ),
@@ -290,7 +277,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_display_precision=3,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "energy", "charged_energy"
         ),
     ),
@@ -302,7 +289,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "charging_voltage"
         ),
     ),
@@ -313,7 +300,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "charging_current"
         ),
     ),
@@ -326,7 +313,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "grid_frequency"
         ),
     ),
@@ -339,7 +326,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "peak_power"
         ),
     ),
@@ -350,7 +337,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "total_active_power"
         ),
     ),
@@ -362,7 +349,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "total_reactive_power"
         ),
     ),
@@ -374,7 +361,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "total_apparent_power"
         ),
     ),
@@ -386,7 +373,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "total_power_factor"
         ),
     ),
@@ -400,7 +387,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l1", "voltage"
         ),
     ),
@@ -411,7 +398,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l1", "current"
         ),
     ),
@@ -422,7 +409,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l1", "active_power"
         ),
     ),
@@ -434,7 +421,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l1", "reactive_power"
         ),
     ),
@@ -446,7 +433,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l1", "apparent_power"
         ),
     ),
@@ -458,7 +445,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l1", "power_factor"
         ),
     ),
@@ -472,7 +459,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l2", "voltage"
         ),
     ),
@@ -483,7 +470,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l2", "current"
         ),
     ),
@@ -494,7 +481,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l2", "active_power"
         ),
     ),
@@ -506,7 +493,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l2", "reactive_power"
         ),
     ),
@@ -518,7 +505,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l2", "apparent_power"
         ),
     ),
@@ -530,7 +517,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l2", "power_factor"
         ),
     ),
@@ -544,7 +531,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l3", "voltage"
         ),
     ),
@@ -555,7 +542,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l3", "current"
         ),
     ),
@@ -566,7 +553,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=2,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l3", "active_power"
         ),
     ),
@@ -578,7 +565,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l3", "reactive_power"
         ),
     ),
@@ -590,7 +577,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l3", "apparent_power"
         ),
     ),
@@ -602,7 +589,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "l3", "power_factor"
         ),
     ),
@@ -616,7 +603,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "powerflow", "n", "current"
         ),
     ),
@@ -626,7 +613,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         translation_key="charging_rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "general", "charging_rate"
         ),
     ),
@@ -638,12 +625,12 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
             _seconds_to_stable_timestamp(
                 cast(
                     StateType,
-                    _get_nested_dict_value(
+                    get_nested_dict_value(
                         data.values, "general", "vehicle_connect_time"
                     ),
                 )
             )
-            if _get_nested_dict_value(data.values, "general", "status")
+            if get_nested_dict_value(data.values, "general", "status")
             != ChargingStatus.STANDBY
             else None
         ),
@@ -655,7 +642,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "general", "vehicle_charging_time"
         ),
     ),
@@ -665,7 +652,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=_enum_options_from_mapping(STATUS_MAP),
         value_fn=lambda data: _map_code_to_translation_key(
-            cast(StateType, _get_nested_dict_value(data.values, "general", "status")),
+            cast(StateType, get_nested_dict_value(data.values, "general", "status")),
             STATUS_MAP,
         ),
     ),
@@ -675,7 +662,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=0,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "general", "charge_count"
         ),
     ),
@@ -687,7 +674,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _map_code_to_translation_key(
             cast(
-                StateType, _get_nested_dict_value(data.values, "general", "rcd_trigger")
+                StateType, get_nested_dict_value(data.values, "general", "rcd_trigger")
             ),
             RCD_TRIGGER_MAP,
         ),
@@ -700,8 +687,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _map_code_to_translation_key(
             cast(
-                StateType,
-                _get_nested_dict_value(data.values, "general", "warning_code"),
+                StateType, get_nested_dict_value(data.values, "general", "warning_code")
             ),
             WARNING_CODE_MAP,
         ),
@@ -714,7 +700,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _map_code_to_translation_key(
             cast(
-                StateType, _get_nested_dict_value(data.values, "general", "error_code")
+                StateType, get_nested_dict_value(data.values, "general", "error_code")
             ),
             ERROR_CODE_MAP,
         ),
@@ -727,7 +713,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "housing"
         ),
     ),
@@ -738,7 +724,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "connector_l1"
         ),
     ),
@@ -749,7 +735,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "connector_l2"
         ),
     ),
@@ -760,7 +746,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "connector_l3"
         ),
     ),
@@ -771,7 +757,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "domestic_plug_1"
         ),
     ),
@@ -782,7 +768,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested_dict_value(
+        value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "domestic_plug_2"
         ),
     ),

@@ -1,7 +1,5 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -29,11 +27,13 @@ from aioesphomeapi import (
     Event,
     EventInfo,
     FanInfo,
+    InfraredInfo,
     LightInfo,
     LockInfo,
     MediaPlayerInfo,
     MediaPlayerSupportedFormat,
     NumberInfo,
+    RadioFrequencyInfo,
     SelectInfo,
     SensorInfo,
     SensorState,
@@ -85,7 +85,9 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     DateTimeInfo: Platform.DATETIME,
     EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
+    InfraredInfo: Platform.INFRARED,
     LightInfo: Platform.LIGHT,
+    RadioFrequencyInfo: Platform.RADIO_FREQUENCY,
     LockInfo: Platform.LOCK,
     MediaPlayerInfo: Platform.MEDIA_PLAYER,
     NumberInfo: Platform.NUMBER,

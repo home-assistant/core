@@ -1,7 +1,5 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

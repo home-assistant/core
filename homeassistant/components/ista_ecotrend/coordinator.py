@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Ista EcoTrend integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -94,10 +92,8 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         result = self.ista.get_consumption_unit_details()
 
         return {
-            consumption_unit: next(
-                details
-                for details in result["consumptionUnits"]
-                if details["id"] == consumption_unit
-            )
+            consumption_unit: details
             for consumption_unit in self.ista.get_uuids()
+            for details in result["consumptionUnits"]
+            if details["id"] == consumption_unit
         }

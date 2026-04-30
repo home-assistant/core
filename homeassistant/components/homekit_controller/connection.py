@@ -1,7 +1,5 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
@@ -965,7 +963,7 @@ class HKDevice:
                     # visible on the network.
                     self.async_set_available_state(False)
                     return
-                except AccessoryDisconnectedError, EncryptionError:
+                except AccessoryDisconnectedError, EncryptionError, TimeoutError:
                     # Temporary connection failure. Device may still available but our
                     # connection was dropped or we are reconnecting
                     self._poll_failures += 1

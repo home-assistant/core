@@ -11,6 +11,11 @@
       }
     }
   },
+  "device": {
+    "season": {
+      "name": "[%key:component::season::title%]"
+    }
+  },
   "entity": {
     "sensor": {
       "season": {

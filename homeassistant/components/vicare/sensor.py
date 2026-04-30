@@ -1,7 +1,5 @@
 """Viessmann ViCare sensor device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -717,6 +715,26 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerConsumptionThisYear(),
         unit_getter=lambda api: api.getPowerConsumptionUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="energy_consumption_heating_this_year",
+        translation_key="energy_consumption_heating_this_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionHeatingThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionHeatingUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="energy_consumption_dhw_this_year",
+        translation_key="energy_consumption_dhw_this_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionDomesticHotWaterThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionDomesticHotWaterUnit(),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,

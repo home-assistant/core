@@ -1,7 +1,5 @@
 """Config flow to configure the Kitchen Sink component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -196,7 +194,7 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
-                            include_entities=[entity.entity_id for entity in entities],
+                            include_entities=entities,
                         )
                     ),
                 }

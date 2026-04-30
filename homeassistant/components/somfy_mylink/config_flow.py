@@ -1,7 +1,5 @@
 """Config flow for Somfy MyLink integration."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 import logging
 from typing import Any
@@ -10,7 +8,6 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -22,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import SomfyMyLinkConfigEntry
 from .const import (
     CONF_REVERSE,
     CONF_REVERSED_TARGET_IDS,
@@ -30,7 +28,6 @@ from .const import (
     CONF_TARGET_NAME,
     DEFAULT_PORT,
     DOMAIN,
-    MYLINK_STATUS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,7 +116,7 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SomfyMyLinkConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
@@ -128,7 +125,9 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for somfy_mylink."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    config_entry: SomfyMyLinkConfigEntry
+
+    def __init__(self, config_entry: SomfyMyLinkConfigEntry) -> None:
         """Initialize options flow."""
         self.options = deepcopy(dict(config_entry.options))
         self._target_id: str | None = None
@@ -136,9 +135,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
     @callback
     def _async_callback_targets(self):
         """Return the list of targets."""
-        return self.hass.data[DOMAIN][self.config_entry.entry_id][MYLINK_STATUS][
-            "result"
-        ]
+        return self.config_entry.runtime_data.mylink_status["result"]
 
     @callback
     def _async_get_target_name(self, target_id) -> str:

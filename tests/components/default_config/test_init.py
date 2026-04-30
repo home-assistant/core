@@ -30,7 +30,7 @@ def recorder_url_mock():
         yield
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_zeroconf")
+@pytest.mark.usefixtures("mock_bluetooth", "mock_zeroconf", "socket_enabled")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)

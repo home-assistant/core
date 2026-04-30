@@ -1,7 +1,5 @@
 """Fixtures for ViCare integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch
@@ -76,6 +74,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="ViCare",
         entry_id="1234",
         data=ENTRY_CONFIG,
+        minor_version=2,
     )
 
 

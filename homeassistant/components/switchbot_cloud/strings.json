@@ -26,6 +26,17 @@
         "name": "Previous"
       }
     },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "state_attributes": {
@@ -65,6 +76,18 @@
     "sensor": {
       "light_level": {
         "name": "Light level"
+      },
+      "lock_state": {
+        "name": "Lock state",
+        "state": {
+          "half_locked": "Half locked",
+          "jammed": "Jammed",
+          "latch_bolt_locked": "Latch bolt locked",
+          "locked": "[%key:common::state::locked%]",
+          "locking": "Locking",
+          "unlocked": "[%key:common::state::unlocked%]",
+          "unlocking": "Unlocking"
+        }
       }
     }
   }

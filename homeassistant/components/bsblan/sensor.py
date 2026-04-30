@@ -1,7 +1,5 @@
 """Support for BSB-LAN sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -64,6 +62,8 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.sensor.total_energy.value
             if data.sensor.total_energy is not None

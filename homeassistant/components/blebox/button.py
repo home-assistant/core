@@ -1,7 +1,5 @@
 """BleBox button entities implementation."""
 
-from __future__ import annotations
-
 import blebox_uniapi.button
 
 from homeassistant.components.button import ButtonEntity

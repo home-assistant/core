@@ -6,8 +6,6 @@ when scene or node loading fails.
 They also verify that unloading the integration properly disconnects.
 """
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -153,12 +151,9 @@ async def test_reboot_gateway_service_raises_on_exception(
 
 
 async def test_reboot_gateway_service_raises_validation_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """Test that reboot_gateway service raises ServiceValidationError when no gateway is loaded."""
-    # Add the config entry but don't set it up
-    mock_config_entry.add_to_hass(hass)
-
     # Set up the velux integration's async_setup to register the service
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()

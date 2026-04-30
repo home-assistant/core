@@ -216,6 +216,12 @@
     "appliances_fetch_failed": {
       "message": "Failed to fetch appliances"
     },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "invalid_value_set": {
       "message": "Invalid value provided"
     },

@@ -74,7 +74,7 @@ async def test_generic_switch_multi_node(
     state_button_1 = hass.states.get("event.mock_generic_switch_button_1")
     assert state_button_1
     assert state_button_1.state == "unknown"
-    # name should be 'DeviceName Button (1)' due to the label set to just '1'
+    # name should be 'DeviceName Button (1)'
     assert state_button_1.name == "Mock Generic Switch Button (1)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax unset (default 2)
     assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
@@ -84,11 +84,11 @@ async def test_generic_switch_multi_node(
         "long_release",
     ]
     # check button 2
-    state_button_2 = hass.states.get("event.mock_generic_switch_button_2")
+    state_button_2 = hass.states.get("event.mock_generic_switch_button_fancy_button")
     assert state_button_2
     assert state_button_2.state == "unknown"
-    # name should be 'DeviceName Button (2)'
-    assert state_button_2.name == "Mock Generic Switch Button (2)"
+    # name should be 'DeviceName Button (Fancy Button)' due to ha_entitylabel 'Fancy Button'
+    assert state_button_2.name == "Mock Generic Switch Button (Fancy Button)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax 4
     assert state_button_2.attributes[ATTR_EVENT_TYPES] == [
         "multi_press_1",

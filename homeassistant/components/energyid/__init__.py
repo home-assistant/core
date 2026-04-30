@@ -1,7 +1,5 @@
 """The EnergyID integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime as dt
 from datetime import timedelta

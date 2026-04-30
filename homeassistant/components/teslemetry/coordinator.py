@@ -1,7 +1,5 @@
 """Teslemetry Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -10,12 +8,13 @@ from tesla_fleet_api.exceptions import (
     GatewayTimeout,
     InvalidResponse,
     InvalidToken,
+    LoginRequired,
     RateLimited,
     ServiceUnavailable,
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.teslemetry import EnergySite, Vehicle
+from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -48,6 +47,7 @@ VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
+METADATA_INTERVAL = timedelta(hours=1)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -57,6 +57,50 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_STATE,
     VehicleDataEndpoint.VEHICLE_CONFIG,
 ]
+
+
+class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator to poll for subscription changes via metadata."""
+
+    config_entry: TeslemetryConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        teslemetry: Teslemetry,
+    ) -> None:
+        """Initialize Teslemetry Metadata coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="Teslemetry Metadata",
+            update_interval=METADATA_INTERVAL,
+        )
+        self.teslemetry = teslemetry
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch latest metadata for subscription status."""
+        try:
+            data = await self.teslemetry.metadata()
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except RETRY_EXCEPTIONS as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"message": e.message},
+                retry_after=_get_retry_after(e),
+            ) from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"message": e.message},
+            ) from e
+
+        return data
 
 
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -70,7 +114,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         api: Vehicle,
-        product: dict,
+        product: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Vehicle Update Coordinator."""
         super().__init__(
@@ -91,7 +135,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update vehicle data using Teslemetry API."""
         try:
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -119,7 +163,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         api: EnergySite,
-        data: dict,
+        data: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
         super().__init__(
@@ -140,8 +184,8 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
-            data = (await self.api.live_status())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+            data: dict[str, Any] = (await self.api.live_status())["response"]
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -171,7 +215,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         api: EnergySite,
-        product: dict,
+        product: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
@@ -188,7 +232,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Update energy site data using Teslemetry API."""
         try:
             data = (await self.api.site_info())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -234,7 +278,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update energy site data using Teslemetry API."""
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(

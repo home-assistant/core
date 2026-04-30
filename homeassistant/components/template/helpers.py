@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +26,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import issue_registry as ir, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
@@ -34,6 +35,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_platforms,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -208,6 +210,21 @@ def _format_template(value: Any, field: str | None = None) -> Any:
     return str(value)
 
 
+def _get_config_breadcrumbs(config: ConfigType) -> str:
+    """Try to coerce entity information from the config."""
+    breadcrumb = "Template Entity"
+    # Default entity id should be in most legacy configuration because
+    # it's created from the legacy slug. Vacuum and Lock do not have a
+    # slug, therefore we need to use the name or unique_id.
+    if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+        breadcrumb = default_entity_id.split(".")[-1]
+    elif (unique_id := config.get(CONF_UNIQUE_ID)) is not None:
+        breadcrumb = f"unique_id: {unique_id}"
+    elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
+        breadcrumb = name.template
+    return breadcrumb
+
+
 def format_migration_config(
     config: ConfigType | list[ConfigType], depth: int = 0
 ) -> ConfigType | list[ConfigType]:
@@ -252,16 +269,7 @@ def create_legacy_template_issue(
     if domain not in PLATFORMS:
         return
 
-    breadcrumb = "Template Entity"
-    # Default entity id should be in most legacy configuration because
-    # it's created from the legacy slug. Vacuum and Lock do not have a
-    # slug, therefore we need to use the name or unique_id.
-    if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
-        breadcrumb = default_entity_id.split(".")[-1]
-    elif (unique_id := config.get(CONF_UNIQUE_ID)) is not None:
-        breadcrumb = f"unique_id: {unique_id}"
-    elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
-        breadcrumb = name.template
+    breadcrumb = _get_config_breadcrumbs(config)
 
     issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hashlib.md5(','.join(config.keys()).encode()).hexdigest()}"
 
@@ -296,6 +304,39 @@ def create_legacy_template_issue(
     )
 
 
+async def validate_template_scripts(
+    hass: HomeAssistant,
+    config: ConfigType,
+    script_options: tuple[str, ...] | None = None,
+) -> None:
+    """Validate template scripts."""
+    if not script_options:
+        return
+
+    def _humanize(err: Exception, data: Any) -> str:
+        """Humanize vol.Invalid, stringify other exceptions."""
+        if isinstance(err, vol.Invalid):
+            return humanize_error(data, err)
+        return str(err)
+
+    breadcrumb: str | None = None
+    for script_option in script_options:
+        if (script_config := config.pop(script_option, None)) is not None:
+            try:
+                config[script_option] = await async_validate_actions_config(
+                    hass, script_config
+                )
+            except (vol.Invalid, HomeAssistantError) as err:
+                if not breadcrumb:
+                    breadcrumb = _get_config_breadcrumbs(config)
+                _LOGGER.error(
+                    "The '%s' actions for %s failed to setup: %s",
+                    script_option,
+                    breadcrumb,
+                    _humanize(err, script_config),
+                )
+
+
 async def async_setup_template_platform(
     hass: HomeAssistant,
     domain: str,
@@ -306,6 +347,7 @@ async def async_setup_template_platform(
     discovery_info: DiscoveryInfoType | None,
     legacy_fields: dict[str, str] | None = None,
     legacy_key: str | None = None,
+    script_options: tuple[str, ...] | None = None,
 ) -> None:
     """Set up the Template platform."""
     if discovery_info is None:
@@ -337,10 +379,14 @@ async def async_setup_template_platform(
     # Trigger Configuration
     if "coordinator" in discovery_info:
         if trigger_entity_cls:
-            entities = [
-                trigger_entity_cls(hass, discovery_info["coordinator"], config)
-                for config in discovery_info["entities"]
-            ]
+            entities = []
+            for entity_config in discovery_info["entities"]:
+                await validate_template_scripts(hass, entity_config, script_options)
+                entities.append(
+                    trigger_entity_cls(
+                        hass, discovery_info["coordinator"], entity_config
+                    )
+                )
             async_add_entities(entities)
         else:
             raise PlatformNotReady(
@@ -349,6 +395,9 @@ async def async_setup_template_platform(
         return
 
     # Modern Configuration
+    for entity_config in discovery_info["entities"]:
+        await validate_template_scripts(hass, entity_config, script_options)
+
     async_create_template_tracking_entities(
         state_entity_cls,
         async_add_entities,
@@ -365,6 +414,7 @@ async def async_setup_template_entry(
     state_entity_cls: type[TemplateEntity],
     config_schema: vol.Schema | vol.All,
     replace_value_template: bool = False,
+    script_options: tuple[str, ...] | None = None,
 ) -> None:
     """Setup the Template from a config entry."""
     options = dict(config_entry.options)
@@ -377,6 +427,7 @@ async def async_setup_template_entry(
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
 
     validated_config = config_schema(options)
+    await validate_template_scripts(hass, validated_config, script_options)
 
     async_add_entities(
         [state_entity_cls(hass, validated_config, config_entry.entry_id)]

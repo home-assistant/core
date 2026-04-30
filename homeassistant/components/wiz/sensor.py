@@ -1,7 +1,5 @@
 """Support for WiZ sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,9 +14,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WizConfigEntry
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizEntity
-from .models import WizData
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

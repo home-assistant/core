@@ -1,7 +1,5 @@
 """PrusaLink sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar, cast
@@ -10,13 +8,11 @@ from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import Conflict, PrinterState
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import PrusaLinkUpdateCoordinator
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
@@ -71,13 +67,11 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PrusaLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink buttons based on a config entry."""
-    coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinators = entry.runtime_data
 
     entities: list[PrusaLinkEntity] = []
 
@@ -124,9 +118,7 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
                 "Action conflicts with current printer state"
             ) from err
 
-        coordinators: dict[str, PrusaLinkUpdateCoordinator] = self.hass.data[DOMAIN][
-            self.coordinator.config_entry.entry_id
-        ]
+        coordinators = self.coordinator.config_entry.runtime_data
 
         for coordinator in coordinators.values():
             coordinator.expect_change()

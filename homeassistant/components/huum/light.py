@@ -1,7 +1,5 @@
 """Control for light."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,6 +12,8 @@ from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
