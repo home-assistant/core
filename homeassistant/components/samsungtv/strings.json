@@ -12,13 +12,13 @@
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
-      "invalid_host": "Host is invalid, please try again.",
-      "invalid_pin": "PIN is invalid, please try again."
+      "invalid_host": "The host is invalid. Please try again.",
+      "invalid_pin": "The PIN is invalid. Please try again."
     },
     "flow_title": "{device}",
     "step": {
       "confirm": {
-        "description": "Do you want to set up {device}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
+        "description": "Do you want to set up {device}? If you have never connected Home Assistant before, you should see a popup on your TV asking for authorization."
       },
       "encrypted_pairing": {
         "data": {
@@ -62,7 +62,7 @@
           "host": "The hostname or IP address of your TV.",
           "name": "The name of your TV. This will be used to identify the device in Home Assistant."
         },
-        "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
+        "description": "Enter your Samsung TV information. If you have never connected Home Assistant before, you should see a popup on your TV asking for authorization."
       }
     }
   },
