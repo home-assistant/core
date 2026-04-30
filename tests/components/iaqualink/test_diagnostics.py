@@ -6,7 +6,6 @@ from iaqualink.client import AqualinkClient
 from iaqualink.systems.iaqua.device import IaquaLightSwitch, IaquaSensor
 from iaqualink.systems.iaqua.system import IaquaSystem
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -55,6 +54,7 @@ async def test_diagnostics(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
+    )
