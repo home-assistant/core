@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -48,3 +44,8 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
     def device(self) -> dict[str, Any]:
         """Return the device data."""
         return self.coordinator.data[self._device_id]
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self._device_id in self.coordinator.data
