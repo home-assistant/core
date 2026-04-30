@@ -372,7 +372,7 @@ jobs:
           RUNNER_OS: ${{ runner.os }}
           RUNNER_ARCH: ${{ runner.arch }}
           PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
-          HASH_FILES: ${{ hashFiles('pyproject.toml', 'requirements.txt', 'requirements_all.txt', 'requirements_test.txt') }}
+          HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt') }}
         run: |
           partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
           echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
