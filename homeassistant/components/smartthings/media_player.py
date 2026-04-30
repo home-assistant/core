@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import MAIN, NETWORK_AUDIO_SOUND_MODE_VENDOR_IDS, NETWORK_AUDIO_SOUND_MODES
 from .entity import SmartThingsEntity
 
 MEDIA_PLAYER_CAPABILITIES = (
@@ -26,17 +26,6 @@ MEDIA_PLAYER_CAPABILITIES = (
 )
 
 CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
-
-OCF_NETWORK_AUDIO_DEVICE_TYPE = "oic.d.networkaudio"
-SAMSUNG_SOUNDBAR_PRESENTATION_PREFIX = "VD-NetworkAudio-"
-SAMSUNG_NETWORK_AUDIO_SOUND_MODE_PATH = "/sec/networkaudio/soundmode"
-SAMSUNG_NETWORK_AUDIO_SOUND_MODE_KEY = "x.com.samsung.networkaudio.soundmode"
-SAMSUNG_NETWORK_AUDIO_SOUND_MODES = [
-    "standard",
-    "surround",
-    "game",
-    "adaptive sound",
-]
 
 DEVICE_CLASS_MAP: dict[Category | str, MediaPlayerDeviceClass] = {
     Category.NETWORK_AUDIO: MediaPlayerDeviceClass.SPEAKER,
@@ -110,20 +99,12 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             or device.device.components[MAIN].manufacturer_category,
         )
         if self._supports_samsung_network_audio_sound_mode():
-            self._attr_sound_mode_list = SAMSUNG_NETWORK_AUDIO_SOUND_MODES
+            self._attr_sound_mode_list = NETWORK_AUDIO_SOUND_MODES
 
     def _supports_samsung_network_audio_sound_mode(self) -> bool:
         """Return True if the device is a Samsung network audio soundbar."""
-        device = self.device.device
-        ocf = device.ocf
-        if (
-            ocf is None
-            or ocf.device_type != OCF_NETWORK_AUDIO_DEVICE_TYPE
-            or not self.supports_capability(Capability.EXECUTE)
-        ):
-            return False
-        presentation_id = device.presentation_id or ocf.vendor_id or ""
-        return presentation_id.startswith(SAMSUNG_SOUNDBAR_PRESENTATION_PREFIX)
+        ocf = self.device.device.ocf
+        return ocf is not None and ocf.vendor_id in NETWORK_AUDIO_SOUND_MODE_VENDOR_IDS
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (
@@ -268,8 +249,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Capability.EXECUTE,
             Command.EXECUTE,
             argument=[
-                SAMSUNG_NETWORK_AUDIO_SOUND_MODE_PATH,
-                {SAMSUNG_NETWORK_AUDIO_SOUND_MODE_KEY: sound_mode},
+                "/sec/networkaudio/soundmode",
+                {"x.com.samsung.networkaudio.soundmode": sound_mode},
             ],
         )
         self._attr_sound_mode = sound_mode

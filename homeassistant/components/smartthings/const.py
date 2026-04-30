@@ -122,3 +122,11 @@ INVALID_SWITCH_CATEGORIES = {
 }
 
 UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
+
+NETWORK_AUDIO_SOUND_MODE_VENDOR_IDS = ["VD-NetworkAudio-002S"]
+NETWORK_AUDIO_SOUND_MODES = [
+    "standard",
+    "surround",
+    "game",
+    "adaptive sound",
+]

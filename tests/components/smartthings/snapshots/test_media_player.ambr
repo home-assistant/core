@@ -61,12 +61,6 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'sound_mode_list': list([
-        'standard',
-        'surround',
-        'game',
-        'adaptive sound',
-      ]),
       'source_list': list([
         'wifi',
         'bluetooth',
@@ -99,7 +93,7 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 89485>,
+    'supported_features': <MediaPlayerEntityFeature: 23949>,
     'translation_key': None,
     'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main',
     'unit_of_measurement': None,
@@ -113,12 +107,6 @@
       'is_volume_muted': False,
       'media_artist': 'Rick Astley',
       'media_title': 'Never Gonna Give You Up',
-      'sound_mode_list': list([
-        'standard',
-        'surround',
-        'game',
-        'adaptive sound',
-      ]),
       'source': 'wifi',
       'source_list': list([
         'wifi',
@@ -127,7 +115,7 @@
         'HDMI2',
         'digital',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 89485>,
+      'supported_features': <MediaPlayerEntityFeature: 23949>,
       'volume_level': 0.01,
     }),
     'context': <ANY>,
@@ -329,12 +317,6 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'sound_mode_list': list([
-        'standard',
-        'surround',
-        'game',
-        'adaptive sound',
-      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -360,7 +342,7 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 66956>,
+    'supported_features': <MediaPlayerEntityFeature: 1420>,
     'translation_key': None,
     'unique_id': 'a75cb1e1-03fd-3c77-ca9f-d4e56c4096c6_main',
     'unit_of_measurement': None,
@@ -371,13 +353,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Soundbar 1',
-      'sound_mode_list': list([
-        'standard',
-        'surround',
-        'game',
-        'adaptive sound',
-      ]),
-      'supported_features': <MediaPlayerEntityFeature: 66956>,
+      'supported_features': <MediaPlayerEntityFeature: 1420>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.soundbar_1',
