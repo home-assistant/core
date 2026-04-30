@@ -1,6 +1,7 @@
 {
   "common": {
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_value": {
@@ -39,21 +40,6 @@
         "step": {
           "name": "Step"
         }
-      }
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -96,6 +82,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reached maximum"
@@ -105,6 +94,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reached minimum"
@@ -114,6 +106,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reset"

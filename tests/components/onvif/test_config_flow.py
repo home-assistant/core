@@ -6,7 +6,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.onvif import DOMAIN, config_flow
+from homeassistant.components.onvif import config_flow
+from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant

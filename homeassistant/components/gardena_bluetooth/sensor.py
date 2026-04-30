@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 from gardena_bluetooth.const import (
     AquaContourBattery,
+    AquaContourWatering,
     Battery,
     EventHistory,
     FlowStatistics,
@@ -133,7 +134,7 @@ DESCRIPTIONS = (
         key=FlowStatistics.overall.unique_id,
         translation_key="flow_statistics_overall",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         char=FlowStatistics.overall,
@@ -141,6 +142,7 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=FlowStatistics.current.unique_id,
         translation_key="flow_statistics_current",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
@@ -150,7 +152,7 @@ DESCRIPTIONS = (
         key=FlowStatistics.resettable.unique_id,
         translation_key="flow_statistics_resettable",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         char=FlowStatistics.resettable,
@@ -166,6 +168,7 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Spray.current_distance.unique_id,
         translation_key="spray_current_distance",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         char=Spray.current_distance,
@@ -216,7 +219,22 @@ async def async_setup_entry(
         if description.char.unique_id in coordinator.characteristics
     ]
     if Valve.remaining_open_time.unique_id in coordinator.characteristics:
-        entities.append(GardenaBluetoothRemainSensor(coordinator))
+        entities.append(
+            GardenaBluetoothRemainSensor(
+                coordinator, Valve.remaining_open_time, "remaining_open_timestamp"
+            )
+        )
+    if (
+        AquaContourWatering.remaining_watering_time.unique_id
+        in coordinator.characteristics
+    ):
+        entities.append(
+            GardenaBluetoothRemainSensor(
+                coordinator,
+                AquaContourWatering.remaining_watering_time,
+                "remaining_watering_timestamp",
+            )
+        )
     async_add_entities(entities)
 
 
@@ -243,18 +261,21 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_native_value: datetime | None = None
-    _attr_translation_key = "remaining_open_timestamp"
 
     def __init__(
         self,
         coordinator: GardenaBluetoothCoordinator,
+        char: Characteristic[int],
+        key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, {Valve.remaining_open_time.uuid})
-        self._attr_unique_id = f"{coordinator.address}-remaining_open_timestamp"
+        super().__init__(coordinator, {char.uuid})
+        self._attr_unique_id = f"{coordinator.address}-{key}"
+        self._attr_translation_key = key
+        self._char = char
 
     def _handle_coordinator_update(self) -> None:
-        value = self.coordinator.get_cached(Valve.remaining_open_time)
+        value = self.coordinator.get_cached(self._char)
         if not value:
             self._attr_native_value = None
             super()._handle_coordinator_update()
@@ -269,8 +290,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         error = time - self._attr_native_value
         if abs(error.total_seconds()) > 10:
             self._attr_native_value = time
-            super()._handle_coordinator_update()
-            return
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:

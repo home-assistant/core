@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tuya_device_handlers.definition.valve import (
-    TuyaValveDefinition,
+    ValveDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -18,8 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
@@ -121,7 +121,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ValveEntityDescription,
-        definition: TuyaValveDefinition,
+        definition: ValveDefinition,
     ) -> None:
         """Init TuyaValveEntity."""
         super().__init__(device, device_manager, description)

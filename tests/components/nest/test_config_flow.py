@@ -1,7 +1,5 @@
 """Test the Google Nest Device Access config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any

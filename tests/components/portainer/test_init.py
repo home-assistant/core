@@ -247,7 +247,8 @@ async def test_device_registry(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device_entries == snapshot
+    # Sort by identifier to ensure consistent order in snapshot
+    assert sorted(device_entries, key=lambda x: list(x.identifiers)[0][1]) == snapshot
 
 
 async def test_container_stack_device_links(

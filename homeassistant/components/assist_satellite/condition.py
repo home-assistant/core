@@ -7,13 +7,17 @@ from .const import DOMAIN
 from .entity import AssistSatelliteState
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_idle": make_entity_state_condition(DOMAIN, AssistSatelliteState.IDLE),
-    "is_listening": make_entity_state_condition(DOMAIN, AssistSatelliteState.LISTENING),
+    "is_idle": make_entity_state_condition(
+        DOMAIN, AssistSatelliteState.IDLE, support_duration=True
+    ),
+    "is_listening": make_entity_state_condition(
+        DOMAIN, AssistSatelliteState.LISTENING, support_duration=True
+    ),
     "is_processing": make_entity_state_condition(
-        DOMAIN, AssistSatelliteState.PROCESSING
+        DOMAIN, AssistSatelliteState.PROCESSING, support_duration=True
     ),
     "is_responding": make_entity_state_condition(
-        DOMAIN, AssistSatelliteState.RESPONDING
+        DOMAIN, AssistSatelliteState.RESPONDING, support_duration=True
     ),
 }
 

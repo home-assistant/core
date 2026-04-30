@@ -8,7 +8,6 @@ from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-from homeassistant.loader import bind_hass
 
 from .const import DOMAIN, MEDIA_SOURCE_DATA
 from .error import UnknownMediaSource, Unresolvable
@@ -37,7 +36,6 @@ def _get_media_item(
     return item
 
 
-@bind_hass
 async def async_browse_media(
     hass: HomeAssistant,
     media_content_id: str | None,
@@ -71,7 +69,6 @@ async def async_browse_media(
     return item
 
 
-@bind_hass
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,

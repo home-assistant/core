@@ -21,6 +21,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     yaml_config: ConfigType = hass.data[DOMAIN][DATA_CONFIG]
     google_config = config_entry.runtime_data
 
