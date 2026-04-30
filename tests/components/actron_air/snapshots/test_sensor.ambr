@@ -167,7 +167,177 @@
     'state': '23.5',
   })
 # ---
-# name: test_sensor_entities[sensor.test_system-entry]
+# name: test_sensor_entities[sensor.test_system_compressor_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_system_compressor_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Compressor capacity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor capacity',
+    'platform': 'actron_air',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_capacity',
+    'unique_id': '123456_compressor_capacity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_entities[sensor.test_system_compressor_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test System Compressor capacity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_system_compressor_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_sensor_entities[sensor.test_system_compressor_chasing_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_system_compressor_chasing_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Compressor chasing temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Compressor chasing temperature',
+    'platform': 'actron_air',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_chasing_temperature',
+    'unique_id': '123456_compressor_chasing_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_entities[sensor.test_system_compressor_chasing_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Test System Compressor chasing temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_system_compressor_chasing_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.0',
+  })
+# ---
+# name: test_sensor_entities[sensor.test_system_compressor_live_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_system_compressor_live_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Compressor live temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Compressor live temperature',
+    'platform': 'actron_air',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_live_temperature',
+    'unique_id': '123456_compressor_live_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_entities[sensor.test_system_compressor_live_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Test System Compressor live temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_system_compressor_live_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.5',
+  })
+# ---
+# name: test_sensor_entities[sensor.test_system_compressor_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -181,7 +351,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system',
+    'entity_id': 'sensor.test_system_compressor_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -189,12 +359,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Compressor mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Compressor mode',
     'platform': 'actron_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -204,20 +374,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities[sensor.test_system-state]
+# name: test_sensor_entities[sensor.test_system_compressor_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System',
+      'friendly_name': 'Test System Compressor mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_system',
+    'entity_id': 'sensor.test_system_compressor_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'COOL',
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_2-entry]
+# name: test_sensor_entities[sensor.test_system_compressor_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -233,7 +403,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system_2',
+    'entity_id': 'sensor.test_system_compressor_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -241,168 +411,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'actron_air',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'compressor_speed',
-    'unique_id': '123456_compressor_speed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities[sensor.test_system_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_system_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1200.0',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_system_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'actron_air',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'compressor_capacity',
-    'unique_id': '123456_compressor_capacity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_system_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_system_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '75',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_system_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'actron_air',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'fan_rpm',
-    'unique_id': '123456_fan_rpm',
-    'unit_of_measurement': 'rpm',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_system_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'rpm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_system_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '850',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_system_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Compressor power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -410,7 +419,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Compressor power',
     'platform': 'actron_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -420,23 +429,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_power-state]
+# name: test_sensor_entities[sensor.test_system_compressor_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test System Power',
+      'friendly_name': 'Test System Compressor power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_system_power',
+    'entity_id': 'sensor.test_system_compressor_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1500',
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_temperature-entry]
+# name: test_sensor_entities[sensor.test_system_compressor_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -452,7 +461,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system_temperature',
+    'entity_id': 'sensor.test_system_compressor_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -460,41 +469,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': 'Compressor speed',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Compressor speed',
     'platform': 'actron_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'compressor_chasing_temperature',
-    'unique_id': '123456_compressor_chasing_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'translation_key': 'compressor_speed',
+    'unique_id': '123456_compressor_speed',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_temperature-state]
+# name: test_sensor_entities[sensor.test_system_compressor_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test System Temperature',
+      'friendly_name': 'Test System Compressor speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_system_temperature',
+    'entity_id': 'sensor.test_system_compressor_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.0',
+    'state': '1200.0',
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_temperature_2-entry]
+# name: test_sensor_entities[sensor.test_system_fan_rpm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -510,7 +514,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_system_temperature_2',
+    'entity_id': 'sensor.test_system_fan_rpm',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -518,41 +522,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': 'Fan RPM',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Fan RPM',
     'platform': 'actron_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'compressor_live_temperature',
-    'unique_id': '123456_compressor_live_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'translation_key': 'fan_rpm',
+    'unique_id': '123456_fan_rpm',
+    'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_temperature_2-state]
+# name: test_sensor_entities[sensor.test_system_fan_rpm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test System Temperature',
+      'friendly_name': 'Test System Fan RPM',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': 'rpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_system_temperature_2',
+    'entity_id': 'sensor.test_system_fan_rpm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22.5',
+    'state': '850',
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_temperature_3-entry]
+# name: test_sensor_entities[sensor.test_system_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -568,7 +568,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_system_temperature_3',
+    'entity_id': 'sensor.test_system_outdoor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -576,7 +576,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -584,7 +584,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Outdoor temperature',
     'platform': 'actron_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -594,16 +594,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities[sensor.test_system_temperature_3-state]
+# name: test_sensor_entities[sensor.test_system_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Test System Temperature',
+      'friendly_name': 'Test System Outdoor temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_system_temperature_3',
+    'entity_id': 'sensor.test_system_outdoor_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
