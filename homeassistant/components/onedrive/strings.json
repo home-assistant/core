@@ -97,10 +97,7 @@
       "message": "Failed to create folder: {message}"
     },
     "delete_error": {
-      "message": "Failed to delete the following files from OneDrive: {paths}"
-    },
-    "delete_path_error": {
-      "message": "`{path}` could not be deleted from OneDrive"
+      "message": "Failed to delete from OneDrive: {paths}"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"

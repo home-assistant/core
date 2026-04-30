@@ -229,7 +229,7 @@ async def test_multiple_filenames_do_not_exist(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: [TEST_FILENAME, second_filename],
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -454,8 +454,8 @@ async def test_delete_service_fails(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "delete_path_error"
-    assert exc_info.value.translation_placeholders["path"] == TEST_DESTINATION_PATH
+    assert exc_info.value.translation_key == "delete_error"
+    assert TEST_DESTINATION_PATH in exc_info.value.translation_placeholders["paths"]
 
 
 async def test_delete_service_multiple_files_all_fail(
@@ -521,8 +521,8 @@ async def test_delete_service_multiple_files_partial_failure(
         f"id:/{TEST_DESTINATION_PATH}:",
         f"id:/{second_path}:",
     }
-    assert exc_info.value.translation_key == "delete_path_error"
-    assert exc_info.value.translation_placeholders["path"] == second_path
+    assert exc_info.value.translation_key == "delete_error"
+    assert second_path in exc_info.value.translation_placeholders["paths"]
 
 
 async def test_delete_service_get_approot_fails(
