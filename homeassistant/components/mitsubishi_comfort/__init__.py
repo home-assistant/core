@@ -66,7 +66,9 @@ async def async_setup_entry(
             _LOGGER.warning("Device %s missing credentials, skipping", info.label)
             continue
         device = _make_device(info, serial, session)
-        coordinators[serial] = MitsubishiComfortCoordinator(hass, entry, device)
+        coordinators[serial] = MitsubishiComfortCoordinator(
+            hass, entry, device, info.mac
+        )
 
     await asyncio.gather(
         *(c.async_config_entry_first_refresh() for c in coordinators.values())

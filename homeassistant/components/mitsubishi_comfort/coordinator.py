@@ -25,6 +25,7 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStatio
         hass: HomeAssistant,
         entry: MitsubishiComfortConfigEntry,
         device: IndoorUnit | KumoStation,
+        mac: str,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -35,6 +36,7 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStatio
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.device = device
+        self.mac = mac
         self.data = device
 
     async def _async_update_data(self) -> IndoorUnit | KumoStation:
