@@ -1,7 +1,5 @@
 """Support for Ness D8X/D16X devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import NamedTuple
 

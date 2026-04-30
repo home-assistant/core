@@ -70,8 +70,8 @@ async def test_humidifier_conditions_gated_by_labs_flag(
     [
         ("humidifier.is_off", {}, True, True),
         ("humidifier.is_on", {}, True, True),
-        ("humidifier.is_drying", {}, True, False),
-        ("humidifier.is_humidifying", {}, True, False),
+        ("humidifier.is_drying", {}, True, True),
+        ("humidifier.is_humidifying", {}, True, True),
     ],
 )
 async def test_humidifier_condition_options_validation(

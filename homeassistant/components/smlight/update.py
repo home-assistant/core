@@ -1,7 +1,5 @@
 """Support updates for SLZB-06 ESP32 and Zigbee firmwares."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass

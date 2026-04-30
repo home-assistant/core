@@ -1,7 +1,5 @@
 """Support for departure information for public transport in Munich."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta

@@ -1,7 +1,5 @@
 """Support for VELUX scenes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyvlx import Scene as PyVLXScene
