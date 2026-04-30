@@ -924,7 +924,6 @@ enturclient==0.2.4
 # homeassistant.components.environment_canada
 env-canada==0.13.2
 
-# homeassistant.components.moon
 # homeassistant.components.season
 ephem==4.1.6
 

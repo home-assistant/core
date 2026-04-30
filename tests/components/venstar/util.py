@@ -1,7 +1,5 @@
 """Tests for the venstar integration."""
 
-import json
-
 import requests_mock
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -24,22 +22,14 @@ def mock_venstar_devices(f):
         # Venstar "colortouch" T7850, FW 5.1
         with requests_mock.mock() as m:
             for model in TEST_MODELS:
-                info = json.loads(
-                    await async_load_fixture(hass, f"{model}_info.json", DOMAIN)
-                )
                 m.get(
                     f"http://venstar-{model}.localdomain/",
                     text=await async_load_fixture(hass, f"{model}_root.json", DOMAIN),
                 )
                 m.get(
                     f"http://venstar-{model}.localdomain/query/info",
-                    json=info,
+                    text=await async_load_fixture(hass, f"{model}_info.json", DOMAIN),
                 )
-                for setting in ("hum_setpoint", "dehum_setpoint"):
-                    m.get(
-                        f"http://venstar-{model}.localdomain/settings?q={setting}",
-                        json={setting: info.get(setting)},
-                    )
                 m.get(
                     f"http://venstar-{model}.localdomain/query/sensors",
                     text=await async_load_fixture(

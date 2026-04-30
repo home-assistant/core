@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import ephem
 import pytest
 
 from homeassistant.components.moon.const import (
@@ -18,7 +17,7 @@ from homeassistant.components.moon.const import (
     STATE_WAXING_CRESCENT,
     STATE_WAXING_GIBBOUS,
 )
-from homeassistant.components.moon.coordinator import _get_next_event, moon_phase_state
+from homeassistant.components.moon.coordinator import moon_phase_state
 from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -85,18 +84,6 @@ async def test_moon_phase_sensor_boundary_values(
     state = hass.states.get("sensor.moon_phase")
     assert state
     assert state.state == native_value
-
-
-@pytest.mark.parametrize("error", [ephem.AlwaysUpError, ephem.NeverUpError])
-def test_get_next_event_returns_none_on_ephem_error(
-    error: type[ephem.AlwaysUpError | ephem.NeverUpError],
-) -> None:
-    """Test next moon event calculation handles missing events."""
-
-    def raise_error(_moon: ephem.Moon) -> ephem.Date:
-        raise error
-
-    assert _get_next_event(ephem.Moon(), raise_error) is None
 
 
 async def test_moon_sensor(
