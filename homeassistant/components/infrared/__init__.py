@@ -18,7 +18,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -242,8 +242,12 @@ class InfraredReceiverEntityDescription(EntityDescription, frozen_or_thawed=True
     """Describes infrared receiver entities."""
 
 
-class InfraredReceiverEntity(Entity):
-    """Base class for infrared receiver entities."""
+class InfraredReceiverEntity(RestoreEntity):
+    """Base class for infrared receiver entities.
+
+    Subclasses overriding `__init__` must call `super().__init__()` so the
+    internal subscriber set is initialized.
+    """
 
     entity_description: InfraredReceiverEntityDescription
     _attr_device_class: InfraredDeviceClass = InfraredDeviceClass.RECEIVER
@@ -264,11 +268,19 @@ class InfraredReceiverEntity(Entity):
         return self.__last_signal_received
 
     @final
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the infrared entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if state is not None and state.state not in (STATE_UNAVAILABLE, None):
+            self.__last_signal_received = state.state
+
+    @final
     def _handle_received_signal(self, signal: InfraredReceivedSignal) -> None:
         """Handle a received IR signal.
 
-        Called by platform implementations when a signal is received.
-        Updates entity state and notifies subscribers.
+        Should not be overridden. To be called by platform implementations when a
+        signal is received.
         """
         self.__last_signal_received = dt_util.utcnow().isoformat(
             timespec="milliseconds"

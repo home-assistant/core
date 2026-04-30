@@ -27,6 +27,7 @@ class MockInfraredEmitterEntity(InfraredEmitterEntity):
 
     def __init__(self, unique_id: str) -> None:
         """Initialize mock entity."""
+        super().__init__()
         self._attr_unique_id = unique_id
         self.send_command_calls: list[InfraredCommand] = []
 
