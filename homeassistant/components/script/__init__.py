@@ -771,7 +771,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         await self.script.async_stop()
         if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
             # Entity ID not changed, unload the script as it will not be reused.
-            self.script.async_unload()
+            await self.script.async_unload()
 
         # remove service
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)

@@ -6956,7 +6956,7 @@ async def test_async_unload_clears_condition_cache(hass: HomeAssistant) -> None:
     assert len(script_obj._condition_cache) == 1
     cached_cond = next(iter(script_obj._condition_cache.values()))
 
-    script_obj.async_unload()
+    await script_obj.async_unload()
 
     assert len(script_obj._condition_cache) == 0
     cached_cond.async_unload.assert_called_once()
@@ -6982,8 +6982,8 @@ async def test_async_unload_clears_repeat_scripts(hass: HomeAssistant) -> None:
     assert len(script_obj._repeat_script) == 1
     sub_script = next(iter(script_obj._repeat_script.values()))
 
-    with mock.patch.object(sub_script, "async_unload") as unload_mock:
-        script_obj.async_unload()
+    with mock.patch.object(sub_script, "_async_unload") as unload_mock:
+        await script_obj.async_unload()
 
     assert len(script_obj._repeat_script) == 0
     unload_mock.assert_called_once()
@@ -7015,10 +7015,10 @@ async def test_async_unload_clears_choose_data(hass: HomeAssistant) -> None:
     default_script = choose_data["default"]
 
     with (
-        mock.patch.object(choice_script, "async_unload") as choice_unload,
-        mock.patch.object(default_script, "async_unload") as default_unload,
+        mock.patch.object(choice_script, "_async_unload") as choice_unload,
+        mock.patch.object(default_script, "_async_unload") as default_unload,
     ):
-        script_obj.async_unload()
+        await script_obj.async_unload()
 
     assert len(script_obj._choose_data) == 0
     choice_unload.assert_called_once()
@@ -7047,10 +7047,10 @@ async def test_async_unload_clears_if_data(hass: HomeAssistant) -> None:
     else_script = if_data["if_else"]
 
     with (
-        mock.patch.object(then_script, "async_unload") as then_unload,
-        mock.patch.object(else_script, "async_unload") as else_unload,
+        mock.patch.object(then_script, "_async_unload") as then_unload,
+        mock.patch.object(else_script, "_async_unload") as else_unload,
     ):
-        script_obj.async_unload()
+        await script_obj.async_unload()
 
     assert len(script_obj._if_data) == 0
     then_unload.assert_called_once()
@@ -7079,10 +7079,10 @@ async def test_async_unload_clears_parallel_scripts(hass: HomeAssistant) -> None
     assert len(parallel_scripts) == 2
 
     with (
-        mock.patch.object(parallel_scripts[0], "async_unload") as unload_0,
-        mock.patch.object(parallel_scripts[1], "async_unload") as unload_1,
+        mock.patch.object(parallel_scripts[0], "_async_unload") as unload_0,
+        mock.patch.object(parallel_scripts[1], "_async_unload") as unload_1,
     ):
-        script_obj.async_unload()
+        await script_obj.async_unload()
 
     assert len(script_obj._parallel_scripts) == 0
     unload_0.assert_called_once()
@@ -7090,11 +7090,11 @@ async def test_async_unload_clears_parallel_scripts(hass: HomeAssistant) -> None
 
 
 async def test_script_del_calls_async_unload(hass: HomeAssistant) -> None:
-    """Test that __del__ calls async_unload if not already called."""
+    """Test that __del__ calls _async_unload if not already called."""
     sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
-    unload_mock = mock.Mock(wraps=script_obj.async_unload)
-    script_obj.async_unload = unload_mock
+    unload_mock = mock.Mock(wraps=script_obj._async_unload)
+    script_obj._async_unload = unload_mock
 
     # Pylint says we should `del script_obj`. However, that's not guaranteed
     # to immediately call __del__.
@@ -7103,14 +7103,14 @@ async def test_script_del_calls_async_unload(hass: HomeAssistant) -> None:
 
 
 async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None:
-    """Test that __del__ does not call async_unload if already called."""
+    """Test that __del__ does not call _async_unload if already called."""
     sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
-    unload_mock = mock.Mock(wraps=script_obj.async_unload)
-    script_obj.async_unload = unload_mock
+    unload_mock = mock.Mock(wraps=script_obj._async_unload)
+    script_obj._async_unload = unload_mock
 
     # First call sets the flag
-    script_obj.async_unload()
+    await script_obj.async_unload()
     unload_mock.assert_called_once()
     unload_mock.reset_mock()
 
@@ -7121,8 +7121,8 @@ async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None
     unload_mock.assert_not_called()
 
 
-async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
-    """Test that async_unload raises RuntimeError if the script is running."""
+async def test_async_unload_drains_running_script(hass: HomeAssistant) -> None:
+    """Test that async_unload stops in-flight runs and unloads the script."""
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"wait_template": "{{ false }}"},
@@ -7135,14 +7135,10 @@ async def test_async_unload_raises_if_running(hass: HomeAssistant) -> None:
 
     assert script_obj.is_running
 
-    with pytest.raises(RuntimeError, match="Cannot unload script"):
-        script_obj.async_unload()
+    await script_obj.async_unload()
 
-    await script_obj.async_stop()
     assert not script_obj.is_running
-
-    # Should succeed now
-    script_obj.async_unload()
+    assert script_obj._unloaded
 
 
 async def test_async_unload_removes_from_data_scripts(hass: HomeAssistant) -> None:
@@ -7153,7 +7149,7 @@ async def test_async_unload_removes_from_data_scripts(hass: HomeAssistant) -> No
     all_scripts = hass.data[script.DATA_SCRIPTS]
     assert any(s["instance"] is script_obj for s in all_scripts.values())
 
-    script_obj.async_unload()
+    await script_obj.async_unload()
 
     assert not any(s["instance"] is script_obj for s in all_scripts.values())
 
@@ -7171,7 +7167,7 @@ async def test_async_unload_non_top_level_does_not_touch_data_scripts(
     count_before = len(all_scripts)
 
     # Should not raise and should not modify DATA_SCRIPTS
-    script_obj.async_unload()
+    await script_obj.async_unload()
 
     assert len(all_scripts) == count_before
 
@@ -7181,7 +7177,7 @@ async def test_async_run_raises_if_unloaded(hass: HomeAssistant) -> None:
     sequence = cv.SCRIPT_SCHEMA([{"event": "test_event"}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    script_obj.async_unload()
+    await script_obj.async_unload()
 
     with pytest.raises(
         RuntimeError, match="Cannot run script.*after it has been unloaded"

@@ -906,7 +906,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # Entity ID change, do not unload the script or conditions as they will
             # be reused.
             return
-        self.action_script.async_unload()
+        await self.action_script.async_unload()
         if self._condition is not None:
             self._condition.async_unload()
 
