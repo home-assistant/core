@@ -249,6 +249,78 @@ async def test_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_recover_after_cannot_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we can recover from a connection error and create an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+        side_effect=aiohttp.ClientError,
+    ):
+        error_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+        )
+        await hass.async_block_till_done()
+
+    assert error_result["type"] is FlowResultType.FORM
+    assert error_result["errors"] == {"base": "cannot_connect"}
+
+    mock_lock = Mock(spec=loqed.Lock, id="Foo")
+    webhook_id = "Webhook_ID"
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
+    found_lock = all_locks_response["data"][0]
+
+    with (
+        patch(
+            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+            return_value=all_locks_response,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock",
+            return_value=mock_lock,
+        ),
+        patch(
+            "homeassistant.components.loqed.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.webhook.async_generate_id",
+            return_value=webhook_id,
+        ),
+    ):
+        success_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+        )
+        await hass.async_block_till_done()
+
+    assert success_result["type"] is FlowResultType.CREATE_ENTRY
+    assert success_result["title"] == "MyLock"
+    assert success_result["data"] == {
+        "id": "Foo",
+        "lock_key_key": found_lock["key_secret"],
+        "bridge_key": found_lock["bridge_key"],
+        "lock_key_local_id": found_lock["local_id"],
+        "bridge_mdns_hostname": found_lock["bridge_hostname"],
+        "bridge_ip": found_lock["bridge_ip"],
+        "name": found_lock["name"],
+        CONF_WEBHOOK_ID: webhook_id,
+        CONF_API_TOKEN: "eyadiuyfasiuasf",
+    }
+    mock_lock.getWebhooks.assert_awaited()
+
+
 async def test_no_locks(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
