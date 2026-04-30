@@ -254,7 +254,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plc_rx_rate',
-    'unique_id': '1234567890_plc_rx_rate_11:22:33:44:55:66',
+    'unique_id': '1234567890_plc_rx_rate_00:00:5E:00:53:02',
     'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
   })
 # ---
@@ -309,7 +309,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plc_rx_rate',
-    'unique_id': '1234567890_plc_rx_rate_11:22:33:44:55:66',
+    'unique_id': '1234567890_plc_rx_rate_00:00:5E:00:53:02',
     'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
   })
 # ---
