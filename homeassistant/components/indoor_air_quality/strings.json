@@ -109,43 +109,6 @@
       }
     }
   },
-  "options": {
-    "error": {
-      "no_sources": "[%key:component::indoor_air_quality::config::error::no_sources%]",
-      "only_one_voc_sensor": "[%key:component::indoor_air_quality::config::error::only_one_voc_sensor%]"
-    },
-    "step": {
-      "init": {
-        "data": {
-          "co": "[%key:component::indoor_air_quality::config::step::sources::data::co%]",
-          "co2": "[%key:component::indoor_air_quality::config::step::sources::data::co2%]",
-          "hcho": "[%key:component::indoor_air_quality::config::step::sources::data::hcho%]",
-          "humidity": "[%key:component::indoor_air_quality::config::step::sources::data::humidity%]",
-          "no2": "[%key:component::indoor_air_quality::config::step::sources::data::no2%]",
-          "pm": "[%key:component::indoor_air_quality::config::step::sources::data::pm%]",
-          "radon": "[%key:component::indoor_air_quality::config::step::sources::data::radon%]",
-          "standard": "[%key:component::indoor_air_quality::config::step::user::data::standard%]",
-          "temperature": "[%key:component::indoor_air_quality::config::step::sources::data::temperature%]",
-          "tvoc": "[%key:component::indoor_air_quality::config::step::sources::data::tvoc%]",
-          "voc_index": "[%key:component::indoor_air_quality::config::step::sources::data::voc_index%]"
-        },
-        "data_description": {
-          "co": "[%key:component::indoor_air_quality::config::step::sources::data_description::co%]",
-          "co2": "[%key:component::indoor_air_quality::config::step::sources::data_description::co2%]",
-          "hcho": "[%key:component::indoor_air_quality::config::step::sources::data_description::hcho%]",
-          "humidity": "[%key:component::indoor_air_quality::config::step::sources::data_description::humidity%]",
-          "no2": "[%key:component::indoor_air_quality::config::step::sources::data_description::no2%]",
-          "pm": "[%key:component::indoor_air_quality::config::step::sources::data_description::pm%]",
-          "radon": "[%key:component::indoor_air_quality::config::step::sources::data_description::radon%]",
-          "standard": "[%key:component::indoor_air_quality::config::step::user::data_description::standard%]",
-          "temperature": "[%key:component::indoor_air_quality::config::step::sources::data_description::temperature%]",
-          "tvoc": "[%key:component::indoor_air_quality::config::step::sources::data_description::tvoc%]",
-          "voc_index": "[%key:component::indoor_air_quality::config::step::sources::data_description::voc_index%]"
-        },
-        "description": "Update your Indoor Air Quality configuration."
-      }
-    }
-  },
   "selector": {
     "standard": {
       "options": {

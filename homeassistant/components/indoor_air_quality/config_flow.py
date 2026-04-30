@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er, selector
 
 from .const import (
@@ -76,42 +76,56 @@ STANDARD_SELECTOR = selector.SelectSelector(
 SOURCE_SELECTORS = {
     CONF_TEMPERATURE: selector.EntitySelector(
         selector.EntitySelectorConfig(
-            domain="sensor",
-            device_class="temperature",
+            domain=SENSOR_DOMAIN,
+            device_class=SensorDeviceClass.TEMPERATURE,
         )
     ),
     CONF_HUMIDITY: selector.EntitySelector(
         selector.EntitySelectorConfig(
-            domain="sensor",
-            device_class="humidity",
+            domain=SENSOR_DOMAIN,
+            device_class=SensorDeviceClass.HUMIDITY,
         )
     ),
     CONF_CO2: selector.EntitySelector(
         selector.EntitySelectorConfig(
-            domain="sensor",
-            device_class="carbon_dioxide",
+            domain=SENSOR_DOMAIN,
+            device_class=SensorDeviceClass.CO2,
         )
     ),
-    CONF_TVOC: selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+    CONF_TVOC: selector.EntitySelector(
+        selector.EntitySelectorConfig(
+            domain=SENSOR_DOMAIN,
+            device_class=list(TVOC_DEVICE_CLASSES),
+        )
+    ),
     CONF_VOC_INDEX: selector.EntitySelector(
-        selector.EntitySelectorConfig(domain="sensor")
+        selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
     ),
     CONF_PM: selector.EntitySelector(
         selector.EntitySelectorConfig(
-            domain="sensor",
-            device_class="pm25",
+            domain=SENSOR_DOMAIN,
+            device_class=list(PM_DEVICE_CLASSES),
             multiple=True,
         )
     ),
-    CONF_NO2: selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
-    CONF_CO: selector.EntitySelector(
+    CONF_NO2: selector.EntitySelector(
         selector.EntitySelectorConfig(
-            domain="sensor",
-            device_class="carbon_monoxide",
+            domain=SENSOR_DOMAIN,
+            device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         )
     ),
-    CONF_HCHO: selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
-    CONF_RADON: selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+    CONF_CO: selector.EntitySelector(
+        selector.EntitySelectorConfig(
+            domain=SENSOR_DOMAIN,
+            device_class=SensorDeviceClass.CO,
+        )
+    ),
+    CONF_HCHO: selector.EntitySelector(
+        selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+    ),
+    CONF_RADON: selector.EntitySelector(
+        selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+    ),
 }
 
 
@@ -460,58 +474,6 @@ class IndoorAirQualityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_STANDARD, default=current_standard
-                    ): STANDARD_SELECTOR,
-                    **_source_schema_fields(current_sources),
-                }
-            ),
-            errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> IndoorAirQualityOptionsFlow:
-        """Create the options flow."""
-        return IndoorAirQualityOptionsFlow()
-
-
-class IndoorAirQualityOptionsFlow(config_entries.OptionsFlow):
-    """Handle options flow for Indoor Air Quality."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Manage the options."""
-        errors = {}
-        current_sources = self.config_entry.data.get(CONF_SOURCES, {})
-        current_standard = self.config_entry.data.get(CONF_STANDARD, DEFAULT_STANDARD)
-
-        if user_input is not None:
-            sources = _sources_from_user_input(user_input)
-
-            if not _has_at_least_one_source(sources):
-                errors["base"] = "no_sources"
-            else:
-                errors.update(_validate_voc_sources(sources))
-
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={
-                        **self.config_entry.data,
-                        CONF_SOURCES: sources,
-                        CONF_STANDARD: user_input.get(CONF_STANDARD, current_standard),
-                    },
-                )
-                return self.async_create_entry(title="", data={})
-
-        return self.async_show_form(
-            step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(

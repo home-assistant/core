@@ -278,41 +278,6 @@ async def test_form_user_already_configured(hass: HomeAssistant) -> None:
     assert result4["reason"] == "already_configured"
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test the options flow returns its form and persists changes."""
-    hass.states.async_set("sensor.test", 20, {"unit_of_measurement": "°C"})
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SOURCES: {CONF_TEMPERATURE: "sensor.test"},
-            CONF_STANDARD: STANDARD_UK,
-        },
-        title="Test",
-        unique_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            CONF_TEMPERATURE: "sensor.new_temperature",
-            CONF_HUMIDITY: "sensor.new_humidity",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.data[CONF_SOURCES] == {
-        CONF_TEMPERATURE: "sensor.new_temperature",
-        CONF_HUMIDITY: "sensor.new_humidity",
-    }
-    assert config_entry.data[CONF_STANDARD] == STANDARD_UK
-
-
 async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     """Test the reconfigure flow updates and reloads the entry."""
     hass.states.async_set("sensor.test", "20", {"unit_of_measurement": "°C"})
