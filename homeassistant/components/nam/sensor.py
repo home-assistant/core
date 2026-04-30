@@ -1,7 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -358,8 +356,7 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     ),
     NAMSensorEntityDescription(
         key=ATTR_UPTIME,
-        translation_key="last_restart",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda sensors: utcnow() - timedelta(seconds=sensors.uptime or 0),

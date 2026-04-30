@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools sensor platform."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from unittest.mock import patch
 
@@ -84,7 +82,7 @@ async def test_sensor_uptime_spike(
 ) -> None:
     """Test handling of uptime spikes in Fritz!Tools sensors."""
 
-    entity_id = "sensor.mock_title_last_restart"
+    entity_id = "sensor.mock_title_uptime"
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)

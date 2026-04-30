@@ -1,7 +1,5 @@
 """Establish MQTT connection and listen for event data."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import partial
 from typing import TypedDict

@@ -1,7 +1,5 @@
 """Binary sensors for Yale Alarm."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,

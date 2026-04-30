@@ -1,7 +1,5 @@
 """Number platform for Growatt."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

@@ -1,7 +1,5 @@
 """Base class for Netatmo entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from typing import Any, cast
 
