@@ -11,6 +11,7 @@ import logging
 from typing import final
 
 from infrared_protocols import Command as InfraredCommand
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -243,11 +244,7 @@ class InfraredReceiverEntityDescription(EntityDescription, frozen_or_thawed=True
 
 
 class InfraredReceiverEntity(RestoreEntity):
-    """Base class for infrared receiver entities.
-
-    Subclasses overriding `__init__` must call `super().__init__()` so the
-    internal subscriber set is initialized.
-    """
+    """Base class for infrared receiver entities."""
 
     entity_description: InfraredReceiverEntityDescription
     _attr_device_class: InfraredDeviceClass = InfraredDeviceClass.RECEIVER
@@ -256,10 +253,10 @@ class InfraredReceiverEntity(RestoreEntity):
 
     __last_signal_received: str | None = None
 
-    def __init__(self) -> None:
-        """Initialize the receiver entity."""
-        super().__init__()
-        self.__signal_callbacks: set[Callable[[InfraredReceivedSignal], None]] = set()
+    @cached_property
+    def __signal_callbacks(self) -> set[Callable[[InfraredReceivedSignal], None]]:
+        """Subscriber callback set, lazily initialized on first access."""
+        return set()
 
     @property
     @final
@@ -301,10 +298,11 @@ class InfraredReceiverEntity(RestoreEntity):
 
         Returns a callable to unsubscribe.
         """
-        self.__signal_callbacks.add(signal_callback)
+        callbacks = self.__signal_callbacks
+        callbacks.add(signal_callback)
 
         @callback
         def remove_callback() -> None:
-            self.__signal_callbacks.discard(signal_callback)
+            callbacks.discard(signal_callback)
 
         return remove_callback

@@ -50,7 +50,6 @@ class MockInfraredReceiverEntity(InfraredReceiverEntity):
 
     def __init__(self, unique_id: str) -> None:
         """Initialize mock receiver entity."""
-        super().__init__()
         self._attr_unique_id = unique_id
 
 
