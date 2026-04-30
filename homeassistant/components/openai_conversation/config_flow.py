@@ -441,6 +441,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.pop(CONF_VERBOSITY)
 
         if model.startswith(("o", "gpt-5")):
+            reasoning_summary_options = ["off", "auto", "detailed"]
+            if model.startswith("gpt-5"):
+                reasoning_summary_options = ["off", "auto", "concise", "detailed"]
             step_schema.update(
                 {
                     vol.Optional(
@@ -450,7 +453,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         ),
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["off", "auto", "concise", "detailed"],
+                            options=reasoning_summary_options,
                             translation_key=CONF_REASONING_SUMMARY,
                             mode=SelectSelectorMode.DROPDOWN,
                         )

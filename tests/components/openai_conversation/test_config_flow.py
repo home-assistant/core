@@ -370,6 +370,55 @@ async def test_subentry_reasoning_summary_visibility(
 
 
 @pytest.mark.parametrize(
+    ("model", "reasoning_summary_options"),
+    [
+        ("o3", ["off", "auto", "detailed"]),
+        ("o4-mini", ["off", "auto", "detailed"]),
+        ("gpt-5", ["off", "auto", "concise", "detailed"]),
+        ("gpt-5-mini", ["off", "auto", "concise", "detailed"]),
+    ],
+)
+async def test_subentry_reasoning_summary_options(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    model: str,
+    reasoning_summary_options: list[str],
+) -> None:
+    """Test the list of reasoning summary options for reasoning models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (
+        subentry_flow["data_schema"].schema[CONF_REASONING_SUMMARY].config["options"]
+        == reasoning_summary_options
+    )
+
+
+@pytest.mark.parametrize(
     ("model", "service_tier_options"),
     [
         ("gpt-5.4", ["auto", "flex", "default", "priority"]),
