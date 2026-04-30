@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -12,20 +11,18 @@ from tests.common import MockConfigEntry
 
 
 async def test_async_setup_and_unload_entry(
-    hass: HomeAssistant, mock_cielo_client: MagicMock
+    hass: HomeAssistant,
+    mock_cielo_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting up and unloading the integration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "ABC1234567890XZY", CONF_TOKEN: "valid-test-token"},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data is not None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is not None
 
     entity_reg = er.async_get(hass)
     entities = [
@@ -36,6 +33,6 @@ async def test_async_setup_and_unload_entry(
     assert len(entities) == 1
 
     # Unload
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

@@ -13,6 +13,8 @@ from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 MOCK_TOKEN = "valid-test-token"
 MOCK_CIELO_CLIENT_CTOR = "homeassistant.components.cielo_home.config_flow.CieloClient"
 
@@ -40,21 +42,26 @@ async def test_full_config_flow_success(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_API_KEY: "  test-api-key  "},
         )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Cielo Home"
+    assert result["data"] == {
+        CONF_API_KEY: "test-api-key",
+        CONF_TOKEN: MOCK_TOKEN,
+    }
+    assert result["result"].unique_id == "test-user"
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Cielo Home"
-    assert result2["data"][CONF_API_KEY] == "test-api-key"
-    assert result2["data"][CONF_TOKEN] == MOCK_TOKEN
 
-
-async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) -> None:
+async def test_full_config_flow_abort_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the flow aborts when the account is already configured."""
+    mock_config_entry.add_to_hass(hass)
     mock_client = MagicMock()
-    mock_client.user_id = "test-user"
+    mock_client.user_id = mock_config_entry.unique_id
     mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
     mock_client.get_devices_data = AsyncMock(
         return_value=_devices_payload({"dev1": MagicMock()})
@@ -70,20 +77,9 @@ async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) ->
             result["flow_id"],
             user_input={CONF_API_KEY: "test-api-key"},
         )
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
 
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result3["type"] is FlowResultType.FORM
-
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
-            user_input={CONF_API_KEY: "test-api-key"},
-        )
-
-    assert result4["type"] is FlowResultType.ABORT
-    assert result4["reason"] == "already_configured"
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -117,8 +113,18 @@ async def test_form_error_mapping(
             user_input={CONF_API_KEY: "test-api-key"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"]["base"] == flow_error_key
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"]["base"] == flow_error_key
+
+        # simulate recovery (next call succeeds)
+        mock_client.get_devices_data = AsyncMock(return_value=MagicMock(parsed=True))
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "test-api-key"},
+        )
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_error_mapping_invalid_auth(hass: HomeAssistant) -> None:
@@ -142,5 +148,14 @@ async def test_form_error_mapping_invalid_auth(hass: HomeAssistant) -> None:
             user_input={CONF_API_KEY: "test-api-key"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"]["base"] == "invalid_auth"
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"]["base"] == "invalid_auth"
+
+        mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "test-api-key"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
