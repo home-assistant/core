@@ -10,6 +10,7 @@ from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionE
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_PASSWORD, MOCK_USERNAME
 
@@ -18,6 +19,7 @@ from tests.common import MockConfigEntry
 
 async def test_setup_entry_success(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
@@ -28,7 +30,7 @@ async def test_setup_entry_success(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert "SERIAL001" in mock_config_entry.runtime_data
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
 
 
 async def test_setup_entry_invalid_auth(
@@ -75,9 +77,10 @@ async def test_setup_entry_connection_error(
 
 async def test_setup_entry_no_devices_loads_empty(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup succeeds with an empty runtime_data when no devices are found."""
+    """Test setup succeeds with no entities when no devices are found."""
     mock_config_entry.add_to_hass(hass)
 
     mock_account = AsyncMock()
@@ -92,15 +95,18 @@ async def test_setup_entry_no_devices_loads_empty(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data == {}
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
 
 async def test_setup_entry_incomplete_credentials_loads_empty(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
 ) -> None:
-    """Test setup loads with no coordinators when devices have incomplete credentials."""
+    """Test setup loads with no entities when devices have incomplete credentials."""
     mock_config_entry.add_to_hass(hass)
     mock_device_info.password = ""
     mock_device_info.address = ""
@@ -119,14 +125,17 @@ async def test_setup_entry_incomplete_credentials_loads_empty(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data == {}
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
 
 async def test_setup_entry_skips_incomplete_devices(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_indoor_unit: MagicMock,
 ) -> None:
-    """Test setup skips incomplete devices and only creates coordinators for complete ones."""
+    """Test setup skips incomplete devices and only creates entities for complete ones."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -183,8 +192,8 @@ async def test_setup_entry_skips_incomplete_devices(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert "SERIAL001" in entry.runtime_data
-    assert "SERIAL002" not in entry.runtime_data
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
 
 
 async def test_unload_entry(
