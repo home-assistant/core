@@ -1,7 +1,5 @@
 """Base entity for Mill devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 
 from mill import MillDevice

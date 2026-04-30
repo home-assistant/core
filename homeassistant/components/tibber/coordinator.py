@@ -1,7 +1,5 @@
 """Coordinator for Tibber sensors."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
 import logging

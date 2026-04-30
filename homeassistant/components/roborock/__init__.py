@@ -1,7 +1,5 @@
 """The Roborock component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
