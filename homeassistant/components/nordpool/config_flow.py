@@ -1,7 +1,5 @@
 """Adds config flow for Nord Pool integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pynordpool import (

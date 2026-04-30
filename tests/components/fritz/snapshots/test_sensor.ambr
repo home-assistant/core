@@ -324,57 +324,6 @@
     'state': '1.7',
   })
 # ---
-# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_last_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last restart',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
-    'original_icon': None,
-    'original_name': 'Last restart',
-    'platform': 'fritz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_uptime',
-    'unique_id': '1CED6F123411-device_uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_last_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Mock Title Last restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-08-03T16:30:21+00:00',
-  })
-# ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_link_download_noise_margin-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -857,6 +806,57 @@
     'state': '3.4',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1CED6F123411-device_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'uptime',
+      'friendly_name': 'Mock Title Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-03T16:30:21+00:00',
+  })
+# ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_connection_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1180,57 +1180,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.7',
-  })
-# ---
-# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_last_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last restart',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
-    'original_icon': None,
-    'original_name': 'Last restart',
-    'platform': 'fritz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_uptime',
-    'unique_id': '1CED6F123411-device_uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_last_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Mock Title Last restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-08-03T16:30:21+00:00',
   })
 # ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_link_download_noise_margin-entry]
@@ -1715,6 +1664,57 @@
     'state': '3.4',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1CED6F123411-device_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'uptime',
+      'friendly_name': 'Mock Title Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-03T16:30:21+00:00',
+  })
+# ---
 # name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_connection_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2038,57 +2038,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.7',
-  })
-# ---
-# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_last_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last restart',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
-    'original_icon': None,
-    'original_name': 'Last restart',
-    'platform': 'fritz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_uptime',
-    'unique_id': '1CED6F123411-device_uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_last_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Mock Title Last restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-08-03T16:30:21+00:00',
   })
 # ---
 # name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_link_download_noise_margin-entry]
@@ -2573,6 +2522,57 @@
     'state': '3.4',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1CED6F123411-device_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'uptime',
+      'friendly_name': 'Mock Title Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-03T16:30:21+00:00',
+  })
+# ---
 # name: test_sensor_setup[sensor.mock_title_connection_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2954,57 +2954,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.7',
-  })
-# ---
-# name: test_sensor_setup[sensor.mock_title_last_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last restart',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
-    'original_icon': None,
-    'original_name': 'Last restart',
-    'platform': 'fritz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_uptime',
-    'unique_id': '1CED6F123411-device_uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_setup[sensor.mock_title_last_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Mock Title Last restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_last_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-08-03T16:30:21+00:00',
   })
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_download_noise_margin-entry]
@@ -3487,5 +3436,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.4',
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1CED6F123411-device_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'uptime',
+      'friendly_name': 'Mock Title Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-03T16:30:21+00:00',
   })
 # ---

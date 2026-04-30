@@ -1,7 +1,5 @@
 """Data update coordinator for iaqualink."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Support for Satel Integra alarm, using ETHM module."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
