@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -286,6 +287,14 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.NUMBER:
         schema |= {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in NumberDeviceClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="number_device_class",
+                    sort=True,
+                ),
+            ),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),

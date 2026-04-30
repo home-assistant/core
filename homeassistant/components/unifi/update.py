@@ -19,9 +19,11 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
+from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -96,7 +98,13 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.entity_description.control_fn(self.api, self._obj_id)
+        try:
+            await self.entity_description.control_fn(self.api, self._obj_id)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

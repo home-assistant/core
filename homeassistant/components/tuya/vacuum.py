@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from tuya_device_handlers.definition.vacuum import (
-    TuyaVacuumDefinition,
+    VacuumDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -24,8 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
@@ -81,7 +81,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: StateVacuumEntityDescription,
-        definition: TuyaVacuumDefinition,
+        definition: VacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager, description)

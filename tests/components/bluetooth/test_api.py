@@ -9,12 +9,15 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
+    BluetoothChange,
     BluetoothScanningMode,
+    BluetoothServiceInfo,
     HaBluetoothConnector,
+    async_clear_advertisement_history,
     async_scanner_by_source,
     async_scanner_devices_by_address,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from . import (
     FakeRemoteScanner,
@@ -23,6 +26,7 @@ from . import (
     _get_manager,
     generate_advertisement_data,
     generate_ble_device,
+    inject_advertisement,
 )
 
 
@@ -228,3 +232,49 @@ async def test_async_current_scanners(hass: HomeAssistant) -> None:
     # Verify we're back to the initial scanner
     final_scanners = bluetooth.async_current_scanners(hass)
     assert len(final_scanners) == initial_scanner_count
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_clear_advertisement_history(hass: HomeAssistant) -> None:
+    """Test clearing advertisement history bypasses the dedup guard."""
+    callbacks: list[tuple[BluetoothServiceInfo, BluetoothChange]] = []
+
+    @callback
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        callbacks.append((service_info, change))
+
+    cancel = bluetooth.async_register_callback(
+        hass,
+        _fake_subscriber,
+        {"address": "44:44:33:11:23:45"},
+        BluetoothScanningMode.ACTIVE,
+    )
+
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+    )
+
+    inject_advertisement(hass, switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+
+    # Identical advertisement is deduplicated by the manager
+    inject_advertisement(hass, switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+
+    assert len(callbacks) == 1
+
+    # Clearing the advertisement history makes the next identical
+    # advertisement be treated as new data
+    async_clear_advertisement_history(hass, "44:44:33:11:23:45")
+
+    inject_advertisement(hass, switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+
+    assert len(callbacks) == 2
+
+    cancel()
