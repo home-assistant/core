@@ -5,6 +5,7 @@
     'custom_integrations': list([
       dict({
         'domain': 'test_package',
+        'issue_tracker': 'http://github.com/test/test_package/issues',
         'version': <AwesomeVersion SemVer '1.2.3'>,
       }),
     ]),
