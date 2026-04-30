@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from catgenie.exceptions import CatGenieAuthenticationError
+from catgenie.exceptions import CatGenieAuthenticationError, CatGenieException
 
 from homeassistant import config_entries
 from homeassistant.components.catgenie.config_flow import CONF_COUNTRY_CODE, CONF_PHONE
@@ -90,7 +90,9 @@ async def test_phone_step_unknown_error(
     mock_catgenie_auth: MagicMock,
 ) -> None:
     """Test we handle unexpected exception on phone step."""
-    mock_catgenie_auth.request_login_code.side_effect = RuntimeError("boom")
+    mock_catgenie_auth.request_login_code.side_effect = CatGenieException(
+        "Unexpected API error"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -170,7 +172,7 @@ async def test_code_step_unknown_error(
         {CONF_COUNTRY_CODE: 61, CONF_PHONE: "499999999"},
     )
 
-    mock_catgenie_auth.login.side_effect = RuntimeError("boom")
+    mock_catgenie_auth.login.side_effect = CatGenieException("Unexpected API error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"code": "123456"},
@@ -333,7 +335,9 @@ async def test_reauth_confirm_unknown_error(
 ) -> None:
     """Test re-auth when requesting code raises unexpected exception."""
     mock_config_entry.add_to_hass(hass)
-    mock_catgenie_auth.request_login_code.side_effect = RuntimeError("boom")
+    mock_catgenie_auth.request_login_code.side_effect = CatGenieException(
+        "Unexpected API error"
+    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -379,7 +383,7 @@ async def test_reauth_code_unknown_error(
     )
     assert result["step_id"] == "reauth_code"
 
-    mock_catgenie_auth.login.side_effect = RuntimeError("boom")
+    mock_catgenie_auth.login.side_effect = CatGenieException("Unexpected API error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"code": "123456"},
