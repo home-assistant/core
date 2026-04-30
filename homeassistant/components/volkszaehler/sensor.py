@@ -7,17 +7,15 @@ import logging
 
 from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import VolkszaehlerApiConnectionError
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
     CONF_UUID,
@@ -26,17 +24,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Volkszaehler"
-DEFAULT_PORT = 80
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -73,18 +71,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_UUID): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        ),
-    }
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -92,22 +78,41 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Volkszaehler sensors."""
+    """Import Volkszaehler sensor YAML config into config flow."""
+    data = {
+        CONF_HOST: config.get(CONF_HOST),
+        CONF_NAME: config.get(CONF_NAME),
+        CONF_PORT: config.get(CONF_PORT),
+        CONF_UUID: config.get(CONF_UUID),
+    }
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=data,
+        )
+    )
 
-    host: str = config[CONF_HOST]
-    name: str = config[CONF_NAME]
-    port: int = config[CONF_PORT]
-    uuid: str = config[CONF_UUID]
-    conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Volkszaehler sensors from a config entry."""
+    data = entry.data
+    host: str = data[CONF_HOST]
+    name: str = data[CONF_NAME]
+    port: int = data[CONF_PORT]
+    uuid: str = data[CONF_UUID]
+    conditions = SENSOR_KEYS
 
     session = async_get_clientsession(hass)
     vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
-
     await vz_api.async_update()
 
     if vz_api.api.data is None:
         raise PlatformNotReady
-
     entities = [
         VolkszaehlerSensor(vz_api, name, description)
         for description in SENSOR_TYPES

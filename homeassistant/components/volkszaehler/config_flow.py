@@ -1,0 +1,91 @@
+"""Config flow for Volkszaehler integration."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from volkszaehler import Volkszaehler
+from volkszaehler.exceptions import (
+    VolkszaehlerApiConnectionError,
+    VolkszaehlerNoDataAvailable,
+)
+import voluptuous as vol
+
+from homeassistant.config_entries import (
+    CONN_CLASS_LOCAL_POLL,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default="localhost"): str,
+        vol.Required(CONF_PORT, default=80): int,
+        vol.Required(CONF_UUID): str,
+        vol.Required(CONF_NAME, default="Volkszaehler"): str,
+    }
+)
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Validate the user input allows us to connect.
+
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    session = async_get_clientsession(hass)
+    api = Volkszaehler(
+        session,
+        data[CONF_UUID],
+        host=data[CONF_HOST],
+        port=data[CONF_PORT],
+    )
+    await api.get_data()
+    return {"title": data[CONF_NAME]}
+
+
+class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Volkszaehler."""
+
+    VERSION = 1
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
+
+    async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
+        """Set the config entry up from yaml."""
+        existing_entries = self._async_current_entries()
+        for entry in existing_entries:
+            if entry.data.get(CONF_UUID) == import_data.get(CONF_UUID):
+                return self.async_abort(reason="already_configured")
+
+        return self.async_create_entry(
+            title=import_data.get(CONF_NAME, "Volkszaehler"), data=import_data
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except VolkszaehlerApiConnectionError:
+                errors["base"] = "cannot_connect"
+            except VolkszaehlerNoDataAvailable:
+                errors["base"] = "no_data"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
+
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
