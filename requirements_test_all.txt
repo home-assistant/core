@@ -2804,7 +2804,7 @@ waterfurnace==1.7.1
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.2
+weatherflow4py==1.5.4
 
 # homeassistant.components.nasweb
 webio-api==0.1.12
