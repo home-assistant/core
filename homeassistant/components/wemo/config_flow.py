@@ -1,7 +1,5 @@
 """Config flow for Wemo."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 from typing import Any, get_type_hints
 
@@ -64,11 +62,12 @@ def _schema_for_options(options: Options) -> vol.Schema:
     All values are optional. The default value is set to the current value and
     the type hint is set to the value of the field type annotation.
     """
+    type_hints = get_type_hints(type(options))
     return vol.Schema(
         {
-            vol.Optional(
-                field.name, default=getattr(options, field.name)
-            ): get_type_hints(options)[field.name]
+            vol.Optional(field.name, default=getattr(options, field.name)): type_hints[
+                field.name
+            ]
             for field in fields(options)
         }
     )
