@@ -391,7 +391,7 @@ async def test_function_call_without_reasoning(
 async def test_reasoning_summary_off_omits_summary_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    mock_init_component: None,
     mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
