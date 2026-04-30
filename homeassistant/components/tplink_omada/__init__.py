@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
@@ -22,6 +24,8 @@ from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
 from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -99,3 +103,27 @@ def _remove_old_devices(
             device_registry.async_update_device(
                 registered_device.id, remove_config_entry_id=entry.entry_id
             )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+    """Migrate old config entry to a new format."""
+
+    if entry.version == 1:
+        # Migrate unique_id from controller_id to controller_id_site_id
+        # to allow multiple sites per controller to be set up independently.
+        _LOGGER.debug(
+            "Migrating tplink_omada config entry from version %s.%s",
+            entry.version,
+            entry.minor_version,
+        )
+
+        controller_id = entry.unique_id
+        site_id = entry.data[CONF_SITE]
+        new_unique_id = f"{controller_id}_{site_id}"
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=new_unique_id,
+            version=2,
+        )
+
+    return True

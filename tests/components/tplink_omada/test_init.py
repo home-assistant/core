@@ -70,7 +70,8 @@ async def test_missing_devices_removed_at_startup(
         title="Test Omada Controller",
         domain=DOMAIN,
         data=dict(MOCK_ENTRY_DATA),
-        unique_id="12345",
+        unique_id="12345_SiteId",
+        version=2,
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -88,3 +89,25 @@ async def test_missing_devices_removed_at_startup(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id) is None
+
+
+async def test_migrate_entry_v1_to_v2(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test migration of a version 1 config entry to version 2."""
+    entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="12345",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.unique_id == "12345_SiteId"
+    assert entry.state is ConfigEntryState.LOADED

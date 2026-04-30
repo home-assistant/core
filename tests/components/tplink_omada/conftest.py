@@ -45,7 +45,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: False,
             CONF_SITE: "Default",
         },
-        unique_id="12345",
+        unique_id="12345_Default",
+        version=2,
     )
 
 
