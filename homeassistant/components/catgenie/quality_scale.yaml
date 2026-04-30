@@ -43,12 +43,12 @@ rules:
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
