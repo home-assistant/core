@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -17,8 +18,9 @@ from homematicip.exceptions.connection_exceptions import (
 
 import homeassistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
@@ -105,6 +107,18 @@ class HomematicipHAP:
 
     home: AsyncHome
 
+    # Bounded wait for websocket reconnect before refreshing state.
+    _WS_WAIT_INTERVAL = 2
+    _WS_WAIT_WARNING = 60
+    _WS_WAIT_TIMEOUT = 120
+
+    # Staleness detection thresholds. The library has its own 8h safety net;
+    # we surface staleness much earlier so users see a clear log signal and
+    # we capture diagnostics for the still-unsolved reports in core #160048.
+    _STALE_CHECK_INTERVAL = timedelta(minutes=1)
+    _STALE_WARNING_SECONDS = 300
+    _STALE_ERROR_SECONDS = 600
+
     def __init__(
         self, hass: HomeAssistant, config_entry: HomematicIPConfigEntry
     ) -> None:
@@ -115,6 +129,9 @@ class HomematicipHAP:
         self._ws_close_requested = False
         self._ws_connection_closed = asyncio.Event()
         self._get_state_task: asyncio.Task | None = None
+        self._stale_check_unsub: CALLBACK_TYPE | None = None
+        self._stale_warning_logged = False
+        self._stale_error_logged = False
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
 
@@ -142,6 +159,12 @@ class HomematicipHAP:
             self.config_entry, PLATFORMS
         )
 
+        self._stale_check_unsub = async_track_time_interval(
+            self.hass,
+            self._async_check_websocket_staleness,
+            self._STALE_CHECK_INTERVAL,
+        )
+
         return True
 
     @callback
@@ -163,10 +186,11 @@ class HomematicipHAP:
             self._ws_connection_closed.set()
             self.set_all_to_unavailable()
         elif self._ws_connection_closed.is_set():
-            _LOGGER.info("HMIP access point has reconnected to the cloud")
-            self._get_state_task = self.hass.async_create_task(self._try_get_state())
-            self._get_state_task.add_done_callback(self.get_state_finished)
-            self._ws_connection_closed.clear()
+            _LOGGER.info(
+                "HMIP access point has reconnected to the cloud (%s)",
+                self._websocket_diagnostic_context(),
+            )
+            self._start_get_state_task()
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:
@@ -180,15 +204,81 @@ class HomematicipHAP:
             await asyncio.sleep(30)
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
+    def _websocket_diagnostic_context(self) -> str:
+        """Return a single-line summary of websocket diagnostics for logs."""
+        diagnostics = {
+            "last_disconnect_reason": self.home.websocket_last_disconnect_reason(),
+            "reconnect_attempts": self.home.websocket_reconnect_attempt_count(),
+            "seconds_since_last_message": (
+                self.home.websocket_seconds_since_last_message()
+            ),
+            "message_count": self.home.websocket_message_count(),
+        }
+        rendered = ", ".join(
+            f"{key}={value!r}"
+            for key, value in diagnostics.items()
+            if value is not None
+        )
+        return rendered or "no diagnostics available"
+
+    @callback
+    def _start_get_state_task(self) -> None:
+        """Cancel any in-flight reconnect refresh and start a new one."""
+        if self._get_state_task is not None and not self._get_state_task.done():
+            _LOGGER.debug(
+                "Cancelling previous HomematicIP reconnect state refresh task"
+            )
+            self._get_state_task.cancel()
+
+        self._get_state_task = self.hass.async_create_task(self._try_get_state())
+        self._get_state_task.add_done_callback(self.get_state_finished)
+        self._ws_connection_closed.clear()
+
+    async def _wait_for_websocket_connection(self) -> bool:
+        """Wait up to ``_WS_WAIT_TIMEOUT`` seconds for the websocket to be connected.
+
+        Returns ``True`` when the websocket reports connected, ``False`` when the
+        wait times out. Even on timeout we proceed with ``get_state``: the REST
+        call is independent and may still recover the entity state.
+        """
+        elapsed = 0
+        warning_logged = False
+
+        while not self.home.websocket_is_connected():
+            if elapsed >= self._WS_WAIT_TIMEOUT:
+                _LOGGER.warning(
+                    "Websocket did not reconnect within %s seconds; "
+                    "proceeding with HomematicIP state refresh anyway (%s)",
+                    self._WS_WAIT_TIMEOUT,
+                    self._websocket_diagnostic_context(),
+                )
+                return False
+            await asyncio.sleep(self._WS_WAIT_INTERVAL)
+            elapsed += self._WS_WAIT_INTERVAL
+            # Re-check connectivity before logging so a reconnect during the
+            # sleep does not produce a misleading "still waiting" warning.
+            if (
+                not warning_logged
+                and elapsed >= self._WS_WAIT_WARNING
+                and not self.home.websocket_is_connected()
+            ):
+                warning_logged = True
+                _LOGGER.warning(
+                    "Still waiting for HomematicIP websocket reconnect after "
+                    "%s seconds (%s)",
+                    elapsed,
+                    self._websocket_diagnostic_context(),
+                )
+
+        return True
+
     async def _try_get_state(self) -> None:
         """Call get_state in a loop until no error occurs.
 
         Uses exponential backoff on error.
         """
 
-        # Wait until WebSocket connection is established.
-        while not self.home.websocket_is_connected():
-            await asyncio.sleep(2)
+        await self._wait_for_websocket_connection()
 
         delay = 8
         max_delay = 1500
@@ -208,16 +298,79 @@ class HomematicipHAP:
                 )
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, max_delay)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error updating state after HomematicIP "
+                    "reconnect, retrying in %s seconds (%s)",
+                    delay,
+                    self._websocket_diagnostic_context(),
+                )
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, max_delay)
+
+    @callback
+    def _async_check_websocket_staleness(self, _now: datetime) -> None:
+        """Detect a websocket that claims connected but has stopped receiving.
+
+        The library's stale-connection safety net only triggers after 8h.
+        Surfacing this much earlier gives users a clear log signal and
+        captures diagnostics for the still-unsolved reports in core #160048.
+        """
+        if not self.home.websocket_is_connected():
+            return
+
+        seconds_since = self.home.websocket_seconds_since_last_message()
+        if seconds_since is None:
+            return
+
+        if seconds_since < self._STALE_WARNING_SECONDS:
+            self._stale_warning_logged = False
+            self._stale_error_logged = False
+            return
+
+        if seconds_since >= self._STALE_ERROR_SECONDS:
+            if not self._stale_error_logged:
+                _LOGGER.error(
+                    "HomematicIP websocket has not received a message for "
+                    "%.0f seconds while reporting connected (%s)",
+                    seconds_since,
+                    self._websocket_diagnostic_context(),
+                )
+                self._stale_error_logged = True
+            return
+
+        if not self._stale_warning_logged:
+            _LOGGER.warning(
+                "HomematicIP websocket has not received a message for "
+                "%.0f seconds while reporting connected (%s)",
+                seconds_since,
+                self._websocket_diagnostic_context(),
+            )
+            self._stale_warning_logged = True
 
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
         await self.home.get_current_state_async()
+        # ``set_all_to_unavailable`` marked every device unreach=True on
+        # disconnect; ``get_current_state_async`` only clears that flag for
+        # devices whose state actually changed during the outage, so the rest
+        # stay stuck unavailable after reconnect. Force-clear for all devices.
+        # Trade-off: a device that is *genuinely* unreachable on the cloud
+        # side will briefly appear available until its next state push
+        # corrects it. That self-corrects, while the previous behaviour left
+        # entities stuck unavailable indefinitely (core #160048).
+        for device in self.home.devices:
+            device.unreach = False
         self.update_all()
 
     def get_state_finished(self, future) -> None:
         """Execute when try_get_state coroutine has finished."""
         try:
             future.result()
+        except asyncio.CancelledError:
+            _LOGGER.debug("HomematicIP reconnect state refresh task was cancelled")
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error updating state after HMIP access point reconnect: %s", err
@@ -250,6 +403,9 @@ class HomematicipHAP:
     async def async_reset(self) -> bool:
         """Close the websocket connection."""
         self._ws_close_requested = True
+        if self._stale_check_unsub is not None:
+            self._stale_check_unsub()
+            self._stale_check_unsub = None
         if self._get_state_task is not None:
             self._get_state_task.cancel()
         await self.home.disable_events_async()
@@ -275,22 +431,27 @@ class HomematicipHAP:
         """Handle websocket connected."""
         _LOGGER.info("Websocket connection to HomematicIP Cloud established")
         if self._ws_connection_closed.is_set():
-            self._get_state_task = self.hass.async_create_task(self._try_get_state())
-            self._get_state_task.add_done_callback(self.get_state_finished)
-
-            self._ws_connection_closed.clear()
+            self._start_get_state_task()
 
     async def ws_disconnected_handler(self) -> None:
         """Handle websocket disconnection."""
-        _LOGGER.warning("Websocket connection to HomematicIP Cloud closed")
+        _LOGGER.warning(
+            "Websocket connection to HomematicIP Cloud closed (%s)",
+            self._websocket_diagnostic_context(),
+        )
         self._ws_connection_closed.set()
+        # Re-arm staleness logging so a new stuck period after reconnect
+        # is reported instead of being squelched by a previous one.
+        self._stale_warning_logged = False
+        self._stale_error_logged = False
 
     async def ws_reconnected_handler(self, reason: str) -> None:
         """Handle websocket reconnection."""
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud trying"
-            " to reconnect due to reason: %s",
+            "Websocket connection to HomematicIP Cloud trying to reconnect due to "
+            "reason: %s (%s)",
             reason,
+            self._websocket_diagnostic_context(),
         )
 
         self._ws_connection_closed.set()
