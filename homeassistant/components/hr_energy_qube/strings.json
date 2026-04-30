@@ -20,6 +20,116 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm_antilegionella_timeout": {
+        "name": "Anti-legionella timeout alarm"
+      },
+      "alarm_central_heating": {
+        "name": "Central heating alarm"
+      },
+      "alarm_compressor": {
+        "name": "Compressor alarm"
+      },
+      "alarm_cooling": {
+        "name": "Cooling alarm"
+      },
+      "alarm_dewpoint": {
+        "name": "Dewpoint alarm"
+      },
+      "alarm_dhw_timeout": {
+        "name": "DHW timeout alarm"
+      },
+      "alarm_flow": {
+        "name": "Flow alarm"
+      },
+      "alarm_global": {
+        "name": "Global alarm"
+      },
+      "alarm_heating": {
+        "name": "Heating alarm"
+      },
+      "alarm_source": {
+        "name": "Source alarm"
+      },
+      "alarm_supply_too_hot": {
+        "name": "Supply too hot alarm"
+      },
+      "alarm_working_hours": {
+        "name": "Working hours alarm"
+      },
+      "anti_legionella": {
+        "name": "Anti-legionella"
+      },
+      "booster_security": {
+        "name": "Booster security"
+      },
+      "buffer_pump": {
+        "name": "Buffer pump"
+      },
+      "buffer_sensor_enabled": {
+        "name": "Buffer sensor enabled"
+      },
+      "cooling_output": {
+        "name": "Cooling output"
+      },
+      "day_mode": {
+        "name": "Day mode"
+      },
+      "dewpoint": {
+        "name": "Dewpoint"
+      },
+      "dhw_controller_enabled": {
+        "name": "DHW controller enabled"
+      },
+      "external_demand": {
+        "name": "External demand"
+      },
+      "four_way_valve": {
+        "name": "Four-way valve"
+      },
+      "heater_step_1": {
+        "name": "Heater step 1"
+      },
+      "heater_step_2": {
+        "name": "Heater step 2"
+      },
+      "heater_step_3": {
+        "name": "Heater step 3"
+      },
+      "keypad": {
+        "name": "Keypad"
+      },
+      "plant_demand": {
+        "name": "Plant demand"
+      },
+      "plant_sensor_enabled": {
+        "name": "Plant sensor enabled"
+      },
+      "pv_surplus": {
+        "name": "PV surplus"
+      },
+      "room_sensor_enabled": {
+        "name": "Room sensor enabled"
+      },
+      "source_flow": {
+        "name": "Source flow"
+      },
+      "source_pump": {
+        "name": "Source pump"
+      },
+      "summer_mode": {
+        "name": "Summer mode"
+      },
+      "thermostat_demand": {
+        "name": "Thermostat demand"
+      },
+      "three_way_valve": {
+        "name": "Three-way valve"
+      },
+      "user_pump": {
+        "name": "User pump"
+      }
+    },
     "sensor": {
       "compressor_speed": {
         "name": "Compressor speed"

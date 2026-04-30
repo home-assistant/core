@@ -70,8 +70,8 @@ class VeluxEntity(Entity):
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
+
         self._attr_unique_id = velux_unique_id(node, config_entry_id)
-        self.unsubscribe = None
         self._attr_device_info = velux_device_info(node, config_entry_id)
 
     async def after_update_callback(self, _: Node) -> None:

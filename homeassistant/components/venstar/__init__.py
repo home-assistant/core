@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from venstarcolortouch import VenstarColorTouch
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,13 +14,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, VENSTAR_TIMEOUT
-from .coordinator import VenstarDataUpdateCoordinator
+from .const import VENSTAR_TIMEOUT
+from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: VenstarConfigEntry
+) -> bool:
     """Set up the Venstar thermostat."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
@@ -46,17 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     await venstar_data_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = venstar_data_coordinator
+    config_entry.runtime_data = venstar_data_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: VenstarConfigEntry
+) -> bool:
     """Unload the config and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

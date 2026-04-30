@@ -5,12 +5,26 @@ from __future__ import annotations
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    ATTR_NAME,
+    CONF_IP_ADDRESS,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
+from .const import (
+    ATTR_HARDWARE_VERSION,
+    ATTR_SOFTWARE_VERSION,
+    CONF_AUTO_DISCOVERED,
+    CONF_OVERRIDE_TYPE,
+    CONF_SERIAL,
+    DOMAIN,
+    NOBO_MANUFACTURER,
+)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
@@ -76,6 +90,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     )
     entry.runtime_data = hub
 
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, hub.hub_serial)},
+        serial_number=hub.hub_serial,
+        name=hub.hub_info[ATTR_NAME],
+        manufacturer=NOBO_MANUFACTURER,
+        model="Nobø Ecohub",
+        sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
+        hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await hub.start()
@@ -90,3 +116,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> 
         await entry.runtime_data.stop()
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Lowercase override_type to match translation keys.
+        new_options = dict(entry.options)
+        if (override_type := new_options.get(CONF_OVERRIDE_TYPE)) is not None:
+            new_options[CONF_OVERRIDE_TYPE] = override_type.lower()
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, version=1, minor_version=2
+        )
+
+    return True

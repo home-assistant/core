@@ -5,22 +5,20 @@ from typing import Any
 from aiomusiccast.capabilities import BinarySetter
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import MusicCastDataUpdateCoordinator
+from .coordinator import MusicCastConfigEntry
 from .entity import MusicCastCapabilityEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MusicCastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast sensor based on a config entry."""
-    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     switch_entities = [
         SwitchCapability(coordinator, capability)

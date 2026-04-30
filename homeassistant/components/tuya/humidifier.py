@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.definition.humidifier import (
-    TuyaHumidifierDefinition,
+    HumidifierDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -21,8 +21,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 from .util import ActionDPCodeNotFoundError
 
@@ -101,7 +101,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaHumidifierEntityDescription,
-        definition: TuyaHumidifierDefinition,
+        definition: HumidifierDefinition,
     ) -> None:
         """Init Tuya (de)humidifier."""
         super().__init__(device, device_manager, description)

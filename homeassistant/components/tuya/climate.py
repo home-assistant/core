@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from tuya_device_handlers.definition.climate import (
-    TuyaClimateDefinition,
+    ClimateDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -32,8 +32,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 _TUYA_TO_HA_HVACMODE_MAPPINGS = {
@@ -144,7 +144,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
-        definition: TuyaClimateDefinition,
+        definition: ClimateDefinition,
     ) -> None:
         """Determine which values to use."""
         super().__init__(device, device_manager, description)
