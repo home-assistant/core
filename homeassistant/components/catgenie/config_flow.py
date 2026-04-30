@@ -158,6 +158,8 @@ class CatGenieConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception during re-auth login")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(credentials.user_id)
+                self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
                 reauth_entry = self._get_reauth_entry()
                 return self.async_update_reload_and_abort(
                     reauth_entry,

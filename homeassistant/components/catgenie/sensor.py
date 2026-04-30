@@ -80,11 +80,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up CatGenie sensors based on a config entry."""
     coordinator = entry.runtime_data.coordinator
-    async_add_entities(
-        CatGenieSensorEntity(coordinator, description, device_id)
-        for device_id in coordinator.data
-        for description in SENSOR_DESCRIPTIONS
-    )
+    known_device_ids: set[str] = set()
+
+    def _async_add_new_devices() -> None:
+        """Add entities for any newly discovered devices."""
+        new_device_ids = set(coordinator.data) - known_device_ids
+        if new_device_ids:
+            async_add_entities(
+                CatGenieSensorEntity(coordinator, description, device_id)
+                for device_id in new_device_ids
+                for description in SENSOR_DESCRIPTIONS
+            )
+            known_device_ids.update(new_device_ids)
+
+    _async_add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class CatGenieSensorEntity(CatGenieEntity, SensorEntity):
@@ -95,4 +105,6 @@ class CatGenieSensorEntity(CatGenieEntity, SensorEntity):
     @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.device_data)
+        if (device := self.device_data) is None:
+            return None
+        return self.entity_description.value_fn(device)

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from catgenie import Credentials
 from catgenie.exceptions import CatGenieAuthenticationError, CatGenieException
 
 from homeassistant import config_entries
@@ -402,3 +403,39 @@ async def test_reauth_code_unknown_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_account_mismatch(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_catgenie_auth: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test re-auth aborts when a different account is used."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Return credentials with a different user_id than the config entry's unique_id
+    different_credentials = Credentials(
+        access_token="test-access-token",
+        refresh_token="other-refresh-token",
+        token_expiration=9999999999.0,
+        account_id="other-account-id",
+        user_id="other-user-id",
+        tenant_id="other-tenant-id",
+    )
+    mock_catgenie_auth.login.return_value = different_credentials
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_COUNTRY_CODE: 61, CONF_PHONE: "499999999"},
+    )
+    assert result["step_id"] == "reauth_code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"code": "654321"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"

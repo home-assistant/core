@@ -28,6 +28,7 @@ class CatGenieEntity(CoordinatorEntity[CatGenieCoordinator]):
         self.entity_description = description
         self._device_id = device_id
         device = self.device_data
+        assert device is not None
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
@@ -40,11 +41,13 @@ class CatGenieEntity(CoordinatorEntity[CatGenieCoordinator]):
         )
 
     @property
-    def device_data(self) -> Device:
+    def device_data(self) -> Device | None:
         """Return the device data for this entity."""
-        return self.coordinator.data[self._device_id]
+        return self.coordinator.data.get(self._device_id)
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.device_data.is_online
+        if (device := self.device_data) is None:
+            return False
+        return super().available and device.is_online

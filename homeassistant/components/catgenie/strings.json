@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_account_mismatch": "The authenticated account does not match the account that needs re-authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
