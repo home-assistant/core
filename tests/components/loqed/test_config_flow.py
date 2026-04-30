@@ -347,57 +347,28 @@ async def test_no_locks(
     assert result["errors"] == {"base": "no_locks"}
 
 
-async def test_cannot_connect_during_validation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we handle cannot connect when validation refresh fails."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
-
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
-    )
-
-    with patch(
-        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        side_effect=[all_locks_response, aiohttp.ClientError],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_invalid_auth_when_lock_not_found(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we handle a situation where the user selects an invalid lock id."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
+    """Test we handle a situation where the lock is absent from the cloud API response."""
+    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value=lock_result,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
-    )
-    initial_locks_response = {"data": [all_locks_response["data"][0]]}
-    changed_locks_response = {"data": []}
-
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        side_effect=[initial_locks_response, changed_locks_response],
+        return_value={"data": []},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -407,6 +378,39 @@ async def test_invalid_auth_when_lock_not_found(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_cannot_connect_zeroconf_cloud_api_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test we handle a cloud API error during zeroconf validate_input."""
+    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value=lock_result,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+        side_effect=aiohttp.ClientError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_cannot_connect_when_lock_not_reachable(

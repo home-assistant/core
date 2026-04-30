@@ -42,18 +42,23 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, Any]:
         """Validate the user input allows us to connect."""
 
-        # 1. Checking loqed-connection
-        try:
-            session = async_get_clientsession(hass)
-            cloud_api_client = cloud_loqed.CloudAPIClient(
-                session,
-                data[CONF_API_TOKEN],
-            )
-            cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
-            lock_data = await cloud_client.async_get_locks()
-        except aiohttp.ClientError as err:
-            _LOGGER.error("HTTP Connection error to loqed API")
-            raise CannotConnect from err
+        session = async_get_clientsession(hass)
+        if self._locks and not self._host:
+            # Reuse the lock list already fetched during manual setup to
+            # avoid a duplicate cloud request.
+            lock_data = {"data": self._locks}
+        else:
+            # 1. Checking loqed-connection
+            try:
+                cloud_api_client = cloud_loqed.CloudAPIClient(
+                    session,
+                    data[CONF_API_TOKEN],
+                )
+                cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
+                lock_data = await cloud_client.async_get_locks()
+            except aiohttp.ClientError as err:
+                _LOGGER.error("HTTP Connection error to loqed API")
+                raise CannotConnect from err
 
         try:
             if self._host:
