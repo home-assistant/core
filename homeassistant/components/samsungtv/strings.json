@@ -12,7 +12,7 @@
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
-      "invalid_host": "The host is invalid. Please try again.",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "invalid_pin": "The PIN is invalid. Please try again."
     },
     "flow_title": "{device}",
