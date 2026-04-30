@@ -1,7 +1,5 @@
 """Fixtures and helpers for the evohome tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Callable
 from datetime import timedelta, timezone
 from http import HTTPMethod

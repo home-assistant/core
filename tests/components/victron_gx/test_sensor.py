@@ -1,7 +1,5 @@
 """Tests for Victron GX MQTT sensors."""
 
-from __future__ import annotations
-
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 

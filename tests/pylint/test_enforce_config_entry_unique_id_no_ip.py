@@ -1,7 +1,5 @@
 """Tests for pylint hass_enforce_config_entry_unique_id_no_ip plugin."""
 
-from __future__ import annotations
-
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter

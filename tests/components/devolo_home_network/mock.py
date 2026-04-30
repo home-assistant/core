@@ -1,7 +1,5 @@
 """Mock of a devolo Home Network device."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.device import Device

@@ -1,7 +1,5 @@
 """Test the addon manager."""
 
-from __future__ import annotations
-
 import asyncio
 from unittest.mock import AsyncMock, call
 from uuid import uuid4

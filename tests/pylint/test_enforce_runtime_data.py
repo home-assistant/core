@@ -1,7 +1,5 @@
 """Tests for pylint hass_enforce_runtime_data plugin."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 import astroid

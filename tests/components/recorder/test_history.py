@@ -1,7 +1,5 @@
 """The tests the History component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta

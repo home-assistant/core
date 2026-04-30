@@ -1,7 +1,5 @@
 """Tests for the Duco integration setup."""
 
-from __future__ import annotations
-
 from ssl import SSLContext
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 

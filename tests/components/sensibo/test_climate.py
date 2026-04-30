@@ -1,7 +1,5 @@
 """The test for the sensibo climate platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 

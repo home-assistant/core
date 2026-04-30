@@ -1,7 +1,5 @@
 """The tests for the Pico TTS speech platform."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import io
 from pathlib import Path

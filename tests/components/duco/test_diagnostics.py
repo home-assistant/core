@@ -1,7 +1,5 @@
 """Tests for the Duco diagnostics."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 

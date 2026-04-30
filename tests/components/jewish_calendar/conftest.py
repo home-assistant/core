@@ -1,7 +1,5 @@
 """Common fixtures for the jewish_calendar tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime as dt
 from typing import Any, NamedTuple

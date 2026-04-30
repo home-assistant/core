@@ -1,7 +1,5 @@
 """Tests for the Novy Hood light platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, call
 
 from homeassistant.components.light import (

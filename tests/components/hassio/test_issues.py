@@ -1,7 +1,5 @@
 """Test issues from supervisor issues."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 import os

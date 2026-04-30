@@ -1,7 +1,5 @@
 """Common fixtures for the Novy Cooker Hood tests."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock, patch
 

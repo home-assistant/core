@@ -1,7 +1,5 @@
 """Test the Electric Kiwi config flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 

@@ -1,7 +1,5 @@
 """Tests for the EARN-E P1 Meter config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device

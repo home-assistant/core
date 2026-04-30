@@ -1,7 +1,5 @@
 """Test select entity."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.assist_pipeline import Pipeline

@@ -1,7 +1,5 @@
 """Common fixtures for the Bluesound tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 import ipaddress

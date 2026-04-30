@@ -1,7 +1,5 @@
 """Tests for BTHome repair handling."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from unittest.mock import patch

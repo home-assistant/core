@@ -1,7 +1,5 @@
 """Tests for pylint hass_imports plugin."""
 
-from __future__ import annotations
-
 import astroid
 from pylint.checkers import BaseChecker
 import pylint.testutils

@@ -1,7 +1,5 @@
 """Tests for the LG Infrared config flow."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.infrared import (

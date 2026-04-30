@@ -1,7 +1,5 @@
 """Test for airOS integration setup."""
 
-from __future__ import annotations
-
 from unittest.mock import ANY, AsyncMock, MagicMock
 
 from airos.exceptions import (

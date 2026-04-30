@@ -1,7 +1,5 @@
 """Test the Novy Hood config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 

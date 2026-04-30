@@ -1,7 +1,5 @@
 """Test ZHA WebSocket API."""
 
-from __future__ import annotations
-
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy

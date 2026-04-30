@@ -1,7 +1,5 @@
 """Test how the DmsDeviceSource handles available and unavailable devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterable
 import logging

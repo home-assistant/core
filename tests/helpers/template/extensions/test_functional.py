@@ -1,7 +1,5 @@
 """Test functional utility functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import random
 from unittest.mock import MagicMock, patch
 

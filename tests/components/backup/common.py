@@ -1,7 +1,5 @@
 """Common helpers for the Backup integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Buffer, Callable, Coroutine, Iterable
 from pathlib import Path
 from typing import Any, cast

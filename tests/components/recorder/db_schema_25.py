@@ -1,7 +1,5 @@
 """Models for SQLAlchemy."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import json
 import logging

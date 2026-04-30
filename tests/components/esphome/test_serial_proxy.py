@@ -1,7 +1,5 @@
 """Tests for the ESPHome serial proxy helper."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, call, patch
 
 from aioesphomeapi import APIClient

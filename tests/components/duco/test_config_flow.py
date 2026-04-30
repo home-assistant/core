@@ -1,7 +1,5 @@
 """Tests for the Duco config flow."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
 from ssl import SSLContext
 from unittest.mock import ANY, AsyncMock, MagicMock, patch

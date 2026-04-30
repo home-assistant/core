@@ -1,7 +1,5 @@
 """Common constants and functions for UptimeRobot tests."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Any
 from unittest.mock import patch

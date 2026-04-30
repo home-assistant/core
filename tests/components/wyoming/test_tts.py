@@ -1,7 +1,5 @@
 """Test tts."""
 
-from __future__ import annotations
-
 import io
 from unittest.mock import patch
 import wave

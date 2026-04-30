@@ -1,7 +1,5 @@
 """Config flow tests for Fish Audio."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from fishaudio import AuthenticationError, FishAudioError

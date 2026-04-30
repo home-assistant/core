@@ -1,7 +1,5 @@
 """Test the browse and resolve methods of DmsDeviceSource."""
 
-from __future__ import annotations
-
 from typing import Final
 from unittest.mock import ANY, Mock, call
 

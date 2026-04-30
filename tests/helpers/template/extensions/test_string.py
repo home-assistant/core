@@ -1,7 +1,5 @@
 """Test string template extension."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 
 from tests.helpers.template.helpers import render

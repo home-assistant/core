@@ -1,7 +1,5 @@
 """Test system log component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable
 import logging

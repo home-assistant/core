@@ -1,7 +1,5 @@
 """Test the RabbitAir config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import MagicMock, Mock, patch

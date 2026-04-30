@@ -1,7 +1,5 @@
 """Define tests for the Flux LED/Magic Home config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest

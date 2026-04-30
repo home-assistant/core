@@ -1,7 +1,5 @@
 """Common fixtures for the LG Infrared tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import patch
 

@@ -1,7 +1,5 @@
 """Test the Fjäråskupan config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

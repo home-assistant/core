@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools sensor platform."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from unittest.mock import patch
 
