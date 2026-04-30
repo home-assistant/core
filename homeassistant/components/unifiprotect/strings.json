@@ -408,6 +408,9 @@
           "window": "Window"
         }
       },
+      "nvr_arm_profile": {
+        "name": "Alarm profile"
+      },
       "paired_camera": {
         "name": "Paired camera"
       },
