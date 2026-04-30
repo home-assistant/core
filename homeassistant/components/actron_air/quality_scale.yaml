@@ -55,8 +55,8 @@ rules:
   docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
