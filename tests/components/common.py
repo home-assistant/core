@@ -1167,9 +1167,10 @@ async def assert_condition_options_supported(
         )
 
     # Duration
-    await _validate_condition_options(
-        hass, condition, _merge({"for": {"seconds": 5}}), valid=supports_duration
-    )
+    for for_value in ({"seconds": 5}, "00:00:05", 5):
+        await _validate_condition_options(
+            hass, condition, _merge({"for": for_value}), valid=supports_duration
+        )
 
     # Unknown option should always be rejected
     await _validate_condition_options(
@@ -1230,9 +1231,10 @@ async def assert_trigger_options_supported(
         )
 
     # Duration
-    await _validate_trigger_options(
-        hass, trigger, _merge({"for": {"seconds": 5}}), valid=supports_duration
-    )
+    for for_value in ({"seconds": 5}, "00:00:05", 5):
+        await _validate_trigger_options(
+            hass, trigger, _merge({"for": for_value}), valid=supports_duration
+        )
 
     # Unknown option should always be rejected
     await _validate_trigger_options(
