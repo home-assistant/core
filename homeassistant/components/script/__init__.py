@@ -770,11 +770,11 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         """Stop script and remove service when it will be removed from HA."""
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
 
-        if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
-            # Entity ID not changed, unload the script as it will not be reused.
-            await self.script.async_unload()
-        else:
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script as it will be reused.
             await self.script.async_stop()
+            return
+        await self.script.async_unload()
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})
