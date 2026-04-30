@@ -1,8 +1,7 @@
 """Common entity for LG IR integration."""
 
 import logging
-
-from infrared_protocols.codes.lg.tv import LGTVCode, make_command as make_lg_tv_command
+from enum import Enum
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.config_entries import ConfigEntry
@@ -66,11 +65,13 @@ class LgIrEntity(Entity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    async def _send_command(self, code: LGTVCode) -> None:
+    async def _send_command(self, code: Enum) -> None:
         """Send an IR command using the LG protocol."""
         await async_send_command(
             self.hass,
             self._infrared_entity_id,
-            make_lg_tv_command(code),
+            code.to_command(),
             context=self._context,
         )
+
+

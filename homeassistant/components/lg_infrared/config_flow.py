@@ -18,7 +18,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LGDeviceType
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LGDeviceType, CONF_CODESET
+from .codesets import LG_CODESETS
 
 DEVICE_TYPE_NAMES: dict[LGDeviceType, str] = {
     LGDeviceType.TV: "TV",
@@ -56,6 +57,10 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=user_input)
 
+        codeset_options = [
+            {"value": codeset.key, "label": codeset.name}
+            for codeset in LG_CODESETS.values()
+        ]
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -71,6 +76,15 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
+                        )
+                    ),
+                    vol.Required(
+                        CONF_CODESET,
+                        default=next(iter(LG_CODESETS)),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=codeset_options,
+                            mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                 }
