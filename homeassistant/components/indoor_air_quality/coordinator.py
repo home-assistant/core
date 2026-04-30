@@ -179,14 +179,15 @@ class IndoorAirQualityController:
 
         @callback
         def remove_listener() -> None:
-            self._listeners.remove(update_callback)
+            if update_callback in self._listeners:
+                self._listeners.remove(update_callback)
 
         return remove_listener
 
     @callback
     def async_update_listeners(self) -> None:
         """Notify all subscribed listeners of an update."""
-        for listener in self._listeners:
+        for listener in list(self._listeners):
             listener()
 
     # --- index calculation -------------------------------------------------
