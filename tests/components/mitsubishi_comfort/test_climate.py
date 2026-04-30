@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from mitsubishi_comfort import CommandResult, FanSpeed, Mode, VaneDirection
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -18,15 +22,21 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.mitsubishi_comfort.climate import MitsubishiComfortClimate
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.components.mitsubishi_comfort.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import _make_device_status
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.living_room"
 
@@ -45,6 +55,16 @@ async def setup_climate(
     return mock_device
 
 
+async def _refresh(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance time past the scan interval to trigger a coordinator refresh."""
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+# -- Snapshot of default state and registry --
+
+
 async def test_climate_entity(
     hass: HomeAssistant,
     setup_climate: MagicMock,
@@ -56,236 +76,237 @@ async def test_climate_entity(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_hvac_mode_mappings(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test all HVAC mode mappings from device mode strings."""
-    device = setup_climate
+# -- Mode-driven attribute behavior --
 
-    mode_pairs = [
+
+@pytest.mark.parametrize(
+    ("device_mode", "expected_hvac"),
+    [
         ("off", HVACMode.OFF),
-        ("cool", HVACMode.COOL),
         ("heat", HVACMode.HEAT),
         ("dry", HVACMode.DRY),
         ("vent", HVACMode.FAN_ONLY),
         ("auto", HVACMode.HEAT_COOL),
         ("autoCool", HVACMode.HEAT_COOL),
         ("autoHeat", HVACMode.HEAT_COOL),
-    ]
-
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    for device_mode, expected_hvac in mode_pairs:
-        device.status = _make_device_status(mode=device_mode)
-        assert entity.hvac_mode is expected_hvac, f"Failed for mode {device_mode}"
-
-
-async def test_hvac_mode_none_when_no_mode(
+    ],
+)
+async def test_hvac_mode_mappings(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+    device_mode: str,
+    expected_hvac: HVACMode,
+) -> None:
+    """Test HVAC mode mappings from device mode strings."""
+    setup_climate.status = _make_device_status(mode=device_mode)
+    await _refresh(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == expected_hvac
+
+
+async def test_hvac_mode_unknown_when_no_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test HVAC mode returns None when device has no mode."""
+    """Test entity reports unknown when device has no mode."""
     setup_climate.status = _make_device_status(mode=None)
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.hvac_mode is None
+    await _refresh(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
 
-async def test_hvac_action_idle_on_standby(
+@pytest.mark.parametrize(
+    ("device_mode", "standby", "expected_action"),
+    [
+        ("off", False, HVACAction.OFF),
+        ("heat", False, HVACAction.HEATING),
+        ("dry", False, HVACAction.DRYING),
+        ("vent", False, HVACAction.FAN),
+        ("auto", False, HVACAction.IDLE),
+        ("autoCool", False, HVACAction.COOLING),
+        ("autoHeat", False, HVACAction.HEATING),
+        ("cool", True, HVACAction.IDLE),
+    ],
+)
+async def test_hvac_action(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
+    device_mode: str,
+    standby: bool,
+    expected_action: HVACAction,
 ) -> None:
-    """Test HVAC action is IDLE when device is in standby."""
-    setup_climate.status = _make_device_status(mode="cool", standby=True)
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.hvac_action is HVACAction.IDLE
+    """Test HVAC action mappings for all modes and standby."""
+    setup_climate.status = _make_device_status(mode=device_mode, standby=standby)
+    await _refresh(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_HVAC_ACTION] is expected_action
 
 
-async def test_hvac_action_none_when_no_mode(
+async def test_hvac_action_unknown_when_no_mode(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
     """Test HVAC action is None when device has no mode."""
     setup_climate.status = _make_device_status(mode=None)
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.hvac_action is None
+    await _refresh(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_HVAC_ACTION) is None
 
 
-async def test_hvac_action_all_modes(
+@pytest.mark.parametrize(
+    ("device_mode", "expected_temp"),
+    [
+        ("heat", 21.0),
+        ("autoCool", 24.0),
+        ("autoHeat", 21.0),
+    ],
+)
+async def test_target_temperature(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
+    device_mode: str,
+    expected_temp: float,
 ) -> None:
-    """Test HVAC action mappings for all modes."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    device = setup_climate
+    """Test target temperature follows the active mode's setpoint."""
+    setup_climate.status = _make_device_status(mode=device_mode)
+    await _refresh(hass, freezer)
 
-    action_pairs = [
-        ("off", HVACAction.OFF),
-        ("heat", HVACAction.HEATING),
-        ("dry", HVACAction.DRYING),
-        ("vent", HVACAction.FAN),
-        ("auto", HVACAction.IDLE),
-        ("autoCool", HVACAction.COOLING),
-        ("autoHeat", HVACAction.HEATING),
-    ]
-
-    for mode, expected_action in action_pairs:
-        device.status = _make_device_status(mode=mode)
-        assert entity.hvac_action is expected_action, f"Failed for mode {mode}"
-
-
-async def test_target_temperature_heat_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test target temperature in heat mode returns heat setpoint."""
-    setup_climate.status = _make_device_status(mode="heat")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.target_temperature == 21.0
-
-
-async def test_target_temperature_auto_cool(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test target temperature in autoCool mode returns cool setpoint."""
-    setup_climate.status = _make_device_status(mode="autoCool")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.target_temperature == 24.0
-
-
-async def test_target_temperature_auto_heat(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test target temperature in autoHeat mode returns heat setpoint."""
-    setup_climate.status = _make_device_status(mode="autoHeat")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.target_temperature == 21.0
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == expected_temp
 
 
 async def test_target_temperature_none_in_dry_mode(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test target temperature returns None in dry mode."""
+    """Test target temperature is None in dry mode."""
     setup_climate.status = _make_device_status(mode="dry")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.target_temperature is None
+    await _refresh(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_TEMPERATURE) is None
 
 
-async def test_target_temperature_high_auto_mode(
+async def test_target_temperature_high_low_auto(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test target_temperature_high/low in auto modes."""
+    """Test target_temperature_high/low track setpoints in auto mode."""
     setup_climate.status = _make_device_status(mode="auto")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.target_temperature_high == 24.0
-    assert entity.target_temperature_low == 21.0
+    await _refresh(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 24.0
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 21.0
 
 
-async def test_max_temp_heat_mode(
+# -- Min/max temperature behavior --
+
+
+@pytest.mark.parametrize(
+    ("device_mode", "expected_min", "expected_max"),
+    [
+        ("cool", 18.0, 30.0),
+        ("heat", 16.0, 28.0),
+    ],
+)
+async def test_min_max_temp(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+    device_mode: str,
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Test min/max temp track the active mode's setpoint bounds."""
+    setup_climate.status = _make_device_status(mode=device_mode)
+    await _refresh(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == expected_min
+    assert state.attributes[ATTR_MAX_TEMP] == expected_max
+
+
+async def test_min_max_temp_fallback_when_none(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test max temp in heat mode returns max_heat_setpoint."""
-    setup_climate.status = _make_device_status(mode="heat")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.max_temp == 28.0
-
-
-async def test_min_temp_fallback_when_none(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test min temp falls back to parent default when setpoints are None."""
+    """Test min/max temp fall back to climate defaults when setpoints are None."""
     setup_climate.status = _make_device_status(
         min_cool_setpoint=None,
         max_cool_setpoint=None,
         min_heat_setpoint=None,
         max_heat_setpoint=None,
     )
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.min_temp == 7
-    assert entity.max_temp == 35
+    await _refresh(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == 7
+    assert state.attributes[ATTR_MAX_TEMP] == 35
 
 
-async def test_min_temp_heat_setpoint_none_falls_to_cool(
+async def test_min_max_temp_heat_falls_back_to_cool(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test min temp in heat mode falls back to cool setpoint if heat is None."""
+    """Test min/max temp in heat mode fall back to cool setpoints when heat is None."""
     setup_climate.status = _make_device_status(
         mode="heat",
         min_heat_setpoint=None,
         max_heat_setpoint=None,
     )
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.min_temp == 18.0
-    assert entity.max_temp == 30.0
+    await _refresh(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == 18.0
+    assert state.attributes[ATTR_MAX_TEMP] == 30.0
+
+
+# -- Supported features --
 
 
 async def test_supported_features_no_auto(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
     """Test supported features without auto mode lack temp range."""
     setup_climate.supported_modes = [Mode.OFF, Mode.COOL, Mode.HEAT]
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    features = entity.supported_features
+    await _refresh(hass, freezer)
+
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
     assert features & ClimateEntityFeature.TARGET_TEMPERATURE
     assert not (features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE)
 
 
 async def test_supported_features_no_vane(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
     """Test supported features without vane directions lack swing mode."""
     setup_climate.supported_vane_directions = []
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    features = entity.supported_features
+    await _refresh(hass, freezer)
+
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
     assert not (features & ClimateEntityFeature.SWING_MODE)
 
 
-# -- Command tests via service calls --
+# -- Service calls --
 
 
 async def test_set_hvac_mode(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting HVAC mode via service call."""
+    """Test setting HVAC mode via service call updates device and state."""
     device = setup_climate
     device.set_mode = AsyncMock(return_value=CommandResult(success=True, value="heat"))
 
@@ -297,34 +318,32 @@ async def test_set_hvac_mode(
     )
 
     device.set_mode.assert_awaited_once_with(Mode.HEAT)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
 
 
-async def test_set_hvac_mode_unsupported(
+async def test_set_hvac_mode_failed_keeps_state(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting HVAC mode when command fails doesn't set optimistic state."""
+    """Test failed set_hvac_mode does not change reported state."""
     device = setup_climate
     device.set_mode = AsyncMock(return_value=CommandResult(success=False))
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
 
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic == {} or "mode" not in entity._optimistic
+    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
 
 
-async def test_set_hvac_mode_unknown_mode_returns(
+async def test_set_hvac_mode_unmapped_returns(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting an unmapped HVACMode returns without calling device."""
+    """Test setting an unmapped HVACMode does not call the device."""
     device = setup_climate
 
     with patch.dict(
@@ -346,7 +365,7 @@ async def test_set_temperature_cool_mode(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting temperature in cool mode."""
+    """Test setting temperature in cool mode updates the cool setpoint."""
     device = setup_climate
     device.set_cool_setpoint = AsyncMock(
         return_value=CommandResult(success=True, value=22.0)
@@ -360,15 +379,18 @@ async def test_set_temperature_cool_mode(
     )
 
     device.set_cool_setpoint.assert_awaited_once_with(22.0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.0
 
 
 async def test_set_temperature_heat_mode(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting temperature in heat mode."""
+    """Test setting temperature in heat mode updates the heat setpoint."""
     device = setup_climate
     device.status = _make_device_status(mode="heat")
+    await _refresh(hass, freezer)
     device.set_heat_setpoint = AsyncMock(
         return_value=CommandResult(success=True, value=20.0)
     )
@@ -381,14 +403,18 @@ async def test_set_temperature_heat_mode(
     )
 
     device.set_heat_setpoint.assert_awaited_once_with(20.0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 20.0
 
 
 async def test_set_temperature_high_low(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting high and low temperatures for auto mode."""
+    """Test setting high and low temperatures in auto mode."""
     device = setup_climate
+    device.status = _make_device_status(mode="auto")
+    await _refresh(hass, freezer)
     device.set_cool_setpoint = AsyncMock(
         return_value=CommandResult(success=True, value=25.0)
     )
@@ -409,13 +435,16 @@ async def test_set_temperature_high_low(
 
     device.set_cool_setpoint.assert_awaited_once_with(25.0)
     device.set_heat_setpoint.assert_awaited_once_with(19.0)
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.0
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 19.0
 
 
-async def test_set_temperature_failed_command(
+async def test_set_temperature_failed_keeps_state(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting temperature when command fails doesn't set optimistic state."""
+    """Test failed set_temperature does not change reported setpoint."""
     device = setup_climate
     device.set_cool_setpoint = AsyncMock(return_value=CommandResult(success=False))
 
@@ -426,17 +455,48 @@ async def test_set_temperature_failed_command(
         blocking=True,
     )
 
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic == {} or "cool_setpoint" not in entity._optimistic
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 24.0
+
+
+@pytest.mark.parametrize(
+    ("device_mode", "set_method"),
+    [
+        ("autoCool", "set_cool_setpoint"),
+        ("autoHeat", "set_heat_setpoint"),
+    ],
+)
+async def test_set_temperature_in_auto_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+    device_mode: str,
+    set_method: str,
+) -> None:
+    """Test set_temperature in autoCool/autoHeat targets the right setpoint."""
+    device = setup_climate
+    device.status = _make_device_status(mode=device_mode)
+    await _refresh(hass, freezer)
+    setattr(
+        device,
+        set_method,
+        AsyncMock(return_value=CommandResult(success=True, value=22.0)),
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+        blocking=True,
+    )
+
+    getattr(device, set_method).assert_awaited_once_with(22.0)
 
 
 async def test_set_fan_mode(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting fan mode via service call."""
+    """Test setting fan mode via service call updates device and state."""
     device = setup_climate
     device.set_fan_speed = AsyncMock(
         return_value=CommandResult(success=True, value="quiet")
@@ -450,6 +510,7 @@ async def test_set_fan_mode(
     )
 
     device.set_fan_speed.assert_awaited_once_with(FanSpeed.QUIET)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == "quiet"
 
 
 async def test_set_fan_mode_unknown(
@@ -466,11 +527,11 @@ async def test_set_fan_mode_unknown(
         )
 
 
-async def test_set_fan_mode_failed(
+async def test_set_fan_mode_failed_keeps_state(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting fan mode when command fails."""
+    """Test failed set_fan_mode does not change reported fan mode."""
     device = setup_climate
     device.set_fan_speed = AsyncMock(return_value=CommandResult(success=False))
 
@@ -481,17 +542,14 @@ async def test_set_fan_mode_failed(
         blocking=True,
     )
 
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic == {} or "fan_speed" not in entity._optimistic
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == "auto"
 
 
 async def test_set_swing_mode(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting swing mode via service call."""
+    """Test setting swing mode via service call updates device and state."""
     device = setup_climate
     device.set_vane_direction = AsyncMock(
         return_value=CommandResult(success=True, value="swing")
@@ -505,6 +563,7 @@ async def test_set_swing_mode(
     )
 
     device.set_vane_direction.assert_awaited_once_with(VaneDirection.SWING)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == "swing"
 
 
 async def test_set_swing_mode_unknown(
@@ -521,11 +580,11 @@ async def test_set_swing_mode_unknown(
         )
 
 
-async def test_set_swing_mode_failed(
+async def test_set_swing_mode_failed_keeps_state(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting swing mode when command fails."""
+    """Test failed set_swing_mode does not change reported swing mode."""
     device = setup_climate
     device.set_vane_direction = AsyncMock(return_value=CommandResult(success=False))
 
@@ -536,10 +595,7 @@ async def test_set_swing_mode_failed(
         blocking=True,
     )
 
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic == {} or "vane_direction" not in entity._optimistic
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == "auto"
 
 
 async def test_turn_off(
@@ -558,157 +614,40 @@ async def test_turn_off(
     )
 
     device.set_mode.assert_awaited_once_with(Mode.OFF)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
 
 
-# -- Optimistic state tests --
+# -- Optimistic state cleared on next refresh --
 
 
-async def test_optimistic_mode_used_for_hvac_mode(
+async def test_optimistic_mode_cleared_on_refresh(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test that optimistic mode overrides device mode."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic["mode"] = "heat"
-    assert entity.hvac_mode is HVACMode.HEAT
-
-
-async def test_optimistic_cool_setpoint(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test that optimistic cool setpoint overrides device value."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic["cool_setpoint"] = 22.0
-    assert entity.target_temperature == 22.0
-
-
-async def test_optimistic_heat_setpoint(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test that optimistic heat setpoint overrides device value in heat mode."""
-    setup_climate.status = _make_device_status(mode="heat")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic["heat_setpoint"] = 19.0
-    assert entity.target_temperature == 19.0
-
-
-async def test_optimistic_fan_speed(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test that optimistic fan speed overrides device value."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic["fan_speed"] = "quiet"
-    assert entity.fan_mode == "quiet"
-
-
-async def test_optimistic_vane_direction(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test that optimistic vane direction overrides device value."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic["vane_direction"] = "swing"
-    assert entity.swing_mode == "swing"
-
-
-async def test_coordinator_update_clears_optimistic(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test that coordinator update clears all optimistic state."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    entity._optimistic["mode"] = "heat"
-    entity._optimistic["cool_setpoint"] = 22.0
-    entity._optimistic["heat_setpoint"] = 19.0
-    entity._optimistic["fan_speed"] = "quiet"
-    entity._optimistic["vane_direction"] = "swing"
-
-    entity._handle_coordinator_update()
-
-    assert entity._optimistic == {} or "mode" not in entity._optimistic
-    assert entity._optimistic == {} or "cool_setpoint" not in entity._optimistic
-    assert entity._optimistic == {} or "heat_setpoint" not in entity._optimistic
-    assert entity._optimistic == {} or "fan_speed" not in entity._optimistic
-    assert entity._optimistic == {} or "vane_direction" not in entity._optimistic
-
-
-async def test_optimistic_temp_high_low_in_auto(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test optimistic setpoints in auto mode for high/low targets."""
-    setup_climate.status = _make_device_status(mode="auto")
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    entity._optimistic["cool_setpoint"] = 26.0
-    entity._optimistic["heat_setpoint"] = 18.0
-
-    assert entity.target_temperature_high == 26.0
-    assert entity.target_temperature_low == 18.0
-
-
-async def test_unique_id(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test unique ID is the device serial."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.unique_id == "SERIAL001"
-
-
-async def test_entity_available(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test entity availability delegates to CoordinatorEntity."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    # After successful setup, entity should be available
-    assert entity.available is True
-
-
-async def test_entity_device_info(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test device info is populated correctly."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    info = entity.device_info
-    assert info["identifiers"] == {("mitsubishi_comfort", "SERIAL001")}
-    assert info["name"] == "Living Room"
-    assert info["manufacturer"] == "Mitsubishi"
-
-
-async def test_set_temperature_auto_cool_mode(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test setting temperature in autoCool mode sets cool setpoint."""
+    """Test optimistic mode is cleared when a fresh device status arrives."""
     device = setup_climate
-    device.status = _make_device_status(mode="autoCool")
+    device.set_mode = AsyncMock(return_value=CommandResult(success=True, value="heat"))
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+    await _refresh(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
+
+
+async def test_optimistic_setpoint_cleared_on_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+) -> None:
+    """Test optimistic setpoint is cleared when a fresh device status arrives."""
+    device = setup_climate
     device.set_cool_setpoint = AsyncMock(
         return_value=CommandResult(success=True, value=22.0)
     )
@@ -719,125 +658,127 @@ async def test_set_temperature_auto_cool_mode(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
         blocking=True,
     )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.0
 
-    device.set_cool_setpoint.assert_awaited_once_with(22.0)
+    await _refresh(hass, freezer)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 24.0
 
 
-async def test_set_temperature_auto_heat_mode(
+async def test_optimistic_fan_speed_cleared_on_refresh(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test setting temperature in autoHeat mode sets heat setpoint."""
+    """Test optimistic fan speed is cleared when a fresh device status arrives."""
     device = setup_climate
-    device.status = _make_device_status(mode="autoHeat")
+    device.set_fan_speed = AsyncMock(
+        return_value=CommandResult(success=True, value="quiet")
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "quiet"},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == "quiet"
+
+    await _refresh(hass, freezer)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == "auto"
+
+
+async def test_optimistic_swing_cleared_on_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+) -> None:
+    """Test optimistic swing mode is cleared when a fresh device status arrives."""
+    device = setup_climate
+    device.set_vane_direction = AsyncMock(
+        return_value=CommandResult(success=True, value="swing")
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_swing_mode",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "swing"},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == "swing"
+
+    await _refresh(hass, freezer)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == "auto"
+
+
+async def test_optimistic_temp_high_low_in_auto(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+) -> None:
+    """Test optimistic high/low setpoints reflect immediately in auto mode."""
+    device = setup_climate
+    device.status = _make_device_status(mode="auto")
+    await _refresh(hass, freezer)
+    device.set_cool_setpoint = AsyncMock(
+        return_value=CommandResult(success=True, value=26.0)
+    )
     device.set_heat_setpoint = AsyncMock(
-        return_value=CommandResult(success=True, value=20.0)
+        return_value=CommandResult(success=True, value=18.0)
     )
 
     await hass.services.async_call(
         "climate",
         "set_temperature",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20.0},
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TARGET_TEMP_HIGH: 26.0,
+            ATTR_TARGET_TEMP_LOW: 18.0,
+        },
         blocking=True,
     )
 
-    device.set_heat_setpoint.assert_awaited_once_with(20.0)
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 26.0
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 18.0
 
 
-async def test_set_fan_mode_unknown_direct(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test calling async_set_fan_mode directly with unknown mode returns early."""
-    device = setup_climate
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    await entity.async_set_fan_mode("turbo")
-
-    device.set_fan_speed.assert_not_awaited()
-
-
-async def test_set_swing_mode_unknown_direct(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test calling async_set_swing_mode directly with unknown mode returns early."""
-    device = setup_climate
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    await entity.async_set_swing_mode("unknown_direction")
-
-    device.set_vane_direction.assert_not_awaited()
-
-
-# -- Coordinator behavior (tested via entity state) --
+# -- Coordinator availability --
 
 
 async def test_coordinator_update_failure_makes_unavailable(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
     """Test that a failed coordinator update makes the entity unavailable."""
-    device = setup_climate
-    device.update_status = AsyncMock(return_value=False)
+    setup_climate.update_status = AsyncMock(return_value=False)
+    await _refresh(hass, freezer)
 
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    await entity.coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_update_exception_makes_unavailable(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
     """Test that an exception during update makes the entity unavailable."""
-    device = setup_climate
-    device.update_status = AsyncMock(side_effect=TimeoutError("timeout"))
+    setup_climate.update_status = AsyncMock(side_effect=TimeoutError("timeout"))
+    await _refresh(hass, freezer)
 
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    await entity.coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_recovery_restores_available(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
     """Test that a successful update after failure restores availability."""
-    device = setup_climate
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-
-    # Fail first
-    device.update_status = AsyncMock(return_value=False)
-    await entity.coordinator.async_refresh()
-    await hass.async_block_till_done()
+    setup_climate.update_status = AsyncMock(return_value=False)
+    await _refresh(hass, freezer)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # Recover
-    device.update_status = AsyncMock(return_value=True)
-    await entity.coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    setup_climate.update_status = AsyncMock(return_value=True)
+    await _refresh(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
