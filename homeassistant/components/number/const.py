@@ -1,7 +1,5 @@
 """Provides the constants needed for the component."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -60,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -629,6 +628,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.ENERGY: EnergyConverter,
     NumberDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     NumberDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    NumberDeviceClass.FREQUENCY: FrequencyConverter,
     NumberDeviceClass.GAS: VolumeConverter,
     NumberDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     NumberDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,

@@ -1,7 +1,5 @@
 """Test the DNS IP config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from aiodns.error import DNSError

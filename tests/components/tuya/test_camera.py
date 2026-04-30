@@ -1,7 +1,5 @@
 """Test Tuya camera platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -33,16 +31,6 @@ def platform_autouse():
             "homeassistant.components.camera.SystemRandom.getrandbits",
             return_value=1,
         ),
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def mock_getrandbits():
-    """Mock camera access token which normally is randomized."""
-    with patch(
-        "homeassistant.components.camera.SystemRandom.getrandbits",
-        return_value=1,
     ):
         yield
 

@@ -1,7 +1,5 @@
 """Support for SmartThings Cloud."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pysmartthings import (

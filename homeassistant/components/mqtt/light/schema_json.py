@@ -1,7 +1,5 @@
 """Support for MQTT JSON lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -337,8 +335,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_brightness = last_attributes.get(
                 ATTR_BRIGHTNESS, self.brightness
             )
-            self._attr_color_mode = last_attributes.get(
-                ATTR_COLOR_MODE, self.color_mode
+            self._attr_color_mode = (
+                last_attributes.get(ATTR_COLOR_MODE) or self.color_mode
             )
             self._attr_color_temp_kelvin = last_attributes.get(
                 ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin

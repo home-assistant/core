@@ -6549,8 +6549,11 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -6559,15 +6562,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.a3qtb7pulkcc6jdjqldadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.eau_chaude_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Eau Chaude Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eau_chaude_total_energy',
@@ -25764,8 +25768,11 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -25774,14 +25781,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.fcdadqsiax2gvnt0qldadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': '一路带计量磁保持通断器 Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_total_energy',

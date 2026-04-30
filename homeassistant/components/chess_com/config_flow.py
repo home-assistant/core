@@ -1,7 +1,5 @@
 """Config flow for the Chess.com integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -39,7 +37,9 @@ class ChessConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(str(user.player_id))
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=user.name, data=user_input)
+                return self.async_create_entry(
+                    title=user.name or user.username, data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",

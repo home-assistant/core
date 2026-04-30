@@ -1,7 +1,5 @@
 """Support for Renault number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -86,6 +84,7 @@ async def _set_charge_limits(
 
     entity.coordinator.data.socMin = min_soc
     entity.coordinator.data.socTarget = target_soc
+    entity.coordinator.assumed_state = True
     entity.coordinator.async_set_updated_data(entity.coordinator.data)
 
 

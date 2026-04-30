@@ -1,7 +1,5 @@
 """Generate config flow file."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
@@ -9,7 +7,7 @@ from .brand import validate as validate_brands
 from .model import Brand, Config, Integration, IntegrationType
 from .serializer import format_python_namespace
 
-UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
+UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard", "unifi_discovery"}
 
 
 def _validate_integration(config: Config, integration: Integration) -> None:

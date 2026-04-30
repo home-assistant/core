@@ -1,6 +1,5 @@
 """Provide functionality to interact with Cast devices on the network."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Callable
 from contextlib import suppress

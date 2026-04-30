@@ -1,7 +1,5 @@
 """Support for Switchbot devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -114,21 +112,25 @@ PLATFORMS_BY_TYPE = {
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
+        Platform.SWITCH,
     ],
     SupportedModels.AIR_PURIFIER_US.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
+        Platform.SWITCH,
     ],
     SupportedModels.AIR_PURIFIER_TABLE_JP.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
+        Platform.SWITCH,
     ],
     SupportedModels.AIR_PURIFIER_TABLE_US.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
+        Platform.SWITCH,
     ],
     SupportedModels.EVAPORATIVE_HUMIDIFIER.value: [
         Platform.HUMIDIFIER,

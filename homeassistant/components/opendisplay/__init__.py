@@ -1,7 +1,5 @@
 """Integration for OpenDisplay BLE e-paper displays."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from dataclasses import dataclass
@@ -36,7 +34,7 @@ from .services import async_setup_services
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _BASE_PLATFORMS: list[Platform] = []
-_FLEX_PLATFORMS = [Platform.SENSOR]
+_FLEX_PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
 
 @dataclass

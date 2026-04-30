@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -453,10 +451,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 if not attributes.get("MACAddress"):
                     continue
 
+                wan_access_result = None
                 if (wan_access := attributes.get("X_AVM-DE_WANAccess")) is not None:
-                    wan_access_result = "granted" in wan_access
-                else:
-                    wan_access_result = None
+                    # wan_access can be "granted", "denied", "unknown" or "error"
+                    if "granted" in wan_access:
+                        wan_access_result = True
+                    elif "denied" in wan_access:
+                        wan_access_result = False
 
                 hosts[attributes["MACAddress"]] = Device(
                     name=attributes["HostName"],
@@ -692,7 +693,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         _LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
-            device_hosts = await self._async_update_hosts_info()
+            device_hosts.update(await self._async_update_hosts_info())
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry
 

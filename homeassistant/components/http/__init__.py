@@ -1,7 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -51,7 +49,6 @@ from homeassistant.helpers.http import (
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.setup import (
     SetupPhases,
     async_start_setup,
@@ -175,7 +172,6 @@ class ConfData(TypedDict, total=False):
     ssl_profile: str
 
 
-@bind_hass
 async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
     store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)

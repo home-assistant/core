@@ -256,11 +256,13 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Invalid response format during login: %s", ex)
             return self._async_show_password_form({"base": ERROR_CANNOT_CONNECT})
 
-        if (
-            not login_response["success"]
-            and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
-        ):
-            return self._async_show_password_form({"base": ERROR_INVALID_AUTH})
+        if not login_response.get("success"):
+            if login_response.get("msg") == LOGIN_INVALID_AUTH_CODE:
+                return self._async_show_password_form({"base": ERROR_INVALID_AUTH})
+            _LOGGER.debug(
+                "Growatt login failed: %s", login_response.get("msg", "Unknown error")
+            )
+            return self._async_show_password_form({"base": ERROR_CANNOT_CONNECT})
 
         self.user_id = login_response["user"]["id"]
         self.data = user_input

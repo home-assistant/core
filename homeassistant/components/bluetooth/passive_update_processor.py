@@ -1,7 +1,5 @@
 """Passive update processors for the Bluetooth integration."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import timedelta
 from functools import cache

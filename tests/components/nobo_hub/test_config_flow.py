@@ -57,7 +57,6 @@ async def test_configure_with_discover(
         assert result3["data"] == {
             "ip_address": "1.1.1.1",
             "serial": "123456789012",
-            "auto_discovered": True,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -102,7 +101,6 @@ async def test_configure_manual(
         assert result2["data"] == {
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
-            "auto_discovered": False,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -154,7 +152,6 @@ async def test_configure_user_selected_manual(
         assert result2["data"] == {
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
-            "auto_discovered": False,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -276,7 +273,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_OVERRIDE_TYPE: "Constant",
+            CONF_OVERRIDE_TYPE: "constant",
         },
     )
     await hass.async_block_till_done()
@@ -284,7 +281,7 @@ async def test_options_flow(
     assert mock_unload_entry.await_count == 1
     assert mock_setup_entry.await_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_OVERRIDE_TYPE: "Constant"}
+    assert config_entry.options == {CONF_OVERRIDE_TYPE: "constant"}
     mock_unload_entry.reset_mock()
     mock_setup_entry.reset_mock()
 
@@ -292,7 +289,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_OVERRIDE_TYPE: "Now",
+            CONF_OVERRIDE_TYPE: "now",
         },
     )
     await hass.async_block_till_done()
@@ -300,4 +297,4 @@ async def test_options_flow(
     assert mock_unload_entry.await_count == 1
     assert mock_setup_entry.await_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_OVERRIDE_TYPE: "Now"}
+    assert config_entry.options == {CONF_OVERRIDE_TYPE: "now"}

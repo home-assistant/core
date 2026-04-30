@@ -1,17 +1,13 @@
 """Fixtures and helpers for the evohome tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Callable
 from datetime import timedelta, timezone
 from http import HTTPMethod
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from evohomeasync2 import EvohomeClient, HotWater
+from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
 from evohomeasync2.auth import AbstractTokenManager, Auth
-from evohomeasync2.control_system import ControlSystem
-from evohomeasync2.zone import Zone
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -225,11 +221,11 @@ def zone_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> st
     """Return the entity_id of evohome's first zone (a Climate entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    ctl: ControlSystem = evo.tcs
+    tcs: ControlSystem = evo.tcs
 
     zone: Zone = evo.tcs.zones[0]
 
-    return entity_id(Platform.CLIMATE, f"{zone.id}z" if zone.id == ctl.id else zone.id)
+    return entity_id(Platform.CLIMATE, f"{zone.id}z" if zone.id == tcs.id else zone.id)
 
 
 @pytest.fixture

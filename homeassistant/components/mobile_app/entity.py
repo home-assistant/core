@@ -1,7 +1,5 @@
 """An entity class for mobile_app."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -110,6 +108,8 @@ class MobileAppEntity(RestoreEntity):
     def _apply_pending_update(self) -> None:
         """Restore any pending update for this entity."""
         entity_type = self._config[ATTR_SENSOR_TYPE]
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         pending_updates = self.hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type]
         if update := pending_updates.pop(self._attr_unique_id, None):
             _LOGGER.debug(

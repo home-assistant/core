@@ -1,7 +1,5 @@
 """The MELCloud Climate integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
@@ -19,7 +17,12 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.WATER_HEATER,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:

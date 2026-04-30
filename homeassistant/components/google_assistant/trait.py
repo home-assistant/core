@@ -1,7 +1,5 @@
 """Implement the Google Smart Home traits."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
@@ -1076,14 +1074,16 @@ class TemperatureControlTrait(_Trait):
                     float(attrs[water_heater.ATTR_MIN_TEMP]),
                     unit,
                     UnitOfTemperature.CELSIUS,
-                )
+                ),
+                1,
             )
             max_temp = round(
                 TemperatureConverter.convert(
                     float(attrs[water_heater.ATTR_MAX_TEMP]),
                     unit,
                     UnitOfTemperature.CELSIUS,
-                )
+                ),
+                1,
             )
             response["temperatureRange"] = {
                 "minThresholdCelsius": min_temp,
@@ -1236,14 +1236,16 @@ class TemperatureSettingTrait(_Trait):
                 float(attrs[climate.ATTR_MIN_TEMP]),
                 unit,
                 UnitOfTemperature.CELSIUS,
-            )
+            ),
+            1,
         )
         max_temp = round(
             TemperatureConverter.convert(
                 float(attrs[climate.ATTR_MAX_TEMP]),
                 unit,
                 UnitOfTemperature.CELSIUS,
-            )
+            ),
+            1,
         )
         response["thermostatTemperatureRange"] = {
             "minThresholdCelsius": min_temp,
