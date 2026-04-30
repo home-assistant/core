@@ -29,7 +29,9 @@ PLATFORMS: Final = [Platform.SENSOR]
 
 _ENTRY_DATA_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(CONF_SOURCES): vol.Schema({str: vol.Any(str, [str])}),
+        vol.Required(CONF_SOURCES): vol.All(
+            vol.Schema({str: vol.Any(str, [str])}), vol.Length(min=1)
+        ),
         vol.Optional(CONF_STANDARD, default=DEFAULT_STANDARD): vol.In(STANDARDS),
         vol.Optional(CONF_DEVICE_ID): vol.Any(str, None),
     },

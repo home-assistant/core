@@ -1,5 +1,7 @@
 """Test the Indoor Air Quality controller and setup."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant import config_entries
@@ -428,11 +430,21 @@ async def test_iaq_index_state_class(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_invalid_entry_data_raises(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "data",
+    [
+        {CONF_SOURCES: {}, CONF_STANDARD: "uk"},
+        {CONF_SOURCES: {CONF_TEMPERATURE: "sensor.t"}, CONF_STANDARD: "not_a_standard"},
+    ],
+    ids=["empty_sources", "unknown_standard"],
+)
+async def test_invalid_entry_data_raises(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> None:
     """Invalid entry data should raise ConfigEntryError."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SOURCES: {}, CONF_STANDARD: "not_a_standard"},
+        data=data,
         title="Bad",
         unique_id="bad",
     )
