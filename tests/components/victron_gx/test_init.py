@@ -9,11 +9,10 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     MetricKind,
 )
-from victron_mqtt.testing import create_mocked_hub, finalize_injection, inject_message
+from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.victron_gx import async_remove_config_entry_device
 from homeassistant.components.victron_gx.const import DOMAIN
-from homeassistant.components.victron_gx.hub import Hub
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -155,26 +154,42 @@ async def test_hub_start_success(
     assert victron_hub.installation_id == MOCK_INSTALLATION_ID
 
 
-async def test_switch_output_uses_direct_parent_as_via_device() -> None:
-    """Test via_device follows the actual switch output parent device."""
-    victron_hub = await create_mocked_hub(installation_id=MOCK_INSTALLATION_ID)
-    try:
-        await inject_message(
-            victron_hub,
-            f"N/{MOCK_INSTALLATION_ID}/switch/0/SwitchableOutput/1/State",
-            '{"value": 1}',
-        )
-        await finalize_injection(victron_hub, disconnect=False)
+async def test_child_device_via_device_links_to_parent_in_registry(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test non-root device is linked to its parent device in the HA device registry."""
+    victron_hub, _mock_config_entry = init_integration
 
-        device = victron_hub.devices["switch_0_output_1"]
-        device_info = Hub._map_device_info(device, MOCK_INSTALLATION_ID)
+    # Inject a system metric first so system_0 is registered as the gateway device.
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
+        '{"value": 9}',
+    )
+    # Inject a battery metric; its parent_device resolves to system_0.
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 10.5}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
 
-        assert device_info["via_device"] == (
-            DOMAIN,
-            f"{MOCK_INSTALLATION_ID}_switch_0",
-        )
-    finally:
-        await victron_hub.disconnect()
+    system_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    )
+    assert system_device is not None
+    # The GX gateway has no parent — it IS the root.
+    assert system_device.via_device_id is None
+
+    battery_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")}
+    )
+    assert battery_device is not None
+    # Battery is a child of the GX gateway, not an orphan.
+    assert battery_device.via_device_id == system_device.id
 
 
 async def test_hub_start_authentication_error(
