@@ -120,6 +120,7 @@ FLOWS = {
         "canary",
         "casper_glow",
         "cast",
+        "catgenie",
         "ccm15",
         "cert_expiry",
         "chacon_dio",

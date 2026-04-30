@@ -286,6 +286,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/casper_glow/ @mikeodr
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
+/homeassistant/components/catgenie/ @kclif9
+/tests/components/catgenie/ @kclif9
 /homeassistant/components/ccm15/ @ocalvo
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren

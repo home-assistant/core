@@ -1,0 +1,12 @@
+{
+  "domain": "catgenie",
+  "name": "CatGenie",
+  "codeowners": ["@kclif9"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/catgenie",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["catgenie"],
+  "quality_scale": "silver",
+  "requirements": ["catgenie==0.1.3"]
+}
