@@ -12,10 +12,8 @@ from aiohttp import ClientError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mobile_app.const import (
-    ATTR_TAG,
     DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
-    SERVICE_DISMISS_MESSAGE,
 )
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -868,8 +866,8 @@ async def test_send_message_local_push(
         ),
         (
             DOMAIN,
-            SERVICE_DISMISS_MESSAGE,
-            {ATTR_TAG: "tag"},
+            "dismiss_message",
+            {"tag": "tag"},
         ),
     ],
 )
@@ -1404,10 +1402,10 @@ async def test_dismiss_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISMISS_MESSAGE,
+        "dismiss_message",
         {
             ATTR_ENTITY_ID: "notify.test",
-            ATTR_TAG: "motion",
+            "tag": "motion",
         },
         blocking=True,
     )
