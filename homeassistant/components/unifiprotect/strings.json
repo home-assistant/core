@@ -641,6 +641,9 @@
       "privacy_mode": {
         "name": "Privacy mode"
       },
+      "relay_output": {
+        "name": "Output {output_name}"
+      },
       "ssh_enabled": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::ssh_enabled::name%]"
       },
@@ -697,8 +700,17 @@
     "ptz_preset_not_found": {
       "message": "Could not find PTZ preset with name {preset_name} on camera {camera_name}"
     },
+    "relay_not_available": {
+      "message": "Relay is no longer available"
+    },
     "service_error": {
       "message": "Error calling UniFi Protect service, check the logs for more details"
+    },
+    "siren_invalid_duration": {
+      "message": "Invalid siren duration {duration}s. Valid values are: {valid} seconds"
+    },
+    "siren_not_available": {
+      "message": "Siren is no longer available"
     },
     "stream_error": {
       "message": "Error playing audio, check the logs for more details"
