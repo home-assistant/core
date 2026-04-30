@@ -436,6 +436,7 @@ async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
         subentry,
         data={**subentry.data, CONF_REASONING_SUMMARY: "concise"},
     )
+    await hass.async_block_till_done()
 
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
