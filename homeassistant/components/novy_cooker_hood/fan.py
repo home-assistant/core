@@ -1,7 +1,5 @@
 """Fan platform for the Novy Cooker Hood (calibrated speed control)."""
 
-from __future__ import annotations
-
 import math
 from typing import Any
 

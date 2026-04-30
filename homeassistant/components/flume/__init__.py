@@ -1,7 +1,5 @@
 """The flume integration."""
 
-from __future__ import annotations
-
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests import Session
 from requests.exceptions import RequestException

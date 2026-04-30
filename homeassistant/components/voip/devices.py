@@ -1,7 +1,5 @@
 """Class to manage devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 import logging

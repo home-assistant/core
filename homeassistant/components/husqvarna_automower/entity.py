@@ -1,7 +1,5 @@
 """Platform for Husqvarna Automower base entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import functools

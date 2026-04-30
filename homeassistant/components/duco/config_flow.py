@@ -1,7 +1,5 @@
 """Config flow for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

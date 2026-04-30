@@ -1,7 +1,5 @@
 """Litter-Robot entities for common data and methods."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, Generic, TypeVar
 

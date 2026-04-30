@@ -1,8 +1,6 @@
 """Data used by this integration."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from typing import NamedTuple, cast

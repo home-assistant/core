@@ -1,7 +1,5 @@
 """Http views to control the config manager."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
 import logging

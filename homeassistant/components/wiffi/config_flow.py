@@ -3,8 +3,6 @@
 Used by UI to setup a wiffi integration.
 """
 
-from __future__ import annotations
-
 import errno
 from typing import Any
 

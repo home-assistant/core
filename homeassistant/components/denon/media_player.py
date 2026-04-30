@@ -1,7 +1,5 @@
 """Support for Denon Network Receivers."""
 
-from __future__ import annotations
-
 import logging
 
 import telnetlib  # pylint: disable=deprecated-module

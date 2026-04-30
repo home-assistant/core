@@ -1,7 +1,5 @@
 """Tesla Fleet Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from random import randint
 from time import time

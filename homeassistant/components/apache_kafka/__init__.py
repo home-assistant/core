@@ -1,7 +1,5 @@
 """Support for Apache Kafka."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import json
 from typing import Any, Literal

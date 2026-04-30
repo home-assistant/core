@@ -1,7 +1,5 @@
 """Support gathering system information of hosts which are running Glances."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (

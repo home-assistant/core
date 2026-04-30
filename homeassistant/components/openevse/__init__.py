@@ -1,7 +1,5 @@
 """The OpenEVSE integration."""
 
-from __future__ import annotations
-
 from openevsehttp.__main__ import OpenEVSE
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform

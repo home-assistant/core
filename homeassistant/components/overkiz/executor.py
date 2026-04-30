@@ -1,7 +1,5 @@
 """Class for helpers and communication with the OverKiz API."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 from urllib.parse import urlparse
 

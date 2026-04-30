@@ -1,7 +1,5 @@
 """Support for ESPHome media players."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import Any, cast

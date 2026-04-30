@@ -1,7 +1,5 @@
 """Shopping list commons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any, cast

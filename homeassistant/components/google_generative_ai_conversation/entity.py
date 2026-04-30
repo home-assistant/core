@@ -1,7 +1,5 @@
 """Conversation support for the Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import codecs

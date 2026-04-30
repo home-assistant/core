@@ -1,7 +1,5 @@
 """Support for Bosch Alarm Panel binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from bosch_alarm_mode2 import Panel

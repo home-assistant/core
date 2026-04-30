@@ -1,7 +1,5 @@
 """Base entity class for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 
 from homeassistant.core import callback

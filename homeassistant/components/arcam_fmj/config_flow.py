@@ -1,7 +1,5 @@
 """Config flow to configure the Arcam FMJ component."""
 
-from __future__ import annotations
-
 from typing import Any
 from urllib.parse import urlparse
 

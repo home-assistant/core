@@ -1,7 +1,5 @@
 """Demo platform that offers a fake event entity."""
 
-from __future__ import annotations
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback

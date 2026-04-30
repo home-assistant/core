@@ -1,7 +1,5 @@
 """Support for Obihai Sensors."""
 
-from __future__ import annotations
-
 import datetime
 
 from requests.exceptions import RequestException

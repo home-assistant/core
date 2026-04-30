@@ -1,7 +1,5 @@
 """Support for TPLink select entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Final, cast
 

@@ -1,7 +1,5 @@
 """Vodafone Station buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError

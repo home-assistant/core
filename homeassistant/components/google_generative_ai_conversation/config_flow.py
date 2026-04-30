@@ -1,7 +1,5 @@
 """Config flow for Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from functools import partial
 import logging

@@ -1,7 +1,5 @@
 """Support for Minut Point."""
 
-from __future__ import annotations
-
 import logging
 
 from pypoint import PointSession

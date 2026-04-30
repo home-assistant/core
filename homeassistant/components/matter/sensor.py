@@ -1,7 +1,5 @@
 """Matter sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast

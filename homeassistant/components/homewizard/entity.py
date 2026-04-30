@@ -1,7 +1,5 @@
 """Base entity for the HomeWizard integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

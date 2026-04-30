@@ -1,7 +1,5 @@
 """Helper functions for mysensors package."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable
 from enum import IntEnum

@@ -1,7 +1,5 @@
 """Axis network device abstraction."""
 
-from __future__ import annotations
-
 import axis
 from axis.errors import Unauthorized
 from axis.interfaces.mqtt import mqtt_json_to_event

@@ -1,7 +1,5 @@
 """Repair flows for the Synology DSM integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import cast

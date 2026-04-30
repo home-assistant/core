@@ -1,7 +1,5 @@
 """System Bridge Media Source Implementation."""
 
-from __future__ import annotations
-
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles

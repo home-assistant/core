@@ -1,7 +1,5 @@
 """Utility methods for the Tuya integration."""
 
-from __future__ import annotations
-
 from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError

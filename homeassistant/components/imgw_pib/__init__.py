@@ -1,7 +1,5 @@
 """The IMGW-PIB integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp import ClientError

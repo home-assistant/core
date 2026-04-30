@@ -1,7 +1,5 @@
 """Representation of Z-Wave switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from zwave_js_server.const import TARGET_VALUE_PROPERTY

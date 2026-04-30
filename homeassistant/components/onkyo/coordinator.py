@@ -1,7 +1,5 @@
 """Onkyo coordinators."""
 
-from __future__ import annotations
-
 import asyncio
 from enum import StrEnum
 import logging

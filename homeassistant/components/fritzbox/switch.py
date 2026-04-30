@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyfritzhome.devicetypes import FritzhomeTrigger

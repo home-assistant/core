@@ -1,7 +1,5 @@
 """API for Electric Kiwi bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from aiohttp import ClientSession
 from electrickiwi_api import AbstractAuth
 

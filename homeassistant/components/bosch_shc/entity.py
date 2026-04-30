@@ -1,7 +1,5 @@
 """Bosch Smart Home Controller base entity."""
 
-from __future__ import annotations
-
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
 from homeassistant.core import HomeAssistant

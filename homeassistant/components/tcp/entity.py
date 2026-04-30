@@ -1,7 +1,5 @@
 """Common code for TCP component."""
 
-from __future__ import annotations
-
 import logging
 import select
 import socket

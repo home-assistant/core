@@ -1,7 +1,5 @@
 """Support for the ElevenLabs text-to-speech service."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import AsyncGenerator, Mapping

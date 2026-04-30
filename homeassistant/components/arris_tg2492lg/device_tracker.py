@@ -1,7 +1,5 @@
 """Support for Arris TG2492LG router."""
 
-from __future__ import annotations
-
 from aiohttp.client_exceptions import ClientResponseError
 from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol

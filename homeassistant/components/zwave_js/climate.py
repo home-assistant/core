@@ -1,7 +1,5 @@
 """Representation of Z-Wave thermostats."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from zwave_js_server.const import CommandClass

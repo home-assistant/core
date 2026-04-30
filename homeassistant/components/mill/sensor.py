@@ -1,8 +1,6 @@
 """Support for mill wifi-enabled home heaters."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 import mill
 
 from homeassistant.components.sensor import (

@@ -1,7 +1,5 @@
 """Support for Tibber notifications."""
 
-from __future__ import annotations
-
 import tibber
 
 from homeassistant.components.notify import (

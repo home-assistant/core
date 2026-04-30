@@ -1,7 +1,5 @@
 """Fan platform for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 
 from duco.exceptions import DucoError, DucoRateLimitError

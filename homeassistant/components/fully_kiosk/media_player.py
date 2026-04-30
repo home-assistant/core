@@ -1,7 +1,5 @@
 """Fully Kiosk Browser media player."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components import media_source

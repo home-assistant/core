@@ -1,7 +1,5 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv

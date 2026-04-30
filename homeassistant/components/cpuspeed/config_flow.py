@@ -1,7 +1,5 @@
 """Config flow to configure the CPU Speed integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from cpuinfo import cpuinfo

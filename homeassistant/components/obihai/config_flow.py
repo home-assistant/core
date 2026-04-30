@@ -1,7 +1,5 @@
 """Config flow to configure the Obihai integration."""
 
-from __future__ import annotations
-
 from socket import gaierror, gethostbyname
 from typing import Any
 

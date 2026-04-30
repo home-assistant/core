@@ -1,7 +1,5 @@
 """Media player entity for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta

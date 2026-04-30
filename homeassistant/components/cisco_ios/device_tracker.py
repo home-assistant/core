@@ -1,7 +1,5 @@
 """Support for Cisco IOS Routers."""
 
-from __future__ import annotations
-
 import logging
 
 from pexpect import pxssh

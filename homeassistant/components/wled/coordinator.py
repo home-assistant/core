@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for WLED."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from wled import (

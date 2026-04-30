@@ -1,7 +1,5 @@
 """Helper functions for LG webOS TV."""
 
-from __future__ import annotations
-
 import logging
 
 from aiowebostv import WebOsClient, WebOsTvState

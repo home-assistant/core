@@ -1,7 +1,5 @@
 """Support for TPLink Omada device firmware updates."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tplink_omada_client.devices import OmadaListDevice

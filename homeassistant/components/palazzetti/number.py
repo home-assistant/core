@@ -1,7 +1,5 @@
 """Number platform for Palazzetti settings."""
 
-from __future__ import annotations
-
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 from pypalazzetti.fan import FanType
 

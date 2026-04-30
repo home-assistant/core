@@ -1,7 +1,5 @@
 """Component providing support for Ring buttons."""
 
-from __future__ import annotations
-
 from ring_doorbell import RingOther
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription

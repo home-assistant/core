@@ -1,7 +1,5 @@
 """Base Entity for the jvc_projector integration."""
 
-from __future__ import annotations
-
 import logging
 
 from jvcprojector import Command, JvcProjector

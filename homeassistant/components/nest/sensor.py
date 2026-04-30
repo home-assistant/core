@@ -1,7 +1,5 @@
 """Support for Google Nest SDM sensors."""
 
-from __future__ import annotations
-
 import logging
 
 from google_nest_sdm.device import Device

@@ -1,7 +1,5 @@
 """Coordinator module for managing Growatt data fetching."""
 
-from __future__ import annotations
-
 import datetime
 import json
 import logging

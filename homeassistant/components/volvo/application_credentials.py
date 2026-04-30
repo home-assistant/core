@@ -1,7 +1,5 @@
 """Application credentials platform for the Volvo integration."""
 
-from __future__ import annotations
-
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.scopes import ALL_SCOPES
 

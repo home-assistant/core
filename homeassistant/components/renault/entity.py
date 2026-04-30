@@ -1,7 +1,5 @@
 """Base classes for Renault entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from renault_api.kamereon.models import KamereonVehicleDataAttributes

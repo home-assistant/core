@@ -1,7 +1,5 @@
 """Config flow for the Open Thread Border Router integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, cast

@@ -1,7 +1,5 @@
 """The Vogel's MotionMount integration."""
 
-from __future__ import annotations
-
 import socket
 
 import motionmount

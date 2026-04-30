@@ -1,7 +1,5 @@
 """Support for switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError
 from typing import Any, Final

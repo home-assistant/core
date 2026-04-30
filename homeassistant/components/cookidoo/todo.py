@@ -1,7 +1,5 @@
 """Todo platform for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from cookidoo_api import (

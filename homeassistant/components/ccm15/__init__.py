@@ -1,7 +1,5 @@
 """The Midea ccm15 AC Controller integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 

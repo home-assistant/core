@@ -1,7 +1,5 @@
 """Support for Edimax switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyedimax.smartplug import SmartPlug

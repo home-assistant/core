@@ -1,7 +1,5 @@
 """Config flow for Improv via BLE integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from contextlib import asynccontextmanager

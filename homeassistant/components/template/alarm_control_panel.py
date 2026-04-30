@@ -1,7 +1,5 @@
 """Support for Template alarm control panels."""
 
-from __future__ import annotations
-
 from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any

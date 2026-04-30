@@ -1,7 +1,5 @@
 """Config flow to configure SMHI component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pysmhi import SmhiForecastException, SMHIPointForecast

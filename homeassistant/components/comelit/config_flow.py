@@ -1,7 +1,5 @@
 """Config flow for Comelit integration."""
 
-from __future__ import annotations
-
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 import re

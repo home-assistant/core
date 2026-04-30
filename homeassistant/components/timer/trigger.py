@@ -1,7 +1,5 @@
 """Provides triggers for timers."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger

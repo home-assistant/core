@@ -1,7 +1,5 @@
 """Config flow for the Denon RS232 integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from denon_rs232 import DenonReceiver

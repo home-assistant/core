@@ -1,7 +1,5 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

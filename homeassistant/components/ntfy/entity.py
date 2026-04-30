@@ -1,7 +1,5 @@
 """Base entity for ntfy integration."""
 
-from __future__ import annotations
-
 from yarl import URL
 
 from homeassistant.config_entries import ConfigSubentry

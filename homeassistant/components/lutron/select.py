@@ -1,7 +1,5 @@
 """Support for Lutron selects."""
 
-from __future__ import annotations
-
 from pylutron import Button, Keypad, Led, Lutron
 
 from homeassistant.components.select import SelectEntity

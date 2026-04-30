@@ -1,7 +1,5 @@
 """Support for Tasmota covers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from hatasmota import const as tasmota_const, shutter as tasmota_shutter

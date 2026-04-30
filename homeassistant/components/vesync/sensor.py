@@ -1,7 +1,5 @@
 """Support for voltage, power & energy sensors for VeSync outlets."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging

@@ -1,7 +1,5 @@
 """The HTTP api to control the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress

@@ -1,7 +1,5 @@
 """Support for Goal Zero Yeti Switches."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription

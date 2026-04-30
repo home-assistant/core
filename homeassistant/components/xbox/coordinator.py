@@ -1,7 +1,5 @@
 """Coordinator for the xbox integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

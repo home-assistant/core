@@ -1,7 +1,5 @@
 """The ThermoPro Bluetooth integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 

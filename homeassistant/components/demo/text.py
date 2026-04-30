@@ -1,7 +1,5 @@
 """Demo platform that offers a fake text entity."""
 
-from __future__ import annotations
-
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

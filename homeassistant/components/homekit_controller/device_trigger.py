@@ -1,7 +1,5 @@
 """Provides device automations for homekit devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from typing import TYPE_CHECKING, Any
 

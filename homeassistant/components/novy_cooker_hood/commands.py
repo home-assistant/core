@@ -1,7 +1,5 @@
 """Helpers for loading Novy cooker-hood RF commands."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from rf_protocols import CodeCollection, get_codes

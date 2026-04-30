@@ -6,8 +6,6 @@ others.
 Note that the API used by this integration's client does not support cooling.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Final

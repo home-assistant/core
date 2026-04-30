@@ -1,7 +1,5 @@
 """The Ollama integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from types import MappingProxyType

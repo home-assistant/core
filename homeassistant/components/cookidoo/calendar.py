@@ -1,7 +1,5 @@
 """Calendar platform for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
 import logging
 

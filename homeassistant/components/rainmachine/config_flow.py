@@ -1,7 +1,5 @@
 """Config flow to configure the RainMachine component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from regenmaschine import Client

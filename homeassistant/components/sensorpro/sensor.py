@@ -1,7 +1,5 @@
 """Support for SensorPro sensors."""
 
-from __future__ import annotations
-
 from sensorpro_ble import (
     SensorDeviceClass as SensorProSensorDeviceClass,
     SensorUpdate,

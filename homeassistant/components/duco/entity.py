@@ -1,7 +1,5 @@
 """Base entity for the Duco integration."""
 
-from __future__ import annotations
-
 from duco.models import Node
 
 from homeassistant.const import ATTR_VIA_DEVICE

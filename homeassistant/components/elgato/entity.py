@@ -1,7 +1,5 @@
 """Base entity for the Elgato integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,

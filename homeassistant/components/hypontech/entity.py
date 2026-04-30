@@ -1,7 +1,5 @@
 """Base entity for the Hypontech Cloud integration."""
 
-from __future__ import annotations
-
 from hyponcloud import PlantData
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Support for Magic Home select."""
 
-from __future__ import annotations
-
 import asyncio
 
 from flux_led.aio import AIOWifiLedBulb

@@ -1,7 +1,5 @@
 """Support for ESPHome cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from functools import partial

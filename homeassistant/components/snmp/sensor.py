@@ -1,7 +1,5 @@
 """Support for displaying collected data over SNMP."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from struct import unpack

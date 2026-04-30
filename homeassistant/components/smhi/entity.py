@@ -1,7 +1,5 @@
 """Support for the Swedish weather institute weather  base entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 
 from homeassistant.core import callback

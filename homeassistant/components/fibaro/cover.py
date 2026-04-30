@@ -1,7 +1,5 @@
 """Support for Fibaro cover - curtains, rollershutters etc."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyfibaro.fibaro_device import DeviceModel

@@ -1,7 +1,5 @@
 """Config flow for LD2410BLE integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

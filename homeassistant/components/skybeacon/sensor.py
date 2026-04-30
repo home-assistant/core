@@ -1,7 +1,5 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
 
-from __future__ import annotations
-
 import logging
 import threading
 from uuid import UUID

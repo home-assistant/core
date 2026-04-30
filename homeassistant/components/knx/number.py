@@ -1,7 +1,5 @@
 """Support for KNX number entities."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from xknx.devices import NumericValue

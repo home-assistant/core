@@ -1,7 +1,5 @@
 """Support for exposing Home Assistant via Zeroconf."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from ipaddress import IPv4Address, IPv6Address
 import logging

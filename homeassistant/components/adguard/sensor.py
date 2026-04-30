@@ -1,7 +1,5 @@
 """Support for AdGuard Home sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta

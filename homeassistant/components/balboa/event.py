@@ -1,7 +1,5 @@
 """Support for Balboa events."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from pybalboa import EVENT_UPDATE, SpaClient

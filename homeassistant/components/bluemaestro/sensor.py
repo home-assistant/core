@@ -1,7 +1,5 @@
 """Support for BlueMaestro sensors."""
 
-from __future__ import annotations
-
 from bluemaestro_ble import (
     SensorDeviceClass as BlueMaestroSensorDeviceClass,
     SensorUpdate,

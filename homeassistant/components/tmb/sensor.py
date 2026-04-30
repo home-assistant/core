@@ -1,7 +1,5 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any

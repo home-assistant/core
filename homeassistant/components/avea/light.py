@@ -1,7 +1,5 @@
 """Support for the Elgato Avea lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import avea

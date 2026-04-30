@@ -1,7 +1,5 @@
 """Support for setting the Deluge BitTorrent client in Pause."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity

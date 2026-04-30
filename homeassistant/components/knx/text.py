@@ -1,7 +1,5 @@
 """Support for KNX text entities."""
 
-from __future__ import annotations
-
 from propcache.api import cached_property
 from xknx.devices import Notification as XknxNotification
 from xknx.dpt import DPTLatin1

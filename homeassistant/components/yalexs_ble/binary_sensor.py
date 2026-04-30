@@ -1,7 +1,5 @@
 """Support for yalexs ble binary sensors."""
 
-from __future__ import annotations
-
 from yalexs_ble import ConnectionInfo, DoorStatus, LockInfo, LockState
 
 from homeassistant.components.binary_sensor import (

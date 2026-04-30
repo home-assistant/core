@@ -1,7 +1,5 @@
 """Select entities for the Motionblinds Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
 
 from motionblindsble.const import MotionBlindType, MotionSpeedLevel

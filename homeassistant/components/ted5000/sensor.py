@@ -1,7 +1,5 @@
 """Support gathering ted5000 information."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from datetime import timedelta
 import logging

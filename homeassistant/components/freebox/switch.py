@@ -1,7 +1,5 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

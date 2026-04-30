@@ -1,7 +1,5 @@
 """Viessmann ViCare button device."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 import logging

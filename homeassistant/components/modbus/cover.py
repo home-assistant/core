@@ -1,7 +1,5 @@
 """Support for Modbus covers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState

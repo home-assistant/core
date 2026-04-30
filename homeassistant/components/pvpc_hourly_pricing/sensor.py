@@ -1,7 +1,5 @@
 """Sensor to collect the reference daily prices of electricity ('PVPC') in Spain."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime
 import logging

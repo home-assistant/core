@@ -1,7 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress

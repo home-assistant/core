@@ -1,7 +1,5 @@
 """Sensor entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 import contextlib
 from datetime import timedelta
 

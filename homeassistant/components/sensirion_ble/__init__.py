@@ -1,7 +1,5 @@
 """The sensirion_ble integration."""
 
-from __future__ import annotations
-
 import logging
 
 from sensirion_ble import SensirionBluetoothDeviceData

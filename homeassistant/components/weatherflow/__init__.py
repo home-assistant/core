@@ -1,7 +1,5 @@
 """Get data from Smart Weather station via UDP."""
 
-from __future__ import annotations
-
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.device import EVENT_LOAD_COMPLETE, WeatherFlowDevice
 from pyweatherflowudp.errors import ListenerError

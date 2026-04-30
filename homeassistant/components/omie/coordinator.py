@@ -1,7 +1,5 @@
 """Coordinator for the OMIE - Spain and Portugal electricity prices integration."""
 
-from __future__ import annotations
-
 import datetime as dt
 from datetime import timedelta
 import logging

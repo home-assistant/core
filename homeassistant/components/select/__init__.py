@@ -1,7 +1,5 @@
 """Component to allow selecting an option from a list as platforms."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any, final

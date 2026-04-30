@@ -1,7 +1,5 @@
 """Data coordinator for receiving LD2410B updates."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import time

@@ -1,7 +1,5 @@
 """Config flow to configure the Stookwijzer integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from stookwijzer import Stookwijzer

@@ -1,7 +1,5 @@
 """Remote control support for Apple TV."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from typing import Any

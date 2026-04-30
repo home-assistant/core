@@ -1,7 +1,5 @@
 """Support for Netgear LTE notifications."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import eternalegypt

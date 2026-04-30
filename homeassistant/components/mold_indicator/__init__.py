@@ -1,7 +1,5 @@
 """Calculates mold growth indication from temperature and humidity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 

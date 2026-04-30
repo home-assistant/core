@@ -1,7 +1,5 @@
 """Config flow for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from ipaddress import AddressValueError, IPv4Address
 from typing import Any, TypedDict
 

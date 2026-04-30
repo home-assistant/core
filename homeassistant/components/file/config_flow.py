@@ -1,7 +1,5 @@
 """Config flow for file integration."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 

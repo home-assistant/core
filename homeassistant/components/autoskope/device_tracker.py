@@ -1,7 +1,5 @@
 """Support for Autoskope device tracking."""
 
-from __future__ import annotations
-
 from autoskope_client.constants import MANUFACTURER
 from autoskope_client.models import Vehicle
 

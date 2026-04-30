@@ -1,7 +1,5 @@
 """Config flow for pvpc_hourly_pricing."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 

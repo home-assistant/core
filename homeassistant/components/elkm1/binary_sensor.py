@@ -1,7 +1,5 @@
 """Support for control of ElkM1 binary sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.const import ZoneLogicalStatus, ZoneType

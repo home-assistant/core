@@ -1,7 +1,5 @@
 """Platform for Lunatone light integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from lunatone_rest_api_client import DALIBroadcast

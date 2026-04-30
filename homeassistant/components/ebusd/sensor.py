@@ -1,7 +1,5 @@
 """Support for Ebusd sensors."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any, cast

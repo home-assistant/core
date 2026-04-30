@@ -1,7 +1,5 @@
 """Support for interface with an LG webOS TV."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress

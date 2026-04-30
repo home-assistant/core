@@ -1,7 +1,5 @@
 """Support for ReCollect Waste calendars."""
 
-from __future__ import annotations
-
 import datetime
 
 from aiorecollect.client import PickupEvent

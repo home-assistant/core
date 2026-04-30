@@ -1,7 +1,5 @@
 """Provide functionality to STT."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import AsyncIterable
 from dataclasses import asdict

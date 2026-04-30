@@ -1,7 +1,5 @@
 """Voluptuous schemas for the KNX integration."""
 
-from __future__ import annotations
-
 from abc import ABC
 from collections import OrderedDict
 from datetime import timedelta

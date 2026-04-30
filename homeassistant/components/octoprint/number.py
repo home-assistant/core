@@ -1,7 +1,5 @@
 """Support for OctoPrint number entities."""
 
-from __future__ import annotations
-
 import logging
 
 from pyoctoprintapi import OctoprintClient

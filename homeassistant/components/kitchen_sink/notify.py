@@ -1,7 +1,5 @@
 """Demo platform that offers a fake notify entity."""
 
-from __future__ import annotations
-
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.config_entries import ConfigEntry

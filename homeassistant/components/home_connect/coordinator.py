@@ -1,7 +1,5 @@
 """Coordinator for Home Connect."""
 
-from __future__ import annotations
-
 from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from dataclasses import dataclass

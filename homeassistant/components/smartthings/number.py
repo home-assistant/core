@@ -1,7 +1,5 @@
 """Support for number entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode

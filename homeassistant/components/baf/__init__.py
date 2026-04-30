@@ -1,7 +1,5 @@
 """The Big Ass Fans integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 
 from aiobafi6 import Device, Service

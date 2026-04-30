@@ -1,7 +1,5 @@
 """The repairs integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

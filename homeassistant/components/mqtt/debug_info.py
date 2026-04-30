@@ -1,7 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
 
-from __future__ import annotations
-
 from collections import deque
 from dataclasses import dataclass
 import datetime as dt

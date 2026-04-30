@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Fast.com integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from fastdotcom import fast_com

@@ -1,7 +1,5 @@
 """Service registration for the OpenDisplay integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import contextlib

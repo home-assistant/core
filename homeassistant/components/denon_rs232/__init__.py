@@ -1,7 +1,5 @@
 """The Denon RS232 integration."""
 
-from __future__ import annotations
-
 from denon_rs232 import DenonReceiver, ReceiverState
 from denon_rs232.models import MODELS
 

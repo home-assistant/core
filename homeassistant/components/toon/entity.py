@@ -1,7 +1,5 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.helpers.device_registry import DeviceInfo

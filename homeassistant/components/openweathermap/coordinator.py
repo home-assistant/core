@@ -1,7 +1,5 @@
 """Data coordinator for the OpenWeatherMap (OWM) service."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any

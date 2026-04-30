@@ -1,7 +1,5 @@
 """Arcam media player."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import functools
 import logging

@@ -1,7 +1,5 @@
 """Coordinator to handle keeping device states up to date."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time

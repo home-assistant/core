@@ -1,7 +1,5 @@
 """Support for Hass.io."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import replace
 from datetime import datetime

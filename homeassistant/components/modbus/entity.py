@@ -1,7 +1,5 @@
 """Base implementation for all modbus platforms."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 import copy

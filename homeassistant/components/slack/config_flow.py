@@ -1,7 +1,5 @@
 """Config flow for Slack integration."""
 
-from __future__ import annotations
-
 import logging
 
 from slack_sdk.errors import SlackApiError

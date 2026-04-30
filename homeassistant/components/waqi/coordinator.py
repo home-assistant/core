@@ -1,7 +1,5 @@
 """Coordinator for the World Air Quality Index (WAQI) integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from aiowaqi import WAQIAirQuality, WAQIClient, WAQIError

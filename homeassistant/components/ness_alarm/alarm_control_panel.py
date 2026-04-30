@@ -1,7 +1,5 @@
 """Support for Ness D8X/D16X alarm panel."""
 
-from __future__ import annotations
-
 import logging
 
 from nessclient import ArmingMode, ArmingState, Client

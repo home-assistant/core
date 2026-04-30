@@ -1,7 +1,5 @@
 """Support for UK Met Office weather service."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any, cast
 

@@ -1,7 +1,5 @@
 """Config flow for Downloader integration."""
 
-from __future__ import annotations
-
 import os
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Config flow for Knocki integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from knocki import KnockiClient, KnockiConnectionError, KnockiInvalidAuthError

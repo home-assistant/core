@@ -1,7 +1,5 @@
 """Coordinator for the WattTime integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from aiowatttime import Client

@@ -1,7 +1,5 @@
 """Data update coordinator for ReCollect Waste."""
 
-from __future__ import annotations
-
 from datetime import date, timedelta
 
 from aiorecollect.client import Client, PickupEvent

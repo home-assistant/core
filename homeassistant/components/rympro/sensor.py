@@ -1,7 +1,5 @@
 """Sensor for RymPro meters."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (

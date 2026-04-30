@@ -1,7 +1,5 @@
 """Helper to test significant Alarm Control Panel state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback

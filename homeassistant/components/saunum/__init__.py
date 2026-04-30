@@ -1,7 +1,5 @@
 """The Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 from pysaunum import SaunumClient, SaunumConnectionError, SaunumTimeoutError
 
 from homeassistant.config_entries import ConfigEntry

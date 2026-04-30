@@ -1,7 +1,5 @@
 """Coordinator for the SamsungTV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from typing import Any

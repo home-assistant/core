@@ -1,7 +1,5 @@
 """Config flow for ista EcoTrend integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any

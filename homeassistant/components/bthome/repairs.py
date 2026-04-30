@@ -1,7 +1,5 @@
 """Repairs for the BTHome integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant import data_entry_flow

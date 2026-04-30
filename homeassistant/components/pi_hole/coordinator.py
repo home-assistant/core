@@ -1,7 +1,5 @@
 """Coordinator for the Pi-hole integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

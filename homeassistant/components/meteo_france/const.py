@@ -1,7 +1,5 @@
 """Meteo-France component constants."""
 
-from __future__ import annotations
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,

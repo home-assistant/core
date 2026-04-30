@@ -1,7 +1,5 @@
 """Support for system log."""
 
-from __future__ import annotations
-
 from collections import OrderedDict, deque
 import logging
 import re

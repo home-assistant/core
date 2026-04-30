@@ -1,7 +1,5 @@
 """Support for Z-Wave controls using the number platform."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 

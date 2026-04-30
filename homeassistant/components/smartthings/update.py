@@ -1,7 +1,5 @@
 """Support for update entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from awesomeversion import AwesomeVersion

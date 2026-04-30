@@ -1,7 +1,5 @@
 """Helper to test significant Water Heater state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import UnitOfTemperature

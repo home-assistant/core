@@ -1,7 +1,5 @@
 """Config flow for AVM FRITZ!SmartHome."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import ipaddress
 from typing import Any, Self

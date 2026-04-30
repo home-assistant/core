@@ -6,8 +6,6 @@ be stable between reboots and upgrades.
 This module generates and stores them in a HA storage.
 """
 
-from __future__ import annotations
-
 from uuid import UUID
 
 from pyhap.util import uuid_to_hap_type

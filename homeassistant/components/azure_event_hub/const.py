@@ -1,7 +1,5 @@
 """Constants and shared schema for the Azure Event Hub integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN

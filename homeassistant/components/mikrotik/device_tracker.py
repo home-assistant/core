@@ -1,7 +1,5 @@
 """Support for Mikrotik routers as device tracker."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.device_tracker import (

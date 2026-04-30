@@ -1,7 +1,5 @@
 """Binary sensor entities for LIFX integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,

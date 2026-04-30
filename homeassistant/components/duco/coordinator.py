@@ -1,7 +1,5 @@
 """Data update coordinator for the Duco integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

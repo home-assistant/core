@@ -1,7 +1,5 @@
 """Provides device triggers for Xiaomi BLE."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

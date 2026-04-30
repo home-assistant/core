@@ -1,7 +1,5 @@
 """Support for Hue binary sensors."""
 
-from __future__ import annotations
-
 from functools import partial
 
 from aiohue.v2 import HueBridgeV2

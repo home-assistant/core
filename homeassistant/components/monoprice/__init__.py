@@ -1,7 +1,5 @@
 """The Monoprice 6-Zone Amplifier integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

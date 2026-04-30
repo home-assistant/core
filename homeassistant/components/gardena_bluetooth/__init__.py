@@ -1,7 +1,5 @@
 """The Gardena Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bleak.backends.device import BLEDevice

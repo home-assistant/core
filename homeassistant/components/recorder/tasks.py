@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections.abc import Callable, Iterable

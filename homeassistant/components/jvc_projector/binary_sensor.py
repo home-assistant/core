@@ -1,7 +1,5 @@
 """Binary Sensor platform for JVC Projector integration."""
 
-from __future__ import annotations
-
 from jvcprojector import command as cmd
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

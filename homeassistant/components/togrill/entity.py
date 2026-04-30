@@ -1,7 +1,5 @@
 """Provides the base entities."""
 
-from __future__ import annotations
-
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
 from togrill_bluetooth.exceptions import BaseError

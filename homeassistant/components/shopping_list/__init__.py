@@ -1,7 +1,5 @@
 """Support to manage a shopping list."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from typing import Any

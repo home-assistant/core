@@ -1,7 +1,5 @@
 """Support for Tuya Smart devices."""
 
-from __future__ import annotations
-
 import logging
 
 from tuya_sharing import Manager

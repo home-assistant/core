@@ -1,7 +1,5 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
 
-from __future__ import annotations
-
 import logging
 from random import randrange
 from typing import Any, NamedTuple

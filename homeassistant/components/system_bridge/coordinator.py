@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for System Bridge."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta

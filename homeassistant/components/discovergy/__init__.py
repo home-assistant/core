@@ -1,7 +1,5 @@
 """The Discovergy integration."""
 
-from __future__ import annotations
-
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError

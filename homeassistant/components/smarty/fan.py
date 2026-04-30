@@ -1,7 +1,5 @@
 """Platform to control a Salda Smarty XP/XV ventilation unit."""
 
-from __future__ import annotations
-
 import logging
 import math
 from typing import Any

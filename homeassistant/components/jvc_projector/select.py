@@ -1,7 +1,5 @@
 """Select platform for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Final
 

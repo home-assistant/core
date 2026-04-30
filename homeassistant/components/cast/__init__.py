@@ -1,8 +1,6 @@
 """Component to embed Google Cast."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 from typing import Protocol
 
 from pychromecast import Chromecast

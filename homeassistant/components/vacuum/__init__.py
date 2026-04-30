@@ -1,7 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass

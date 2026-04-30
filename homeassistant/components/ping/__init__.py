@@ -1,7 +1,5 @@
 """The ping component."""
 
-from __future__ import annotations
-
 import logging
 
 from icmplib import SocketPermissionError, async_ping

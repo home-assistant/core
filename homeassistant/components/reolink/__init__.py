@@ -1,7 +1,5 @@
 """Reolink integration for HomeAssistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging

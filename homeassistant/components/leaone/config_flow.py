@@ -1,7 +1,5 @@
 """Config flow for Leaone integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from leaone_ble import LeaoneBluetoothDeviceData as DeviceData

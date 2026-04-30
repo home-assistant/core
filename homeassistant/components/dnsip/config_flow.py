@@ -1,7 +1,5 @@
 """Adds config flow for dnsip integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from typing import Any, Literal

@@ -1,7 +1,5 @@
 """Coordinator for the Anthropic integration."""
 
-from __future__ import annotations
-
 import datetime
 import re
 

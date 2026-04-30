@@ -1,7 +1,5 @@
 """The OpenRouter integration."""
 
-from __future__ import annotations
-
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 
 from homeassistant.config_entries import ConfigEntry

@@ -1,7 +1,5 @@
 """Represent the Freebox router and its devices and sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime

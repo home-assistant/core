@@ -1,7 +1,5 @@
 """Data coordinator for the dwd_weather_warnings integration."""
 
-from __future__ import annotations
-
 from dwdwfsapi import DwdWeatherWarningsAPI
 
 from homeassistant.config_entries import ConfigEntry

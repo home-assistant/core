@@ -1,7 +1,5 @@
 """Config flow for the AWS S3 integration."""
 
-from __future__ import annotations
-
 from typing import Any
 from urllib.parse import urlparse
 

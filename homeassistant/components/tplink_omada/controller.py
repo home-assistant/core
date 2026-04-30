@@ -1,7 +1,5 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 

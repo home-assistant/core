@@ -1,7 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN

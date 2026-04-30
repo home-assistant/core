@@ -1,7 +1,5 @@
 """Support for Nexia switches."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import functools as ft
 from typing import Any

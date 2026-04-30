@@ -1,7 +1,5 @@
 """Support for KNX time entities."""
 
-from __future__ import annotations
-
 from datetime import time as dt_time
 from typing import Any
 

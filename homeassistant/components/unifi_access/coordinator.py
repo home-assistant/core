@@ -1,7 +1,5 @@
 """Data update coordinator for the UniFi Access integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, replace

@@ -1,7 +1,5 @@
 """Support for esphome devices."""
 
-from __future__ import annotations
-
 import logging
 
 from aioesphomeapi import APIClient, APIConnectionError

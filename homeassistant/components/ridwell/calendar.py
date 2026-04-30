@@ -1,7 +1,5 @@
 """Support for Ridwell calendars."""
 
-from __future__ import annotations
-
 import datetime
 
 from aioridwell.model import PickupCategory, RidwellAccount, RidwellPickupEvent

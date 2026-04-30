@@ -1,7 +1,5 @@
 """Config flow for WeatherFlow."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Future
 from asyncio.exceptions import CancelledError

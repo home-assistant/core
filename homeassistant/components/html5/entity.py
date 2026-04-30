@@ -1,7 +1,5 @@
 """Base entities for HTML5 integration."""
 
-from __future__ import annotations
-
 from typing import NotRequired, TypedDict
 
 from aiohttp import ClientSession

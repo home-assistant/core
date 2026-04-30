@@ -1,7 +1,5 @@
 """The PrusaLink integration."""
 
-from __future__ import annotations
-
 from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth
 

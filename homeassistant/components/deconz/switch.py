@@ -1,7 +1,5 @@
 """Support for deCONZ switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pydeconz.models.event import EventType

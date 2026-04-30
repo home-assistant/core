@@ -1,7 +1,5 @@
 """Support for Daikin AirBase zones."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity

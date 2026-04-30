@@ -1,7 +1,5 @@
 """Repairs implementation for the VoIP integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.assist_pipeline.repair_flows import (  # pylint: disable=hass-component-root-import
     AssistInProgressDeprecatedRepairFlow,
 )

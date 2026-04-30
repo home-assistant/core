@@ -1,7 +1,5 @@
 """Expose regular shell commands as services."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress

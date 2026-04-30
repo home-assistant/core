@@ -1,7 +1,5 @@
 """Base class for Wyoming providers."""
 
-from __future__ import annotations
-
 import asyncio
 
 from wyoming.client import AsyncTcpClient

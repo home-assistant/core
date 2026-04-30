@@ -1,7 +1,5 @@
 """Config flow for StreamLabs integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from streamlabswater.streamlabswater import StreamlabsClient

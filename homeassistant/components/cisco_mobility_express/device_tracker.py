@@ -1,7 +1,5 @@
 """Support for Cisco Mobility Express."""
 
-from __future__ import annotations
-
 import logging
 
 from ciscomobilityexpress.ciscome import CiscoMobilityExpress

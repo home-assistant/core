@@ -1,7 +1,5 @@
 """Support for Wi-Fi enabled iRobot Roombas."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any

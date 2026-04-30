@@ -1,7 +1,5 @@
 """Integration for SFTP Storage."""
 
-from __future__ import annotations
-
 import contextlib
 from dataclasses import dataclass, field
 import errno

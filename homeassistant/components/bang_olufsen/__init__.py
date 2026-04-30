@@ -1,7 +1,5 @@
 """The Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from aiohttp.client_exceptions import (

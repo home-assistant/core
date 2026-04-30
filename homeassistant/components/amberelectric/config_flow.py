@@ -1,7 +1,5 @@
 """Config flow for the Amber Electric integration."""
 
-from __future__ import annotations
-
 import amberelectric
 from amberelectric.models.site import Site
 from amberelectric.models.site_status import SiteStatus

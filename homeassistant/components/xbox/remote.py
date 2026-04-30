@@ -1,7 +1,5 @@
 """Xbox Remote support."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import wraps

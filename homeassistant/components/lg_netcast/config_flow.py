@@ -1,7 +1,5 @@
 """Config flow to configure the LG Netcast TV integration."""
 
-from __future__ import annotations
-
 import contextlib
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any

@@ -1,7 +1,5 @@
 """DataUpdateCoordinators for the Fronius integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any

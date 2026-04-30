@@ -1,7 +1,5 @@
 """Support for NWS weather service."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from functools import partial
 from typing import Any, Required, TypedDict, cast

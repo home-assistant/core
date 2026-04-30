@@ -1,7 +1,5 @@
 """Handle legacy speech-to-text platforms."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
 import logging

@@ -1,7 +1,5 @@
 """Support for MQTT lawn mowers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 import logging

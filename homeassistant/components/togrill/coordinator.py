@@ -1,7 +1,5 @@
 """Coordinator for the ToGrill Bluetooth integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta

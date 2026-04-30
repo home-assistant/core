@@ -1,7 +1,5 @@
 """Generic AirOS Entity Class."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

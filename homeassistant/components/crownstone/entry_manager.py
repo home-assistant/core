@@ -1,7 +1,5 @@
 """Manager to set up IO with Crownstone devices for a config entry."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

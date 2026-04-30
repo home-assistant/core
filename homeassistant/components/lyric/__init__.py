@@ -1,7 +1,5 @@
 """The Honeywell Lyric integration."""
 
-from __future__ import annotations
-
 from aiolyric import Lyric
 
 from homeassistant.const import Platform

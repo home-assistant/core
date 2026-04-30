@@ -1,7 +1,5 @@
 """Support led_brightness for Mi Air Humidifier."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
 from typing import Any, NamedTuple

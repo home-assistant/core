@@ -1,7 +1,5 @@
 """Provides diagnostics for Version."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from attr import asdict

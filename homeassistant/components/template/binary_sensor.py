@@ -1,7 +1,5 @@
 """Support for exposing a templated binary sensor."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta

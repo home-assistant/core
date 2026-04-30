@@ -1,7 +1,5 @@
 """Utility functions to combine state attributes from multiple entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from itertools import groupby
 from math import atan2, cos, degrees, radians, sin

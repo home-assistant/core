@@ -1,7 +1,5 @@
 """Support for statistics for sensor values."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib

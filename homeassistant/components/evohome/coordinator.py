@@ -1,7 +1,5 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus

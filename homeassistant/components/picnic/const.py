@@ -1,7 +1,5 @@
 """Constants for the Picnic integration."""
 
-from __future__ import annotations
-
 DOMAIN = "picnic"
 
 SERVICE_ADD_PRODUCT_TO_CART = "add_product"

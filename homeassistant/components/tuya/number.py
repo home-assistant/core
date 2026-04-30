@@ -1,7 +1,5 @@
 """Support for Tuya number."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.number import (
     NumberDefinition,
     get_default_definition,

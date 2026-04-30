@@ -1,7 +1,5 @@
 """Config flow for the EufyLife integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from eufylife_ble_client import MODEL_TO_NAME

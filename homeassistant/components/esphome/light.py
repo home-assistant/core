@@ -1,7 +1,5 @@
 """Support for ESPHome lights."""
 
-from __future__ import annotations
-
 from functools import lru_cache, partial
 from operator import methodcaller
 from typing import TYPE_CHECKING, Any, cast

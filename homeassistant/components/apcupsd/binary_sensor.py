@@ -1,7 +1,5 @@
 """Support for tracking the online status of a UPS."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.components.binary_sensor import (

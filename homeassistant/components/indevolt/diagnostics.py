@@ -1,7 +1,5 @@
 """Diagnostics support for Indevolt integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from indevolt_api import IndevoltBattery, IndevoltSystem

@@ -1,7 +1,5 @@
 """Update coordinator for HomeWizard."""
 
-from __future__ import annotations
-
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry

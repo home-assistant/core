@@ -1,7 +1,5 @@
 """Support for functionality to keep track of the sun."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import Any
