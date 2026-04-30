@@ -813,14 +813,7 @@ async def webhook_scan_tag(
 async def webhook_update_live_activity_token(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
-    """Handle a Live Activity token update from the iOS companion app.
-
-    When the iOS app creates a Live Activity locally, ActivityKit provides
-    a per-activity APNs push token. The app sends this token so HA can
-    later include it as live_activity_token in the push relay request.
-    The relay server places it in the FCM message's apns.liveActivityToken
-    field, and FCM handles APNs delivery automatically.
-    """
+    """Store a Live Activity APNs token sent by the iOS app."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
 
@@ -841,12 +834,7 @@ async def webhook_update_live_activity_token(
 async def webhook_live_activity_dismissed(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:
-    """Handle a Live Activity dismissal from the iOS companion app.
-
-    When a Live Activity ends on the device (user dismissal, expiration,
-    or an explicit end event), the app notifies HA so the stored push
-    token for that activity can be cleaned up.
-    """
+    """Remove a stored Live Activity token when the activity ends on device."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
 

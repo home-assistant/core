@@ -219,23 +219,8 @@ class MobileAppNotificationService(BaseNotificationService):
     def _get_live_activity_token(
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> str | None:
-        """Return the Live Activity APNs token if this notification targets one.
-
-        Checks whether the payload contains live_update: true and a tag. If a
-        per-activity APNs token is stored for that tag it is returned. Otherwise,
-        if the device has a push-to-start token, that is returned so the relay
-        server can start a new activity remotely.
-
-        The token is sent alongside the regular FCM push_token as live_activity_token.
-        The relay places it in the FCM payload's apns.liveActivityToken field, and FCM
-        handles apns-push-type: liveactivity and APNs routing automatically.
-
-        Returns None if this is a normal notification (not a Live Activity).
-        """
+        """Return the Live Activity APNs token for this notification, or None."""
         notification_data = data.get(ATTR_DATA) or {}
-        # live_update is the cross-platform YAML key shared with Android.
-        # On iOS it maps to starting or updating an ActivityKit Live Activity;
-        # on Android it maps to a different mechanism (progress notifications).
         if not notification_data.get(ATTR_LIVE_UPDATE):
             return None
 
@@ -252,10 +237,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
         app_data = entry.data[ATTR_APP_DATA]
-        if token := app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN):
-            return token
-
-        return None
+        return app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN)
 
     async def _async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
@@ -296,9 +278,6 @@ async def _send_message(
         ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
         "registration_info": reg_info,
     }
-    # If this is a Live Activity notification, include the APNs token so the relay
-    # server can set apns.liveActivityToken in the FCM payload. FCM then handles
-    # apns-push-type: liveactivity and APNs routing automatically.
     if live_activity_token:
         payload[ATTR_LIVE_ACTIVITY_TOKEN] = live_activity_token
 

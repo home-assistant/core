@@ -36,26 +36,18 @@ ATTR_PUSH_TAG = "tag"
 ATTR_PUSH_WEBSOCKET_CHANNEL = "push_websocket_channel"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
-
-ATTR_LIVE_UPDATE = "live_update"
-ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
-ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
-ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT = (
-    "live_activity_push_to_start_apns_environment"
-)
-# Tag identifying a specific Live Activity instance in the iOS companion app webhooks.
-ATTR_LIVE_ACTIVITY_TAG = "live_activity_tag"
-
-# In-memory store for per-device Live Activity push tokens, keyed by webhook_id → live_activity_tag.
-# Populated by mobile_app_live_activity_token and cleared by mobile_app_live_activity_dismissed webhooks.
-DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
-
 ATTR_PUSH_RATE_LIMITS = "rateLimits"
 ATTR_PUSH_RATE_LIMITS_ERRORS = "errors"
 ATTR_PUSH_RATE_LIMITS_MAXIMUM = "maximum"
 ATTR_PUSH_RATE_LIMITS_RESETS_AT = "resetsAt"
 ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = "successful"
 ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
+
+ATTR_LIVE_UPDATE = "live_update"
+ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
+ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
+ATTR_LIVE_ACTIVITY_TAG = "live_activity_tag"
+DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"
@@ -104,18 +96,8 @@ SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
         vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
-        # Set to True to indicate that this registration will connect via websocket channel
-        # to receive push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
-        # Push-to-start token and environment must be provided together — a token
-        # without an environment is ambiguous (sandbox tokens fail on production).
-        vol.Inclusive(
-            ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN, "live_activity_push_to_start"
-        ): vol.All(cv.string, vol.Length(min=1)),
-        vol.Inclusive(
-            ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT,
-            "live_activity_push_to_start",
-        ): vol.In(["sandbox", "production"]),
+        vol.Optional(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
