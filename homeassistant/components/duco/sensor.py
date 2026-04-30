@@ -186,6 +186,7 @@ async def async_setup_entry(
                         remove_config_entry_id=entry.entry_id,
                     )
             known_nodes.difference_update(stale_node_ids)
+            warned_unknown_nodes.difference_update(stale_node_ids)
 
         new_entities: list[SensorEntity] = []
         for node in coordinator.data.nodes.values():
@@ -213,6 +214,7 @@ async def async_setup_entry(
                     )
                 continue
             known_nodes.add(node.node_id)
+            warned_unknown_nodes.discard(node.node_id)
             new_entities.extend(
                 DucoSensorEntity(coordinator, node, description)
                 for description in SENSOR_DESCRIPTIONS
