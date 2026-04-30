@@ -81,7 +81,7 @@ async def test_victron_button_press(
         f"N/{MOCK_INSTALLATION_ID}/platform/0/Device/Reboot",
         '{"value": 0}',
     )
-    await finalize_injection(victron_hub)
+    await finalize_injection(victron_hub, disconnect=False)
     await hass.async_block_till_done()
 
     entities = er.async_entries_for_config_entry(
@@ -97,6 +97,7 @@ async def test_victron_button_press(
         f"N/{MOCK_INSTALLATION_ID}/platform/0/Device/Reboot",
         '{"value": 1}',
     )
+    await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
     assert victron_hub._client is not None

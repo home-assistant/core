@@ -21,7 +21,7 @@ from .hub import VictronGxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
