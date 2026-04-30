@@ -56,23 +56,19 @@ async def test_setup_entry_login_failure(
     assert mock_config_entry.state is expected_state
 
 
-async def test_setup_entry_no_devices_loads_empty(
+async def test_setup_entry_no_devices_raises(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
 ) -> None:
-    """Test setup succeeds with no entities when no devices are found."""
+    """Test setup raises a setup error when no devices are found."""
     mock_config_entry.add_to_hass(hass)
     mock_cloud_account.discover_devices.return_value = {}
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_incomplete_credentials_loads_empty(

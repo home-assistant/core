@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_CONNECT_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT, PLATFORMS
+from .const import DEFAULT_CONNECT_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT, DOMAIN, PLATFORMS
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +59,12 @@ async def async_setup_entry(
         raise ConfigEntryError("Mitsubishi cloud authentication failed") from err
     except DeviceConnectionError as err:
         raise ConfigEntryNotReady("Cannot reach Mitsubishi cloud") from err
+
+    if not devices:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_devices",
+        )
 
     coordinators: dict[str, MitsubishiComfortCoordinator] = {}
     for serial, info in devices.items():
