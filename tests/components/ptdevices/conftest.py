@@ -61,9 +61,9 @@ def mock_ptdevices_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Home",
+        title="User Name",
         data={
             CONF_API_TOKEN: "test-api-token",
         },
-        unique_id="test-user-id",
+        unique_id="1234",
     )

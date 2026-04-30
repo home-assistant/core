@@ -11,7 +11,7 @@ from aioptdevices.interface import Interface
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN
+from homeassistant.const import CONF_API_TOKEN, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -84,11 +84,6 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Test connection when user data is available
         if user_input is not None:
-            # Make sure the device isn't already configured
-            self._async_abort_entries_match(
-                {CONF_API_TOKEN: user_input[CONF_API_TOKEN]}
-            )
-
             # Test connection
             try:
                 title, unique_id = await validate_input(self.hass, user_input)
@@ -103,6 +98,11 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Connection Successful
+
+                # Make sure the device isn't already configured
+                self._async_abort_entries_match({CONF_UNIQUE_ID: unique_id})
+
+                # Setup the device
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=title, data=user_input)
