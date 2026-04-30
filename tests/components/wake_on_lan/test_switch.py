@@ -294,8 +294,7 @@ async def test_remove_unloads_off_script(
         await entity.async_remove()
         await hass.async_block_till_done()
 
-    # async_stop is called explicitly and again from inside async_unload.
-    assert stop_mock.call_count == 2
+    stop_mock.assert_called_once()
     unload_mock.assert_called_once()
 
 
