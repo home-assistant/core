@@ -41,6 +41,10 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltGrid.METER_CONNECTED,
         IndevoltSolar.CUMULATIVE_PRODUCTION,
         IndevoltSystem.HEATING_STATE,
+        IndevoltBattery.GEN_1_INVERTER_TEMPERATURE,
+        IndevoltBattery.GEN_1_PACK_1_TEMPERATURE,
+        IndevoltBattery.GEN_1_PACK_2_TEMPERATURE,
+        IndevoltBattery.GEN_1_PACK_3_TEMPERATURE,
     ],
     2: [
         IndevoltSystem.OPERATING_MODE,
