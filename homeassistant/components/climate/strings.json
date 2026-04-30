@@ -271,21 +271,6 @@
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "set_fan_mode": {
       "description": "Sets the fan mode of a thermostat.",

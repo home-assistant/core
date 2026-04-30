@@ -7,6 +7,7 @@ from typing import Any
 
 from devolo_plc_api import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound
+from yarl import URL
 
 from homeassistant.components import zeroconf
 from homeassistant.const import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
@@ -122,6 +124,25 @@ async def async_setup_entry(
         await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data.coordinators = coordinators
+
+    # Ensure the device exists before forwarding to platforms, so that the
+    # device tracker (which looks up the device by wifi station MAC) is not
+    # racing the other platforms that create the device via DeviceInfo.
+    device_info = dr.DeviceInfo(
+        configuration_url=URL.build(scheme="http", host=device.ip),
+        identifiers={(DOMAIN, str(device.serial_number))},
+        manufacturer="devolo",
+        model=device.product,
+        model_id=device.mt_number,
+        serial_number=device.serial_number,
+        sw_version=device.firmware_version,
+    )
+    if device.mac:
+        device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, device.mac)}
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **device_info,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms(device))
 

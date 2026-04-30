@@ -44,12 +44,6 @@
     }
   },
   "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "status": {
       "options": {
         "completed": "Completed",
