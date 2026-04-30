@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from catgenie import Device
-from catgenie.auth import CatGenieAuthenticationError
+from catgenie.exceptions import CatGenieAuthenticationError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

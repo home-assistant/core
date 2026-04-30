@@ -12,6 +12,7 @@ from catgenie.exceptions import CatGenieAPIError, CatGenieAuthenticationError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -66,11 +67,18 @@ class CatGenieCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch all devices from the CatGenie API."""
         try:
-            devices = await self.client.get_devices()
-        except CatGenieAuthenticationError:
-            credentials = await self.auth.refresh()
-            self._update_entry_tokens(credentials)
-            devices = await self.client.get_devices()
+            # Refresh the access token if needed and retry the request once
+            try:
+                devices = await self.client.get_devices()
+            except CatGenieAuthenticationError:
+                credentials = await self.auth.refresh()
+                self._update_entry_tokens(credentials)
+                devices = await self.client.get_devices()
+        except CatGenieAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except CatGenieAPIError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

@@ -53,7 +53,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CatGenieConfigEntry) -> 
     client.set_auth(auth)
 
     coordinator = CatGenieCoordinator(hass, entry, client, auth)
-    await coordinator.async_config_entry_first_refresh()
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        await stack.aclose()
+        raise
 
     entry.runtime_data = CatGenieRuntimeData(
         stack=stack,
