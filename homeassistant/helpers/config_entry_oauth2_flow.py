@@ -6,8 +6,6 @@ This module exists of the following parts:
 
 """
 
-from __future__ import annotations
-
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock

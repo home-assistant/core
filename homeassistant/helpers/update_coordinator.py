@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator

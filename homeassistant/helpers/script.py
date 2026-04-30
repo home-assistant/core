@@ -1,7 +1,5 @@
 """Helpers to execute scripts."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager

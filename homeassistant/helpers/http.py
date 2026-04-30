@@ -1,7 +1,5 @@
 """Helper to track the current http request."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus

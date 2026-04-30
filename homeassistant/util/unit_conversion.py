@@ -1,7 +1,5 @@
 """Typing Helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10

@@ -1,7 +1,5 @@
 """Color util methods."""
 
-from __future__ import annotations
-
 import colorsys
 import math
 from typing import NamedTuple

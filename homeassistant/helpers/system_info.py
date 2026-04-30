@@ -1,7 +1,5 @@
 """Helper to gather system info."""
 
-from __future__ import annotations
-
 from functools import cache
 from getpass import getuser
 import logging

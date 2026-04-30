@@ -1,7 +1,5 @@
 """State functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import collections.abc
 from collections.abc import Iterable
 import logging
