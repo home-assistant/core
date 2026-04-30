@@ -225,12 +225,6 @@
     }
   },
   "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "enqueue": {
       "options": {
         "add": "Add to queue",
@@ -244,13 +238,6 @@
         "all": "Repeat all",
         "off": "[%key:common::state::off%]",
         "one": "Repeat one"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },

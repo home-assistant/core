@@ -7,6 +7,7 @@ from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
 from fumis import FumisInfo
+import orjson
 import pytest
 
 from homeassistant.components.fumis.const import DOMAIN
@@ -57,9 +58,9 @@ def mock_fumis(device_fixture: str) -> Generator[MagicMock]:
         ),
     ):
         fumis = fumis_mock.return_value
-        fumis.update_info.return_value = FumisInfo.from_json(
-            load_fixture(f"{device_fixture}.json", DOMAIN)
-        )
+        fixture = load_fixture(f"{device_fixture}.json", DOMAIN)
+        fumis.update_info.return_value = FumisInfo.from_json(fixture)
+        fumis.raw_status.return_value = orjson.loads(fixture)
         yield fumis
 
 

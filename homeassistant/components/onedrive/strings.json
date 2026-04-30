@@ -111,8 +111,8 @@
     "file_too_large": {
       "message": "`{filename}` is too large ({size} > {limit})"
     },
-    "filename_does_not_exist": {
-      "message": "`{filename}` does not exist"
+    "filenames_do_not_exist": {
+      "message": "The following files do not exist: {filenames}"
     },
     "invalid_destination_path": {
       "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"

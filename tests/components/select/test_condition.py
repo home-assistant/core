@@ -243,19 +243,19 @@ async def test_select_condition_evaluates_both_domains(
         condition_options={CONF_OPTION: ["option_a", "option_b"]},
     )
 
-    assert cond(hass) is True
+    assert cond.async_check() is True
 
     # Set one to a non-matching option - "any" behavior should still pass
     hass.states.async_set(entity_id_select, "option_c")
     await hass.async_block_till_done()
 
-    assert cond(hass) is True
+    assert cond.async_check() is True
 
     # Set both to non-matching options
     hass.states.async_set(entity_id_input_select, "option_c")
     await hass.async_block_till_done()
 
-    assert cond(hass) is False
+    assert cond.async_check() is False
 
 
 # --- Schema validation tests ---

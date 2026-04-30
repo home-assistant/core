@@ -13,7 +13,11 @@ from iaqualink.exception import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
@@ -84,12 +88,16 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle confirmation of reauthentication."""
         errors = {}
 
-        reauth_entry = self._get_reauth_entry()
+        config_entry = (
+            self._get_reconfigure_entry()
+            if self.source == SOURCE_RECONFIGURE
+            else self._get_reauth_entry()
+        )
         if user_input is not None:
             errors = await self._async_test_credentials(user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    reauth_entry,
+                    config_entry,
                     title=user_input[CONF_USERNAME],
                     data_updates={
                         CONF_USERNAME: user_input[CONF_USERNAME],
@@ -98,7 +106,15 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=(
+                "reconfigure" if self.source == SOURCE_RECONFIGURE else "reauth_confirm"
+            ),
             data_schema=CREDENTIALS_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self.async_step_reauth_confirm(user_input)
