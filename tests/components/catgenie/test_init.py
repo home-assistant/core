@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from catgenie import Device
-from catgenie.exceptions import CatGenieAuthenticationError
+from catgenie import Credentials, Device
+from catgenie.exceptions import CatGenieAPIError, CatGenieAuthenticationError
 
+from homeassistant.components.catgenie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_DEVICE_DATA, MOCK_ENTRY_DATA
@@ -204,6 +206,62 @@ async def test_coordinator_communication_error(
     assert entry.state is ConfigEntryState.LOADED
 
     mock_catgenie_client.get_devices.side_effect = RuntimeError("network error")
+
+    coordinator = entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+
+    assert not coordinator.last_update_success
+
+
+async def test_setup_entry_token_rotation(
+    hass: HomeAssistant,
+    mock_catgenie_auth_init: MagicMock,
+    mock_catgenie_client: MagicMock,
+) -> None:
+    """Test that a rotated refresh token is persisted to the config entry."""
+    rotated_credentials = Credentials(
+        access_token="new-access-token",
+        refresh_token="rotated-refresh-token",
+        token_expiration=9999999999.0,
+        account_id="test-account-id",
+        user_id="test-user-id",
+        tenant_id="test-tenant-id",
+    )
+    mock_catgenie_auth_init.refresh.return_value = rotated_credentials
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="test-user-id",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_TOKEN] == "rotated-refresh-token"
+
+
+async def test_coordinator_api_error(
+    hass: HomeAssistant,
+    mock_catgenie_auth_init: MagicMock,
+    mock_catgenie_client: MagicMock,
+) -> None:
+    """Test coordinator raises UpdateFailed on CatGenieAPIError."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="test-user-id",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_catgenie_client.get_devices.side_effect = CatGenieAPIError("server error")
 
     coordinator = entry.runtime_data.coordinator
     await coordinator.async_refresh()
