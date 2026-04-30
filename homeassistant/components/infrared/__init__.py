@@ -166,7 +166,7 @@ def async_subscribe_receiver(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="receiver_not_found",
-            translation_placeholders={"entity_id": entity_id},
+            translation_placeholders={"entity_id": entity_id_or_uuid},
         ) from err
 
     entity = component.get_entity(entity_id)
@@ -274,7 +274,7 @@ class InfraredReceiverEntity(Entity):
             timespec="milliseconds"
         )
         self.async_write_ha_state()
-        for signal_callback in self.__signal_callbacks:
+        for signal_callback in tuple(self.__signal_callbacks):
             try:
                 signal_callback(signal)
             except Exception:

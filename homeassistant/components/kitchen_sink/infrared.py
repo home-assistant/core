@@ -80,7 +80,7 @@ class DemoInfraredReceiver(DemoInfraredEntityBase, InfraredReceiverEntity):
     """Representation of a demo infrared receiver entity."""
 
     @callback
-    def _on_dispacher_signal(self, raw_timings: list[int]) -> None:
+    def _on_dispatcher_signal(self, raw_timings: list[int]) -> None:
         """Handle received infrared command signal."""
         self._handle_received_signal(InfraredReceivedSignal(timings=raw_timings))
 
@@ -89,6 +89,6 @@ class DemoInfraredReceiver(DemoInfraredEntityBase, InfraredReceiverEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, INFRARED_COMMAND_SIGNAL, self._on_dispacher_signal
+                self.hass, INFRARED_COMMAND_SIGNAL, self._on_dispatcher_signal
             )
         )
