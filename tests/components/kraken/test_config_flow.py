@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -51,7 +50,6 @@ async def test_options(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         options={
-            CONF_SCAN_INTERVAL: 60,
             CONF_TRACKED_ASSET_PAIRS: [
                 "ADA/XBT",
                 "ADA/ETH",
@@ -87,7 +85,6 @@ async def test_options(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             {
-                CONF_SCAN_INTERVAL: 10,
                 CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
             },
         )
@@ -105,7 +102,6 @@ async def test_deselect_removed_pair(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         options={
-            CONF_SCAN_INTERVAL: 60,
             CONF_TRACKED_ASSET_PAIRS: [
                 "XBT/USD",
             ],
@@ -150,7 +146,6 @@ async def test_deselect_removed_pair(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             {
-                CONF_SCAN_INTERVAL: 10,
                 CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
             },
         )

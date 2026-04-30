@@ -9,11 +9,11 @@ import pytest
 
 from homeassistant.components.kraken.const import (
     CONF_TRACKED_ASSET_PAIRS,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TRACKED_ASSET_PAIR,
     DOMAIN,
+    SCAN_INTERVAL,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -47,7 +47,6 @@ async def test_sensor(
             domain=DOMAIN,
             unique_id="0123456789",
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [
                     "ADA/XBT",
                     "ADA/ETH",
@@ -157,7 +156,6 @@ async def test_sensors_available_after_restart(
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
@@ -199,7 +197,6 @@ async def test_sensors_added_after_config_update(
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
@@ -219,11 +216,10 @@ async def test_sensors_added_after_config_update(
         hass.config_entries.async_update_entry(
             entry,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR, "ADA/XBT"],
             },
         )
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -247,7 +243,6 @@ async def test_missing_pair_marks_sensor_unavailable(
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
@@ -269,13 +264,13 @@ async def test_missing_pair_marks_sensor_unavailable(
         ticket_information_mock.side_effect = KrakenAPIError(
             "EQuery:Unknown asset pair"
         )
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         ticket_information_mock.side_effect = None
         ticket_information_mock.return_value = MISSING_PAIR_TICKER_INFORMATION_RESPONSE
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 

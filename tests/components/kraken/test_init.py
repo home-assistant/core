@@ -75,7 +75,4 @@ async def test_callrate_limit(
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            "Exceeded the Kraken.com call rate limit. Increase the update interval to"
-            " prevent this error" in caplog.text
-        )
+        assert "Exceeded the Kraken.com call rate limit" in caplog.text

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -33,7 +33,4 @@ async def async_options_updated(
     hass: HomeAssistant, config_entry: KrakenConfigEntry
 ) -> None:
     """Triggered by config entry options updates."""
-    config_entry.runtime_data.set_update_interval(
-        config_entry.options[CONF_SCAN_INTERVAL]
-    )
     async_dispatcher_send(hass, DISPATCH_CONFIG_UPDATED, hass, config_entry)
