@@ -4051,14 +4051,12 @@ async def _setup_state_condition(
     target_config: dict[str, Any],
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    support_duration: bool = False,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,
         states,
-        support_duration=support_duration,
         primary_entities_only=primary_entities_only,
     )
 
@@ -4244,7 +4242,6 @@ async def test_state_condition_duration_not_met(
         target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4267,7 +4264,6 @@ async def test_state_condition_duration_met(
         target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4292,7 +4288,6 @@ async def test_state_condition_duration_zero_behaves_like_no_duration(
         target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 0}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4311,7 +4306,6 @@ async def test_state_condition_duration_wrong_state(
         target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_OFF)
@@ -4330,7 +4324,6 @@ async def test_state_condition_duration_reset_on_state_change(
         target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4368,7 +4361,6 @@ async def test_state_condition_duration_behavior(
         target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4413,7 +4405,6 @@ async def test_state_condition_duration_unavailable_unknown(
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", state_value)
@@ -4432,7 +4423,6 @@ async def test_state_condition_duration_unavailable_unknown(
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", state_value)
@@ -4683,7 +4673,6 @@ async def _setup_attr_state_condition(
     condition_cls = make_entity_state_condition(
         _ATTR_DOMAIN_SPECS,
         states,
-        support_duration=True,
     )
 
     async def async_get_conditions(
@@ -4946,7 +4935,6 @@ async def _setup_attr_state_condition_with_target(
     condition_cls = make_entity_state_condition(
         _ATTR_DOMAIN_SPECS,
         states,
-        support_duration=True,
     )
 
     async def async_get_conditions(
@@ -5250,7 +5238,6 @@ async def test_state_condition_primary_entities_only_with_duration(
             ATTR_BEHAVIOR: BEHAVIOR_ALL,
             CONF_FOR: {"seconds": 5},
         },
-        support_duration=True,
         primary_entities_only=primary_entities_only,
     )
 

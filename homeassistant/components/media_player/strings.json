@@ -11,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is not playing"
@@ -32,6 +35,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is on"

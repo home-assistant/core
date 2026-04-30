@@ -45,6 +45,11 @@ class TextIsEqualToCondition(EntityConditionBase):
             assert config.options
         self._value: str = config.options[CONF_VALUE]
 
+    @property
+    def _needs_duration_tracking(self) -> bool:
+        """Return if this condition needs duration tracking."""
+        return False
+
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected value."""
         return entity_state.state == self._value
