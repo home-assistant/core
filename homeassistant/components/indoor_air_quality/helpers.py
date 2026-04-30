@@ -122,11 +122,18 @@ def convert_value(
 
 
 def entity_ids_from_sources(sources: Mapping[str, str | list[str]]) -> list[str]:
-    """Flatten configured sources to a single list of entity ids."""
-    entity_ids: list[str] = []
+    """Flatten configured sources to a de-duplicated list of entity ids.
+
+    Order is preserved so that callers (e.g. tests, listener registration)
+    see a stable sequence even when the same entity is selected for
+    multiple source fields.
+    """
+    entity_ids: dict[str, None] = {}
     for value in sources.values():
         if isinstance(value, list):
-            entity_ids.extend(value)
+            for entity_id in value:
+                if entity_id:
+                    entity_ids.setdefault(entity_id)
         elif value:
-            entity_ids.append(value)
-    return entity_ids
+            entity_ids.setdefault(value)
+    return list(entity_ids)
