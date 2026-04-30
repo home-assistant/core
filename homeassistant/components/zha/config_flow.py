@@ -41,6 +41,7 @@ from homeassistant.helpers.selector import (
     FileSelector,
     FileSelectorConfig,
     SerialPortSelector,
+    SerialPortSelectorConfig,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -209,7 +210,15 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             {
                 vol.Required(
                     CONF_DEVICE_PATH, default=default_path
-                ): SerialPortSelector(),
+                ): SerialPortSelector(
+                    SerialPortSelectorConfig(
+                        extra_recommended_domains=[
+                            "homeassistant_yellow",
+                            "homeassistant_sky_connect",
+                            "homeassistant_connect_zbt2",
+                        ]
+                    )
+                ),
             }
         )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)

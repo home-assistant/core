@@ -1,7 +1,5 @@
 """Tests for the melnor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, _patch, patch

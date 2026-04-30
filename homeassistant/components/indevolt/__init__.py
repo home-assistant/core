@@ -12,6 +12,7 @@ from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,

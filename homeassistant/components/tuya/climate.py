@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from tuya_device_handlers.definition.climate import (
-    TuyaClimateDefinition,
+    ClimateDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -144,7 +144,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
-        definition: TuyaClimateDefinition,
+        definition: ClimateDefinition,
     ) -> None:
         """Determine which values to use."""
         super().__init__(device, device_manager, description)

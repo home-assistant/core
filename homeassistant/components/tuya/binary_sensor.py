@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.binary_sensor import (
-    TuyaBinarySensorDefinition,
+    BinarySensorDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -434,7 +434,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        definition: TuyaBinarySensorDefinition,
+        definition: BinarySensorDefinition,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager, description)

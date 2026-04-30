@@ -1,7 +1,5 @@
 """Tests for the Duco sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
