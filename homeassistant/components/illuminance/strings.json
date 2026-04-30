@@ -38,6 +38,9 @@
         "behavior": {
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::illuminance::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::illuminance::common::condition_threshold_name%]"
         }

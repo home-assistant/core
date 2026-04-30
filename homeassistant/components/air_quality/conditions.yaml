@@ -7,6 +7,12 @@
     automation_behavior:
       mode: condition
 
+.condition_for: &condition_for
+  required: true
+  default: 00:00:00
+  selector:
+    duration:
+
 # --- Unit lists for multi-unit pollutants ---
 
 .co_units: &co_units
@@ -246,11 +252,7 @@
 .condition_binary_common: &condition_binary_common
   fields:
     behavior: *condition_behavior
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
+    for: *condition_for
 
 is_gas_detected:
   <<: *condition_binary_common
@@ -282,6 +284,7 @@ is_co_value:
   target: *target_co_sensor
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -296,6 +299,7 @@ is_ozone_value:
   target: *target_ozone
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -310,6 +314,7 @@ is_voc_value:
   target: *target_voc
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -324,6 +329,7 @@ is_voc_ratio_value:
   target: *target_voc_ratio
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -338,6 +344,7 @@ is_no_value:
   target: *target_no
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -352,6 +359,7 @@ is_no2_value:
   target: *target_no2
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -366,6 +374,7 @@ is_so2_value:
   target: *target_so2
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -382,6 +391,7 @@ is_co2_value:
   target: *target_co2
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -394,6 +404,7 @@ is_pm1_value:
   target: *target_pm1
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -406,6 +417,7 @@ is_pm25_value:
   target: *target_pm25
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -418,6 +430,7 @@ is_pm4_value:
   target: *target_pm4
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -430,6 +443,7 @@ is_pm10_value:
   target: *target_pm10
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -442,6 +456,7 @@ is_n2o_value:
   target: *target_n2o
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
