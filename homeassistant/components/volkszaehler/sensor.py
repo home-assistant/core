@@ -7,8 +7,10 @@ import logging
 
 from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import VolkszaehlerApiConnectionError
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -24,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -32,7 +35,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +74,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_UUID): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -79,11 +91,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Volkszaehler sensor YAML config into config flow."""
+    validated = PLATFORM_SCHEMA(config)
     data = {
-        CONF_HOST: config.get(CONF_HOST),
-        CONF_NAME: config.get(CONF_NAME),
-        CONF_PORT: config.get(CONF_PORT),
-        CONF_UUID: config.get(CONF_UUID),
+        CONF_HOST: validated[CONF_HOST],
+        CONF_NAME: validated[CONF_NAME],
+        CONF_PORT: validated[CONF_PORT],
+        CONF_UUID: validated[CONF_UUID],
     }
     hass.async_create_task(
         hass.config_entries.flow.async_init(

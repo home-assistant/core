@@ -19,18 +19,19 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default="localhost"): str,
-        vol.Required(CONF_PORT, default=80): int,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_UUID): str,
-        vol.Required(CONF_NAME, default="Volkszaehler"): str,
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
 
@@ -57,7 +58,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
         existing_entries = self._async_current_entries()
         for entry in existing_entries:
@@ -74,6 +75,8 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_UUID])
+            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
             except VolkszaehlerApiConnectionError:

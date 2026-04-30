@@ -4,7 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.volkszaehler import sensor
 from homeassistant.components.volkszaehler.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_PORT,
+    CONF_UUID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -45,7 +51,7 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_UUID: "import-uuid",
         CONF_HOST: "importhost",
         CONF_NAME: "2.8.0",
-        CONF_PORT: 8080,
+        CONF_PLATFORM: "volkszaehler",
     }
     with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
 
@@ -59,7 +65,12 @@ async def test_import(hass: HomeAssistant) -> None:
         entries = hass.config_entries.async_entries(DOMAIN)
         assert len(entries) == 1
         entry = entries[0]
-        assert entry.data == import_data
+        assert entry.data == {
+            CONF_UUID: "import-uuid",
+            CONF_HOST: "importhost",
+            CONF_NAME: "2.8.0",
+            CONF_PORT: 80,
+        }
         assert entry.title == "2.8.0"
 
 
@@ -70,6 +81,7 @@ async def test_import_once(hass: HomeAssistant) -> None:
         CONF_HOST: "importhost",
         CONF_NAME: "2.8.0",
         CONF_PORT: 8080,
+        CONF_PLATFORM: "volkszaehler",
     }
     with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
 
