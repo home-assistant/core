@@ -93,12 +93,11 @@ class MobileAppNotifyEntity(NotifyEntity):
         await self._async_send_remote_message(message="clear_notification", **kwargs)
 
     async def _async_send_remote_message(
-        self, message: str | None = None, title: str | None = None, **kwargs: Any
+        self, message: str, title: str | None = None, **kwargs: Any
     ) -> None:
         """Shared internal helper to send a message."""
         data: dict[str, Any] = {}
-        if message is not None:
-            data[ATTR_MESSAGE] = message
+        data[ATTR_MESSAGE] = message
         if title is not None:
             data[ATTR_TITLE] = title
 
