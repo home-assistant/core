@@ -47,7 +47,6 @@ from zha.application.helpers import (
     qr_to_install_code,
 )
 from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
-from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
@@ -635,10 +634,17 @@ async def websocket_remove_group_members(
 async def websocket_reconfigure_node(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Reconfigure a ZHA nodes entities by its ieee address."""
+    """Reconfigure a ZHA node by its ieee address with a prior re-interview."""
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: Device | None = zha_gateway.get_device(ieee)
+
+    if zha_gateway.get_device(ieee) is None:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
+            )
+        )
+        return
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -655,9 +661,8 @@ async def websocket_reconfigure_node(
 
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
-    assert device
-    hass.async_create_task(device.async_configure())
+    _LOGGER.debug("Re-interview node with ieee_address: %s", ieee)
+    hass.async_create_task(zha_gateway.async_reinterview_device(ieee))
 
 
 @websocket_api.require_admin

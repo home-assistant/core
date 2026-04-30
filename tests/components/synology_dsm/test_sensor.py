@@ -1,10 +1,13 @@
 """Tests for Synology DSM USB."""
 
+from datetime import timedelta
 from itertools import chain
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -27,7 +30,7 @@ from .common import (
 )
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -356,6 +359,34 @@ async def test_no_external_usb(
     """Test Synology DSM without USB."""
     sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_1_device_size")
     assert sensor is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2024-01-01T12:00:00+00:00")
+async def test_uptime_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    setup_dsm_with_usb: MagicMock,
+) -> None:
+    """Test Synology DSM uptime sensor."""
+    entity_id = "sensor.nas_meontheinternet_com_uptime"
+    uptime = "2023-12-31T01:42:24+00:00"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == uptime
+    assert state.attributes["device_class"] == SensorDeviceClass.UPTIME
+
+    # Simulate uptime increase by 50s
+    base_uptime = setup_dsm_with_usb.information.uptime
+    setup_dsm_with_usb.information.uptime = base_uptime + 50
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == uptime
 
 
 async def test_hub_device_info_mac_connections(

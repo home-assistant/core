@@ -1918,7 +1918,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tapsaff",
