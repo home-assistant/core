@@ -475,7 +475,7 @@ jobs:
           ./script/check_dirty
       - name: Prune uv cache
         if: |
-          steps.cache-hit.outputs.cache-hit != 'true'
+          steps.cache-uv.outputs.cache-hit != 'true'
           && (
             success()
             || (always() && steps.create-venv.outcome == 'success'))
