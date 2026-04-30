@@ -21,7 +21,7 @@ API_KEY = (
 SITE_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 SITE_DATA = {"title": "Test Ghost", "url": API_URL, "site_uuid": SITE_UUID}
 POSTS_DATA = {"published": 42, "drafts": 5, "scheduled": 2}
-MEMBERS_DATA = {"total": 1000, "paid": 100, "free": 850, "comped": 50}
+MEMBERS_DATA = {"total": 1000, "paid": 100, "free": 850, "comped": 50, "gift": 25}
 LATEST_POST_DATA = {
     "title": "Latest Post",
     "slug": "latest-post",
