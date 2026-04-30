@@ -27,6 +27,14 @@ RUN \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+
+#ENV http_proxy http://192.168.100.212:7897
+#ENV https_proxy http://192.168.100.212:7897
+
+ENV http_proxy http://192.168.8.120:1080
+ENV https_proxy http://192.168.8.120:1080
+
+
 # Add go2rtc binary
 COPY --from=ghcr.io/alexxit/go2rtc:latest /usr/local/bin/go2rtc /bin/go2rtc
 
@@ -54,6 +62,7 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     uv pip install -r requirements.txt -r requirements_test.txt
 
 # Claude Code native install
+
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
 WORKDIR /workspaces
