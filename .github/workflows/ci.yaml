@@ -479,7 +479,9 @@ jobs:
             && steps.create-venv.outcome == 'success'
             && steps.cache-uv.outputs.cache-matched-key == '')
         id: prune-uv-cache
-        run: uv cache prune
+        run: |
+          . venv/bin/activate
+          uv cache prune
       - name: Save uv wheel cache
         if: steps.prune-uv-cache.outcome == 'success'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
