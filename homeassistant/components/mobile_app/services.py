@@ -1,4 +1,4 @@
-"""Service registratin for Mobile App integration."""
+"""Service registration for Mobile App integration."""
 
 import voluptuous as vol
 
@@ -9,7 +9,7 @@ from homeassistant.helpers.service import async_register_platform_entity_service
 
 from .const import ATTR_TAG, DOMAIN, SERVICE_DISMISS_MESSAGE
 
-SERVICE_DISMISS_NOTIFICATION_SCHEMA = cv.make_entity_service_schema(
+SERVICE_DISMISS_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {vol.Required(ATTR_TAG): cv.string}
 )
 
@@ -23,6 +23,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_DISMISS_MESSAGE,
         entity_domain=NOTIFY_DOMAIN,
-        schema=SERVICE_DISMISS_NOTIFICATION_SCHEMA,
+        schema=SERVICE_DISMISS_MESSAGE_SCHEMA,
         func="async_dismiss_message",
     )
