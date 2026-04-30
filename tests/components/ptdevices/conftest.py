@@ -1,16 +1,16 @@
 """Common fixtures for the PTDevices tests."""
 
 from collections.abc import Generator
-import json
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
-from aioptdevices.interface import PTDevicesResponse
+from aioptdevices.interface import PTDevicesResponse, PTDevicesResponseData
 import pytest
 
 from homeassistant.components.ptdevices.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -26,15 +26,17 @@ def mock_ptdevices_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_ptdevices_level() -> PTDevicesResponse:
     """Mock a PTLevel device."""
-    data = json.loads(load_fixture("ptdevices_level.json", integration=DOMAIN))
+    data = load_json_object_fixture("ptdevices_level.json", DOMAIN)
     return PTDevicesResponse(
         code=200,
-        body=data,
+        body=cast(PTDevicesResponseData, data),
     )
 
 
 @pytest.fixture
-def mock_ptdevices_interface() -> Generator[AsyncMock]:
+def mock_ptdevices_interface(
+    mock_ptdevices_level: PTDevicesResponse,
+) -> Generator[AsyncMock]:
     """Mock a PTDevices Interface."""
     with (
         patch(
@@ -47,10 +49,7 @@ def mock_ptdevices_interface() -> Generator[AsyncMock]:
         ),
     ):
         interface = mock_interface.return_value
-        interface.get_data.return_value = PTDevicesResponse(
-            code=200,
-            body=json.loads(load_fixture("ptdevices_level.json", DOMAIN)),
-        )
+        interface.get_data.return_value = mock_ptdevices_level
 
         yield interface
 
