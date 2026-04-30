@@ -278,10 +278,10 @@ async def test_subentry_unsupported_model(
 )
 async def test_subentry_reasoning_effort_list(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    model,
-    reasoning_effort_options,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    reasoning_effort_options: list[str],
 ) -> None:
     """Test the list reasoning effort options."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -332,8 +332,8 @@ async def test_subentry_reasoning_effort_list(
 )
 async def test_subentry_reasoning_summary_visibility(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
     model: str,
     has_reasoning_summary: bool,
 ) -> None:
@@ -382,8 +382,8 @@ async def test_subentry_reasoning_summary_visibility(
 )
 async def test_subentry_reasoning_summary_options(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
     model: str,
     reasoning_summary_options: list[str],
 ) -> None:
