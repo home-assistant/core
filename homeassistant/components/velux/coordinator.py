@@ -25,7 +25,7 @@ class VeluxLimitationData:
 
 
 class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | None]):
-    """Coordinator that fetches limitation min+max for one opening device."""
+    """Coordinator that fetches limitation_min for one opening device."""
 
     def __init__(
         self,
