@@ -10,6 +10,9 @@
       "barometric_pressure": {
         "default": "mdi:gauge"
       },
+      "brightness": {
+        "default": "mdi:brightness-5"
+      },
       "dew_point": {
         "default": "mdi:water-percent"
       },
@@ -88,8 +91,17 @@
         }
       },
 
+      "relative_humidity": {
+        "default": "mdi:water-percent"
+      },
       "sea_level_pressure": {
         "default": "mdi:gauge"
+      },
+      "solar_radiation": {
+        "default": "mdi:solar-power"
+      },
+      "uv": {
+        "default": "mdi:sun-wireless"
       },
       "wet_bulb_globe_temperature": {
         "default": "mdi:thermometer-water"
