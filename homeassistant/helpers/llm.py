@@ -506,6 +506,7 @@ class AssistAPI(API):
         """Return the area prompt for the voice satellite."""
         floor: fr.FloorEntry | None = None
         area: ar.AreaEntry | None = None
+        extra = ""
         if llm_context.device_id:
             device_reg = dr.async_get(self.hass)
             device = device_reg.async_get(llm_context.device_id)
