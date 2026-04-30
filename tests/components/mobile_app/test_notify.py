@@ -4,18 +4,26 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
-from aiohttp import ClientError
 import pytest
+from aiohttp import ClientError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.const import (
+    ATTR_TAG,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DOMAIN,
+    SERVICE_DISMISS_MESSAGE,
+)
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
-    DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
+)
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -24,7 +32,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
 from tests.common import MockConfigEntry, MockUser, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -851,6 +858,21 @@ async def test_send_message_local_push(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("domain", "service", "service_data"),
+    [
+        (
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_MESSAGE: "Hello world", ATTR_TITLE: "test"},
+        ),
+        (
+            DOMAIN,
+            SERVICE_DISMISS_MESSAGE,
+            {ATTR_TAG: "tag"},
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_push_receiver")
 @pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_send_message_exceptions(
@@ -859,6 +881,9 @@ async def test_send_message_exceptions(
     exc: Exception | None,
     status: HTTPStatus,
     error_msg: str,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any],
 ) -> None:
     """Test sending message via notify.send_message action with exceptions."""
     aioclient_mock.clear_requests()
@@ -882,12 +907,11 @@ async def test_send_message_exceptions(
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            domain,
+            service,
             {
                 ATTR_ENTITY_ID: "notify.test",
-                ATTR_MESSAGE: "Hello world",
-                ATTR_TITLE: "test",
+                **service_data,
             },
             blocking=True,
         )
@@ -1369,3 +1393,29 @@ async def test_notify_non_apple_device_skips_live_activity(
             "webhook_id": "android-webhook-1",
         },
     }
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_dismiss_message(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test mobile_app.dismiss_message action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DISMISS_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.test",
+            ATTR_TAG: "motion",
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+
+    assert call_json["message"] == "clear_notification"
+    assert call_json["data"]["tag"] == "motion"

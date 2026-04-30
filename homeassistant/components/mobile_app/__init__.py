@@ -6,9 +6,12 @@ from functools import partial
 from typing import Any, override
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import cloud, intent, notify as hass_notify
+from homeassistant.components import cloud, intent
+from homeassistant.components import notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
+)
+from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +25,11 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
+)
+from homeassistant.helpers import (
     device_registry as dr,
+)
+from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.storage import Store
@@ -33,9 +40,17 @@ from homeassistant.helpers.typing import ConfigType
 # cheaper to import them all at once.
 from . import (  # noqa: F401
     binary_sensor as binary_sensor_pre_import,
+)
+from . import (
     device_tracker as device_tracker_pre_import,
+)
+from . import (
     notify as notify_pre_import,
+)
+from . import (
     sensor as sensor_pre_import,
+)
+from . import (
     websocket_api,
 )
 from .const import (
@@ -60,6 +75,7 @@ from .const import (
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
 from .live_activity.store import async_cleanup_expired_live_activity_tokens
+from .services import async_setup_services
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
@@ -121,6 +137,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await hass.config_entries.async_remove(entry.entry_id)
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
+
+    async_setup_services(hass)
 
     return True
 
