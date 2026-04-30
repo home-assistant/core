@@ -69,7 +69,7 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
             return_value=webhook_id,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_API_TOKEN: "eyadiuyfasiuasf",
@@ -78,9 +78,9 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     found_lock = all_locks_response["data"][0]
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MyLock"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "MyLock"
+    assert result["data"] == {
         "id": "Foo",
         "lock_key_key": found_lock["key_secret"],
         "bridge_key": found_lock["bridge_key"],
@@ -131,15 +131,15 @@ async def test_create_entry_user(
             return_value=webhook_id,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MyLock"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "MyLock"
+    assert result["data"] == {
         "id": "Foo",
         "lock_key_key": found_lock["key_secret"],
         "bridge_key": found_lock["bridge_key"],
@@ -193,23 +193,23 @@ async def test_create_entry_user_with_pick_lock(
             return_value=webhook_id,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
 
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "pick_lock"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pick_lock"
 
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"lock_id": second_lock["id"]},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == second_lock["name"]
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == second_lock["name"]
+    assert result["data"] == {
         "id": second_lock["id"],
         "lock_key_key": second_lock["key_secret"],
         "bridge_key": second_lock["bridge_key"],
@@ -239,14 +239,14 @@ async def test_cannot_connect(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
         side_effect=aiohttp.ClientError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_no_locks(
@@ -265,14 +265,14 @@ async def test_no_locks(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
         return_value={"data": []},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "no_locks"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_locks"}
 
 
 async def test_cannot_connect_during_validation(
@@ -295,14 +295,14 @@ async def test_cannot_connect_during_validation(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
         side_effect=[all_locks_response, aiohttp.ClientError],
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_invalid_auth_when_lock_not_found(
@@ -327,14 +327,14 @@ async def test_invalid_auth_when_lock_not_found(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
         side_effect=[initial_locks_response, changed_locks_response],
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_cannot_connect_when_lock_not_reachable(
@@ -362,11 +362,11 @@ async def test_cannot_connect_when_lock_not_reachable(
             "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}

@@ -138,13 +138,14 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If no Zeroconf discovery and no selected lock, we need to fetch locks and show picker
         if not self._host and not user_input.get("lock_id"):
+            session = async_get_clientsession(self.hass)
+            cloud_api_client = cloud_loqed.CloudAPIClient(
+                session,
+                user_input[CONF_API_TOKEN],
+            )
+            cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
+
             try:
-                session = async_get_clientsession(self.hass)
-                cloud_api_client = cloud_loqed.CloudAPIClient(
-                    session,
-                    user_input[CONF_API_TOKEN],
-                )
-                cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
                 lock_data = await cloud_client.async_get_locks()
                 self._locks = lock_data["data"]
                 self._api_token = user_input[CONF_API_TOKEN]
@@ -209,11 +210,9 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle lock selection when multiple locks are available."""
         if user_input is not None:
-            # Merge the API token and lock_id, then process
             user_input[CONF_API_TOKEN] = self._api_token
             return await self.async_step_user(user_input)
 
-        # Build options for lock selection
         lock_options = {lock["id"]: lock["name"] for lock in self._locks}
 
         return self.async_show_form(
