@@ -24,7 +24,7 @@ USER_SCHEMA = vol.Schema(
 
 async def _check_connection(
     host: str, password: str
-) -> tuple[PyVLX | None, dict[str, Any]]:
+) -> tuple[PyVLX | None, dict[str, str]]:
     """Connect to the Velux bridge and return the live instance.
 
     The caller is responsible for storing the returned instance so that
