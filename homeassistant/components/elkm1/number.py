@@ -1,0 +1,66 @@
+"""Support for ElkM1 number entities."""
+
+from __future__ import annotations
+
+from typing import Any, cast
+
+from elkm1_lib.const import SettingFormat
+from elkm1_lib.elements import Element
+from elkm1_lib.settings import Setting
+
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import ElkM1ConfigEntry
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .models import ELKM1Data
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ElkM1ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Elk-M1 number platform."""
+    elk_data = config_entry.runtime_data
+    elk = elk_data.elk
+    entities: list[ElkEntity] = []
+    number_settings = [
+        s
+        for s in cast(list[Setting], elk.settings)
+        if s.value_format in (SettingFormat.NUMBER, SettingFormat.TIMER)
+    ]
+
+    create_elk_entities(
+        elk_data,
+        number_settings,
+        "setting",
+        ElkNumberSetting,
+        entities,
+    )
+    async_add_entities(entities)
+
+
+class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
+    """Representation of an Elk-M1 Number Setting."""
+
+    _element: Setting
+
+    _attr_native_min_value = 0
+    _attr_native_max_value = 65535
+    _attr_native_step = 1
+
+    def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
+        """Initialize the number setting."""
+        super().__init__(element, elk, elk_data)
+        if element.value_format == SettingFormat.TIMER:
+            self._attr_device_class = NumberDeviceClass.DURATION
+
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
+        if (value := self._element.value) is not None:
+            self._attr_native_value = float(value)  # type: ignore[unreachable]
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the value of the setting."""
+        self._element.set(int(value))

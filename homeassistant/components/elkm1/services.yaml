@@ -144,17 +144,6 @@ sensor_counter_set:
           min: 0
           max: 65536
 
-sensor_setting_set:
-  target:
-    entity:
-      integration: elkm1
-      domain: sensor
-  fields:
-    value:
-      required: true
-      selector:
-        text:
-
 sensor_zone_update_voltage:
   target:
     entity:

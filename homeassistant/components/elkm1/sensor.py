@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import time as time_sys
 from typing import Any
 
 from elkm1_lib.const import SettingFormat, ZoneType
@@ -24,7 +23,6 @@ from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
@@ -34,7 +32,6 @@ from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
-SERVICE_SENSOR_SETTING_SET = "sensor_setting_set"
 SERVICE_SENSOR_ZONE_UPDATE_VOLTAGE = "sensor_zone_update_voltage"
 SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
@@ -52,12 +49,6 @@ _STATE_CLASS_MAP: dict[ZoneType, SensorStateClass] = {
 
 ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
-}
-
-ELK_SET_SETTING_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_VALUE): vol.Any(
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)), cv.time
-    )
 }
 
 
@@ -88,11 +79,6 @@ async def async_setup_entry(
         SERVICE_SENSOR_COUNTER_SET,
         ELK_SET_COUNTER_SERVICE_SCHEMA,
         "async_counter_set",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_SETTING_SET,
-        ELK_SET_SETTING_SERVICE_SCHEMA,
-        "async_setting_set",
     )
     platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_UPDATE_VOLTAGE,
@@ -133,31 +119,6 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
             raise HomeAssistantError("supported only on ElkM1 Counter sensors")
         if value is not None:
             self._element.set(value)
-
-    async def async_setting_set(self, value: int | time_sys | None = None) -> None:
-        """Set the value of a setting on the panel."""
-        if not isinstance(self, ElkSetting):
-            raise HomeAssistantError("supported only on ElkM1 Setting sensors")
-
-        if value is None:
-            return
-
-        if isinstance(value, int):
-            if self._element.value_format == SettingFormat.TIME_OF_DAY:
-                raise HomeAssistantError(
-                    "must use time format to set time of day setting"
-                )
-            self._element.set(value)
-        else:
-            if self._element.value_format != SettingFormat.TIME_OF_DAY:
-                raise HomeAssistantError(
-                    "must use integer to set number or timer setting"
-                )
-            if value.second != 0:
-                raise HomeAssistantError(
-                    "must specify only hours and minutes to set time of day setting"
-                )
-            self._element.set((value.hour, value.minute))
 
     async def async_zone_update_voltage(self) -> None:
         """Refresh the voltage of a zone from the panel."""

@@ -34,9 +34,6 @@
     "sensor_counter_set": {
       "service": "mdi:counter"
     },
-    "sensor_setting_set": {
-      "service": "mdi:counter"
-    },
     "sensor_zone_bypass": {
       "service": "mdi:shield-off"
     },
