@@ -143,24 +143,22 @@ def mock_indoor_unit() -> MagicMock:
 @pytest.fixture
 def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
     """Mock MitsubishiCloudAccount for both main code and config flow."""
-    account = AsyncMock()
-    account.login = AsyncMock(return_value=None)
-    account.discover_devices = AsyncMock(
-        return_value={"SERIAL001": mock_device_info}
-    )
-    account.get_passwords_via_websocket = AsyncMock(return_value={})
-    account.user_id = "user-12345"
-
     with (
         patch(
             "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=account,
-        ),
+            autospec=True,
+        ) as mock_init_cls,
         patch(
             "homeassistant.components.mitsubishi_comfort.config_flow.MitsubishiCloudAccount",
-            return_value=account,
-        ),
+            autospec=True,
+        ) as mock_cf_cls,
     ):
+        account = mock_init_cls.return_value
+        mock_cf_cls.return_value = account
+        account.login.return_value = None
+        account.discover_devices.return_value = {"SERIAL001": mock_device_info}
+        account.get_passwords_via_websocket.return_value = {}
+        account.user_id = "user-12345"
         yield account
 
 
