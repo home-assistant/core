@@ -481,16 +481,28 @@ class AssistAPI(API):
     ) -> str:
         if not exposed_entities or not exposed_entities["entities"]:
             return NO_ENTITIES_PROMPT
-        return "\n".join(
-            [
-                *self._async_get_preable(llm_context),
-                *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
-                self._async_get_voice_satellite_area(llm_context),
-            ]
-        )
+
+        # Collect all parts, filtering out any None values
+        prompt_parts = [
+            *self._async_get_preamble(),
+            *self._async_get_exposed_entities_prompt(exposed_entities),
+            self._async_get_voice_satellite_area_prompt(llm_context),
+            self._async_get_no_timer_prompt(llm_context),
+        ]
+
+        # Filter out None and empty strings before joining
+        return "\n".join([part for part in prompt_parts if part])
 
     @callback
-    def _async_get_voice_satellite_area(self, llm_context: LLMContext) -> str:
+    def _async_get_no_timer_prompt(self, llm_context: LLMContext) -> str | None:
+        if not llm_context.device_id or not async_device_supports_timers(
+            self.hass, llm_context.device_id
+        ):
+            return "This device is not able to start timers."
+        return None
+
+    @callback
+    def _async_get_voice_satellite_area_prompt(self, llm_context: LLMContext) -> str:
         """Return the area prompt for the voice satellite."""
         floor: fr.FloorEntry | None = None
         area: ar.AreaEntry | None = None
@@ -508,43 +520,31 @@ class AssistAPI(API):
             extra = "and all generic commands like 'turn on the lights' should target this area."
 
         if floor and area:
-            area_prompt = (
-                f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
-            )
-        elif area:
-            area_prompt = f"You are in area {area.name} {extra}".strip()
-        else:
-            area_prompt = (
-                "When a user asks to turn on all devices of a specific type, "
-                "ask user to specify an area, unless there is only one device of that type."
-            )
-        return area_prompt
+            return f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
+        if area:
+            return f"You are in area {area.name} {extra}".strip()
+        return (
+            "When a user asks to turn on all devices of a specific type, "
+            "ask user to specify an area, unless there is only one device of that type."
+        )
 
     @callback
-    def _async_get_preable(self, llm_context: LLMContext) -> list[str]:
+    def _async_get_preamble(self) -> list[str]:
         """Return the prompt for the API."""
 
-        prompt = [
+        return [
             (
                 "When controlling Home Assistant always call the intent tools. "
                 "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
                 "When controlling a device, prefer passing just name and domain. "
                 "When controlling an area, prefer passing just area name and domain."
-            )
+            ),
+            DYNAMIC_CONTEXT_PROMPT,
         ]
-
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            prompt.append("This device is not able to start timers.")
-
-        prompt.append(DYNAMIC_CONTEXT_PROMPT)
-
-        return prompt
 
     @callback
     def _async_get_exposed_entities_prompt(
-        self, llm_context: LLMContext, exposed_entities: dict | None
+        self, exposed_entities: dict | None
     ) -> list[str]:
         """Return the prompt for the API for exposed entities."""
         prompt = []

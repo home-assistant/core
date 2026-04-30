@@ -691,10 +691,10 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
-{area_prompt}"""
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Verify that the GetLiveContext tool returns the same results as the exposed_entities_prompt
@@ -715,10 +715,10 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
-{area_prompt}"""
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Add floor
@@ -731,10 +731,10 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
-{area_prompt}"""
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Register device for timers
