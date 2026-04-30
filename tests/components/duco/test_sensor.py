@@ -265,21 +265,64 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     mock_duco_client: AsyncMock,
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a node with UNKNOWN type is retried and gets entities once the type resolves."""
+    node_id = 99
+    ventilation = NodeVentilationInfo(
+        state="AUTO", time_state_remain=0, time_state_end=0, mode="-", flow_lvl_tgt=None
+    )
+    sensor = NodeSensorInfo(co2=None, iaq_co2=None, rh=62.0, iaq_rh=70, temp=21.0)
+
+    def _make_node(node_type: NodeType | str) -> Node:
+        return Node(
+            node_id=node_id,
+            general=NodeGeneralInfo(
+                node_type=node_type,
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Future sensor",
+                identify=0,
+            ),
+            ventilation=ventilation,
+            sensor=sensor,
+        )
+
+    # First poll: UNKNOWN type — no entities created.
+    mock_duco_client.async_get_nodes.return_value = [
+        *mock_nodes,
+        _make_node(NodeType.UNKNOWN),
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.future_sensor_humidity") is None
+
+    # Second poll: type now resolved — entities must be created.
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, _make_node("BSRH")]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.future_sensor_humidity")
+    assert state is not None
+    assert state.state == "62.0"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_node_warning_logged_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a node initially reported as UNKNOWN is retried on every update.
-
-    A node must not be added to known_nodes when its type is UNKNOWN, so that
-    entities are created automatically once the type resolves to a supported
-    value (e.g. after a firmware update or a library update).
-
-    The warning is logged only once per node; subsequent updates with an
-    UNKNOWN type emit a debug message instead to avoid log spam.
-    """
-    node_id = 99
-
+    """Test that a WARNING for UNKNOWN nodes is emitted only once, then demoted to DEBUG."""
     unknown_node = Node(
-        node_id=node_id,
+        node_id=99,
         general=NodeGeneralInfo(
             node_type=NodeType.UNKNOWN,
             sub_type=0,
@@ -296,57 +339,21 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
             mode="-",
             flow_lvl_tgt=None,
         ),
-        sensor=NodeSensorInfo(
-            co2=None,
-            iaq_co2=None,
-            rh=62.0,
-            iaq_rh=70,
-            temp=21.0,
-        ),
+        sensor=NodeSensorInfo(co2=None, iaq_co2=None, rh=None, iaq_rh=None, temp=None),
     )
-
-    # First poll: node type is UNKNOWN. A warning must be logged and no entities created.
     mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.future_sensor_humidity") is None
     assert "has an unsupported device type" in caplog.text
-
     caplog.clear()
 
-    # Second poll: node is still UNKNOWN. No new warning should be emitted;
-    # only a debug message to avoid log spam.
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.future_sensor_humidity") is None
     assert "has an unsupported device type" not in caplog.text
-
-    # Third poll: the same node now reports a known type. Entities must be created.
-    known_node = Node(
-        node_id=node_id,
-        general=NodeGeneralInfo(
-            node_type="BSRH",
-            sub_type=0,
-            network_type="RF",
-            parent=1,
-            asso=1,
-            name="Future sensor",
-            identify=0,
-        ),
-        ventilation=unknown_node.ventilation,
-        sensor=unknown_node.sensor,
-    )
-    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, known_node]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("sensor.future_sensor_humidity")
-    assert state is not None
-    assert state.state == "62.0"
