@@ -69,8 +69,5 @@ class VeluxRainSensor(
         # assume that any large enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
         if self.coordinator.data is None:
-            # mypy doesn't know this can still be None before the initial refresh,
-            # which is only triggered after the entity is added to hass, so we need
-            # to ignore the unreachable code error here
-            return None  # type: ignore[unreachable]
+            return None
         return self.coordinator.data.limitation_min.position_percent >= 89
