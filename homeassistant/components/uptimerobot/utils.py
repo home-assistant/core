@@ -4,15 +4,16 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from pyuptimerobot import UptimeRobotException, UptimeRobotMonitor
+from pyuptimerobot import (
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+    UptimeRobotMonitor,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .coordinator import (
-    UptimeRobotAuthenticationException,
-    UptimeRobotDataUpdateCoordinator,
-)
+from .coordinator import UptimeRobotDataUpdateCoordinator
 from .entity import UptimeRobotEntity
 
 
