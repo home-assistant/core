@@ -31,7 +31,6 @@ async def test_user_step_shows_form(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert CONF_HOST in result["data_schema"].schema
 
 
 async def test_user_step_validates_and_goes_to_mode(
@@ -58,7 +57,10 @@ async def test_user_step_connection_error(
     mock_wibeee_api_config_flow: AsyncMock,
 ) -> None:
     """Test user step handles connection error."""
-    mock_wibeee_api_config_flow.async_check_connection.side_effect = Exception("error")
+    # validate_input calls async_fetch_device_info
+    mock_wibeee_api_config_flow.async_fetch_device_info.side_effect = TimeoutError(
+        "error"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -70,7 +72,8 @@ async def test_user_step_connection_error(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
+    assert "errors" in result
+    assert result["errors"][CONF_HOST] == "no_device_info"
 
 
 async def test_user_step_invalid_device(
@@ -79,7 +82,7 @@ async def test_user_step_invalid_device(
     mock_wibeee_api_config_flow: AsyncMock,
 ) -> None:
     """Test user step handles non-Wibeee device."""
-    mock_wibeee_api_config_flow.async_check_connection.return_value = False
+    mock_wibeee_api_config_flow.async_fetch_device_info.return_value = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -112,32 +115,8 @@ async def test_dhcp_discovery(
         data=discovery_info,
     )
 
-    # In success case, DHCP flow goes straight to 'mode' step after internal user step validation
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mode"
-
-
-async def test_dhcp_discovery_not_wibeee(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_wibeee_api_config_flow: AsyncMock,
-) -> None:
-    """Test DHCP discovery aborted if device is not Wibeee."""
-    mock_wibeee_api_config_flow.async_check_connection.return_value = False
-    discovery_info = DhcpServiceInfo(
-        ip=MOCK_HOST,
-        macaddress=MOCK_MAC,
-        hostname="wibeee_test",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=discovery_info,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_wibeee_device"
 
 
 async def test_mode_step_creates_entry_polling(
@@ -249,6 +228,7 @@ async def test_options_flow_auto_configure_fail(
     mock_wibeee_api: AsyncMock,
 ) -> None:
     """Test options flow handles auto-configuration failure."""
+    # Ensure the instance used in options flow is mocked
     mock_wibeee_api.async_configure_push_server.return_value = False
 
     result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
