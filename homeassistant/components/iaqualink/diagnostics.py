@@ -26,7 +26,7 @@ async def async_get_config_entry_diagnostics(
                 "data": coordinator.system.data,
                 "devices": {
                     name: {"class": obj.__class__.__name__, "data": obj.data}
-                    for name, obj in coordinator.system.devices.items()
+                    for name, obj in getattr(coordinator.system, "devices", {}).items()
                 },
             }
         )
