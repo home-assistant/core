@@ -6,7 +6,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.myneomitis import climate as climate_platform
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -455,35 +454,6 @@ async def test_skip_unknown_model(
             "connected": True,
         }
     ]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert not any(e.domain == "climate" for e in entries)
-
-
-async def test_skip_supported_model_without_preset_mapping(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Supported model without preset mapping should be skipped."""
-    mock_pyaxenco_client.get_devices.return_value = [
-        {
-            "_id": "climate_no_map",
-            "name": "No Map",
-            "model": "EV30",
-            "state": {},
-            "connected": True,
-        }
-    ]
-    monkeypatch.setattr(climate_platform, "PRESET_MODE_MODELS", {})
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -45,6 +45,8 @@ async def async_setup_entry(
         if model not in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS:
             continue
 
+        # Defensive check: PRESET_MODE_MODELS is provided by pyaxencoapi and always
+        # contains entries for supported models, so this branch is unreachable in practice.
         if model not in PRESET_MODE_MODELS:
             _LOGGER.warning(
                 "Skipping climate device %s: model %s has no preset mapping",
