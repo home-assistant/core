@@ -14,7 +14,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 - Home Assistant officially supports Python 3.14 as its minimum version. Do not flag syntax or features that require Python 3.14 as issues, and do not suggest workarounds for older Python versions.
 - Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses. Never flag this as an issue.
-- Python 3.14 evaluates annotations lazily (PEP 649). Forward references are no longer required — type hints can reference names defined later in the module without quoting them or using `from __future__ import annotations`. Do not flag unquoted forward references as issues.
+- Python 3.14 evaluates annotations lazily (PEP 649). Forward references in annotations do not need quotes or `from __future__ import annotations`, so do not flag unquoted forward references in annotations as issues. Some typing constructs evaluated at runtime may still require strings.
 
 ## Testing
 
