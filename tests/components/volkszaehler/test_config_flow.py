@@ -2,6 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from volkszaehler.exceptions import (
+    VolkszaehlerApiConnectionError,
+    VolkszaehlerNoDataAvailable,
+)
+
 from homeassistant.components.volkszaehler import sensor
 from homeassistant.components.volkszaehler.const import DOMAIN
 from homeassistant.const import (
@@ -29,7 +35,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     user_input = {
         CONF_UUID: "test-uuid",
         CONF_HOST: "localhost",
-        CONF_NAME: "1.8.0",
         CONF_PORT: 80,
     }
     with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
@@ -41,8 +46,35 @@ async def test_create_entry(hass: HomeAssistant) -> None:
                 result["flow_id"], user_input
             )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "1.8.0"
+        assert result["title"] == "test-uuid"
         assert result["data"] == user_input
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (VolkszaehlerApiConnectionError, "cannot_connect"),
+        (VolkszaehlerNoDataAvailable, "no_data"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_user_errors(hass: HomeAssistant, side_effect, expected_error) -> None:
+    """Test error handling in the config flow user step."""
+    user_input = {
+        CONF_UUID: "test-uuid",
+        CONF_HOST: "localhost",
+        CONF_PORT: 80,
+    }
+    with patch("volkszaehler.Volkszaehler.get_data", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=user_input
+        )
+        if result["type"] == FlowResultType.FORM:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == expected_error
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -68,7 +100,6 @@ async def test_import(hass: HomeAssistant) -> None:
         assert entry.data == {
             CONF_UUID: "import-uuid",
             CONF_HOST: "importhost",
-            CONF_NAME: "2.8.0",
             CONF_PORT: 80,
         }
         assert entry.title == "2.8.0"
@@ -79,7 +110,6 @@ async def test_import_once(hass: HomeAssistant) -> None:
     import_data = {
         CONF_UUID: "import-uuid",
         CONF_HOST: "importhost",
-        CONF_NAME: "2.8.0",
         CONF_PORT: 8080,
         CONF_PLATFORM: "volkszaehler",
     }

@@ -24,9 +24,10 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -98,12 +99,42 @@ async def async_setup_platform(
         CONF_PORT: validated[CONF_PORT],
         CONF_UUID: validated[CONF_UUID],
     }
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=data,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
             DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=data,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Volkszaehler",
+            },
         )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Volkszaehler",
+        },
     )
 
 
@@ -115,9 +146,9 @@ async def async_setup_entry(
     """Set up Volkszaehler sensors from a config entry."""
     data = entry.data
     host: str = data[CONF_HOST]
-    name: str = data[CONF_NAME]
     port: int = data[CONF_PORT]
     uuid: str = data[CONF_UUID]
+    title = entry.title
     conditions = SENSOR_KEYS
 
     session = async_get_clientsession(hass)
@@ -127,7 +158,7 @@ async def async_setup_entry(
     if vz_api.api.data is None:
         raise PlatformNotReady
     entities = [
-        VolkszaehlerSensor(vz_api, name, description)
+        VolkszaehlerSensor(vz_api, title, description)
         for description in SENSOR_TYPES
         if description.key in conditions
     ]
