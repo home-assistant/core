@@ -33,6 +33,41 @@
     }
   },
   "entity": {
+    "sensor": {
+      "compressor_capacity": {
+        "name": "Compressor capacity"
+      },
+      "compressor_chasing_temperature": {
+        "name": "Compressor chasing temperature"
+      },
+      "compressor_live_temperature": {
+        "name": "Compressor live temperature"
+      },
+      "compressor_mode": {
+        "name": "Compressor mode"
+      },
+      "compressor_power": {
+        "name": "Compressor power"
+      },
+      "compressor_speed": {
+        "name": "Compressor speed"
+      },
+      "fan_rpm": {
+        "name": "Fan RPM"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "peripheral_battery": {
+        "name": "Battery"
+      },
+      "peripheral_humidity": {
+        "name": "Humidity"
+      },
+      "peripheral_temperature": {
+        "name": "Temperature"
+      }
+    },
     "switch": {
       "away_mode": {
         "name": "Away mode"
