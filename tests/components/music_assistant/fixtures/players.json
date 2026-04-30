@@ -9,7 +9,11 @@
       "device_info": {
         "model": "Test Model",
         "address": "192.168.1.1",
-        "manufacturer": "Test Manufacturer"
+        "manufacturer": "Test Manufacturer",
+        "connections": [
+          ["mac", "00:00:00:00:00:01"],
+          ["bluetooth", "aa:bb:cc:dd:ee:ff"]
+        ]
       },
       "supported_features": [
         "volume_set",

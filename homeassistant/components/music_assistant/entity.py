@@ -38,6 +38,20 @@ class MusicAssistantEntity(Entity):
             name=self.player.name,
             configuration_url=f"{mass.server_url}/#/settings/editplayer/{player_id}",
         )
+        # Forward MA player's hardware connections (set by per-protocol
+        # providers — bluetooth bridges, AirPlay, WiiM, …) verbatim into
+        # HA's device-registry input. The connection-type strings come
+        # from the provider; HA's registry treats any string as a valid
+        # connection type and merges devices across integrations that
+        # declare the same tuple. ``getattr`` keeps the integration
+        # working with older ``music_assistant_models`` releases that
+        # don't yet have the field. Only set the key when non-empty so
+        # players with no advertised hardware identity don't get a
+        # spurious empty ``connections`` set in their HA device record.
+        if mass_connections := set(
+            getattr(self.player.device_info, "connections", None) or set()
+        ):
+            self._attr_device_info["connections"] = mass_connections
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

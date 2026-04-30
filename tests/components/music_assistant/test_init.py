@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.enums import EventType
 from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
+from music_assistant_models.player import DeviceInfo as MassDeviceInfo
+import pytest
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
@@ -211,3 +213,41 @@ async def test_authentication_required_addon_no_reauth(
     issue_reg = ir.async_get(hass)
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     assert issue_reg.async_get_issue("homeassistant", issue_id) is None
+
+
+@pytest.mark.skipif(
+    "connections" not in getattr(MassDeviceInfo, "__dataclass_fields__", {}),
+    reason=(
+        "music_assistant_models.player.DeviceInfo.connections not yet "
+        "available — requires music-assistant/models#215 release + a "
+        "music-assistant-client bump in this integration's manifest."
+    ),
+)
+async def test_device_info_forwards_player_connections(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that the player's device_info.connections is forwarded into HA's device_registry.
+
+    Provider-side connection identifiers (BT MAC, Wi-Fi MAC, Zigbee EUI-64,
+    UPnP UUID, etc.) are surfaced in the MA player's
+    ``device_info.connections`` set; HA's MA integration must forward them
+    so HA's device_registry can dedupe device cards across integrations
+    that know the same hardware.
+    """
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    await hass.async_block_till_done()
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    # Look up the specific player's device by its identifier rather than
+    # by ``async_entries_for_config_entry`` index (the fixture has multiple
+    # players and ordering is not part of the API).
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:00:00:00:00:01")}
+    )
+    assert device_entry is not None
+    assert device_entry.config_entries == {config_entry.entry_id}
+    # The fixture's first player declares two connections: a Wi-Fi MAC
+    # and a Bluetooth MAC. Both must round-trip into the HA device.
+    assert ("mac", "00:00:00:00:00:01") in device_entry.connections
+    assert ("bluetooth", "aa:bb:cc:dd:ee:ff") in device_entry.connections
