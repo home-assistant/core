@@ -1,7 +1,5 @@
 """Support for SwitchBee light."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError

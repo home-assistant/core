@@ -1,7 +1,5 @@
 """Support for Tuya Alarm."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.alarm_control_panel import (
     AlarmControlPanelDefinition,
     get_default_definition,

@@ -1,7 +1,5 @@
 """Data update coordinator for the Sonarr integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import TypeVar, cast

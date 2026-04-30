@@ -1,7 +1,5 @@
 """Expose Synology DSM as a media source."""
 
-from __future__ import annotations
-
 from logging import getLogger
 import mimetypes
 from typing import TYPE_CHECKING

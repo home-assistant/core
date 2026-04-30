@@ -1,7 +1,5 @@
 """Support for Z-Wave cover devices."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from zwave_js_server.const import (
