@@ -6,13 +6,13 @@ from homeassistant.components.climate import HVACAction, HVACMode
 
 DOMAIN = "watts"
 
-OAUTH2_AUTHORIZE = "https://visionlogindev.b2clogin.com/visionlogindev.onmicrosoft.com/B2C_1A_VISION_UNIFIEDSIGNUPORSIGNIN/oauth2/v2.0/authorize"
-OAUTH2_TOKEN = "https://visionlogindev.b2clogin.com/visionlogindev.onmicrosoft.com/B2C_1A_VISION_UNIFIEDSIGNUPORSIGNIN/oauth2/v2.0/token"
+OAUTH2_AUTHORIZE = "https://visionlogin.b2clogin.com/visionlogin.onmicrosoft.com/B2C_1A_VISION_UNIFIEDSIGNUPORSIGNIN/oauth2/v2.0/authorize"
+OAUTH2_TOKEN = "https://visionlogin.b2clogin.com/visionlogin.onmicrosoft.com/B2C_1A_VISION_UNIFIEDSIGNUPORSIGNIN/oauth2/v2.0/token"
 
 OAUTH2_SCOPES = [
     "openid",
     "offline_access",
-    "https://visionlogindev.onmicrosoft.com/homeassistant-api/homeassistant.read",
+    "https://visionlogin.onmicrosoft.com/homeassistant-api/homeassistant.read",
 ]
 
 # Update intervals
@@ -37,8 +37,7 @@ HVAC_MODE_TO_THERMOSTAT: dict[HVACMode, ThermostatMode] = {
     HVACMode.AUTO: ThermostatMode.PROGRAM,
 }
 
-# Preset modes available on all Watts Vision+ thermostats (always shown,
-# regardless of what availableThermostatModes the API reports).
+# Preset modes available on all Watts Vision+ thermostats.
 PRESET_MODES: list[str] = ["comfort", "eco", "defrost", "timer"]
 
 # Mapping from Watts Vision+ mode name to HA preset mode string
