@@ -57,7 +57,6 @@ async def test_configure_with_discover(
         assert result3["data"] == {
             "ip_address": "1.1.1.1",
             "serial": "123456789012",
-            "auto_discovered": True,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -102,7 +101,6 @@ async def test_configure_manual(
         assert result2["data"] == {
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
-            "auto_discovered": False,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -154,7 +152,6 @@ async def test_configure_user_selected_manual(
         assert result2["data"] == {
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
-            "auto_discovered": False,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()

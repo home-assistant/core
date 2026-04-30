@@ -2,7 +2,6 @@
 
 DOMAIN = "nobo_hub"
 
-CONF_AUTO_DISCOVERED = "auto_discovered"
 CONF_SERIAL = "serial"
 CONF_OVERRIDE_TYPE = "override_type"
 OVERRIDE_TYPE_CONSTANT = "constant"
