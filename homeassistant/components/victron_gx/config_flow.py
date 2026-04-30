@@ -180,30 +180,24 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.installation_id)
 
         # Check if we need to update the host for an existing entry
-        existing_entry = next(
-            (
-                entry
-                for entry in self._async_current_entries()
-                if entry.unique_id == self.installation_id
-            ),
-            None,
+        existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, self.installation_id
         )
         if (
             existing_entry is not None
             and existing_entry.data[CONF_HOST] != self.hostname
         ):
-            # Update the entry with the new host and title
-            self.hass.config_entries.async_update_entry(
+            # Update the entry with the new host and title, then reload and abort
+            return self.async_update_reload_and_abort(
                 existing_entry,
-                data={**existing_entry.data, CONF_HOST: self.hostname},
+                data_updates={CONF_HOST: self.hostname},
                 title=ENTRY_TITLE_FORMAT.format(
                     installation_id=self.installation_id,
                     host=self.hostname,
                     port=existing_entry.data[CONF_PORT],
                 ),
+                reason="already_configured",
             )
-            # Reload the entry to apply the changes
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
 
         self._abort_if_unique_id_configured()
 
