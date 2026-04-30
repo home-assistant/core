@@ -1,0 +1,270 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "controllers": {
+        "data": {
+          "controllers": "Number of controllers"
+        },
+        "description": "Enter the number of controllers in your Russound system.",
+        "title": "Controllers"
+      },
+      "model": {
+        "data": {
+          "model": "Model"
+        },
+        "description": "Select your Russound RNET device model.",
+        "title": "Device Model"
+      },
+      "serial": {
+        "data": {
+          "device": "Serial device"
+        },
+        "description": "Enter the serial connection details for your Russound RNET device.",
+        "title": "Serial Connection"
+      },
+      "sources": {
+        "data": {
+          "source_1": "Source 1",
+          "source_2": "Source 2",
+          "source_3": "Source 3",
+          "source_4": "Source 4",
+          "source_5": "Source 5",
+          "source_6": "Source 6",
+          "source_7": "Source 7",
+          "source_8": "Source 8"
+        },
+        "description": "Enter names for the audio sources connected to your Russound system. Leave a source empty to exclude it.",
+        "title": "Source Names"
+      },
+      "tcp": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Enter the TCP connection details for your Russound RNET device.",
+        "title": "TCP Connection"
+      },
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "description": "Select how to connect to your Russound RNET device.",
+        "title": "Connection Type"
+      },
+      "zones": {
+        "data": {
+          "zone_1_1": "Controller 1, Zone 1",
+          "zone_1_2": "Controller 1, Zone 2",
+          "zone_1_3": "Controller 1, Zone 3",
+          "zone_1_4": "Controller 1, Zone 4",
+          "zone_1_5": "Controller 1, Zone 5",
+          "zone_1_6": "Controller 1, Zone 6",
+          "zone_1_7": "Controller 1, Zone 7",
+          "zone_1_8": "Controller 1, Zone 8",
+          "zone_2_1": "Controller 2, Zone 1",
+          "zone_2_2": "Controller 2, Zone 2",
+          "zone_2_3": "Controller 2, Zone 3",
+          "zone_2_4": "Controller 2, Zone 4",
+          "zone_2_5": "Controller 2, Zone 5",
+          "zone_2_6": "Controller 2, Zone 6",
+          "zone_2_7": "Controller 2, Zone 7",
+          "zone_2_8": "Controller 2, Zone 8",
+          "zone_3_1": "Controller 3, Zone 1",
+          "zone_3_2": "Controller 3, Zone 2",
+          "zone_3_3": "Controller 3, Zone 3",
+          "zone_3_4": "Controller 3, Zone 4",
+          "zone_3_5": "Controller 3, Zone 5",
+          "zone_3_6": "Controller 3, Zone 6",
+          "zone_3_7": "Controller 3, Zone 7",
+          "zone_3_8": "Controller 3, Zone 8",
+          "zone_4_1": "Controller 4, Zone 1",
+          "zone_4_2": "Controller 4, Zone 2",
+          "zone_4_3": "Controller 4, Zone 3",
+          "zone_4_4": "Controller 4, Zone 4",
+          "zone_4_5": "Controller 4, Zone 5",
+          "zone_4_6": "Controller 4, Zone 6",
+          "zone_4_7": "Controller 4, Zone 7",
+          "zone_4_8": "Controller 4, Zone 8",
+          "zone_5_1": "Controller 5, Zone 1",
+          "zone_5_2": "Controller 5, Zone 2",
+          "zone_5_3": "Controller 5, Zone 3",
+          "zone_5_4": "Controller 5, Zone 4",
+          "zone_5_5": "Controller 5, Zone 5",
+          "zone_5_6": "Controller 5, Zone 6",
+          "zone_5_7": "Controller 5, Zone 7",
+          "zone_5_8": "Controller 5, Zone 8",
+          "zone_6_1": "Controller 6, Zone 1",
+          "zone_6_2": "Controller 6, Zone 2",
+          "zone_6_3": "Controller 6, Zone 3",
+          "zone_6_4": "Controller 6, Zone 4",
+          "zone_6_5": "Controller 6, Zone 5",
+          "zone_6_6": "Controller 6, Zone 6",
+          "zone_6_7": "Controller 6, Zone 7",
+          "zone_6_8": "Controller 6, Zone 8",
+          "zone_7_1": "Controller 7, Zone 1",
+          "zone_7_2": "Controller 7, Zone 2",
+          "zone_7_3": "Controller 7, Zone 3",
+          "zone_7_4": "Controller 7, Zone 4",
+          "zone_7_5": "Controller 7, Zone 5",
+          "zone_7_6": "Controller 7, Zone 6",
+          "zone_7_7": "Controller 7, Zone 7",
+          "zone_7_8": "Controller 7, Zone 8",
+          "zone_8_1": "Controller 8, Zone 1",
+          "zone_8_2": "Controller 8, Zone 2",
+          "zone_8_3": "Controller 8, Zone 3",
+          "zone_8_4": "Controller 8, Zone 4",
+          "zone_8_5": "Controller 8, Zone 5",
+          "zone_8_6": "Controller 8, Zone 6",
+          "zone_8_7": "Controller 8, Zone 7",
+          "zone_8_8": "Controller 8, Zone 8"
+        },
+        "description": "Enter names for each zone. Leave a zone empty to exclude it.",
+        "title": "Zone Names"
+      }
+    }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Error executing {function_name} for {entity_id}"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring Russound RNET using YAML is being removed. A config entry already exists for this device.\n\nTo fix this issue:\n\n1. Remove the `russound_rnet` section from your `configuration.yaml` file.\n2. Restart Home Assistant.",
+      "title": "Russound RNET YAML configuration should be removed"
+    },
+    "yaml_import_needed": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "Could not connect to the Russound RNET device. Check the connection details in your YAML configuration.",
+          "import_failed": "Failed to create the configuration entry. The device may already be configured."
+        },
+        "step": {
+          "confirm": {
+            "description": "Configuring Russound RNET using YAML is being removed. Additional settings are needed to complete the migration.\n\nSelect **Submit** to select your device model and confirm your zones and sources.",
+            "title": "Russound RNET YAML configuration needs migration"
+          },
+          "model": {
+            "data": {
+              "model": "Model"
+            },
+            "description": "Select your Russound RNET device model to complete the import from YAML configuration.",
+            "title": "Device Model"
+          },
+          "sources": {
+            "data": {
+              "source_1": "[%key:component::russound_rnet::config::step::sources::data::source_1%]",
+              "source_2": "[%key:component::russound_rnet::config::step::sources::data::source_2%]",
+              "source_3": "[%key:component::russound_rnet::config::step::sources::data::source_3%]",
+              "source_4": "[%key:component::russound_rnet::config::step::sources::data::source_4%]",
+              "source_5": "[%key:component::russound_rnet::config::step::sources::data::source_5%]",
+              "source_6": "[%key:component::russound_rnet::config::step::sources::data::source_6%]",
+              "source_7": "[%key:component::russound_rnet::config::step::sources::data::source_7%]",
+              "source_8": "[%key:component::russound_rnet::config::step::sources::data::source_8%]"
+            },
+            "description": "Confirm the audio source names imported from your YAML configuration. Leave a source empty to exclude it.",
+            "title": "Source Names"
+          },
+          "zones": {
+            "data": {
+              "zone_1_1": "[%key:component::russound_rnet::config::step::zones::data::zone_1_1%]",
+              "zone_1_2": "[%key:component::russound_rnet::config::step::zones::data::zone_1_2%]",
+              "zone_1_3": "[%key:component::russound_rnet::config::step::zones::data::zone_1_3%]",
+              "zone_1_4": "[%key:component::russound_rnet::config::step::zones::data::zone_1_4%]",
+              "zone_1_5": "[%key:component::russound_rnet::config::step::zones::data::zone_1_5%]",
+              "zone_1_6": "[%key:component::russound_rnet::config::step::zones::data::zone_1_6%]",
+              "zone_1_7": "[%key:component::russound_rnet::config::step::zones::data::zone_1_7%]",
+              "zone_1_8": "[%key:component::russound_rnet::config::step::zones::data::zone_1_8%]",
+              "zone_2_1": "[%key:component::russound_rnet::config::step::zones::data::zone_2_1%]",
+              "zone_2_2": "[%key:component::russound_rnet::config::step::zones::data::zone_2_2%]",
+              "zone_2_3": "[%key:component::russound_rnet::config::step::zones::data::zone_2_3%]",
+              "zone_2_4": "[%key:component::russound_rnet::config::step::zones::data::zone_2_4%]",
+              "zone_2_5": "[%key:component::russound_rnet::config::step::zones::data::zone_2_5%]",
+              "zone_2_6": "[%key:component::russound_rnet::config::step::zones::data::zone_2_6%]",
+              "zone_2_7": "[%key:component::russound_rnet::config::step::zones::data::zone_2_7%]",
+              "zone_2_8": "[%key:component::russound_rnet::config::step::zones::data::zone_2_8%]",
+              "zone_3_1": "[%key:component::russound_rnet::config::step::zones::data::zone_3_1%]",
+              "zone_3_2": "[%key:component::russound_rnet::config::step::zones::data::zone_3_2%]",
+              "zone_3_3": "[%key:component::russound_rnet::config::step::zones::data::zone_3_3%]",
+              "zone_3_4": "[%key:component::russound_rnet::config::step::zones::data::zone_3_4%]",
+              "zone_3_5": "[%key:component::russound_rnet::config::step::zones::data::zone_3_5%]",
+              "zone_3_6": "[%key:component::russound_rnet::config::step::zones::data::zone_3_6%]",
+              "zone_3_7": "[%key:component::russound_rnet::config::step::zones::data::zone_3_7%]",
+              "zone_3_8": "[%key:component::russound_rnet::config::step::zones::data::zone_3_8%]",
+              "zone_4_1": "[%key:component::russound_rnet::config::step::zones::data::zone_4_1%]",
+              "zone_4_2": "[%key:component::russound_rnet::config::step::zones::data::zone_4_2%]",
+              "zone_4_3": "[%key:component::russound_rnet::config::step::zones::data::zone_4_3%]",
+              "zone_4_4": "[%key:component::russound_rnet::config::step::zones::data::zone_4_4%]",
+              "zone_4_5": "[%key:component::russound_rnet::config::step::zones::data::zone_4_5%]",
+              "zone_4_6": "[%key:component::russound_rnet::config::step::zones::data::zone_4_6%]",
+              "zone_4_7": "[%key:component::russound_rnet::config::step::zones::data::zone_4_7%]",
+              "zone_4_8": "[%key:component::russound_rnet::config::step::zones::data::zone_4_8%]",
+              "zone_5_1": "[%key:component::russound_rnet::config::step::zones::data::zone_5_1%]",
+              "zone_5_2": "[%key:component::russound_rnet::config::step::zones::data::zone_5_2%]",
+              "zone_5_3": "[%key:component::russound_rnet::config::step::zones::data::zone_5_3%]",
+              "zone_5_4": "[%key:component::russound_rnet::config::step::zones::data::zone_5_4%]",
+              "zone_5_5": "[%key:component::russound_rnet::config::step::zones::data::zone_5_5%]",
+              "zone_5_6": "[%key:component::russound_rnet::config::step::zones::data::zone_5_6%]",
+              "zone_5_7": "[%key:component::russound_rnet::config::step::zones::data::zone_5_7%]",
+              "zone_5_8": "[%key:component::russound_rnet::config::step::zones::data::zone_5_8%]",
+              "zone_6_1": "[%key:component::russound_rnet::config::step::zones::data::zone_6_1%]",
+              "zone_6_2": "[%key:component::russound_rnet::config::step::zones::data::zone_6_2%]",
+              "zone_6_3": "[%key:component::russound_rnet::config::step::zones::data::zone_6_3%]",
+              "zone_6_4": "[%key:component::russound_rnet::config::step::zones::data::zone_6_4%]",
+              "zone_6_5": "[%key:component::russound_rnet::config::step::zones::data::zone_6_5%]",
+              "zone_6_6": "[%key:component::russound_rnet::config::step::zones::data::zone_6_6%]",
+              "zone_6_7": "[%key:component::russound_rnet::config::step::zones::data::zone_6_7%]",
+              "zone_6_8": "[%key:component::russound_rnet::config::step::zones::data::zone_6_8%]",
+              "zone_7_1": "[%key:component::russound_rnet::config::step::zones::data::zone_7_1%]",
+              "zone_7_2": "[%key:component::russound_rnet::config::step::zones::data::zone_7_2%]",
+              "zone_7_3": "[%key:component::russound_rnet::config::step::zones::data::zone_7_3%]",
+              "zone_7_4": "[%key:component::russound_rnet::config::step::zones::data::zone_7_4%]",
+              "zone_7_5": "[%key:component::russound_rnet::config::step::zones::data::zone_7_5%]",
+              "zone_7_6": "[%key:component::russound_rnet::config::step::zones::data::zone_7_6%]",
+              "zone_7_7": "[%key:component::russound_rnet::config::step::zones::data::zone_7_7%]",
+              "zone_7_8": "[%key:component::russound_rnet::config::step::zones::data::zone_7_8%]",
+              "zone_8_1": "[%key:component::russound_rnet::config::step::zones::data::zone_8_1%]",
+              "zone_8_2": "[%key:component::russound_rnet::config::step::zones::data::zone_8_2%]",
+              "zone_8_3": "[%key:component::russound_rnet::config::step::zones::data::zone_8_3%]",
+              "zone_8_4": "[%key:component::russound_rnet::config::step::zones::data::zone_8_4%]",
+              "zone_8_5": "[%key:component::russound_rnet::config::step::zones::data::zone_8_5%]",
+              "zone_8_6": "[%key:component::russound_rnet::config::step::zones::data::zone_8_6%]",
+              "zone_8_7": "[%key:component::russound_rnet::config::step::zones::data::zone_8_7%]",
+              "zone_8_8": "[%key:component::russound_rnet::config::step::zones::data::zone_8_8%]"
+            },
+            "description": "Confirm the zone names imported from your YAML configuration. Leave a zone empty to exclude it.",
+            "title": "Zone Names"
+          }
+        }
+      },
+      "title": "Russound RNET YAML configuration needs migration"
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "serial": "Serial",
+        "tcp": "TCP/IP"
+      }
+    },
+    "model": {
+      "options": {
+        "aca-e5": "ACA-E5",
+        "caa66": "CAA66",
+        "cam6_6": "CAM6.6",
+        "cas44": "CAS44",
+        "cav6_6": "CAV6.6",
+        "mca-c3": "MCA-C3",
+        "mca-c5": "MCA-C5"
+      }
+    }
+  }
+}

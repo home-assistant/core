@@ -1,0 +1,106 @@
+"""DataUpdateCoordinator for the Russound RNET integration."""
+
+from __future__ import annotations
+
+from contextlib import suppress
+from datetime import timedelta
+import logging
+
+from aiorussound.rnet.client import RNETZoneInfo, RussoundRNETClient
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import CONF_ZONES, DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
+
+_LOGGER = logging.getLogger(__name__)
+
+type RussoundRNETConfigEntry = ConfigEntry[RussoundRNETCoordinator]
+
+
+class RussoundRNETCoordinator(
+    DataUpdateCoordinator[dict[tuple[int, int], RNETZoneInfo]]
+):
+    """Coordinator for polling Russound RNET zones."""
+
+    config_entry: RussoundRNETConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: RussoundRNETConfigEntry,
+        client: RussoundRNETClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.client = client
+        self._pending_updates: dict[tuple[int, int], RNETZoneInfo] = {}
+        model_key = entry.data[CONF_MODEL]
+        self._model = RNET_MODELS[model_key]
+
+        # Build list of (controller_id, zone_id) tuples to poll
+        zones_config = entry.data.get(CONF_ZONES, {})
+        self._zone_keys: list[tuple[int, int]] = [
+            (int(key.split("_")[0]), int(key.split("_")[1])) for key in zones_config
+        ]
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=30),
+        )
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator — connect to the device."""
+        try:
+            await self.client.connect()
+        except RNET_EXCEPTIONS as err:
+            raise UpdateFailed(f"Cannot connect to RNET device: {err}") from err
+
+    async def _async_update_data(self) -> dict[tuple[int, int], RNETZoneInfo]:
+        """Poll all zones and return zone data keyed by (controller_id, zone_id)."""
+        data: dict[tuple[int, int], RNETZoneInfo] = {}
+
+        if not self.client.is_connected:
+            try:
+                await self.client.connect()
+            except RNET_EXCEPTIONS as err:
+                raise UpdateFailed(f"Cannot reconnect to RNET device: {err}") from err
+
+        try:
+            for controller_id, zone_id in self._zone_keys:
+                info = await self.client.get_all_zone_info(controller_id, zone_id)
+                data[(controller_id, zone_id)] = info
+        except RNET_EXCEPTIONS as err:
+            with suppress(*RNET_EXCEPTIONS):
+                await self.client.disconnect()
+            raise UpdateFailed(f"Error polling RNET zones: {err}") from err
+
+        # Merge any pending single-zone updates (fresher than polled data)
+        data.update(self._pending_updates)
+        self._pending_updates.clear()
+        return data
+
+    async def async_refresh_zone(
+        self,
+        controller_id: int,
+        zone_id: int,
+    ) -> None:
+        """Poll only the affected zone for instant feedback after a command."""
+        try:
+            info = await self.client.get_all_zone_info(controller_id, zone_id)
+        except RNET_EXCEPTIONS:
+            return
+        self._pending_updates[(controller_id, zone_id)] = info
+        if self.data is not None:
+            self.data[(controller_id, zone_id)] = info
+            self.async_set_updated_data(self.data)
+
+    async def async_shutdown(self) -> None:
+        """Disconnect the client on shutdown."""
+        await super().async_shutdown()
+        with suppress(*RNET_EXCEPTIONS):
+            await self.client.disconnect()
