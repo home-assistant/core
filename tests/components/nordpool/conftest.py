@@ -1,7 +1,5 @@
 """Fixtures for the Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 import json
 from typing import Any

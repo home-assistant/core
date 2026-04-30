@@ -1,7 +1,5 @@
 """Tests for the Novy Hood fan platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
