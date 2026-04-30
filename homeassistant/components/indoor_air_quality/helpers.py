@@ -15,6 +15,8 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER: Final = logging.getLogger(__name__)
 
+_WARNED_MISSING_ENTITIES: set[str] = set()
+
 
 _UGM3_UNITS: Final = frozenset({"µg/m³", "µg/m3", "µg/m^3", "ug/m³", "ug/m3", "ug/m^3"})
 _MGM3_UNITS: Final = frozenset({"mg/m³", "mg/m3", "mg/m^3"})
@@ -48,8 +50,13 @@ def resolve_state(
     """Resolve an entity's numeric state and unit, or ``None``."""
     entity = hass.states.get(entity_id)
     if entity is None:
-        _LOGGER.warning("Entity %s not found", entity_id)
+        if entity_id not in _WARNED_MISSING_ENTITIES:
+            _WARNED_MISSING_ENTITIES.add(entity_id)
+            _LOGGER.warning("Entity %s not found", entity_id)
+        else:
+            _LOGGER.debug("Entity %s not found", entity_id)
         return None
+    _WARNED_MISSING_ENTITIES.discard(entity_id)
     if not has_state(entity.state):
         _LOGGER.debug("State of entity %s is unknown", entity_id)
         return None
