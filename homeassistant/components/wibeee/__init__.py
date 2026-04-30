@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import ipaddress
 import logging
+import socket
 
 import aiohttp
 from pywibeee import WibeeeAPI, WibeeeDeviceInfo
@@ -105,21 +107,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
                 f"Could not fetch initial sensor data from Wibeee at {host}"
             )
 
-        if not isinstance(initial_data, dict):
-            raise ConfigEntryNotReady(
-                f"Invalid initial sensor data received from Wibeee at {host}"
-            )
-
         coordinator.async_set_updated_data(initial_data)
 
         # Register with push receiver
-        # Ensure we use a concrete IP even if host is a hostname
-        import socket  # noqa: PLC0415
-
+        # Ensure we use a concrete IP even if host is a hostname for validation
         try:
-            resolved_ip = await hass.async_add_executor_job(socket.gethostbyname, host)
-        except OSError:
-            resolved_ip = host
+            resolved_ip = str(ipaddress.ip_address(host))
+        except ValueError:
+            try:
+                resolved_ip = await hass.async_add_executor_job(
+                    socket.gethostbyname, host
+                )
+                resolved_ip = str(ipaddress.ip_address(resolved_ip))
+            except (OSError, ValueError) as err:
+                raise ConfigEntryNotReady(
+                    f"Could not resolve Wibeee host {host} to an IP address for push mode"
+                ) from err
 
         receiver = async_setup_push_receiver(hass)
         receiver.register_device(mac_addr, resolved_ip, coordinator.async_push_update)
