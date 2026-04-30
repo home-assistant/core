@@ -200,6 +200,7 @@ class IndoorAirQualityController:
             _LOGGER.warning(
                 "[%s] Unknown IAQ standard %r", self._entry_id, self._standard
             )
+            self._reset_state()
             return
 
         total = 0
@@ -244,6 +245,15 @@ class IndoorAirQualityController:
                 self._iaq_index,
                 self._iaq_sources,
             )
+        else:
+            self._reset_state()
+            _LOGGER.debug("[%s] No usable sources, IAQ index cleared", self._entry_id)
+
+    def _reset_state(self) -> None:
+        """Clear all computed state so sensors report unavailable."""
+        self._iaq_index = None
+        self._iaq_sources = 0
+        self._indexes = {}
 
     # --- per-source resolution ---------------------------------------------
 

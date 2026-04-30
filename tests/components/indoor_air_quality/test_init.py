@@ -440,3 +440,59 @@ async def test_invalid_entry_data_raises(hass: HomeAssistant) -> None:
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+
+async def test_state_resets_when_all_sources_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Index, level and per-source attributes clear when no source resolves."""
+    hass.states.async_set(
+        "sensor.t", 17, {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    )
+    hass.states.async_set("sensor.h", 50, {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE})
+
+    controller = IndoorAirQualityController(
+        hass,
+        "test",
+        "Test",
+        {CONF_TEMPERATURE: "sensor.t", CONF_HUMIDITY: "sensor.h"},
+    )
+    controller.update()
+    assert controller.iaq_index is not None
+    assert controller.iaq_level is not None
+    assert ATTR_SOURCE_INDEX_TPL.format(CONF_TEMPERATURE) in (
+        controller.extra_state_attributes
+    )
+
+    hass.states.async_remove("sensor.t")
+    hass.states.async_remove("sensor.h")
+    controller.update()
+
+    assert controller.iaq_index is None
+    assert controller.iaq_level is None
+    assert controller.extra_state_attributes == {
+        ATTR_SOURCES_SET: 2,
+        ATTR_SOURCES_USED: 0,
+    }
+
+
+async def test_state_resets_for_unknown_standard(hass: HomeAssistant) -> None:
+    """An unknown rating standard clears any previously computed state."""
+    hass.states.async_set(
+        "sensor.t", 17, {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    )
+    controller = IndoorAirQualityController(
+        hass, "test", "Test", {CONF_TEMPERATURE: "sensor.t"}
+    )
+    controller.update()
+    assert controller.iaq_index is not None
+
+    controller._standard = "not_a_standard"
+    controller.update()
+
+    assert controller.iaq_index is None
+    assert controller.iaq_level is None
+    assert controller.extra_state_attributes == {
+        ATTR_SOURCES_SET: 1,
+        ATTR_SOURCES_USED: 0,
+    }
