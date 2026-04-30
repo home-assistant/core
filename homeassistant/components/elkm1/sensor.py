@@ -138,24 +138,26 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
         """Set the value of a setting on the panel."""
         if not isinstance(self, ElkSetting):
             raise HomeAssistantError("supported only on ElkM1 Setting sensors")
-        if value is not None:
-            if self._element.value_format != SettingFormat.TIME_OF_DAY:
-                if isinstance(value, int):
-                    self._element.set(value)
-                else:
-                    raise HomeAssistantError(
-                        "cannot use integer value to set a time of day setting"
-                    )
-            elif isinstance(value, time_sys):
-                if value.second != 0:
-                    raise HomeAssistantError(
-                        "can only specify hour and minutes for time of day setting"
-                    )
-                self._element.set((value.hour, value.minute))
-            else:
+
+        if value is None:
+            return
+
+        if isinstance(value, int):
+            if self._element.value_format == SettingFormat.TIME_OF_DAY:
                 raise HomeAssistantError(
-                    "cannot use time of day format to set an integer setting"
+                    "must use time format to set time of day setting"
                 )
+            self._element.set(value)
+        else:
+            if self._element.value_format != SettingFormat.TIME_OF_DAY:
+                raise HomeAssistantError(
+                    "must use integer to set number or timer setting"
+                )
+            if value.second != 0:
+                raise HomeAssistantError(
+                    "must specify only hours and minutes to set time of day setting"
+                )
+            self._element.set((value.hour, value.minute))
 
     async def async_zone_update_voltage(self) -> None:
         """Refresh the voltage of a zone from the panel."""

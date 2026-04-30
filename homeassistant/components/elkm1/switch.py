@@ -25,7 +25,7 @@ from .const import ATTR_DURATION
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
-SERVICE_SWITCH_OUTPUT_TURN_ON_FOR = "switch_output_turn_on"
+SERVICE_SWITCH_OUTPUT_TURN_ON_FOR = "switch_output_turn_on_for"
 
 ELK_OUTPUT_TURN_ON_FOR_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_DURATION): vol.All(
@@ -113,6 +113,6 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
         """Turn off the output."""
         self._elk_set(ThermostatMode.EMERGENCY_HEAT)
 
-    async def async_switch_output_turn_on(self, value: int | None = None) -> None:
+    async def async_switch_output_turn_on_for(self, value: int | None = None) -> None:
         """Turn on an output for specified length of time: not supported for thermostat."""
         raise HomeAssistantError("supported only on ElkM1 output switch entities")
