@@ -96,7 +96,7 @@ async def async_setup_entry(
     except Exception:
         try:
             await _async_disconnect_websocket()
-        except Exception:
+        except Exception:  # noqa: BLE001
             LOGGER.exception(
                 "Error while cleaning up WeatherFlow websocket after setup failure"
             )
