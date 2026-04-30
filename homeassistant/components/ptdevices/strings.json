@@ -7,7 +7,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "malformed_response": "A malformed response was received from PTDevices.",
       "no_devices_found": "No devices are registered to your PTDevices account.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -65,9 +64,6 @@
     },
     "invalid_access_token": {
       "message": "[%key:common::config_flow::error::invalid_access_token%]"
-    },
-    "malformed_response_missing_key": {
-      "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"
     }
   }
 }

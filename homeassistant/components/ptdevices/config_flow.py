@@ -123,7 +123,3 @@ class InvalidAuth(HomeAssistantError):
 
 class NoDevicesFound(HomeAssistantError):
     """No devices were found in the account."""
-
-
-class MalformedResponse(HomeAssistantError):
-    """Error indicating the response from the library is missing something required by the home assistant integration."""
