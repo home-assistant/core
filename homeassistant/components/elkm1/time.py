@@ -11,6 +11,7 @@ from elkm1_lib.settings import Setting
 
 from homeassistant.components.time import TimeEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
@@ -27,9 +28,9 @@ async def async_setup_entry(
     elk = elk_data.elk
     entities: list[ElkEntity] = []
     time_settings = [
-        s
-        for s in cast(list[Setting], elk.settings)
-        if s.value_format == SettingFormat.TIME_OF_DAY
+        setting
+        for setting in cast(list[Setting], elk.settings)
+        if setting.value_format == SettingFormat.TIME_OF_DAY
     ]
 
     create_elk_entities(
@@ -45,12 +46,14 @@ async def async_setup_entry(
 class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
     """Representation of an Elk-M1 Time Setting."""
 
-    _attr_translation_key = "setting"
     _element: Setting
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        if (value := self._element.value) is not None:
-            self._attr_native_value = dt_time(hour=value[0], minute=value[1])  # type: ignore[unreachable]
+        value = self._element.value
+        if isinstance(value, tuple):
+            self._attr_native_value = dt_time(hour=value[0], minute=value[1])
+        else:
+            raise HomeAssistantError("setting type no longer matches the panel")
 
     async def async_set_value(self, value: dt_time) -> None:
         """Set the time of the setting."""

@@ -10,6 +10,7 @@ from elkm1_lib.settings import Setting
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
@@ -27,9 +28,9 @@ async def async_setup_entry(
     elk = elk_data.elk
     entities: list[ElkEntity] = []
     number_settings = [
-        s
-        for s in cast(list[Setting], elk.settings)
-        if s.value_format in (SettingFormat.NUMBER, SettingFormat.TIMER)
+        setting
+        for setting in cast(list[Setting], elk.settings)
+        if setting.value_format in (SettingFormat.NUMBER, SettingFormat.TIMER)
     ]
 
     create_elk_entities(
@@ -54,12 +55,17 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
+        # Only set class for TIMER settings; NUMBER settings are unitless
         if element.value_format == SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        if (value := self._element.value) is not None:
-            self._attr_native_value = float(value)  # type: ignore[unreachable]
+        # Guard against the panel possibly have changing the underlying
+        # type and we don't know about the change
+        if isinstance(self._element.value, int):
+            self._attr_native_value = self._element.value
+        else:
+            raise HomeAssistantError("setting type no longer matches the panel")
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the setting."""
