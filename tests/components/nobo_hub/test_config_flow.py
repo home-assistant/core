@@ -4,10 +4,18 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, DOMAIN
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="192.168.1.106",
+    macaddress="7c830602644f",
+    hostname="hubdo",
+)
 
 
 async def test_configure_with_discover(
@@ -248,6 +256,91 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
         assert result3["type"] is FlowResultType.FORM
         assert result3["errors"] == {"base": "cannot_connect"}
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+
+
+async def test_dhcp_discovery_new_hub(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A DHCP-discovered hub routes to `selected` for the user to enter the suffix."""
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value={("192.168.1.106", "102000100")},
+    ) as mock_discover:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    mock_discover.assert_awaited_once_with(ip="192.168.1.106", autodiscover_wait=5.0)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "selected"
+
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True) as mock_connect,
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial_suffix": "098"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        "serial": "102000100098",
+        "ip_address": "192.168.1.106",
+    }
+    mock_connect.assert_awaited_once_with("192.168.1.106", "102000100098")
+    mock_setup_entry.assert_awaited_once()
+
+
+async def test_dhcp_discovery_updates_existing_ip(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """DHCP for a hub already configured updates its stored IP and aborts."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="102000100098",
+        data={"serial": "102000100098", "ip_address": "1.1.1.1"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value={("192.168.1.106", "102000100")},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
+
+
+async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:
+    """DHCP at an IP that emits no Nobø broadcast aborts cleanly."""
+    with patch("pynobo.nobo.async_discover_hubs", return_value=set()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_discover"
 
 
 async def test_options_flow(

@@ -15,6 +15,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import NoboHubConfigEntry
 from .const import (
@@ -68,6 +69,42 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of a Nobø Ecohub.
+
+        DHCP gives us the IP and MAC; we listen for the hub's UDP broadcast
+        at that IP to get the 9-digit serial prefix. If an existing entry
+        matches the prefix, just refresh its IP. Otherwise, ask the user
+        for the serial suffix via the existing `selected` step.
+        """
+        # Wait 5s — real-world gaps up to ~4s have been observed.
+        discovered = await nobo.async_discover_hubs(
+            ip=discovery_info.ip, autodiscover_wait=5.0
+        )
+        if not discovered:
+            return self.async_abort(reason="cannot_discover")
+        _, serial_prefix = next(iter(discovered))
+
+        # Use the 9-digit serial prefix as a temporary unique_id so the
+        # frontend offers an "Ignore" option for this discovery. It is
+        # replaced with the full 12-digit serial in _create_configuration
+        # once the user supplies the suffix.
+        await self.async_set_unique_id(serial_prefix)
+
+        for entry in self._async_current_entries():
+            if entry.unique_id and entry.unique_id.startswith(serial_prefix):
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: discovery_info.ip},
+                    reason="already_configured",
+                )
+
+        self._discovered_hubs = {discovery_info.ip: serial_prefix}
+        self._hub = discovery_info.ip
+        return await self.async_step_selected()
 
     async def async_step_selected(
         self, user_input: dict[str, Any] | None = None
