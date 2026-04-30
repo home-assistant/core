@@ -162,21 +162,6 @@
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "set_humidity": {
       "description": "Sets the target humidity of a humidifier.",

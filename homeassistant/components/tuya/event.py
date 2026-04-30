@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.event import (
-    TuyaEventDefinition,
+    EventDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
@@ -158,7 +158,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        definition: TuyaEventDefinition,
+        definition: EventDefinition,
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager, description)

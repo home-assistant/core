@@ -67,17 +67,6 @@ from tests.common import MockConfigEntry
         ),
         (
             AQUA_CONTOUR_SERVICE_INFO,
-            AquaContourWatering.remaining_watering_time.uuid,
-            [
-                AquaContourWatering.remaining_watering_time.encode(100),
-                AquaContourWatering.remaining_watering_time.encode(10),
-                CharacteristicNoAccess("Test for no access"),
-                GardenaBluetoothException("Test for errors on bluetooth"),
-            ],
-            "number.mock_title_remaining_watering_time",
-        ),
-        (
-            AQUA_CONTOUR_SERVICE_INFO,
             Spray.sector.uuid,
             [
                 Spray.sector.encode(359),
@@ -141,13 +130,6 @@ async def test_setup(
             100,
             100,
             "number.mock_title_manual_watering_time",
-        ),
-        (
-            AQUA_CONTOUR_SERVICE_INFO,
-            AquaContourWatering.remaining_watering_time,
-            100,
-            100,
-            "number.mock_title_remaining_watering_time",
         ),
     ],
 )

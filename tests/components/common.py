@@ -1151,6 +1151,10 @@ async def assert_condition_options_supported(
     - Rejects unknown options
     """
     # Minimal config should always be valid
+    # If there are no base options, also test that options can be omitted or be empty
+    supports_empty = not bool(base_options)
+    await _validate_condition_options(hass, condition, None, valid=supports_empty)
+    await _validate_condition_options(hass, condition, {}, valid=supports_empty)
     await _validate_condition_options(hass, condition, base_options, valid=True)
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
@@ -1211,6 +1215,9 @@ async def assert_trigger_options_supported(
     - Rejects unknown options
     """
     # Minimal config should always be valid
+    supports_empty = not bool(base_options)
+    await _validate_trigger_options(hass, trigger, None, valid=supports_empty)
+    await _validate_trigger_options(hass, trigger, {}, valid=supports_empty)
     await _validate_trigger_options(hass, trigger, base_options, valid=True)
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
