@@ -12,7 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 
 USER_SCHEMA = vol.Schema(
     {
@@ -76,7 +76,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert pyvlx is not None
                 # Keep the live connection so async_setup_entry can reuse it
                 # without triggering a disconnect/reboot cycle.
-                self.hass.data.setdefault(DOMAIN, {})[host] = pyvlx
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_create_entry(
                     title=host,
                     data=user_input,
@@ -108,7 +108,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert pyvlx is not None
                 # Keep the live connection so async_setup_entry can reuse it
                 # without triggering a disconnect/reboot cycle.
-                self.hass.data.setdefault(DOMAIN, {})[host] = pyvlx
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
@@ -171,7 +171,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert pyvlx is not None
                 # Keep the live connection so async_setup_entry can reuse it
                 # without triggering a disconnect/reboot cycle.
-                self.hass.data.setdefault(DOMAIN, {})[host] = pyvlx
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_create_entry(
                     title=self.discovery_data[CONF_NAME],
                     data={**self.discovery_data, **user_input},

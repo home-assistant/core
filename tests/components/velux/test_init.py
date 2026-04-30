@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pyvlx.exception import PyVLXException
 
-from homeassistant.components.velux.const import DOMAIN
+from homeassistant.components.velux.const import DOMAIN, PYVLX_FROM_CONFIG_FLOW
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -98,7 +98,7 @@ async def test_setup_uses_preconnected_pyvlx_from_config_flow(
     disconnect/reboot cycle between connection validation and integration start.
     """
 
-    hass.data.setdefault(DOMAIN, {})["127.0.0.1"] = mock_pyvlx
+    hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})["127.0.0.1"] = mock_pyvlx
 
     # A fresh instance must NOT have been used.
     fresh = AsyncMock(name="fresh-not-used")

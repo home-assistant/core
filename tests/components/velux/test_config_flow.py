@@ -6,6 +6,7 @@ import pytest
 from pyvlx import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
+from homeassistant.components.velux.const import PYVLX_FROM_CONFIG_FLOW
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -54,7 +55,7 @@ async def test_user_flow(
     # The live connection must NOT be disconnected; it is handed off to setup.
     mock_pyvlx.connect.assert_called_once()
     mock_pyvlx.disconnect.assert_not_called()
-    assert hass.data[DOMAIN]["127.0.0.1"] is mock_pyvlx
+    assert hass.data[PYVLX_FROM_CONFIG_FLOW]["127.0.0.1"] is mock_pyvlx
 
 
 @pytest.mark.parametrize(
@@ -265,7 +266,7 @@ async def test_dhcp_discovery(
 
     mock_pyvlx.connect.assert_called_once()
     mock_pyvlx.disconnect.assert_not_called()
-    assert hass.data[DOMAIN]["127.0.0.1"] is mock_pyvlx
+    assert hass.data[PYVLX_FROM_CONFIG_FLOW]["127.0.0.1"] is mock_pyvlx
 
 
 @pytest.mark.parametrize(
