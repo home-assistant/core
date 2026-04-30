@@ -462,8 +462,9 @@ async def test_iaq_index_state_class(hass: HomeAssistant) -> None:
     [
         {CONF_SOURCES: {}, CONF_STANDARD: "uk"},
         {CONF_SOURCES: {CONF_TEMPERATURE: "sensor.t"}, CONF_STANDARD: "not_a_standard"},
+        {CONF_SOURCES: {"unknown_key": "sensor.x"}, CONF_STANDARD: "uk"},
     ],
-    ids=["empty_sources", "unknown_standard"],
+    ids=["empty_sources", "unknown_standard", "only_unknown_source_keys"],
 )
 async def test_invalid_entry_data_raises(
     hass: HomeAssistant, data: dict[str, Any]

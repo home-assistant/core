@@ -19,7 +19,7 @@ from homeassistant.helpers.event import (
 )
 
 from .const import CONF_SOURCES, CONF_STANDARD, DEFAULT_STANDARD, STANDARDS
-from .coordinator import IndoorAirQualityController
+from .coordinator import SOURCE_SPECS, IndoorAirQualityController
 from .helpers import entity_ids_from_sources
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -27,10 +27,19 @@ _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
 
 
+def _has_known_source(sources: dict[str, Any]) -> dict[str, Any]:
+    """Ensure at least one source key is recognised by the controller."""
+    if not any(key in SOURCE_SPECS for key in sources):
+        raise vol.Invalid(f"At least one of {sorted(SOURCE_SPECS)} must be configured")
+    return sources
+
+
 _ENTRY_DATA_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_SOURCES): vol.All(
-            vol.Schema({str: vol.Any(str, [str])}), vol.Length(min=1)
+            vol.Schema({str: vol.Any(str, [str])}),
+            vol.Length(min=1),
+            _has_known_source,
         ),
         vol.Optional(CONF_STANDARD, default=DEFAULT_STANDARD): vol.In(STANDARDS),
         vol.Optional(CONF_DEVICE_ID): vol.Any(str, None),
