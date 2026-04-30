@@ -18,7 +18,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.mitsubishi_comfort.climate import MitsubishiComfortClimate
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -979,7 +984,7 @@ async def test_coordinator_update_failure_makes_unavailable(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_update_exception_makes_unavailable(
@@ -999,7 +1004,7 @@ async def test_coordinator_update_exception_makes_unavailable(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_recovery_restores_available(
@@ -1016,7 +1021,7 @@ async def test_coordinator_recovery_restores_available(
     device.update_status = AsyncMock(return_value=False)
     await entity.coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == "unavailable"
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     # Recover
     device.update_status = AsyncMock(return_value=True)
@@ -1025,4 +1030,4 @@ async def test_coordinator_recovery_restores_available(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
