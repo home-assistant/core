@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
+import pytest
 
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -31,34 +32,28 @@ async def test_setup_entry_success(
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
 
 
-async def test_setup_entry_invalid_auth(
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (AuthenticationError("bad creds"), ConfigEntryState.SETUP_ERROR),
+        (DeviceConnectionError("Connection refused"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_entry_login_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup returns a setup error when credentials are rejected."""
+    """Test setup translates login failures into the expected config entry state."""
     mock_config_entry.add_to_hass(hass)
-    mock_cloud_account.login.side_effect = AuthenticationError("bad creds")
+    mock_cloud_account.login.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_entry_connection_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_cloud_account: AsyncMock,
-) -> None:
-    """Test setup retries when the cloud is unreachable."""
-    mock_config_entry.add_to_hass(hass)
-    mock_cloud_account.login.side_effect = DeviceConnectionError("Connection refused")
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 async def test_setup_entry_no_devices_loads_empty(
