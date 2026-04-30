@@ -76,7 +76,7 @@ _PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("humidity.is_value", _PLAIN_THRESHOLD, True, False),
+        ("humidity.is_value", _PLAIN_THRESHOLD, True, True),
     ],
 )
 async def test_humidity_condition_options_validation(

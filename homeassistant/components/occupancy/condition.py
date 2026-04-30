@@ -15,12 +15,8 @@ _OCCUPANCY_DOMAIN_SPECS = {
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_detected": make_entity_state_condition(
-        _OCCUPANCY_DOMAIN_SPECS, STATE_ON, support_duration=True
-    ),
-    "is_not_detected": make_entity_state_condition(
-        _OCCUPANCY_DOMAIN_SPECS, STATE_OFF, support_duration=True
-    ),
+    "is_detected": make_entity_state_condition(_OCCUPANCY_DOMAIN_SPECS, STATE_ON),
+    "is_not_detected": make_entity_state_condition(_OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
 }
 
 

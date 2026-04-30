@@ -429,18 +429,9 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
-)
-
-ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
-    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
-        {
-            vol.Required(CONF_OPTIONS, default={}): {
-                vol.Optional(CONF_FOR): cv.positive_time_period,
-            },
-        }
-    )
 )
 
 
@@ -670,7 +661,6 @@ def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     states: str | bool | set[str | bool],
     *,
-    support_duration: bool = False,
     primary_entities_only: bool = True,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
@@ -689,11 +679,6 @@ def make_entity_state_condition(
         """Condition for entity state."""
 
         _domain_specs = specs
-        _schema = (
-            ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
-            if support_duration
-            else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-        )
         _states = states_set
         _primary_entities_only = primary_entities_only
 
