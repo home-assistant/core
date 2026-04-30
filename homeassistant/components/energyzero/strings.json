@@ -47,6 +47,12 @@
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
     },
+    "invalid_range": {
+      "message": "Invalid date range provided. Start {start} and end {end} must be on the same day."
+    },
+    "no_data": {
+      "message": "No price data available for {date}."
+    },
     "unloaded_config_entry": {
       "message": "Invalid config entry provided. {config_entry} is not loaded."
     }
