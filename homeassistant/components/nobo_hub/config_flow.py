@@ -119,15 +119,27 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             new_ip = user_input[CONF_IP_ADDRESS]
+            is_loaded = reconfigure_entry.state == ConfigEntryState.LOADED
             try:
                 socket.inet_aton(new_ip)
+                # Probe the new IP only when the integration is not currently
+                # loaded — if it were, the running connection would compete
+                # with the probe for the hub's limited concurrent-connection
+                # slots.
+                if not is_loaded:
+                    await self._test_connection(
+                        reconfigure_entry.data[CONF_SERIAL], new_ip
+                    )
             except OSError:
                 errors["base"] = "invalid_ip"
+            except NoboHubConnectError as error:
+                # The serial is fixed in reconfigure, so blame the IP rather
+                # than the (uneditable) serial number.
+                errors["base"] = (
+                    "cannot_connect_ip" if error.msg == "cannot_connect" else error.msg
+                )
             else:
-                if (
-                    new_ip == reconfigure_entry.data[CONF_IP_ADDRESS]
-                    and reconfigure_entry.state == ConfigEntryState.LOADED
-                ):
+                if new_ip == reconfigure_entry.data[CONF_IP_ADDRESS] and is_loaded:
                     # No-op: IP unchanged and the running integration already
                     # proves it works. Skip the reload to avoid a needless
                     # reconnect.

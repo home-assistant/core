@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
@@ -227,8 +229,20 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_ip"}
 
 
-async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+@pytest.mark.parametrize(
+    "connect_outcome",
+    [{"return_value": False}, {"side_effect": ConnectionRefusedError(61, "")}],
+    ids=["returns_false", "raises_oserror"],
+)
+async def test_configure_cannot_connect(
+    hass: HomeAssistant, connect_outcome: dict[str, object]
+) -> None:
+    """Test we surface a connection failure as a form error.
+
+    pynobo's async_connect_hub may either return False (on protocol-level
+    failures) or raise OSError (e.g., ConnectionRefusedError when the port
+    is closed at the IP). Both paths must produce 'cannot_connect'.
+    """
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
@@ -244,10 +258,7 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
         },
     )
 
-    with patch(
-        "pynobo.nobo.async_connect_hub",
-        return_value=False,
-    ) as mock_connect:
+    with patch("pynobo.nobo.async_connect_hub", **connect_outcome) as mock_connect:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"serial_suffix": "012"},
@@ -261,7 +272,7 @@ async def test_reconfigure_flow_changes_ip(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """A new IP is persisted and the entry is reloaded so setup re-validates."""
+    """A new IP is probed before save when the entry is not loaded."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=SERIAL,
@@ -274,15 +285,48 @@ async def test_reconfigure_flow_changes_ip(
     assert result["step_id"] == "reconfigure"
     assert result["description_placeholders"] == {CONF_SERIAL: SERIAL}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_IP_ADDRESS: "2.2.2.2"},
-    )
-    await hass.async_block_till_done()
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True) as mock_connect,
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "2.2.2.2"},
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert config_entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: "2.2.2.2"}
+    mock_connect.assert_awaited_once_with("2.2.2.2", SERIAL)
+
+
+async def test_reconfigure_flow_unreachable_ip_blocked(
+    hass: HomeAssistant,
+) -> None:
+    """A new IP that doesn't connect is rejected inline; nothing is persisted."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SERIAL,
+        data={CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: "1.1.1.1"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with patch("pynobo.nobo.async_connect_hub", return_value=False):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "2.2.2.2"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect_ip"}
+    assert config_entry.data[CONF_IP_ADDRESS] == "1.1.1.1"
 
 
 async def test_reconfigure_flow_unchanged_ip_skips_reload(
