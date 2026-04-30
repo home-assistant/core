@@ -831,6 +831,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/incomfort/ @jbouwh
 /homeassistant/components/indevolt/ @xirt
 /tests/components/indevolt/ @xirt
+/homeassistant/components/indoor_air_quality/ @liudger
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01 @Robbie1221

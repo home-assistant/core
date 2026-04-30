@@ -1,0 +1,156 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "device_or_sources": "Select a device or enable additional sensors to choose sources manually.",
+      "no_matching_sources": "The selected device does not have any supported sensor sources. Select sources manually or choose another device.",
+      "no_sources": "At least one sensor source must be selected.",
+      "only_one_voc_sensor": "Select either a tVOC sensor or a VOC index sensor, not both."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "co": "[%key:component::indoor_air_quality::config::step::sources::data::co%]",
+          "co2": "[%key:component::indoor_air_quality::config::step::sources::data::co2%]",
+          "hcho": "[%key:component::indoor_air_quality::config::step::sources::data::hcho%]",
+          "humidity": "[%key:component::indoor_air_quality::config::step::sources::data::humidity%]",
+          "no2": "[%key:component::indoor_air_quality::config::step::sources::data::no2%]",
+          "pm": "[%key:component::indoor_air_quality::config::step::sources::data::pm%]",
+          "radon": "[%key:component::indoor_air_quality::config::step::sources::data::radon%]",
+          "standard": "[%key:component::indoor_air_quality::config::step::user::data::standard%]",
+          "temperature": "[%key:component::indoor_air_quality::config::step::sources::data::temperature%]",
+          "tvoc": "[%key:component::indoor_air_quality::config::step::sources::data::tvoc%]",
+          "voc_index": "[%key:component::indoor_air_quality::config::step::sources::data::voc_index%]"
+        },
+        "data_description": {
+          "co": "[%key:component::indoor_air_quality::config::step::sources::data_description::co%]",
+          "co2": "[%key:component::indoor_air_quality::config::step::sources::data_description::co2%]",
+          "hcho": "[%key:component::indoor_air_quality::config::step::sources::data_description::hcho%]",
+          "humidity": "[%key:component::indoor_air_quality::config::step::sources::data_description::humidity%]",
+          "no2": "[%key:component::indoor_air_quality::config::step::sources::data_description::no2%]",
+          "pm": "[%key:component::indoor_air_quality::config::step::sources::data_description::pm%]",
+          "radon": "[%key:component::indoor_air_quality::config::step::sources::data_description::radon%]",
+          "standard": "[%key:component::indoor_air_quality::config::step::user::data_description::standard%]",
+          "temperature": "[%key:component::indoor_air_quality::config::step::sources::data_description::temperature%]",
+          "tvoc": "[%key:component::indoor_air_quality::config::step::sources::data_description::tvoc%]",
+          "voc_index": "[%key:component::indoor_air_quality::config::step::sources::data_description::voc_index%]"
+        },
+        "description": "Update the rating standard or sensor sources for this Indoor Air Quality entry."
+      },
+      "sources": {
+        "data": {
+          "co": "Carbon monoxide sensor",
+          "co2": "Carbon dioxide sensor",
+          "hcho": "Formaldehyde sensor",
+          "humidity": "Humidity sensor",
+          "name": "[%key:common::config_flow::data::name%]",
+          "no2": "Nitrogen dioxide sensor",
+          "pm": "Particulate matter sensors",
+          "radon": "Radon sensor",
+          "temperature": "Temperature sensor",
+          "tvoc": "tVOC sensor",
+          "voc_index": "VOC index sensor"
+        },
+        "data_description": {
+          "co": "Optional CO source used for the air quality calculation.",
+          "co2": "Optional CO\u2082 source used for the air quality calculation.",
+          "hcho": "Optional formaldehyde source used for the air quality calculation.",
+          "humidity": "Optional humidity source used for the air quality calculation.",
+          "name": "Friendly name for this air quality sensor. Defaults to the device name.",
+          "no2": "Optional NO\u2082 source used for the air quality calculation.",
+          "pm": "Optional particulate matter sources used for the air quality calculation.",
+          "radon": "Optional radon source used for the air quality calculation.",
+          "temperature": "Optional temperature source used for the air quality calculation.",
+          "tvoc": "Optional total VOC source used for the air quality calculation.",
+          "voc_index": "Optional VOC index source used for the air quality calculation."
+        },
+        "description": "Review the automatically selected sensors or add more sources."
+      },
+      "user": {
+        "data": {
+          "device_id": "Device",
+          "show_source_options": "Choose additional sensors",
+          "standard": "Rating standard"
+        },
+        "data_description": {
+          "device_id": "The integration will automatically use supported sensor entities from this device.",
+          "show_source_options": "Enable this to add or override source sensors before creating the IAQ sensor.",
+          "standard": "Air quality rating standard used to score the configured sources."
+        },
+        "description": "Select the device that provides your air quality readings, or enable manual sensor selection."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iaq_index": {
+        "name": "Index",
+        "state_attributes": {
+          "sources_set": {
+            "name": "Sources configured"
+          },
+          "sources_used": {
+            "name": "Sources used"
+          }
+        }
+      },
+      "iaq_level": {
+        "name": "Level",
+        "state": {
+          "excellent": "Excellent",
+          "fair": "Fair",
+          "good": "Good",
+          "inadequate": "Inadequate",
+          "poor": "Poor"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "no_sources": "[%key:component::indoor_air_quality::config::error::no_sources%]",
+      "only_one_voc_sensor": "[%key:component::indoor_air_quality::config::error::only_one_voc_sensor%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "co": "[%key:component::indoor_air_quality::config::step::sources::data::co%]",
+          "co2": "[%key:component::indoor_air_quality::config::step::sources::data::co2%]",
+          "hcho": "[%key:component::indoor_air_quality::config::step::sources::data::hcho%]",
+          "humidity": "[%key:component::indoor_air_quality::config::step::sources::data::humidity%]",
+          "no2": "[%key:component::indoor_air_quality::config::step::sources::data::no2%]",
+          "pm": "[%key:component::indoor_air_quality::config::step::sources::data::pm%]",
+          "radon": "[%key:component::indoor_air_quality::config::step::sources::data::radon%]",
+          "standard": "[%key:component::indoor_air_quality::config::step::user::data::standard%]",
+          "temperature": "[%key:component::indoor_air_quality::config::step::sources::data::temperature%]",
+          "tvoc": "[%key:component::indoor_air_quality::config::step::sources::data::tvoc%]",
+          "voc_index": "[%key:component::indoor_air_quality::config::step::sources::data::voc_index%]"
+        },
+        "data_description": {
+          "co": "[%key:component::indoor_air_quality::config::step::sources::data_description::co%]",
+          "co2": "[%key:component::indoor_air_quality::config::step::sources::data_description::co2%]",
+          "hcho": "[%key:component::indoor_air_quality::config::step::sources::data_description::hcho%]",
+          "humidity": "[%key:component::indoor_air_quality::config::step::sources::data_description::humidity%]",
+          "no2": "[%key:component::indoor_air_quality::config::step::sources::data_description::no2%]",
+          "pm": "[%key:component::indoor_air_quality::config::step::sources::data_description::pm%]",
+          "radon": "[%key:component::indoor_air_quality::config::step::sources::data_description::radon%]",
+          "standard": "[%key:component::indoor_air_quality::config::step::user::data_description::standard%]",
+          "temperature": "[%key:component::indoor_air_quality::config::step::sources::data_description::temperature%]",
+          "tvoc": "[%key:component::indoor_air_quality::config::step::sources::data_description::tvoc%]",
+          "voc_index": "[%key:component::indoor_air_quality::config::step::sources::data_description::voc_index%]"
+        },
+        "description": "Update your Indoor Air Quality configuration."
+      }
+    }
+  },
+  "selector": {
+    "standard": {
+      "options": {
+        "uk": "United Kingdom"
+      }
+    }
+  }
+}

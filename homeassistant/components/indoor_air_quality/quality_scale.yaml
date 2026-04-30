@@ -1,0 +1,109 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide any service actions; it only exposes
+      sensor entities derived from configured source entities.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      The integration does not poll. Updates are driven by state changes of
+      the configured source entities via async_track_state_change_event.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: The integration has no external runtime dependencies.
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      This integration is a calculated helper. It does not connect to any
+      external service or device that would benefit from a connection test.
+  test-before-setup:
+    status: exempt
+    comment: |
+      Setup only wires up state-change listeners for already-configured
+      entities; there is nothing to test before setup.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      Source-entity availability is reflected in the calculated index values
+      directly; there is no separate connection state to log.
+  parallel-updates:
+    status: done
+    comment: |
+      All sensors are state-driven and write to Home Assistant in response to
+      source state-change events; ``PARALLEL_UPDATES = 0`` disables polling.
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not authenticate against any service.
+  test-coverage: todo
+
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: This integration is configured manually; nothing to discover.
+  discovery:
+    status: exempt
+    comment: This integration is configured manually; nothing to discover.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: This is a helper integration; it does not target devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not represent dynamic devices.
+  entity-category: todo
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: This integration does not raise user-facing exceptions.
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: There are no user-actionable repair issues to surface.
+  stale-devices:
+    status: exempt
+    comment: This integration does not represent dynamic devices.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: The integration has no external runtime dependencies.
+  inject-websession:
+    status: exempt
+    comment: The integration does not perform any HTTP requests.
+  strict-typing: todo

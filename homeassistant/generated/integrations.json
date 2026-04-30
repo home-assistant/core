@@ -8278,6 +8278,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "indoor_air_quality": {
+      "name": "Indoor Air Quality",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "input_boolean": {
       "integration_type": "helper",
       "config_flow": false
