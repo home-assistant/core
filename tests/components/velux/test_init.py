@@ -112,10 +112,11 @@ async def test_setup_uses_preconnected_pyvlx_from_config_flow(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_pyvlx.ensure_connected.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_awaited_once()
     # The pre-connected instance must be consumed.
-    assert hass.data.get(DOMAIN, {}).get("127.0.0.1") is None
+    assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
     assert mock_config_entry.runtime_data is mock_pyvlx
 
 
