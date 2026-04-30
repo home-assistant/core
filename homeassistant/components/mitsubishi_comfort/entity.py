@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from mitsubishi_comfort import IndoorUnit, KumoStation
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -26,7 +22,7 @@ class MitsubishiComfortEntity(CoordinatorEntity[MitsubishiComfortCoordinator]):
         device = coordinator.device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial)},
-            connections={(CONNECTION_NETWORK_MAC, format_mac(coordinator.mac))},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
             name=device.name,
             manufacturer="Mitsubishi",
             serial_number=device.serial,
