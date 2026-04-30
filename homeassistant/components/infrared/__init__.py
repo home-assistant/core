@@ -11,6 +11,7 @@ import logging
 from typing import final
 
 from infrared_protocols import Command as InfraredCommand
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
@@ -159,7 +160,15 @@ def async_subscribe_receiver(
         )
 
     ent_reg = er.async_get(hass)
-    entity_id = er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
+    try:
+        entity_id = er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
+    except vol.Invalid as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="receiver_not_found",
+            translation_placeholders={"entity_id": entity_id},
+        ) from err
+
     entity = component.get_entity(entity_id)
     if entity is None or not isinstance(entity, InfraredReceiverEntity):
         raise HomeAssistantError(
@@ -266,7 +275,10 @@ class InfraredReceiverEntity(Entity):
         )
         self.async_write_ha_state()
         for signal_callback in self.__signal_callbacks:
-            signal_callback(signal)
+            try:
+                signal_callback(signal)
+            except Exception:
+                _LOGGER.exception("Error in signal callback for %s", self.entity_id)
 
     @callback
     def async_subscribe_received_signal(
