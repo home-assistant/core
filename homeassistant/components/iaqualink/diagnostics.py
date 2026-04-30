@@ -16,19 +16,16 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: AqualinkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    systems = []
-    for serial, coordinator in entry.runtime_data.coordinators.items():
-        systems.append(
-            {
-                "serial_number": serial,
-                "name": coordinator.system.name,
-                "online": coordinator.system.online,
-                "data": coordinator.system.data,
-                "devices": {
-                    name: {"class": obj.__class__.__name__, "data": obj.data}
-                    for name, obj in getattr(coordinator.system, "devices", {}).items()
-                },
-            }
-        )
+    systems = [
+        {
+            "online": coordinator.system.online,
+            "data": coordinator.system.data,
+            "devices": {
+                name: {"class": obj.__class__.__name__, "data": obj.data}
+                for name, obj in getattr(coordinator.system, "devices", {}).items()
+            },
+        }
+        for coordinator in entry.runtime_data.coordinators.values()
+    ]
 
     return {"systems": async_redact_data(systems, TO_REDACT)}

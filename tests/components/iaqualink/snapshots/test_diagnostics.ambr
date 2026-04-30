@@ -23,9 +23,7 @@
             }),
           }),
         }),
-        'name': 'Pool',
         'online': True,
-        'serial_number': '**REDACTED**',
       }),
     ]),
   })
