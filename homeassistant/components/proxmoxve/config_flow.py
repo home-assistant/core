@@ -43,6 +43,7 @@ from .const import (
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    NODE_ONLINE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,6 +110,12 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
+        if node.get("status") != NODE_ONLINE:
+            _LOGGER.debug(
+                "Node %s is offline, skipping VM/container fetch",
+                node["node"],
+            )
+            continue
         try:
             vms = client.nodes(node["node"]).qemu.get()
             containers = client.nodes(node["node"]).lxc.get()
