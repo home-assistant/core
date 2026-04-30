@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: No service actions registered.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Companion PR pending.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
@@ -14,15 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: No service actions.
-  docs-high-level-description:
-    status: exempt
-    comment: Companion PR pending.
-  docs-installation-instructions:
-    status: exempt
-    comment: Companion PR pending.
-  docs-removal-instructions:
-    status: exempt
-    comment: Companion PR pending.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -42,9 +34,7 @@ rules:
   parallel-updates: todo
   test-coverage: todo
   integration-owner: done
-  docs-installation-parameters:
-    status: exempt
-    comment: Companion PR pending.
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: No options flow.
@@ -68,27 +58,13 @@ rules:
   dynamic-devices: todo
   discovery-update-info: todo
   repair-issues: todo
-  docs-use-cases:
-    status: exempt
-    comment: Companion PR pending.
-  docs-supported-devices:
-    status: exempt
-    comment: Companion PR pending.
-  docs-supported-functions:
-    status: exempt
-    comment: Companion PR pending.
-  docs-troubleshooting:
-    status: exempt
-    comment: Companion PR pending.
-  docs-data-update:
-    status: exempt
-    comment: Companion PR pending.
-  docs-known-limitations:
-    status: exempt
-    comment: Companion PR pending.
-  docs-examples:
-    status: exempt
-    comment: Companion PR pending.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-examples: done
 
   # Platinum
   async-dependency: done
