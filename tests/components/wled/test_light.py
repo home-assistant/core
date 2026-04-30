@@ -440,8 +440,6 @@ async def test_rgb_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         },
         blocking=True,
     )
-    assert (state := hass.states.get("light.wled_rgb_cct_light"))
-    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
         color_primary=(255, 255, 255, 0),

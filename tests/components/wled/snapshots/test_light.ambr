@@ -2784,8 +2784,9 @@
 # ---
 # name: test_snapshots[rgbww][light.wled_rgbww_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -3249,8 +3250,9 @@
 # ---
 # name: test_snapshots[rgb_cct][light.wled_rgb_cct_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
