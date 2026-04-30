@@ -169,11 +169,7 @@ class RecorderOutput(StreamOutput):
                     out_file.write(chunk)
             os.remove(video_path + ".tmp")
 
-        def finish_writing(
-            segments: deque[Segment],
-            output: av.container.OutputContainer | None,
-            video_path: str,
-        ) -> None:
+        def finish_writing(segments: deque[Segment]) -> None:
             """Finish writing output."""
             # Should only have 0 or 1 segments, but loop through just in case
             while segments:
@@ -183,14 +179,14 @@ class RecorderOutput(StreamOutput):
                 return
             output.close()
             try:
-                write_transform_matrix_and_rename(video_path)
+                write_transform_matrix_and_rename(self.video_path)
             except FileNotFoundError:
                 _LOGGER.error(
                     (
                         "Error writing to '%s'. There are likely multiple recordings"
                         " writing to the same file"
                     ),
-                    video_path,
+                    self.video_path,
                 )
 
         # Write lookback segments
@@ -208,6 +204,4 @@ class RecorderOutput(StreamOutput):
                 write_segment, self._segments.popleft()
             )
         # Write remaining segments and close output
-        await self._hass.async_add_executor_job(
-            finish_writing, self._segments, output, self.video_path
-        )
+        await self._hass.async_add_executor_job(finish_writing, self._segments)
