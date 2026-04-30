@@ -22,7 +22,6 @@ class VeluxLimitationData:
     """Data for one opening device's limitations."""
 
     limitation_min: Position
-    limitation_max: Position
 
 
 class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | None]):
@@ -45,10 +44,9 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
         self.node = node
 
     async def _async_update_data(self) -> VeluxLimitationData:
-        """Fetch limitation min and max from the device."""
+        """Fetch limitation min data from the device."""
         try:
             min_pos = await self.node.get_limitation_min()
-            max_pos = await self.node.get_limitation_max()
         except (OSError, PyVLXException) as err:
             raise UpdateFailed(f"Error fetching limitations: {err}") from err
-        return VeluxLimitationData(limitation_min=min_pos, limitation_max=max_pos)
+        return VeluxLimitationData(limitation_min=min_pos)
