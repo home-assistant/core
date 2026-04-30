@@ -11,57 +11,10 @@ from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt as dt_util
 
-from .conftest import create_tibber_device
+from .conftest import create_tibber_device, create_tibber_home
 
 from tests.common import MockConfigEntry
-
-
-def _create_home(*, current_price: float | None = 1.25) -> MagicMock:
-    """Create a mocked Tibber home with an active subscription."""
-    home = MagicMock()
-    home.home_id = "home-id"
-    home.name = "Home"
-    home.currency = "NOK"
-    home.price_unit = "NOK/kWh"
-    home.has_active_subscription = True
-    home.has_real_time_consumption = False
-    home.last_data_timestamp = None
-    home.update_info = AsyncMock(return_value=None)
-    home.update_info_and_price_info = AsyncMock(return_value=None)
-    home.current_price_data = MagicMock(
-        return_value=(current_price, dt_util.utcnow(), 0.4)
-    )
-    home.current_attributes = MagicMock(
-        return_value={
-            "max_price": 1.8,
-            "avg_price": 1.2,
-            "min_price": 0.8,
-            "off_peak_1": 0.9,
-            "peak": 1.7,
-            "off_peak_2": 1.0,
-        }
-    )
-    home.month_cost = 111.1
-    home.peak_hour = 2.5
-    home.peak_hour_time = dt_util.utcnow()
-    home.month_cons = 222.2
-    home.hourly_consumption_data = []
-    home.hourly_production_data = []
-    home.info = {
-        "viewer": {
-            "home": {
-                "appNickname": "Home",
-                "address": {"address1": "Street 1"},
-                "meteringPointData": {
-                    "gridCompany": "GridCo",
-                    "estimatedAnnualConsumption": 12000,
-                },
-            }
-        }
-    }
-    return home
 
 
 async def test_price_sensor_state_unit_and_attributes(
@@ -73,7 +26,7 @@ async def test_price_sensor_state_unit_and_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test price sensor state and attributes."""
-    home = _create_home(current_price=1.25)
+    home = create_tibber_home(current_price=1.25)
     tibber_mock.get_homes.return_value = [home]
 
     await hass.config_entries.async_setup(config_entry.entry_id)

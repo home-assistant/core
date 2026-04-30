@@ -201,6 +201,22 @@ VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+# Same Victron manufacturer data prefix but with an unrecognized mode byte
+# (0xEE at offset 4).  detect_device_type returns None for this payload,
+# so validate_advertisement_key would also return False.  The reauth logic
+# must treat this as neutral (not a key failure).
+VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter Charger",
+    address="01:02:03:04:05:06",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("10038027ee1252dad26f0b8eb39162074d140df410")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 VICTRON_VEBUS_SENSORS = {
     "inverter_charger_device_state": "float",
     "inverter_charger_battery_voltage": "14.45",

@@ -45,6 +45,7 @@ BUTTONS: Final = [
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_firmware_update(),
+        entity_registry_enabled_default=False,
     ),
     FritzButtonDescription(
         key="reboot",
@@ -96,6 +97,33 @@ def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
         )
 
 
+def repair_issue_firmware_update(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
+    """Repair issue for firmware update button."""
+    entity_registry = er.async_get(hass)
+
+    if (
+        (
+            entity_button := entity_registry.async_get_entity_id(
+                "button", DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
+            )
+        )
+        and (entity_entry := entity_registry.async_get(entity_button))
+        and not entity_entry.disabled
+    ):
+        # Deprecate the 'firmware update' button: create a Repairs issue for users
+        ir.async_create_issue(
+            hass,
+            domain=DOMAIN,
+            issue_id="deprecated_firmware_update_button",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_firmware_update_button",
+            translation_placeholders={"removal_version": "2026.11.0"},
+            breaks_in_ha_version="2026.11.0",
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzConfigEntry,
@@ -112,6 +140,7 @@ async def async_setup_entry(
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         async_add_entities(entities_list)
         repair_issue_cleanup(hass, avm_wrapper)
+        repair_issue_firmware_update(hass, avm_wrapper)
         return
 
     data_fritz = hass.data[FRITZ_DATA_KEY]
@@ -131,6 +160,7 @@ async def async_setup_entry(
     )
 
     repair_issue_cleanup(hass, avm_wrapper)
+    repair_issue_firmware_update(hass, avm_wrapper)
 
 
 class FritzButton(ButtonEntity):
@@ -163,6 +193,12 @@ class FritzButton(ButtonEntity):
                 "The 'cleanup' button is deprecated and will be removed in Home Assistant Core 2026.11.0. "
                 "Please update your automations and dashboards to remove any usage of this button. "
                 "The action is now performed automatically at each data refresh",
+            )
+        elif self.entity_description.key == "firmware_update":
+            _LOGGER.warning(
+                "The 'firmware update' button is deprecated and will be removed in Home Assistant Core "
+                "2026.11.0. It has been superseded by an update entity. Please update your automations "
+                "and dashboards to remove any usage of this button",
             )
         await self.entity_description.press_action(self.avm_wrapper)
 

@@ -997,7 +997,11 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
             "optional": True,
             "required": False,
             "type": "select",
-            "options": [(0, "KeyPressed"), (1, "KeyReleased"), (2, "KeyHeldDown")],
+            "options": [
+                ("0", "KeyPressed"),
+                ("1", "KeyReleased"),
+                ("2", "KeyHeldDown"),
+            ],
         },
     ]
 
@@ -1419,15 +1423,15 @@ async def test_get_trigger_capabilities_value_updated_value(
             "required": True,
             "type": "select",
             "options": [
-                (133, "Association"),
-                (128, "Battery"),
-                (98, "Door Lock"),
-                (122, "Firmware Update Meta Data"),
-                (114, "Manufacturer Specific"),
-                (113, "Notification"),
-                (152, "Security"),
-                (99, "User Code"),
-                (134, "Version"),
+                ("133", "Association"),
+                ("128", "Battery"),
+                ("98", "Door Lock"),
+                ("122", "Firmware Update Meta Data"),
+                ("114", "Manufacturer Specific"),
+                ("113", "Notification"),
+                ("152", "Security"),
+                ("99", "User Code"),
+                ("134", "Version"),
             ],
         },
         {"name": "property", "required": True, "type": "string"},
@@ -1628,14 +1632,14 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
             "name": "from",
             "optional": True,
             "required": False,
-            "options": [(0, "Disable Beeper"), (255, "Enable Beeper")],
+            "options": [("0", "Disable Beeper"), ("255", "Enable Beeper")],
             "type": "select",
         },
         {
             "name": "to",
             "optional": True,
             "required": False,
-            "options": [(0, "Disable Beeper"), (255, "Enable Beeper")],
+            "options": [("0", "Disable Beeper"), ("255", "Enable Beeper")],
             "type": "select",
         },
     ]
@@ -1746,3 +1750,44 @@ async def test_failure_scenarios(
                 "endpoint": 9999,
             },
         )
+
+
+def test_trigger_schema_coerces_string_values() -> None:
+    """Test that trigger schemas accept both int and string values for numeric fields."""
+    for command_class_value in (
+        CommandClass.CENTRAL_SCENE.value,
+        str(CommandClass.CENTRAL_SCENE.value),
+    ):
+        for value in (2, "2"):
+            config = device_trigger.TRIGGER_SCHEMA(
+                {
+                    "platform": "device",
+                    "domain": DOMAIN,
+                    "device_id": "device123",
+                    "type": "event.value_notification.central_scene",
+                    "command_class": command_class_value,
+                    "property": "scene",
+                    "property_key": "001",
+                    "endpoint": 0,
+                    "subtype": "Endpoint 0 Scene 001",
+                    "value": value,
+                }
+            )
+            assert config["command_class"] == CommandClass.CENTRAL_SCENE.value
+            assert config["value"] == 2
+
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "device123",
+                "type": "zwave_js.value_updated.value",
+                "command_class": command_class_value,
+                "property": "latchStatus",
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

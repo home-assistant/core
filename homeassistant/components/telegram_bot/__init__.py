@@ -62,6 +62,7 @@ from .const import (
     ATTR_DIRECTORY_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
+    ATTR_DRAFT_ID,
     ATTR_FILE,
     ATTR_FILE_ID,
     ATTR_FILE_NAME,
@@ -129,6 +130,7 @@ from .const import (
     SERVICE_SEND_LOCATION,
     SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
+    SERVICE_SEND_MESSAGE_DRAFT,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
     SERVICE_SEND_STICKER,
@@ -174,6 +176,19 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
             vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
+)
+
+SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+        vol.Required(ATTR_DRAFT_ID): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+    }
 )
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
@@ -424,6 +439,7 @@ SERVICE_SCHEMA_DOWNLOAD_FILE = vol.Schema(
 
 SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    SERVICE_SEND_MESSAGE_DRAFT: SERVICE_SCHEMA_SEND_MESSAGE_DRAFT,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
@@ -615,6 +631,8 @@ async def _call_service(
         await notify_service.set_message_reaction(context=service.context, **kwargs)
     elif service_name == SERVICE_EDIT_MESSAGE_MEDIA:
         await notify_service.edit_message_media(context=service.context, **kwargs)
+    elif service_name == SERVICE_SEND_MESSAGE_DRAFT:
+        await notify_service.send_message_draft(context=service.context, **kwargs)
     elif service_name == SERVICE_DOWNLOAD_FILE:
         return await notify_service.download_file(context=service.context, **kwargs)
     else:

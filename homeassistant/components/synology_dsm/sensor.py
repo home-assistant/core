@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from synology_dsm.api.core.external_usb import (
@@ -32,7 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import utcnow
 
 from . import SynoApi
 from .const import CONF_VOLUMES, ENTITY_UNIT_LOAD
@@ -327,8 +326,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="uptime",
-        translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -545,17 +543,6 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
 class SynoDSMInfoSensor(SynoDSMSensor):
     """Representation a Synology information sensor."""
 
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMSensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology SynoDSMInfoSensor entity."""
-        super().__init__(api, coordinator, description)
-        self._previous_uptime: str | None = None
-        self._last_boot: datetime | None = None
-
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state."""
@@ -563,11 +550,4 @@ class SynoDSMInfoSensor(SynoDSMSensor):
         if attr is None:
             return None
 
-        if self.entity_description.key == "uptime":
-            # reboot happened or entity creation
-            if self._previous_uptime is None or self._previous_uptime > attr:
-                self._last_boot = utcnow() - timedelta(seconds=attr)
-
-            self._previous_uptime = attr
-            return self._last_boot
         return attr  # type: ignore[no-any-return]

@@ -21,16 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=10)
 
+type UkraineAlarmConfigEntry = ConfigEntry[UkraineAlarmDataUpdateCoordinator]
+
 
 class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Ukraine Alarm API."""
 
-    config_entry: ConfigEntry
+    config_entry: UkraineAlarmConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: UkraineAlarmConfigEntry,
         session: ClientSession,
     ) -> None:
         """Initialize."""

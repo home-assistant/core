@@ -5,6 +5,7 @@ from __future__ import annotations
 from PIL import Image
 from roborock.data import (
     B01Props,
+    CleanPathPreferenceMapping,
     CleanRecord,
     CleanSummary,
     Consumable,
@@ -1558,6 +1559,7 @@ SCENES = [
 
 Q7_B01_PROPS = B01Props(
     status=WorkStatusMapping.SWEEP_MOPING,
+    clean_path_preference=CleanPathPreferenceMapping.BALANCED,
     main_brush=5000,
     side_brush=3000,
     hypa=1500,
