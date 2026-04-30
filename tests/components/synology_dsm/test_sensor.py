@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .common import (
     mock_dsm_external_usb_devices_usb0,
@@ -362,6 +361,7 @@ async def test_no_external_usb(
     assert sensor is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.freeze_time("2024-01-01T12:00:00+00:00")
 async def test_uptime_sensor(
     hass: HomeAssistant,
@@ -371,24 +371,22 @@ async def test_uptime_sensor(
 ) -> None:
     """Test Synology DSM uptime sensor."""
     entity_id = "sensor.nas_meontheinternet_com_uptime"
+    uptime = "2023-12-31T01:42:24+00:00"
 
-    assert hass.states.get(entity_id) is None
+    assert (state := hass.states.get(entity_id))
+    assert state.state == uptime
+    assert state.attributes["device_class"] == SensorDeviceClass.UPTIME
 
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    # Simulate uptime increase by 50s
+    base_uptime = setup_dsm_with_usb.information.uptime
+    setup_dsm_with_usb.information.uptime = base_uptime + 50
 
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
     freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.attributes["device_class"] == SensorDeviceClass.UPTIME
-
-    assert (boot_time := dt_util.parse_datetime(state.state))
-    expected_boot_time = dt_util.utcnow() - timedelta(seconds=123456)
-    assert abs((boot_time - expected_boot_time).total_seconds()) < 10
+    assert state.state == uptime
 
 
 async def test_hub_device_info_mac_connections(
