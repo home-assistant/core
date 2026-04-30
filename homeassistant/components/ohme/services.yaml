@@ -18,3 +18,17 @@ set_price_cap:
         number:
           min: 0
           mode: box
+set_state_of_charge:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: ohme
+    state_of_charge:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider

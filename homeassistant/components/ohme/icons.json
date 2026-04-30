@@ -71,6 +71,9 @@
     },
     "set_price_cap": {
       "service": "mdi:car-speed-limiter"
+    },
+    "set_state_of_charge": {
+      "service": "mdi:battery-unknown"
     }
   }
 }
