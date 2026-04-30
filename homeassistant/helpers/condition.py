@@ -437,7 +437,7 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
             vol.Required(CONF_OPTIONS, default={}): {
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                vol.Optional(CONF_FOR): cv.positive_time_period,
             },
         }
     )
