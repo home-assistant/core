@@ -563,9 +563,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 account, AggregateType.DAY, start, end
             )
         except ApiException as err:
-            # Fall back to coarser monthly data rather than crashing the coordinator.
-            _LOGGER.warning("Error getting daily cost reads, using monthly: %s", err)
-            return cost_reads
+            _LOGGER.warning(
+                "Error getting daily cost reads, falling back to usage-only: %s",
+                err,
+            )
+            try:
+                daily_cost_reads = await self.api.async_get_cost_reads(
+                    account, AggregateType.DAY, start, end, usage_only=True
+                )
+            except ApiException:
+                _LOGGER.warning("Usage-only daily reads also failed, using monthly")
+                return cost_reads
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution == ReadResolution.DAY:
@@ -582,11 +590,19 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 account, AggregateType.HOUR, start, end
             )
         except ApiException as err:
-            # Fall back to coarser data rather than crashing the coordinator.
             _LOGGER.warning(
-                "Error getting hourly cost reads, using coarser reads: %s", err
+                "Error getting hourly cost reads, falling back to usage-only: %s",
+                err,
             )
-            return cost_reads
+            try:
+                hourly_cost_reads = await self.api.async_get_cost_reads(
+                    account, AggregateType.HOUR, start, end, usage_only=True
+                )
+            except ApiException:
+                _LOGGER.warning(
+                    "Usage-only hourly reads also failed, using coarser reads"
+                )
+                return cost_reads
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))

@@ -299,7 +299,7 @@ async def test_coordinator_cost_reads_fallback_on_api_error(
     mock_opower_api: AsyncMock,
     failing_aggregate_type: AggregateType,
 ) -> None:
-    """Test that daily/hourly cost read failures fall back to coarser data."""
+    """Test that daily/hourly cost read failures fall back to usage-only reads."""
     coordinator = OpowerCoordinator(hass, mock_config_entry)
 
     # Use a single ELEC account with HOUR resolution so all read levels are attempted
@@ -311,20 +311,26 @@ async def test_coordinator_cost_reads_fallback_on_api_error(
     bill_read = CostRead(
         start_time=t1, end_time=t2, consumption=10.0, provided_cost=1.0
     )
+    usage_read = CostRead(
+        start_time=t1, end_time=t2, consumption=10.0, provided_cost=0.0
+    )
 
     async def side_effect(
         acc: object,
         agg_type: AggregateType,
         start: object,
         end: object,
+        usage_only: bool = False,
     ) -> list[CostRead]:
-        if agg_type == failing_aggregate_type:
+        if agg_type == failing_aggregate_type and not usage_only:
             raise ApiException(message="HTTP Error: 500", url="http://example.com")
+        if usage_only:
+            return [usage_read]
         return [bill_read]
 
     mock_opower_api.async_get_cost_reads.side_effect = side_effect
 
-    # Should NOT raise — the coordinator should fall back to coarser data
+    # Should NOT raise — the coordinator should fall back to usage-only reads
     result = await coordinator._async_update_data()
     await async_wait_recording_done(hass)
     assert result is not None
