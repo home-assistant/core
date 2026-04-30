@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from indevolt_api import IndevoltConfig
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,15 +18,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-KEY_READ_GRID_CHARGING = "2618"
-KEY_WRITE_GRID_CHARGING = "1143"
-
-KEY_READ_LIGHT = "7171"
-KEY_WRITE_LIGHT = "7265"
-
-KEY_READ_BYPASS = "680"
-KEY_WRITE_BYPASS = "7266"
 
 DEFAULT_STATE_ON = 1
 DEFAULT_STATE_OFF = 0
@@ -53,20 +45,20 @@ async def test_switch(
     [
         (
             "switch.cms_sf2000_allow_grid_charging",
-            KEY_READ_GRID_CHARGING,
-            KEY_WRITE_GRID_CHARGING,
+            IndevoltConfig.READ_GRID_CHARGING,
+            IndevoltConfig.WRITE_GRID_CHARGING,
             1001,
         ),
         (
             "switch.cms_sf2000_led_indicator",
-            KEY_READ_LIGHT,
-            KEY_WRITE_LIGHT,
+            IndevoltConfig.READ_LIGHT,
+            IndevoltConfig.WRITE_LIGHT,
             DEFAULT_STATE_ON,
         ),
         (
             "switch.cms_sf2000_bypass_socket",
-            KEY_READ_BYPASS,
-            KEY_WRITE_BYPASS,
+            IndevoltConfig.READ_BYPASS,
+            IndevoltConfig.WRITE_BYPASS,
             DEFAULT_STATE_ON,
         ),
     ],
@@ -112,20 +104,20 @@ async def test_switch_turn_on(
     [
         (
             "switch.cms_sf2000_allow_grid_charging",
-            KEY_READ_GRID_CHARGING,
-            KEY_WRITE_GRID_CHARGING,
+            IndevoltConfig.READ_GRID_CHARGING,
+            IndevoltConfig.WRITE_GRID_CHARGING,
             1000,
         ),
         (
             "switch.cms_sf2000_led_indicator",
-            KEY_READ_LIGHT,
-            KEY_WRITE_LIGHT,
+            IndevoltConfig.READ_LIGHT,
+            IndevoltConfig.WRITE_LIGHT,
             DEFAULT_STATE_OFF,
         ),
         (
             "switch.cms_sf2000_bypass_socket",
-            KEY_READ_BYPASS,
-            KEY_WRITE_BYPASS,
+            IndevoltConfig.READ_BYPASS,
+            IndevoltConfig.WRITE_BYPASS,
             DEFAULT_STATE_OFF,
         ),
     ],

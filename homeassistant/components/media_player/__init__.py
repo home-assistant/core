@@ -59,7 +59,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .browse_media import (  # noqa: F401
@@ -75,7 +74,6 @@ from .const import (  # noqa: F401
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_LAST_NON_BUFFERING_STATE,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
@@ -247,7 +245,6 @@ class _ImageCache(TypedDict):
 _ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """Return true if specified media player entity_id is on.
 
@@ -587,8 +584,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
     _attr_volume_step: float
-
-    __last_non_buffering_state: MediaPlayerState | None = None
 
     # Implement these for your media player
     @cached_property
@@ -1127,12 +1122,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if (state := self.state) != MediaPlayerState.BUFFERING:
-            self.__last_non_buffering_state = state
-
-        state_attr: dict[str, Any] = {
-            ATTR_LAST_NON_BUFFERING_STATE: self.__last_non_buffering_state
-        }
+        state_attr: dict[str, Any] = {}
 
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members

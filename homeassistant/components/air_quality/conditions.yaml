@@ -4,11 +4,8 @@
   required: true
   default: any
   selector:
-    select:
-      translation_key: condition_behavior
-      options:
-        - all
-        - any
+    automation_behavior:
+      mode: condition
 
 # --- Unit lists for multi-unit pollutants ---
 
@@ -249,6 +246,11 @@
 .condition_binary_common: &condition_binary_common
   fields:
     behavior: *condition_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 is_gas_detected:
   <<: *condition_binary_common

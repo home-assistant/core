@@ -183,6 +183,42 @@ async def test_password_auth_incorrect_login(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+async def test_password_auth_account_locked(
+    hass: HomeAssistant, mock_growatt_classic_api: MagicMock, mock_setup_entry: None
+) -> None:
+    """Test password authentication when account is locked out."""
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": "Account locked",
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Test recovery after lockout expires
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    mock_growatt_classic_api.plant_list.return_value = GROWATT_PLANT_LIST_RESPONSE
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_password_auth_no_plants(
     hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:

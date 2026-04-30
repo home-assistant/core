@@ -291,6 +291,15 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "battery_range": {
+        "name": "Battery range",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
       "bluetooth_signal": {
         "name": "Bluetooth signal"
       },

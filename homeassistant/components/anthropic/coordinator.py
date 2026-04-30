@@ -28,9 +28,7 @@ _model_short_form = re.compile(r"[^\d]-\d$")
 @callback
 def model_alias(model_id: str) -> str:
     """Resolve alias from versioned model name."""
-    if model_id == "claude-3-haiku-20240307" or model_id.endswith("-preview"):
-        return model_id
-    if model_id[-2:-1] != "-":
+    if model_id[-2:-1] != "-" and not model_id.endswith("-preview"):
         model_id = model_id[:-9]
     if _model_short_form.search(model_id):
         return model_id + "-0"
@@ -95,21 +93,21 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
                 self._schedule_refresh()
 
     @callback
-    def get_model_info(self, model_id: str) -> anthropic.types.ModelInfo:
+    def get_model_info(self, model_id: str) -> tuple[anthropic.types.ModelInfo, bool]:
         """Get model info for a given model ID."""
         # First try: exact name match
         for model in self.data or []:
             if model.id == model_id:
-                return model
+                return model, True
         # Second try: match by alias
         alias = model_alias(model_id)
         for model in self.data or []:
             if model_alias(model.id) == alias:
-                return model
+                return model, True
         # Model not found, return safe defaults
         return anthropic.types.ModelInfo(
             type="model",
             id=model_id,
             created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
-            display_name=model_id,
-        )
+            display_name=alias,
+        ), False

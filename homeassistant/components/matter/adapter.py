@@ -8,7 +8,6 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import BridgedNode
 from matter_server.common.models import EventType, ServerInfoMessage
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -16,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import get_device_id
+from .helpers import MatterConfigEntry, get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -38,7 +37,7 @@ class MatterAdapter:
         self,
         hass: HomeAssistant,
         matter_client: MatterClient,
-        config_entry: ConfigEntry,
+        config_entry: MatterConfigEntry,
     ) -> None:
         """Initialize the adapter."""
         self.matter_client = matter_client
