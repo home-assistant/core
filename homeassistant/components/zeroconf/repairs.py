@@ -1,7 +1,5 @@
 """Repairs for the zeroconf integration."""
 
-from __future__ import annotations
-
 from homeassistant import data_entry_flow
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,

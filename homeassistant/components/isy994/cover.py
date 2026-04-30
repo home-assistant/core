@@ -1,7 +1,5 @@
 """Support for ISY covers."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN

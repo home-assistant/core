@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the LG ThinQ device."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import time
 import logging
