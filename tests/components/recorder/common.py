@@ -1,7 +1,5 @@
 """Common test utils for working with recorder."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager

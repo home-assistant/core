@@ -1,7 +1,5 @@
 """Test the Matter integration init."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
