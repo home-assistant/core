@@ -110,9 +110,11 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of an existing hub.
 
-        Only the IP address is editable. The new IP is not probed here;
-        the reload's ``async_setup_entry`` validates it and falls back to
-        UDP rediscovery on connection failure.
+        Only the IP address is editable. When the entry is not loaded,
+        the new IP is probed here before updating. When the entry is
+        loaded, probing is skipped to avoid competing with the active
+        connection for the hub's limited concurrent-connection slots;
+         the reload's ``async_setup_entry`` re-validates the updated IP.
         """
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
