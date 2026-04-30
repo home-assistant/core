@@ -91,7 +91,7 @@
       "message": "Authentication failed"
     },
     "connection_error": {
-      "message": "[%key:component::onedrive::config::abort:: connection_error%]"
+      "message": "[%key:component::onedrive::config::abort::connection_error%]"
     },
     "create_folder_error": {
       "message": "Failed to create folder: {message}"
