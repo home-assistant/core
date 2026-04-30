@@ -2,39 +2,49 @@
 
 from __future__ import annotations
 
+from catgenie import Device
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import CatGenieDeviceCoordinator
+from .coordinator import CatGenieCoordinator
 
 
-class CatGenieEntity(CoordinatorEntity[CatGenieDeviceCoordinator]):
+class CatGenieEntity(CoordinatorEntity[CatGenieCoordinator]):
     """Defines a CatGenie entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: CatGenieDeviceCoordinator,
+        coordinator: CatGenieCoordinator,
         description: EntityDescription,
+        device_id: str,
     ) -> None:
         """Initialize the CatGenie entity."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        self._device_id = device_id
+        device = self.device_data
+        self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.data.mac_address)},
-            identifiers={(DOMAIN, coordinator.device_id)},
-            name=coordinator.data.name,
+            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
+            identifiers={(DOMAIN, device_id)},
+            name=device.name,
             manufacturer="PetNovations",
             model="CatGenie AI",
-            sw_version=coordinator.data.fw_version,
-            hw_version=coordinator.data.hw_revision,
+            sw_version=device.fw_version,
+            hw_version=device.hw_revision,
         )
+
+    @property
+    def device_data(self) -> Device:
+        """Return the device data for this entity."""
+        return self.coordinator.data[self._device_id]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.is_online
+        return super().available and self.device_data.is_online

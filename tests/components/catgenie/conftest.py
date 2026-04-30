@@ -62,8 +62,8 @@ MOCK_DEVICE_DATA = {
         },
     },
     "operationStatus": {
-        "state": 0,
-        "progress": 255,
+        "state": 1,
+        "progress": 42,
     },
     "activeErrors": [],
 }

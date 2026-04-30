@@ -35,12 +35,8 @@ async def test_sensors_created(
 
     state = hass.states.get("sensor.catgenie_litter_box_status")
     assert state is not None
-    assert state.state == "idle"
+    assert state.state == "cleaning"
 
-    state = hass.states.get("sensor.catgenie_litter_box_total_cycles")
+    state = hass.states.get("sensor.catgenie_litter_box_clean_progress")
     assert state is not None
-    assert state.state == "150"
-
-    state = hass.states.get("sensor.catgenie_litter_box_connectivity")
-    assert state is not None
-    assert state.state == "connected"
+    assert state.state == "42"

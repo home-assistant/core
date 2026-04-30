@@ -35,7 +35,7 @@ SENSOR_DESCRIPTIONS: tuple[CatGenieSensorDescription, ...] = (
     CatGenieSensorDescription(
         key="sani_solution",
         translation_key="sani_solution",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda device: device.remaining_sani_solution,
     ),
     CatGenieSensorDescription(
@@ -79,9 +79,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up CatGenie sensors based on a config entry."""
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
-        CatGenieSensorEntity(coordinator, description)
-        for coordinator in entry.runtime_data.device_coordinators.values()
+        CatGenieSensorEntity(coordinator, description, device_id)
+        for device_id in coordinator.data
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -94,4 +95,4 @@ class CatGenieSensorEntity(CatGenieEntity, SensorEntity):
     @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.device_data)

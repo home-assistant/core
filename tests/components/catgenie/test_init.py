@@ -146,7 +146,7 @@ async def test_coordinator_auth_error_triggers_refresh(
         devices,
     ]
 
-    coordinator = list(entry.runtime_data.device_coordinators.values())[0]
+    coordinator = entry.runtime_data.coordinator
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success
@@ -179,7 +179,7 @@ async def test_coordinator_auth_error_refresh_fails(
         "bad token"
     )
 
-    coordinator = list(entry.runtime_data.device_coordinators.values())[0]
+    coordinator = entry.runtime_data.coordinator
     await coordinator.async_refresh()
 
     assert not coordinator.last_update_success
@@ -205,18 +205,18 @@ async def test_coordinator_communication_error(
 
     mock_catgenie_client.get_devices.side_effect = RuntimeError("network error")
 
-    coordinator = list(entry.runtime_data.device_coordinators.values())[0]
+    coordinator = entry.runtime_data.coordinator
     await coordinator.async_refresh()
 
     assert not coordinator.last_update_success
 
 
-async def test_coordinator_device_not_found(
+async def test_coordinator_empty_device_list(
     hass: HomeAssistant,
     mock_catgenie_auth_init: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
-    """Test coordinator raises UpdateFailed when device disappears."""
+    """Test coordinator handles empty device list gracefully."""
     entry = MockConfigEntry(
         domain="catgenie",
         data=MOCK_ENTRY_DATA,
@@ -232,7 +232,8 @@ async def test_coordinator_device_not_found(
     # Return empty device list
     mock_catgenie_client.get_devices.return_value = []
 
-    coordinator = list(entry.runtime_data.device_coordinators.values())[0]
+    coordinator = entry.runtime_data.coordinator
     await coordinator.async_refresh()
 
-    assert not coordinator.last_update_success
+    assert coordinator.last_update_success
+    assert coordinator.data == {}
