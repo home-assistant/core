@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import cast
+from unittest.mock import MagicMock
+
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -85,6 +88,7 @@ async def test_victron_button_press(
         entity_registry, mock_config_entry.entry_id
     )
     button_entities = [e for e in entities if e.domain == "button"]
+    assert len(button_entities) == 1
     entity_id = button_entities[0].entity_id
 
     # Inject an update to exercise _on_update_cb (the pass branch)
@@ -95,7 +99,16 @@ async def test_victron_button_press(
     )
     await hass.async_block_till_done()
 
+    assert victron_hub._client is not None
+    publish_mock = cast(MagicMock, victron_hub._client.publish)
+    publish_mock.reset_mock()
+
     # Call the press service to cover async_press()
     await hass.services.async_call(
         "button", "press", {"entity_id": entity_id}, blocking=True
+    )
+
+    publish_mock.assert_called_once_with(
+        f"W/{MOCK_INSTALLATION_ID}/platform/0/Device/Reboot",
+        '{"value": 1}',
     )
