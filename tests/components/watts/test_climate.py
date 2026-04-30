@@ -27,7 +27,7 @@ from homeassistant.components.watts.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -329,6 +329,31 @@ async def test_activate_timer_mode(
     mock_watts_client.activate_thermostat_timer.assert_called_once_with(
         "thermostat_123", 20.5, 90
     )
+
+
+@pytest.mark.parametrize("temperature", [4.5, 30.5])
+async def test_activate_timer_mode_temperature_out_of_range(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Test that out-of-range timer temperatures are rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError, match="out of range"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVATE_TIMER_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_TEMPERATURE: temperature,
+                ATTR_DURATION: 90,
+            },
+            blocking=True,
+        )
+
+    mock_watts_client.activate_thermostat_timer.assert_not_called()
 
 
 async def test_activate_timer_mode_error(

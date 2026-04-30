@@ -88,6 +88,9 @@
     },
     "temporary_connection_error": {
       "message": "Temporary connection error"
+    },
+    "timer_temperature_out_of_range": {
+      "message": "Timer temperature {temperature} is out of range ({min_temp}-{max_temp})"
     }
   },
   "services": {

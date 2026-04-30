@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -221,6 +221,17 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         self, temperature: float, duration: int
     ) -> None:
         """Activate timer mode with a target temperature and duration."""
+        if not self._attr_min_temp <= temperature <= self._attr_max_temp:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="timer_temperature_out_of_range",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "min_temp": str(self._attr_min_temp),
+                    "max_temp": str(self._attr_max_temp),
+                },
+            )
+
         try:
             await self.coordinator.client.activate_thermostat_timer(
                 self.device_id, temperature, duration
