@@ -56,8 +56,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                unique_id = account.user_id or user_input[CONF_USERNAME].strip().lower()
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(account.user_id)
                 self._abort_if_unique_id_configured()
 
                 if not devices:
