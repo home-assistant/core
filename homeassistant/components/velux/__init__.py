@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from pyvlx import PyVLX, PyVLXException
-from pyvlx.opening_device import Window
+from pyvlx import PyVLX, PyVLXException, Window
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
