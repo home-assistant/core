@@ -102,7 +102,7 @@ async def test_user_errors(
     mock_pyvlx.connect.assert_called_once()
     # On failure nothing is stored and no disconnect occurs.
     mock_pyvlx.disconnect.assert_not_called()
-    assert hass.data.get(DOMAIN, {}).get("127.0.0.1") is None
+    assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
 
     mock_pyvlx.connect.side_effect = None
 
@@ -218,7 +218,7 @@ async def test_reauth_errors(
 
     mock_pyvlx.connect.assert_called_once()
     mock_pyvlx.disconnect.assert_not_called()
-    assert hass.data.get(DOMAIN, {}).get("127.0.0.1") is None
+    assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
 
     mock_pyvlx.connect.side_effect = None
 
