@@ -21,6 +21,9 @@
       "lightning_strike_last_energy": {
         "default": "mdi:lightning-bolt"
       },
+      "lightning_strike_last_epoch": {
+        "default": "mdi:lightning-bolt"
+      },
       "precipitation_type": {
         "default": "mdi:weather-rainy"
       },
