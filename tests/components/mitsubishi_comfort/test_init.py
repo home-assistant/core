@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
@@ -11,8 +11,6 @@ from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from .conftest import MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -36,19 +34,14 @@ async def test_setup_entry_success(
 async def test_setup_entry_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
 ) -> None:
     """Test setup returns a setup error when credentials are rejected."""
     mock_config_entry.add_to_hass(hass)
+    mock_cloud_account.login.side_effect = AuthenticationError("bad creds")
 
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(side_effect=AuthenticationError("bad creds"))
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-        return_value=mock_account,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -56,21 +49,14 @@ async def test_setup_entry_invalid_auth(
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
 ) -> None:
     """Test setup retries when the cloud is unreachable."""
     mock_config_entry.add_to_hass(hass)
+    mock_cloud_account.login.side_effect = DeviceConnectionError("Connection refused")
 
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(
-        side_effect=DeviceConnectionError("Connection refused")
-    )
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-        return_value=mock_account,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -79,20 +65,14 @@ async def test_setup_entry_no_devices_loads_empty(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
 ) -> None:
     """Test setup succeeds with no entities when no devices are found."""
     mock_config_entry.add_to_hass(hass)
+    mock_cloud_account.discover_devices.return_value = {}
 
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=None)
-    mock_account.discover_devices = AsyncMock(return_value={})
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-        return_value=mock_account,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(
@@ -105,24 +85,15 @@ async def test_setup_entry_incomplete_credentials_loads_empty(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
+    mock_cloud_account: AsyncMock,
 ) -> None:
     """Test setup loads with no entities when devices have incomplete credentials."""
     mock_config_entry.add_to_hass(hass)
     mock_device_info.password = ""
     mock_device_info.address = ""
 
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=None)
-    mock_account.discover_devices = AsyncMock(
-        return_value={"SERIAL001": mock_device_info}
-    )
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-        return_value=mock_account,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(
@@ -133,28 +104,11 @@ async def test_setup_entry_incomplete_credentials_loads_empty(
 async def test_setup_entry_skips_incomplete_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_indoor_unit: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: DeviceInfo,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
     """Test setup skips incomplete devices and only creates entities for complete ones."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "username": MOCK_USERNAME,
-            "password": MOCK_PASSWORD,
-        },
-        unique_id="user-12345",
-    )
-    entry.add_to_hass(hass)
-
-    complete_info = DeviceInfo(
-        serial="SERIAL001",
-        label="Living Room",
-        address="192.168.1.100",
-        mac="AA:BB:CC:DD:EE:FF",
-        unit_type="ductless",
-        password="dGVzdHBhc3M=",
-        crypto_serial="0102030405060708090a",
-    )
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
         label="Bedroom",
@@ -164,34 +118,17 @@ async def test_setup_entry_skips_incomplete_devices(
         password="",
         crypto_serial="",
     )
+    mock_account, _ = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        "SERIAL001": mock_device_info,
+        "SERIAL002": incomplete_info,
+    }
+    mock_config_entry.add_to_hass(hass)
 
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=None)
-    mock_account.discover_devices = AsyncMock(
-        return_value={
-            "SERIAL001": complete_info,
-            "SERIAL002": incomplete_info,
-        }
-    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.IndoorUnit",
-            return_value=mock_indoor_unit,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.KumoStation",
-            return_value=mock_indoor_unit,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
 
