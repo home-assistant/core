@@ -60,6 +60,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
@@ -495,8 +496,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
         for subentry in entry.subentries.values():
             if subentry.subentry_type in ("conversation", "ai_task_data"):
                 data = dict(subentry.data)
+                updated = False
                 if data.get(CONF_REASONING_SUMMARY) == "short":
                     data[CONF_REASONING_SUMMARY] = "concise"
+                    updated = True
+                if data.get(CONF_REASONING_SUMMARY) == "concise" and not data.get(
+                    CONF_CHAT_MODEL, ""
+                ).startswith("gpt-5"):
+                    data[CONF_REASONING_SUMMARY] = RECOMMENDED_REASONING_SUMMARY
+                    updated = True
+                if updated:
                     hass.config_entries.async_update_subentry(
                         entry, subentry, data=data
                     )

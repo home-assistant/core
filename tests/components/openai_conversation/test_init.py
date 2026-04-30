@@ -1889,10 +1889,12 @@ async def test_migration_from_v2_6(
 ) -> None:
     """Test migration from version 2.6.
 
-    Ensures reasoning_summary "short" is renamed to "concise" to match the
-    actual OpenAI API value. Other values and unrelated subentries are unchanged.
+    Ensures reasoning_summary "short" is renamed to "concise" for gpt-5 models,
+    and that "concise" (whether from "short" or already stored) is reset to "auto"
+    for o* models where it is unsupported. Other values and unrelated subentries
+    are unchanged.
     """
-    conversation_options_short = {
+    conversation_options_short_o = {
         "chat_model": "o4-mini",
         CONF_REASONING_SUMMARY: "short",
     }
@@ -1900,12 +1902,20 @@ async def test_migration_from_v2_6(
         "chat_model": "gpt-5-mini",
         CONF_REASONING_SUMMARY: "auto",
     }
-    ai_task_options_short = {
+    ai_task_options_short_o = {
         "chat_model": "o3",
         CONF_REASONING_SUMMARY: "short",
     }
     tts_options = {
         "chat_model": "gpt-4o-mini-tts",
+    }
+    conversation_options_short_gpt5 = {
+        "chat_model": "gpt-5",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    conversation_options_concise_o = {
+        "chat_model": "o3",
+        CONF_REASONING_SUMMARY: "concise",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1915,10 +1925,10 @@ async def test_migration_from_v2_6(
         minor_version=6,
         subentries_data=[
             ConfigSubentryData(
-                data=conversation_options_short,
+                data=conversation_options_short_o,
                 subentry_id="mock_id_1",
                 subentry_type="conversation",
-                title="ChatGPT short",
+                title="ChatGPT short o",
                 unique_id=None,
             ),
             ConfigSubentryData(
@@ -1929,7 +1939,7 @@ async def test_migration_from_v2_6(
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=ai_task_options_short,
+                data=ai_task_options_short_o,
                 subentry_id="mock_id_3",
                 subentry_type="ai_task_data",
                 title="OpenAI AI Task",
@@ -1940,6 +1950,20 @@ async def test_migration_from_v2_6(
                 subentry_id="mock_id_4",
                 subentry_type="tts",
                 title="OpenAI TTS",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_short_gpt5,
+                subentry_id="mock_id_5",
+                subentry_type="conversation",
+                title="ChatGPT short gpt5",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_concise_o,
+                subentry_id="mock_id_6",
+                subentry_type="conversation",
+                title="ChatGPT concise o",
                 unique_id=None,
             ),
         ],
@@ -1962,14 +1986,20 @@ async def test_migration_from_v2_6(
 
     subentries_by_id = entry.subentries
 
-    # "short" in a conversation subentry should become "concise"
-    assert subentries_by_id["mock_id_1"].data[CONF_REASONING_SUMMARY] == "concise"
+    # "short" on an o* model: short→concise→auto (concise unsupported on o*)
+    assert subentries_by_id["mock_id_1"].data[CONF_REASONING_SUMMARY] == "auto"
 
-    # "auto" in a conversation subentry should be unchanged
+    # "auto" on a gpt-5 model: unchanged
     assert subentries_by_id["mock_id_2"].data[CONF_REASONING_SUMMARY] == "auto"
 
-    # "short" in an ai_task_data subentry should also become "concise"
-    assert subentries_by_id["mock_id_3"].data[CONF_REASONING_SUMMARY] == "concise"
+    # "short" on an o* ai_task_data subentry: short→concise→auto
+    assert subentries_by_id["mock_id_3"].data[CONF_REASONING_SUMMARY] == "auto"
 
     # TTS subentry is unaffected
     assert subentries_by_id["mock_id_4"].data == tts_options
+
+    # "short" on a gpt-5 model: short→concise (concise is valid for gpt-5)
+    assert subentries_by_id["mock_id_5"].data[CONF_REASONING_SUMMARY] == "concise"
+
+    # "concise" already stored on an o* model: concise→auto
+    assert subentries_by_id["mock_id_6"].data[CONF_REASONING_SUMMARY] == "auto"

@@ -420,6 +420,49 @@ async def test_subentry_reasoning_summary_options(
     )
 
 
+async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test that a stored 'concise' default is sanitized to 'auto' for o* models."""
+    subentry = next(
+        s
+        for s in mock_config_entry.subentries.values()
+        if s.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_REASONING_SUMMARY: "concise"},
+    )
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["step_id"] == "init"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["step_id"] == "advanced"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {CONF_CHAT_MODEL: "o3"},
+    )
+    assert subentry_flow["step_id"] == "model"
+
+    schema = subentry_flow["data_schema"].schema
+    summary_key = next(k for k in schema if k == CONF_REASONING_SUMMARY)
+    assert summary_key.default() == RECOMMENDED_REASONING_SUMMARY
+
+
 @pytest.mark.parametrize(
     ("model", "service_tier_options"),
     [

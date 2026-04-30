@@ -444,13 +444,16 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             reasoning_summary_options = ["off", "auto", "detailed"]
             if model.startswith("gpt-5"):
                 reasoning_summary_options = ["off", "auto", "concise", "detailed"]
+            stored_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
             step_schema.update(
                 {
                     vol.Optional(
                         CONF_REASONING_SUMMARY,
-                        default=options.get(
-                            CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-                        ),
+                        default=stored_summary
+                        if stored_summary in reasoning_summary_options
+                        else RECOMMENDED_REASONING_SUMMARY,  # Auto
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=reasoning_summary_options,
