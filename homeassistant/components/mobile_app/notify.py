@@ -88,9 +88,9 @@ class MobileAppNotifyEntity(NotifyEntity):
         """Send a message via notify.send_message action."""
         await self._async_send_remote_message(message=message, title=title)
 
-    async def async_dismiss_message(self, tag: str) -> None:
+    async def async_dismiss_message(self, **kwargs: Any) -> None:
         """Dismiss a message by tag."""
-        await self._async_send_remote_message(message="clear_notification", tag=tag)
+        await self._async_send_remote_message(message="clear_notification", **kwargs)
 
     async def _async_send_remote_message(
         self, message: str | None = None, title: str | None = None, **kwargs: Any

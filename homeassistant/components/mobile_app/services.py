@@ -7,11 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_platform_entity_service
 
-from .const import ATTR_TAG, DOMAIN, SERVICE_DISMISS_MESSAGE
-
-SERVICE_DISMISS_MESSAGE_SCHEMA = cv.make_entity_service_schema(
-    {vol.Required(ATTR_TAG): cv.string}
-)
+from .const import DOMAIN
 
 
 @callback
@@ -21,8 +17,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_DISMISS_MESSAGE,
+        "dismiss_message",
         entity_domain=NOTIFY_DOMAIN,
-        schema=SERVICE_DISMISS_MESSAGE_SCHEMA,
+        schema={vol.Required("tag"): cv.string},
         func="async_dismiss_message",
     )
