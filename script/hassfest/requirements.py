@@ -1,7 +1,5 @@
 """Validate requirements."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Collection
 from functools import cache

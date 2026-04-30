@@ -1,7 +1,5 @@
 """The tests for NEW_NAME device conditions."""
 
-from __future__ import annotations
-
 from pytest_unordered import unordered
 
 from homeassistant.components import automation

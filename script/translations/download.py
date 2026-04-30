@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import subprocess
