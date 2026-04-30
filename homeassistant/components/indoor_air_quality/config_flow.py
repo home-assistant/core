@@ -158,11 +158,8 @@ def _validate_voc_sources(sources: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
-def _clean_sources(sources: dict[str, Any] | None) -> dict[str, Any]:
+def _clean_sources(sources: dict[str, Any]) -> dict[str, Any]:
     """Remove empty source selections."""
-    if not sources:
-        return {}
-
     return {key: value for key, value in sources.items() if value}
 
 
@@ -181,9 +178,6 @@ def _device_name(hass: HomeAssistant, device_id: str | None) -> str | None:
 
 def _sources_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     """Return source selections submitted by the user."""
-    if CONF_SOURCES in user_input:
-        return _clean_sources(user_input.get(CONF_SOURCES))
-
     return _clean_sources(
         {source: user_input.get(source) for source in SOURCE_SELECTORS}
     )
@@ -395,9 +389,6 @@ class IndoorAirQualityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._standard = user_input.get(CONF_STANDARD, DEFAULT_STANDARD)
             device_id = user_input.get(CONF_DEVICE_ID)
             sources = _sources_from_input(self.hass, user_input)
-
-            if _sources_from_user_input(user_input):
-                return await self._async_create_config_entry(user_input, sources)
 
             if user_input.get(CONF_SHOW_SOURCE_OPTIONS):
                 self._device_id = device_id
