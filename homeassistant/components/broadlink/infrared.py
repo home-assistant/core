@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data as _bl_pulses_to_data
 
-from homeassistant.components.infrared import InfraredCommand, InfraredEntity
+from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -45,8 +45,8 @@ async def async_setup_entry(
     async_add_entities([BroadlinkInfraredEntity(device)])
 
 
-class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
-    """Broadlink infrared transmitter entity."""
+class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEmitterEntity):
+    """Broadlink infrared emitter entity."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "infrared_emitter"
