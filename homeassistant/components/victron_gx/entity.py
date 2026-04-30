@@ -35,14 +35,14 @@ class VictronBaseEntity(Entity):
         self._attr_device_info = device_info
         self._attr_unique_id = f"{installation_id}_{metric.unique_id}"
         self._attr_suggested_display_precision = metric.precision
-        # When main_topic is set, omit translation_key/name so HA uses the device name (via _attr_has_entity_name).
+        # Always set translation_key so HA can resolve state/option translations (e.g. select options).
+        self._attr_translation_key = metric.generic_short_id.replace("{", "").replace(
+            "}", ""
+        )
+        self._attr_translation_placeholders = metric.key_values
+        # When main_topic is set, override name to None so HA uses the device name (via _attr_has_entity_name).
         if metric.main_topic:
             self._attr_name = None
-        else:
-            self._attr_translation_key = metric.generic_short_id.replace(
-                "{", ""
-            ).replace("}", "")
-            self._attr_translation_placeholders = metric.key_values
 
         # Special case for "%" as it should not be coming from the localization file
         self._attr_native_unit_of_measurement = (
