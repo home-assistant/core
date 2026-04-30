@@ -25,6 +25,7 @@ COPILOT_SPECIFIC_INSTRUCTIONS = """
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
 - Do not comment on code style, formatting or linting issues.
+- A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
 """
 
 INTEGRATION_PATH_SPECIFIC_INSTRUCTIONS = """---
