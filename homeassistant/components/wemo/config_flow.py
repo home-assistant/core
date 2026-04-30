@@ -1,7 +1,5 @@
 """Config flow for Wemo."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 from typing import Any, get_type_hints
 
