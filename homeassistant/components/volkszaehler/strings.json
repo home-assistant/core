@@ -9,7 +9,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {}
+      "user": {
+        "description": "Enter your Volkszaehler channel details to add it to Home Assistant.",
+        "title": "Set up Volkszaehler"
+      }
     }
   }
 }
