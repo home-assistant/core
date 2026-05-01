@@ -100,7 +100,7 @@
       "solar_radiation": {
         "default": "mdi:solar-power"
       },
-      "uv": {
+      "uv_index": {
         "default": "mdi:sun-wireless"
       },
       "wet_bulb_globe_temperature": {
