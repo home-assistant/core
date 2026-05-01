@@ -66,7 +66,7 @@ CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED = "fan_speed"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
-CONF_SEGMENTS_TEMPLATE = "segments_template"
+CONF_SEGMENTS = "segments"
 
 DEFAULT_NAME = "Template Vacuum"
 
@@ -98,9 +98,9 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_FAN_SPEED): cv.template,
         vol.Optional(CONF_STATE): cv.template,
         vol.Inclusive(
-            CONF_SEGMENTS_TEMPLATE,
+            CONF_SEGMENTS,
             CLEAN_AREA_GROUP,
-            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+            f"Options `{CONF_SEGMENTS}` and `{SERVICE_CLEAN_AREA}` must both exist",
         ): cv.template,
         vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
@@ -112,7 +112,7 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
         vol.Inclusive(
             SERVICE_CLEAN_AREA,
             CLEAN_AREA_GROUP,
-            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+            f"Options `{CONF_SEGMENTS}` and `{SERVICE_CLEAN_AREA}` must both exist",
         ): cv.SCRIPT_SCHEMA,
     }
 )
@@ -124,7 +124,7 @@ VACUUM_YAML_SCHEMA = vol.All(
             VACUUM_DOMAIN, DEFAULT_NAME
         ).schema
     ),
-    cv.key_dependency(CONF_SEGMENTS_TEMPLATE, CONF_UNIQUE_ID),
+    cv.key_dependency(CONF_SEGMENTS, CONF_UNIQUE_ID),
     cv.key_dependency(SERVICE_CLEAN_AREA, CONF_UNIQUE_ID),
 )
 
@@ -318,9 +318,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         )
 
         self.setup_template(
-            CONF_SEGMENTS_TEMPLATE,
+            CONF_SEGMENTS,
             "_segments",
-            validate_segments(self, CONF_SEGMENTS_TEMPLATE),
+            validate_segments(self, CONF_SEGMENTS),
             self._update_segments,
         )
 
