@@ -1,7 +1,5 @@
 """Home Assistant extension for Syrupy."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import dataclasses
 from enum import IntFlag

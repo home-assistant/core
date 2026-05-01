@@ -7,8 +7,6 @@ and create events using a relative time offset and then advance the clock
 forward exercising the triggers.
 """
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass

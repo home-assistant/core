@@ -1,7 +1,5 @@
 """Support for fetching data from Broadlink devices."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging

@@ -1,7 +1,5 @@
 """Support for Iperf3 sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription

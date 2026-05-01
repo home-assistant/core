@@ -1,7 +1,5 @@
 """Support for LiteJet lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylitejet import LiteJet, LiteJetError

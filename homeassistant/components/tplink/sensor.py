@@ -1,7 +1,5 @@
 """Support for TPLink sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from operator import methodcaller

@@ -1,7 +1,5 @@
 """Support for Netatmo/Bubendorff button."""
 
-from __future__ import annotations
-
 import logging
 
 from pyatmo import modules as NaModules

@@ -1,7 +1,5 @@
 """Test the UniFi Protect alarm control panel platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -43,6 +41,8 @@ def _make_public_bootstrap(arm_mode: Mock | None) -> Mock:
     pb = Mock(spec=PublicBootstrap)
     pb.arm_mode = arm_mode
     pb.arm_profiles = {}
+    pb.relays = {}
+    pb.sirens = {}
     return pb
 
 
