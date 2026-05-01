@@ -1,7 +1,5 @@
 """Voice activity detection."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum

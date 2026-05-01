@@ -1,7 +1,5 @@
 """Diagnostics support for Miele."""
 
-from __future__ import annotations
-
 import hashlib
 from typing import Any, cast
 

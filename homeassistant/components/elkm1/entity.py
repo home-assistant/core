@@ -1,7 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from enum import Enum
 import logging

@@ -1,7 +1,5 @@
 """Support for Proximity sensors."""
 
-from __future__ import annotations
-
 from typing import NamedTuple
 
 from homeassistant.components.sensor import (

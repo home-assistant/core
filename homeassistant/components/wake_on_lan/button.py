@@ -1,7 +1,5 @@
 """Support for button entity in wake on lan."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import Any

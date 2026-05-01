@@ -1,7 +1,5 @@
 """Support for wake on lan."""
 
-from __future__ import annotations
-
 import logging
 import subprocess as sp
 from typing import Any
