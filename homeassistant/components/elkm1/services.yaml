@@ -144,12 +144,6 @@ sensor_counter_set:
           min: 0
           max: 65536
 
-sensor_zone_update_voltage:
-  target:
-    entity:
-      integration: elkm1
-      domain: sensor
-
 sensor_zone_bypass:
   target:
     entity:
