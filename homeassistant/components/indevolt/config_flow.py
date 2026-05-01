@@ -96,7 +96,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "timeout"
         except ConnectionError, ClientError:
             errors["base"] = "cannot_connect"
-        except Exception, KeyError:
+        except Exception:
             _LOGGER.exception("Unknown error occurred while verifying device")
             errors["base"] = "unknown"
 
