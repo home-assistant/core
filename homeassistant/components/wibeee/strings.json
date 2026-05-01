@@ -82,6 +82,9 @@
     }
   },
   "options": {
+    "error": {
+      "auto_configure_failed": "Failed to auto-configure the device for Local Push. You can configure it manually via the device web interface."
+    },
     "step": {
       "init": {
         "data": {
