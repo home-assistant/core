@@ -1,7 +1,5 @@
 """Adds config flow for dnsip integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from typing import Any, Literal
@@ -93,7 +91,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dnsip integration."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -133,10 +131,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "invalid_hostname"
             else:
-                # Uses hostname as unique ID, which is no longer allowed
-                # pylint: disable-next=hass-unique-id-ip-based
-                await self.async_set_unique_id(hostname)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_HOSTNAME: hostname})
 
                 return self.async_create_entry(
                     title=name,

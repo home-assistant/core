@@ -48,7 +48,7 @@
         "data_description": {
           "advanced_options": "Enable and select **Submit** to set advanced options.",
           "broker": "The hostname or IP address of your MQTT broker.",
-          "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+          "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
           "client_key": "The private key file that belongs to your client certificate.",
@@ -57,7 +57,7 @@
           "password": "The password to log in to your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT broker's certificate.",
           "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "transport": "The transport to be used for the connection to your MQTT broker.",
@@ -83,7 +83,7 @@
           "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
           "username": "[%key:component::mqtt::config::step::broker::data_description::username%]"
         },
-        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
+        "description": "The MQTT broker reported an authentication error. Please confirm the broker's correct username and password.",
         "title": "Re-authentication required with the MQTT broker"
       },
       "start_addon": {

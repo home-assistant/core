@@ -1,7 +1,5 @@
 """Support for buttons."""
 
-from __future__ import annotations
-
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant

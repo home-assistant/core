@@ -1,7 +1,5 @@
 """The AirVisual component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil

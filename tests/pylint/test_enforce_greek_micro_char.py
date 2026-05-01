@@ -1,7 +1,5 @@
 """Tests for pylint hass_enforce_greek_micro_char plugin."""
 
-from __future__ import annotations
-
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
