@@ -167,6 +167,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
+        """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are

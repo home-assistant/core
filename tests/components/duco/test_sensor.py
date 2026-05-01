@@ -274,6 +274,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     sensor = NodeSensorInfo(co2=None, iaq_co2=None, rh=62.0, iaq_rh=70, temp=21.0)
 
     def _make_node(node_type: NodeType | str) -> Node:
+        """Create a Node with the given node type for use in tests."""
         return Node(
             node_id=node_id,
             general=NodeGeneralInfo(
