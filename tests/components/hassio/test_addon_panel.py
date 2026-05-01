@@ -1,6 +1,7 @@
 """Test add-on panel."""
 
 from http import HTTPStatus
+import os
 from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor.models import IngressPanel
@@ -12,17 +13,15 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
 
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
+
 
 @pytest.fixture(autouse=True)
-def mock_all(
-    supervisor_is_connected: AsyncMock,
-    homeassistant_info: AsyncMock,
-    ingress_panels: AsyncMock,
-) -> None:
+def mock_all(all_setup_requests: None) -> None:
     """Mock all setup requests."""
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hassio_addon_panel_startup(
     hass: HomeAssistant, ingress_panels: AsyncMock
 ) -> None:
@@ -37,8 +36,9 @@ async def test_hassio_addon_panel_startup(
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
+        with patch.dict(os.environ, MOCK_ENVIRON):
+            await async_setup_component(hass, "hassio", {})
+            await hass.async_block_till_done()
 
         ingress_panels.assert_called_once()
         assert mock_panel.called
@@ -49,7 +49,7 @@ async def test_hassio_addon_panel_startup(
         )
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hassio_addon_panel_api(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, ingress_panels: AsyncMock
 ) -> None:
@@ -64,8 +64,9 @@ async def test_hassio_addon_panel_api(
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
+        with patch.dict(os.environ, MOCK_ENVIRON):
+            await async_setup_component(hass, "hassio", {})
+            await hass.async_block_till_done()
 
         ingress_panels.assert_called_once()
         assert mock_panel.called
@@ -91,7 +92,7 @@ async def test_hassio_addon_panel_api(
         )
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hassio_addon_panel_api_non_admin(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -106,8 +107,9 @@ async def test_hassio_addon_panel_api_non_admin(
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
+        with patch.dict(os.environ, MOCK_ENVIRON):
+            await async_setup_component(hass, "hassio", {})
+            await hass.async_block_till_done()
 
         ingress_panels.assert_called_once()
         mock_panel.assert_called_once()
@@ -127,7 +129,7 @@ async def test_hassio_addon_panel_api_non_admin(
         mock_panel.assert_not_called()
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hassio_addon_panel_registration(
     hass: HomeAssistant, ingress_panels: AsyncMock
 ) -> None:
@@ -141,8 +143,9 @@ async def test_hassio_addon_panel_registration(
     with patch(
         "homeassistant.components.hassio.addon_panel.frontend.async_register_built_in_panel"
     ) as mock_register:
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
+        with patch.dict(os.environ, MOCK_ENVIRON):
+            await async_setup_component(hass, "hassio", {})
+            await hass.async_block_till_done()
 
         # Verify that async_register_built_in_panel was called with correct arguments
         # for our test addon
@@ -157,7 +160,7 @@ async def test_hassio_addon_panel_registration(
         )
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hassio_addon_panel_api_delete(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, ingress_panels: AsyncMock
 ) -> None:
@@ -165,8 +168,9 @@ async def test_hassio_addon_panel_api_delete(
     ingress_panels.return_value = {
         "test1": IngressPanel(enable=True, title="Test", icon="mdi:test", admin=False),
     }
-    await async_setup_component(hass, "hassio", {})
-    await hass.async_block_till_done()
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
 
     hass_client = await hass_client()
 
@@ -178,7 +182,7 @@ async def test_hassio_addon_panel_api_delete(
         mock_remove.assert_called_once_with(hass, "test1")
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hassio_addon_panel_api_delete_non_admin(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -189,8 +193,9 @@ async def test_hassio_addon_panel_api_delete_non_admin(
     ingress_panels.return_value = {
         "test1": IngressPanel(enable=True, title="Test", icon="mdi:test", admin=False),
     }
-    await async_setup_component(hass, "hassio", {})
-    await hass.async_block_till_done()
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
 
     hass_admin_user.groups = []
     hass_client = await hass_client()

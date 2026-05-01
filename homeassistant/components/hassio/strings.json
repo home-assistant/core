@@ -52,6 +52,9 @@
     },
     "mount_reload_unknown_device_id": {
       "message": "Device ID not found"
+    },
+    "supervisor_not_connected": {
+      "message": "Not connected with the supervisor / system too busy"
     }
   },
   "issues": {

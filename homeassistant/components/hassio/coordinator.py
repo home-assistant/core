@@ -780,10 +780,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         )
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        if info := self.hass.data.get(DATA_INFO):
-            self.is_hass_os = info.hassos is not None
-        else:
-            self.is_hass_os = False
+        self.is_hass_os = False
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs = SupervisorJobs(hass)
         self._dispatcher_disconnect = async_dispatcher_connect(
@@ -843,6 +840,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         # Build clean coordinator data
+        self.is_hass_os = info.hassos is not None
         new_data = HassioMainData(
             core=core_info,
             supervisor=supervisor_info,

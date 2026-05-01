@@ -27,6 +27,7 @@ from aiohasupervisor.models import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.hassio.const import DATA_HOST_INFO
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1109,10 +1110,12 @@ async def test_supervisor_issues_free_space_host_info_fail(
 ) -> None:
     """Test supervisor issue for too little free space remaining without host info."""
     mock_resolution_info(supervisor_client)
-    host_info.side_effect = SupervisorError()
 
     result = await async_setup_component(hass, "hassio", {})
     assert result
+
+    # Simulate host info being unavailable after setup (e.g., cached data cleared)
+    hass.data.pop(DATA_HOST_INFO, None)
 
     client = await hass_supervisor_ws_client()
 
