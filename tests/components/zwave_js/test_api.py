@@ -3519,10 +3519,8 @@ async def test_firmware_upload_view(
         )
 
         update_data = NodeFirmwareUpdateData(
-            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", **expected_data
         )
-        for attr, value in expected_data.items():
-            setattr(update_data, attr, value)
 
         mock_controller_cmd.assert_not_called()
         assert mock_node_cmd.call_args[0][1:3] == (multisensor_6, [update_data])
