@@ -216,8 +216,8 @@ async def test_reauth_errors(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_pyvlx.connect.assert_called_once()
-    mock_pyvlx.disconnect.assert_not_called()
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
     assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
 
     mock_pyvlx.connect.side_effect = None
