@@ -27,9 +27,9 @@ from homeassistant.components.hassio.const import (
     WS_TYPE_API,
     WS_TYPE_SUBSCRIBE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 

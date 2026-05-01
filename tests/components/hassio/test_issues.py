@@ -1213,7 +1213,6 @@ async def test_supervisor_issues_addon_pwned(
     )
 
 
-
 async def test_supervisor_issues_unload_disconnects_listener(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
