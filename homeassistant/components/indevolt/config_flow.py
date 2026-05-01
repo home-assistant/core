@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
 
@@ -89,15 +90,14 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_discovery(
-        self, discovery_info: dict[str, Any]
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Handle UDP broadcast discovery."""
-        host = discovery_info["host"]
+        """Handle DHCP discovery — probe the device to confirm it is an Indevolt device."""
+        host = discovery_info.ip
 
         try:
             device_data = await self._async_get_device_data(host)
-
         except TimeoutError, ConnectionError, ClientError:
             return self.async_abort(reason="cannot_connect")
 
