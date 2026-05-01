@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
-from homeassistant.components.template.vacuum import CONF_SEGMENTS, SERVICE_CLEAN_AREA
+from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
@@ -69,7 +69,9 @@ SET_FAN_SPEED_ACTION = make_test_action(
 )
 START_ACTION = make_test_action("start")
 STOP_ACTION = make_test_action("stop")
-CLEAN_AREA_ACTION = make_test_action("clean_area", {"segment_ids": "{{ segment_ids }}"})
+CLEAN_SEGMENTS_ACTION = make_test_action(
+    "clean_segments", {"segment_ids": "{{ segment_ids }}"}
+)
 
 TEMPLATE_VACUUM_ACTIONS = {
     **START_ACTION,
@@ -1045,7 +1047,7 @@ async def test_not_optimistic(
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
-                **CLEAN_AREA_ACTION,
+                **CLEAN_SEGMENTS_ACTION,
                 "segments": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
             },
         )
@@ -1056,7 +1058,7 @@ async def test_not_optimistic(
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_vacuum")
-async def test_clean_area(
+async def test_clean_segments(
     hass: HomeAssistant,
     calls: list[ServiceCall],
     entity_registry: er.EntityRegistry,
@@ -1076,7 +1078,7 @@ async def test_clean_area(
 
     await common.async_clean_area(hass, ["area_1"], TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
-    assert_action(TEST_VACUUM, calls, 1, "clean_area", segment_ids=["1", "2"])
+    assert_action(TEST_VACUUM, calls, 1, "clean_segments", segment_ids=["1", "2"])
 
     state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
@@ -1090,7 +1092,7 @@ async def test_clean_area(
             1,
             {
                 "start": [],
-                **CLEAN_AREA_ACTION,
+                **CLEAN_SEGMENTS_ACTION,
             },
         )
     ],
@@ -1145,7 +1147,7 @@ async def test_get_segments(
             1,
             {
                 "start": [],
-                **CLEAN_AREA_ACTION,
+                **CLEAN_SEGMENTS_ACTION,
             },
         )
     ],
@@ -1228,7 +1230,7 @@ async def test_invalid_segments(
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
-                **CLEAN_AREA_ACTION,
+                **CLEAN_SEGMENTS_ACTION,
                 "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
             },
         )
@@ -1268,7 +1270,7 @@ async def test_raise_segments_changed_issue(
     [
         (
             {**START_ACTION},
-            f"Options `{CONF_SEGMENTS}` and `{SERVICE_CLEAN_AREA}` must both exist",
+            f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ),
     ],
 )
@@ -1283,7 +1285,7 @@ async def test_raise_segments_changed_issue(
         ),
         (
             0,
-            {**CLEAN_AREA_ACTION},
+            {**CLEAN_SEGMENTS_ACTION},
         ),
     ],
 )
@@ -1309,7 +1311,7 @@ async def test_segments_part_config(
     [
         {
             **START_ACTION,
-            **CLEAN_AREA_ACTION,
+            **CLEAN_SEGMENTS_ACTION,
             "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
         },
     ],
