@@ -119,7 +119,7 @@ _BANDS_UK: Final[dict[str, tuple[ScoreBand, ...]]] = {
     ),
 }
 
-# IAQ score (5 per source, normalized to 0-65) -> human level.
+# IAQ score (per-source 1-5, normalized to 13-65) -> human level.
 _LEVEL_BANDS_UK: Final[tuple[tuple[int, str], ...]] = (
     (25, LEVEL_INADEQUATE),
     (38, LEVEL_POOR),

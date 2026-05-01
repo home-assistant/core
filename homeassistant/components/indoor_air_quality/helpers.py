@@ -95,9 +95,13 @@ def convert_value(
     The first key of ``target_units`` is the target unit; remaining keys list
     aliases and like-family conversions with their multiplicative factor.
 
-    If the source ``unit`` is in a different family (ppm/ppb vs. mg/m³ /
-    µg/m³) and ``molar_mass`` is provided, a molar-mass-based conversion is
-    performed using the standard 24.45 L/mol molar volume at 25 °C / 1 atm.
+    Cross-family conversion is supported in one direction only: from ppm/ppb
+    to a mass concentration (mg/m³ or µg/m³) using the supplied
+    ``molar_mass`` and the standard 24.45 L/mol molar volume at 25 °C /
+    1 atm. The reverse direction (mass concentration → ppm/ppb) is not
+    implemented because the only ppm-targeted source (CO₂) is reported in
+    ppm by virtually every sensor in practice; sources reporting in another
+    family are treated as non-convertible.
     """
     if unit is not None and unit in target_units:
         return value * target_units[unit]
