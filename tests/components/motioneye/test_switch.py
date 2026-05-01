@@ -260,3 +260,31 @@ async def test_switch_optimistic_state_on_toggle(
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "on"
+
+async def test_switch_optimistic_state_reverts_on_get_camera_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test that coordinator refreshes if async_get_camera fails.
+
+    When the GET fails, the optimistic state was already written, so we
+    trigger a coordinator refresh to revert to the real state.
+    Regression test for https://github.com/home-assistant/core/issues/169617
+    """
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    # Simulate async_get_camera returning None (network failure etc.)
+    client.async_get_camera = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        blocking=True,
+    )
+
+    # async_set_camera should NOT have been called since GET failed.
+    client.async_set_camera.assert_not_called()
+
+    # Coordinator should have been asked to refresh to revert optimistic state.
+    assert client.async_get_cameras.call_count >= 1
