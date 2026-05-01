@@ -219,7 +219,7 @@ class ElkSetting(ElkSensor):
     _element: Setting
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        self._attr_native_value = str(self._element.value)
+        self._attr_native_value = self._element.value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

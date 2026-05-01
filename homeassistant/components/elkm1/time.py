@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import time as dt_time
+import logging
 from typing import Any, cast
 
 from elkm1_lib.const import SettingFormat
@@ -11,12 +12,13 @@ from elkm1_lib.settings import Setting
 
 from homeassistant.components.time import TimeEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -50,9 +52,9 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
     _element: Setting
 
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
-        """Initialize the number setting."""
+        """Initialize the time setting."""
         super().__init__(element, elk, elk_data)
-        self._unique_id = self.generate_unique_id(elk_data.mac)
+        self._unique_id = self.generate_unique_id(elk_data.mac or "time")
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         value = self._element.value
@@ -62,7 +64,10 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
             self._attr_native_value = dt_time(hour=value[0], minute=value[1])  # type: ignore[unreachable]
         else:
             self._attr_available = False
-            raise HomeAssistantError("setting type no longer matches the panel")
+            _LOGGER.warning(
+                "Setting type for '%s' differ between the ElkM1 and the entity. Restart the integration to fix",
+                self.entity_id,
+            )
 
     async def async_set_value(self, value: dt_time) -> None:
         """Set the time of the setting."""

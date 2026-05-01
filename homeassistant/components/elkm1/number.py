@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, cast
 
 from elkm1_lib.const import SettingFormat
@@ -11,12 +12,13 @@ from elkm1_lib.settings import Setting
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -56,7 +58,7 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
-        self._unique_id = self.generate_unique_id(elk_data.mac)
+        self._unique_id = self.generate_unique_id(elk_data.mac or "number")
         if element.value_format == SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
             self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
@@ -68,7 +70,10 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
             self._attr_native_value = self._element.value  # type: ignore[unreachable]
         else:
             self._attr_available = False
-            raise HomeAssistantError("setting type no longer matches the panel")
+            _LOGGER.warning(
+                "Setting type for '%s' differ between the ElkM1 and the entity. Restart the integration to fix",
+                self.entity_id,
+            )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the setting."""
