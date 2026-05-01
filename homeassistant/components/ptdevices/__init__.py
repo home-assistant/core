@@ -1,7 +1,5 @@
 """The PTDevices integration."""
 
-from __future__ import annotations
-
 from aioptdevices.configuration import Configuration
 from aioptdevices.interface import Interface
 
