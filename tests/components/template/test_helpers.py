@@ -32,10 +32,7 @@ from homeassistant.components.template.helpers import (
     rewrite_legacy_to_modern_config,
     rewrite_legacy_to_modern_configs,
 )
-from homeassistant.components.template.light import (
-    LEGACY_FIELDS as LIGHT_LEGACY_FIELDS,
-    SCRIPT_FIELDS as LIGHT_SCRIPT_FIELDS,
-)
+from homeassistant.components.template.light import SCRIPT_FIELDS as LIGHT_SCRIPT_FIELDS
 from homeassistant.components.template.lock import (
     LEGACY_FIELDS as LOCK_LEGACY_FIELDS,
     SCRIPT_FIELDS as LOCK_SCRIPT_FIELDS,
@@ -201,104 +198,6 @@ async def test_legacy_to_modern_config(
             "preset_mode_template",
             "preset_mode",
             "{{ 'foo' }}",
-        ),
-        (
-            "fan",
-            LIGHT_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "rgb_template",
-            "rgb",
-            "{{ (255,255,255) }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "rgbw_template",
-            "rgbw",
-            "{{ (255,255,255,255) }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "rgbww_template",
-            "rgbww",
-            "{{ (255,255,255,255,255) }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "effect_list_template",
-            "effect_list",
-            "{{ ['a', 'b'] }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "effect_template",
-            "effect",
-            "{{ 'a' }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "level_template",
-            "level",
-            "{{ 255 }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "max_mireds_template",
-            "max_mireds",
-            "{{ 255 }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "min_mireds_template",
-            "min_mireds",
-            "{{ 255 }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "supports_transition_template",
-            "supports_transition",
-            "{{ True }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "temperature_template",
-            "temperature",
-            "{{ 255 }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "white_value_template",
-            "white_value",
-            "{{ 255 }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "hs_template",
-            "hs",
-            "{{ (255, 255) }}",
-        ),
-        (
-            "light",
-            LIGHT_LEGACY_FIELDS,
-            "color_template",
-            "hs",
-            "{{ (255, 255) }}",
         ),
         (
             "sensor",
@@ -1013,22 +912,6 @@ async def test_platform_not_ready(
             "bedroom_fan",
         ),
         (
-            "light",
-            {
-                "light": {
-                    "platform": "template",
-                    "lights": {
-                        "theater_lights": {
-                            "value_template": "{{ states('input_boolean.state') }}",
-                            "turn_on": {"action": "script.toggle"},
-                            "turn_off": {"action": "script.toggle"},
-                        }
-                    },
-                },
-            },
-            "theater_lights",
-        ),
-        (
             "lock",
             {
                 "lock": {
@@ -1140,33 +1023,6 @@ async def test_legacy_deprecation(
     ("domain", "config", "strings_to_check"),
     [
         (
-            "light",
-            {
-                "light": {
-                    "platform": "template",
-                    "lights": {
-                        "garage_light_template": {
-                            "friendly_name": "Garage Light Template",
-                            "min_mireds_template": 153,
-                            "max_mireds_template": 500,
-                            "turn_on": [],
-                            "turn_off": [],
-                            "set_temperature": [],
-                            "set_hs": [],
-                            "set_level": [],
-                        }
-                    },
-                },
-            },
-            [
-                "turn_on: []",
-                "turn_off: []",
-                "set_temperature: []",
-                "set_hs: []",
-                "set_level: []",
-            ],
-        ),
-        (
             "switch",
             {
                 "switch": {
@@ -1183,97 +1039,6 @@ async def test_legacy_deprecation(
             [
                 "turn_on: []",
                 "turn_off: []",
-            ],
-        ),
-        (
-            "light",
-            {
-                "light": [
-                    {
-                        "platform": "template",
-                        "lights": {
-                            "atrium_lichterkette": {
-                                "unique_id": "atrium_lichterkette",
-                                "friendly_name": "Atrium Lichterkette",
-                                "value_template": "{{ states('input_boolean.atrium_lichterkette_power') }}",
-                                "level_template": "{% if is_state('input_boolean.atrium_lichterkette_power', 'off') %}\n  0\n{% else %}\n  {{ states('input_number.atrium_lichterkette_brightness') | int * (255 / state_attr('input_number.atrium_lichterkette_brightness', 'max') | int) }}\n{% endif %}",
-                                "effect_list_template": "{{ state_attr('input_select.atrium_lichterkette_mode', 'options') }}",
-                                "effect_template": "'{{ states('input_select.atrium_lichterkette_mode')}}'",
-                                "turn_on": [
-                                    {
-                                        "service": "button.press",
-                                        "target": {
-                                            "entity_id": "button.esphome_web_28a814_lichterkette_on"
-                                        },
-                                    },
-                                    {
-                                        "service": "input_boolean.turn_on",
-                                        "target": {
-                                            "entity_id": "input_boolean.atrium_lichterkette_power"
-                                        },
-                                    },
-                                ],
-                                "turn_off": [
-                                    {
-                                        "service": "button.press",
-                                        "target": {
-                                            "entity_id": "button.esphome_web_28a814_lichterkette_off"
-                                        },
-                                    },
-                                    {
-                                        "service": "input_boolean.turn_off",
-                                        "target": {
-                                            "entity_id": "input_boolean.atrium_lichterkette_power"
-                                        },
-                                    },
-                                ],
-                                "set_level": [
-                                    {
-                                        "variables": {
-                                            "scaled": "{{ (brightness / (255 / state_attr('input_number.atrium_lichterkette_brightness', 'max'))) | round | int }}",
-                                            "diff": "{{ scaled | int - states('input_number.atrium_lichterkette_brightness') | int }}",
-                                            "direction": "{{ 'dim' if diff | int < 0 else 'bright' }}",
-                                        }
-                                    },
-                                    {
-                                        "repeat": {
-                                            "count": "{{ diff | int | abs }}",
-                                            "sequence": [
-                                                {
-                                                    "service": "button.press",
-                                                    "target": {
-                                                        "entity_id": "button.esphome_web_28a814_lichterkette_{{ direction }}"
-                                                    },
-                                                },
-                                                {"delay": {"milliseconds": 500}},
-                                            ],
-                                        }
-                                    },
-                                    {
-                                        "service": "input_number.set_value",
-                                        "data": {
-                                            "value": "{{ scaled }}",
-                                            "entity_id": "input_number.atrium_lichterkette_brightness",
-                                        },
-                                    },
-                                ],
-                                "set_effect": [
-                                    {
-                                        "service": "button.press",
-                                        "target": {
-                                            "entity_id": "button.esphome_web_28a814_lichterkette_{{ effect }}"
-                                        },
-                                    }
-                                ],
-                            }
-                        },
-                    }
-                ]
-            },
-            [
-                "scaled: ",
-                "diff: ",
-                "direction: ",
             ],
         ),
         (
