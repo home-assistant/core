@@ -61,8 +61,8 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
             self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        # Guard against the panel possibly have changing the underlying
-        # type and we don't know about the change
+        # Guard against the panel possibly changing the underlying
+        # type without us knowing about the change
         if isinstance(self._element.value, int):
             self._attr_native_value = self._element.value  # type: ignore[unreachable]
         else:

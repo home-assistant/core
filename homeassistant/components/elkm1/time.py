@@ -50,6 +50,8 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         value = self._element.value
+        # Guard against the panel possibly changing the underlying
+        # type without us knowing about the change
         if isinstance(value, tuple):
             self._attr_native_value = dt_time(hour=value[0], minute=value[1])  # type: ignore[unreachable]
         else:
