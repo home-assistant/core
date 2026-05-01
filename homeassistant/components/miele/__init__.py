@@ -80,18 +80,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
             translation_key="config_entry_not_ready",
         ) from err
 
-    # Setup MieleAPI and coordinator for data fetch
+    # Setup MieleAPI and coordinators for data fetch.
+    # runtime_data must be set before any coordinator refresh: the main coordinator
+    # may call failure_coordinator during its first update via _handle_device_failure.
     _api = MieleAPI(auth)
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
-    await _coordinator.async_config_entry_first_refresh()
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
-    await _aux_coordinator.async_config_entry_first_refresh()
     _failure_coordinator = MieleFailureDataUpdateCoordinator(hass, entry, _api)
-    await _failure_coordinator.async_config_entry_first_refresh()
-
     entry.runtime_data = MieleRuntimeData(
         _api, _coordinator, _aux_coordinator, _failure_coordinator
     )
+
+    await _coordinator.async_config_entry_first_refresh()
+    await _aux_coordinator.async_config_entry_first_refresh()
+    await _failure_coordinator.async_config_entry_first_refresh()
 
     entry.async_create_background_task(
         hass,

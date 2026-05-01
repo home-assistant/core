@@ -61,7 +61,6 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
     config_entry: MieleConfigEntry
     new_device_callbacks: list[Callable[[dict[str, MieleDevice]], None]] = []
     known_devices: set[str] = set()
-    failing_devices: set[str] = set()
     devices: dict[str, MieleDevice] = {}
 
     def __init__(
@@ -79,6 +78,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             update_interval=timedelta(seconds=120),
         )
         self.api = api
+        self.failing_devices: set[str] = set()
 
     async def _async_update_data(self) -> MieleCoordinatorData:
         """Fetch data from the Miele API."""

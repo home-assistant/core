@@ -975,9 +975,10 @@ async def async_setup_entry(
         if device_id not in new_devices_set and unique_id in added_entities:
             return False
 
-        # sensors is not enabled, should not add entity
-        if not _is_sensor_enabled(
-            definition,
+        # Regular sensors: optional temperature/plate rules use value_fn(MieleDevice).
+        # Failure sensors use value_fn(MieleFailureData); never pass device into that.
+        if definition not in FAILURE_SENSOR_TYPES and not _is_sensor_enabled(
+            cast(MieleSensorDefinition[MieleDevice], definition),
             device,
             unique_id,
         ):
