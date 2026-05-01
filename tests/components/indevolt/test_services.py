@@ -371,7 +371,7 @@ async def test_single_device_execution_failure(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the original exception is re-raised for a single device execution failure."""
+    """Test that the exception is raised for a single device execution failure."""
     await setup_integration(hass, mock_config_entry)
 
     # Simulate an API push failure
