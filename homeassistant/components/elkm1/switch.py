@@ -76,12 +76,9 @@ class ElkOutput(ElkAttachedEntity, SwitchEntity):
         """Turn off the output."""
         self._element.turn_off()
 
-    async def async_switch_output_turn_on_for(
-        self, duration: timedelta | None = None
-    ) -> None:
+    async def async_switch_output_turn_on_for(self, duration: timedelta) -> None:
         """Turn on an output for specified length of time."""
-        if duration is not None:
-            self._element.turn_on(int(duration.total_seconds()))
+        self._element.turn_on(int(duration.total_seconds()))
 
 
 class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
