@@ -392,6 +392,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
+            key=DPCode.CUR_NEUTRAL,
+            translation_key="total_production",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.SUPPLY_FREQUENCY,
             translation_key="supply_frequency",
             device_class=SensorDeviceClass.FREQUENCY,
