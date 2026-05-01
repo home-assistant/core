@@ -330,6 +330,47 @@ async def test_dhcp_discovery_updates_existing_ip(
     assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
 
 
+async def test_dhcp_discovery_ignored_and_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """A configured entry must win the IP refresh even when an ignored entry shares the prefix.
+
+    An ignored discovery's unique_id is the 9-digit prefix; the configured
+    entry's unique_id is the full 12-digit serial. Both `startswith` the
+    prefix, so iterating over all entries (including ignored) could refresh
+    the wrong one. The configured entry must always win.
+    """
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="102000100",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+    configured_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="102000100098",
+        data={"serial": "102000100098", "ip_address": "1.1.1.1"},
+    )
+    configured_entry.add_to_hass(hass)
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value={("192.168.1.106", "102000100")},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert configured_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
+
+
 async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:
     """DHCP at an IP that emits no Nobø broadcast aborts cleanly."""
     with patch("pynobo.nobo.async_discover_hubs", return_value=set()):

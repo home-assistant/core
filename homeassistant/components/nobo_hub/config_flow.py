@@ -88,19 +88,26 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_discover")
         _, serial_prefix = next(iter(discovered))
 
-        # Use the 9-digit serial prefix as a temporary unique_id so the
-        # frontend offers an "Ignore" option for this discovery. It is
-        # replaced with the full 12-digit serial in _create_configuration
-        # once the user supplies the suffix.
-        await self.async_set_unique_id(serial_prefix)
-
-        for entry in self._async_current_entries():
+        # Look for a configured entry whose full 12-digit unique_id starts
+        # with the discovered prefix and refresh its IP. Exclude ignored
+        # entries: an ignored discovery's unique_id is the 9-digit prefix,
+        # which would also match `startswith` and could shadow the real
+        # configured entry depending on iteration order.
+        for entry in self._async_current_entries(include_ignore=False):
             if entry.unique_id and entry.unique_id.startswith(serial_prefix):
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates={CONF_IP_ADDRESS: discovery_info.ip},
                     reason="already_configured",
                 )
+
+        # Use the 9-digit serial prefix as a temporary unique_id so the
+        # frontend offers an "Ignore" option for this discovery, and so a
+        # previously-ignored prefix correctly aborts the flow here. It is
+        # replaced with the full 12-digit serial in _create_configuration
+        # once the user supplies the suffix.
+        await self.async_set_unique_id(serial_prefix)
+        self._abort_if_unique_id_configured()
 
         self._discovered_hubs = {discovery_info.ip: serial_prefix}
         self._hub = discovery_info.ip
