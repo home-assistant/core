@@ -371,3 +371,60 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "account_mismatch"
+
+
+async def test_reauth_account_mismatch_with_unique_id(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test reauth aborts when login returns a different account ID for an entry that already has a proper unique ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        unique_id=MOCK_USER_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login_other,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "account_mismatch"
+
+
+async def test_reauth_already_configured(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test reauth aborts when credentials belong to an account already used by another entry."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_USER_ID,
+    ).add_to_hass(hass)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        unique_id=config_data[CONF_USERNAME].casefold(),
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
