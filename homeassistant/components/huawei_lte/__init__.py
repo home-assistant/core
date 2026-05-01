@@ -363,7 +363,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
 
     # Set up device registry
     if router.device_identifiers or router.device_connections:
-        _async_get_or_create_device(entry, router)
+        _get_or_create_device(entry, router)
 
     # Forward config entry setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -404,7 +404,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     return True
 
 
-def _async_get_or_create_device(entry: HuaweiLteConfigEntry, router: Router) -> None:
+def _get_or_create_device(entry: HuaweiLteConfigEntry, router: Router) -> None:
     """Get or create a device in the registry."""
     device_info = DeviceInfo(
         configuration_url=router.url,
