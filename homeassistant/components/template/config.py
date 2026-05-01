@@ -182,9 +182,6 @@ CONFIG_SECTION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-                binary_sensor_platform.BINARY_SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
                 sensor_platform.SENSOR_LEGACY_YAML_SCHEMA
@@ -384,11 +381,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 CONF_SENSORS,
                 SENSOR_DOMAIN,
                 sensor_platform.LEGACY_FIELDS,
-            ),
-            (
-                CONF_BINARY_SENSORS,
-                BINARY_SENSOR_DOMAIN,
-                binary_sensor_platform.LEGACY_FIELDS,
             ),
         ):
             if old_key not in template_config:

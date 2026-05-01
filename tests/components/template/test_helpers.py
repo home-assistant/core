@@ -10,9 +10,6 @@ from homeassistant.components.template.alarm_control_panel import (
     LEGACY_FIELDS as ALARM_CONTROL_PANEL_LEGACY_FIELDS,
     SCRIPT_FIELDS as ALARM_CONTROL_PANEL_SCRIPT_FIELDS,
 )
-from homeassistant.components.template.binary_sensor import (
-    LEGACY_FIELDS as BINARY_SENSOR_LEGACY_FIELDS,
-)
 from homeassistant.components.template.button import (
     SCRIPT_FIELDS as BUTTON_SCRIPT_FIELDS,
     StateButtonEntity,
@@ -135,13 +132,6 @@ async def test_legacy_to_modern_config(
         (
             "alarm_control_panel",
             ALARM_CONTROL_PANEL_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            "binary_sensor",
-            BINARY_SENSOR_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
@@ -866,7 +856,6 @@ async def test_config_entry_device_actions(
 @pytest.mark.parametrize(
     ("domain", "legacy_fields"),
     [
-        ("binary_sensor", BINARY_SENSOR_LEGACY_FIELDS),
         ("sensor", SENSOR_LEGACY_FIELDS),
     ],
 )
@@ -938,21 +927,6 @@ async def test_platform_not_ready(
             "undocumented_configuration",
         ),
         (
-            "template",
-            {
-                "template": [
-                    {
-                        "binary_sensors": {
-                            "undocumented_configuration": {
-                                "value_template": "{{ 'armed_away' }}",
-                            }
-                        }
-                    },
-                ]
-            },
-            "undocumented_configuration",
-        ),
-        (
             "alarm_control_panel",
             {
                 "alarm_control_panel": {
@@ -965,20 +939,6 @@ async def test_platform_not_ready(
                 },
             },
             "safe_alarm_panel",
-        ),
-        (
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "template",
-                    "sensors": {
-                        "sun_up": {
-                            "value_template": "{{ state_attr('sun.sun', 'elevation') > 0 }}",
-                        }
-                    },
-                },
-            },
-            "sun_up",
         ),
         (
             "cover",
@@ -1343,22 +1303,6 @@ async def test_legacy_deprecation(
                 ]
             },
             ["device_class: garage"],
-        ),
-        (
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "template",
-                    "sensors": {
-                        "motion_sensor": {
-                            "friendly_name": "Motion Sensor",
-                            "device_class": "motion",
-                            "value_template": "{{ is_state('sensor.motion_detector', 'on') }}",
-                        }
-                    },
-                },
-            },
-            ["device_class: motion"],
         ),
         (
             "sensor",
