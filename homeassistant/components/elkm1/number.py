@@ -9,6 +9,7 @@ from elkm1_lib.elements import Element
 from elkm1_lib.settings import Setting
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -55,9 +56,9 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
-        # Only set class for TIMER settings; NUMBER settings are unitless
         if element.value_format == SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
+            self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         # Guard against the panel possibly have changing the underlying
@@ -65,6 +66,7 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
         if isinstance(self._element.value, int):
             self._attr_native_value = self._element.value
         else:
+            self._attr_available = False
             raise HomeAssistantError("setting type no longer matches the panel")
 
     async def async_set_native_value(self, value: float) -> None:
