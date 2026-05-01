@@ -64,20 +64,20 @@ async def test_setup_failure_cleans_up_websocket(
     mock_websocket_api.close.assert_awaited_once()
 
 
-async def test_websocket_connect_failure_sets_entry_setup_error(
+async def test_websocket_connect_failure_sets_entry_retry(
     hass: HomeAssistant,
     mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test websocket connection failure sets the entry setup error state."""
+    """Test websocket connection failure retries entry setup."""
     mock_config_entry.add_to_hass(hass)
     mock_websocket_api.connect.side_effect = OSError("connect failed")
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_websocket_api.connect.assert_awaited_once()
     mock_websocket_api.stop_all_listeners.assert_not_awaited()
     mock_websocket_api.close.assert_not_awaited()

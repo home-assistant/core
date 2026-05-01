@@ -10,7 +10,7 @@ from websockets.exceptions import WebSocketException
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import client_context
 
@@ -83,7 +83,7 @@ async def async_setup_entry(
     try:
         await websocket_api.connect(client_context())
     except (OSError, WebSocketException) as err:
-        raise ConfigEntryError("Error connecting to WeatherFlow websocket") from err
+        raise ConfigEntryNotReady("Error connecting to WeatherFlow websocket") from err
 
     entry.async_on_unload(_async_disconnect_websocket)
 
