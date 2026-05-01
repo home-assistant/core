@@ -3,6 +3,11 @@
 
 set_system_mode:
   fields:
+    entity_id:
+      selector:
+        entity:
+          integration: evohome
+          domain: climate
     mode:
       required: true
       default: Auto

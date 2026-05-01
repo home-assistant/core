@@ -1,6 +1,5 @@
 """Support for the Netatmo cameras."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast

@@ -3,12 +3,8 @@
     required: true
     default: any
     selector:
-      select:
-        translation_key: trigger_behavior
-        options:
-          - first
-          - last
-          - any
+      automation_behavior:
+        mode: trigger
   for: &trigger_for
     required: true
     default: 00:00:00
@@ -33,16 +29,19 @@
   entity:
     - domain: binary_sensor
       device_class: battery
+  primary_entities_only: false
 
 .trigger_target_charging: &trigger_target_charging
   entity:
     - domain: binary_sensor
       device_class: battery_charging
+  primary_entities_only: false
 
 .trigger_target_percentage: &trigger_target_percentage
   entity:
     - domain: sensor
       device_class: battery
+  primary_entities_only: false
 
 low:
   fields:

@@ -1,7 +1,5 @@
 """Support for Magic Home switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from flux_led import DeviceType

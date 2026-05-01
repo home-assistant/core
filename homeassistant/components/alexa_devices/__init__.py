@@ -1,9 +1,12 @@
 """Alexa Devices integration."""
 
+import httpx
+
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import _LOGGER, CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
@@ -11,6 +14,7 @@ from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.SENSOR,
@@ -35,7 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     await coordinator.async_config_entry_first_refresh()
 
     await coordinator.sync_media_state()
-    await coordinator.api.start_http2_thread()
+
+    alexa_httpx_client = httpx_client.create_async_httpx_client(
+        hass,
+        alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
+        timeout=httpx.Timeout(None),
+    )
+    await coordinator.api.start_http2_processing(alexa_httpx_client)
 
     entry.runtime_data = coordinator
 
@@ -89,7 +99,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Unload a config entry."""
     try:
-        await entry.runtime_data.api.stop_http2_thread()
+        await entry.runtime_data.api.stop_http2_processing()
     except Exception:  # noqa: BLE001
-        _LOGGER.error("Error while stopping http2 thread", exc_info=True)
+        _LOGGER.error("Error while stopping http2 task", exc_info=True)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

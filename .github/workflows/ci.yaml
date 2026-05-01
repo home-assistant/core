@@ -38,9 +38,8 @@ on:
 
 env:
   CACHE_VERSION: 3
-  UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.5"
+  HA_SHORT_VERSION: "2026.6"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
@@ -282,7 +281,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
+        uses: j178/prek-action@cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3 # v2.0.2
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
@@ -303,7 +302,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run zizmor
-        uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
+        uses: j178/prek-action@cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3 # v2.0.2
         with:
           extra-args: --all-files zizmor
 
@@ -358,35 +357,37 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
-      - name: Generate partial uv restore key
-        id: generate-uv-key
-        run: |
-          uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
-          echo "version=${uv_version}" >> $GITHUB_OUTPUT
-          echo "key=uv-${UV_CACHE_VERSION}-${uv_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
+      - name: Generate partial uv restore key
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: generate-uv-key
+        env:
+          RUNNER_OS: ${{ runner.os }}
+          RUNNER_ARCH: ${{ runner.arch }}
+          PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
+          HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt') }}
+        run: |
+          partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
+          echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
+          echo "full_key=${partial_key}${HASH_FILES}" >> $GITHUB_OUTPUT
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        id: cache-uv
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.UV_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-uv-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
-            env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
-            env.HA_SHORT_VERSION }}-
+          key: ${{ steps.generate-uv-key.outputs.full_key }}
+          restore-keys: ${{ steps.generate-uv-key.outputs.partial_key }}
       - name: Check if apt cache exists
         id: cache-apt-check
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           lookup-only: ${{ steps.cache-venv.outputs.cache-hit == 'true' }}
           path: |
@@ -398,6 +399,7 @@ jobs:
         if: |
           steps.cache-venv.outputs.cache-hit != 'true'
           || steps.cache-apt-check.outputs.cache-hit != 'true'
+        id: install-os-deps
         timeout-minutes: 10
         env:
           APT_CACHE_HIT: ${{ steps.cache-apt-check.outputs.cache-hit }}
@@ -431,8 +433,11 @@ jobs:
             sudo chmod -R 755 ${APT_CACHE_BASE}
           fi
       - name: Save apt cache
-        if: steps.cache-apt-check.outputs.cache-hit != 'true'
-        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        if: |
+          always()
+          && steps.cache-apt-check.outputs.cache-hit != 'true'
+          && steps.install-os-deps.outcome == 'success'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -441,6 +446,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: create-venv
         run: |
           python -m venv venv
           . venv/bin/activate
@@ -448,8 +454,7 @@ jobs:
           pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -U "pip>=25.2"
           uv pip install -r requirements.txt
-          python -m script.gen_requirements_all ci
-          uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
+          uv pip install -r requirements_all.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
       - name: Dump pip freeze
         run: |
@@ -465,12 +470,33 @@ jobs:
           overwrite: true
       - name: Remove pip_freeze
         run: rm pip_freeze.txt
-      - name: Remove generated requirements_all
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Prune uv cache
+        if: |
+          steps.cache-uv.outputs.cache-hit != 'true'
+          && (
+            success()
+            || (always() && steps.create-venv.outcome == 'success'))
+        id: prune-uv-cache
+        run: |
+          . venv/bin/activate
+          uv cache prune --ci
+      - name: Save uv wheel cache
+        if: steps.prune-uv-cache.outcome == 'success'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: ${{ steps.generate-uv-key.outputs.full_key }}
+      - name: Save base Python virtual environment
+        if: always() && steps.create-venv.outcome == 'success'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
 
   hassfest:
     name: Check hassfest
@@ -486,7 +512,7 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Restore apt cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -517,7 +543,7 @@ jobs:
           check-latest: true
       - name: Restore full Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -554,7 +580,7 @@ jobs:
           check-latest: true
       - name: Restore full Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -645,7 +671,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -696,7 +722,7 @@ jobs:
           check-latest: true
       - name: Restore full Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -749,7 +775,7 @@ jobs:
           check-latest: true
       - name: Restore full Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -806,7 +832,7 @@ jobs:
           echo "key=mypy-${MYPY_CACHE_VERSION}-${mypy_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -814,7 +840,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .mypy_cache
           key: >-
@@ -856,7 +882,7 @@ jobs:
       - base
     steps:
       - name: Restore apt cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -889,7 +915,7 @@ jobs:
           check-latest: true
       - name: Restore full Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -932,7 +958,7 @@ jobs:
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - name: Restore apt cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -966,7 +992,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1084,7 +1110,7 @@ jobs:
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     steps:
       - name: Restore apt cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -1119,7 +1145,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1242,7 +1268,7 @@ jobs:
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     steps:
       - name: Restore apt cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -1279,7 +1305,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1425,7 +1451,7 @@ jobs:
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - name: Restore apt cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ${{ env.APT_CACHE_DIR }}
@@ -1459,7 +1485,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           fail-on-cache-miss: true

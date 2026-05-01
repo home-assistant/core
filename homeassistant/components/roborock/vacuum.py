@@ -240,14 +240,16 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
             )
-        await self.send(
-            RoborockCommand.SET_CUSTOM_MODE,
-            [
-                {v: k for k, v in self._status_trait.fan_speed_mapping.items()}[
-                    fan_speed
-                ]
-            ],
-        )
+        code_mapping = {v: k for k, v in self._status_trait.fan_speed_mapping.items()}
+        if (fan_speed_code := code_mapping.get(fan_speed)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            )
+        await self.send(RoborockCommand.SET_CUSTOM_MODE, [fan_speed_code])
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Send vacuum to a specific target point."""
@@ -458,9 +460,17 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            fan_speed_code = SCWindMapping.from_value(fan_speed)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            ) from err
+        try:
+            await self.coordinator.api.set_fan_speed(fan_speed_code)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -1,7 +1,5 @@
 """Support for using switch with ecoNet thermostats."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
