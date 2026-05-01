@@ -39,7 +39,12 @@ def client_fixture():
 
 @pytest.fixture(autouse=True)
 def user_id_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Expose a default public user_id on the test client class."""
+    """Expose a default public user_id on the test client class.
+
+    The installed library (0.7.0) uses _user_id internally. This fixture
+    provides the public user_id attribute expected by the integration code
+    until the library exposes it natively.
+    """
     monkeypatch.setattr(AqualinkClient, "user_id", MOCK_USER_ID, raising=False)
 
 

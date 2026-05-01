@@ -140,6 +140,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     account_id = aqualink.user_id
     if entry.unique_id != account_id:
+        conflicting_entry = next(
+            (
+                existing_entry
+                for existing_entry in hass.config_entries.async_entries(DOMAIN)
+                if existing_entry.entry_id != entry.entry_id
+                and existing_entry.unique_id == account_id
+            ),
+            None,
+        )
+        if conflicting_entry is not None:
+            await aqualink.close()
+            raise ConfigEntryError(
+                "Another iAquaLink config entry already uses this account"
+            )
         hass.config_entries.async_update_entry(entry, unique_id=account_id)
 
     try:

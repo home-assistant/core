@@ -37,7 +37,7 @@ async def _async_mock_login_other(self: Any) -> None:
     self.user_id = MOCK_USER_ID_2
 
 
-async def test_already_configured(
+async def test_multiple_accounts_allowed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     config_data: dict[str, str],
@@ -261,8 +261,6 @@ async def test_reconfigure_success(
     )
     entry.add_to_hass(hass)
 
-    new_username = "updated@example.com"
-
     result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -272,7 +270,7 @@ async def test_reconfigure_success(
     with (
         patch(
             "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -281,16 +279,16 @@ async def test_reconfigure_success(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: new_username, CONF_PASSWORD: "new_password"},
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.title == new_username
+    assert entry.title == config_data[CONF_USERNAME]
+    assert entry.unique_id == MOCK_USER_ID
     assert dict(entry.data) == {
         **config_data,
-        CONF_USERNAME: new_username,
         CONF_PASSWORD: "new_password",
     }
 
