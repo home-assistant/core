@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Marantz device has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_entity_id": "Infrared transmitter",
+          "model": "Model"
+        },
+        "data_description": {
+          "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "model": "The Marantz model to control."
+        },
+        "description": "Select the Marantz model and the infrared transmitter entity to use for controlling your Marantz device.",
+        "title": "Set up Marantz IR Remote"
+      }
+    }
+  },
+  "selector": {
+    "model": {
+      "options": {
+        "pm6006": "PM6006"
+      }
+    }
+  }
+}
