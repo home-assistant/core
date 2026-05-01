@@ -1058,7 +1058,7 @@ async def test_not_optimistic(
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_vacuum")
-async def test_clean_segments(
+async def test_clean_area(
     hass: HomeAssistant,
     calls: list[ServiceCall],
     entity_registry: er.EntityRegistry,
