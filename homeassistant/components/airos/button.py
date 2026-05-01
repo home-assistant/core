@@ -1,7 +1,5 @@
 """AirOS button component for Home Assistant."""
 
-from __future__ import annotations
-
 from airos.exceptions import AirOSException
 
 from homeassistant.components.button import (

@@ -1,7 +1,5 @@
 """Constants for the Shelly integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from logging import Logger, getLogger
 import re

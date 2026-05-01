@@ -49,8 +49,8 @@ async def test_media_player_conditions_gated_by_labs_flag(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("media_player.is_off", {}, True, True),
-        ("media_player.is_on", {}, True, False),
-        ("media_player.is_not_playing", {}, True, False),
+        ("media_player.is_on", {}, True, True),
+        ("media_player.is_not_playing", {}, True, True),
         ("media_player.is_paused", {}, True, True),
         ("media_player.is_playing", {}, True, True),
     ],

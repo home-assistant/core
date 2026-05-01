@@ -1,7 +1,5 @@
 """Infrared platform for SLZB-Ultima."""
 
-from __future__ import annotations
-
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 

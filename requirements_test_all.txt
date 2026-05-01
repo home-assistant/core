@@ -387,7 +387,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.24.2
+aioshelly==13.25.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1112,7 +1112,7 @@ hole==0.9.0
 holidays==0.95
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260429.0
+home-assistant-frontend==20260429.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1486,7 +1486,7 @@ objgraph==3.5.0
 odp-amsterdam==6.1.2
 
 # homeassistant.components.ohme
-ohme==1.7.1
+ohme==1.9.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -1531,7 +1531,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.18.1
+opower==0.18.2
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -2310,7 +2310,7 @@ python-telegram-bot[socks]==22.7
 python-xbox==0.2.0
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.5.0
+pythonkuma==0.5.1
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2807,7 +2807,7 @@ waterfurnace==1.7.1
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.2
+weatherflow4py==1.5.4
 
 # homeassistant.components.nasweb
 webio-api==0.1.12
