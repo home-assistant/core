@@ -261,6 +261,7 @@ async def test_switch_optimistic_state_on_toggle(
     assert entity_state
     assert entity_state.state == "on"
 
+
 async def test_switch_optimistic_state_reverts_on_get_camera_failure(
     hass: HomeAssistant,
 ) -> None:
@@ -273,7 +274,7 @@ async def test_switch_optimistic_state_reverts_on_get_camera_failure(
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
 
-    # Simulate async_get_camera returning None (network failure etc.)
+    # Simulate async_get_camera returning no camera data.
     client.async_get_camera = AsyncMock(return_value=None)
     # Reset set_camera so we can assert it wasn't called by our action
     client.async_set_camera.reset_mock()
