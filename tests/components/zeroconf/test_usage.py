@@ -1,7 +1,5 @@
 """Test Zeroconf multiple instance protection."""
 
-from __future__ import annotations
-
 from typing import Self
 from unittest.mock import Mock, patch
 

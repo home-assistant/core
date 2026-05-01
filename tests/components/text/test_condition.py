@@ -53,7 +53,7 @@ async def test_text_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("text.is_equal_to", {"value": "hello"}, True, False),
+        ("text.is_equal_to", {"value": "hello"}, True, True),
     ],
 )
 async def test_text_condition_options_validation(
@@ -242,9 +242,9 @@ async def test_text_condition_fires_for_both_domains(
         },
     )
 
-    assert checker(hass) is True
+    assert checker.async_check() is True
 
     # Change input_text to non-matching - all behavior should fail
     hass.states.async_set(entity_id_input_text, "world")
     await hass.async_block_till_done()
-    assert checker(hass) is False
+    assert checker.async_check() is False
