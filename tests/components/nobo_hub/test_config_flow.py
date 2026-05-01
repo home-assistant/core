@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
@@ -233,8 +235,27 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_ip"}
 
 
-async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+@pytest.mark.parametrize(
+    ("connect_outcome", "expected_error"),
+    [
+        ({"return_value": False}, "cannot_connect"),
+        ({"side_effect": ConnectionRefusedError(61, "")}, "cannot_connect_ip"),
+    ],
+    ids=["serial_mismatch", "tcp_failure"],
+)
+async def test_configure_cannot_connect(
+    hass: HomeAssistant,
+    connect_outcome: dict[str, object],
+    expected_error: str,
+) -> None:
+    """Connect failures map to distinct error keys.
+
+    pynobo's async_connect_hub returns False on a successful TCP connect
+    followed by a handshake REJECT (serial mismatch) and raises OSError
+    on TCP-level failure (wrong IP / hub offline). We surface these as
+    cannot_connect ("check serial number") and cannot_connect_ip
+    ("check IP address") respectively.
+    """
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
@@ -250,7 +271,7 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
-        return_value=False,
+        **connect_outcome,
     ) as mock_connect:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -258,7 +279,7 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
 
 
