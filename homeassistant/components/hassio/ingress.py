@@ -51,7 +51,7 @@ DISABLED_TIMEOUT = ClientTimeout(total=None)
 
 @callback
 def async_setup_ingress_view(hass: HomeAssistant) -> None:
-    """Auth setup."""
+    """Set up the Hass.io ingress HTTP view."""
     host = hass.data[DATA_HASSIO_HOST]
     websession = async_get_clientsession(hass)
 

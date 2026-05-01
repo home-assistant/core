@@ -1,6 +1,7 @@
 """Supervisor events monitor."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
@@ -180,6 +181,7 @@ class SupervisorIssues:
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
         self._supervisor_client = get_supervisor_client(hass)
+        self._disconnect: Callable[[], None] | None = None
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -352,9 +354,15 @@ class SupervisorIssues:
         """Create supervisor events listener."""
         await self._update()
 
-        async_dispatcher_connect(
+        self._disconnect = async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
+
+    def unload(self) -> None:
+        """Remove supervisor events listener."""
+        if self._disconnect is not None:
+            self._disconnect()
+            self._disconnect = None
 
     async def _update(self, _: datetime | None = None) -> None:
         """Update issues from Supervisor resolution center."""

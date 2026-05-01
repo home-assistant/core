@@ -209,9 +209,10 @@ def websocket_update_config_info(
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    connection.send_result(
-        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
-    )
+    if (config_store := hass.data.get(DATA_CONFIG_STORE)) is None:
+        connection.send_error(msg["id"], "not_loaded", "Supervisor not loaded")
+        return
+    connection.send_result(msg["id"], config_store.data.update_config.to_dict())
 
 
 @callback
@@ -230,10 +231,11 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
+    if (config_store := hass.data.get(DATA_CONFIG_STORE)) is None:
+        connection.send_error(msg["id"], "not_loaded", "Supervisor not loaded")
+        return
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    hass.data[DATA_CONFIG_STORE].update(
-        update_config=cast(HassioUpdateParametersDict, changes)
-    )
+    config_store.update(update_config=cast(HassioUpdateParametersDict, changes))
     connection.send_result(msg["id"])

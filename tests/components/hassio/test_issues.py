@@ -28,8 +28,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.hassio.const import DATA_HOST_INFO
+from homeassistant.components.hassio.issues import SupervisorIssues
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
@@ -1209,3 +1211,48 @@ async def test_supervisor_issues_addon_pwned(
             "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )
+
+
+
+async def test_supervisor_issues_unload_disconnects_listener(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test SupervisorIssues.unload() disconnects the EVENT_SUPERVISOR_EVENT listener.
+
+    After calling unload(), dispatching supervisor events must not trigger
+    the listener — preventing listener accumulation on config-entry reload.
+    """
+    mock_resolution_info(supervisor_client)
+    issues = SupervisorIssues(hass)
+    await issues.setup()
+
+    # While connected, a health_changed event updates unhealthy_reasons.
+    async_dispatcher_send(
+        hass,
+        "supervisor_event",
+        {
+            "event": "health_changed",
+            "data": {"healthy": False, "unhealthy_reasons": ["docker"]},
+        },
+    )
+    await hass.async_block_till_done()
+    assert "docker" in issues.unhealthy_reasons
+
+    # After unload(), the same event is silently ignored.
+    issues.unload()
+    async_dispatcher_send(
+        hass,
+        "supervisor_event",
+        {
+            "event": "health_changed",
+            "data": {"healthy": True},
+        },
+    )
+    await hass.async_block_till_done()
+    # unhealthy_reasons unchanged — listener did not fire.
+    assert "docker" in issues.unhealthy_reasons
+
+    # Calling unload() again is safe (idempotent).
+    issues.unload()

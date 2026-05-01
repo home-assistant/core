@@ -19,6 +19,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
+from homeassistant.components.homeassistant.const import DATA_STOP_HANDLER
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
@@ -303,19 +304,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert user is not None
     hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
 
-    # Start listening for problems with supervisor and making issues
-    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass)
-
-    async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
-        """Stop or restart home assistant."""
-        if restart:
-            await supervisor_client.homeassistant.restart()
-        else:
-            await supervisor_client.homeassistant.stop()
-
-    # Set a custom handler for the homeassistant.restart and homeassistant.stop services
-    async_set_stop_handler(hass, _async_stop)
-
     # Set up coordinators — these can raise ConfigEntryNotReady.
     # Register listeners only after all refreshes succeed to avoid accumulation
     # across retries.
@@ -335,8 +323,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await stats_coordinator.async_config_entry_first_refresh()
     hass.data[STATS_COORDINATOR] = stats_coordinator
 
-    # All coordinator data is now available. Register the ongoing config listener
-    # and kick off background tasks.
+    # All coordinators refreshed successfully. Start the issues listener and
+    # install the stop handler now so they are never left in a partial state
+    # if a coordinator refresh raises ConfigEntryNotReady.
+    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass)
+
+    async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
+        """Stop or restart home assistant."""
+        if restart:
+            await supervisor_client.homeassistant.restart()
+        else:
+            await supervisor_client.homeassistant.stop()
+
+    # Install a custom handler for the homeassistant.restart / stop services,
+    # and restore the previous one when this entry unloads.
+    prev_stop_handler = hass.data.get(DATA_STOP_HANDLER)
+    async_set_stop_handler(hass, _async_stop)
+
+    def _restore_stop_handler() -> None:
+        if prev_stop_handler is not None:
+            async_set_stop_handler(hass, prev_stop_handler)
+        else:
+            hass.data.pop(DATA_STOP_HANDLER, None)
+
+    entry.async_on_unload(_restore_stop_handler)
     last_timezone = None
     last_country = None
 
@@ -452,6 +462,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(STATS_COORDINATOR, None)
     hass.data.pop(DATA_CONFIG_STORE, None)
     hass.data.pop(DATA_HASSIO_SUPERVISOR_USER, None)
-    hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+
+    if (
+        supervisor_issues := hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+    ) is not None:
+        supervisor_issues.unload()
 
     return unload_ok
