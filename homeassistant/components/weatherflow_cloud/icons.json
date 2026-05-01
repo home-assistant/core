@@ -10,7 +10,7 @@
       "barometric_pressure": {
         "default": "mdi:gauge"
       },
-      "brightness": {
+      "illuminance": {
         "default": "mdi:brightness-5"
       },
       "dew_point": {
