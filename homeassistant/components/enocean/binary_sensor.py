@@ -1,7 +1,5 @@
 """Support for EnOcean binary sensors."""
 
-from __future__ import annotations
-
 from enocean_async import ERP1Telegram
 import voluptuous as vol
 

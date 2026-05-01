@@ -1,7 +1,5 @@
 """Config flow for Nina integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pynina import ApiError, Nina

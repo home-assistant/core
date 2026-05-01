@@ -1,7 +1,5 @@
 """The Airzone Cloud integration."""
 
-from __future__ import annotations
-
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
 

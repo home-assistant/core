@@ -1,7 +1,5 @@
 """Config flow for inkbird ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from inkbird_ble import INKBIRDBluetoothDeviceData as DeviceData

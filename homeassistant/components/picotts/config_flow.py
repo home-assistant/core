@@ -1,7 +1,5 @@
 """Config flow for Pico TTS integration."""
 
-from __future__ import annotations
-
 import shutil
 from typing import Any
 

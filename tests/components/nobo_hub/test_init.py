@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.nobo_hub import async_setup_entry
 from homeassistant.components.nobo_hub.const import (
-    CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
@@ -44,12 +43,12 @@ def _spec_hub(connect_exc: BaseException | None = None) -> MagicMock:
     return hub
 
 
-async def test_setup_manual_entry_uses_stored_ip(
+async def test_setup_uses_stored_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
 ) -> None:
-    """Manual entry connects using the stored IP without rediscovery."""
+    """Setup connects using the stored IP without invoking rediscovery."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -60,49 +59,11 @@ async def test_setup_manual_entry_uses_stored_ip(
     mock_nobo_class.async_discover_hubs.assert_not_called()
 
 
-@pytest.mark.parametrize("auto_discovered", [True])
-async def test_setup_autodiscovered_entry_uses_stored_ip(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_nobo_class: MagicMock,
-) -> None:
-    """Auto-discovered entry with a working stored IP does not rediscover."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_nobo_class.async_discover_hubs.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    "connect_exc",
-    [OSError("Unreachable"), TimeoutError("Handshake timed out")],
-)
-async def test_setup_manual_entry_connection_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_nobo_class: MagicMock,
-) -> None:
-    """Manual entry raises ConfigEntryNotReady on socket errors or timeouts."""
-    mock_config_entry.add_to_hass(hass)
-    with pytest.raises(ConfigEntryNotReady) as exc_info:
-        await async_setup_entry(hass, mock_config_entry)
-
-    assert exc_info.value.translation_key == "cannot_connect_manual"
-    assert exc_info.value.translation_placeholders == {
-        "serial": SERIAL,
-        "ip": STORED_IP,
-    }
-    mock_nobo_class.async_discover_hubs.assert_not_called()
-
-
-@pytest.mark.parametrize("auto_discovered", [True])
-async def test_setup_autodiscovered_rediscovery_updates_ip(
+async def test_setup_rediscovery_updates_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Auto-discovered entry recovers via rediscovery and persists the new IP."""
+    """A failed direct connect falls back to rediscovery and persists the new IP."""
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
         mock_cls.side_effect = [
@@ -121,30 +82,26 @@ async def test_setup_autodiscovered_rediscovery_updates_ip(
 
 
 @pytest.mark.parametrize(
-    (
-        "discovered_hubs",
-        "rediscovered_connect_fails",
-        "expected_key",
-        "expected_placeholders",
-        "auto_discovered",
-    ),
+    ("discovered_hubs", "second_exc", "expected_placeholders"),
     [
-        (set(), False, "hub_not_found", {"serial": SERIAL}, True),
-        ({(NEW_IP, SERIAL)}, True, "cannot_connect_rediscovered", {"ip": NEW_IP}, True),
+        (set(), None, {"serial": SERIAL, "ip": STORED_IP}),
+        (
+            {(NEW_IP, SERIAL)},
+            OSError("Unreachable"),
+            {"serial": SERIAL, "ip": NEW_IP},
+        ),
     ],
     ids=["rediscovery_empty", "rediscovered_ip_fails"],
 )
-async def test_setup_autodiscovered_rediscovery_failure(
+async def test_setup_rediscovery_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     discovered_hubs: set[tuple[str, str]],
-    rediscovered_connect_fails: bool,
-    expected_key: str,
+    second_exc: BaseException | None,
     expected_placeholders: dict[str, str],
 ) -> None:
-    """Auto-discovered entry raises the right error when rediscovery can't recover."""
+    """Setup raises cannot_connect when rediscovery can't recover."""
     mock_config_entry.add_to_hass(hass)
-    second_exc = OSError("Unreachable") if rediscovered_connect_fails else None
     with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
         mock_cls.side_effect = [
             _spec_hub(connect_exc=OSError("Unreachable")),
@@ -154,25 +111,27 @@ async def test_setup_autodiscovered_rediscovery_failure(
         with pytest.raises(ConfigEntryNotReady) as exc_info:
             await async_setup_entry(hass, mock_config_entry)
 
-    assert exc_info.value.translation_key == expected_key
+    assert exc_info.value.translation_key == "cannot_connect"
     assert exc_info.value.translation_placeholders == expected_placeholders
 
 
 @pytest.mark.parametrize(
-    ("stored_value", "expected_value"),
+    ("stored_options", "expected_options"),
     [
-        ("Constant", "constant"),
-        ("Now", "now"),
-        ("constant", "constant"),
+        ({CONF_OVERRIDE_TYPE: "Constant"}, {CONF_OVERRIDE_TYPE: "constant"}),
+        ({CONF_OVERRIDE_TYPE: "Now"}, {CONF_OVERRIDE_TYPE: "now"}),
+        ({CONF_OVERRIDE_TYPE: "constant"}, {CONF_OVERRIDE_TYPE: "constant"}),
+        ({}, {}),
     ],
+    ids=["Constant", "Now", "already_lowercase", "no_options"],
 )
-async def test_migrate_options_lowercases_override_type(
+async def test_migrate_options(
     hass: HomeAssistant,
     mock_nobo_class: MagicMock,
-    stored_value: str,
-    expected_value: str,
+    stored_options: dict[str, str],
+    expected_options: dict[str, str],
 ) -> None:
-    """Legacy capitalized override_type values are lowercased on migration."""
+    """Migrating from minor_version 1 lowercases override_type and bumps version."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="My Eco Hub",
@@ -180,9 +139,8 @@ async def test_migrate_options_lowercases_override_type(
         data={
             CONF_SERIAL: SERIAL,
             CONF_IP_ADDRESS: STORED_IP,
-            CONF_AUTO_DISCOVERED: False,
         },
-        options={CONF_OVERRIDE_TYPE: stored_value},
+        options=stored_options,
         version=1,
         minor_version=1,
     )
@@ -190,15 +148,15 @@ async def test_migrate_options_lowercases_override_type(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
-    assert entry.options == {CONF_OVERRIDE_TYPE: expected_value}
+    assert entry.minor_version == 3
+    assert entry.options == expected_options
 
 
-async def test_migrate_options_without_override_type(
+async def test_migrate_data_drops_auto_discovered(
     hass: HomeAssistant,
     mock_nobo_class: MagicMock,
 ) -> None:
-    """Migration still bumps the version when no override_type is stored."""
+    """The auto_discovered key is stripped from entry.data on migration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="My Eco Hub",
@@ -206,16 +164,17 @@ async def test_migrate_options_without_override_type(
         data={
             CONF_SERIAL: SERIAL,
             CONF_IP_ADDRESS: STORED_IP,
-            CONF_AUTO_DISCOVERED: False,
+            "auto_discovered": True,
         },
         version=1,
-        minor_version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
+    assert entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: STORED_IP}
     assert entry.options == {}
 
 
