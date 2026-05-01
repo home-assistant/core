@@ -51,7 +51,7 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         value = self._element.value
         if isinstance(value, tuple):
-            self._attr_native_value = dt_time(hour=value[0], minute=value[1])
+            self._attr_native_value = dt_time(hour=value[0], minute=value[1])  # type: ignore[unreachable]
         else:
             self._attr_available = False
             raise HomeAssistantError("setting type no longer matches the panel")

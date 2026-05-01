@@ -64,7 +64,7 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
         # Guard against the panel possibly have changing the underlying
         # type and we don't know about the change
         if isinstance(self._element.value, int):
-            self._attr_native_value = self._element.value
+            self._attr_native_value = self._element.value  # type: ignore[unreachable]
         else:
             self._attr_available = False
             raise HomeAssistantError("setting type no longer matches the panel")
