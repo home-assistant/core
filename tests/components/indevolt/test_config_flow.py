@@ -10,17 +10,18 @@ from homeassistant.components.indevolt.const import (
     CONF_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DISCOVERY,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST
+from .conftest import ALT_TEST_HOST, TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_MODEL_GEN2
 
 from tests.common import MockConfigEntry
-
-# Used to mock host change
-TEST_HOST_NEW = "192.168.1.200"
 
 
 async def test_user_flow_success(
@@ -44,11 +45,11 @@ async def test_user_flow_success(
 
     # Verify entry is created with correct data
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "INDEVOLT CMS-SF2000"
+    assert result["title"] == f"INDEVOLT {TEST_MODEL_GEN2}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_SERIAL_NUMBER: TEST_DEVICE_SN_GEN2,
-        CONF_MODEL: "CMS-SF2000",
+        CONF_MODEL: TEST_MODEL_GEN2,
         CONF_GENERATION: 2,
     }
     assert result["result"].unique_id == TEST_DEVICE_SN_GEN2
@@ -95,7 +96,7 @@ async def test_user_flow_error(
 
     # Verify entry is created with correct data
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "INDEVOLT CMS-SF2000"
+    assert result["title"] == f"INDEVOLT {TEST_MODEL_GEN2}"
 
 
 async def test_user_flow_duplicate_entry(
@@ -138,10 +139,8 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock new host input
-    new_host = TEST_HOST_NEW
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: new_host}
+        result["flow_id"], {CONF_HOST: ALT_TEST_HOST}
     )
 
     # Verify flow is aborted
@@ -152,7 +151,7 @@ async def test_reconfigure_flow_success(
     await hass.async_block_till_done()
 
     # Verify entry is updated
-    assert mock_config_entry.data[CONF_HOST] == new_host
+    assert mock_config_entry.data[CONF_HOST] == ALT_TEST_HOST
     assert mock_config_entry.data[CONF_SERIAL_NUMBER] == TEST_DEVICE_SN_GEN2
 
 
@@ -233,7 +232,7 @@ async def test_reconfigure_flow_different_device(
 
     # Configure mock to cause host collision with different device
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST_NEW}
+        result["flow_id"], {CONF_HOST: ALT_TEST_HOST}
     )
 
     # Verify flow is aborted with correct reason
@@ -242,3 +241,100 @@ async def test_reconfigure_flow_different_device(
 
     # Flush pending tasks
     await hass.async_block_till_done()
+
+
+async def test_discovery_flow_success(
+    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test successful discovery flow."""
+    # Verify confirmation form is returned with correct device info
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data={"host": TEST_HOST},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"][CONF_HOST] == TEST_HOST
+    assert result["description_placeholders"][CONF_MODEL] == TEST_MODEL_GEN2
+
+    # Verify entry is created with correct data
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"INDEVOLT {TEST_MODEL_GEN2}"
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_SERIAL_NUMBER: TEST_DEVICE_SN_GEN2,
+        CONF_MODEL: TEST_MODEL_GEN2,
+        CONF_GENERATION: 2,
+    }
+    assert result["result"].unique_id == TEST_DEVICE_SN_GEN2
+
+
+async def test_discovery_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
+) -> None:
+    """Test discovery aborts if already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Verify flow is aborted if device is already configured
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data={"host": TEST_HOST},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_discovery_ip_change(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
+) -> None:
+    """Test discovery updates config entry host if the device moved to a new IP."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+
+    # Verify flow is aborted on ip change and existing entry host is updated
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data={"host": ALT_TEST_HOST},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == ALT_TEST_HOST
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (TimeoutError, "cannot_connect"),
+        (ConnectionError, "cannot_connect"),
+        (ClientError, "cannot_connect"),
+    ],
+)
+async def test_discovery_cannot_connect(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    exception: type[Exception],
+    reason: str,
+) -> None:
+    """Test discovery aborts on connection errors."""
+
+    # Initiate discovery flow with exception
+    mock_indevolt.get_config.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data={"host": TEST_HOST},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason

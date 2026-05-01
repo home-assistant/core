@@ -21,6 +21,12 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._discovered_host: str | None = None
+        self._discovered_device_data: dict[str, Any] | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -81,6 +87,53 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry.data,
             ),
             errors=errors,
+        )
+
+    async def async_step_discovery(
+        self, discovery_info: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle UDP broadcast discovery."""
+        host = discovery_info["host"]
+
+        try:
+            device_data = await self._async_get_device_data(host)
+        except TimeoutError, ConnectionError, ClientError:
+            _LOGGER.warning("Failed to connect to discovered device at %s", host)
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        self.context["title_placeholders"] = {"name": device_data[CONF_MODEL]}
+        self._discovered_host = host
+        self._discovered_device_data = device_data
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm UDP discovery by user."""
+        assert self._discovered_host is not None
+        assert self._discovered_device_data is not None
+
+        # Attempt to setup from user input
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"INDEVOLT {self._discovered_device_data[CONF_MODEL]}",
+                data={
+                    CONF_HOST: self._discovered_host,
+                    **self._discovered_device_data,
+                },
+            )
+
+        # Retrieve user confirmation
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={
+                CONF_HOST: self._discovered_host,
+                CONF_MODEL: self._discovered_device_data[CONF_MODEL],
+            },
         )
 
     async def _async_validate_input(

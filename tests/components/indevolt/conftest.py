@@ -1,7 +1,7 @@
 """Setup the Indevolt test environment."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -19,18 +19,20 @@ ALT_TEST_HOST = "192.168.1.101"
 TEST_PORT = 8080
 TEST_DEVICE_SN_GEN1 = "BK1600-12345678"
 TEST_DEVICE_SN_GEN2 = "SolidFlex2000-87654321"
+TEST_MODEL_GEN1 = "BK1600"
+TEST_MODEL_GEN2 = "CMS-SF2000"
 TEST_FW_VERSION = "1.2.3"
 
 # Map device fixture names to generation and fixture files
 DEVICE_MAPPING = {
     1: {
-        "device": "BK1600",
+        "device": TEST_MODEL_GEN1,
         "generation": 1,
         "sn": TEST_DEVICE_SN_GEN1,
         "host": ALT_TEST_HOST,
     },
     2: {
-        "device": "CMS-SF2000",
+        "device": TEST_MODEL_GEN2,
         "generation": 2,
         "sn": TEST_DEVICE_SN_GEN2,
         "host": TEST_HOST,
@@ -136,3 +138,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture(autouse=True)
+def mock_udp_discovery() -> Generator[None]:
+    """Mock UDP socket creation to prevent blocking sockets in tests."""
+    mock_transport = MagicMock()
+    with patch(
+        "asyncio.BaseEventLoop.create_datagram_endpoint",
+        new_callable=AsyncMock,
+        return_value=(mock_transport, mock_transport),
+    ):
+        yield
