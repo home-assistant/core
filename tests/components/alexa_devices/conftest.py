@@ -60,8 +60,8 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
         client.routines = ["Test Routine"]
-        client.start_http2_thread = AsyncMock()
-        client.stop_http2_thread = AsyncMock()
+        client.start_http2_processing = AsyncMock()
+        client.stop_http2_processing = AsyncMock()
         client.sync_media_state = AsyncMock()
         client.send_sound_notification = AsyncMock()
         yield client

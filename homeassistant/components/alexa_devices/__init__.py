@@ -1,5 +1,7 @@
 """Alexa Devices integration."""
 
+import asyncio
+
 import httpx
 
 from homeassistant.const import CONF_COUNTRY, Platform
@@ -45,7 +47,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
         timeout=httpx.Timeout(None),
     )
-    await coordinator.api.start_http2_processing(alexa_httpx_client)
+    http2_task = await coordinator.api.start_http2_processing(alexa_httpx_client)
+
+    def _on_http2_task_done(task: asyncio.Task) -> None:
+        if not task.cancelled() and task.exception():
+            _LOGGER.exception("HTTP2 task failed", exc_info=task.exception())
+
+    http2_task.add_done_callback(_on_http2_task_done)
+
+    async def _cancel_http2_task() -> None:
+        # needed to avoid typing issues with async_on_unload
+        http2_task.cancel()
+
+    entry.async_on_unload(_cancel_http2_task)
 
     entry.runtime_data = coordinator
 
