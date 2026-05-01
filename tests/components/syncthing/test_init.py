@@ -61,7 +61,7 @@ async def test_syncthing_client_event_listener(
     )
 
     async def mock_listen():
-        """Mock events.listen that yields all events and then loops indefinitely without blocking."""
+        """Mock events.listen that yields all events and then waits for cancellation."""
         for event in events:
             await asyncio.sleep(0)
             yield event
