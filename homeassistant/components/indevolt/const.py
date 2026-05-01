@@ -11,7 +11,7 @@ from indevolt_api import (
 )
 
 DOMAIN: Final = "indevolt"
-UDP_DISCOVERY_PORT = 8099
+UDP_DISCOVERY_PORT: Final[int] = 8099
 
 # Default configurations
 DEFAULT_PORT: Final = 8080
