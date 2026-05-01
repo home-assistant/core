@@ -10,9 +10,6 @@
       "barometric_pressure": {
         "default": "mdi:gauge"
       },
-      "illuminance": {
-        "default": "mdi:brightness-5"
-      },
       "dew_point": {
         "default": "mdi:water-percent"
       },
@@ -21,6 +18,9 @@
       },
       "heat_index": {
         "default": "mdi:sun-thermometer"
+      },
+      "illuminance": {
+        "default": "mdi:brightness-5"
       },
       "lightning_strike_count": {
         "default": "mdi:lightning-bolt"

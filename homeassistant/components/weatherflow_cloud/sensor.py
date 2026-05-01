@@ -177,7 +177,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         key="uv",
         translation_key="uv_index",
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         value_fn=lambda data: data.uv,
         native_unit_of_measurement=UV_INDEX,
     ),
