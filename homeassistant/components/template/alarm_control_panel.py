@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
@@ -20,8 +19,6 @@ from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
     CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -74,10 +71,6 @@ class TemplateCodeFormat(Enum):
     text = CodeFormat.TEXT
 
 
-LEGACY_FIELDS = {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
-
 SCRIPT_FIELDS = (
     CONF_ARM_AWAY_ACTION,
     CONF_ARM_CUSTOM_BYPASS_ACTION,
@@ -113,33 +106,6 @@ ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     make_template_entity_common_modern_schema(
         ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME
     ).schema
-)
-
-ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
-            TemplateCodeFormat
-        ),
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    }
-)
-
-PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
-            ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA
-        ),
-    }
 )
 
 ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
@@ -179,8 +145,6 @@ async def async_setup_platform(
         TriggerAlarmControlPanelEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_ALARM_CONTROL_PANELS,
         script_options=SCRIPT_FIELDS,
     )
 

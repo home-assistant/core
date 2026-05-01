@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.template.alarm_control_panel import (
-    LEGACY_FIELDS as ALARM_CONTROL_PANEL_LEGACY_FIELDS,
     SCRIPT_FIELDS as ALARM_CONTROL_PANEL_SCRIPT_FIELDS,
 )
 from homeassistant.components.template.binary_sensor import (
@@ -132,13 +131,6 @@ async def test_legacy_to_modern_config(
 @pytest.mark.parametrize(
     ("domain", "legacy_fields", "old_attr", "new_attr", "attr_template"),
     [
-        (
-            "alarm_control_panel",
-            ALARM_CONTROL_PANEL_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
         (
             "binary_sensor",
             BINARY_SENSOR_LEGACY_FIELDS,
@@ -951,20 +943,6 @@ async def test_platform_not_ready(
                 ]
             },
             "undocumented_configuration",
-        ),
-        (
-            "alarm_control_panel",
-            {
-                "alarm_control_panel": {
-                    "platform": "template",
-                    "panels": {
-                        "safe_alarm_panel": {
-                            "value_template": "{{ 'armed_away' }}",
-                        }
-                    },
-                },
-            },
-            "safe_alarm_panel",
         ),
         (
             "binary_sensor",
