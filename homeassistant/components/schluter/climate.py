@@ -62,6 +62,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name="schluter",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
