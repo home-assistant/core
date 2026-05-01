@@ -1,7 +1,5 @@
 """Support for ReCollect Waste sensors."""
 
-from __future__ import annotations
-
 from datetime import date
 
 from homeassistant.components.sensor import (

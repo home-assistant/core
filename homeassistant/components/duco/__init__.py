@@ -1,7 +1,5 @@
 """The Duco integration."""
 
-from __future__ import annotations
-
 from duco import DucoClient, build_ssl_context
 
 from homeassistant.const import CONF_HOST

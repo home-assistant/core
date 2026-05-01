@@ -1,7 +1,5 @@
 """Reolink Integration views."""
 
-from __future__ import annotations
-
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from http import HTTPStatus
 import logging
