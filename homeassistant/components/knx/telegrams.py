@@ -1,8 +1,13 @@
 """KNX Telegram handler."""
 
-from collections import deque
-from typing import Final, TypedDict
+from __future__ import annotations
 
+from collections import deque
+import logging
+from typing import TypedDict
+
+from knx_telegram_store import StoredTelegram
+from knx_telegram_store.backends.memory import MemoryStore
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt import DPTComplexData, DPTEnumData
@@ -12,15 +17,12 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 
-from .const import DOMAIN
 from .project import KNXProject
 
-STORAGE_VERSION: Final = 1
-STORAGE_KEY: Final = f"{DOMAIN}/telegrams_history.json"
+_LOGGER = logging.getLogger(__name__)
 
 # dispatcher signal for KNX interface device triggers
 SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
@@ -67,9 +69,7 @@ class Telegrams:
         """Initialize Telegrams class."""
         self.hass = hass
         self.project = project
-        self._history_store = Store[list[TelegramDict]](
-            hass, STORAGE_VERSION, STORAGE_KEY
-        )
+        self.store = MemoryStore(max_telegrams=log_size)
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
                 telegram_received_cb=self._xknx_telegram_cb,
@@ -86,24 +86,11 @@ class Telegrams:
 
     async def load_history(self) -> None:
         """Load history from store."""
-        if (telegrams := await self._history_store.async_load()) is None:
-            return
-        if self.recent_telegrams.maxlen == 0:
-            await self._history_store.async_remove()
-            return
-        for telegram in telegrams:
-            # tuples are stored as lists in JSON
-            if isinstance(telegram["payload"], list):
-                telegram["payload"] = tuple(telegram["payload"])  # type: ignore[unreachable]
-        self.recent_telegrams.extend(telegrams)
-        self.last_ga_telegrams = {
-            t["destination"]: t for t in telegrams if t["payload"] is not None
-        }
+        await self.store.initialize()
 
-    async def save_history(self) -> None:
-        """Save history to store."""
-        if self.recent_telegrams:
-            await self._history_store.async_save(list(self.recent_telegrams))
+    async def stop(self) -> None:
+        """Stop history store."""
+        await self.store.close()
 
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
@@ -112,12 +99,26 @@ class Telegrams:
         if telegram_dict["payload"] is not None:
             # exclude GroupValueRead telegrams
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
+
+        # Store in history store asynchronously
+        if self.recent_telegrams.maxlen != 0:
+            self.hass.async_create_task(
+                self.store.store(self.dict_to_model(telegram_dict))
+            )
+
         async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
 
     def _xknx_data_secure_group_key_issue_cb(self, telegram: Telegram) -> None:
         """Handle telegrams with undecodable data secure payload from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
+
+        # Store in history store asynchronously
+        if self.recent_telegrams.maxlen != 0:
+            self.hass.async_create_task(
+                self.store.store(self.dict_to_model(telegram_dict))
+            )
+
         async_dispatcher_send(
             self.hass, SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM, telegram, telegram_dict
         )
@@ -166,6 +167,43 @@ class Telegrams:
             timestamp=dt_util.now().isoformat(),
             unit=transcoder.unit if transcoder is not None else None,
             value=value,
+        )
+
+    def dict_to_model(self, t: TelegramDict) -> StoredTelegram:
+        """Convert a TelegramDict to a StoredTelegram model."""
+        return StoredTelegram(
+            timestamp=dt_util.parse_datetime(t["timestamp"]) or dt_util.now(),
+            source=t["source"],
+            destination=t["destination"],
+            direction=t["direction"],
+            telegramtype=t["telegramtype"],
+            payload=t["payload"],
+            value=t["value"] if isinstance(t["value"], (int, float, bool)) else None,
+            dpt_main=t["dpt_main"],
+            dpt_sub=t["dpt_sub"],
+            unit=t["unit"],
+            source_name=t["source_name"],
+            destination_name=t["destination_name"],
+            data_secure=t["data_secure"],
+        )
+
+    def model_to_dict(self, m: StoredTelegram) -> TelegramDict:
+        """Convert a StoredTelegram model to a TelegramDict."""
+        return TelegramDict(
+            timestamp=m.timestamp.isoformat(),
+            source=m.source,
+            destination=m.destination,
+            direction=m.direction,
+            telegramtype=m.telegramtype,
+            payload=m.payload,
+            value=m.value,
+            dpt_main=m.dpt_main,
+            dpt_sub=m.dpt_sub,
+            dpt_name=None,  # Not stored, could be resolved if needed
+            unit=m.unit,
+            source_name=m.source_name,
+            destination_name=m.destination_name,
+            data_secure=m.data_secure,
         )
 
 

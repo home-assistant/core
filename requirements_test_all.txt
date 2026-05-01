@@ -1244,6 +1244,9 @@ knocki==0.4.2
 # homeassistant.components.knx
 knx-frontend==2026.4.30.60856
 
+# homeassistant.components.knx
+knx-telegram-store==0.1.0
+
 # homeassistant.components.konnected
 konnected==1.2.0
 

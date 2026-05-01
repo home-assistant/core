@@ -1,5 +1,7 @@
 """KNX Websocket API."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
 from functools import wraps
@@ -7,6 +9,7 @@ import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
+from knx_telegram_store import TelegramQuery
 import voluptuous as vol
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
@@ -56,6 +59,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_group_telegrams)
+    websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
     websocket_api.async_register_command(hass, ws_validate_entity)
@@ -322,6 +326,58 @@ def ws_group_telegrams(
     connection.send_result(
         msg["id"],
         knx.telegrams.last_ga_telegrams,
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/query_telegrams",
+        vol.Optional("sources"): [str],
+        vol.Optional("destinations"): [str],
+        vol.Optional("telegram_types"): [str],
+        vol.Optional("directions"): [str],
+        vol.Optional("dpt_mains"): [vol.Coerce(int)],
+        vol.Optional("start_time"): vol.Datetime(),
+        vol.Optional("end_time"): vol.Datetime(),
+        vol.Optional("delta_before_ms"): vol.Coerce(int),
+        vol.Optional("delta_after_ms"): vol.Coerce(int),
+        vol.Optional("limit"): vol.Coerce(int),
+        vol.Optional("offset"): vol.Coerce(int),
+        vol.Optional("order_descending"): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_query_telegrams(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle query telegrams command."""
+    query = TelegramQuery(
+        sources=msg.get("sources", []),
+        destinations=msg.get("destinations", []),
+        telegram_types=msg.get("telegram_types", []),
+        directions=msg.get("directions", []),
+        dpt_mains=msg.get("dpt_mains", []),
+        start_time=msg.get("start_time"),
+        end_time=msg.get("end_time"),
+        delta_before_ms=msg.get("delta_before_ms", 0),
+        delta_after_ms=msg.get("delta_after_ms", 0),
+        limit=msg.get("limit", 25_000),
+        offset=msg.get("offset", 0),
+        order_descending=msg.get("order_descending", True),
+    )
+    result = await knx.telegrams.store.query(query)
+    connection.send_result(
+        msg["id"],
+        {
+            "telegrams": [knx.telegrams.model_to_dict(t) for t in result.telegrams],
+            "total_count": result.total_count,
+            "limit_reached": result.limit_reached,
+        },
     )
 
 

@@ -131,7 +131,7 @@ class KNXModule:
     async def stop(self, event: Event | None = None) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
-        await self.telegrams.save_history()
+        await self.telegrams.stop()
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
