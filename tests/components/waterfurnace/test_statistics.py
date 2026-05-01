@@ -82,14 +82,14 @@ async def _trigger_energy_poll(
     """Advance time to trigger an energy poll."""
     freezer.tick(ENERGY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     # The coordinator reads from the recorder on an executor thread, then
     # calls async_add_external_statistics which queues a write back to the
     # recorder thread. A single flush isn't enough because the write is
     # queued after the event loop task completes. Flush twice to ensure the
     # full event-loop → recorder → event-loop → recorder chain settles.
     await async_wait_recording_done(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
 
 
