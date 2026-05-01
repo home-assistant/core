@@ -25,12 +25,13 @@ async def test_configure_with_discover(
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
-    ):
+    ) as mock_discover:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+    mock_discover.assert_awaited_once_with(autodiscover_wait=5.0)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

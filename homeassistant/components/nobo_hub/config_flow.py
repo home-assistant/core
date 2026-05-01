@@ -23,6 +23,8 @@ from .const import (
     DOMAIN,
     OVERRIDE_TYPE_CONSTANT,
     OVERRIDE_TYPE_NOW,
+    SERIAL_LENGTH,
+    SERIAL_PREFIX_LENGTH,
 )
 
 DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
@@ -50,7 +52,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             # Hide hubs that already have a config entry. Include matching on IP
             # as serial prefix is not unique.
             configured = {
-                (entry.data[CONF_IP_ADDRESS], entry.unique_id[:9])
+                (entry.data[CONF_IP_ADDRESS], entry.unique_id[:SERIAL_PREFIX_LENGTH])
                 for entry in self._async_current_entries(include_ignore=False)
                 if entry.unique_id
             }
@@ -157,7 +159,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _test_connection(self, serial: str, ip_address: str) -> str:
-        if not len(serial) == 12 or not serial.isdigit():
+        if len(serial) != SERIAL_LENGTH or not serial.isdigit():
             raise NoboHubConnectError("invalid_serial")
         try:
             socket.inet_aton(ip_address)
