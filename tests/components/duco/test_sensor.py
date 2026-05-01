@@ -312,7 +312,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_unknown_node_warning_logged_once(
+async def test_unknown_node_logged_at_debug(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -320,7 +320,7 @@ async def test_unknown_node_warning_logged_once(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a WARNING for UNKNOWN nodes is emitted only once, then demoted to DEBUG."""
+    """Test that UNKNOWN nodes are logged at DEBUG level on every coordinator update."""
     unknown_node = Node(
         node_id=99,
         general=NodeGeneralInfo(
@@ -348,12 +348,11 @@ async def test_unknown_node_warning_logged_once(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "has an unsupported device type" in caplog.text
-    caplog.clear()
+    assert "has an unsupported device type" not in caplog.text
 
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.duco"):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "has an unsupported device type" not in caplog.text
+    assert "has an unsupported device type" in caplog.text

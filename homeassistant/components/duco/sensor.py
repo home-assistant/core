@@ -164,7 +164,6 @@ async def async_setup_entry(
     # can detect both newly added and stale (deregistered) nodes on every
     # coordinator update.
     known_nodes: set[int] = set()
-    warned_unknown_nodes: set[int] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -186,7 +185,6 @@ async def async_setup_entry(
                         remove_config_entry_id=entry.entry_id,
                     )
             known_nodes.difference_update(stale_node_ids)
-            warned_unknown_nodes.difference_update(stale_node_ids)
 
         new_entities: list[SensorEntity] = []
         for node in coordinator.data.nodes.values():
@@ -197,24 +195,14 @@ async def async_setup_entry(
                 # on every coordinator update. This allows entities to be
                 # created automatically once a firmware update or library
                 # update adds support for the device type.
-                if node.node_id not in warned_unknown_nodes:
-                    _LOGGER.warning(
-                        "Duco node %s (%s) has an unsupported device type and will be "
-                        "ignored for this update; it will be retried on subsequent "
-                        "coordinator updates once its type becomes supported",
-                        node.node_id,
-                        node.general.name,
-                    )
-                    warned_unknown_nodes.add(node.node_id)
-                else:
-                    _LOGGER.debug(
-                        "Duco node %s (%s) still has an unsupported device type",
-                        node.node_id,
-                        node.general.name,
-                    )
+                _LOGGER.debug(
+                    "Duco node %s (%s) has an unsupported device type and will be "
+                    "retried on subsequent coordinator updates",
+                    node.node_id,
+                    node.general.name,
+                )
                 continue
             known_nodes.add(node.node_id)
-            warned_unknown_nodes.discard(node.node_id)
             new_entities.extend(
                 DucoSensorEntity(coordinator, node, description)
                 for description in SENSOR_DESCRIPTIONS
