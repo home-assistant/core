@@ -81,9 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     # Prefer the already-connected instance passed from the config flow so that
     # we do not force a disconnect/reboot between connection validation and setup.
     # Falls back to creating a fresh instance on HA restart or reload.
-    pyvlx: PyVLX = hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).pop(
-        host, PyVLX(host=host, password=password)
-    )
+    pyvlx: PyVLX | None = hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).pop(host, None)
+    if pyvlx is None:
+        pyvlx = PyVLX(host=host, password=password)
 
     try:
         LOGGER.debug("Ensuring connection to Velux gateway %s", host)
