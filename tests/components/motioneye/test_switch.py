@@ -275,7 +275,7 @@ async def test_switch_optimistic_state_reverts_on_get_camera_failure(
     await setup_mock_motioneye_config_entry(hass, client=client)
 
     # Simulate async_get_camera returning no camera data.
-    client.async_get_camera = AsyncMock(return_value={})
+    client.async_get_camera = AsyncMock(return_value=None)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
