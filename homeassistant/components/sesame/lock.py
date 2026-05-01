@@ -1,7 +1,5 @@
 """Support for Sesame, by CANDY HOUSE."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pysesame2

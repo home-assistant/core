@@ -1,7 +1,5 @@
 """Support for Tuya buttons."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.button import (
     ButtonDefinition,
     get_default_definition,

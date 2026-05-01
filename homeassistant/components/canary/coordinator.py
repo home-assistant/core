@@ -1,7 +1,5 @@
 """Provides the Canary DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import ValuesView
 from datetime import timedelta

@@ -1,7 +1,5 @@
 """Hassfest utils."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Iterable, Mapping
 import shutil
 import subprocess

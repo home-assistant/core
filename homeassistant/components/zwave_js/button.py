@@ -1,7 +1,5 @@
 """Representation of Z-Wave buttons."""
 
-from __future__ import annotations
-
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
