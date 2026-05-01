@@ -109,7 +109,7 @@ async def test_configure_skips_user_step_when_all_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Flow lands on manual step when every discovered hub's IP is already configured."""
+    """Flow lands on manual step when every discovered hub matches a configured (IP, prefix) pair."""
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="111111111012",
