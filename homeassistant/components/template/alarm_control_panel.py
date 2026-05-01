@@ -51,7 +51,6 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_ARM_AWAY_ACTION = "arm_away"
 CONF_ARM_CUSTOM_BYPASS_ACTION = "arm_custom_bypass"
 CONF_ARM_HOME_ACTION = "arm_home"
