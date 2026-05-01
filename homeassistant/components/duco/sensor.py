@@ -167,6 +167,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
+        """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
@@ -190,14 +191,19 @@ async def async_setup_entry(
         for node in coordinator.data.nodes.values():
             if node.node_id in known_nodes:
                 continue
-            known_nodes.add(node.node_id)
             if node.general.node_type == NodeType.UNKNOWN:
-                _LOGGER.warning(
-                    "Duco node %s (%s) has an unsupported device type and will be ignored",
+                # Do not add the node to known_nodes so that it is re-evaluated
+                # on every coordinator update. This allows entities to be
+                # created automatically once a firmware update or library
+                # update adds support for the device type.
+                _LOGGER.debug(
+                    "Duco node %s (%s) has an unsupported device type and will be "
+                    "retried on subsequent coordinator updates",
                     node.node_id,
                     node.general.name,
                 )
                 continue
+            known_nodes.add(node.node_id)
             new_entities.extend(
                 DucoSensorEntity(coordinator, node, description)
                 for description in SENSOR_DESCRIPTIONS
