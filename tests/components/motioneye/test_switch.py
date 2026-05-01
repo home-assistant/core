@@ -275,6 +275,8 @@ async def test_switch_optimistic_state_reverts_on_get_camera_failure(
 
     # Simulate async_get_camera returning None (network failure etc.)
     client.async_get_camera = AsyncMock(return_value=None)
+    # Reset set_camera so we can assert it wasn't called by our action
+    client.async_set_camera.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -283,7 +285,7 @@ async def test_switch_optimistic_state_reverts_on_get_camera_failure(
         blocking=True,
     )
 
-    # async_set_camera should NOT have been called since GET failed.
+    # async_set_camera should NOT have been called since GET returned None.
     client.async_set_camera.assert_not_called()
 
     # Coordinator should have been asked to refresh to revert optimistic state.
