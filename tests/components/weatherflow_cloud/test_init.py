@@ -64,30 +64,20 @@ async def test_setup_failure_cleans_up_websocket(
     mock_websocket_api.close.assert_awaited_once()
 
 
-async def test_setup_failure_logs_websocket_cleanup_failure(
+async def test_websocket_connect_failure_sets_entry_setup_error(
     hass: HomeAssistant,
     mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cleanup failures are logged during partial setup cleanup."""
+    """Test websocket connection failure sets the entry setup error state."""
     mock_config_entry.add_to_hass(hass)
-    mock_websocket_api.stop_all_listeners.side_effect = RuntimeError("cleanup failed")
+    mock_websocket_api.connect.side_effect = OSError("connect failed")
 
-    with (
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            side_effect=RuntimeError("setup failed"),
-        ),
-        patch("homeassistant.components.weatherflow_cloud.LOGGER.exception") as logger,
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert mock_config_entry.state is not ConfigEntryState.LOADED
-    mock_websocket_api.stop_all_listeners.assert_awaited_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_websocket_api.connect.assert_awaited_once()
+    mock_websocket_api.stop_all_listeners.assert_not_awaited()
     mock_websocket_api.close.assert_not_awaited()
-    logger.assert_called_once_with(
-        "Error while cleaning up WeatherFlow websocket after setup failure"
-    )
