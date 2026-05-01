@@ -375,7 +375,7 @@ async def test_single_device_execution_failure(
     await setup_integration(hass, mock_config_entry)
 
     # Simulate an API push failure
-    mock_indevolt.set_data.side_effect = HomeAssistantError("Device push failed")
+    mock_indevolt.set_data.side_effect = OSError("Device push failed")
 
     # Mock call to start charging
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -391,8 +391,7 @@ async def test_single_device_execution_failure(
         )
 
     # Verify correct translation key is used for the error (for single coordinator)
-    assert str(exc_info.value) == "Device push failed"
-    assert exc_info.value.translation_key is None
+    assert exc_info.value.translation_key == "failed_to_switch_energy_mode"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -410,7 +409,7 @@ async def test_multi_device_execution_failure(
     await setup_integration(hass, alt_mock_config_entry)
 
     # Simulate an API push failure (triggers for both coordinators)
-    mock_indevolt.set_data.side_effect = HomeAssistantError("Device push failed")
+    mock_indevolt.set_data.side_effect = OSError("Device push failed")
 
     # Mock call to start charging both devices
     with pytest.raises(HomeAssistantError) as exc_info:
