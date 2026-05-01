@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
+
+from duco.exceptions import DucoConnectionError
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
@@ -17,6 +20,21 @@ def async_register(
 ) -> None:
     """Register system health callbacks."""
     register.async_register_info(system_health_info)
+
+
+async def _async_get_write_requests_remaining(
+    config_entry: DucoConfigEntry,
+) -> int | dict[str, str]:
+    """Get the remaining write-request quota for system health."""
+    try:
+        async with asyncio.timeout(5):
+            return (
+                await config_entry.runtime_data.client.async_get_write_req_remaining()
+            )
+    except TimeoutError:
+        return {"type": "failed", "error": "timeout"}
+    except DucoConnectionError:
+        return {"type": "failed", "error": "unreachable"}
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
@@ -36,8 +54,9 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     # Exposed via system_health rather than as a diagnostic entity because it
     # reflects the state of how the integration communicates with the device
     # (API quota), not a device-internal subsystem state.
+    # Wrap the live quota fetch here because system health only bounds the
+    # initial info callback. Returned coroutines are awaited later without a
+    # per-field timeout.
     return {
-        "write_requests_remaining": (
-            config_entry.runtime_data.client.async_get_write_req_remaining()
-        )
+        "write_requests_remaining": _async_get_write_requests_remaining(config_entry)
     }
