@@ -11,7 +11,6 @@ from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.components.ohme.services import (
     ATTR_CONFIG_ENTRY,
     ATTR_PRICE_CAP,
-    ATTR_STATE_OF_CHARGE,
     SERVICE_LIST_CHARGE_SLOTS,
 )
 from homeassistant.core import HomeAssistant
@@ -73,29 +72,6 @@ async def test_set_price_cap(
     )
 
     mock_client.async_change_price_cap.assert_called_once_with(cap=10.0)
-
-
-async def test_set_state_of_charge(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test set state of charge service."""
-
-    await setup_integration(hass, mock_config_entry)
-    mock_client.async_set_state_of_charge = AsyncMock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_state_of_charge",
-        {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
-            ATTR_STATE_OF_CHARGE: 80.0,
-        },
-        blocking=True,
-    )
-
-    mock_client.async_set_state_of_charge.assert_called_once_with(80.0)
 
 
 async def test_list_charge_slots_exception(

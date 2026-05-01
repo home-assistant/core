@@ -19,7 +19,6 @@ from .coordinator import OhmeConfigEntry
 
 ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_PRICE_CAP: Final = "price_cap"
-ATTR_STATE_OF_CHARGE: Final = "state_of_charge"
 
 SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
 SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
@@ -41,18 +40,6 @@ SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
             }
         ),
         vol.Required(ATTR_PRICE_CAP): vol.Coerce(float),
-    }
-)
-
-SERVICE_SET_STATE_OF_CHARGE = "set_state_of_charge"
-SERVICE_SET_STATE_OF_CHARGE_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
-            {
-                "integration": DOMAIN,
-            }
-        ),
-        vol.Required(ATTR_STATE_OF_CHARGE): vol.Coerce(int),
     }
 )
 
@@ -86,14 +73,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         price_cap = service_call.data[ATTR_PRICE_CAP]
         await client.async_change_price_cap(cap=price_cap)
 
-    async def set_state_of_charge(
-        service_call: ServiceCall,
-    ) -> None:
-        """Set the state of charge."""
-        client = __get_client(service_call)
-        state_of_charge = service_call.data[ATTR_STATE_OF_CHARGE]
-        await client.async_set_state_of_charge(state_of_charge)
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_LIST_CHARGE_SLOTS,
@@ -107,13 +86,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_PRICE_CAP,
         set_price_cap,
         schema=SERVICE_SET_PRICE_CAP_SCHEMA,
-        supports_response=SupportsResponse.NONE,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_STATE_OF_CHARGE,
-        set_state_of_charge,
-        schema=SERVICE_SET_STATE_OF_CHARGE_SCHEMA,
         supports_response=SupportsResponse.NONE,
     )

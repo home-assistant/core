@@ -53,6 +53,9 @@
       "preconditioning_duration": {
         "name": "Preconditioning duration"
       },
+      "state_of_charge_input": {
+        "name": "State of charge input"
+      },
       "target_percentage": {
         "name": "Target percentage"
       }
@@ -147,20 +150,6 @@
         }
       },
       "name": "Set price cap"
-    },
-    "set_state_of_charge": {
-      "description": "Sets the state of charge for the vehicle.",
-      "fields": {
-        "config_entry": {
-          "description": "The Ohme config entry for which to set the state of charge.",
-          "name": "Ohme account"
-        },
-        "state_of_charge": {
-          "description": "The current state of charge for the vehicle.",
-          "name": "State of charge"
-        }
-      },
-      "name": "Set state of charge"
     }
   }
 }
