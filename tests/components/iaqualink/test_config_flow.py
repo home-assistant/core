@@ -83,6 +83,37 @@ async def test_duplicate_account_aborts(
     assert result["reason"] == "already_configured"
 
 
+async def test_second_account_creates_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_data: dict[str, str],
+) -> None:
+    """Test config flow creates a second entry when a different account logs in."""
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    other_data = {
+        CONF_USERNAME: "other@example.com",
+        CONF_PASSWORD: "other_password",
+    }
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login_other,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], other_data
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "other@example.com"
+    assert result["data"] == other_data
+
+
 async def test_without_config(hass: HomeAssistant) -> None:
     """Test config flow with no configuration."""
     flow = config_flow.AqualinkFlowHandler()
