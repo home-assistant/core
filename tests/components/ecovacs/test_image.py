@@ -4,7 +4,7 @@ from deebot_client.events.map import MapTraceEvent
 import pytest
 
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from .util import notify_and_wait
@@ -18,25 +18,29 @@ def platforms() -> Platform | list[Platform]:
     return Platform.IMAGE
 
 
+_ENTITY_ID = "image.goat_g1_trace_map"
+
+
 @pytest.mark.parametrize(("device_fixture"), ["5xu9h3"])
 async def test_mower_trace_map_created(
     hass: HomeAssistant,
     controller: EcovacsController,
 ) -> None:
-    """A mower device exposes a trace_map image entity."""
-    entity_id = "image.goat_g1_trace_map"
-    assert (state := hass.states.get(entity_id))
-    assert state.attributes["content_type"] == "image/svg+xml"
+    """A mower device exposes a trace_map image entity in the unknown state."""
+    assert (state := hass.states.get(_ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(("device_fixture"), ["5xu9h3"])
-async def test_mower_trace_map_renders_svg_after_trace_event(
+async def test_mower_trace_map_state_advances_after_trace_event(
     hass: HomeAssistant,
     controller: EcovacsController,
 ) -> None:
-    """After a MapTraceEvent the entity exposes a non-empty SVG."""
-    entity_id = "image.goat_g1_trace_map"
+    """After a MapTraceEvent the entity state advances away from ``unknown``."""
     device = controller.devices[0]
+    pre = hass.states.get(_ENTITY_ID)
+    assert pre is not None
+    assert pre.state == STATE_UNKNOWN
 
     await notify_and_wait(
         hass,
@@ -44,34 +48,36 @@ async def test_mower_trace_map_renders_svg_after_trace_event(
         MapTraceEvent(start=1, total=1, data="0,0;100,200;200,400;300,600"),
     )
 
-    image_state = hass.states.get(entity_id)
-    assert image_state is not None
-    assert image_state.attributes["content_type"] == "image/svg+xml"
+    post = hass.states.get(_ENTITY_ID)
+    assert post is not None
+    assert post.state != STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(("device_fixture"), ["5xu9h3"])
-async def test_mower_trace_map_accumulates_points_across_events(
+async def test_mower_trace_map_state_changes_on_each_event(
     hass: HomeAssistant,
     controller: EcovacsController,
 ) -> None:
-    """Successive MapTraceEvents add to the running trace."""
+    """Successive ``MapTraceEvent``s update the state timestamp each time."""
     device = controller.devices[0]
-
+    timestamps: list[str] = []
     for chunk in ("0,0;100,100", "200,200;300,300", "400,400;500,500"):
         await notify_and_wait(
             hass,
             device.events,
             MapTraceEvent(start=1, total=1, data=chunk),
         )
+        state = hass.states.get(_ENTITY_ID)
+        assert state is not None
+        timestamps.append(state.state)
 
-    image_state = hass.states.get("image.goat_g1_trace_map")
-    assert image_state is not None
-    # ``last_updated`` advances with each notification
-    assert image_state.attributes["content_type"] == "image/svg+xml"
+    # Each trace event must produce a strictly later timestamp.
+    assert timestamps == sorted(set(timestamps))
+    assert len(timestamps) == 3
 
 
 @pytest.mark.parametrize(("device_fixture"), ["5xu9h3"])
-async def test_mower_trace_map_ignores_empty_or_malformed_tokens(
+async def test_mower_trace_map_ignores_malformed_tokens(
     hass: HomeAssistant,
     controller: EcovacsController,
 ) -> None:
@@ -83,5 +89,6 @@ async def test_mower_trace_map_ignores_empty_or_malformed_tokens(
         MapTraceEvent(start=1, total=1, data="0;;100,200;not-a-pair;300,400;"),
     )
 
-    image_state = hass.states.get("image.goat_g1_trace_map")
-    assert image_state is not None
+    state = hass.states.get(_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
