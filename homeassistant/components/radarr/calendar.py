@@ -1,7 +1,5 @@
 """Support for Radarr calendar items."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from homeassistant.components.calendar import (

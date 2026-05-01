@@ -1,7 +1,5 @@
 """Sensor platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 
 from unifi_access_api import Door, DoorLockRuleType

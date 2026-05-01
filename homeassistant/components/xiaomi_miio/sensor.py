@@ -1,7 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging

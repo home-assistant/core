@@ -1,7 +1,5 @@
 """Constants for the evohome tests."""
 
-from __future__ import annotations
-
 from typing import Final
 
 ACCESS_TOKEN: Final = "at_1dc7z657UKzbhKA..."

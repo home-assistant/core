@@ -1,9 +1,7 @@
 """DataUpdateCoordinator for the Whois integration."""
 
-from __future__ import annotations
-
-from whoisdomain import Domain, query as whoisdomain_query
-from whoisdomain.exceptions import (
+from whois import Domain, query as whois_query
+from whois.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
     UnknownTld,
@@ -17,13 +15,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type WhoisConfigEntry = ConfigEntry[WhoisCoordinator]
+
 
 class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
     """Class to manage fetching WHOIS data."""
 
-    config_entry: ConfigEntry
+    config_entry: WhoisConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: WhoisConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,

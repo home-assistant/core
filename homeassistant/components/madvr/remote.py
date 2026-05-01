@@ -1,7 +1,5 @@
 """Support for madVR remote control."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import logging
 from typing import Any

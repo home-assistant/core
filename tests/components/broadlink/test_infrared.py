@@ -1,161 +1,108 @@
 """Tests for Broadlink infrared platform."""
 
+from unittest.mock import call
+
+from broadlink.exceptions import BroadlinkException
+from broadlink.remote import pulses_to_data
+from infrared_protocols import NECCommand
 import pytest
 
-from homeassistant.components.broadlink.const import IR_PACKET_REPEAT_INDEX
-from homeassistant.components.broadlink.infrared import (
-    BroadlinkIRCommand,
-    timings_to_broadlink_packet,
-)
+from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.infrared import async_send_command
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-# Test-only constants for Broadlink IR packet format
-IR_PACKET_TYPE = 0x26  # IR data packet type byte
-IR_PACKET_PAYLOAD_OFFSET = 4  # Byte offset where payload starts
+from . import get_device
 
-# NEC IR protocol timings (microseconds)
-NEC_HEADER_MARK_US = 9000
-NEC_HEADER_SPACE_US = 4500
-NEC_BIT_MARK_US = 562
-NEC_ONE_SPACE_US = 1687
-NEC_ZERO_SPACE_US = 562
+IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
+NON_IR_DEVICE = "Bedroom"
 
 
-def test_packet_header() -> None:
-    """Test IR type byte, repeat, and length fields."""
-    timings = [(NEC_HEADER_MARK_US, NEC_HEADER_SPACE_US)]
-    packet = timings_to_broadlink_packet(timings, repeat=0)
+async def test_infrared_setup_works(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the infrared entity is created for all IR-capable devices."""
+    for device in map(get_device, IR_DEVICES):
+        mock_setup = await device.setup_entry(hass)
 
-    assert packet[0] == IR_PACKET_TYPE
-    assert packet[1] == 0  # no repeat
-
-    payload_len = packet[2] | (packet[3] << 8)
-    assert payload_len == len(packet) - IR_PACKET_PAYLOAD_OFFSET
-
-
-def test_packet_ends_with_silence() -> None:
-    """Test packet structure is well-formed."""
-    timings = [(NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
-    packet = timings_to_broadlink_packet(timings)
-    assert packet[0] == IR_PACKET_TYPE
-    assert len(packet) >= IR_PACKET_PAYLOAD_OFFSET  # header + minimum payload
-
-
-def test_packet_repeat_count() -> None:
-    """Test repeat count is set."""
-    timings = [(NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
-    packet = timings_to_broadlink_packet(timings, repeat=2)
-    assert packet[IR_PACKET_REPEAT_INDEX] == 2
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        )
+        entries = er.async_entries_for_device(entity_registry, device_entry.id)
+        infrared_entities = [
+            entry for entry in entries if entry.domain == Platform.INFRARED
+        ]
+        assert len(infrared_entities) == 1
+        assert infrared_entities[0].unique_id == f"{device.mac}-emitter"
 
 
-def test_packet_repeat_out_of_range() -> None:
-    """Test that out-of-range repeat raises ValueError."""
-    timings = [(NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
-    with pytest.raises(ValueError, match="repeat must be 0"):
-        timings_to_broadlink_packet(timings, repeat=-1)
-    with pytest.raises(ValueError, match="repeat must be 0"):
-        timings_to_broadlink_packet(timings, repeat=256)
+async def test_infrared_not_created_for_non_ir_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no infrared entity is created for non-IR devices."""
+    device = get_device(NON_IR_DEVICE)
+    mock_setup = await device.setup_entry(hass)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    infrared_entities = [
+        entry for entry in entries if entry.domain == Platform.INFRARED
+    ]
+    assert len(infrared_entities) == 0
 
 
-def test_packet_nec_header_encoding() -> None:
-    """Test that a NEC header encodes correctly."""
-    timings = [(NEC_HEADER_MARK_US, NEC_HEADER_SPACE_US)]
-    packet = timings_to_broadlink_packet(timings)
+async def test_infrared_send_command(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sending an IR command dispatches to the Broadlink API."""
+    device = get_device("Entrance")
+    mock_setup = await device.setup_entry(hass)
 
-    # Skip packet header to get encoded payload
-    data = packet[IR_PACKET_PAYLOAD_OFFSET:]
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    infrared_entity = next(
+        entry for entry in entries if entry.domain == Platform.INFRARED
+    )
 
-    # 9000µs → 274 (>255 → 3 bytes: 0x00, 0x01, 0x12)
-    assert data[0] == 0x00
-    assert data[1] == 0x01
-    assert data[2] == 0x12
+    command = NECCommand(address=0x20, command=0x10)
+    await async_send_command(hass, infrared_entity.entity_id, command)
 
-    # 4500µs → 137 (<=255 → 1 byte)
-    assert data[3] == 0x89
+    expected_pulses = [abs(t) for t in command.get_raw_timings()]
+    expected_packet = pulses_to_data(expected_pulses)
 
-
-def test_packet_known_nec_command() -> None:
-    """Encode a full NEC power command and verify it's well-formed."""
-    nec_timings: list[tuple[int, int]] = [(NEC_HEADER_MARK_US, NEC_HEADER_SPACE_US)]
-    for bit in (
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,  # address
-        1,
-        1,
-        0,
-        1,
-        1,
-        1,
-        1,
-        1,  # ~address
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,  # command
-        1,
-        1,
-        1,
-        1,
-        0,
-        1,
-        1,
-        1,  # ~command
-    ):
-        if bit:
-            nec_timings.append((NEC_BIT_MARK_US, NEC_ONE_SPACE_US))
-        else:
-            nec_timings.append((NEC_BIT_MARK_US, NEC_ZERO_SPACE_US))
-    nec_timings.append((NEC_BIT_MARK_US, 0))  # stop bit
-
-    packet = timings_to_broadlink_packet(nec_timings)
-
-    assert packet[0] == IR_PACKET_TYPE
-    assert len(packet) > 10
+    assert mock_setup.api.send_data.call_count == 1
+    assert mock_setup.api.send_data.call_args == call(expected_packet)
 
 
-def test_broadlink_ir_command_basic() -> None:
-    """Test BroadlinkIRCommand initialization and interface."""
-    timings = [(500, 500), (500, 1000), (NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
-    cmd = BroadlinkIRCommand(timings, repeat_count=3)
+@pytest.mark.parametrize("error", [BroadlinkException("boom"), OSError("boom")])
+async def test_infrared_send_command_error_translates(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    error: Exception,
+) -> None:
+    """Test that Broadlink API errors translate to HomeAssistantError."""
+    device = get_device("Entrance")
+    mock_setup = await device.setup_entry(hass)
+    mock_setup.api.send_data.side_effect = error
 
-    assert cmd.repeat_count == 3
-    raw_timings = cmd.get_raw_timings()
-    assert len(raw_timings) == 3
-    assert raw_timings[0].high_us == 500
-    assert raw_timings[0].low_us == 500
-    assert raw_timings[2].high_us == NEC_BIT_MARK_US
-    assert raw_timings[2].low_us == NEC_ZERO_SPACE_US
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    infrared_entity = next(
+        entry for entry in entries if entry.domain == Platform.INFRARED
+    )
 
+    command = NECCommand(address=0x20, command=0x10)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_send_command(hass, infrared_entity.entity_id, command)
 
-def test_broadlink_ir_command_default_repeat() -> None:
-    """Test BroadlinkIRCommand defaults to repeat=0."""
-    timings = [(500, 500)]
-    cmd = BroadlinkIRCommand(timings)
-
-    assert cmd.repeat_count == 0
-
-
-def test_broadlink_ir_command_invalid_repeat() -> None:
-    """Test that BroadlinkIRCommand raises ValueError for out-of-range repeat_count."""
-    timings = [(500, 500)]
-
-    # Test negative repeat count
-    with pytest.raises(ValueError, match="repeat_count must be 0–255"):
-        BroadlinkIRCommand(timings, repeat_count=-1)
-
-    # Test repeat count > 255
-    with pytest.raises(ValueError, match="repeat_count must be 0–255"):
-        BroadlinkIRCommand(timings, repeat_count=256)
-
-    # Test boundary cases that should work
-    BroadlinkIRCommand(timings, repeat_count=0)  # Should not raise
-    BroadlinkIRCommand(timings, repeat_count=255)  # Should not raise
+    assert exc_info.value.translation_key == "send_command_failed"
+    assert exc_info.value.translation_domain == DOMAIN

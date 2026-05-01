@@ -1,7 +1,5 @@
 """Base entity for AirPatrol integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Config flow for OpenAI Conversation integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import json
 import logging
@@ -525,7 +523,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"],
+                    options=[
+                        "gpt-image-2",
+                        "gpt-image-1.5",
+                        "gpt-image-1",
+                        "gpt-image-1-mini",
+                    ],
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
@@ -574,8 +577,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            ("gpt-5.2-pro", "gpt-5.4-pro"): ["medium", "high", "xhigh"],
-            ("gpt-5.2", "gpt-5.3", "gpt-5.4"): [
+            ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
+            ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [
                 "none",
                 "low",
                 "medium",

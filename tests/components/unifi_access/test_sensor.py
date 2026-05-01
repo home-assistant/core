@@ -1,7 +1,5 @@
 """Tests for the UniFi Access sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
