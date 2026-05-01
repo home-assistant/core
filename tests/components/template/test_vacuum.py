@@ -7,10 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
-from homeassistant.components.template.vacuum import (
-    CONF_SEGMENTS_TEMPLATE,
-    SERVICE_CLEAN_AREA,
-)
+from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
@@ -72,7 +69,9 @@ SET_FAN_SPEED_ACTION = make_test_action(
 )
 START_ACTION = make_test_action("start")
 STOP_ACTION = make_test_action("stop")
-CLEAN_AREA_ACTION = make_test_action("clean_area", {"segment_ids": "{{ segment_ids }}"})
+CLEAN_SEGMENTS_ACTION = make_test_action(
+    "clean_segments", {"segment_ids": "{{ segment_ids }}"}
+)
 
 TEMPLATE_VACUUM_ACTIONS = {
     **START_ACTION,
@@ -1048,8 +1047,8 @@ async def test_not_optimistic(
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
-                **CLEAN_AREA_ACTION,
-                "segments_template": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
+                **CLEAN_SEGMENTS_ACTION,
+                "segments": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
             },
         )
     ],
@@ -1079,7 +1078,7 @@ async def test_clean_area(
 
     await common.async_clean_area(hass, ["area_1"], TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
-    assert_action(TEST_VACUUM, calls, 1, "clean_area", segment_ids=["1", "2"])
+    assert_action(TEST_VACUUM, calls, 1, "clean_segments", segment_ids=["1", "2"])
 
     state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
@@ -1093,7 +1092,7 @@ async def test_clean_area(
             1,
             {
                 "start": [],
-                **CLEAN_AREA_ACTION,
+                **CLEAN_SEGMENTS_ACTION,
             },
         )
     ],
@@ -1108,7 +1107,7 @@ async def test_clean_area(
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments_template": "{{ ["
+                "segments": "{{ ["
                 "{'id': '1', 'name': 'Kitchen'}, "
                 "{'id': '2', 'name': 'Bedroom', 'group': 'Upstairs'}"
                 "] }}",
@@ -1148,7 +1147,7 @@ async def test_get_segments(
             1,
             {
                 "start": [],
-                **CLEAN_AREA_ACTION,
+                **CLEAN_SEGMENTS_ACTION,
             },
         )
     ],
@@ -1163,46 +1162,46 @@ async def test_get_segments(
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments_template": "{{ [ {'id': '1'} ] }}",
+                "segments": "{{ [ {'id': '1'} ] }}",
             },
             "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments_template": "{{ [ {'name': 'kitchen'} ] }}",
+                "segments": "{{ [ {'name': 'kitchen'} ] }}",
             },
             "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments_template": "{{ [ {} ] }}",
+                "segments": "{{ [ {} ] }}",
             },
             "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
+                "segments": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
             },
             "expected dictionary with keys id, name and optional group and string values",
         ),
         (
-            {"unique_id": TEST_VACUUM.entity_id, "segments_template": "{{ [[]] }}"},
+            {"unique_id": TEST_VACUUM.entity_id, "segments": "{{ [[]] }}"},
             "expected dictionary with keys id, name and optional group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
+                "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
             },
             "expected dictionary with keys id, name and optional group and string values",
         ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
-async def test_invalid_segments_template(
+async def test_invalid_segments(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog_setup_text,
@@ -1231,8 +1230,8 @@ async def test_invalid_segments_template(
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
-                **CLEAN_AREA_ACTION,
-                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
+                **CLEAN_SEGMENTS_ACTION,
+                "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
             },
         )
     ],
@@ -1271,7 +1270,7 @@ async def test_raise_segments_changed_issue(
     [
         (
             {**START_ACTION},
-            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+            f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ),
     ],
 )
@@ -1281,12 +1280,12 @@ async def test_raise_segments_changed_issue(
         (
             0,
             {
-                "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+                "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
             },
         ),
         (
             0,
-            {**CLEAN_AREA_ACTION},
+            {**CLEAN_SEGMENTS_ACTION},
         ),
     ],
 )
@@ -1312,8 +1311,8 @@ async def test_segments_part_config(
     [
         {
             **START_ACTION,
-            **CLEAN_AREA_ACTION,
-            "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            **CLEAN_SEGMENTS_ACTION,
+            "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
         },
     ],
 )
@@ -1323,7 +1322,7 @@ async def test_segments_part_config(
         (
             0,
             {},
-            f'key "{CONF_SEGMENTS_TEMPLATE}" requires key "{CONF_UNIQUE_ID}" to exist',
+            f'key "{CONF_SEGMENTS}" requires key "{CONF_UNIQUE_ID}" to exist',
         ),
         (1, {"unique_id": TEST_VACUUM.entity_id}, ""),
     ],
