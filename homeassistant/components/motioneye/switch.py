@@ -124,12 +124,20 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
     async def _async_send_set_camera(self, value: bool) -> None:
         """Set a switch value."""
 
+        # Optimistically update local state immediately to prevent flickering.
+        if self._camera is not None:
+            self._camera[self.entity_description.key] = value
+            self.async_write_ha_state()
+
         # Fetch the very latest camera config to reduce the risk of updating with a
         # stale configuration.
         camera = await self._client.async_get_camera(self._camera_id)
         if camera:
             camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
+        else:
+            # Couldn't get camera config revert optimistic state and refresh.
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
