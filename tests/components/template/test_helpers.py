@@ -17,10 +17,7 @@ from homeassistant.components.template.button import (
     SCRIPT_FIELDS as BUTTON_SCRIPT_FIELDS,
     StateButtonEntity,
 )
-from homeassistant.components.template.cover import (
-    LEGACY_FIELDS as COVER_LEGACY_FIELDS,
-    SCRIPT_FIELDS as COVER_SCRIPT_FIELDS,
-)
+from homeassistant.components.template.cover import SCRIPT_FIELDS as COVER_SCRIPT_FIELDS
 from homeassistant.components.template.fan import (
     LEGACY_FIELDS as FAN_LEGACY_FIELDS,
     SCRIPT_FIELDS as FAN_SCRIPT_FIELDS,
@@ -145,27 +142,6 @@ async def test_legacy_to_modern_config(
             "value_template",
             "state",
             "{{ 1 == 1 }}",
-        ),
-        (
-            "cover",
-            COVER_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            "cover",
-            COVER_LEGACY_FIELDS,
-            "position_template",
-            "position",
-            "{{ 100 }}",
-        ),
-        (
-            "cover",
-            COVER_LEGACY_FIELDS,
-            "tilt_template",
-            "tilt",
-            "{{ 100 }}",
         ),
         (
             "fan",
@@ -981,22 +957,6 @@ async def test_platform_not_ready(
             "sun_up",
         ),
         (
-            "cover",
-            {
-                "cover": {
-                    "platform": "template",
-                    "covers": {
-                        "garage_door": {
-                            "value_template": "{{ states('sensor.garage_door')|float > 0 }}",
-                            "open_cover": {"action": "script.toggle"},
-                            "close_cover": {"action": "script.toggle"},
-                        }
-                    },
-                },
-            },
-            "garage_door",
-        ),
-        (
             "fan",
             {
                 "fan": {
@@ -1275,74 +1235,6 @@ async def test_legacy_deprecation(
                 "diff: ",
                 "direction: ",
             ],
-        ),
-        (
-            "cover",
-            {
-                "cover": [
-                    {
-                        "platform": "template",
-                        "covers": {
-                            "large_garage_door": {
-                                "device_class": "garage",
-                                "friendly_name": "Large Garage Door",
-                                "value_template": "{% if is_state('binary_sensor.large_garage_door', 'off') %}\n  closed\n{% elif is_state('timer.large_garage_opening_timer', 'active') %}\n  opening\n{% elif is_state('timer.large_garage_closing_timer', 'active') %}            \n  closing\n{% elif is_state('binary_sensor.large_garage_door', 'on') %}\n  open\n{% endif %}\n",
-                                "open_cover": [
-                                    {
-                                        "condition": "state",
-                                        "entity_id": "binary_sensor.large_garage_door",
-                                        "state": "off",
-                                    },
-                                    {
-                                        "action": "switch.turn_on",
-                                        "target": {
-                                            "entity_id": "switch.garage_door_relay_1"
-                                        },
-                                    },
-                                    {
-                                        "action": "timer.start",
-                                        "entity_id": "timer.large_garage_opening_timer",
-                                    },
-                                ],
-                                "close_cover": [
-                                    {
-                                        "condition": "state",
-                                        "entity_id": "binary_sensor.large_garage_door",
-                                        "state": "on",
-                                    },
-                                    {
-                                        "action": "switch.turn_on",
-                                        "target": {
-                                            "entity_id": "switch.garage_door_relay_1"
-                                        },
-                                    },
-                                    {
-                                        "action": "timer.start",
-                                        "entity_id": "timer.large_garage_closing_timer",
-                                    },
-                                ],
-                                "stop_cover": [
-                                    {
-                                        "action": "switch.turn_on",
-                                        "target": {
-                                            "entity_id": "switch.garage_door_relay_1"
-                                        },
-                                    },
-                                    {
-                                        "action": "timer.cancel",
-                                        "entity_id": "timer.large_garage_opening_timer",
-                                    },
-                                    {
-                                        "action": "timer.cancel",
-                                        "entity_id": "timer.large_garage_closing_timer",
-                                    },
-                                ],
-                            }
-                        },
-                    }
-                ]
-            },
-            ["device_class: garage"],
         ),
         (
             "binary_sensor",
