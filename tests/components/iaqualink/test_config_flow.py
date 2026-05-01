@@ -29,11 +29,6 @@ MOCK_USER_ID = "account-123"
 MOCK_USER_ID_2 = "account-456"
 
 
-async def _async_mock_login(self: Any) -> None:
-    """Mock a successful login with a stable account ID."""
-    self.user_id = MOCK_USER_ID
-
-
 async def _async_mock_login_other(self: Any) -> None:
     """Mock a successful login for a different account."""
     self.user_id = MOCK_USER_ID_2
@@ -43,7 +38,7 @@ async def _async_mock_login(self: Any) -> None:
     """Mock a successful login."""
 
 
-async def test_single_instance_allowed(
+async def test_multiple_accounts_allowed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:

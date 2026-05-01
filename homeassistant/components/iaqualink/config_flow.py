@@ -112,8 +112,8 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors, account_id = await self._async_validate_credentials(user_input)
             if not errors and account_id is not None:
-                legacy_unique_id = _username_unique_id(reauth_entry.data[CONF_USERNAME])
-                if reauth_entry.unique_id in (None, legacy_unique_id):
+                legacy_unique_id = _username_unique_id(config_entry.data[CONF_USERNAME])
+                if config_entry.unique_id in (None, legacy_unique_id):
                     if (
                         _username_unique_id(user_input[CONF_USERNAME])
                         != legacy_unique_id
@@ -128,11 +128,11 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                         DOMAIN, account_id
                     )
                 )
-                if existing_entry and existing_entry.entry_id != reauth_entry.entry_id:
+                if existing_entry and existing_entry.entry_id != config_entry.entry_id:
                     return self.async_abort(reason="already_configured")
 
                 self.hass.config_entries.async_update_entry(
-                    reauth_entry, unique_id=account_id
+                    config_entry, unique_id=account_id
                 )
                 return self.async_update_reload_and_abort(
                     config_entry,
