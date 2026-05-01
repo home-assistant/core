@@ -42,9 +42,7 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: The hub announces itself via a proprietary UDP broadcast not supported by Home Assistant.
+  discovery: todo
   discovery-update-info:
     status: exempt
     comment: IP address changes are recovered via UDP rediscovery on connection failure.
