@@ -26,7 +26,6 @@ async def test_system_health_single_entry(
 
     info = await get_system_health_info(hass, DOMAIN)
 
-    assert info["loaded_config_entries"] == 1
     assert await info["write_requests_remaining"] == 100
 
 
@@ -43,7 +42,6 @@ async def test_system_health_single_entry_quota_error(
 
     info = await get_system_health_info(hass, DOMAIN)
 
-    assert info["loaded_config_entries"] == 1
     with pytest.raises(DucoConnectionError):
         await info["write_requests_remaining"]
 
@@ -54,7 +52,7 @@ async def test_system_health_no_loaded_entries(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 
-    assert await get_system_health_info(hass, DOMAIN) == {"loaded_config_entries": 0}
+    assert await get_system_health_info(hass, DOMAIN) == {}
 
 
 async def test_system_health_multiple_entries(hass: HomeAssistant) -> None:
@@ -83,4 +81,4 @@ async def test_system_health_multiple_entries(hass: HomeAssistant) -> None:
         client=Mock(async_get_write_req_remaining=AsyncMock(return_value=200))
     )
 
-    assert await get_system_health_info(hass, DOMAIN) == {"loaded_config_entries": 2}
+    assert await get_system_health_info(hass, DOMAIN) == {}
