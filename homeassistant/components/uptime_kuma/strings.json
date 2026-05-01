@@ -118,6 +118,7 @@
           "mongodb": "MongoDB",
           "mqtt": "MQTT",
           "mysql": "MySQL/MariaDB",
+          "oracledb": "Oracle database",
           "ping": "Ping",
           "port": "TCP port",
           "postgres": "PostgreSQL",
