@@ -94,7 +94,11 @@ SENSOR_DESCRIPTIONS: tuple[PTDevicesSensorEntityDescription, ...] = (
         key=PTDevicesSensors.DEVICE_STATUS,
         translation_key=PTDevicesSensors.DEVICE_STATUS,
         device_class=SensorDeviceClass.ENUM,
-        options=[member.value for member in PTDevicesStatusStates],
+        options=[
+            member.value
+            for member in PTDevicesStatusStates
+            if member.value != "unknown"
+        ],
         value_fn=lambda data: (
             cast(str, data.get(PTDevicesSensors.DEVICE_STATUS))
             if cast(str, data.get(PTDevicesSensors.DEVICE_STATUS)) != "unknown"
