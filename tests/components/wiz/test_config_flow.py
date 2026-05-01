@@ -47,6 +47,8 @@ INTEGRATION_DISCOVERY = {
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -54,7 +56,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     # Patch functions
     with (
-        _patch_wizlight(),
+        _patch_wizlight(device=bulb),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
             return_value=True,
@@ -76,31 +78,6 @@ async def test_form(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_form_closes_connection(hass: HomeAssistant) -> None:
-    """Test the user flow closes the bulb connection after setup."""
-    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        _patch_wizlight(device=bulb),
-        patch(
-            "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
-        ),
-        patch("homeassistant.components.wiz.async_setup", return_value=True),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONNECTION,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
     bulb.async_close.assert_awaited_once()
 
 
@@ -227,49 +204,6 @@ async def test_discovered_by_dhcp_connection_fails(
 
 
 @pytest.mark.parametrize(
-    ("source", "data"),
-    [
-        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
-    ],
-)
-async def test_discovered_by_dhcp_or_integration_discovery_closes_connection(
-    hass: HomeAssistant, source, data
-) -> None:
-    """Test discovery closes the bulb connection during confirmation."""
-    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
-
-    with _patch_wizlight(device=bulb):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": source}, data=data
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-    bulb.async_close.assert_awaited_once()
-
-    bulb.async_close.reset_mock()
-
-    with (
-        _patch_wizlight(device=bulb),
-        patch(
-            "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
-        ),
-        patch("homeassistant.components.wiz.async_setup", return_value=True),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    bulb.async_close.assert_awaited_once()
-
-
-@pytest.mark.parametrize(
     ("source", "data", "bulb_type", "extended_white_range", "name"),
     [
         (
@@ -334,9 +268,9 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     hass: HomeAssistant, source, data, bulb_type, extended_white_range, name
 ) -> None:
     """Test we can configure when discovered from dhcp or discovery."""
-    with _patch_wizlight(
-        device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
-    ):
+    bulb = _mocked_wizlight(None, extended_white_range, bulb_type)
+
+    with _patch_wizlight(device=bulb):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
@@ -344,11 +278,12 @@ async def test_discovered_by_dhcp_or_integration_discovery(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    bulb.async_close.assert_awaited_once()
+
+    bulb.async_close.reset_mock()
 
     with (
-        _patch_wizlight(
-            device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
-        ),
+        _patch_wizlight(device=bulb),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
             return_value=True,
@@ -370,6 +305,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    bulb.async_close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -464,8 +400,10 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+
     with (
-        _patch_wizlight(),
+        _patch_wizlight(device=bulb),
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
         ) as mock_setup,
@@ -486,6 +424,7 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    bulb.async_close.assert_awaited_once()
 
     # ignore configured devices
     result = await hass.config_entries.flow.async_init(
@@ -501,36 +440,6 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
-
-
-async def test_setup_via_discovery_closes_connection(hass: HomeAssistant) -> None:
-    """Test selecting a discovered device closes the bulb connection."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with _patch_discovery():
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "pick_device"
-
-    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
-
-    with (
-        _patch_wizlight(device=bulb),
-        patch("homeassistant.components.wiz.async_setup", return_value=True),
-        patch("homeassistant.components.wiz.async_setup_entry", return_value=True),
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE: FAKE_MAC},
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    bulb.async_close.assert_awaited_once()
 
 
 async def test_setup_via_discovery_cannot_connect(hass: HomeAssistant) -> None:
