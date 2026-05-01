@@ -158,14 +158,13 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         # successful TCP connection followed by a handshake REJECT
         # (serial mismatch) returns False.
         try:
-            connected = await hub.async_connect_hub(ip_address, serial)
+            if not await hub.async_connect_hub(ip_address, serial):
+                raise NoboHubConnectError("cannot_connect")
+            return hub.hub_info["name"]
         except OSError as err:
             raise NoboHubConnectError("cannot_connect_ip") from err
-        if not connected:
-            raise NoboHubConnectError("cannot_connect")
-        name = hub.hub_info["name"]
-        await hub.close()
-        return name
+        finally:
+            await hub.close()
 
     @staticmethod
     def _format_hub(ip, serial_prefix):
