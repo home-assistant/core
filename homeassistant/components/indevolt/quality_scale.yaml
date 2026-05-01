@@ -40,12 +40,8 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: Integration does not support network discovery
-  discovery:
-    status: exempt
-    comment: Integration does not support network discovery
+  discovery-update-info: done
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
