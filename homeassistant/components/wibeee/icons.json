@@ -1,13 +1,5 @@
 {
   "entity": {
-    "button": {
-      "reboot": {
-        "default": "mdi:restart"
-      },
-      "reset_energy": {
-        "default": "mdi:counter"
-      }
-    },
     "sensor": {
       "active_energy": {
         "default": "mdi:pulse"

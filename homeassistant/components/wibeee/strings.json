@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "Device is already configured",
       "not_wibeee_device": "Discovered device is not a WiBeee energy monitor",
+      "reconfigure_successful": "Reconfiguration successful",
       "wrong_device": "The device at this address has a different MAC address than the one being reconfigured"
     },
     "error": {
@@ -71,14 +72,6 @@
       "thd_voltage_harmonic_5": { "name": "THD Voltage Harmonic 5" },
       "thd_voltage_harmonic_7": { "name": "THD Voltage Harmonic 7" },
       "thd_voltage_harmonic_9": { "name": "THD Voltage Harmonic 9" }
-    }
-  },
-  "exceptions": {
-    "reboot_failed": {
-      "message": "Failed to reboot the WiBeee device. Check that the device is reachable."
-    },
-    "reset_energy_failed": {
-      "message": "Failed to reset energy counters on the WiBeee device. Check that the device is reachable."
     }
   },
   "options": {
