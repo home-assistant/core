@@ -1,12 +1,13 @@
 """Tests for the Indevolt integration initialization and services."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from indevolt_api import TimeOutException
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -45,3 +46,17 @@ async def test_load_failure(
 
     # Verify the config entry enters retry state due to failure
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_udp_discovery_oserror_logged(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that an OSError from create_datagram_endpoint is logged as a warning."""
+    with patch(
+        "asyncio.BaseEventLoop.create_datagram_endpoint",
+        side_effect=OSError("Address already in use"),
+    ):
+        await async_setup_component(hass, "indevolt", {})
+        await hass.async_block_till_done()
+
+    assert "Failed to start UDP discovery" in caplog.text

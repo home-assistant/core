@@ -1,16 +1,25 @@
 """Home Assistant integration for indevolt device."""
 
 import asyncio
+import logging
+
+from indevolt_api import (
+    PASSIVE_DISCOVERY_BIND_ADDR,
+    PASSIVE_DISCOVERY_PORT,
+    PassiveDiscoveryProtocol,
+)
 
 from homeassistant.config_entries import SOURCE_DISCOVERY
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, UDP_DISCOVERY_PORT
+from .const import DOMAIN
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -43,12 +52,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Start UDP discovery listener."""
         loop = asyncio.get_running_loop()
 
-        # Create UDP protocol for device discovery
-        class UDPDiscoveryProtocol(asyncio.DatagramProtocol):
-            def datagram_received(self, data: bytes, addr: tuple) -> None:
-                """Handle UDP broadcast from device."""
-
-                host, _port = addr
+        def _on_device_discovered(host: str) -> None:
+            if not hass.config_entries.flow.async_has_matching_discovery_flow(
+                DOMAIN, {"source": SOURCE_DISCOVERY}, {"host": host}
+            ):
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN,
@@ -57,10 +64,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                 )
 
-        # Start the actual UDP listener
-        await loop.create_datagram_endpoint(
-            UDPDiscoveryProtocol, local_addr=("0.0.0.0", UDP_DISCOVERY_PORT)
-        )
+        try:
+            transport, _ = await loop.create_datagram_endpoint(
+                lambda: PassiveDiscoveryProtocol(_on_device_discovered),
+                local_addr=(PASSIVE_DISCOVERY_BIND_ADDR, PASSIVE_DISCOVERY_PORT),
+            )
+
+        except OSError as err:
+            _LOGGER.warning(
+                "Failed to start UDP discovery on port %s: %s",
+                PASSIVE_DISCOVERY_PORT,
+                err,
+            )
+            return
+
+        def _close_transport(_event: Event) -> None:
+            transport.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close_transport)
 
     # Start UDP discovery in background & setup services
     hass.async_create_task(_start_udp_discovery())
