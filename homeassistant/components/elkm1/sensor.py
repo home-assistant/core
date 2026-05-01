@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
-from .const import ATTR_VALUE, DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
+from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .util import deprecate_entity
 
@@ -59,27 +59,30 @@ async def async_setup_entry(
     elk_data = config_entry.runtime_data
     elk = elk_data.elk
     entities: list[ElkEntity] = []
+
+    create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
+    setting_entities = list(entities)
+
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
     create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
-    create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
     async_add_entities(entities)
 
     entity_registry = er.async_get(hass)
-    for setting in cast(list[Setting], elk.settings):
-        if not setting.configured:
-            continue
-        setting_id = f"elkm1_{setting.default_name('_')}".lower()
+    for setting in setting_entities:
+        element = cast(Setting, setting._element)  # noqa: SLF001
+        d = "time" if element.value_format == SettingFormat.TIME_OF_DAY else "number"
+        new_entity_id = f"{d}.{element.default_name('_')}"
         deprecate_entity(
             hass,
             entity_registry,
             "sensor",
-            setting_id,
-            f"deprecated_sensor_{setting.index}",
+            setting.unique_id,
+            f"deprecated_sensor_{setting.unique_id}",
             "deprecated_sensor",
-            setting_id,
-            f"number.{DOMAIN}_{setting_id}",
+            setting.generate_unique_id(elk_data.mac),
+            new_entity_id,
         )
 
     platform = entity_platform.async_get_current_platform()

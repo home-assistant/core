@@ -60,6 +60,11 @@ class ElkEntity(Entity):
         self._mac = elk_data.mac
         self._prefix = elk_data.prefix
         self._temperature_unit: str = elk_data.config["temperature_unit"]
+        self._unique_id = self.generate_unique_id()
+        self._attr_name = element.name
+
+    def generate_unique_id(self, uniqueness: str | None = None) -> str:
+        """Generate a unique_id."""
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
         # this is to avoid a conflict between
@@ -72,8 +77,12 @@ class ElkEntity(Entity):
             uid_start = f"elkm1m_{self._prefix}"
         else:
             uid_start = "elkm1"
-        self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
-        self._attr_name = element.name
+
+        if uniqueness:
+            uniqueness = "_" + uniqueness.replace(":", "_")
+        else:
+            uniqueness = ""
+        return f"{uid_start}_{self._element.default_name('_')}{uniqueness}".lower()
 
     @property
     def unique_id(self) -> str:

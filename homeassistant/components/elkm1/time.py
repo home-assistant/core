@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .models import ELKM1Data
 
 
 async def async_setup_entry(
@@ -47,6 +48,11 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
     """Representation of an Elk-M1 Time Setting."""
 
     _element: Setting
+
+    def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
+        """Initialize the number setting."""
+        super().__init__(element, elk, elk_data)
+        self._unique_id = self.generate_unique_id(elk_data.mac)
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         value = self._element.value
