@@ -73,7 +73,7 @@ async def async_setup_entry(
     for setting in setting_entities:
         element = cast(Setting, setting._element)  # noqa: SLF001
         d = "time" if element.value_format == SettingFormat.TIME_OF_DAY else "number"
-        new_entity_id = f"{d}.{element.default_name('_')}"
+        new_entity_id = f"{d}.elkm1_{element.name.replace(' ', '_')}".lower()
         deprecate_entity(
             hass,
             entity_registry,
