@@ -21,10 +21,7 @@ from homeassistant.components.template.cover import (
     LEGACY_FIELDS as COVER_LEGACY_FIELDS,
     SCRIPT_FIELDS as COVER_SCRIPT_FIELDS,
 )
-from homeassistant.components.template.fan import (
-    LEGACY_FIELDS as FAN_LEGACY_FIELDS,
-    SCRIPT_FIELDS as FAN_SCRIPT_FIELDS,
-)
+from homeassistant.components.template.fan import SCRIPT_FIELDS as FAN_SCRIPT_FIELDS
 from homeassistant.components.template.helpers import (
     async_setup_template_platform,
     create_legacy_template_issue,
@@ -166,48 +163,6 @@ async def test_legacy_to_modern_config(
             "tilt_template",
             "tilt",
             "{{ 100 }}",
-        ),
-        (
-            "fan",
-            FAN_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            "fan",
-            FAN_LEGACY_FIELDS,
-            "direction_template",
-            "direction",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            "fan",
-            FAN_LEGACY_FIELDS,
-            "oscillating_template",
-            "oscillating",
-            "{{ True }}",
-        ),
-        (
-            "fan",
-            FAN_LEGACY_FIELDS,
-            "percentage_template",
-            "percentage",
-            "{{ 100 }}",
-        ),
-        (
-            "fan",
-            FAN_LEGACY_FIELDS,
-            "preset_mode_template",
-            "preset_mode",
-            "{{ 'foo' }}",
-        ),
-        (
-            "fan",
-            LIGHT_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
         ),
         (
             "light",
@@ -995,22 +950,6 @@ async def test_platform_not_ready(
                 },
             },
             "garage_door",
-        ),
-        (
-            "fan",
-            {
-                "fan": {
-                    "platform": "template",
-                    "fans": {
-                        "bedroom_fan": {
-                            "value_template": "{{ states('input_boolean.state') }}",
-                            "turn_on": {"action": "script.toggle"},
-                            "turn_off": {"action": "script.toggle"},
-                        }
-                    },
-                },
-            },
-            "bedroom_fan",
         ),
         (
             "light",
