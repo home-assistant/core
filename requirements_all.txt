@@ -275,7 +275,19 @@ aioguardian==2026.01.1
 # homeassistant.components.harmony
 aioharmony==0.5.3
 
+# homeassistant.components.backup
+# homeassistant.components.esphome
+# homeassistant.components.hardkernel
 # homeassistant.components.hassio
+# homeassistant.components.homeassistant_alerts
+# homeassistant.components.homeassistant_green
+# homeassistant.components.homeassistant_hardware
+# homeassistant.components.homeassistant_yellow
+# homeassistant.components.matter
+# homeassistant.components.mqtt
+# homeassistant.components.otbr
+# homeassistant.components.raspberry_pi
+# homeassistant.components.zwave_js
 aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
