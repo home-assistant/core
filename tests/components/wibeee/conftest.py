@@ -46,10 +46,10 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_get_source_ip() -> Generator[AsyncMock]:
-    """Mock async_get_source_ip to return a valid IP."""
+def mock_wibeee_local_ip() -> Generator[AsyncMock]:
+    """Mock the network helpers used by the wibeee config flow."""
     with patch(
-        "homeassistant.components.network.async_get_source_ip",
+        "homeassistant.components.wibeee.config_flow._get_local_ip",
         new_callable=AsyncMock,
         return_value="192.168.1.50",
     ) as mock:
@@ -108,12 +108,23 @@ def _setup_mock_api(api: MagicMock) -> None:
     api.host = MOCK_HOST
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_wibeee_api() -> Generator[MagicMock]:
-    """Mock the WibeeeAPI class globally."""
-    with patch("pywibeee.WibeeeAPI", autospec=True) as mock_cls:
-        api = MagicMock()
-        _setup_mock_api(api)
+    """Mock the WibeeeAPI class globally in all import locations."""
+    api = MagicMock()
+    _setup_mock_api(api)
+    with (
+        patch("pywibeee.WibeeeAPI", return_value=api) as mock_cls,
+        patch("homeassistant.components.wibeee.WibeeeAPI", return_value=api),
+        patch(
+            "homeassistant.components.wibeee.config_flow.WibeeeAPI",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.wibeee.coordinator.WibeeeAPI",
+            return_value=api,
+        ),
+    ):
         mock_cls.return_value = api
         yield api
 
