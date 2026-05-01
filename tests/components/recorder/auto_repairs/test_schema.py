@@ -5,13 +5,15 @@ from sqlalchemy import text
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.auto_repairs.schema import (
+    correct_db_schema_missing_indexes,
     correct_db_schema_precision,
     correct_db_schema_utf8,
     validate_db_schema_precision,
     validate_table_schema_has_correct_collation,
+    validate_table_schema_has_indexes,
     validate_table_schema_supports_utf8,
 )
-from homeassistant.components.recorder.db_schema import States
+from homeassistant.components.recorder.db_schema import Statistics, States
 from homeassistant.components.recorder.migration import _modify_columns
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
@@ -291,4 +293,62 @@ async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
         States,
     )
     assert "Error when validating DB schema" in caplog.text
+    assert schema_errors == set()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_validate_db_schema_missing_index_good_schema(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+) -> None:
+    """Test validating indexes when all expected indexes exist."""
+    await async_wait_recording_done(hass)
+    schema_errors = await recorder_mock.async_add_executor_job(
+        validate_table_schema_has_indexes,
+        recorder_mock,
+        Statistics,
+    )
+    assert schema_errors == set()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_validate_db_schema_missing_index_with_broken_schema(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test detecting and repairing a missing index."""
+    await async_wait_recording_done(hass)
+    session_maker = recorder_mock.get_session
+
+    def _drop_index():
+        with session_scope(session=session_maker()) as session:
+            session.execute(
+                text("DROP INDEX ix_statistics_statistic_id_start_ts")
+            )
+
+    await recorder_mock.async_add_executor_job(_drop_index)
+
+    schema_errors = await recorder_mock.async_add_executor_job(
+        validate_table_schema_has_indexes,
+        recorder_mock,
+        Statistics,
+    )
+    assert schema_errors == {
+        "statistics.missing_index.ix_statistics_statistic_id_start_ts"
+    }
+    assert "ix_statistics_statistic_id_start_ts is missing" in caplog.text
+
+    await recorder_mock.async_add_executor_job(
+        correct_db_schema_missing_indexes,
+        recorder_mock,
+        Statistics,
+        schema_errors,
+    )
+
+    schema_errors = await recorder_mock.async_add_executor_job(
+        validate_table_schema_has_indexes,
+        recorder_mock,
+        Statistics,
+    )
     assert schema_errors == set()

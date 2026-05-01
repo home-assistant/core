@@ -4,6 +4,7 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
 
+import sqlalchemy
 from sqlalchemy import MetaData, Table
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
@@ -270,3 +271,75 @@ def correct_db_schema_precision(
             table_name,
             [f"{column} {DOUBLE_PRECISION_TYPE_SQL}" for column in precision_columns],
         )
+
+
+def validate_table_schema_has_indexes(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+) -> set[str]:
+    """Check that the table has all indexes defined in the SQLAlchemy model.
+
+    Indexes can be silently lost during manual database migration (e.g.
+    pg_dump/pg_restore across major PostgreSQL versions) or when a migration
+    fails to create a unique index due to pre-existing duplicate rows.
+    """
+    schema_errors: set[str] = set()
+    try:
+        schema_errors = _validate_table_schema_has_indexes(instance, table_object)
+    except Exception:
+        _LOGGER.exception("Error when validating DB schema indexes")
+
+    _log_schema_errors(table_object, schema_errors)
+    return schema_errors
+
+
+def _validate_table_schema_has_indexes(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+) -> set[str]:
+    """Check that expected indexes exist on the table."""
+    schema_errors: set[str] = set()
+    table_name = table_object.__tablename__
+    expected_indexes = {idx.name for idx in table_object.__table__.indexes}
+    if not expected_indexes:
+        return schema_errors
+
+    engine = instance.engine
+    assert engine is not None, "Engine should be set"
+    inspector = sqlalchemy.inspect(engine)
+    live_indexes = {idx["name"] for idx in inspector.get_indexes(table_name)}
+
+    for index_name in sorted(expected_indexes - live_indexes):
+        _LOGGER.error(
+            "Index %s is missing from database table %s; "
+            "this can cause severe performance degradation",
+            index_name,
+            table_name,
+        )
+        schema_errors.add(f"{table_name}.missing_index.{index_name}")
+
+    return schema_errors
+
+
+def correct_db_schema_missing_indexes(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+    schema_errors: set[str],
+) -> None:
+    """Recreate indexes detected as missing by validate_table_schema_has_indexes."""
+    table_name = table_object.__tablename__
+    prefix = f"{table_name}.missing_index."
+    missing = {e for e in schema_errors if e.startswith(prefix)}
+    if not missing:
+        return
+
+    from ..migration import _create_index  # noqa: PLC0415
+
+    for error_key in sorted(missing):
+        index_name = error_key[len(prefix) :]
+        _LOGGER.warning(
+            "Recreating missing index %s on table %s",
+            index_name,
+            table_name,
+        )
+        _create_index(instance, instance.get_session, table_name, index_name)
