@@ -58,7 +58,9 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_user_errors(hass: HomeAssistant, side_effect, expected_error) -> None:
+async def test_user_errors(
+    hass: HomeAssistant, side_effect: type[Exception], expected_error: str
+) -> None:
     """Test error handling in the config flow user step."""
     user_input = {
         CONF_UUID: "test-uuid",
