@@ -10,7 +10,6 @@ from indevolt_api import (
     IndevoltConfig,
     IndevoltEnergyMode,
     IndevoltRealtimeAction,
-    TimeOutException,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -78,7 +77,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch device info once on boot."""
         try:
             config_data = await self.api.get_config()
-        except TimeOutException as err:
+        except TimeoutError as err:
             raise ConfigEntryNotReady(
                 f"Device config retrieval timed out: {err}"
             ) from err
@@ -94,14 +93,14 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             return await self.api.fetch_data(sensor_keys)
-        except TimeOutException as err:
+        except TimeoutError as err:
             raise UpdateFailed(f"Device update timed out: {err}") from err
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
         """Push/write data values to given key on the device."""
         try:
             return await self.api.set_data(sensor_key, value)
-        except TimeOutException as err:
+        except TimeoutError as err:
             raise DeviceTimeoutError(f"Device push timed out: {err}") from err
         except (ClientError, ConnectionError, OSError) as err:
             raise DeviceConnectionError(f"Device push failed: {err}") from err
