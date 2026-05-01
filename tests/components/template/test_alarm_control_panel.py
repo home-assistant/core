@@ -358,7 +358,7 @@ async def test_template_syntax_error(
 async def test_legacy_template_creates_warning(
     hass: HomeAssistant, caplog_setup_text
 ) -> None:
-    """Test templating syntax error."""
+    """Test legacy YAML configuration logs a warning."""
     assert len(hass.states.async_all("alarm_control_panel")) == 0
     assert "entities can only be configured under template:" in caplog_setup_text
 
