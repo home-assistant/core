@@ -1,8 +1,9 @@
 """Base for Hass.io entities."""
 
-from aiohasupervisor.models import OSInfo
+from collections.abc import Callable
+
+from aiohasupervisor.models import CIFSMountResponse, HostInfo, NFSMountResponse, OSInfo
 from aiohasupervisor.models.base import ContainerStats
-from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -13,8 +14,8 @@ from .coordinator import (
     AddonData,
     HassioAddOnDataUpdateCoordinator,
     HassioMainDataUpdateCoordinator,
+    HassioStatsData,
     HassioStatsDataUpdateCoordinator,
-    StatsDataKey,
 )
 
 
@@ -29,7 +30,7 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         entity_description: EntityDescription,
         *,
         container_id: str,
-        data_key: StatsDataKey,
+        stats_fn: Callable[[HassioStatsData], ContainerStats | None],
         device_id: str,
         unique_id_prefix: str,
     ) -> None:
@@ -37,19 +38,14 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._container_id = container_id
-        self._data_key = data_key
+        self._stats_fn = stats_fn
         self._attr_unique_id = f"{unique_id_prefix}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
     @property
     def _stats(self) -> ContainerStats | None:
         """Return the stats object for this entity's container."""
-        data = self.coordinator.data
-        if self._data_key == StatsDataKey.ADDONS:
-            return data.addons.get(self._container_id)
-        if self._data_key == StatsDataKey.CORE:
-            return data.core
-        return data.supervisor
+        return self._stats_fn(self.coordinator.data)
 
     @property
     def stats(self) -> ContainerStats:
@@ -100,6 +96,13 @@ class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
     def addon_slug(self) -> str:
         """Return the add-on slug."""
         return self._addon_slug
+
+    @property
+    def addon_data(self) -> AddonData:
+        """Return the add-on data, asserting it is available."""
+        data = self.coordinator.data
+        assert self._addon_slug in data.addons
+        return data.addons[self._addon_slug]
 
     @property
     def available(self) -> bool:
@@ -159,6 +162,12 @@ class HassioHostEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self.entity_description = entity_description
         self._attr_unique_id = f"home_assistant_host_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "host")})
+
+    @property
+    def host(self) -> HostInfo:
+        """Return the host info, asserting it is available."""
+        assert self.coordinator.data.host is not None
+        return self.coordinator.data.host
 
 
 class HassioSupervisorEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):

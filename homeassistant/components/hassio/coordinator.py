@@ -4,7 +4,6 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable
 from dataclasses import dataclass
-from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -78,14 +77,6 @@ if TYPE_CHECKING:
     from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class StatsDataKey(StrEnum):
-    """Key identifying which container stats to access in HassioStatsData."""
-
-    CORE = "core"
-    SUPERVISOR = "supervisor"
-    ADDONS = "addons"
 
 
 @dataclass

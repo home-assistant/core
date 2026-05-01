@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aiohasupervisor.models.base import ContainerStats
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,7 +25,7 @@ from .const import (
     STATS_COORDINATOR,
     SUPERVISOR_CONTAINER,
 )
-from .coordinator import StatsDataKey
+from .coordinator import HassioStatsData
 from .entity import (
     HassioAddonEntity,
     HassioHostEntity,
@@ -65,17 +67,13 @@ ADDON_ENTITY_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         key="version",
         translation_key="version",
-        value_fn=lambda entity: (
-            entity.coordinator.data.addons[entity.addon_slug].addon.version
-        ),
+        value_fn=lambda entity: entity.addon_data.addon.version,
     ),
     HassioAddonSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="version_latest",
         translation_key="version_latest",
-        value_fn=lambda entity: (
-            entity.coordinator.data.addons[entity.addon_slug].addon.version_latest
-        ),
+        value_fn=lambda entity: entity.addon_data.addon.version_latest,
     ),
 )
 
@@ -119,14 +117,14 @@ HOST_ENTITY_DESCRIPTIONS = (
         key="agent_version",
         translation_key="agent_version",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda entity: entity.coordinator.data.host.agent_version,
+        value_fn=lambda entity: entity.host.agent_version,
     ),
     HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="apparmor_version",
         translation_key="apparmor_version",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda entity: entity.coordinator.data.host.apparmor_version,
+        value_fn=lambda entity: entity.host.apparmor_version,
     ),
     HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -135,7 +133,7 @@ HOST_ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda entity: entity.coordinator.data.host.disk_total,
+        value_fn=lambda entity: entity.host.disk_total,
     ),
     HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -144,7 +142,7 @@ HOST_ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda entity: entity.coordinator.data.host.disk_used,
+        value_fn=lambda entity: entity.host.disk_used,
     ),
     HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -153,7 +151,7 @@ HOST_ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda entity: entity.coordinator.data.host.disk_free,
+        value_fn=lambda entity: entity.host.disk_free,
     ),
 )
 
@@ -182,12 +180,23 @@ async def async_setup_entry(
     )
 
     # Add-on stats sensors (cpu_percent, memory_percent)
+    def stats_fn_factory(
+        addon_slug: str,
+    ) -> Callable[[HassioStatsData], ContainerStats | None]:
+        """Return a stats_fn for the given add-on slug."""
+
+        def stats_fn(data: HassioStatsData) -> ContainerStats | None:
+            """Return the stats for the given add-on."""
+            return data.addons.get(addon_slug)
+
+        return stats_fn
+
     entities.extend(
         HassioStatsSensor(
             coordinator=stats_coordinator,
             entity_description=entity_description,
             container_id=addon.addon.slug,
-            data_key=StatsDataKey.ADDONS,
+            stats_fn=stats_fn_factory(addon.addon.slug),
             device_id=addon.addon.slug,
             unique_id_prefix=addon.addon.slug,
         )
@@ -201,7 +210,7 @@ async def async_setup_entry(
             coordinator=stats_coordinator,
             entity_description=entity_description,
             container_id=CORE_CONTAINER,
-            data_key=StatsDataKey.CORE,
+            stats_fn=lambda data: data.core,
             device_id="core",
             unique_id_prefix="home_assistant_core",
         )
@@ -214,7 +223,7 @@ async def async_setup_entry(
             coordinator=stats_coordinator,
             entity_description=entity_description,
             container_id=SUPERVISOR_CONTAINER,
-            data_key=StatsDataKey.SUPERVISOR,
+            stats_fn=lambda data: data.supervisor,
             device_id="supervisor",
             unique_id_prefix="home_assistant_supervisor",
         )
