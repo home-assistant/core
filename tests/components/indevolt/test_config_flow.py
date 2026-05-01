@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import ALT_TEST_HOST, TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_MODEL_GEN2
+from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_HOST_ALT, TEST_MODEL_GEN2
 
 from tests.common import MockConfigEntry
 
@@ -137,7 +137,7 @@ async def test_reconfigure_flow_success(
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: ALT_TEST_HOST}
+        result["flow_id"], {CONF_HOST: TEST_HOST_ALT}
     )
 
     # Verify flow is aborted
@@ -148,7 +148,7 @@ async def test_reconfigure_flow_success(
     await hass.async_block_till_done()
 
     # Verify entry is updated
-    assert mock_config_entry.data[CONF_HOST] == ALT_TEST_HOST
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT
     assert mock_config_entry.data[CONF_SERIAL_NUMBER] == TEST_DEVICE_SN_GEN2
 
 
@@ -229,7 +229,7 @@ async def test_reconfigure_flow_different_device(
 
     # Configure mock to cause host collision with different device
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: ALT_TEST_HOST}
+        result["flow_id"], {CONF_HOST: TEST_HOST_ALT}
     )
 
     # Verify flow is aborted with correct reason
@@ -310,7 +310,7 @@ async def test_dhcp_ip_change(
         DOMAIN,
         context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
-            ip=ALT_TEST_HOST,
+            ip=TEST_HOST_ALT,
             hostname="indevolt",
             macaddress="1c784b8d47bb",
         ),
@@ -318,7 +318,7 @@ async def test_dhcp_ip_change(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == ALT_TEST_HOST
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT
 
 
 @pytest.mark.parametrize(

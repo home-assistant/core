@@ -113,7 +113,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm UDP discovery by user."""
+        """Confirm DHCP discovery by user."""
         assert self._discovered_host is not None
         assert self._discovered_device_data is not None
 
