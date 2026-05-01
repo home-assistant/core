@@ -53,8 +53,8 @@ async def test_user_flow(
     assert not result["result"].unique_id
 
     # The live connection must NOT be disconnected; it is handed off to setup.
-    mock_pyvlx.connect.assert_called_once()
-    mock_pyvlx.disconnect.assert_not_called()
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
     assert hass.data[PYVLX_FROM_CONFIG_FLOW]["127.0.0.1"] is mock_pyvlx
 
 
@@ -99,9 +99,9 @@ async def test_user_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    mock_pyvlx.connect.assert_called_once()
+    mock_pyvlx.connect.assert_awaited_once()
     # On failure nothing is stored and no disconnect occurs.
-    mock_pyvlx.disconnect.assert_not_called()
+    mock_pyvlx.disconnect.assert_not_awaited()
     assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
 
     mock_pyvlx.connect.side_effect = None
@@ -173,8 +173,8 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_PASSWORD] == "New Password"
 
     # The live connection must NOT be disconnected; it is handed off to setup.
-    mock_pyvlx.connect.assert_called_once()
-    mock_pyvlx.disconnect.assert_not_called()
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -264,8 +264,8 @@ async def test_dhcp_discovery(
     }
     assert result["result"].unique_id == "VELUX_KLF_ABCD"
 
-    mock_pyvlx.connect.assert_called_once()
-    mock_pyvlx.disconnect.assert_not_called()
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
     assert hass.data[PYVLX_FROM_CONFIG_FLOW]["127.0.0.1"] is mock_pyvlx
 
 

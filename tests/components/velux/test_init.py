@@ -113,7 +113,7 @@ async def test_setup_uses_preconnected_pyvlx_from_config_flow(
     assert result["result"].state is ConfigEntryState.LOADED
 
     # connect was called exactly once (by config flow), setup must not call it again
-    mock_pyvlx.connect.assert_called_once()
+    mock_pyvlx.connect.assert_awaited_once()
     # ensure_connected was called once (by async_setup_entry)
     mock_pyvlx.ensure_connected.assert_awaited_once()
     # The gateway must not be disconnected between config flow and setup
