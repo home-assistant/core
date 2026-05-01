@@ -6,9 +6,11 @@ import asyncio
 
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
+from websockets.exceptions import WebSocketException
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import client_context
 
@@ -80,29 +82,23 @@ async def async_setup_entry(
     # socket, causing ConnectionClosedOK errors (issue #164441).
     try:
         await websocket_api.connect(client_context())
-
-        # Register callbacks and subscribe each coordinator to its device messages
-        await asyncio.gather(
-            websocket_wind_coordinator.async_setup(),
-            websocket_observation_coordinator.async_setup(),
-        )
-
-        entry.runtime_data = WeatherFlowCoordinators(
-            rest_data_coordinator,
-            websocket_wind_coordinator,
-            websocket_observation_coordinator,
-        )
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
-        try:
-            await _async_disconnect_websocket()
-        except Exception:  # noqa: BLE001
-            LOGGER.exception(
-                "Error while cleaning up WeatherFlow websocket after setup failure"
-            )
-        raise
+    except (OSError, WebSocketException) as err:
+        raise ConfigEntryError("Error connecting to WeatherFlow websocket") from err
 
     entry.async_on_unload(_async_disconnect_websocket)
+
+    # Register callbacks and subscribe each coordinator to its device messages
+    await asyncio.gather(
+        websocket_wind_coordinator.async_setup(),
+        websocket_observation_coordinator.async_setup(),
+    )
+
+    entry.runtime_data = WeatherFlowCoordinators(
+        rest_data_coordinator,
+        websocket_wind_coordinator,
+        websocket_observation_coordinator,
+    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

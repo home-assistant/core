@@ -146,12 +146,7 @@ class BaseWebsocketCoordinator[T](BaseWeatherFlowCoordinator[dict[int, T | None]
         }
 
     async def async_setup(self) -> None:
-        """Register callbacks and subscribe to device messages.
-
-        The websocket connection must already be established before calling this.
-        Call websocket_api.connect() once in async_setup_entry before invoking
-        async_setup() on each coordinator.
-        """
+        """Register callbacks and subscribe to device messages."""
         self.websocket_api.register_callback(
             message_type=self._event_type,
             callback=self._handle_websocket_message,
