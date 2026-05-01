@@ -1,7 +1,5 @@
 """Support for events which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 

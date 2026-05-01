@@ -230,18 +230,25 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "connect_outcome",
-    [{"return_value": False}, {"side_effect": ConnectionRefusedError(61, "")}],
-    ids=["returns_false", "raises_oserror"],
+    ("connect_outcome", "expected_error"),
+    [
+        ({"return_value": False}, "cannot_connect"),
+        ({"side_effect": ConnectionRefusedError(61, "")}, "cannot_connect_ip"),
+    ],
+    ids=["serial_mismatch", "tcp_failure"],
 )
 async def test_configure_cannot_connect(
-    hass: HomeAssistant, connect_outcome: dict[str, object]
+    hass: HomeAssistant,
+    connect_outcome: dict[str, object],
+    expected_error: str,
 ) -> None:
-    """Test we surface a connection failure as a form error.
+    """Connect failures map to distinct error keys.
 
-    pynobo's async_connect_hub may either return False (on protocol-level
-    failures) or raise OSError (e.g., ConnectionRefusedError when the port
-    is closed at the IP). Both paths must produce 'cannot_connect'.
+    pynobo's async_connect_hub returns False on a successful TCP connect
+    followed by a handshake REJECT (serial mismatch) and raises OSError
+    on TCP-level failure (wrong IP / hub offline). We surface these as
+    cannot_connect ("check serial number") and cannot_connect_ip
+    ("check IP address") respectively.
     """
     with patch(
         "pynobo.nobo.async_discover_hubs",
@@ -264,7 +271,7 @@ async def test_configure_cannot_connect(
             {"serial_suffix": "012"},
         )
         assert result3["type"] is FlowResultType.FORM
-        assert result3["errors"] == {"base": "cannot_connect"}
+        assert result3["errors"] == {"base": expected_error}
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
 
 

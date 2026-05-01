@@ -1,7 +1,5 @@
 """Provides device actions for Network UPS Tools (NUT)."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol

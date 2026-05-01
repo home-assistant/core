@@ -1,7 +1,5 @@
 """Coordinators for the PrusaLink integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from datetime import timedelta

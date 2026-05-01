@@ -1,7 +1,5 @@
 """Config flow for Nobø Ecohub integration."""
 
-from __future__ import annotations
-
 import socket
 from typing import TYPE_CHECKING, Any
 
@@ -213,15 +211,18 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         except OSError as err:
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
+        # pynobo distinguishes the two failure modes: TCP-level errors
+        # (wrong IP, hub offline, port closed) raise OSError, while a
+        # successful TCP connection followed by a handshake REJECT
+        # (serial mismatch) returns False.
         try:
-            connected = await hub.async_connect_hub(ip_address, serial)
+            if not await hub.async_connect_hub(ip_address, serial):
+                raise NoboHubConnectError("cannot_connect")
+            return hub.hub_info["name"]
         except OSError as err:
-            raise NoboHubConnectError("cannot_connect") from err
-        if not connected:
-            raise NoboHubConnectError("cannot_connect")
-        name = hub.hub_info["name"]
-        await hub.close()
-        return name
+            raise NoboHubConnectError("cannot_connect_ip") from err
+        finally:
+            await hub.close()
 
     @staticmethod
     def _format_hub(ip, serial_prefix):

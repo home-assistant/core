@@ -1,7 +1,5 @@
 """The Casper Glow integration."""
 
-from __future__ import annotations
-
 from pycasperglow import CasperGlow
 
 from homeassistant.components import bluetooth

@@ -1,7 +1,5 @@
 """Module to coordinate user intentions."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Collection, Coroutine, Iterable

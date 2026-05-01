@@ -1,7 +1,5 @@
 """Base SamsungTV Entity."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from wakeonlan import send_magic_packet

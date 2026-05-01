@@ -1,7 +1,5 @@
 """UniFi Protect Integration utils."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator, Iterable
 import contextlib
 from functools import wraps
