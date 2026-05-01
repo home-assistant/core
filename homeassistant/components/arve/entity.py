@@ -1,7 +1,5 @@
 """Arve base entity."""
 
-from __future__ import annotations
-
 from asyncarve import ArveDeviceInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Support for Jellyfin remote commands."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import time
 from typing import Any

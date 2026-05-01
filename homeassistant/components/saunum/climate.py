@@ -1,7 +1,5 @@
 """Climate platform for Saunum Leil Sauna Control Unit."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from typing import Any

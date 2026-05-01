@@ -1,7 +1,5 @@
 """Fixtures for the Coolmaster integration."""
 
-from __future__ import annotations
-
 import copy
 from typing import Any
 from unittest.mock import patch
