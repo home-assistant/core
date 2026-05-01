@@ -2,8 +2,15 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import pytest
+
 from homeassistant import config_entries
-from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, DOMAIN
+from homeassistant.components.nobo_hub.const import (
+    CONF_OVERRIDE_TYPE,
+    CONF_SERIAL,
+    DOMAIN,
+)
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -60,6 +67,65 @@ async def test_configure_with_discover(
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("discovered", "expected_devices"),
+    [
+        # Same IP+prefix hidden; sibling with same prefix at a different IP shown.
+        (
+            [("1.1.1.1", "111111111"), ("2.2.2.2", "111111111")],
+            {"2.2.2.2", "manual"},
+        ),
+        # Same IP, different prefix → different hub (e.g. replacement), shown.
+        ([("1.1.1.1", "222222222")], {"1.1.1.1", "manual"}),
+    ],
+    ids=["sibling_different_ip", "replaced_hub"],
+)
+async def test_configure_filters_configured_hubs(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    discovered: list[tuple[str, str]],
+    expected_devices: set[str],
+) -> None:
+    """Configured (IP, prefix) pairs are hidden; everything else stays in the picker."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="111111111012",
+        data={CONF_SERIAL: "111111111012", CONF_IP_ADDRESS: "1.1.1.1"},
+    ).add_to_hass(hass)
+
+    with patch("pynobo.nobo.async_discover_hubs", return_value=discovered):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert set(result["data_schema"].schema["device"].container) == expected_devices
+
+
+async def test_configure_skips_user_step_when_all_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Flow lands on manual step when every discovered hub's IP is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="111111111012",
+        data={CONF_SERIAL: "111111111012", CONF_IP_ADDRESS: "1.1.1.1"},
+    ).add_to_hass(hass)
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "111111111")],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
 
 async def test_configure_manual(

@@ -45,7 +45,20 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._discovered_hubs is None:
-            self._discovered_hubs = dict(await nobo.async_discover_hubs())
+            # Wait 5s — real-world gaps up to ~4s have been observed.
+            discovered = dict(await nobo.async_discover_hubs(autodiscover_wait=5.0))
+            # Hide hubs that already have a config entry. Include matching on IP
+            # as serial prefix is not unique.
+            configured = {
+                (entry.data[CONF_IP_ADDRESS], entry.unique_id[:9])
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.unique_id
+            }
+            self._discovered_hubs = {
+                ip: prefix
+                for ip, prefix in discovered.items()
+                if (ip, prefix) not in configured
+            }
 
         if not self._discovered_hubs:
             # No hubs auto discovered
