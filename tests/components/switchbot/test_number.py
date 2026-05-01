@@ -74,7 +74,7 @@ async def test_meter_pro_co2_set_display_time_offset(
     time_offset: int,
     expected_seconds_on_device: int,
 ) -> None:
-    """Test setting time offset on a MeterProCO2 device.."""
+    """Test setting time offset on a MeterProCO2 device."""
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
