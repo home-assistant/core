@@ -77,7 +77,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch device info once on boot."""
         try:
             config_data = await self.api.get_config()
-        except (TimeoutError, ClientError) as err:
+        except (ClientError, OSError) as err:
             raise ConfigEntryNotReady(f"Device config retrieval failed: {err}") from err
 
         # Cache device information
@@ -91,7 +91,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             return await self.api.fetch_data(sensor_keys)
-        except (TimeoutError, ClientError) as err:
+        except (ClientError, OSError) as err:
             raise UpdateFailed(f"Device update failed: {err}") from err
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
