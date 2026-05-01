@@ -261,6 +261,7 @@ async def test_switch_optimistic_state_on_toggle(
     assert entity_state
     assert entity_state.state == "on"
 
+
 async def test_switch_optimistic_state_reverts_on_get_camera_failure(
     hass: HomeAssistant,
 ) -> None:
