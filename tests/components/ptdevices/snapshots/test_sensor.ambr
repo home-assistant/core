@@ -290,7 +290,6 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'unknown',
         'working',
         'not_connected_yet',
         'not_connected',
@@ -335,7 +334,6 @@
       'device_class': 'enum',
       'friendly_name': 'Garden rain barrel Status',
       'options': list([
-        'unknown',
         'working',
         'not_connected_yet',
         'not_connected',
@@ -697,7 +695,6 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'unknown',
         'working',
         'not_connected_yet',
         'not_connected',
@@ -742,7 +739,6 @@
       'device_class': 'enum',
       'friendly_name': 'Home Status',
       'options': list([
-        'unknown',
         'working',
         'not_connected_yet',
         'not_connected',
