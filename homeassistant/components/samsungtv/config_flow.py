@@ -374,11 +374,15 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get first existing matching entry (prefer unique id)."""
         matching_host_entry: ConfigEntry | None = None
         for entry in self._async_current_entries(include_ignore=False):
-            if (self._mac and self._mac == entry.data.get(CONF_MAC)) or (
-                self._upnp_udn and self._upnp_udn == entry.unique_id
-            ):
+            # UUID match — this is a unique_id match
+            if self._upnp_udn and self._upnp_udn == entry.unique_id:
                 LOGGER.debug("Found entry matching unique_id for %s", self._host)
                 return entry, True
+
+            # MAC match — same physical device but not a unique_id match
+            if self._mac and self._mac == entry.data.get(CONF_MAC):
+                LOGGER.debug("Found entry matching MAC for %s", self._host)
+                return entry, False
 
             if entry.data[CONF_HOST] == self._host:
                 LOGGER.debug("Found entry matching host for %s", self._host)
