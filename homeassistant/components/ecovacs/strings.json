@@ -109,6 +109,9 @@
     "image": {
       "map": {
         "name": "Map"
+      },
+      "trace_map": {
+        "name": "Trace map"
       }
     },
     "number": {
