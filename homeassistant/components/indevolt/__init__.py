@@ -1,7 +1,5 @@
 """Home Assistant integration for indevolt device."""
 
-import logging
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -10,8 +8,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -38,8 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> 
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up services."""
+    """Set up indevolt services (actions)."""
+
     await async_setup_services(hass)
+
     return True
 
 
