@@ -74,17 +74,11 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     def _update_group_member(self) -> None:
         """Update group members based on current segments."""
         segment_unique_ids = [
-            f"{self.coordinator.data.info.mac_address}_{segment.segment_id}"
-            for segment in sorted(
-                (
-                    segment
-                    for segment in self.coordinator.data.state.segments.values()
-                    if segment.segment_id is not None
-                ),
-                key=lambda segment: segment.segment_id,
-            )
+            f"{self.coordinator.data.info.mac_address}_{segment_id}"
+            for segment_id in sorted(self.coordinator.segment_ids)
         ]
-        self.group.member_unique_ids = segment_unique_ids
+        if segment_unique_ids != self.group.member_unique_ids:
+            self.group.member_unique_ids = segment_unique_ids
 
     @property
     def brightness(self) -> int | None:
@@ -305,11 +299,7 @@ def async_update_segments(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {
-        light.segment_id
-        for light in coordinator.data.state.segments.values()
-        if light.segment_id is not None
-    }
+    segment_ids = coordinator.segment_ids
     new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
 
     # More than 1 segment now? No main? Add main controls
