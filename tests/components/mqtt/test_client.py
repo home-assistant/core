@@ -1204,7 +1204,7 @@ async def test_wildcard_unsubscribe_race(
     ]
     expected_calls_2 = [
         call.subscribe("test/#", 0, properties=ANY),
-        call.subscribe("test/#", 0, ANY),
+        call.subscribe("test/#", 0, properties=ANY),
     ]
     expected_calls_3 = [
         call.subscribe("test/#", 0, properties=ANY),
