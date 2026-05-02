@@ -1,7 +1,5 @@
 """Backup platform for the Google Drive integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging

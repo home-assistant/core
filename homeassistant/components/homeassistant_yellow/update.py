@@ -1,7 +1,5 @@
 """Home Assistant Yellow firmware update entity."""
 
-from __future__ import annotations
-
 import logging
 
 from universal_silabs_flasher.flasher import YellowFlasher

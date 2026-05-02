@@ -1,7 +1,5 @@
 """Config flow for Husqvarna Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import random
 from typing import Any

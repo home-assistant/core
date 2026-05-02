@@ -1,7 +1,5 @@
 """Support for KNX scene entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xknx.devices import Device as XknxDevice, Scene as XknxScene

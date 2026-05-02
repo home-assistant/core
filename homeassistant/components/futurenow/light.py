@@ -1,7 +1,5 @@
 """Support for FutureNow Ethernet unit outputs as Lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pyfnip

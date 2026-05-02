@@ -1,7 +1,5 @@
 """Event platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from unifi_access_api import Door
