@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfTime,
 )
@@ -1626,6 +1627,34 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
+    ),
+    DeviceCategory.TZC1: (
+        TuyaSensorEntityDescription(
+            key=DPCode.WEIGHT,
+            translation_key="weight",
+            device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.REALTIME_DATA,
+            translation_key="realtime_weight",
+            device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HEART_RATE,
+            translation_key="heart_rate",
+            native_unit_of_measurement="bpm",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BODY_RESISTANCE,
+            translation_key="body_resistance",
+            native_unit_of_measurement="ohm",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
     ),
 }
 
