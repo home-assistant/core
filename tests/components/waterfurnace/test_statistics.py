@@ -5,7 +5,13 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from waterfurnace.waterfurnace import WFCredentialError, WFEnergyData, WFNoDataError
+from waterfurnace.waterfurnace import (
+    WFCredentialError,
+    WFEnergyData,
+    WFError,
+    WFException,
+    WFNoDataError,
+)
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models.statistics import StatisticData
@@ -225,6 +231,10 @@ async def test_no_data_error_handled_gracefully(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "energy_error",
+    [WFCredentialError("session expired"), WFError("401 Unauthorized")],
+)
 @pytest.mark.freeze_time(NOW)
 @pytest.mark.usefixtures("seed_statistics")
 async def test_login_credential_error_raises_update_failed(
@@ -233,16 +243,15 @@ async def test_login_credential_error_raises_update_failed(
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
     freezer: FrozenDateTimeFactory,
+    energy_error: WFException,
 ) -> None:
-    """Test that WFCredentialError during energy login raises UpdateFailed."""
+    """Test that WFCredentialError/WFError during energy fetch triggers re-login."""
     await _setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # On next poll, get_energy_data fails with expired session, then
     # re-login also fails with credential error.
-    mock_waterfurnace_client.get_energy_data.side_effect = WFCredentialError(
-        "session expired"
-    )
+    mock_waterfurnace_client.get_energy_data.side_effect = energy_error
     mock_waterfurnace_client.login.side_effect = WFCredentialError("bad creds")
 
     await _trigger_energy_poll(hass, freezer)
