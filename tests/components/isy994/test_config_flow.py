@@ -4,7 +4,6 @@ import re
 from unittest.mock import patch
 
 from pyisy import ISYConnectionError, ISYInvalidAuthError
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
