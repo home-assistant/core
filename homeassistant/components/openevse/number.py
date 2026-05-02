@@ -124,18 +124,21 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
             await self.entity_description.set_value_fn(self.coordinator.charger, value)
         except ValueError as err:
             raise ServiceValidationError(
-                f"Value {value} is out of range for the charger"
+                f"Value {value} is invalid for the charger: {err}"
             ) from err
         except AuthenticationError as err:
             raise HomeAssistantError(
                 "Authentication failed while communicating with the charger"
+            ) from err
+        except UnsupportedFeature as err:
+            raise HomeAssistantError(
+                f"The charger does not support this feature: {err}"
             ) from err
         except (
             TimeoutError,
             ServerTimeoutError,
             ContentTypeError,
             ParseJSONError,
-            UnsupportedFeature,
         ) as err:
             raise HomeAssistantError(
                 f"Failed to communicate with the charger: {err}"
