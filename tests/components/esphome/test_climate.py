@@ -698,7 +698,7 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
         (
             3,
             UnitOfTemperature.CELSIUS,
-        ),  # unknown value maps to Celsius via aioesphomeapi
+        ),  # unknown value falls back to Celsius via HA's TEMPERATURE_UNIT_MAP default
     ],
 )
 async def test_climate_entity_temperature_unit(
