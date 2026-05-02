@@ -1,0 +1,16 @@
+{
+  "domain": "wjg_camera",
+  "name": "WJG XM-3820 Camera Bridge",
+  "version": "1.0.0",
+  "documentation": "https://github.com/your-repo/wjg-ha-bridge",
+  "issue_tracker": "https://github.com/your-repo/wjg-ha-bridge/issues",
+  "requirements": [
+    "onvif-zeep>=0.2.12",
+    "ffmpeg-python>=0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": [],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "quality_scale": "custom"
+}
