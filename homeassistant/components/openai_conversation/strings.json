@@ -19,7 +19,7 @@
           "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]",
           "base_url": "[%key:component::openai_conversation::config::step::user::data_description::base_url%]"
         },
-        "description": "Reauthentication required. Please enter your updated API key."
+        "description": "Reauthentication required. Please enter your updated credentials."
       },
       "user": {
         "data": {
@@ -28,7 +28,7 @@
         },
         "data_description": {
           "api_key": "Your OpenAI API key.",
-          "base_url": "Optional OpenAI-compatible API base URL. Leave empty to use OpenAI."
+          "base_url": "Advanced option for an OpenAI-compatible API base URL. Third-party endpoints are not supported for Home Assistant bug reports unless the issue is reproducible with the official OpenAI API. Leave empty to use OpenAI."
         },
         "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
       }

@@ -11,7 +11,6 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -29,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -104,12 +104,43 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
+BASE_URL_SCHEMA = vol.All(str, str.strip, vol.Any("", cv.url))
+
+
+def _user_data_schema(*, show_base_url: bool) -> vol.Schema:
+    """Return the user form schema."""
+    schema: VolDictType = {
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_BASE_URL): str,
     }
-)
+    if show_base_url:
+        schema[vol.Optional(CONF_BASE_URL)] = BASE_URL_SCHEMA
+
+    return vol.Schema(schema)
+
+
+def _normalize_user_input(
+    data: dict[str, Any], *, keep_empty_base_url: bool = False
+) -> dict[str, Any]:
+    """Normalize optional fields before validation and storage."""
+    normalized_data = dict(data)
+    base_url = normalized_data.get(CONF_BASE_URL)
+    if base_url is None:
+        normalized_data.pop(CONF_BASE_URL, None)
+    elif base_url := base_url.strip():
+        normalized_data[CONF_BASE_URL] = base_url
+    elif keep_empty_base_url:
+        normalized_data[CONF_BASE_URL] = ""
+    else:
+        normalized_data.pop(CONF_BASE_URL, None)
+
+    return normalized_data
+
+
+def _base_url_from_data(data: Mapping[str, Any]) -> str | None:
+    """Return a normalized base URL for OpenAI SDK clients."""
+    if base_url := data.get(CONF_BASE_URL):
+        return base_url.strip() or None
+    return None
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -119,7 +150,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """
     client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY],
-        base_url=data.get(CONF_BASE_URL),
+        base_url=_base_url_from_data(data),
         http_client=get_async_client(hass),
     )
     await client.models.list(timeout=10.0)
@@ -139,7 +170,8 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
+            user_input = _normalize_user_input(user_input)
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
                 await validate_input(self.hass, user_input)
             except openai.APIConnectionError:
@@ -150,10 +182,6 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
                 return self.async_create_entry(
                     title="ChatGPT",
                     data=user_input,
@@ -188,7 +216,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                _user_data_schema(show_base_url=self.show_advanced_options), user_input
             ),
             errors=errors,
             description_placeholders={
@@ -207,11 +235,62 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if not user_input:
+            reauth_entry = self._get_reauth_entry()
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    _user_data_schema(
+                        show_base_url=self.show_advanced_options
+                        or CONF_BASE_URL in reauth_entry.data
+                    ),
+                    {CONF_BASE_URL: reauth_entry.data.get(CONF_BASE_URL)},
+                ),
             )
 
-        return await self.async_step_user(user_input)
+        reauth_entry = self._get_reauth_entry()
+        normalized_input = _normalize_user_input(user_input, keep_empty_base_url=True)
+        self._async_abort_entries_match({CONF_API_KEY: normalized_input[CONF_API_KEY]})
+
+        validation_data = dict(normalized_input)
+        if CONF_BASE_URL not in validation_data and (
+            base_url := reauth_entry.data.get(CONF_BASE_URL)
+        ):
+            validation_data[CONF_BASE_URL] = base_url
+
+        try:
+            await validate_input(self.hass, validation_data)
+        except openai.APIConnectionError:
+            errors = {"base": "cannot_connect"}
+        except openai.AuthenticationError:
+            errors = {"base": "invalid_auth"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors = {"base": "unknown"}
+        else:
+            updated_data = dict(reauth_entry.data)
+            updated_data[CONF_API_KEY] = normalized_input[CONF_API_KEY]
+            if normalized_input.get(CONF_BASE_URL):
+                updated_data[CONF_BASE_URL] = normalized_input[CONF_BASE_URL]
+            elif CONF_BASE_URL in normalized_input:
+                updated_data.pop(CONF_BASE_URL, None)
+            return self.async_update_reload_and_abort(reauth_entry, data=updated_data)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                _user_data_schema(
+                    show_base_url=self.show_advanced_options
+                    or CONF_BASE_URL in reauth_entry.data
+                    or CONF_BASE_URL in normalized_input
+                ),
+                {
+                    CONF_BASE_URL: normalized_input.get(
+                        CONF_BASE_URL, reauth_entry.data.get(CONF_BASE_URL)
+                    )
+                },
+            ),
+            errors=errors,
+        )
 
     @classmethod
     @callback
@@ -634,6 +713,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if zone_home is not None:
             client = openai.AsyncOpenAI(
                 api_key=self._get_entry().data[CONF_API_KEY],
+                base_url=_base_url_from_data(self._get_entry().data),
                 http_client=get_async_client(self.hass),
             )
             location_schema = vol.Schema(
