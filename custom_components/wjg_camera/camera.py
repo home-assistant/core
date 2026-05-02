@@ -20,16 +20,15 @@ from .coordinator import WJGCameraCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: WJGCameraCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([WJGCamera(coordinator, entry)])
 
-class WJGCamera(  # pyright: ignore[reportArgumentType]
-    CoordinatorEntity[WJGCameraCoordinator],
-    Camera,
-):
+
+class WJGCamera(CoordinatorEntity[WJGCameraCoordinator], Camera):
     """Kamera-Entity für WJG XM-3820."""
 
     _attr_has_entity_name = True
@@ -38,7 +37,8 @@ class WJGCamera(  # pyright: ignore[reportArgumentType]
     def __init__(
         self, coordinator: WJGCameraCoordinator, entry: ConfigEntry
     ) -> None:
-        super().__init__(coordinator)
+        # FIX: Nur super().__init__ aufrufen – Camera.__init__ wird via MRO korrekt aufgerufen
+        CoordinatorEntity.__init__(self, coordinator)
         Camera.__init__(self)
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_camera"
@@ -60,10 +60,16 @@ class WJGCamera(  # pyright: ignore[reportArgumentType]
 
     @property
     def available(self) -> bool:
-        return bool(
-            super().available and self.coordinator.data
-            and self.coordinator.data.get("available", False)
-        )
+        """FIX: Kamera ist verfügbar sobald Coordinator läuft,
+        auch wenn der erste Snapshot noch aussteht.
+        Nur unavailable wenn Coordinator selbst fehlschlägt."""
+        if not super().available:
+            return False
+        # Wenn noch keine Daten da sind (erster Start), trotzdem verfügbar zeigen
+        if self.coordinator.data is None:
+            return False
+        # available-Flag aus Coordinator-Daten auswerten
+        return self.coordinator.data.get("available", False)
 
     @property
     def is_recording(self) -> bool:
@@ -87,39 +93,16 @@ class WJGCamera(  # pyright: ignore[reportArgumentType]
         return await self.coordinator.async_snapshot()
 
     async def async_enable_motion_detection(self) -> None:
-        """Bewegungserkennung aktivieren."""
         _LOGGER.info("Bewegungserkennung aktiviert")
-        return None
 
     async def async_disable_motion_detection(self) -> None:
-        """Bewegungserkennung deaktivieren."""
         _LOGGER.info("Bewegungserkennung deaktiviert")
-        return None
 
     async def async_turn_on(self) -> None:
-        """Kamera-Stream einschalten (IR-LEDs etc.)."""
-        return None
+        """Kamera-Stream einschalten."""
 
     async def async_turn_off(self) -> None:
         """Kamera-Stream ausschalten."""
-        return None
-
-    def camera_image(
-        self, width: int | None = None, height: int | None = None
-    ) -> bytes | None:
-        raise NotImplementedError()
-
-    def enable_motion_detection(self) -> None:
-        raise NotImplementedError()
-
-    def disable_motion_detection(self) -> None:
-        raise NotImplementedError()
-
-    def turn_on(self) -> None:
-        raise NotImplementedError()
-
-    def turn_off(self) -> None:
-        raise NotImplementedError()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
