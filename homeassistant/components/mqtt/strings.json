@@ -162,7 +162,7 @@
             "component": "Entity"
           },
           "data_description": {
-            "component": "Select the entity you want to delete. Minimal one entity is required."
+            "component": "Select the entity you want to delete. At least one entity is required."
           },
           "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
           "title": "Delete entity"
