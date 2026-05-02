@@ -78,11 +78,14 @@ async def async_setup_entry(
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
     entry_unique_id = config.unique_id
+    initialized_controllers: set[str] = set()
 
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
         if entry_unique_id and ctrl.device_uid != entry_unique_id:
+            return
+        if ctrl.device_uid in initialized_controllers:
             return
 
         conf: ConfigType | None = hass.data.get(DATA_CONFIG)
@@ -91,6 +94,8 @@ async def async_setup_entry(
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
             _LOGGER.debug("Controller UID=%s ignored as excluded", ctrl.device_uid)
             return
+        # This dedup probably isn't needed, but it's there for safety
+        initialized_controllers.add(ctrl.device_uid)
         _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
 
         device = ControllerDevice(ctrl)
