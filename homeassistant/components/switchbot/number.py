@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 import switchbot
 from switchbot import SwitchbotOperationError
 from switchbot.devices.meter_pro import MAX_TIME_OFFSET
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,6 +18,7 @@ from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
 PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(days=7)
 _LOGGER = logging.getLogger(__name__)
 _SECONDS_IN_MINUTE = 60
 _MAX_TIME_OFFSET_MINUTES = MAX_TIME_OFFSET // _SECONDS_IN_MINUTE
@@ -40,12 +42,15 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
     """Number entity to set the time offset for Meter Pro CO2 devices."""
 
     _device: switchbot.SwitchbotMeterProCO2
+    _attr_device_class = NumberDeviceClass.DURATION
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "display_time_offset"
     _attr_native_min_value = -_MAX_TIME_OFFSET_MINUTES
     _attr_native_max_value = _MAX_TIME_OFFSET_MINUTES
     _attr_native_step = 1.0
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_should_poll = True
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the number entity."""
@@ -56,6 +61,8 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
     async def async_set_native_value(self, value: float) -> None:
         """Set the time offset."""
         _LOGGER.debug("Setting time offset to %s minutes for %s", value, self._address)
+        if not value.is_integer():
+            raise ValueError("Time offset must be a whole number of minutes")
         offset_minutes = int(value)
         offset_seconds = offset_minutes * _SECONDS_IN_MINUTE
         await self._device.set_time_offset(offset_seconds)
@@ -71,4 +78,4 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
                 "Failed to update time offset for %s", self._address, exc_info=True
             )
             return
-        self._attr_native_value = offset_seconds // _SECONDS_IN_MINUTE
+        self._attr_native_value = round(offset_seconds / _SECONDS_IN_MINUTE)

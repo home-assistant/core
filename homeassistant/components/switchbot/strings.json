@@ -274,7 +274,7 @@
     },
     "number": {
       "display_time_offset": {
-        "name": "Display time ±offset"
+        "name": "Display time offset"
       }
     },
     "select": {
