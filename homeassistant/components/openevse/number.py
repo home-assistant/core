@@ -4,7 +4,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.__main__ import OpenEVSE
+from openevsehttp.exceptions import (
+    AuthenticationError,
+    ParseJSONError,
+    UnsupportedFeature,
+)
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -18,6 +24,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -113,4 +120,23 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.entity_description.set_value_fn(self.coordinator.charger, value)
+        try:
+            await self.entity_description.set_value_fn(self.coordinator.charger, value)
+        except ValueError as err:
+            raise ServiceValidationError(
+                f"Value {value} is out of range for the charger"
+            ) from err
+        except AuthenticationError as err:
+            raise HomeAssistantError(
+                "Authentication failed while communicating with the charger"
+            ) from err
+        except (
+            TimeoutError,
+            ServerTimeoutError,
+            ContentTypeError,
+            ParseJSONError,
+            UnsupportedFeature,
+        ) as err:
+            raise HomeAssistantError(
+                f"Failed to communicate with the charger: {err}"
+            ) from err
