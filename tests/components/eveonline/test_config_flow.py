@@ -323,3 +323,114 @@ async def test_flow_succeeds_after_oauth_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry,
+    setup_credentials: None,
+) -> None:
+    """Test a successful reauth flow updates the existing entry."""
+    with patch(
+        "homeassistant.components.eveonline.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert len(mock_setup.mock_calls) == 1
+
+        result = await mock_config_entry.start_reauth_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        state = parse_qs(urlparse(result["url"]).query)["state"][0]
+        client = await hass_client_no_auth()
+        await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+        fake_jwt = _make_jwt(
+            mock_config_entry.data["character_id"],
+            mock_config_entry.data["character_name"],
+        )
+        aioclient_mock.post(
+            OAUTH2_TOKEN,
+            json={
+                "refresh_token": "new-refresh-token",
+                "access_token": fake_jwt,
+                "token_type": "Bearer",
+                "expires_in": 1200,
+            },
+        )
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.data["token"]["refresh_token"] == "new-refresh-token"
+    assert len(mock_setup.mock_calls) == 2
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry,
+    setup_credentials: None,
+) -> None:
+    """Test reauth aborts when a different character is authenticated."""
+    with patch(
+        "homeassistant.components.eveonline.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert len(mock_setup.mock_calls) == 1
+
+        result = await mock_config_entry.start_reauth_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        state = parse_qs(urlparse(result["url"]).query)["state"][0]
+        client = await hass_client_no_auth()
+        await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+        aioclient_mock.post(
+            OAUTH2_TOKEN,
+            json={
+                "refresh_token": "new-refresh-token",
+                "access_token": _make_jwt(
+                    mock_config_entry.data["character_id"] + 1,
+                    "Other Character",
+                ),
+                "token_type": "Bearer",
+                "expires_in": 1200,
+            },
+        )
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
+    assert len(mock_setup.mock_calls) == 1
