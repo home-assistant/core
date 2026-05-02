@@ -17,9 +17,9 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_component, entity_registry as er
 
 from . import setup_integration
 
@@ -260,3 +260,69 @@ async def test_cover_not_created_when_no_initial_data(
     """Test cover entity is not created when coordinator has no initial data."""
     state = hass.states.get(ENTITY_ID)
     assert state is None
+
+
+@pytest.mark.parametrize(
+    ("mock_cover_variables", "expected_position", "expected_state"),
+    [
+        pytest.param(
+            {234: {}},
+            None,
+            STATE_UNKNOWN,
+            id="all_missing",
+        ),
+        pytest.param(
+            {234: {"Level": 0}},
+            0,
+            CoverState.CLOSED,
+            id="level_only_closed",
+        ),
+        pytest.param(
+            {234: {"Level": 80}},
+            80,
+            CoverState.OPEN,
+            id="level_only_open",
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_partial_variables(
+    hass: HomeAssistant,
+    expected_position: int | None,
+    expected_state: str,
+) -> None:
+    """Cover handles missing variables — falls back to position-derived is_closed."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_unavailable_when_data_disappears(
+    hass: HomeAssistant,
+) -> None:
+    """Cover becomes unavailable if coordinator stops returning its idx."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    component: entity_component.EntityComponent = hass.data[COVER_DOMAIN]
+    entity = component.get_entity(ENTITY_ID)
+    assert entity is not None
+    entity.coordinator.async_set_updated_data({})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
