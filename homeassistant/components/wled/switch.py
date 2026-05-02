@@ -2,14 +2,13 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any
 
 from wled import WLED
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_DURATION, ATTR_TARGET_BRIGHTNESS, ATTR_UDP_PORT
@@ -25,6 +24,7 @@ class WLEDSegmentSwitchEntityDescription(SwitchEntityDescription):
     """Describes WLED segment switch entity."""
 
     segment_translation_key: str
+    segment_named_translation_key: str
     set_segment: Callable[[WLED, int, bool], Awaitable[None]]
 
 
@@ -33,6 +33,7 @@ SEGMENT_SWITCHES: tuple[WLEDSegmentSwitchEntityDescription, ...] = (
         key="reverse",
         translation_key="reverse",
         segment_translation_key="segment_reverse",
+        segment_named_translation_key="segment_named_reverse",
         set_segment=lambda wled, segment, value: wled.segment(
             segment_id=segment,
             reverse=value,
@@ -42,6 +43,7 @@ SEGMENT_SWITCHES: tuple[WLEDSegmentSwitchEntityDescription, ...] = (
         key="freeze",
         translation_key="freeze",
         segment_translation_key="segment_freeze",
+        segment_named_translation_key="segment_named_freeze",
         set_segment=lambda wled, segment, value: wled.segment(
             segment_id=segment,
             freeze=value,
@@ -58,22 +60,23 @@ async def async_setup_entry(
     """Set up WLED switch based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        [
-            WLEDNightlightSwitch(coordinator),
-            WLEDSyncSendSwitch(coordinator),
-            WLEDSyncReceiveSwitch(coordinator),
-        ]
+    new_entities: list[WLEDEntity] = [
+        WLEDNightlightSwitch(coordinator),
+        WLEDSyncSendSwitch(coordinator),
+        WLEDSyncReceiveSwitch(coordinator),
+    ]
+
+    new_entities.extend(
+        WLEDSegmentSwitch(
+            coordinator=coordinator,
+            segment=segment_id,
+            description=description,
+        )
+        for description in SEGMENT_SWITCHES
+        for segment_id in coordinator.segment_ids
     )
 
-    update_segments = partial(
-        async_update_segments,
-        coordinator,
-        set(),
-        async_add_entities,
-    )
-    coordinator.async_add_listener(update_segments)
-    update_segments()
+    async_add_entities(new_entities)
 
 
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
@@ -194,9 +197,13 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         self.entity_description = description
         self._segment = segment
 
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
-        if segment != 0:
+        # The segment name defined in WLED is always used if available.
+        if self._segment_name:
+            self._attr_translation_key = description.segment_named_translation_key
+            self._attr_translation_placeholders = {"segment_name": self._segment_name}
+        elif segment != 0:
+            # Segment 0 uses a simpler name, which is more natural for when using
+            # a single segment / using WLED with one big LED strip.
             self._attr_translation_key = description.segment_translation_key
             self._attr_translation_placeholders = {"segment": str(segment)}
         else:
@@ -205,6 +212,13 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_{description.key}_{segment}"
         )
+
+    @property
+    def _segment_name(self) -> str | None:
+        """Return the segment name if available."""
+        if not (name := self.coordinator.data.state.segments[self._segment].name):
+            return None
+        return name
 
     @property
     def available(self) -> bool:
@@ -236,33 +250,3 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED segment switch."""
         await self._async_set_state(False)
-
-
-@callback
-def async_update_segments(
-    coordinator: WLEDDataUpdateCoordinator,
-    current_ids: set[int],
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Update segments."""
-    segment_ids = {
-        segment.segment_id
-        for segment in coordinator.data.state.segments.values()
-        if segment.segment_id is not None
-    }
-
-    new_entities: list[WLEDSegmentSwitch] = []
-
-    # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
-        current_ids.add(segment_id)
-        new_entities.extend(
-            WLEDSegmentSwitch(
-                coordinator=coordinator,
-                segment=segment_id,
-                description=description,
-            )
-            for description in SEGMENT_SWITCHES
-        )
-
-    async_add_entities(new_entities)

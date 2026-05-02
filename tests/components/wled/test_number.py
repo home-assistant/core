@@ -173,3 +173,22 @@ async def test_speed_dynamically_handle_segments(
     assert segment0.state == state_segment0
     assert (segment1 := hass.states.get(entity_id_segment1))
     assert segment1.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_segment_named"])
+async def test_number_named_segments(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test if named segments get the custom name."""
+    assert {
+        entity_id: entity_registry.entities[entity_id].original_name
+        for entity_id in entity_registry.entities
+    } == {
+        "number.wled_rgb_light_custom_segment_name_1_intensity": "Custom segment name 1 intensity",
+        "number.wled_rgb_light_custom_segment_name_1_speed": "Custom segment name 1 speed",
+        "number.wled_rgb_light_custom_segment_name_2_intensity": "Custom segment name 2 intensity",
+        "number.wled_rgb_light_custom_segment_name_2_speed": "Custom segment name 2 speed",
+    }

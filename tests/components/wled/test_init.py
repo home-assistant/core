@@ -4,15 +4,22 @@ import asyncio
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from wled import WLEDConnectionError
+from wled import Device as WLEDDevice, WLEDConnectionError
 
+from homeassistant.components.air_quality import SCAN_INTERVAL
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
@@ -211,3 +218,39 @@ async def test_migrate_entry_already_at_1_2_is_noop(
     assert entry.version == 1
     assert entry.minor_version == 2
     assert entry.unique_id == "aabbccddeeff"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_named_segments(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test if segment entities are created with the correct names and update when segment names change."""
+    assert entity_registry.async_get("light.wled_rgb_light").original_name is None
+    assert (
+        entity_registry.async_get("light.wled_rgb_light_segment_0").original_name
+        == "Segment 0"
+    )
+    assert (
+        entity_registry.async_get("light.wled_rgb_light_segment_1").original_name
+        == "Segment 1"
+    )
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        await async_load_json_object_fixture(hass, "rgb_segment_named.json", DOMAIN)
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("light.wled_rgb_light").original_name is None
+    assert (
+        entity_registry.async_get("light.wled_rgb_light_segment_0").original_name
+        == "Custom segment name 1"
+    )
+    assert (
+        entity_registry.async_get("light.wled_rgb_light_segment_1").original_name
+        == "Custom segment name 2"
+    )

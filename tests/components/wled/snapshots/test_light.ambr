@@ -466,6 +466,66 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.wled_rgb_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': 'main',
+    'unique_id': 'aabbccddeeff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[rgb][light.wled_rgb_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 128,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'WLED RGB Light',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.wled_rgb_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_snapshots[rgb][light.wled_rgb_light_segment_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
       'effect_list': list([
         'Solid',
         'Blink',
@@ -666,7 +726,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.wled_rgb_light',
+    'entity_id': 'light.wled_rgb_light_segment_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -674,12 +734,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Segment 0',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Segment 0',
     'platform': 'wled',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -689,7 +749,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_snapshots[rgb][light.wled_rgb_light-state]
+# name: test_snapshots[rgb][light.wled_rgb_light_segment_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 255,
@@ -884,7 +944,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGB Light',
+      'friendly_name': 'WLED RGB Light Segment 0',
       'hs_color': tuple(
         218.906,
         50.196,
@@ -904,67 +964,7 @@
       ),
     }),
     'context': <ANY>,
-    'entity_id': 'light.wled_rgb_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_snapshots[rgb][light.wled_rgb_light_main-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.wled_rgb_light_main',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Main',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Main',
-    'platform': 'wled',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': 'main',
-    'unique_id': 'aabbccddeeff',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_snapshots[rgb][light.wled_rgb_light_main-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'WLED RGB Light Main',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.wled_rgb_light_main',
+    'entity_id': 'light.wled_rgb_light_segment_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

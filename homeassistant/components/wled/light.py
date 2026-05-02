@@ -1,6 +1,5 @@
 """Support for LED lights."""
 
-from functools import partial
 from typing import Any, cast
 
 from homeassistant.components.light import (
@@ -40,18 +39,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED light based on a config entry."""
     coordinator = entry.runtime_data
-    if coordinator.keep_main_light:
-        async_add_entities([WLEDMainLight(coordinator=coordinator)])
+    new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
 
-    update_segments = partial(
-        async_update_segments,
-        coordinator,
-        set(),
-        async_add_entities,
+    if coordinator.has_main_light:
+        new_entities.append(WLEDMainLight(coordinator=coordinator))
+
+    new_entities.extend(
+        WLEDSegmentLight(coordinator, segment_id)
+        for segment_id in coordinator.segment_ids
     )
 
-    coordinator.async_add_listener(update_segments)
-    update_segments()
+    async_add_entities(new_entities)
 
 
 class WLEDMainLight(WLEDEntity, LightEntity):
@@ -61,6 +59,7 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_name = None
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED main light."""
@@ -122,9 +121,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         super().__init__(coordinator=coordinator)
         self._segment = segment
 
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
-        if segment == 0:
+        # The segment name defined in WLED is always used if available.
+        if self._segment_name:
+            self._attr_translation_key = "segment_named"
+            self._attr_translation_placeholders = {"segment_name": self._segment_name}
+        elif not self.coordinator.has_main_light:
             self._attr_name = None
         else:
             self._attr_translation_placeholders = {"segment": str(segment)}
@@ -144,6 +145,13 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         ):
             self._attr_color_mode = color_modes[0]
             self._attr_supported_color_modes = set(color_modes)
+
+    @property
+    def _segment_name(self) -> str | None:
+        """Return the segment name if available."""
+        if not (name := self.coordinator.data.state.segments[self._segment].name):
+            return None
+        return name
 
     @property
     def available(self) -> bool:
@@ -280,22 +288,3 @@ def async_update_segments(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {
-        light.segment_id
-        for light in coordinator.data.state.segments.values()
-        if light.segment_id is not None
-    }
-    new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
-
-    # More than 1 segment now? No main? Add main controls
-    if not coordinator.keep_main_light and (
-        len(current_ids) < 2 and len(segment_ids) > 1
-    ):
-        new_entities.append(WLEDMainLight(coordinator))
-
-    # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
-        current_ids.add(segment_id)
-        new_entities.append(WLEDSegmentLight(coordinator, segment_id))
-
-    async_add_entities(new_entities)

@@ -269,3 +269,23 @@ async def test_select_load_new_options_after_update(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes["options"] == new_options
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_segment_named"])
+async def test_select_named_segments(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test if named segments get the custom name."""
+    assert {
+        entity_id: entity_registry.entities[entity_id].original_name
+        for entity_id in entity_registry.entities
+    } == {
+        "select.wled_rgb_light_custom_segment_name_1_color_palette": "Custom segment name 1 color palette",
+        "select.wled_rgb_light_custom_segment_name_2_color_palette": "Custom segment name 2 color palette",
+        "select.wled_rgb_light_live_override": "Live override",
+        "select.wled_rgb_light_playlist": "Playlist",
+        "select.wled_rgb_light_preset": "Preset",
+    }

@@ -43,6 +43,9 @@
       },
       "segment": {
         "name": "Segment {segment}"
+      },
+      "segment_named": {
+        "name": "{segment_name}"
       }
     },
     "number": {
@@ -51,6 +54,12 @@
       },
       "segment_intensity": {
         "name": "Segment {segment} intensity"
+      },
+      "segment_named_intensity": {
+        "name": "{segment_name} intensity"
+      },
+      "segment_named_speed": {
+        "name": "{segment_name} speed"
       },
       "segment_speed": {
         "name": "Segment {segment} speed"
@@ -79,6 +88,9 @@
       },
       "segment_color_palette": {
         "name": "Segment {segment} color palette"
+      },
+      "segment_named_color_palette": {
+        "name": "{segment_name} color palette"
       }
     },
     "sensor": {
@@ -126,6 +138,12 @@
       },
       "segment_freeze": {
         "name": "Segment {segment} freeze"
+      },
+      "segment_named_freeze": {
+        "name": "{segment_name} freeze"
+      },
+      "segment_named_reverse": {
+        "name": "{segment_name} reverse"
       },
       "segment_reverse": {
         "name": "Segment {segment} reverse"

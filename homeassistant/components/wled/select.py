@@ -1,12 +1,10 @@
 """Support for LED selects."""
 
-from functools import partial
-
 from wled import LiveDataOverride
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
@@ -24,22 +22,18 @@ async def async_setup_entry(
     """Set up WLED select based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        [
-            WLEDLiveOverrideSelect(coordinator),
-            WLEDPlaylistSelect(coordinator),
-            WLEDPresetSelect(coordinator),
-        ]
+    new_entities: list[WLEDEntity] = [
+        WLEDLiveOverrideSelect(coordinator),
+        WLEDPlaylistSelect(coordinator),
+        WLEDPresetSelect(coordinator),
+    ]
+
+    new_entities.extend(
+        WLEDPaletteSelect(coordinator, segment_id)
+        for segment_id in coordinator.segment_ids
     )
 
-    update_segments = partial(
-        async_update_segments,
-        coordinator,
-        set(),
-        async_add_entities,
-    )
-    coordinator.async_add_listener(update_segments)
-    update_segments()
+    async_add_entities(new_entities)
 
 
 class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
@@ -158,15 +152,26 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
         """Initialize WLED ."""
         super().__init__(coordinator=coordinator)
+        self._segment = segment
 
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
-        if segment != 0:
+        # The segment name defined in WLED is always used if available.
+        if self._segment_name:
+            self._attr_translation_key = "segment_named_color_palette"
+            self._attr_translation_placeholders = {"segment_name": self._segment_name}
+        elif segment != 0:
+            # Segment 0 uses a simpler name, which is more natural for when using
+            # a single segment / using WLED with one big LED strip.
             self._attr_translation_key = "segment_color_palette"
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
-        self._segment = segment
+
+    @property
+    def _segment_name(self) -> str | None:
+        """Return the segment name if available."""
+        if not (name := self.coordinator.data.state.segments[self._segment].name):
+            return None
+        return name
 
     @property
     def available(self) -> bool:
@@ -199,26 +204,3 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set WLED segment to the selected color palette."""
         await self.coordinator.wled.segment(segment_id=self._segment, palette=option)
-
-
-@callback
-def async_update_segments(
-    coordinator: WLEDDataUpdateCoordinator,
-    current_ids: set[int],
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Update segments."""
-    segment_ids = {
-        segment.segment_id
-        for segment in coordinator.data.state.segments.values()
-        if segment.segment_id is not None
-    }
-
-    new_entities: list[WLEDPaletteSelect] = []
-
-    # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
-        current_ids.add(segment_id)
-        new_entities.append(WLEDPaletteSelect(coordinator, segment_id))
-
-    async_add_entities(new_entities)
