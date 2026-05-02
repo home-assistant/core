@@ -1,6 +1,6 @@
 """Test init of Ohme integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -45,3 +45,21 @@ async def test_device(
     device = device_registry.async_get_device({(DOMAIN, mock_client.serial)})
     assert device
     assert device == snapshot
+
+
+async def test_remove_entry_cleans_up_imported_history(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test removing the config entry cleans up imported history state."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.ohme.async_remove_energy_history",
+        new=AsyncMock(),
+    ) as mock_remove_history:
+        await hass.config_entries.async_remove(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_remove_history.assert_awaited_once_with(hass, mock_config_entry)

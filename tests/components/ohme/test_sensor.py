@@ -59,3 +59,19 @@ async def test_sensors_unavailable(
 
     state = hass.states.get("sensor.ohme_home_pro_energy")
     assert state.state == "1.0"
+
+
+async def test_summary_failure_nonfatal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test summary failures don't block setup of the live charger sensors."""
+    mock_client.async_get_charge_summary.side_effect = ApiException
+
+    await setup_integration(hass, mock_config_entry)
+
+    live_state = hass.states.get("sensor.ohme_home_pro_energy")
+    assert live_state
+    assert live_state.state == "1.0"
+    assert hass.states.get("sensor.ohme_home_pro_total_charged_energy") is None

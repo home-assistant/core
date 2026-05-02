@@ -54,6 +54,8 @@ def mock_client():
         client.status = ChargerStatus.CHARGING
         client.power = ChargerPower(0, 0, 0)
         client.available = True
+        client.session_start = None
+        client.session_finish = None
 
         client.target_soc = 50
         client.target_time = (8, 0)
@@ -64,6 +66,10 @@ def mock_client():
         client.cap_available = True
         client.cap_enabled = True
         client.energy = 1000
+        client.async_get_charge_session.return_value = None
+        client.async_get_charge_summary.return_value = {
+            "totalStats": {"energyChargedTotalWh": 123456}
+        }
         client.device_info = {
             "name": "Ohme Home Pro",
             "model": "Home Pro",

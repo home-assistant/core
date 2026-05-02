@@ -1,5 +1,7 @@
 """Set up ohme integration."""
 
+import logging
+
 from ohme import ApiException, AuthException, OhmeApiClient
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -16,9 +18,12 @@ from .coordinator import (
     OhmeDeviceInfoCoordinator,
     OhmeRuntimeData,
 )
+from .history import async_ensure_energy_history, async_remove_energy_history
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -53,22 +58,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
             translation_key="api_failed", translation_domain=DOMAIN
         ) from e
 
-    coordinators = (
-        OhmeChargeSessionCoordinator(hass, entry, client),
-        OhmeDeviceInfoCoordinator(hass, entry, client),
+    charge_session_coordinator = OhmeChargeSessionCoordinator(hass, entry, client)
+    device_info_coordinator = OhmeDeviceInfoCoordinator(hass, entry, client)
+
+    entry.runtime_data = OhmeRuntimeData(
+        charge_session_coordinator=charge_session_coordinator,
+        device_info_coordinator=device_info_coordinator,
     )
 
-    for coordinator in coordinators:
+    for coordinator in (charge_session_coordinator, device_info_coordinator):
         await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = OhmeRuntimeData(*coordinators)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    try:
+        result = await async_ensure_energy_history(hass, entry)
+    except Exception:
+        _LOGGER.exception("Failed to initialize Ohme energy history sync")
+    else:
+        _LOGGER.debug("Initialized Ohme energy history sync: %s", result)
+
+    charge_session_coordinator.enable_history_sync()
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Unload a config entry."""
-
+    entry.runtime_data.charge_session_coordinator.disable_history_sync()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> None:
+    """Remove a config entry and its imported recorder history."""
+    try:
+        await async_remove_energy_history(hass, entry)
+    except Exception:
+        _LOGGER.exception("Failed to remove Ohme energy history")

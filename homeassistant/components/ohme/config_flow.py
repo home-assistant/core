@@ -1,20 +1,30 @@
 """Config flow for ohme integration."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any
 
 from ohme import ApiException, AuthException, OhmeApiClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import CONF_BACKFILL_DAYS, DEFAULT_BACKFILL_DAYS, DOMAIN
 
 USER_SCHEMA = vol.Schema(
     {
@@ -48,6 +58,11 @@ REAUTH_SCHEMA = vol.Schema(
 class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow."""
 
+    @staticmethod
+    def async_get_options_flow(config_entry: ConfigEntry) -> OhmeOptionsFlow:
+        """Return the options flow."""
+        return OhmeOptionsFlow()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,7 +78,9 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
+                    title=user_input[CONF_EMAIL],
+                    data=user_input,
+                    options={CONF_BACKFILL_DAYS: DEFAULT_BACKFILL_DAYS},
                 )
 
         return self.async_show_form(
@@ -137,3 +154,34 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return errors
+
+
+class OhmeOptionsFlow(OptionsFlowWithReload):
+    """Handle Ohme options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage integration options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_BACKFILL_DAYS,
+                        default=self.config_entry.options.get(
+                            CONF_BACKFILL_DAYS, DEFAULT_BACKFILL_DAYS
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            mode=NumberSelectorMode.BOX,
+                            step=1,
+                        )
+                    )
+                }
+            ),
+        )

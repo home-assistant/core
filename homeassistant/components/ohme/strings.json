@@ -43,6 +43,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "backfill_days": "Hourly history backfill days"
+        },
+        "data_description": {
+          "backfill_days": "How many days of finalized hourly Ohme energy history to import into Home Assistant. Set to 0 to import all available history."
+        }
+      }
+    }
+  },
   "entity": {
     "button": {
       "approve": {
