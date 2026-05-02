@@ -145,7 +145,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_start_monitor",
             side_effect=UptimeRobotException,
         ),
         pytest.raises(HomeAssistantError) as exc_info,
@@ -173,7 +173,7 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_pause_monitor",
             side_effect=UptimeRobotException,
         ),
         pytest.raises(HomeAssistantError) as exc_info,
