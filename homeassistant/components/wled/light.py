@@ -75,7 +75,7 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         """Update group members based on current segments."""
         segment_unique_ids = [
             f"{self.coordinator.data.info.mac_address}_{segment_id}"
-            for segment_id in sorted(self.coordinator.segment_ids)
+            for segment_id in self.coordinator.segment_ids
         ]
         if segment_unique_ids != self.group.member_unique_ids:
             self.group.member_unique_ids = segment_unique_ids
