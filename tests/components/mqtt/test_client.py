@@ -2557,7 +2557,7 @@ async def test_overlapping_subscriptions_only_processed_once(
         # Simulate the broker sends a publish message at topic "test/bla/status"
         # That matches all three subscriptions
         for message_identifier in message_identifiers:
-            properties = paho_mqtt.Properties(paho_mqtt.PacketTypes.SUBSCRIBE)
+            properties = paho_mqtt.Properties(paho_mqtt.PacketTypes.PUBLISH)
             properties.SubscriptionIdentifier = message_identifier
             async_fire_mqtt_message(
                 hass, "test/bla/status", "bla", properties=properties
