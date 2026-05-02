@@ -639,3 +639,38 @@ async def test_dhcp_discovery_rut240_repeated_advertisement(
     )
     assert second["type"] is FlowResultType.ABORT
     assert second["reason"] == "already_in_progress"
+
+
+async def test_dhcp_discovery_rut240_legacy_entry_updates_host(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """A legacy entry without MAC connections still gets its host updated via dhcp_confirm."""
+    mock_config_entry.add_to_hass(hass)
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.99.99",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "https://192.168.99.99"

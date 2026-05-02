@@ -267,21 +267,27 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # Get the host from the discovery
             host = getattr(self, "_discovered_host", "")
 
+            data = {
+                CONF_HOST: host,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_VERIFY_SSL: False,
+            }
             try:
-                # Validate credentials with discovered host
-                data = {
-                    CONF_HOST: host,
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_VERIFY_SSL: False,
-                }
                 info = await validate_input(self.hass, data)
-
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during DHCP confirm")
+                errors["base"] = "unknown"
+            else:
                 # Update unique ID to device identifier if we didn't get it during discovery
                 await self.async_set_unique_id(
                     info["device_id"], raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates={CONF_HOST: info["host"]})
 
                 return self.async_create_entry(
                     title=info["title"],
@@ -292,13 +298,6 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_VERIFY_SSL: False,
                     },
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during DHCP confirm")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="dhcp_confirm",
