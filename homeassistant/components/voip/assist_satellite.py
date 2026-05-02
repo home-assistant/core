@@ -1,5 +1,4 @@
 """Assist satellite entity for VoIP integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -79,7 +78,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP Assist satellite entity."""
-    domain_data: DomainData = hass.data[DOMAIN]
+    domain_data: DomainData = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:
@@ -271,7 +270,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._announcement = announcement
 
         # Make the call
-        sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
+        sip_protocol: SipDatagramProtocol = (
+            self.config_entry.runtime_data.domain_data.protocol
+        )
         _LOGGER.debug("Outgoing call to contact %s", self.voip_device.contact)
         call_info = sip_protocol.outgoing_call(
             source=source_endpoint,

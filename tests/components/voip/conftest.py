@@ -41,15 +41,18 @@ async def setup_voip(hass: HomeAssistant, config_entry: MockConfigEntry) -> None
         "homeassistant.components.voip._create_sip_server",
         return_value=(Mock(), AsyncMock()),
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
         yield
 
 
 @pytest.fixture
-async def voip_devices(hass: HomeAssistant, setup_voip: None) -> VoIPDevices:
+async def voip_devices(
+    hass: HomeAssistant, config_entry: MockConfigEntry, setup_voip: None
+) -> VoIPDevices:
     """Get VoIP devices object from a configured instance."""
-    return hass.data[DOMAIN].devices
+    return config_entry.runtime_data.domain_data.devices
 
 
 @pytest.fixture

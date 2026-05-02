@@ -80,13 +80,15 @@ class VoIPDevice:
 class VoIPDevices:
     """Class to store devices."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, store: VoipStore
+    ) -> None:
         """Initialize VoIP devices."""
         self.hass = hass
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[VoIPDevice], None]] = []
         self.devices: dict[str, VoIPDevice] = {}
-        self.device_store: VoipStore = config_entry.runtime_data
+        self.device_store: VoipStore = store
 
     async def async_setup(self) -> None:
         """Set up devices."""
