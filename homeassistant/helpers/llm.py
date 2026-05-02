@@ -14,21 +14,49 @@ import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
+)
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
-from homeassistant.components.homeassistant import async_should_expose
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    INTENT_CLOSE_COVER,
+    INTENT_OPEN_COVER,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+)
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    async_should_expose,
+)
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.intent import async_device_supports_timers
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+)
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+)
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -47,7 +75,29 @@ from . import (
     selector,
     service,
 )
+from .group import expand_entity_ids
 from .singleton import singleton
+
+ENTITY_CONTROL_SERVICE_MAP = {
+    SERVICE_TURN_ON: {
+        BUTTON_DOMAIN: SERVICE_PRESS_BUTTON,
+        COVER_DOMAIN: SERVICE_OPEN_COVER,
+        INPUT_BUTTON_DOMAIN: SERVICE_PRESS_BUTTON,
+        LOCK_DOMAIN: SERVICE_LOCK,
+        VALVE_DOMAIN: SERVICE_OPEN_VALVE,
+    },
+    SERVICE_TURN_OFF: {
+        COVER_DOMAIN: SERVICE_CLOSE_COVER,
+        LOCK_DOMAIN: SERVICE_UNLOCK,
+        VALVE_DOMAIN: SERVICE_CLOSE_VALVE,
+    },
+}
+
+
+def _entity_control_entity_ids(value: str | list) -> list[str]:
+    """Validate exact entity tool entity IDs."""
+    return cv.entity_ids(value)
+
 
 ACTION_PARAMETERS_CACHE: HassKey[
     dict[str, dict[str, tuple[str | None, vol.Schema]]]
@@ -317,6 +367,143 @@ class IntentTool(Tool):
         return IntentResponseDict(intent_response)
 
 
+class EntityControlTool(Tool):
+    """LLM tool for controlling exposed entities by exact entity_id."""
+
+    def __init__(self, service_name: str) -> None:
+        """Init the class."""
+        self._service_name = service_name
+        service_label = (
+            unicode_slug.slugify(service_name, separator="_").title().replace("_", "")
+        )
+        self.name = f"HassEntity{service_label}"
+        self.description = (
+            f"Execute Home Assistant {service_name} for exposed entities by exact entity_id. "
+            "Use entity_id values from the static context when a specific device is requested."
+        )
+        self.parameters = vol.Schema(
+            {vol.Required(ATTR_ENTITY_ID): _entity_control_entity_ids}
+        )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Call the Home Assistant turn service for exposed entities."""
+        try:
+            entity_ids = self.parameters(tool_input.tool_args)[ATTR_ENTITY_ID]
+        except vol.Invalid as err:
+            return {"success": False, "error": str(err)}
+
+        valid_entity_ids: list[str] = []
+        failed: dict[str, str] = {}
+        service_calls: dict[tuple[str, str], list[str]] = {}
+
+        for entity_id in entity_ids:
+            if hass.states.get(entity_id) is None:
+                failed[entity_id] = "Entity does not exist"
+                continue
+
+            if llm_context.assistant and not async_should_expose(
+                hass, llm_context.assistant, entity_id
+            ):
+                failed[entity_id] = "Entity is not exposed to this assistant"
+                continue
+
+            domain = split_entity_id(entity_id)[0]
+            service_entity_ids = (
+                expand_entity_ids(hass, [entity_id])
+                if domain == GROUP_DOMAIN
+                else [entity_id]
+            )
+            entity_service_calls: dict[tuple[str, str], list[str]] = {}
+            unsupported_domains: set[str] = set()
+
+            for service_entity_id in service_entity_ids:
+                service_entity_domain = split_entity_id(service_entity_id)[0]
+                service_domain, service_name = self._get_service(
+                    hass, service_entity_domain
+                )
+                if service_name is None:
+                    unsupported_domains.add(service_entity_domain)
+                    continue
+                entity_service_calls.setdefault(
+                    (service_domain, service_name), []
+                ).append(service_entity_id)
+
+            if not entity_service_calls:
+                failed[entity_id] = (
+                    f"Domain {domain} does not support {self._service_name}"
+                )
+                continue
+
+            if unsupported_domains:
+                failed[entity_id] = (
+                    f"Domain {domain} does not support {self._service_name}"
+                    if domain != GROUP_DOMAIN
+                    else f"Group contains domains that do not support {self._service_name}: "
+                    f"{', '.join(sorted(unsupported_domains))}"
+                )
+                continue
+
+            valid_entity_ids.append(entity_id)
+            for service_key, service_entity_ids in entity_service_calls.items():
+                service_calls.setdefault(service_key, []).extend(service_entity_ids)
+
+        for (service_domain, service_name), service_entity_ids in service_calls.items():
+            await hass.services.async_call(
+                service_domain,
+                service_name,
+                {ATTR_ENTITY_ID: service_entity_ids},
+                context=llm_context.context,
+                blocking=True,
+            )
+
+        return cast(
+            JsonObjectType,
+            {
+                "success": bool(valid_entity_ids) and not failed,
+                "done": valid_entity_ids,
+                "failed": failed,
+            },
+        )
+
+    def _get_service(self, hass: HomeAssistant, domain: str) -> tuple[str, str | None]:
+        """Get the service to call for a domain."""
+        if (
+            service_name := ENTITY_CONTROL_SERVICE_MAP[self._service_name].get(domain)
+        ) and hass.services.has_service(domain, service_name):
+            return domain, service_name
+
+        if domain == GROUP_DOMAIN and hass.services.has_service(
+            HOMEASSISTANT_DOMAIN, self._service_name
+        ):
+            return HOMEASSISTANT_DOMAIN, self._service_name
+
+        if hass.services.has_service(
+            HOMEASSISTANT_DOMAIN, self._service_name
+        ) and hass.services.has_service(domain, self._service_name):
+            return HOMEASSISTANT_DOMAIN, self._service_name
+
+        return domain, None
+
+    @staticmethod
+    def has_supported_domain_service(
+        hass: HomeAssistant, domain: str, service_name: str
+    ) -> bool:
+        """Return if the domain can be controlled by the exact entity tool."""
+        if service_name in ENTITY_CONTROL_SERVICE_MAP and (
+            mapped_service := ENTITY_CONTROL_SERVICE_MAP[service_name].get(domain)
+        ):
+            return hass.services.has_service(domain, mapped_service)
+
+        if domain == GROUP_DOMAIN:
+            return hass.services.has_service(HOMEASSISTANT_DOMAIN, service_name)
+
+        return hass.services.has_service(
+            HOMEASSISTANT_DOMAIN, service_name
+        ) and hass.services.has_service(domain, service_name)
+
+
 class IntentResponseDict(dict):
     """Dictionary to represent an intent response resulting from a tool call."""
 
@@ -492,10 +679,13 @@ class AssistAPI(API):
 
         prompt = [
             (
-                "When controlling Home Assistant always call the intent tools. "
+                "When controlling Home Assistant, call intent tools for natural language "
+                "area, device, or domain requests. "
                 "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
                 "When controlling a device, prefer passing just name and domain. "
-                "When controlling an area, prefer passing just area name and domain."
+                "When controlling an area, prefer passing just area name and domain. "
+                "When the user requests a specific exposed entity and the static context "
+                "contains its entity_id, use the exact entity_id tool."
             )
         ]
         area: ar.AreaEntry | None = None
@@ -543,7 +733,14 @@ class AssistAPI(API):
             prompt.append(
                 "Static Context: An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
+            prompt.append(
+                yaml_util.dump(
+                    [
+                        {"entity_id": entity_id, **info}
+                        for entity_id, info in exposed_entities["entities"].items()
+                    ]
+                )
+            )
 
         return prompt
 
@@ -613,6 +810,16 @@ class AssistAPI(API):
             )
 
         if exposed_domains:
+            tools.extend(
+                EntityControlTool(service_name)
+                for service_name in (SERVICE_TURN_ON, SERVICE_TURN_OFF)
+                if any(
+                    EntityControlTool.has_supported_domain_service(
+                        self.hass, domain, service_name
+                    )
+                    for domain in exposed_domains
+                )
+            )
             tools.append(GetLiveContextTool())
 
         return tools
@@ -686,10 +893,7 @@ def _get_exposed_entities(
                     area_names.append(area_entry.name)
                     area_names.extend(area_entry.aliases)
 
-        info: dict[str, Any] = {
-            "names": ", ".join(names),
-            "domain": state.domain,
-        }
+        info: dict[str, Any] = {"names": ", ".join(names), "domain": state.domain}
 
         if include_state:
             info["state"] = state.state
@@ -726,6 +930,12 @@ def _get_exposed_entities(
 
 def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
+    if schema is _entity_control_entity_ids:
+        return {
+            "type": "string",
+            "description": "An entity_id or comma-separated entity_ids from the static context",
+        }
+
     if not isinstance(schema, selector.Selector):
         return UNSUPPORTED
 
