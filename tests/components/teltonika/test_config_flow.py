@@ -439,6 +439,36 @@ async def test_reauth_flow_success(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.1"
 
 
+async def test_reauth_flow_success_rut240(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """Reauth on a RUT240 falls back to mnf_info.serial for unique_id matching."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
