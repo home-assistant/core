@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -76,44 +77,70 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle DHCP discovery of a Nobø Ecohub.
 
-        DHCP gives us the IP and MAC; we listen for the hub's UDP broadcast
-        at that IP to get the 9-digit serial prefix. If an existing entry
-        matches the prefix, just refresh its IP. Otherwise, ask the user
-        for the serial suffix via the existing `selected` step.
+        The MAC from the DHCP packet is set as the flow's temporary
+        unique_id so the user can dismiss this discovery via "Ignore",
+        and so a previously-ignored hub aborts cleanly on rediscovery.
+        The unique_id is replaced with the full 12-digit serial when an
+        entry is created.
+
+        Three paths from here:
+        - Fast path: a configured entry already has this MAC stored →
+          refresh its IP and abort.
+        - IP+prefix match: listen for the hub's UDP broadcast (15s) to
+          learn the 9-digit serial prefix. If a configured entry's
+          stored IP and prefix both match the DHCP packet, backfill its
+          MAC and abort.
+        - Otherwise: route to the `selected` step so the user can
+          supply the 3-digit serial suffix.
         """
         self._mac = discovery_info.macaddress
-        # Wait 5s — real-world gaps up to ~4s have been observed.
+        # Use the MAC as the temporary unique_id so the frontend offers an
+        # "Ignore" option, and so a previously-ignored MAC correctly aborts
+        # the flow here. The MAC is per-device unique (the 9-digit serial
+        # prefix would shadow sibling hubs from the same production batch).
+        # Replaced with the full 12-digit serial in _create_configuration
+        # once the user supplies the suffix.
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured()
+
+        # Fast path: a configured entry already knows this MAC. Refresh
+        # its IP and skip the (5s) broadcast wait entirely.
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_MAC) == discovery_info.macaddress:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: discovery_info.ip},
+                    reason="already_configured",
+                )
+
+        # Wait 15s — when DHCP fires on hub boot, the hub's broadcast
+        # service comes up after the DHCPDISCOVER but typically within
+        # ~10-15s. Shorter waits miss the first post-boot broadcast.
         discovered = await nobo.async_discover_hubs(
-            ip=discovery_info.ip, autodiscover_wait=5.0
+            ip=discovery_info.ip, autodiscover_wait=15.0
         )
         if not discovered:
             return self.async_abort(reason="cannot_discover")
         _, serial_prefix = next(iter(discovered))
 
-        # Look for a configured entry whose full 12-digit unique_id starts
-        # with the discovered prefix and refresh its IP (and backfill MAC
-        # for entries created before DHCP discovery existed). Exclude
-        # ignored entries: an ignored discovery's unique_id is the 9-digit
-        # prefix, which would also match `startswith` and could shadow the
-        # real configured entry depending on iteration order.
+        # Fallback: a configured entry without a stored MAC (manual or
+        # user-picker entry, not yet DHCP-backfilled) is identified by
+        # both the stored IP and the 9-digit serial prefix matching the
+        # DHCP packet. Requiring IP match prevents clobbering a sibling
+        # entry from the same production batch (which shares the prefix).
+        # Pynobo's connection-failure rediscovery handles IP changes for
+        # non-DHCP-backfilled entries.
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id and entry.unique_id.startswith(serial_prefix):
+            if (
+                entry.data.get(CONF_IP_ADDRESS) == discovery_info.ip
+                and entry.unique_id
+                and entry.unique_id.startswith(serial_prefix)
+            ):
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates={
-                        CONF_IP_ADDRESS: discovery_info.ip,
-                        CONF_MAC: discovery_info.macaddress,
-                    },
+                    data_updates={CONF_MAC: discovery_info.macaddress},
                     reason="already_configured",
                 )
-
-        # Use the 9-digit serial prefix as a temporary unique_id so the
-        # frontend offers an "Ignore" option for this discovery, and so a
-        # previously-ignored prefix correctly aborts the flow here. It is
-        # replaced with the full 12-digit serial in _create_configuration
-        # once the user supplies the suffix.
-        await self.async_set_unique_id(serial_prefix)
-        self._abort_if_unique_id_configured()
 
         self._discovered_hubs = {discovery_info.ip: serial_prefix}
         self._hub = discovery_info.ip

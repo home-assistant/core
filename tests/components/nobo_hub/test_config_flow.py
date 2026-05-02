@@ -301,7 +301,7 @@ async def test_dhcp_discovery_new_hub(
             data=DHCP_DISCOVERY,
         )
 
-    mock_discover.assert_awaited_once_with(ip="192.168.1.106", autodiscover_wait=5.0)
+    mock_discover.assert_awaited_once_with(ip="192.168.1.106", autodiscover_wait=15.0)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "selected"
 
@@ -334,18 +334,51 @@ async def test_dhcp_discovery_new_hub(
     mock_setup_entry.assert_awaited_once()
 
 
-async def test_dhcp_discovery_updates_existing_ip(
+@pytest.mark.parametrize(
+    ("stored_ip", "expected_type", "expected_reason", "expected_step", "expected_mac"),
+    [
+        # Matching IP + prefix → backfill MAC, abort already_configured.
+        (
+            "192.168.1.106",
+            FlowResultType.ABORT,
+            "already_configured",
+            None,
+            "7c830602644f",
+        ),
+        # Mismatched IP (sibling hub in same production batch) → don't
+        # clobber, fall through to the selected step.
+        (
+            "192.168.1.100",
+            FlowResultType.FORM,
+            None,
+            "selected",
+            None,
+        ),
+    ],
+    ids=["matching_ip_backfills_mac", "mismatched_ip_does_not_clobber"],
+)
+async def test_dhcp_discovery_backfill_requires_ip_match(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_unload_entry: AsyncMock,
+    stored_ip: str,
+    expected_type: FlowResultType,
+    expected_reason: str | None,
+    expected_step: str | None,
+    expected_mac: str | None,
 ) -> None:
-    """DHCP for a configured hub refreshes the stored IP and backfills MAC."""
+    """MAC backfill on an entry without a stored MAC requires both IP and prefix to match.
+
+    Two hubs from the same production batch share the 9-digit serial
+    prefix but have different IPs. Requiring IP match prevents a DHCP
+    packet from one hub clobbering a sibling entry's MAC.
+    """
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="102000100098",
         data={
             CONF_SERIAL: "102000100098",
-            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_IP_ADDRESS: stored_ip,
             CONF_MAC: None,
         },
     )
@@ -361,40 +394,83 @@ async def test_dhcp_discovery_updates_existing_ip(
             data=DHCP_DISCOVERY,
         )
 
+    assert result["type"] is expected_type
+    assert result.get("reason") == expected_reason
+    assert result.get("step_id") == expected_step
+    assert config_entry.data[CONF_IP_ADDRESS] == stored_ip
+    assert config_entry.data[CONF_MAC] == expected_mac
+
+
+async def test_dhcp_discovery_skips_broadcast_when_mac_known(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """A configured entry with a stored MAC refreshes its IP without broadcasting."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="102000100098",
+        data={
+            CONF_SERIAL: "102000100098",
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_MAC: "7c830602644f",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
+    ) as mock_discover:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    mock_discover.assert_not_awaited()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
     assert config_entry.data[CONF_MAC] == "7c830602644f"
 
 
-async def test_dhcp_discovery_ignored_and_configured(
+@pytest.mark.parametrize(
+    ("ignored_unique_id", "expected_type", "expected_reason", "expected_step"),
+    [
+        # Same MAC: rediscovery of a previously-ignored hub aborts.
+        (
+            "7c:83:06:02:64:4f",
+            FlowResultType.ABORT,
+            "already_configured",
+            None,
+        ),
+        # Different MAC (sibling in same production batch): flow proceeds
+        # to the selected step. The 9-digit serial prefix would match,
+        # but using the MAC as unique_id prevents the false-shadowing.
+        (
+            "7c:83:06:99:99:99",
+            FlowResultType.FORM,
+            None,
+            "selected",
+        ),
+    ],
+    ids=["same_mac_aborts", "different_mac_proceeds"],
+)
+async def test_dhcp_discovery_with_ignored_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_unload_entry: AsyncMock,
+    ignored_unique_id: str,
+    expected_type: FlowResultType,
+    expected_reason: str | None,
+    expected_step: str | None,
 ) -> None:
-    """A configured entry must win the IP refresh even when an ignored entry shares the prefix.
-
-    An ignored discovery's unique_id is the 9-digit prefix; the configured
-    entry's unique_id is the full 12-digit serial. Both `startswith` the
-    prefix, so iterating over all entries (including ignored) could refresh
-    the wrong one. The configured entry must always win.
-    """
+    """Ignored entries match the discovery flow by MAC, not by serial prefix."""
     ignored_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="102000100",
+        unique_id=ignored_unique_id,
         source=config_entries.SOURCE_IGNORE,
     )
     ignored_entry.add_to_hass(hass)
-    configured_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="102000100098",
-        data={
-            CONF_SERIAL: "102000100098",
-            CONF_IP_ADDRESS: "1.1.1.1",
-            CONF_MAC: None,
-        },
-    )
-    configured_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
@@ -406,10 +482,9 @@ async def test_dhcp_discovery_ignored_and_configured(
             data=DHCP_DISCOVERY,
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert configured_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
-    assert configured_entry.data[CONF_MAC] == "7c830602644f"
+    assert result["type"] is expected_type
+    assert result.get("reason") == expected_reason
+    assert result.get("step_id") == expected_step
 
 
 async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:
