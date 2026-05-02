@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
+from . import Control4ConfigEntry, get_items_of_category
 from .const import CONTROL4_ENTITY_TYPE
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
