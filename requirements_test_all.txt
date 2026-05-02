@@ -1181,7 +1181,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.6.5
+indevolt-api==1.7.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2904,7 +2904,7 @@ zinvolt==0.4.3
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.68.0
+zwave-js-server-python==0.70.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
