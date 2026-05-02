@@ -284,7 +284,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(
         api_key=entry.data[CONF_API_KEY],
-        base_url=entry.data.get(CONF_BASE_URL),
+        base_url=_base_url_from_entry(entry),
         http_client=get_async_client(hass),
     )
 
@@ -315,6 +315,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> b
 async def async_update_options(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _base_url_from_entry(entry: OpenAIConfigEntry) -> str | None:
+    """Return the configured base URL, treating blanks as the OpenAI default."""
+    if base_url := entry.data.get(CONF_BASE_URL):
+        return base_url.strip() or None
+
+    return None
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
