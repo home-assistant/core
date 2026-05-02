@@ -587,6 +587,49 @@ async def test_get_url(hass: HomeAssistant) -> None:
         assert get_url(hass, allow_internal=False)
 
 
+@pytest.mark.parametrize("prefer_external", [False, True])
+@pytest.mark.parametrize(
+    ("internal_url", "external_url"),
+    [
+        ("https://example.com", "https://example.com:18123"),
+        ("https://example.com:18123", "https://example.com"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("host_header", "expected_url"),
+    [
+        ("example.com", "https://example.com"),
+        ("example.com:443", "https://example.com"),
+        ("example.com:18123", "https://example.com:18123"),
+    ],
+)
+async def test_get_url_host_matching_respects_port(
+    hass: HomeAssistant,
+    internal_url: str,
+    external_url: str,
+    host_header: str,
+    expected_url: str,
+    prefer_external: bool,
+) -> None:
+    """Test that get_url respects the port when matching the request host."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": internal_url,
+            "external_url": external_url,
+        },
+    )
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = {hdrs.HOST: host_header}
+        mock_request_context.get.return_value = mock_request
+
+        assert (
+            get_url(hass, require_current_request=True, prefer_external=prefer_external)
+            == expected_url
+        )
+
+
 async def test_get_request_host_with_port(hass: HomeAssistant) -> None:
     """Test getting the host of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
