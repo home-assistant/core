@@ -33,6 +33,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_LOCAL_ONLY,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
@@ -185,6 +186,9 @@ class MobileAppNotificationService(BaseNotificationService):
         local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][
             DATA_PUSH_CHANNEL
         ]
+        force_local_notification = (kwargs.get(ATTR_DATA) or {}).pop(
+            ATTR_LOCAL_ONLY, False
+        )
 
         failed_targets = []
         for target in targets:
@@ -198,7 +202,10 @@ class MobileAppNotificationService(BaseNotificationService):
                 continue
 
             # Test if local push only.
-            if ATTR_PUSH_URL not in entry.data[ATTR_APP_DATA]:
+            if (
+                ATTR_PUSH_URL not in entry.data[ATTR_APP_DATA]
+                or force_local_notification
+            ):
                 failed_targets.append(target)
                 continue
 
