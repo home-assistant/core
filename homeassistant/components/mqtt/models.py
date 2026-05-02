@@ -42,6 +42,22 @@ class PayloadSentinel(StrEnum):
     DEFAULT = "default"
 
 
+class SubscriptionID:
+    """ID generator for wildcard subscriptions."""
+
+    _id: int = 1
+
+    def generate(self) -> int:
+        """Generate a new subscription ID.
+
+        ID 0 is reserved.
+        ID 1 is used for non wildcard topics.
+        Generator starts at ID 2.
+        """
+        self._id = self._id + 1
+        return self._id
+
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
@@ -428,6 +444,7 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: set[Subscription] = field(default_factory=set)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+    subscription_id_generator: SubscriptionID = field(default_factory=SubscriptionID)
 
 
 @dataclass(slots=True)

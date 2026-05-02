@@ -23,7 +23,7 @@ import os
 import pathlib
 import time
 from types import FrameType, ModuleType
-from typing import Any, Literal, NoReturn
+from typing import TYPE_CHECKING, Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port
@@ -121,6 +121,9 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+if TYPE_CHECKING:
+    import paho.mqtt.client as mqtt
 
 __all__ = [
     "async_get_device_automation_capabilities",
@@ -452,6 +455,7 @@ def async_fire_mqtt_message(
     payload: bytes | str,
     qos: int = 0,
     retain: bool = False,
+    properties: mqtt.Properties | None = None,
 ) -> None:
     """Fire the MQTT message."""
     from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
@@ -464,6 +468,7 @@ def async_fire_mqtt_message(
     msg.qos = qos
     msg.retain = retain
     msg.timestamp = time.monotonic()
+    msg.properties = properties
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client

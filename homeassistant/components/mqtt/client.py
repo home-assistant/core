@@ -110,7 +110,6 @@ TIMEOUT_ACK = 10
 SUBSCRIBE_TIMEOUT = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
 MAX_SUBSCRIBES_PER_CALL = 500
 MAX_UNSUBSCRIBES_PER_CALL = 500
 
@@ -331,8 +330,9 @@ class Subscription:
     is_simple_match: bool
     complex_matcher: Callable[[str], bool] | None
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
-    qos: int = 0
-    encoding: str | None = "utf-8"
+    qos: int
+    encoding: str | None
+    subscription_id: int
 
 
 class MqttClientSetup:
@@ -480,6 +480,7 @@ class MQTT:
 
         self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
+        self._registered_subscriptions: dict[str, int] = {}  # topic, subscription_id
         self._unsubscribe_debouncer = EnsureJobAfterCooldown(
             UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
         )
@@ -959,7 +960,19 @@ class MQTT:
         is_simple_match = not ("+" in topic or "#" in topic)
         matcher = None if is_simple_match else _matcher_for_topic(topic)
 
-        subscription = Subscription(topic, is_simple_match, matcher, job, qos, encoding)
+        if is_simple_match:
+            subscription_id = 1
+        elif topic in self._registered_subscriptions:
+            subscription_id = self._registered_subscriptions[topic]
+        else:
+            subscription_id = self._registered_subscriptions[topic] = (
+                self._mqtt_data.subscription_id_generator.generate()
+            )
+
+        subscription = Subscription(
+            topic, is_simple_match, matcher, job, qos, encoding, subscription_id
+        )
+
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
@@ -1012,33 +1025,61 @@ class MQTT:
         #
         # Since we do not know if a published value is retained we need to
         # (re)subscribe, to ensure retained messages are replayed
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         if not self._pending_subscriptions:
             return
 
         # Split out the wildcard subscriptions, we subscribe to them one by one
+        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
         pending_subscriptions: dict[str, int] = self._pending_subscriptions
         pending_wildcard_subscriptions = {
             subscription.topic: pending_subscriptions.pop(subscription.topic)
             for subscription in self._wildcard_subscriptions
             if subscription.topic in pending_subscriptions
         }
+        subscribe_chain = chunked_or_all(
+            pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL
+        )
+        if self.is_mqttv5 and pending_subscriptions:
+            bulk_properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
+            bulk_properties.SubscriptionIdentifier = 1
+        else:
+            bulk_properties = None
 
         self._pending_subscriptions = {}
 
-        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
+        for topic, qos in pending_wildcard_subscriptions.items():
+            if self.is_mqttv5:
+                properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
+                properties.SubscriptionIdentifier = self._registered_subscriptions[
+                    topic
+                ]
+            else:
+                properties = None
 
-        for chunk in chain(
-            chunked_or_all(
-                pending_wildcard_subscriptions.items(), MAX_WILDCARD_SUBSCRIBES_PER_CALL
-            ),
-            chunked_or_all(pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL),
-        ):
+            result, mid = self._mqttc.subscribe(topic, qos, properties=properties)
+            if debug_enabled:
+                _LOGGER.debug(
+                    "Subscribing with mid: %s to topic %s with qos: %s and properties: %s",
+                    mid,
+                    topic,
+                    qos,
+                    properties,
+                )
+            self._last_subscribe = time.monotonic()
+
+            await self._async_wait_for_mid_or_raise(mid, result)
+            async_dispatcher_send(
+                self.hass, MQTT_PROCESSED_SUBSCRIPTIONS, [(topic, qos)]
+            )
+
+        for chunk in subscribe_chain:
             chunk_list = list(chunk)
             if not chunk_list:
                 continue
 
-            result, mid = self._mqttc.subscribe(chunk_list)
+            result, mid = self._mqttc.subscribe(chunk_list, properties=bulk_properties)
 
             if debug_enabled:
                 _LOGGER.debug(
@@ -1068,6 +1109,10 @@ class MQTT:
                 )
 
             await self._async_wait_for_mid_or_raise(mid, result)
+
+        # Flush subscription identifiers if they are available
+        for topic in topics:
+            self._registered_subscriptions.pop(topic, None)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
@@ -1184,6 +1229,17 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
+        identifiers: list[int] | None = None
+        if self.is_mqttv5:
+            # It is possible we have multiple messages if there
+            # are overlapping wildcard subscriptions.
+            # So we assigned all wildcard subscriptions with a
+            # unique SubscriptionIdentifier. Simple subscriptions are assigned
+            # with SubscriptionIdentifier 1.
+            if msg.properties is not None and hasattr(
+                msg.properties, "SubscriptionIdentifier"
+            ):
+                identifiers = msg.properties.SubscriptionIdentifier
         try:
             # msg.topic is a property that decodes the topic to a string
             # every time it is accessed. Save the result to avoid
@@ -1200,16 +1256,20 @@ class MQTT:
             )
             return
         _LOGGER.debug(
-            "Received%s message on %s (qos=%s): %s",
+            "Received%s message on %s (qos=%s) IDs=%s: %s",
             " retained" if msg.retain else "",
             topic,
             msg.qos,
+            identifiers,
             msg.payload[0:8192],
         )
-        subscriptions = self._matching_subscriptions(topic)
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
-        for subscription in subscriptions:
+        for subscription in [
+            subscription
+            for subscription in self._matching_subscriptions(topic)
+            if identifiers is None or subscription.subscription_id in identifiers
+        ]:
             if msg.retain:
                 retained_topics = self._retained_topics[subscription]
                 # Skip if the subscription already received a retained message

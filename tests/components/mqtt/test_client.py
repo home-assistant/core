@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import json
 import socket
 import ssl
 import time
@@ -1104,16 +1105,16 @@ async def test_unsubscribe_race(
     # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
     # when both subscriptions were combined [subscribe]
     expected_calls_1 = [
-        call.subscribe([("test/state", 0)]),
+        call.subscribe([("test/state", 0)], properties=None),
         call.unsubscribe("test/state"),
-        call.subscribe([("test/state", 0)]),
+        call.subscribe([("test/state", 0)], properties=None),
     ]
     expected_calls_2 = [
-        call.subscribe([("test/state", 0)]),
-        call.subscribe([("test/state", 0)]),
+        call.subscribe([("test/state", 0)], properties=None),
+        call.subscribe([("test/state", 0)], properties=None),
     ]
     expected_calls_3 = [
-        call.subscribe([("test/state", 0)]),
+        call.subscribe([("test/state", 0)], properties=None),
     ]
     assert mqtt_client_mock.mock_calls in (
         expected_calls_1,
@@ -1181,7 +1182,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
     # the subscription with the highest QoS should survive
     expected = [
-        call([("test/state", 2)]),
+        call([("test/state", 2)], properties=None),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
@@ -1195,7 +1196,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     # wait for cooldown
     await mock_debouncer.wait()
 
-    expected.append(call([("test/state", 1)]))
+    expected.append(call([("test/state", 1)], properties=None))
     for expected_call in expected:
         assert mqtt_client_mock.subscribe.hass_call(expected_call)
 
@@ -1387,7 +1388,7 @@ async def test_subscribe_error(
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
-    mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
+    mqtt_client_mock.subscribe.side_effect = lambda *args, **kwargs: (4, 0)
     await mqtt.async_subscribe(hass, "some-topic", record_calls)
     while mqtt_client_mock.subscribe.call_count == 0:
         await hass.async_block_till_done()
@@ -2384,3 +2385,89 @@ async def test_loop_write_failure(
 
     # Cleanup. Server is closed earlier already.
     client.close()
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "5",
+            },
+            ENTRY_DEFAULT_BIRTH_MESSAGE,
+        ),
+    ],
+    ids=["v5"],
+)
+async def test_overlapping_subscriptions_only_processed_once(
+    hass: HomeAssistant,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test message are only processed once per subscription in case of overlap.
+
+    Overlapping subscriptions are only supported with MQTTv5
+    """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
+
+    mock_subscribe: MagicMock = mqtt_client_mock.subscribe
+    mock_subscribe.reset_mock()
+
+    # We create 3 sensors:
+    # - 2 with an overlapping wildcard subscription
+    # - 1 with an overlapping simple subscription
+    config1 = json.dumps(
+        {
+            "name": "test1",
+            "default_entity_id": "sensor.test1",
+            "unique_id": "test1_veryunique",
+            "state_topic": "test/+/status",
+        }
+    )
+    config2 = json.dumps(
+        {
+            "name": "test2",
+            "default_entity_id": "sensor.test2",
+            "unique_id": "test2_veryunique",
+            "state_topic": "test/#",
+        }
+    )
+    config3 = json.dumps(
+        {
+            "name": "test3",
+            "default_entity_id": "sensor.test3",
+            "unique_id": "test3_veryunique",
+            "state_topic": "test/bla/status",
+        }
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/config1/config", config1)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/config2/config", config2)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/config3/config", config3)
+    while len(mock_subscribe.mock_calls) < 3:
+        await hass.async_block_till_done()
+
+    message_identifiers = [
+        mock_call[2]["properties"].SubscriptionIdentifier[0]
+        for mock_call in mock_subscribe.mock_calls
+    ]
+
+    assert hass.states.get("sensor.test1") is not None
+    assert hass.states.get("sensor.test2") is not None
+    assert hass.states.get("sensor.test3") is not None
+
+    with patch(
+        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        # Simulate the broker sends a publish message at topic "test/bla/status"
+        # That matches all three subscriptions
+        for message_identifier in message_identifiers:
+            properties = paho_mqtt.Properties(paho_mqtt.PacketTypes.SUBSCRIBE)
+            properties.SubscriptionIdentifier = message_identifier
+            async_fire_mqtt_message(
+                hass, "test/bla/status", "bla", properties=properties
+            )
+            await hass.async_block_till_done()
+        # Each sensor should receive one update, so we should have 3 state write calls
+        assert len(mock_async_ha_write_state.mock_calls) == 3
