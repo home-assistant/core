@@ -94,6 +94,11 @@
         "name": "[%key:common::config_flow::data::location%]"
       }
     },
+    "image": {
+      "vehicle_image": {
+        "name": "Vehicle image"
+      }
+    },
     "number": {
       "charge_limit_min": {
         "name": "Minimum charge level"

@@ -1,0 +1,313 @@
+# serializer version: 1
+# name: test_images[captur_fuel][image.reg_captur_fuel_vehicle_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.reg_captur_fuel_vehicle_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle image',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_image',
+    'unique_id': 'vf1capturfuelvin_vehicle_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[captur_fuel][image.reg_captur_fuel_vehicle_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '31e4701317bfcb0fd2cd8246a8546e699cfa19b3ebbbb67fa636e594085f3e42',
+      'entity_picture': '/api/image_proxy/image.reg_captur_fuel_vehicle_image?token=31e4701317bfcb0fd2cd8246a8546e699cfa19b3ebbbb67fa636e594085f3e42',
+      'friendly_name': 'REG-CAPTUR-FUEL Vehicle image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.reg_captur_fuel_vehicle_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T17:59:58.443472+00:00',
+  })
+# ---
+# name: test_images[captur_phev][image.reg_captur_phev_vehicle_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.reg_captur_phev_vehicle_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle image',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_image',
+    'unique_id': 'vf1capturphevvin_vehicle_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[captur_phev][image.reg_captur_phev_vehicle_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'a36c44b6f40ee7ffad2974ea9b19b6fd7558e88c5930bcc1a7ecc0cbc8d7b258',
+      'entity_picture': '/api/image_proxy/image.reg_captur_phev_vehicle_image?token=a36c44b6f40ee7ffad2974ea9b19b6fd7558e88c5930bcc1a7ecc0cbc8d7b258',
+      'friendly_name': 'REG-CAPTUR_PHEV Vehicle image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.reg_captur_phev_vehicle_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T17:59:58.413599+00:00',
+  })
+# ---
+# name: test_images[megane_e_tech][image.reg_meg_0_vehicle_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.reg_meg_0_vehicle_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle image',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_image',
+    'unique_id': 'vf1meganeetechvin_vehicle_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[megane_e_tech][image.reg_meg_0_vehicle_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'cb732dcbc090c3c4b48de7c9a520ee90f02184de86d91f47f143a5ed181342fe',
+      'entity_picture': '/api/image_proxy/image.reg_meg_0_vehicle_image?token=cb732dcbc090c3c4b48de7c9a520ee90f02184de86d91f47f143a5ed181342fe',
+      'friendly_name': 'REG-MEG-0 Vehicle image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.reg_meg_0_vehicle_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T17:59:58.497501+00:00',
+  })
+# ---
+# name: test_images[twingo_3_electric][image.reg_twingo_iii_vehicle_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.reg_twingo_iii_vehicle_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle image',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_image',
+    'unique_id': 'vf1twingoiiivin_vehicle_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[twingo_3_electric][image.reg_twingo_iii_vehicle_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '46c3df21535b5410990fbc0d55f4c1353126588ea411220c0733a4c4e948b4fa',
+      'entity_picture': '/api/image_proxy/image.reg_twingo_iii_vehicle_image?token=46c3df21535b5410990fbc0d55f4c1353126588ea411220c0733a4c4e948b4fa',
+      'friendly_name': 'REG-TWINGO-III Vehicle image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.reg_twingo_iii_vehicle_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T17:59:58.470672+00:00',
+  })
+# ---
+# name: test_images[zoe_40][image.reg_zoe_40_vehicle_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.reg_zoe_40_vehicle_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle image',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_image',
+    'unique_id': 'vf1zoe40vin_vehicle_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[zoe_40][image.reg_zoe_40_vehicle_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '6b6622054e76adb3a91798b41eb018543334b6fd4ced8c3437397841e45b33e6',
+      'entity_picture': '/api/image_proxy/image.reg_zoe_40_vehicle_image?token=6b6622054e76adb3a91798b41eb018543334b6fd4ced8c3437397841e45b33e6',
+      'friendly_name': 'REG-ZOE-40 Vehicle image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.reg_zoe_40_vehicle_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T17:59:58.354900+00:00',
+  })
+# ---
+# name: test_images[zoe_50][image.reg_zoe_50_vehicle_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.reg_zoe_50_vehicle_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle image',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_image',
+    'unique_id': 'vf1zoe50vin_vehicle_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[zoe_50][image.reg_zoe_50_vehicle_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '11ac21220d87b8b36842bfc56330534ba254a4955eb71dd583471462a9da35f9',
+      'entity_picture': '/api/image_proxy/image.reg_zoe_50_vehicle_image?token=11ac21220d87b8b36842bfc56330534ba254a4955eb71dd583471462a9da35f9',
+      'friendly_name': 'REG-ZOE-50 Vehicle image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.reg_zoe_50_vehicle_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T17:59:58.384733+00:00',
+  })
+# ---
