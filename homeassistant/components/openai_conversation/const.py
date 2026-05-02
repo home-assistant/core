@@ -16,6 +16,7 @@ DEFAULT_TTS_NAME = "OpenAI TTS"
 DEFAULT_NAME = "OpenAI Conversation"
 
 CONF_CHAT_MODEL = "chat_model"
+CONF_BASE_URL = "base_url"
 CONF_IMAGE_MODEL = "image_model"
 CONF_CODE_INTERPRETER = "code_interpreter"
 CONF_FILENAMES = "filenames"
