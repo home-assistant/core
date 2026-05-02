@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
+from teltasync.unauthorized import UnauthorizedStatusData
 
 from homeassistant import config_entries
 from homeassistant.components.teltonika.const import DOMAIN
@@ -518,3 +519,95 @@ async def test_reauth_flow_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+
+
+async def test_form_user_flow_rut240(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """RUT240 firmware omits device_identifier; the flow falls back to mnf_info.serial."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "RUT240"
+    assert result["result"].unique_id == "1234567890"
+
+
+async def test_dhcp_discovery_rut240(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """RUT240 DHCP discovery proceeds to confirmation when the MAC isn't yet known."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.50",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
+    assert "name" in result["description_placeholders"]
+    assert "host" in result["description_placeholders"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "RUT240"
+    assert result["data"][CONF_HOST] == "https://192.168.1.50"
+    assert result["data"][CONF_USERNAME] == "admin"
+    assert result["data"][CONF_PASSWORD] == "password"
+    assert result["result"].unique_id == "1234567890"
+
+
+async def test_dhcp_discovery_rut240_already_configured(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    init_integration: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """RUT240 DHCP discovery dedups via MAC against the device registry and updates host."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.99.99",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert init_integration.data[CONF_HOST] == "192.168.99.99"

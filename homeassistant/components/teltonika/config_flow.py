@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -59,6 +60,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         try:
             device_info = await client.get_device_info()
             auth_valid = await client.validate_credentials()
+            if auth_valid and device_info.device_identifier is None:
+                system_info = await client.get_system_info()
         except TeltonikaConnectionError as err:
             _LOGGER.debug(
                 "Failed to connect to Teltonika device at %s: %s", base_url, err
@@ -76,7 +79,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         return {
             "title": device_info.device_name,
-            "device_id": device_info.device_identifier,
+            "device_id": device_info.device_identifier or system_info.mnf_info.serial,
             "host": base_url,
         }
 
@@ -220,9 +223,27 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # No URL variant worked, device not reachable, don't autodiscover
             return self.async_abort(reason="cannot_connect")
 
-        # Set unique ID and check for existing conf
-        await self.async_set_unique_id(device_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        if device_id is not None:
+            # Set unique ID and check for existing conf
+            await self.async_set_unique_id(device_id)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        else:
+            # Older firmware (API v1.0) does not expose the serial without
+            # authentication, for thus fall back to MAC as unique ID.
+            mac = dr.format_mac(discovery_info.macaddress)
+            existing = dr.async_get(self.hass).async_get_device(
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+            )
+            if existing is not None:
+                for entry_id in existing.config_entries:
+                    entry = self.hass.config_entries.async_get_entry(entry_id)
+                    if entry is not None and entry.domain == DOMAIN:
+                        return self.async_update_reload_and_abort(
+                            entry,
+                            data_updates={CONF_HOST: host},
+                            reason="already_configured",
+                            reload_even_if_entry_is_unchanged=False,
+                        )
 
         # Store discovery info for the user step
         self.context["title_placeholders"] = {
