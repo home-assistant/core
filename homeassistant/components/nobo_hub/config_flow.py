@@ -86,6 +86,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         Three paths from here:
         - Fast path: a configured entry already has this MAC stored →
           refresh its IP and abort.
+        - Device is already ignored.
         - IP+prefix match: listen for the hub's UDP broadcast (15s) to
           learn the 9-digit serial prefix. If a configured entry's
           stored IP and prefix both match the DHCP packet, backfill its
@@ -94,6 +95,18 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
           supply the 3-digit serial suffix.
         """
         self._mac = discovery_info.macaddress
+        # Fast path: a configured entry already knows this MAC. Refresh
+        # its IP and skip the broadcast wait entirely. Done before
+        # `async_set_unique_id` so an ignored entry with the same MAC
+        # doesn't block the IP refresh of an active configuration.
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_MAC) == discovery_info.macaddress:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: discovery_info.ip},
+                    reason="already_configured",
+                )
+
         # Use the MAC as the temporary unique_id so the frontend offers an
         # "Ignore" option, and so a previously-ignored MAC correctly aborts
         # the flow here. The MAC is per-device unique (the 9-digit serial
@@ -103,19 +116,9 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
-        # Fast path: a configured entry already knows this MAC. Refresh
-        # its IP and skip the (5s) broadcast wait entirely.
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data.get(CONF_MAC) == discovery_info.macaddress:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates={CONF_IP_ADDRESS: discovery_info.ip},
-                    reason="already_configured",
-                )
-
         # Wait 15s — when DHCP fires on hub boot, the hub's broadcast
         # service comes up after the DHCPDISCOVER but typically within
-        # ~10-15s. Shorter waits miss the first post-boot broadcast.
+        # ~10s. Shorter waits may miss the first post-boot broadcast.
         discovered = await nobo.async_discover_hubs(
             ip=discovery_info.ip, autodiscover_wait=15.0
         )

@@ -487,6 +487,51 @@ async def test_dhcp_discovery_with_ignored_entry(
     assert result.get("step_id") == expected_step
 
 
+async def test_dhcp_discovery_configured_wins_over_ignored_mac(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """A configured entry's IP refresh wins over an ignored entry with the same MAC.
+
+    If both an ignored entry (unique_id = formatted MAC) and a configured
+    entry (with the MAC stored in data) exist for the same hub, the
+    configured entry's fast-path IP refresh fires before the ignored MAC
+    can abort the flow. Otherwise the ignored entry would silently block
+    every future DHCP-driven IP update for the active configuration.
+    """
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="7c:83:06:02:64:4f",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+    configured_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="102000100098",
+        data={
+            CONF_SERIAL: "102000100098",
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_MAC: "7c830602644f",
+        },
+    )
+    configured_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
+    ) as mock_discover:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    mock_discover.assert_not_awaited()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert configured_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
+
+
 async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:
     """DHCP at an IP that emits no Nobø broadcast aborts cleanly."""
     with patch(
