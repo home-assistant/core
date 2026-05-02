@@ -16,6 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.group import IntegrationSpecificGroup
 
 from .const import (
     ATTR_CCT,
@@ -61,11 +62,23 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    group: IntegrationSpecificGroup
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED main light."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = coordinator.data.info.mac_address
+        self.group = IntegrationSpecificGroup(self, [])
+        self._update_group_member()
+
+    def _update_group_member(self) -> None:
+        """Update group members based on current segments."""
+        segment_unique_ids = [
+            f"{self.coordinator.data.info.mac_address}_{segment.segment_id}"
+            for segment in self.coordinator.data.state.segments.values()
+            if segment.segment_id is not None
+        ]
+        self.group.member_unique_ids = segment_unique_ids
 
     @property
     def brightness(self) -> int | None:
@@ -103,6 +116,12 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         await self.coordinator.wled.master(
             on=True, brightness=kwargs.get(ATTR_BRIGHTNESS), transition=transition
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._update_group_member()
+        super()._handle_coordinator_update()
 
 
 class WLEDSegmentLight(WLEDEntity, LightEntity):
