@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from waterfurnace.waterfurnace import (
     WaterFurnace,
     WFCredentialError,
+    WFError,
     WFException,
     WFGateway,
     WFNoDataError,
@@ -174,7 +175,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                 frequency="1H",
                 timezone_str=self.hass.config.time_zone,
             )
-        except WFCredentialError:
+        except WFCredentialError, WFError:
             try:
                 self.client.login()
             except WFCredentialError as err:
@@ -191,6 +192,10 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             except WFCredentialError as err:
                 raise UpdateFailed(
                     "Authentication failed during energy data fetch"
+                ) from err
+            except WFError as err:
+                raise UpdateFailed(
+                    "Error fetching energy data after re-authentication"
                 ) from err
         return [
             (reading.timestamp, reading.total_power)
