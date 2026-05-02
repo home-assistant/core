@@ -229,8 +229,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         else:
             # Older firmware (API v1.0) does not expose the serial without
-            # authentication, for thus fall back to MAC as unique ID.
+            # authentication, so we fall back to the DHCP MAC as the flow
+            # unique_id (suppresses parallel discovery flows for the same
+            # device) and look the device up in the registry by MAC.
             mac = dr.format_mac(discovery_info.macaddress)
+            await self.async_set_unique_id(mac)
             existing = dr.async_get(self.hass).async_get_device(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )

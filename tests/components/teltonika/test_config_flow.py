@@ -611,3 +611,31 @@ async def test_dhcp_discovery_rut240_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert init_integration.data[CONF_HOST] == "192.168.99.99"
+
+
+async def test_dhcp_discovery_rut240_repeated_advertisement(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """A second DHCP advertisement before dhcp_confirm finishes is suppressed."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    discovery = DhcpServiceInfo(
+        ip="192.168.1.50",
+        macaddress="209727aabbcc",
+        hostname="teltonika",
+    )
+
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery
+    )
+    assert first["type"] is FlowResultType.FORM
+    assert first["step_id"] == "dhcp_confirm"
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery
+    )
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_in_progress"
