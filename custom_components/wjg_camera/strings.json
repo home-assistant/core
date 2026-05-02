@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WJG XM-3820 Kamera einrichten",
+        "description": "Verbinde Home Assistant mit deiner WJG-Kamera.\n{hotspot_hint}",
+        "data": {
+          "host": "IP-Adresse der Kamera",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "port": "HTTP-Port",
+          "rtsp_port": "RTSP-Port",
+          "protocol": "Protokoll",
+          "http_retries": "HTTP-Wiederholungen bei Fehlern (0-5)",
+          "rtsp_path": "RTSP-Pfad",
+          "snapshot_path": "Snapshot-Pfad"
+        }
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "protocol": "Protokoll",
+            "http_retries": "HTTP-Wiederholungen bei Fehlern (0-5)",
+            "rtsp_path": "RTSP-Pfad",
+            "snapshot_path": "Snapshot-Pfad"
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kamera nicht erreichbar – prüfe IP-Adresse und WLAN-Verbindung"
+    },
+    "abort": {
+      "already_configured": "Diese Kamera ist bereits eingerichtet"
+    }
+  }
+}

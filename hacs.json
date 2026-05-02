@@ -1,0 +1,6 @@
+{
+  "name": "WJG XM-3820 Camera Bridge",
+  "render_readme": true,
+  "content_in_root": false,
+  "homeassistant": ">=2024.1.0"
+}
