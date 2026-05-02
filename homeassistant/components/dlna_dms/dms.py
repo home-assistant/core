@@ -1,6 +1,5 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine

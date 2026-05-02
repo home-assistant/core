@@ -1,7 +1,5 @@
 """Support for Harmony Hub devices."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import json
 import logging

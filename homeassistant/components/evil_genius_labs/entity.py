@@ -1,7 +1,5 @@
 """The Evil Genius Labs integration."""
 
-from __future__ import annotations
-
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.device_registry import format_mac
 
 from .conftest import ConfigEntryFactoryType
 
@@ -492,33 +492,37 @@ async def test_simple_option_flow(
     }
 
 
-async def test_form_ssdp(hass: HomeAssistant) -> None:
-    """Test we get the form with ssdp source."""
+async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
+    """Verify positive run of UniFi discovery."""
+    with patch("socket.gethostbyname", return_value="192.168.1.1"):
+        assert await _async_discover_unifi(hass) == "192.168.1.1"
+
+
+async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
+    """Verify negative run of UniFi discovery."""
+    with patch("socket.gethostbyname", side_effect=socket.gaierror):
+        assert await _async_discover_unifi(hass) is None
+
+
+INTEGRATION_DISCOVERY_INFO = {
+    "source_ip": "10.0.0.1",
+    "hw_addr": "e0:63:da:20:14:a9",
+    "hostname": "UniFi-Dream-Machine",
+    "platform": "UCG-Ultra",
+    "direct_connect_domain": "x.ui.direct",
+}
+
+
+async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
+    """Test we get the form with integration discovery source."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "e0:63:da:20:14:a9",
-            },
-        ),
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-
-    assert (
-        flows[0].get("context", {}).get("configuration_url")
-        == "https://192.168.208.1:443"
-    )
 
     context = next(
         flow["context"]
@@ -526,56 +530,123 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "192.168.208.1",
+        "host": "x.ui.direct",
         "site": "default",
     }
+    assert context["configuration_url"] == "https://x.ui.direct"
 
 
 @pytest.mark.usefixtures("config_entry")
-async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
+async def test_flow_integration_discovery_aborts_if_host_already_exists(
+    hass: HomeAssistant,
+) -> None:
     """Test we abort if the host is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "e0:63:da:20:14:a9",
-            },
-        ),
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "1.2.3.4",
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_integration_discovery_uses_direct_connect_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery prefers direct_connect_domain over source_ip."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": "x.ui.direct",
+        "site": "default",
+    }
+
+    schema_defaults = {
+        marker.schema: marker.default()
+        for marker in result["data_schema"].schema
+        if hasattr(marker, "default") and callable(marker.default)
+    }
+    assert schema_defaults[CONF_HOST] == "x.ui.direct"
+    assert schema_defaults[CONF_VERIFY_SSL] is True
 
 
 @pytest.mark.usefixtures("config_entry")
-async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) -> None:
-    """Test we abort if the serial is already configured."""
-
+async def test_flow_integration_discovery_aborts_on_direct_connect_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort if the direct connect domain matches a configured host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "1",
-            },
-        ),
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "10.0.0.1",
+            "direct_connect_domain": "1.2.3.4",
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> None:
-    """Test we can still setup if there is an ignored never configured entry."""
+async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test that an existing entry's host is refreshed when rediscovered with the same MAC."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),
+        data={
+            CONF_HOST: "old.host",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert old_entry.data[CONF_HOST] == "x.ui.direct"
+    assert old_entry.data[CONF_VERIFY_SSL] is True
+
+
+async def test_flow_integration_discovery_aborts_without_source_ip(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort discovery when source_ip is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": None,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_integration_discovery_gets_form_with_ignored_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can still set up if there is an ignored never configured entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"not_controller_key": None},
@@ -584,17 +655,8 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine New",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "1",
-            },
-        ),
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -605,18 +667,6 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "1.2.3.4",
+        "host": "x.ui.direct",
         "site": "default",
     }
-
-
-async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
-    """Verify positive run of UniFi discovery."""
-    with patch("socket.gethostbyname", return_value=True):
-        assert await _async_discover_unifi(hass)
-
-
-async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
-    """Verify negative run of UniFi discovery."""
-    with patch("socket.gethostbyname", side_effect=socket.gaierror):
-        assert await _async_discover_unifi(hass) is None

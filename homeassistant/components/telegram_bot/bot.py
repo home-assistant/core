@@ -562,7 +562,7 @@ class TelegramNotificationService:
                 authentication=entry.get(ATTR_AUTHENTICATION),
                 verify_ssl=entry[ATTR_VERIFY_SSL],
             )
-            _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
+            _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
 
             caption: str | None = entry.get(ATTR_CAPTION)
             if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:

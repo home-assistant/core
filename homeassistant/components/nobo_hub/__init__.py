@@ -1,7 +1,5 @@
 """The Nobø Ecohub integration."""
 
-from __future__ import annotations
-
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +17,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_SOFTWARE_VERSION,
-    CONF_AUTO_DISCOVERED,
+    CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
     NOBO_MANUFACTURER,
@@ -35,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
 
     serial = entry.data[CONF_SERIAL]
     stored_ip = entry.data[CONF_IP_ADDRESS]
-    auto_discovered = entry.data[CONF_AUTO_DISCOVERED]
 
     async def _connect(ip: str) -> nobo:
         hub = nobo(
@@ -51,20 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     try:
         hub = await _connect(stored_ip)
     except OSError as err:
-        if not auto_discovered:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect_manual",
-                translation_placeholders={"serial": serial, "ip": stored_ip},
-            ) from err
-        # Stored IP may be stale for an auto-discovered entry - try UDP
-        # rediscovery to pick up a new DHCP lease.
+        # Stored IP may be stale - try UDP rediscovery to pick up a new
+        # DHCP lease (or a hub that's been moved).
         discovered = await nobo.async_discover_hubs(serial=serial)
         if not discovered:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="hub_not_found",
-                translation_placeholders={"serial": serial},
+                translation_key="cannot_connect",
+                translation_placeholders={"serial": serial, "ip": stored_ip},
             ) from err
         new_ip, _ = next(iter(discovered))
         try:
@@ -72,8 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
         except OSError as rediscover_err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect_rediscovered",
-                translation_placeholders={"ip": new_ip},
+                translation_key="cannot_connect",
+                translation_placeholders={"serial": serial, "ip": new_ip},
             ) from rediscover_err
         if new_ip != stored_ip:
             hass.config_entries.async_update_entry(
@@ -115,3 +106,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> 
         await entry.runtime_data.stop()
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Lowercase override_type to match translation keys.
+        new_options = dict(entry.options)
+        if (override_type := new_options.get(CONF_OVERRIDE_TYPE)) is not None:
+            new_options[CONF_OVERRIDE_TYPE] = override_type.lower()
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, version=1, minor_version=2
+        )
+
+    if entry.version == 1 and entry.minor_version < 3:
+        # auto_discovered no longer affects behaviour; rediscovery is now
+        # the unconditional fallback on connection failure.
+        new_data = dict(entry.data)
+        new_data.pop("auto_discovered", None)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, version=1, minor_version=3
+        )
+
+    return True

@@ -1,13 +1,19 @@
 """ESPHome constants."""
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aioesphomeapi import TemperatureUnit
 from awesomeversion import AwesomeVersion
 
 from homeassistant.const import UnitOfTemperature
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .domain_data import DomainData
 
 DOMAIN = "esphome"
+
+ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
 CONF_ALLOW_SERVICE_CALLS = "allow_service_calls"
 CONF_SUBSCRIBE_LOGS = "subscribe_logs"
