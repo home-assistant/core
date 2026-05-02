@@ -855,6 +855,9 @@ class MQTT:
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
+            self._registered_subscriptions[subscription.topic] = (
+                subscription.subscription_id
+            )
             self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
