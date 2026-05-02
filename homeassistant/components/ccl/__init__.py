@@ -6,13 +6,14 @@ import logging
 from typing import Any
 
 from aioccl import CCLDevice, CCLServer
-from aioccl.server import register
 from aiohttp import web
 from aiohttp.hdrs import METH_POST
 
 from homeassistant.components import webhook
+from homeassistant.components.http import NoURLAvailableError
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, NAME
 from .coordinator import CCLConfigEntry, CCLCoordinator
@@ -34,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 
         coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
-        register(devices, device)
+        devices[device.passkey] = device
 
         async def register_webhook() -> None:
             """Register webhook for the device."""
@@ -62,8 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
                 )
                 _LOGGER.debug("Webhook registered at hass: %s", webhook_url)
 
-            except ValueError as err:
+            except (ValueError, NoURLAvailableError) as err:
                 _LOGGER.error("Failed to register webhook: %s", err)
+                raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
 
         await register_webhook()
 
