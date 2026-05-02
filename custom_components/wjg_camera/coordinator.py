@@ -24,8 +24,7 @@ import async_timeout
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 # Konstanten lokal definieren, um zirkulären Import zu vermeiden
 CONF_PROTOCOL = "protocol"
@@ -47,13 +46,13 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 # XM SDK Message IDs
-XM_LOGIN_REQ       = 0x03E8  # 1000
-XM_LOGIN_RSP       = 0x03E9
-XM_KEEPALIVE_REQ   = 0x03EE  # 1006
-XM_RECORD_START    = 0x041A
-XM_RECORD_STOP     = 0x041B
-XM_FILELIST_REQ    = 0x0592
-XM_MOTION_REQ      = 0x0144
+XM_LOGIN_REQ     = 0x03E8  # 1000
+XM_LOGIN_RSP     = 0x03E9
+XM_KEEPALIVE_REQ = 0x03EE  # 1006
+XM_RECORD_START  = 0x041A
+XM_RECORD_STOP   = 0x041B
+XM_FILELIST_REQ  = 0x0592
+XM_MOTION_REQ    = 0x0144
 
 
 async def _await_if_needed(value: Any) -> Any:
@@ -62,10 +61,10 @@ async def _await_if_needed(value: Any) -> Any:
         return await value
     return value
 
+
 def xm_packet(session_id: int, seq: int, msg_id: int, data: dict) -> bytes:
     """Erstellt ein XM SDK Binärpaket."""
     payload = json.dumps(data, separators=(",", ":")).encode()
-    # FF 01 00 00 | SessionID(4) | Sequence(4) | 00 00 | MsgID(2) | DataLen(4)
     header = struct.pack(
         "<BBHIIBBHI",
         0xFF, 0x01, 0x0000,
@@ -74,6 +73,7 @@ def xm_packet(session_id: int, seq: int, msg_id: int, data: dict) -> bytes:
         msg_id, len(payload)
     )
     return header + payload
+
 
 def xm_parse(data: bytes) -> tuple[int, dict]:
     """Parst ein XM SDK Antwortpaket. Gibt (msg_id, body_dict) zurück."""
@@ -121,12 +121,11 @@ class XMClient:
         return body
 
     def _login(self) -> bool:
-        # Passwort-Hash nach XM-Methode (MD5 mit Padding)
         import hashlib
         raw = hashlib.md5(self.password.encode()).hexdigest().upper()
         pwd_hash = ""
         for i in range(0, 32, 2):
-            c = (ord(raw[i]) + ord(raw[i+1])) % 0x62
+            c = (ord(raw[i]) + ord(raw[i + 1])) % 0x62
             pwd_hash += chr(c + (0x41 if c < 0xA else 0x30 + 0x39 - 9))
         pwd_hash = pwd_hash[:8] if self.password else ""
 
@@ -177,18 +176,11 @@ class XMClient:
     def ptz_command(self, code: int, speed: int = 5, channel: int = 0) -> bool:
         resp = self._send_recv(
             0x0601,
-            {
-                "Parameter": {
-                    "Channel": channel,
-                    "CommandValue": code,
-                    "Speed": speed,
-                }
-            },
+            {"Parameter": {"Channel": channel, "CommandValue": code, "Speed": speed}},
         )
         return resp.get("Ret", 0) == 100
 
     def disconnect(self) -> None:
-        """Offene Socket-Verbindung schliessen."""
         if self._sock:
             try:
                 self._sock.close()
@@ -202,7 +194,6 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _normalize_http_retries(value: Any) -> int:
-        """Retry-Wert robust auf den erlaubten Bereich 0..5 bringen."""
         try:
             retries = int(value)
         except (TypeError, ValueError):
@@ -210,7 +201,6 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         return max(0, min(5, retries))
 
     def is_adb_proxy(self) -> bool:
-        """Erkennt, ob ADB-Proxy-Modus aktiv ist (localhost mit Port 8080/8081)."""
         return (
             self.host in ("127.0.0.1", "localhost")
             and self.rtsp_port == 8080
@@ -218,7 +208,6 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         )
 
     async def async_adb_proxy_check(self) -> bool:
-        """Prüft, ob ADB-Proxy-Port erreichbar ist."""
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get("http://127.0.0.1:8081/") as resp:
@@ -226,9 +215,7 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         except Exception:
             return False
 
-    # Beispiel für automatisches Umschalten auf ADB-Proxy, falls Ports erkannt werden
     async def async_prepare_connection(self) -> None:
-        """ADB-Proxy-Erreichbarkeit bei lokalem Tunnel pruefen."""
         if self.is_adb_proxy():
             ok = await self.async_adb_proxy_check()
             if not ok:
@@ -268,21 +255,20 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         self._motion: bool = False
         self._last_motion_time: float = 0
         self._onvif = None
+
         if self.protocol == "onvif":
             try:
                 from onvif import ONVIFCamera
-
                 self._onvif = ONVIFCamera(
                     self.host,
                     entry.data.get("onvif_port", 8899),
                     self.username,
-                    self.password
+                    self.password,
                 )
             except Exception as e:
                 _LOGGER.error("ONVIF-Initialisierung fehlgeschlagen: %s", e)
 
     async def async_onvif_ptz(self, cmd: str, speed: float = 0.5) -> bool:
-        """ONVIF PTZ-Befehl senden (up/down/left/right/zoom_in/zoom_out/stop)."""
         if not self._onvif:
             return False
         try:
@@ -290,7 +276,7 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
             ptz_service = self._onvif.create_ptz_service()
             profiles = await _await_if_needed(media_service.GetProfiles())
             profile = profiles[0]
-            req = ptz_service.create_type('ContinuousMove')
+            req = ptz_service.create_type("ContinuousMove")
             req.ProfileToken = profile.token
             req.Velocity = {}
             if cmd == "up":
@@ -306,7 +292,9 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
             elif cmd == "zoom_out":
                 req.Velocity = {"Zoom": {"x": -speed}}
             elif cmd == "stop":
-                await _await_if_needed(ptz_service.Stop({'ProfileToken': profile.token}))
+                await _await_if_needed(
+                    ptz_service.Stop({"ProfileToken": profile.token})
+                )
                 return True
             else:
                 return False
@@ -317,16 +305,18 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
             return False
 
     async def async_onvif_stream_url(self) -> str | None:
-        """ONVIF Stream-URL abrufen."""
         if not self._onvif:
             return None
         try:
             media_service = self._onvif.create_media_service()
             profiles = await _await_if_needed(media_service.GetProfiles())
             profile = profiles[0]
-            req = media_service.create_type('GetStreamUri')
+            req = media_service.create_type("GetStreamUri")
             req.ProfileToken = profile.token
-            req.StreamSetup = {"Stream": "RTP-Unicast", "Transport": {"Protocol": "RTSP"}}
+            req.StreamSetup = {
+                "Stream": "RTP-Unicast",
+                "Transport": {"Protocol": "RTSP"},
+            }
             uri = await _await_if_needed(media_service.GetStreamUri(req))
             return uri.Uri
         except Exception as e:
@@ -335,8 +325,12 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
 
     @property
     def rtsp_url(self) -> str:
-        u = f"admin:{self.password}@" if self.password else f"{self.username}:@"
-        return f"rtsp://{u}{self.host}:{self.rtsp_port}{self.rtsp_path}"
+        # FIX: Korrekte RTSP-URL – Passwort nur wenn gesetzt, sonst leerer String
+        if self.password:
+            auth = f"{self.username}:{self.password}@"
+        else:
+            auth = f"{self.username}:@"
+        return f"rtsp://{auth}{self.host}:{self.rtsp_port}{self.rtsp_path}"
 
     @property
     def snapshot_url(self) -> str:
@@ -348,7 +342,6 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
 
     @property
     def motion_detected(self) -> bool:
-        """True zurueckgeben, solange die letzte Bewegung frisch genug ist."""
         return time.time() - self._last_motion_time < 30
 
     @property
@@ -357,38 +350,34 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self) -> None:
         """Verbindung herstellen und testen."""
-        self._session = aiohttp.ClientSession()
-        session = self._session
-        assert session is not None
+        # FIX: Session nur einmal erstellen, nicht doppelt
+        if self._session is None:
+            self._session = aiohttp.ClientSession()
 
         # HTTP-Erreichbarkeit prüfen
         try:
             async with async_timeout.timeout(5):
-                async with session.get(
+                async with self._session.get(
                     f"http://{self.host}:{self.http_port}/",
-                    allow_redirects=True
+                    allow_redirects=True,
                 ) as resp:
-                    _LOGGER.debug(
-                        "Kamera HTTP erreichbar, Status: %s", resp.status
-                    )
+                    _LOGGER.debug("Kamera HTTP erreichbar, Status: %s", resp.status)
         except Exception as e:
             _LOGGER.warning("HTTP nicht erreichbar: %s — versuche RTSP-only", e)
 
-        # XM SDK verbinden (in executor, da synchron)
+        # XM SDK verbinden
         if self.protocol == PROTOCOL_XM:
             await self.hass.async_add_executor_job(self._setup_xm)
 
-        await self.async_refresh()
+        # FIX: Erster Refresh – UpdateFailed wird als ConfigEntryNotReady weitergegeben
+        await self.async_config_entry_first_refresh()
 
     def _setup_xm(self) -> None:
-        """XM SDK Client initialisieren (blockierend, im executor)."""
         client = XMClient(self.host, self.xm_port, self.username, self.password)
         if client.connect():
             self._xm = client
             _LOGGER.info(
-                "XM SDK Verbindung erfolgreich zu %s:%s",
-                self.host,
-                self.xm_port,
+                "XM SDK Verbindung erfolgreich zu %s:%s", self.host, self.xm_port
             )
         else:
             _LOGGER.warning("XM SDK nicht verfügbar — Fallback auf HTTP")
@@ -403,11 +392,10 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         }
 
         # Snapshot abrufen um Erreichbarkeit zu prüfen
-        session = self._session
-        if session is not None:
+        if self._session is not None:
             try:
                 async with async_timeout.timeout(5):
-                    async with session.get(
+                    async with self._session.get(
                         self.snapshot_url, allow_redirects=True
                     ) as resp:
                         if resp.status == 200:
@@ -415,6 +403,19 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
                             ct = resp.headers.get("Content-Type", "")
                             if "image" in ct:
                                 data["snapshot_bytes"] = await resp.read()
+                        elif resp.status == 401:
+                            # FIX: 401 = Zugangsdaten falsch → klare Meldung
+                            _LOGGER.warning(
+                                "Snapshot: Authentifizierung fehlgeschlagen (401) "
+                                "für %s — Benutzername/Passwort prüfen!",
+                                self.snapshot_url,
+                            )
+                        else:
+                            _LOGGER.debug(
+                                "Snapshot HTTP-Status: %s", resp.status
+                            )
+            except asyncio.TimeoutError:
+                _LOGGER.debug("Snapshot Timeout für %s", self.host)
             except Exception as e:
                 _LOGGER.debug("Snapshot fehlgeschlagen: %s", e)
 
@@ -428,6 +429,13 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("XM Keepalive fehlgeschlagen: %s — reconnect", e)
                 await self.hass.async_add_executor_job(self._setup_xm)
 
+        # FIX: Wenn Kamera nicht erreichbar, UpdateFailed werfen damit
+        # Coordinator den Fehler korrekt an Entities weitergibt
+        if not data["available"]:
+            raise UpdateFailed(
+                f"Kamera {self.host} nicht erreichbar (Snapshot + XM fehlgeschlagen)"
+            )
+
         return data
 
     async def _async_http_get_data(
@@ -437,10 +445,6 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         retries: int | None = None,
         as_json: bool = False,
     ) -> bytes | dict[str, Any] | None:
-        """HTTP GET mit kleinem Retry für transiente Fehler.
-
-        Gibt bei Erfolg gelesene Daten (bytes oder dict) zurück, sonst None.
-        """
         if not self._session:
             return None
 
@@ -463,27 +467,26 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         return None
 
     async def async_set_recording(self, enabled: bool) -> bool:
-        """Aufnahme starten oder stoppen."""
         xm_client = self._xm
         if xm_client is not None:
             if enabled:
                 ok = await self.hass.async_add_executor_job(
-                    xm_client.start_recording,
-                    0,
+                    xm_client.start_recording, 0
                 )
             else:
                 ok = await self.hass.async_add_executor_job(
-                    xm_client.stop_recording,
-                    0,
+                    xm_client.stop_recording, 0
                 )
             if ok:
                 self._recording = enabled
                 return True
 
-        # HTTP-Fallback (manche Kameras)
         if self._session:
             cmd = "start" if enabled else "stop"
-            url = f"http://{self.host}:{self.http_port}/cgi-bin/record?cmd={cmd}&channel=1"
+            url = (
+                f"http://{self.host}:{self.http_port}"
+                f"/cgi-bin/record?cmd={cmd}&channel=1"
+            )
             data = await self._async_http_get_data(url, timeout_seconds=5)
             if isinstance(data, (bytes, bytearray)):
                 self._recording = enabled
@@ -491,46 +494,34 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
         return False
 
     async def async_get_file_list(self) -> list[dict]:
-        """Dateiliste von der Kamera abrufen."""
         xm_client = self._xm
         if xm_client is not None:
-            files = await self.hass.async_add_executor_job(
-                xm_client.get_file_list,
-                0,
-                50,
+            return await self.hass.async_add_executor_job(
+                xm_client.get_file_list, 0, 50
             )
-            return files
 
-        # HTTP-Fallback
         if self._session:
             url = f"http://{self.host}:{self.http_port}/cgi-bin/fileman"
             data = await self._async_http_get_data(
-                url,
-                timeout_seconds=10,
-                as_json=True,
+                url, timeout_seconds=10, as_json=True
             )
             if isinstance(data, dict):
                 return data.get("files", [])
         return []
 
     async def async_snapshot(self) -> bytes | None:
-        """Aktuelles Bild von der Kamera laden."""
         if not self._session:
             return None
-        data = await self._async_http_get_data(
-            self.snapshot_url,
-            timeout_seconds=5,
-        )
+        data = await self._async_http_get_data(self.snapshot_url, timeout_seconds=5)
         if isinstance(data, (bytes, bytearray)):
             return bytes(data)
         return None
 
     async def async_ptz_command(self, cmd: str, speed: int = 5) -> bool:
-        """PTZ-Steuerbefehl senden (Start/Stop Up/Down/Left/Right/Zoom)."""
         ptz_map = {
             "up": 0x10, "down": 0x11, "left": 0x12, "right": 0x13,
             "zoom_in": 0x01, "zoom_out": 0x02, "focus_in": 0x03,
-            "focus_out": 0x04, "stop": 0xFF
+            "focus_out": 0x04, "stop": 0xFF,
         }
         if cmd not in ptz_map:
             _LOGGER.warning("Unbekannter PTZ-Befehl: %s", cmd)
@@ -545,10 +536,11 @@ class WJGCameraCoordinator(DataUpdateCoordinator):
             except Exception as e:
                 _LOGGER.error("PTZ-Befehl fehlgeschlagen: %s", e)
 
-        # HTTP-Fallback
         if self._session:
-            url = (f"http://{self.host}:{self.http_port}/cgi-bin/ptz"
-                   f"?channel=1&cmd={cmd}&speed={speed}")
+            url = (
+                f"http://{self.host}:{self.http_port}"
+                f"/cgi-bin/ptz?channel=1&cmd={cmd}&speed={speed}"
+            )
             data = await self._async_http_get_data(url, timeout_seconds=3)
             return isinstance(data, (bytes, bytearray))
         return False
