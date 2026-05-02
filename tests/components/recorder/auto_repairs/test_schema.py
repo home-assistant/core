@@ -14,7 +14,7 @@ from homeassistant.components.recorder.auto_repairs.schema import (
     validate_table_schema_supports_utf8,
 )
 from homeassistant.components.recorder.db_schema import Statistics, States
-from homeassistant.components.recorder.migration import _modify_columns
+from homeassistant.components.recorder.migration import _drop_index, _modify_columns
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 
@@ -321,13 +321,12 @@ async def test_validate_db_schema_missing_index_with_broken_schema(
     await async_wait_recording_done(hass)
     session_maker = recorder_mock.get_session
 
-    def _drop_index():
-        with session_scope(session=session_maker()) as session:
-            session.execute(
-                text("DROP INDEX ix_statistics_statistic_id_start_ts")
-            )
-
-    await recorder_mock.async_add_executor_job(_drop_index)
+    await recorder_mock.async_add_executor_job(
+        _drop_index,
+        session_maker,
+        "statistics",
+        "ix_statistics_statistic_id_start_ts",
+    )
 
     schema_errors = await recorder_mock.async_add_executor_job(
         validate_table_schema_has_indexes,

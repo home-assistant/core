@@ -342,4 +342,12 @@ def correct_db_schema_missing_indexes(
             index_name,
             table_name,
         )
-        _create_index(instance, instance.get_session, table_name, index_name)
+        try:
+            _create_index(instance, instance.get_session, table_name, index_name)
+        except Exception:
+            _LOGGER.exception(
+                "Failed to recreate index %s on table %s"
+                " — manual deduplication may be required",
+                index_name,
+                table_name,
+            )
