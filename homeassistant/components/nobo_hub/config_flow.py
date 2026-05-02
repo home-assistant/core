@@ -83,7 +83,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         The unique_id is replaced with the full 12-digit serial when an
         entry is created.
 
-        Three paths from here:
+        Four paths from here:
         - Fast path: a configured entry already has this MAC stored →
           refresh its IP and abort.
         - Device is already ignored.
