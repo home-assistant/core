@@ -234,6 +234,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # device) and look the device up in the registry by MAC.
             mac = dr.format_mac(discovery_info.macaddress)
             await self.async_set_unique_id(mac)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
             existing = dr.async_get(self.hass).async_get_device(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
