@@ -1205,6 +1205,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/notify_events/ @matrozov @papajojo
 /homeassistant/components/notion/ @bachya
 /tests/components/notion/ @bachya
+/homeassistant/components/novy_cooker_hood/ @piitaya
+/tests/components/novy_cooker_hood/ @piitaya
 /homeassistant/components/nrgkick/ @andijakl
 /tests/components/nrgkick/ @andijakl
 /homeassistant/components/nsw_fuel_station/ @nickw444
@@ -1241,6 +1243,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
+/homeassistant/components/omie/ @luuuis
+/tests/components/omie/ @luuuis
 /homeassistant/components/onboarding/ @home-assistant/core
 /tests/components/onboarding/ @home-assistant/core
 /homeassistant/components/ondilo_ico/ @JeromeHXP

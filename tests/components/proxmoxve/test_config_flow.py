@@ -1,7 +1,5 @@
 """Test the config flow for Proxmox VE."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -13,6 +11,7 @@ from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve import CONF_AUTH_METHOD, CONF_HOST, CONF_REALM
 from homeassistant.components.proxmoxve.const import (
+    CONF_NODE,
     CONF_NODES,
     CONF_TOKEN,
     CONF_TOKEN_ID,
@@ -216,7 +215,7 @@ async def test_form_exceptions_qemu(
     reason: str,
 ) -> None:
     """Test we handle all exceptions."""
-    mock_proxmox_client.nodes.get.return_value = [{"node": "pve1"}]
+    mock_proxmox_client.nodes.get.return_value = [{"node": "pve1", "status": "online"}]
     node_resource = mock_proxmox_client.nodes.return_value
     node_resource.qemu.get.side_effect = exception
     result = await hass.config_entries.flow.async_init(
@@ -686,3 +685,33 @@ async def test_full_flow_reauth_exceptions(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_offline_node_skipped(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+) -> None:
+    """Test that offline nodes are skipped during config flow and don't cause setup failure."""
+    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_STEP
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    nodes_in_result = [node[CONF_NODE] for node in result["data"][CONF_NODES]]
+    assert "pve3" not in nodes_in_result
+    assert "pve1" in nodes_in_result
+    assert "pve2" in nodes_in_result

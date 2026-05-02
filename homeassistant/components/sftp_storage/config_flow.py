@@ -1,7 +1,5 @@
 """Config flow to configure the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from pathlib import Path
 import shutil

@@ -1,7 +1,5 @@
 """Support for WiLight lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pywilight.const import ITEM_LIGHT, LIGHT_COLOR, LIGHT_DIMMER, LIGHT_ON_OFF

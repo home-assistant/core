@@ -1,7 +1,5 @@
 """Demo platform that has two fake switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity

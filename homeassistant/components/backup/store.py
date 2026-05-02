@@ -1,7 +1,5 @@
 """Store backup configuration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant.core import HomeAssistant, callback

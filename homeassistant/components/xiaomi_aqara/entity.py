@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 
 from xiaomi_gateway import XiaomiGateway
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -15,6 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from . import XiaomiAqaraConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class XiaomiDevice(Entity):
         device: dict[str, Any],
         device_type: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the Xiaomi device."""
         self._is_available = True

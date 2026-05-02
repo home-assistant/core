@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from unittest.mock import MagicMock, call

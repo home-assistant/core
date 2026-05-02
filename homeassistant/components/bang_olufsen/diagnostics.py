@@ -1,7 +1,5 @@
 """Support for Bang & Olufsen diagnostics."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
