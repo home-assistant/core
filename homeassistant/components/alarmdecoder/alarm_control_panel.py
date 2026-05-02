@@ -1,7 +1,5 @@
 """Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
 
-from __future__ import annotations
-
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,

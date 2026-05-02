@@ -1,7 +1,5 @@
 """Hass.io const variables."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -72,8 +70,6 @@ ATTR_WS_EVENT = "event"
 
 X_AUTH_TOKEN = "X-Supervisor-Token"
 X_INGRESS_PATH = "X-Ingress-Path"
-X_HASS_USER_ID = "X-Hass-User-ID"
-X_HASS_IS_ADMIN = "X-Hass-Is-Admin"
 X_HASS_SOURCE = "X-Hass-Source"
 
 WS_TYPE = "type"

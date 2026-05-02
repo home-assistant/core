@@ -1,7 +1,5 @@
 """Tests for the UniFi Access integration setup."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import ssl
 from unittest.mock import MagicMock, patch

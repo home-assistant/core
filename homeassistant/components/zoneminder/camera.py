@@ -1,7 +1,5 @@
 """Support for ZoneMinder camera streaming."""
 
-from __future__ import annotations
-
 import logging
 
 from zoneminder.monitor import Monitor

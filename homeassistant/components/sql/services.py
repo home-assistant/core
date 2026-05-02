@@ -1,7 +1,5 @@
 """Services for the SQL integration."""
 
-from __future__ import annotations
-
 import logging
 
 from sqlalchemy.engine import Result

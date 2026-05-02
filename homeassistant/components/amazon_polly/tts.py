@@ -1,7 +1,5 @@
 """Support for the Amazon Polly text to speech service."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 import logging
 from typing import Any, Final

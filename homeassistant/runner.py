@@ -1,7 +1,5 @@
 """Run Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager

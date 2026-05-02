@@ -1,8 +1,6 @@
 """Webhook handlers for mobile_app."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
@@ -414,7 +412,7 @@ async def webhook_render_template(
             {
                 vol.Optional(ATTR_LOCATION_NAME): cv.string,
                 vol.Optional(ATTR_GPS): cv.gps,
-                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
+                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
                 vol.Optional(ATTR_BATTERY): cv.positive_int,
                 vol.Optional(ATTR_SPEED): cv.positive_int,
                 vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),

@@ -1,0 +1,124 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register custom service actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration transmits RF commands and does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not register custom service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not use runtime data.
+  test-before-configure:
+    status: exempt
+    comment: |
+      RF transmission is a one-way broadcast with no device to contact.
+  test-before-setup:
+    status: exempt
+    comment: |
+      RF transmission is a one-way broadcast with no device to contact.
+  unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration has no options.
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: |
+      RF transmission is a one-way broadcast; the light uses assumed state.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      RF transmission is a one-way broadcast; the light uses assumed state.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not authenticate.
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      RF devices cannot be discovered.
+  docs-data-update:
+    status: exempt
+    comment: |
+      RF transmission is one-way; there is no data update.
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Each config entry represents a single static device.
+  entity-category:
+    status: exempt
+    comment: |
+      The single entity represents the primary device function.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Light entities do not have device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The single entity represents the primary device function.
+  entity-translations:
+    status: exempt
+    comment: |
+      The entity uses the device name.
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: |
+      Light uses the default icon for its state.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No known repairable issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      Each config entry represents a single static device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not use a web session.
+  strict-typing: todo
