@@ -190,8 +190,8 @@ def mock_current_request(
         # ("https://foo.com:18123", "https://foo.com", "foo.com:18123", "https://foo.com:18123"),
     ],
     ids=[
-        "request_host_matches_external",
         "request_host_matches_internal",
+        "request_host_matches_external",
         "internal_no_port_request_external",
         "internal_port_request_external",
         "request_internal_distinct_host",
