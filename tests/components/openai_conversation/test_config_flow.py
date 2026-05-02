@@ -12,6 +12,7 @@ from homeassistant.components.openai_conversation.config_flow import (
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from homeassistant.components.openai_conversation.const import (
+    CONF_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
@@ -149,6 +150,40 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_form_with_custom_base_url(hass: HomeAssistant) -> None:
+    """Test creating a config entry with an OpenAI-compatible base URL."""
+    hass.config.components.add("openai_conversation")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
+        ) as mock_openai,
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_openai.return_value.models.list = AsyncMock()
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "http://example.local:2455/v1",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_API_KEY: "bla",
+        CONF_BASE_URL: "http://example.local:2455/v1",
+    }
+    assert mock_openai.call_args.kwargs[CONF_BASE_URL] == "http://example.local:2455/v1"
 
 
 async def test_creating_conversation_subentry(
