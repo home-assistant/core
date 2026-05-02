@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.wibeee.diagnostics import (
+    _redact_coordinator_data,
     async_get_config_entry_diagnostics,
 )
 from homeassistant.core import HomeAssistant
@@ -44,3 +45,8 @@ async def test_diagnostics_error(
 
     assert "error" in diag["push_server_config"]
     assert "error" in diag["device_config"]
+
+
+def test_redact_coordinator_data_none() -> None:
+    """Test _redact_coordinator_data returns None for None input."""
+    assert _redact_coordinator_data(None) is None

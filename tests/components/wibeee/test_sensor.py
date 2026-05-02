@@ -134,3 +134,136 @@ async def test_sensors_polling_mode_keeps_all_keys(
     registry = er.async_get(hass)
     assert registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_active_power") is not None
     assert registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_angle") is not None
+
+
+async def test_sensor_setup_no_data_returns_early(
+    hass: HomeAssistant,
+) -> None:
+    """sensor.async_setup_entry must return early when coordinator has no data."""
+    from homeassistant.components.wibeee.sensor import (  # noqa: PLC0415
+        async_setup_entry,
+    )
+
+    coordinator = MagicMock()
+    coordinator.data = None
+    runtime = MagicMock()
+    runtime.coordinator = coordinator
+    runtime.device_info = MagicMock(mac_addr_short="2233", ip_addr=MOCK_HOST)
+    entry = MagicMock()
+    entry.runtime_data = runtime
+    entry.options = {}
+
+    added: list = []
+
+    def _add(entities, update_before_add=False) -> None:
+        added.extend(entities)
+
+    await async_setup_entry(hass, entry, _add)
+    assert added == []
+
+
+async def test_sensor_setup_no_phases_returns_early(
+    hass: HomeAssistant,
+) -> None:
+    """sensor.async_setup_entry must return early when no known phases found."""
+    from homeassistant.components.wibeee.sensor import (  # noqa: PLC0415
+        async_setup_entry,
+    )
+
+    coordinator = MagicMock()
+    # Data with only unknown phase keys → discovered_phases stays empty.
+    coordinator.data = {"unknown_phase": {"vrms": "230"}}
+    runtime = MagicMock()
+    runtime.coordinator = coordinator
+    runtime.device_info = MagicMock(mac_addr_short="2233", ip_addr=MOCK_HOST)
+    entry = MagicMock()
+    entry.runtime_data = runtime
+    entry.options = {}
+
+    added: list = []
+
+    def _add(entities, update_before_add=False) -> None:
+        added.extend(entities)
+
+    await async_setup_entry(hass, entry, _add)
+    assert added == []
+
+
+async def test_sensor_native_value_non_dict_data(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """native_value returns None when coordinator.data is not a dict."""
+    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
+
+    runtime = loaded_entry.runtime_data
+    coordinator = runtime.coordinator
+    sensor = WibeeeSensor(
+        coordinator=coordinator,
+        device_info=runtime.device_info,
+        phase_key="fase4",
+        description=SENSOR_TYPES["p_activa"],
+    )
+
+    coordinator.data = "not_a_dict"  # type: ignore[assignment]
+    assert sensor.native_value is None
+
+
+async def test_sensor_native_value_phase_not_dict(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """native_value returns None when phase data is not a dict."""
+    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
+
+    runtime = loaded_entry.runtime_data
+    coordinator = runtime.coordinator
+    sensor = WibeeeSensor(
+        coordinator=coordinator,
+        device_info=runtime.device_info,
+        phase_key="fase4",
+        description=SENSOR_TYPES["p_activa"],
+    )
+
+    coordinator.data = {"fase4": "garbage"}  # type: ignore[dict-item]
+    assert sensor.native_value is None
+
+
+async def test_sensor_native_value_missing_key(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """native_value returns None when the sensor key is absent from phase."""
+    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
+
+    runtime = loaded_entry.runtime_data
+    coordinator = runtime.coordinator
+    sensor = WibeeeSensor(
+        coordinator=coordinator,
+        device_info=runtime.device_info,
+        phase_key="fase4",
+        description=SENSOR_TYPES["p_activa"],
+    )
+
+    coordinator.data = {"fase4": {"vrms": "230.0"}}
+    assert sensor.native_value is None
+
+
+async def test_sensor_native_value_invalid_number(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """native_value returns None when value can't be parsed as a float."""
+    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
+
+    runtime = loaded_entry.runtime_data
+    coordinator = runtime.coordinator
+    sensor = WibeeeSensor(
+        coordinator=coordinator,
+        device_info=runtime.device_info,
+        phase_key="fase4",
+        description=SENSOR_TYPES["p_activa"],
+    )
+
+    coordinator.data = {"fase4": {"p_activa": "not_a_number"}}
+    assert sensor.native_value is None
