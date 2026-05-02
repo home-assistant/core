@@ -1088,6 +1088,7 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
             CONF_PROTOCOL: "5",
         },
     ],
+    ids=["v3.1", "v3.1.1", "v5"],
 )
 async def test_unsubscribe_race(
     hass: HomeAssistant,
@@ -1159,7 +1160,7 @@ async def test_unsubscribe_race(
             CONF_PROTOCOL: "5",
         },
     ],
-    ids=["v3.1", "v3.3.1", "5"],
+    ids=["v3.1", "v3.1.1", "v5"],
 )
 @pytest.mark.parametrize("mqtt_config_entry_options", [ENTRY_DEFAULT_BIRTH_MESSAGE])
 async def test_wildcard_unsubscribe_race(
