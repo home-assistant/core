@@ -10,7 +10,7 @@ from homeassistant.components.nobo_hub.const import (
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -70,6 +70,7 @@ async def test_configure_with_discover(
     assert result["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_SERIAL: "123456789012",
+        CONF_MAC: None,
     }
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
     mock_setup_entry.assert_awaited_once()
@@ -117,6 +118,7 @@ async def test_configure_manual(
     assert result["data"] == {
         CONF_SERIAL: "123456789012",
         CONF_IP_ADDRESS: "1.1.1.1",
+        CONF_MAC: None,
     }
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
     mock_setup_entry.assert_awaited_once()
@@ -169,6 +171,7 @@ async def test_configure_user_selected_manual(
     assert result["data"] == {
         CONF_SERIAL: "123456789012",
         CONF_IP_ADDRESS: "1.1.1.1",
+        CONF_MAC: None,
     }
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
     mock_setup_entry.assert_awaited_once()
@@ -325,6 +328,7 @@ async def test_dhcp_discovery_new_hub(
     assert result["data"] == {
         CONF_SERIAL: "102000100098",
         CONF_IP_ADDRESS: "192.168.1.106",
+        CONF_MAC: "7c830602644f",
     }
     mock_connect.assert_awaited_once_with("192.168.1.106", "102000100098")
     mock_setup_entry.assert_awaited_once()
@@ -335,11 +339,15 @@ async def test_dhcp_discovery_updates_existing_ip(
     mock_setup_entry: AsyncMock,
     mock_unload_entry: AsyncMock,
 ) -> None:
-    """DHCP for a hub already configured updates its stored IP and aborts."""
+    """DHCP for a configured hub refreshes the stored IP and backfills MAC."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="102000100098",
-        data={CONF_SERIAL: "102000100098", CONF_IP_ADDRESS: "1.1.1.1"},
+        data={
+            CONF_SERIAL: "102000100098",
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_MAC: None,
+        },
     )
     config_entry.add_to_hass(hass)
 
@@ -356,6 +364,7 @@ async def test_dhcp_discovery_updates_existing_ip(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
+    assert config_entry.data[CONF_MAC] == "7c830602644f"
 
 
 async def test_dhcp_discovery_ignored_and_configured(
@@ -379,7 +388,11 @@ async def test_dhcp_discovery_ignored_and_configured(
     configured_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="102000100098",
-        data={CONF_SERIAL: "102000100098", CONF_IP_ADDRESS: "1.1.1.1"},
+        data={
+            CONF_SERIAL: "102000100098",
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_MAC: None,
+        },
     )
     configured_entry.add_to_hass(hass)
 
@@ -396,6 +409,7 @@ async def test_dhcp_discovery_ignored_and_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert configured_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
+    assert configured_entry.data[CONF_MAC] == "7c830602644f"
 
 
 async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:

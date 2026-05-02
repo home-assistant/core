@@ -6,12 +6,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -81,9 +83,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     entry.runtime_data = hub
 
     device_registry = dr.async_get(hass)
+    connections: set[tuple[str, str]] = set()
+    if mac := entry.data.get(CONF_MAC):
+        connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub.hub_serial)},
+        connections=connections,
         serial_number=hub.hub_serial,
         name=hub.hub_info[ATTR_NAME],
         manufacturer=NOBO_MANUFACTURER,
@@ -126,6 +132,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) ->
         new_data.pop("auto_discovered", None)
         hass.config_entries.async_update_entry(
             entry, data=new_data, version=1, minor_version=3
+        )
+
+    if entry.version == 1 and entry.minor_version < 4:
+        # MAC is populated for DHCP-discovered hubs; existing entries
+        # backfill it the next time DHCP fires for the hub.
+        new_data = dict(entry.data)
+        new_data.setdefault(CONF_MAC, None)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, version=1, minor_version=4
         )
 
     return True

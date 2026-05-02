@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -34,12 +34,13 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nobø Ecohub."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_hubs: dict[str, Any] | None = None
         self._hub: str | None = None
+        self._mac: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,6 +81,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         matches the prefix, just refresh its IP. Otherwise, ask the user
         for the serial suffix via the existing `selected` step.
         """
+        self._mac = discovery_info.macaddress
         # Wait 5s — real-world gaps up to ~4s have been observed.
         discovered = await nobo.async_discover_hubs(
             ip=discovery_info.ip, autodiscover_wait=5.0
@@ -89,15 +91,19 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         _, serial_prefix = next(iter(discovered))
 
         # Look for a configured entry whose full 12-digit unique_id starts
-        # with the discovered prefix and refresh its IP. Exclude ignored
-        # entries: an ignored discovery's unique_id is the 9-digit prefix,
-        # which would also match `startswith` and could shadow the real
-        # configured entry depending on iteration order.
+        # with the discovered prefix and refresh its IP (and backfill MAC
+        # for entries created before DHCP discovery existed). Exclude
+        # ignored entries: an ignored discovery's unique_id is the 9-digit
+        # prefix, which would also match `startswith` and could shadow the
+        # real configured entry depending on iteration order.
         for entry in self._async_current_entries(include_ignore=False):
             if entry.unique_id and entry.unique_id.startswith(serial_prefix):
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates={CONF_IP_ADDRESS: discovery_info.ip},
+                    data_updates={
+                        CONF_IP_ADDRESS: discovery_info.ip,
+                        CONF_MAC: discovery_info.macaddress,
+                    },
                     reason="already_configured",
                 )
 
@@ -184,6 +190,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_SERIAL: serial,
                 CONF_IP_ADDRESS: ip_address,
+                CONF_MAC: self._mac,
             },
         )
 
