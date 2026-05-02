@@ -19,13 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import CatGenieConfigEntry
-from .entity import CatGenieEntity
+from .entity import CatGenieEntity, CatGenieEntityDescription
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class CatGenieSensorDescription(SensorEntityDescription):
+class CatGenieSensorDescription(CatGenieEntityDescription, SensorEntityDescription):
     """Describe a CatGenie sensor."""
 
     value_fn: Callable[[Device], int | str | datetime | None]
@@ -50,9 +50,8 @@ SENSOR_DESCRIPTIONS: tuple[CatGenieSensorDescription, ...] = (
         translation_key="clean_progress",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: (
-            device.operation_status.clean_progress_pct if device.is_cleaning else None
-        ),
+        available_fn=lambda device: device.is_cleaning,
+        value_fn=lambda device: device.operation_status.clean_progress_pct,
     ),
     CatGenieSensorDescription(
         key="total_cycles",

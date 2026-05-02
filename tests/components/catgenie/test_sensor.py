@@ -1,11 +1,14 @@
 """Test the CatGenie sensor platform."""
 
+from copy import deepcopy
 from unittest.mock import MagicMock
+
+from catgenie import Device
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_ENTRY_DATA
+from .conftest import MOCK_DEVICE_DATA, MOCK_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -40,6 +43,40 @@ async def test_sensors_created(
     state = hass.states.get("sensor.catgenie_litter_box_clean_progress")
     assert state is not None
     assert state.state == "42"
+
+
+async def test_clean_progress_unavailable_when_idle(
+    hass: HomeAssistant,
+    mock_catgenie_auth_init: MagicMock,
+    mock_catgenie_client: MagicMock,
+) -> None:
+    """Test that clean_progress sensor is unavailable when not cleaning."""
+    idle_device_data = deepcopy(MOCK_DEVICE_DATA)
+    idle_device_data["operationStatus"]["state"] = 0
+    idle_device_data["operationStatus"]["progress"] = 0
+    mock_catgenie_client.get_devices.return_value = [
+        Device.model_validate(idle_device_data)
+    ]
+
+    entry = MockConfigEntry(
+        domain="catgenie",
+        data=MOCK_ENTRY_DATA,
+        unique_id="test-user-id",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.catgenie_litter_box_clean_progress")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    state = hass.states.get("sensor.catgenie_litter_box_status")
+    assert state is not None
+    assert state.state == "idle"
 
 
 async def test_sensor_device_removed(

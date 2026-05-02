@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from catgenie import Device
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -12,15 +15,23 @@ from .const import DOMAIN
 from .coordinator import CatGenieCoordinator
 
 
+@dataclass(frozen=True, kw_only=True)
+class CatGenieEntityDescription(EntityDescription):
+    """Describe a CatGenie entity."""
+
+    available_fn: Callable[[Device], bool] = lambda _: True
+
+
 class CatGenieEntity(CoordinatorEntity[CatGenieCoordinator]):
     """Defines a CatGenie entity."""
 
     _attr_has_entity_name = True
+    entity_description: CatGenieEntityDescription
 
     def __init__(
         self,
         coordinator: CatGenieCoordinator,
-        description: EntityDescription,
+        description: CatGenieEntityDescription,
         device_id: str,
     ) -> None:
         """Initialize the CatGenie entity."""
@@ -50,4 +61,8 @@ class CatGenieEntity(CoordinatorEntity[CatGenieCoordinator]):
         """Return True if entity is available."""
         if (device := self.device_data) is None:
             return False
-        return super().available and device.is_online
+        return (
+            super().available
+            and device.is_online
+            and self.entity_description.available_fn(device)
+        )
