@@ -477,6 +477,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "nobo_hub",
+        "hostname": "hub*",
         "macaddress": "7C8306*",
     },
     {

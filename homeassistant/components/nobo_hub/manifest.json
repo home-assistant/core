@@ -5,6 +5,7 @@
   "config_flow": true,
   "dhcp": [
     {
+      "hostname": "hub*",
       "macaddress": "7C8306*"
     }
   ],
