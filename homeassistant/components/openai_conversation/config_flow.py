@@ -447,13 +447,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             stored_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
             )
+            if stored_summary not in reasoning_summary_options:
+                stored_summary = RECOMMENDED_REASONING_SUMMARY
+                options[CONF_REASONING_SUMMARY] = stored_summary
             step_schema.update(
                 {
                     vol.Optional(
                         CONF_REASONING_SUMMARY,
-                        default=stored_summary
-                        if stored_summary in reasoning_summary_options
-                        else RECOMMENDED_REASONING_SUMMARY,  # Auto
+                        default=stored_summary,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=reasoning_summary_options,
