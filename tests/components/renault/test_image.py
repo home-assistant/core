@@ -23,6 +23,35 @@ def override_platforms() -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_getrandbits() -> Generator[None]:
+    """Mock image access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.image.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_50"], indirect=True)
+async def test_images_no_picture(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that no image entities are created when vehicle has no picture."""
+    with patch(
+        "renault_api.kamereon.models.KamereonVehicleDetails.get_picture",
+        return_value=None,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(entity_registry.entities) == 0
+
+
+@pytest.mark.freeze_time("2024-01-01 00:00:00+00:00")
 @pytest.mark.usefixtures("fixtures_with_data")
 async def test_images(
     hass: HomeAssistant,
