@@ -2,15 +2,20 @@
 
 from datetime import timedelta
 from decimal import Decimal
+import re
 from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import calendar, todo
+from homeassistant.components import calendar, group, todo
+from homeassistant.components.button import SERVICE_PRESS as SERVICE_PRESS_BUTTON
+from homeassistant.components.cover import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.script import ScriptConfig
+from homeassistant.components.valve import SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -28,6 +33,11 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
 from tests.common import MockConfigEntry, async_mock_service
+
+
+def _strip_static_entity_ids(prompt: str) -> str:
+    """Strip entity IDs from the static context for legacy prompt assertions."""
+    return re.sub(r"- entity_id: [^\n]+\n  names:", "- names:", prompt)
 
 
 @pytest.fixture
@@ -156,6 +166,8 @@ async def test_assist_api(
         original_name="Kitchen",
         suggested_object_id="kitchen",
     ).write_unavailable_state(hass)
+    async_mock_service(hass, "light", "turn_on")
+    async_mock_service(hass, "light", "turn_off")
 
     test_context = Context()
     llm_context = llm.LLMContext(
@@ -183,7 +195,12 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "GetDateTime",
+        "HassEntityTurnOn",
+        "HassEntityTurnOff",
+        "GetLiveContext",
+    ]
 
     # Match all
     intent_handler.platforms = None
@@ -192,6 +209,8 @@ async def test_assist_api(
     assert [tool.name for tool in api.tools] == [
         "test_intent",
         "GetDateTime",
+        "HassEntityTurnOn",
+        "HassEntityTurnOff",
         "GetLiveContext",
     ]
 
@@ -199,7 +218,7 @@ async def test_assist_api(
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 3
+    assert len(api.tools) == 5
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -669,10 +688,13 @@ Static Context: An overview of the areas and the devices in this smart home:
   areas: Test Area 2
 """
     first_part_prompt = (
-        "When controlling Home Assistant always call the intent tools. "
+        "When controlling Home Assistant, call intent tools for natural language "
+        "area, device, or domain requests. "
         "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
         "When controlling a device, prefer passing just name and domain. "
-        "When controlling an area, prefer passing just area name and domain."
+        "When controlling an area, prefer passing just area name and domain. "
+        "When the user requests a specific exposed entity and the static context "
+        "contains its entity_id, use the exact entity_id tool."
     )
     no_timer_prompt = "This device is not able to start timers."
 
@@ -707,7 +729,8 @@ Static Context: An overview of the areas and the devices in this smart home:
         " knowledge.\n"
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.api_prompt == (
+    assert "entity_id: light.kitchen" in api.api_prompt
+    assert _strip_static_entity_ids(api.api_prompt) == (
         f"""{first_part_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
@@ -732,7 +755,7 @@ Static Context: An overview of the areas and the devices in this smart home:
         "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.api_prompt == (
+    assert _strip_static_entity_ids(api.api_prompt) == (
         f"""{first_part_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
@@ -749,7 +772,7 @@ Static Context: An overview of the areas and the devices in this smart home:
         "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.api_prompt == (
+    assert _strip_static_entity_ids(api.api_prompt) == (
         f"""{first_part_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
@@ -762,7 +785,7 @@ Static Context: An overview of the areas and the devices in this smart home:
 
     api = await llm.async_get_api(hass, "assist", llm_context)
     # The no_timer_prompt is gone
-    assert api.api_prompt == (
+    assert _strip_static_entity_ids(api.api_prompt) == (
         f"""{first_part_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
@@ -1059,6 +1082,359 @@ async def test_get_live_context_tool_filter(
     }
 
 
+async def test_entity_control_tool_uses_only_exposed_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test controlling exposed entities by exact entity_id."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    exposed_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "exposed_light",
+        original_name="Exposed Light",
+        suggested_object_id="exposed_light",
+    )
+    unexposed_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "unexposed_light",
+        original_name="Unexposed Light",
+        suggested_object_id="unexposed_light",
+    )
+    exposed_lock = entity_registry.async_get_or_create(
+        "lock",
+        "test",
+        "exposed_lock",
+        original_name="Exposed Lock",
+        suggested_object_id="exposed_lock",
+    )
+    exposed_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "exposed_sensor",
+        original_name="Exposed Sensor",
+        suggested_object_id="exposed_sensor",
+    )
+    hass.states.async_set(exposed_light.entity_id, "on")
+    hass.states.async_set(unexposed_light.entity_id, "on")
+    hass.states.async_set(exposed_lock.entity_id, "locked")
+    hass.states.async_set(exposed_sensor.entity_id, "23")
+    async_expose_entity(hass, "conversation", exposed_light.entity_id, True)
+    async_expose_entity(hass, "conversation", unexposed_light.entity_id, False)
+    async_expose_entity(hass, "conversation", exposed_lock.entity_id, True)
+    async_expose_entity(hass, "conversation", exposed_sensor.entity_id, True)
+
+    light_calls = async_mock_service(hass, "light", "turn_off")
+    unlock_calls = async_mock_service(hass, "lock", SERVICE_UNLOCK)
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert "HassEntityTurnOff" in [tool.name for tool in api.tools]
+
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="HassEntityTurnOff", tool_args={})
+    )
+
+    assert result["success"] is False
+    assert "entity_id" in result["error"]
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOff",
+            tool_args={"entity_id": f"{exposed_light.entity_id}, light.missing"},
+        )
+    )
+
+    assert len(light_calls) == 1
+    assert light_calls[0].data == {"entity_id": [exposed_light.entity_id]}
+    assert result == {
+        "success": False,
+        "done": [exposed_light.entity_id],
+        "failed": {"light.missing": "Entity does not exist"},
+    }
+    light_calls.clear()
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOff",
+            tool_args={
+                "entity_id": [
+                    exposed_light.entity_id,
+                    unexposed_light.entity_id,
+                    exposed_lock.entity_id,
+                    exposed_sensor.entity_id,
+                    "light.missing",
+                ]
+            },
+        )
+    )
+
+    assert len(light_calls) == 1
+    assert light_calls[0].data == {"entity_id": [exposed_light.entity_id]}
+    assert light_calls[0].context is context
+    assert len(unlock_calls) == 1
+    assert unlock_calls[0].data == {"entity_id": [exposed_lock.entity_id]}
+    assert unlock_calls[0].context is context
+    assert result == {
+        "success": False,
+        "done": [exposed_light.entity_id, exposed_lock.entity_id],
+        "failed": {
+            unexposed_light.entity_id: "Entity is not exposed to this assistant",
+            exposed_sensor.entity_id: "Domain sensor does not support turn_off",
+            "light.missing": "Entity does not exist",
+        },
+    }
+
+
+async def test_entity_control_tool_maps_on_off_intent_special_domains(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test exact entity control maps the same special domains as on/off intents."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    exposed_cover = entity_registry.async_get_or_create(
+        "cover",
+        "test",
+        "exposed_cover",
+        original_name="Exposed Cover",
+        suggested_object_id="exposed_cover",
+    )
+    exposed_lock = entity_registry.async_get_or_create(
+        "lock",
+        "test",
+        "exposed_lock",
+        original_name="Exposed Lock",
+        suggested_object_id="exposed_lock",
+    )
+    exposed_valve = entity_registry.async_get_or_create(
+        "valve",
+        "test",
+        "exposed_valve",
+        original_name="Exposed Valve",
+        suggested_object_id="exposed_valve",
+    )
+    exposed_button = entity_registry.async_get_or_create(
+        "button",
+        "test",
+        "exposed_button",
+        original_name="Exposed Button",
+        suggested_object_id="exposed_button",
+    )
+    exposed_input_button = entity_registry.async_get_or_create(
+        "input_button",
+        "test",
+        "exposed_input_button",
+        original_name="Exposed Input Button",
+        suggested_object_id="exposed_input_button",
+    )
+    hass.states.async_set(exposed_cover.entity_id, "closed")
+    hass.states.async_set(exposed_lock.entity_id, "locked")
+    hass.states.async_set(exposed_valve.entity_id, "closed")
+    hass.states.async_set(exposed_button.entity_id, "unknown")
+    hass.states.async_set(exposed_input_button.entity_id, "unknown")
+    for entity_id in (
+        exposed_cover.entity_id,
+        exposed_lock.entity_id,
+        exposed_valve.entity_id,
+        exposed_button.entity_id,
+        exposed_input_button.entity_id,
+    ):
+        async_expose_entity(hass, "conversation", entity_id, True)
+
+    cover_open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+    cover_close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
+    lock_calls = async_mock_service(hass, "lock", SERVICE_LOCK)
+    unlock_calls = async_mock_service(hass, "lock", SERVICE_UNLOCK)
+    valve_open_calls = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
+    valve_close_calls = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+    button_calls = async_mock_service(hass, "button", SERVICE_PRESS_BUTTON)
+    input_button_calls = async_mock_service(hass, "input_button", SERVICE_PRESS_BUTTON)
+
+    api = await llm.async_get_api(
+        hass,
+        "assist",
+        llm.LLMContext(
+            platform="test_platform",
+            context=Context(),
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOn",
+            tool_args={
+                "entity_id": [
+                    exposed_cover.entity_id,
+                    exposed_lock.entity_id,
+                    exposed_valve.entity_id,
+                    exposed_button.entity_id,
+                    exposed_input_button.entity_id,
+                ]
+            },
+        )
+    )
+
+    assert result == {
+        "success": True,
+        "done": [
+            exposed_cover.entity_id,
+            exposed_lock.entity_id,
+            exposed_valve.entity_id,
+            exposed_button.entity_id,
+            exposed_input_button.entity_id,
+        ],
+        "failed": {},
+    }
+    assert cover_open_calls[0].data == {"entity_id": [exposed_cover.entity_id]}
+    assert lock_calls[0].data == {"entity_id": [exposed_lock.entity_id]}
+    assert valve_open_calls[0].data == {"entity_id": [exposed_valve.entity_id]}
+    assert button_calls[0].data == {"entity_id": [exposed_button.entity_id]}
+    assert input_button_calls[0].data == {"entity_id": [exposed_input_button.entity_id]}
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOff",
+            tool_args={
+                "entity_id": [
+                    exposed_cover.entity_id,
+                    exposed_lock.entity_id,
+                    exposed_valve.entity_id,
+                    exposed_button.entity_id,
+                ]
+            },
+        )
+    )
+
+    assert result == {
+        "success": False,
+        "done": [
+            exposed_cover.entity_id,
+            exposed_lock.entity_id,
+            exposed_valve.entity_id,
+        ],
+        "failed": {exposed_button.entity_id: "Domain button does not support turn_off"},
+    }
+    assert cover_close_calls[0].data == {"entity_id": [exposed_cover.entity_id]}
+    assert unlock_calls[0].data == {"entity_id": [exposed_lock.entity_id]}
+    assert valve_close_calls[0].data == {"entity_id": [exposed_valve.entity_id]}
+
+
+async def test_entity_control_tool_allows_exposed_groups(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test exact entity control expands groups and maps member services."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "group", {})
+
+    exposed_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "exposed_light",
+        original_name="Exposed Light",
+        suggested_object_id="exposed_light",
+    )
+    exposed_lock = entity_registry.async_get_or_create(
+        "lock",
+        "test",
+        "exposed_lock",
+        original_name="Exposed Lock",
+        suggested_object_id="exposed_lock",
+    )
+    hass.states.async_set(exposed_light.entity_id, "on")
+    hass.states.async_set(exposed_lock.entity_id, "locked")
+    test_group = await group.Group.async_create_group(
+        hass,
+        "Test Group",
+        created_by_service=False,
+        entity_ids=[exposed_light.entity_id, exposed_lock.entity_id],
+        icon=None,
+        mode=None,
+        object_id="test_group",
+        order=None,
+    )
+    await hass.async_block_till_done()
+    async_expose_entity(hass, "conversation", test_group.entity_id, True)
+
+    light_calls = async_mock_service(hass, "light", "turn_off")
+    unlock_calls = async_mock_service(hass, "lock", SERVICE_UNLOCK)
+
+    api = await llm.async_get_api(
+        hass,
+        "assist",
+        llm.LLMContext(
+            platform="test_platform",
+            context=Context(),
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    assert "HassEntityTurnOff" in [tool.name for tool in api.tools]
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOff",
+            tool_args={"entity_id": test_group.entity_id},
+        )
+    )
+
+    assert result == {
+        "success": True,
+        "done": [test_group.entity_id],
+        "failed": {},
+    }
+    assert light_calls[0].data == {"entity_id": [exposed_light.entity_id]}
+    assert unlock_calls[0].data == {"entity_id": [exposed_lock.entity_id]}
+
+
+async def test_entity_control_tool_is_not_exposed_without_homeassistant_service(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test exact entity control tools require homeassistant turn services."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    hass.services.async_remove("homeassistant", "turn_off")
+
+    exposed_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "exposed_light",
+        original_name="Exposed Light",
+        suggested_object_id="exposed_light",
+    )
+    hass.states.async_set(exposed_light.entity_id, "on")
+    async_expose_entity(hass, "conversation", exposed_light.entity_id, True)
+    async_mock_service(hass, "light", "turn_off")
+
+    api = await llm.async_get_api(
+        hass,
+        "assist",
+        llm.LLMContext(
+            platform="test_platform",
+            context=Context(),
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    assert "HassEntityTurnOff" not in [tool.name for tool in api.tools]
+
+
 async def test_script_tool(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1321,6 +1697,13 @@ async def test_selector_serializer(
     api = await llm.async_get_api(hass, "assist", llm_context)
     selector_serializer = api.custom_serializer
 
+    entity_control_schema = next(
+        iter(llm.EntityControlTool("turn_off").parameters.schema.values())
+    )
+    assert selector_serializer(entity_control_schema) == {
+        "type": "string",
+        "description": "An entity_id or comma-separated entity_ids from the static context",
+    }
     assert selector_serializer(selector.ActionSelector()) == {"type": "string"}
     assert selector_serializer(selector.AddonSelector()) == {"type": "string"}
     assert selector_serializer(selector.AreaSelector()) == {"type": "string"}
