@@ -17,8 +17,10 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=IZONE,
         title="iZone",
-        data={},
+        data={"host": "192.168.0.1"},
         entry_id="test_entry_id",
+        unique_id="test_controller_123",
+        version=2,
     )
 
 
@@ -96,6 +98,7 @@ async def mock_discovery(
         "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
     ) as mock_disco:
         mock_disco.return_value.start_discovery = AsyncMock()
+        mock_disco.return_value.close = AsyncMock()
         mock_disco.return_value.controllers = {
             mock_controller.device_uid: mock_controller
         }

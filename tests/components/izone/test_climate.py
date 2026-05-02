@@ -280,15 +280,17 @@ async def test_setup_entry_only_adds_entities_for_matching_config_entry(
     entry = MockConfigEntry(
         domain="izone",
         title="iZone",
-        data={},
+        data={"host": "192.0.2.1"},
         unique_id="controller_1",
         entry_id="test_entry_id",
+        version=2,
     )
 
     with patch(
         "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
     ) as mock_disco:
         mock_disco.return_value.start_discovery = AsyncMock()
+        mock_disco.return_value.close = AsyncMock()
         mock_disco.return_value.controllers = {
             matching_controller.device_uid: matching_controller,
             other_controller.device_uid: other_controller,
