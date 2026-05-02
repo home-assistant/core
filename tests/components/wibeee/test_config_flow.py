@@ -404,6 +404,32 @@ async def test_get_local_ip_falls_back_to_get_url(hass: HomeAssistant) -> None:
     assert result == "192.168.1.77"
 
 
+async def test_get_local_ip_get_url_returns_hostname(hass: HomeAssistant) -> None:
+    """Test _get_local_ip skips get_url result when it's a hostname (non-IP).
+
+    Covers the ValueError branch when ipaddress.ip_address() rejects a non-IP
+    hostname like ``homeassistant.local``: the code falls through to the
+    socket-based executor fallback.
+    """
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            new_callable=AsyncMock,
+            side_effect=HomeAssistantError("no network"),
+        ),
+        patch(
+            "homeassistant.helpers.network.get_url",
+            return_value="http://homeassistant.local:8123",
+        ),
+        patch(
+            "homeassistant.components.wibeee.config_flow._get_local_ip_sync",
+            return_value="192.168.1.99",
+        ),
+    ):
+        result = await _get_local_ip(hass)
+    assert result == "192.168.1.99"
+
+
 async def test_get_local_ip_uses_executor_fallback(hass: HomeAssistant) -> None:
     """Test _get_local_ip falls back to socket-based detection."""
     with (

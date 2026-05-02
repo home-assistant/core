@@ -8,6 +8,9 @@ import pytest
 
 from homeassistant.components.wibeee.push_receiver import (
     PushReceiver,
+    WibeeeReceiverAvgView,
+    WibeeeReceiverLeapView,
+    WibeeeReceiverView,
     _dispatch_push_data,
     _handle_push_request,
     parse_push_data,
@@ -267,3 +270,89 @@ def test_push_receiver_multiple_devices() -> None:
     receiver.register_device("001ec0112233", "192.168.1.101", listener2)
 
     assert receiver.device_count == 2
+
+
+# ---------------------------------------------------------------------------
+# Tests: PushReceiver.validate_ip edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_validate_ip_remote_none() -> None:
+    """Test validate_ip rejects when remote_ip is None."""
+    receiver = PushReceiver()
+    receiver.register_device("001ec0112232", "192.168.1.100", lambda d: None)
+
+    assert receiver.validate_ip("001ec0112232", None) is False
+
+
+def test_dispatch_no_recognized_sensors(
+    registered_receiver: tuple[PushReceiver, list[dict[str, Any]]],
+) -> None:
+    """Test dispatch returns no-sensors message when query has only mac."""
+    receiver, calls = registered_receiver
+
+    # Query with mac but no recognized sensor params
+    query = {"mac": "001ec0112232", "junk": "xyz"}
+    result = _dispatch_push_data(receiver, query)
+
+    assert "no recognized sensors" in result
+    assert calls == []
+
+
+def test_parse_push_data_skips_short_params() -> None:
+    """Test parse_push_data ignores params shorter than 2 chars."""
+    # Single-char params can't have prefix+suffix → must be skipped.
+    query = {"x": "1", "v1": "230.0"}
+
+    result = parse_push_data(query)
+
+    # Only v1 should be parsed; the short "x" must not crash or appear.
+    assert "fase1" in result
+    assert result["fase1"]["vrms"] == "230.0"
+
+
+# ---------------------------------------------------------------------------
+# Tests: View classes (thin wrappers around _handle_push_request)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_receiver_avg_view_get(
+    registered_receiver: tuple[PushReceiver, list[dict[str, Any]]],
+) -> None:
+    """Test WibeeeReceiverAvgView.get delegates to _handle_push_request."""
+    receiver, _calls = registered_receiver
+    view = WibeeeReceiverAvgView(receiver)
+    request = MockRequest({"mac": "001ec0112232", "v1": "230.0"})
+
+    resp = await view.get(request)
+
+    assert resp.status == 200
+
+
+@pytest.mark.asyncio
+async def test_receiver_view_get(
+    registered_receiver: tuple[PushReceiver, list[dict[str, Any]]],
+) -> None:
+    """Test WibeeeReceiverView.get delegates to _handle_push_request."""
+    receiver, _calls = registered_receiver
+    view = WibeeeReceiverView(receiver)
+    request = MockRequest({"mac": "001ec0112232", "v1": "230.0"})
+
+    resp = await view.get(request)
+
+    assert resp.status == 200
+
+
+@pytest.mark.asyncio
+async def test_receiver_leap_view_get(
+    registered_receiver: tuple[PushReceiver, list[dict[str, Any]]],
+) -> None:
+    """Test WibeeeReceiverLeapView.get delegates to _handle_push_request."""
+    receiver, _calls = registered_receiver
+    view = WibeeeReceiverLeapView(receiver)
+    request = MockRequest({"mac": "001ec0112232", "v1": "230.0"})
+
+    resp = await view.get(request)
+
+    assert resp.status == 200

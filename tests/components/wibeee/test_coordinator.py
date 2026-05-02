@@ -120,3 +120,24 @@ async def test_coordinator_shutdown_cancels_watchdog(
     assert await hass.config_entries.async_unload(loaded_entry.entry_id)
     await hass.async_block_till_done()
     assert loaded_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_coordinator_push_update_without_stale_after(
+    hass: HomeAssistant, mock_wibeee_api: AsyncMock
+) -> None:
+    """Test push update on a coordinator without stale_after (polling mode).
+
+    Covers the early-return branch in ``_reschedule_staleness_check`` when
+    ``_stale_after`` is None (e.g. polling-mode coordinators).
+    """
+    coordinator = WibeeeCoordinator(
+        hass,
+        mock_wibeee_api,
+        config_entry=AsyncMock(),
+        update_interval=timedelta(seconds=30),
+        # stale_after omitted -> None
+    )
+    coordinator.async_push_update({"fase4": {"vrms": "230.0"}})
+    # Watchdog must NOT be armed.
+    assert coordinator._stale_unsub is None
+    assert coordinator.data == {"fase4": {"vrms": "230.0"}}
