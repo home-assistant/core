@@ -8,8 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError
 
-from homeassistant.components.air_quality import SCAN_INTERVAL
-from homeassistant.components.wled.const import DOMAIN
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant

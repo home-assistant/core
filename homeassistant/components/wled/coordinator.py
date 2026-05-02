@@ -91,13 +91,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         }
 
     @property
-    def segment_names(self) -> set[str]:
+    def segment_names(self) -> list[str | None]:
         """Return the segment names of the coordinated device."""
-        return {
-            segment.name
-            for segment in self.data.state.segments.values()
-            if segment.name is not None
-        }
+        return [segment.name for segment in self.data.state.segments.values()]
 
     @callback
     def _use_websocket(self) -> None:

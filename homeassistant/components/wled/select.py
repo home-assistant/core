@@ -155,9 +155,10 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
         self._segment = segment
 
         # The segment name defined in WLED is always used if available.
-        if self._segment_name:
+        segment_name = self.coordinator.data.state.segments[self._segment].name
+        if segment_name:
             self._attr_translation_key = "segment_named_color_palette"
-            self._attr_translation_placeholders = {"segment_name": self._segment_name}
+            self._attr_translation_placeholders = {"segment_name": segment_name}
         elif segment != 0:
             # Segment 0 uses a simpler name, which is more natural for when using
             # a single segment / using WLED with one big LED strip.
@@ -165,13 +166,6 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
-
-    @property
-    def _segment_name(self) -> str | None:
-        """Return the segment name if available."""
-        if not (name := self.coordinator.data.state.segments[self._segment].name):
-            return None
-        return name
 
     @property
     def available(self) -> bool:

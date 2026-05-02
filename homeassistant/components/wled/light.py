@@ -122,9 +122,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         self._segment = segment
 
         # The segment name defined in WLED is always used if available.
-        if self._segment_name:
+        segment_name = self.coordinator.data.state.segments[self._segment].name
+        if segment_name:
             self._attr_translation_key = "segment_named"
-            self._attr_translation_placeholders = {"segment_name": self._segment_name}
+            self._attr_translation_placeholders = {"segment_name": segment_name}
         elif not self.coordinator.has_main_light:
             self._attr_name = None
         else:
@@ -145,13 +146,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         ):
             self._attr_color_mode = color_modes[0]
             self._attr_supported_color_modes = set(color_modes)
-
-    @property
-    def _segment_name(self) -> str | None:
-        """Return the segment name if available."""
-        if not (name := self.coordinator.data.state.segments[self._segment].name):
-            return None
-        return name
 
     @property
     def available(self) -> bool:
