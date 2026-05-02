@@ -6,8 +6,6 @@ There are two different types of discoveries that can be fired/listened for.
    components to allow discovery of their platforms.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any, TypedDict
 

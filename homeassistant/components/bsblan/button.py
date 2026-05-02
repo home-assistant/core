@@ -1,7 +1,5 @@
 """Button platform for BSB-Lan integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant

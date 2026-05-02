@@ -1,7 +1,5 @@
 """Coordinator for Powerfox Local integration."""
 
-from __future__ import annotations
-
 from powerfox import (
     LocalResponse,
     PowerfoxAuthenticationError,

@@ -38,9 +38,8 @@ on:
 
 env:
   CACHE_VERSION: 3
-  UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.5"
+  HA_SHORT_VERSION: "2026.6"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
@@ -358,32 +357,33 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
-      - name: Generate partial uv restore key
-        id: generate-uv-key
-        run: |
-          uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
-          echo "version=${uv_version}" >> $GITHUB_OUTPUT
-          echo "key=uv-${UV_CACHE_VERSION}-${uv_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: venv
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
+      - name: Generate partial uv restore key
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: generate-uv-key
+        env:
+          RUNNER_OS: ${{ runner.os }}
+          RUNNER_ARCH: ${{ runner.arch }}
+          PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
+          HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt', 'homeassistant/package_constraints.txt') }}
+        run: |
+          partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
+          echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
+          echo "full_key=${partial_key}${HASH_FILES}" >> $GITHUB_OUTPUT
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.UV_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-uv-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
-            env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
-            env.HA_SHORT_VERSION }}-
+          key: ${{ steps.generate-uv-key.outputs.full_key }}
+          restore-keys: ${{ steps.generate-uv-key.outputs.partial_key }}
       - name: Check if apt cache exists
         id: cache-apt-check
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -398,6 +398,7 @@ jobs:
         if: |
           steps.cache-venv.outputs.cache-hit != 'true'
           || steps.cache-apt-check.outputs.cache-hit != 'true'
+        id: install-os-deps
         timeout-minutes: 10
         env:
           APT_CACHE_HIT: ${{ steps.cache-apt-check.outputs.cache-hit }}
@@ -431,7 +432,10 @@ jobs:
             sudo chmod -R 755 ${APT_CACHE_BASE}
           fi
       - name: Save apt cache
-        if: steps.cache-apt-check.outputs.cache-hit != 'true'
+        if: |
+          always()
+          && steps.cache-apt-check.outputs.cache-hit != 'true'
+          && steps.install-os-deps.outcome == 'success'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
@@ -441,6 +445,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: create-venv
         run: |
           python -m venv venv
           . venv/bin/activate
@@ -448,8 +453,7 @@ jobs:
           pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -U "pip>=25.2"
           uv pip install -r requirements.txt
-          python -m script.gen_requirements_all ci
-          uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
+          uv pip install -r requirements_all.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
       - name: Dump pip freeze
         run: |
@@ -465,12 +469,29 @@ jobs:
           overwrite: true
       - name: Remove pip_freeze
         run: rm pip_freeze.txt
-      - name: Remove generated requirements_all
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Prune uv cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: prune-uv-cache
+        run: |
+          . venv/bin/activate
+          uv cache prune --ci
+      - name: Save uv wheel cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: ${{ steps.generate-uv-key.outputs.full_key }}
+      - name: Save base Python virtual environment
+        if: always() && steps.create-venv.outcome == 'success'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
 
   hassfest:
     name: Check hassfest

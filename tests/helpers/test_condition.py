@@ -23,6 +23,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -37,11 +38,13 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     condition,
     config_validation as cv,
     entity_registry as er,
@@ -76,6 +79,35 @@ from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 from tests.typing import WebSocketGenerator
+
+
+async def _create_primary_and_diagnostic_entities_in_area(
+    hass: HomeAssistant, domain: str
+) -> tuple[str, str, str]:
+    """Create a primary and a diagnostic entity in the same area.
+
+    Returns a tuple of (area_id, primary_entity_id, diagnostic_entity_id).
+    """
+    area_reg = ar.async_get(hass)
+    area = area_reg.async_create("Test Area")
+
+    entity_reg = er.async_get(hass)
+    primary = entity_reg.async_get_or_create(
+        domain=domain,
+        platform="test",
+        unique_id=f"{domain}_primary",
+        suggested_object_id=f"primary_{domain}",
+    )
+    entity_reg.async_update_entity(primary.entity_id, area_id=area.id)
+    diagnostic = entity_reg.async_get_or_create(
+        domain=domain,
+        platform="test",
+        unique_id=f"{domain}_diagnostic",
+        suggested_object_id=f"diagnostic_{domain}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    entity_reg.async_update_entity(diagnostic.entity_id, area_id=area.id)
+    return area.id, primary.entity_id, diagnostic.entity_id
 
 
 def assert_element(trace_element, expected_element, path):
@@ -182,7 +214,7 @@ async def test_and_condition(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -194,7 +226,7 @@ async def test_and_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -206,7 +238,7 @@ async def test_and_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -218,7 +250,7 @@ async def test_and_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -256,7 +288,7 @@ async def test_and_condition_raises(hass: HomeAssistant) -> None:
 
     # All subconditions raise, the AND-condition should raise
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -271,7 +303,7 @@ async def test_and_condition_raises(hass: HomeAssistant) -> None:
     # should raise
     hass.states.async_set("sensor.temperature2", 120)
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -285,7 +317,7 @@ async def test_and_condition_raises(hass: HomeAssistant) -> None:
     # The first subconditions raises, the second returns False, the AND-condition
     # should return False
     hass.states.async_set("sensor.temperature2", 90)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -327,7 +359,7 @@ async def test_and_condition_with_template(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -338,10 +370,10 @@ async def test_and_condition_with_template(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
@@ -369,7 +401,7 @@ async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
     assert "and" not in config
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -380,10 +412,10 @@ async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
@@ -411,7 +443,7 @@ async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     assert "and" not in config
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -422,16 +454,45 @@ async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_conditions_from_config_has_and_semantics(
     hass: HomeAssistant,
 ) -> None:
     """Test that async_conditions_from_config returns a callable with AND semantics."""
+    hass.states.async_set("binary_sensor.test_one", STATE_ON)
+    hass.states.async_set("binary_sensor.test_two", STATE_ON)
+    configs = await condition.async_validate_conditions_config(
+        hass,
+        [
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test_one",
+                "state": STATE_ON,
+            },
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test_two",
+                "state": STATE_ON,
+            },
+        ],
+    )
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+    assert test.async_check() is True
+    hass.states.async_set("binary_sensor.test_two", STATE_OFF)
+    assert test.async_check() is False
+
+
+async def test_conditions_from_config_forwards_call(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_conditions_from_config forwards call."""
     hass.states.async_set("binary_sensor.test_one", STATE_ON)
     hass.states.async_set("binary_sensor.test_two", STATE_ON)
     configs = await condition.async_validate_conditions_config(
@@ -491,7 +552,7 @@ async def test_or_condition(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -503,7 +564,7 @@ async def test_or_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -525,7 +586,7 @@ async def test_or_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -539,7 +600,7 @@ async def test_or_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -575,7 +636,7 @@ async def test_or_condition_raises(hass: HomeAssistant) -> None:
 
     # All subconditions raise, the OR-condition should raise
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -590,7 +651,7 @@ async def test_or_condition_raises(hass: HomeAssistant) -> None:
     # should raise
     hass.states.async_set("sensor.temperature2", 100)
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -612,7 +673,7 @@ async def test_or_condition_raises(hass: HomeAssistant) -> None:
     # The first subconditions raises, the second returns True, the OR-condition
     # should return True
     hass.states.async_set("sensor.temperature2", 120)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -642,13 +703,13 @@ async def test_or_condition_with_template(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 105)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
@@ -672,13 +733,13 @@ async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
     assert "or" not in config
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 105)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_not_condition(hass: HomeAssistant) -> None:
@@ -704,7 +765,7 @@ async def test_not_condition(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -716,7 +777,7 @@ async def test_not_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 101)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -738,7 +799,7 @@ async def test_not_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 50)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -754,7 +815,7 @@ async def test_not_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 49)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -768,7 +829,7 @@ async def test_not_condition(hass: HomeAssistant) -> None:
     )
 
     hass.states.async_set("sensor.temperature", 100)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -804,7 +865,7 @@ async def test_not_condition_raises(hass: HomeAssistant) -> None:
 
     # All subconditions raise, the NOT-condition should raise
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -819,7 +880,7 @@ async def test_not_condition_raises(hass: HomeAssistant) -> None:
     # should raise
     hass.states.async_set("sensor.temperature2", 90)
     with pytest.raises(ConditionError):
-        test(hass)
+        test.async_check()
     assert_condition_trace(
         {
             "": [{"error_type": ConditionError}],
@@ -835,7 +896,7 @@ async def test_not_condition_raises(hass: HomeAssistant) -> None:
     # The first subconditions raises, the second returns True, the NOT-condition
     # should return False
     hass.states.async_set("sensor.temperature2", 40)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -868,16 +929,16 @@ async def test_not_condition_with_template(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 101)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 50)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 49)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_not_condition_shorthand(hass: HomeAssistant) -> None:
@@ -904,16 +965,16 @@ async def test_not_condition_shorthand(hass: HomeAssistant) -> None:
     assert "not" not in config
 
     hass.states.async_set("sensor.temperature", 101)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 50)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 49)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_time_window(hass: HomeAssistant) -> None:
@@ -944,29 +1005,29 @@ async def test_time_window(hass: HomeAssistant) -> None:
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
-        assert not test1(hass)
-        assert test2(hass)
+        assert not test1.async_check()
+        assert test2.async_check()
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
-        assert test1(hass)
-        assert not test2(hass)
+        assert test1.async_check()
+        assert not test2.async_check()
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
-        assert test1(hass)
-        assert not test2(hass)
+        assert test1.async_check()
+        assert not test2.async_check()
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
-        assert not test1(hass)
-        assert test2(hass)
+        assert not test1.async_check()
+        assert test2.async_check()
 
 
 async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
@@ -1272,9 +1333,9 @@ async def test_state_raises(hass: HomeAssistant) -> None:
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
     with pytest.raises(ConditionError, match="unknown entity.*door"):
-        test(hass)
+        test.async_check()
     with pytest.raises(ConditionError, match="unknown entity.*window"):
-        test(hass)
+        test.async_check()
 
     # Unknown state entity
 
@@ -1289,7 +1350,7 @@ async def test_state_raises(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.door", "open")
     with pytest.raises(ConditionError, match="input_text.missing"):
-        test(hass)
+        test.async_check()
 
 
 async def test_state_for(hass: HomeAssistant) -> None:
@@ -1310,11 +1371,11 @@ async def test_state_for(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 100)
-    assert not test(hass)
+    assert not test.async_check()
 
     now = dt_util.utcnow() + timedelta(seconds=5)
     with freeze_time(now):
-        assert test(hass)
+        assert test.async_check()
 
 
 async def test_state_for_template(hass: HomeAssistant) -> None:
@@ -1336,11 +1397,11 @@ async def test_state_for_template(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature", 100)
     hass.states.async_set("input_number.test", 5)
-    assert not test(hass)
+    assert not test.async_check()
 
     now = dt_util.utcnow() + timedelta(seconds=5)
     with freeze_time(now):
-        assert test(hass)
+        assert test.async_check()
 
 
 @pytest.mark.parametrize("for_template", [{"{{invalid}}": 5}, {"hours": "{{ 1/0 }}"}])
@@ -1366,7 +1427,7 @@ async def test_state_for_invalid_template(
     hass.states.async_set("sensor.temperature", 100)
     hass.states.async_set("input_number.test", 5)
     with pytest.raises(ConditionError):
-        assert not test(hass)
+        assert not test.async_check()
 
 
 async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
@@ -1383,7 +1444,7 @@ async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.door", "open")
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -1419,15 +1480,15 @@ async def test_state_multiple_entities(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature_1", 100)
     hass.states.async_set("sensor.temperature_2", 100)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 101)
     hass.states.async_set("sensor.temperature_2", 100)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 100)
     hass.states.async_set("sensor.temperature_2", 101)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_state_multiple_entities_match_any(hass: HomeAssistant) -> None:
@@ -1449,19 +1510,19 @@ async def test_state_multiple_entities_match_any(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature_1", 100)
     hass.states.async_set("sensor.temperature_2", 100)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 101)
     hass.states.async_set("sensor.temperature_2", 100)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 100)
     hass.states.async_set("sensor.temperature_2", 101)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 101)
     hass.states.async_set("sensor.temperature_2", 101)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_multiple_states(hass: HomeAssistant) -> None:
@@ -1482,13 +1543,13 @@ async def test_multiple_states(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 200)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 42)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_state_attribute(hass: HomeAssistant) -> None:
@@ -1509,19 +1570,19 @@ async def test_state_attribute(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 200})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 200})
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": "200"})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 201})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_state_attribute_boolean(hass: HomeAssistant) -> None:
@@ -1537,16 +1598,16 @@ async def test_state_attribute_boolean(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 100, {"happening": 200})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"happening": True})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"no_happening": 201})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"happening": False})
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_state_entity_registry_id(
@@ -1567,10 +1628,10 @@ async def test_state_entity_registry_id(
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("switch.test", "on")
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("switch.test", "off")
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_state_using_input_entities(hass: HomeAssistant) -> None:
@@ -1614,13 +1675,13 @@ async def test_state_using_input_entities(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.salut", "goodbye")
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.salut", "salut")
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.salut", "hello")
-    assert not test(hass)
+    assert not test.async_check()
 
     await hass.services.async_call(
         "input_text",
@@ -1631,13 +1692,13 @@ async def test_state_using_input_entities(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.salut", "hi")
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.salut", "cya")
-    assert test(hass)
+    assert test.async_check()
 
     await hass.services.async_call(
         "input_select",
@@ -1648,10 +1709,10 @@ async def test_state_using_input_entities(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.salut", "welcome")
-    assert test(hass)
+    assert test.async_check()
 
 
 async def test_numeric_state_known_non_matching(hass: HomeAssistant) -> None:
@@ -1667,7 +1728,7 @@ async def test_numeric_state_known_non_matching(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     # Unavailable state
-    assert not test(hass)
+    assert not test.async_check()
 
     assert_condition_trace(
         {
@@ -1687,7 +1748,7 @@ async def test_numeric_state_known_non_matching(hass: HomeAssistant) -> None:
 
     # Unknown state
     hass.states.async_set("sensor.temperature", "unknown")
-    assert not test(hass)
+    assert not test.async_check()
 
     assert_condition_trace(
         {
@@ -1718,9 +1779,9 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
     with pytest.raises(ConditionError, match="unknown entity.*temperature"):
-        test(hass)
+        test.async_check()
     with pytest.raises(ConditionError, match="unknown entity.*humidity"):
-        test(hass)
+        test.async_check()
 
     # Template error
     config = {
@@ -1735,7 +1796,7 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature", 50)
     with pytest.raises(ConditionError, match="ZeroDivisionError"):
-        test(hass)
+        test.async_check()
 
     # Bad number
     config = {
@@ -1749,7 +1810,7 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature", "fifty")
     with pytest.raises(ConditionError, match="cannot be processed as a number"):
-        test(hass)
+        test.async_check()
 
     # Below entity missing
     config = {
@@ -1763,7 +1824,7 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature", 50)
     with pytest.raises(ConditionError, match="'below' entity"):
-        test(hass)
+        test.async_check()
 
     # Below entity not a number
     hass.states.async_set("input_number.missing", "number")
@@ -1771,7 +1832,7 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
         ConditionError,
         match="'below'.*input_number.missing.*cannot be processed as a number",
     ):
-        test(hass)
+        test.async_check()
 
     # Above entity missing
     config = {
@@ -1785,7 +1846,7 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature", 50)
     with pytest.raises(ConditionError, match="'above' entity"):
-        test(hass)
+        test.async_check()
 
     # Above entity not a number
     hass.states.async_set("input_number.missing", "number")
@@ -1793,7 +1854,7 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
         ConditionError,
         match="'above'.*input_number.missing.*cannot be processed as a number",
     ):
-        test(hass)
+        test.async_check()
 
 
 async def test_numeric_state_unknown_attribute(hass: HomeAssistant) -> None:
@@ -1810,7 +1871,7 @@ async def test_numeric_state_unknown_attribute(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 50)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -1848,15 +1909,15 @@ async def test_numeric_state_multiple_entities(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.temperature_1", 49)
     hass.states.async_set("sensor.temperature_2", 49)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 50)
     hass.states.async_set("sensor.temperature_2", 49)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature_1", 49)
     hass.states.async_set("sensor.temperature_2", 50)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_numeric_state_attribute(hass: HomeAssistant) -> None:
@@ -1877,19 +1938,19 @@ async def test_numeric_state_attribute(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 10})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 49})
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": "49"})
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 51})
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_numeric_state_entity_registry_id(
@@ -1910,10 +1971,10 @@ async def test_numeric_state_entity_registry_id(
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.test", "110")
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.test", "90")
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
@@ -1945,19 +2006,19 @@ async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 42)
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("sensor.temperature", 10)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("sensor.temperature", 100)
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("input_number.high", "unknown")
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("input_number.high", "unavailable")
-    assert not test(hass)
+    assert not test.async_check()
 
     await hass.services.async_call(
         "input_number",
@@ -1968,13 +2029,13 @@ async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    assert test(hass)
+    assert test.async_check()
 
     hass.states.async_set("number.low", "unknown")
-    assert not test(hass)
+    assert not test.async_check()
 
     hass.states.async_set("number.low", "unavailable")
-    assert not test(hass)
+    assert not test.async_check()
 
     with pytest.raises(ConditionError):
         condition.async_numeric_state(
@@ -1986,8 +2047,7 @@ async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
         )
 
 
-@pytest.mark.usefixtures("hass")
-async def test_extract_entities() -> None:
+async def test_extract_entities(hass: HomeAssistant) -> None:
     """Test extracting entities."""
     assert condition.async_extract_entities(
         {
@@ -2043,7 +2103,7 @@ async def test_extract_entities() -> None:
                     "entity_id": ["sensor.temperature_9", "sensor.temperature_10"],
                     "below": 110,
                 },
-                Template("{{ is_state('light.example', 'on') }}"),
+                Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {
@@ -2060,8 +2120,7 @@ async def test_extract_entities() -> None:
     }
 
 
-@pytest.mark.usefixtures("hass")
-async def test_extract_devices() -> None:
+async def test_extract_devices(hass: HomeAssistant) -> None:
     """Test extracting devices."""
     assert condition.async_extract_devices(
         {
@@ -2104,7 +2163,7 @@ async def test_extract_devices() -> None:
                         },
                     ],
                 },
-                Template("{{ is_state('light.example', 'on') }}"),
+                Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
@@ -2118,7 +2177,7 @@ async def test_condition_template_error(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     with pytest.raises(ConditionError, match="template"):
-        test(hass)
+        test.async_check()
 
 
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
@@ -2127,25 +2186,25 @@ async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
-    assert not test(hass)
+    assert not test.async_check()
 
     config = {"condition": "template", "value_template": "{{ 10.1 }}"}
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
-    assert not test(hass)
+    assert not test.async_check()
 
     config = {"condition": "template", "value_template": "{{ 42 }}"}
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
-    assert not test(hass)
+    assert not test.async_check()
 
     config = {"condition": "template", "value_template": "{{ [1, 2, 3] }}"}
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
-    assert not test(hass)
+    assert not test.async_check()
 
 
 async def test_trigger(hass: HomeAssistant) -> None:
@@ -2155,11 +2214,11 @@ async def test_trigger(hass: HomeAssistant) -> None:
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
 
-    assert not test(hass)
-    assert not test(hass, {})
-    assert not test(hass, {"other_var": "123456"})
-    assert not test(hass, {"trigger": {"trigger_id": "123456"}})
-    assert test(hass, {"trigger": {"id": "123456"}})
+    assert not test.async_check()
+    assert not test.async_check(variables={})
+    assert not test.async_check(variables={"other_var": "123456"})
+    assert not test.async_check(variables={"trigger": {"trigger_id": "123456"}})
+    assert test.async_check(variables={"trigger": {"id": "123456"}})
 
 
 async def test_platform_async_get_conditions(hass: HomeAssistant) -> None:
@@ -2221,11 +2280,11 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     ):
         await async_validate_condition_config(hass, config_3)
 
-    cond_func = await condition.async_from_config(hass, config_1)
-    assert cond_func(hass, {}) is True
+    cond = await condition.async_from_config(hass, config_1)
+    assert cond.async_check(variables={}) is True
 
-    cond_func = await condition.async_from_config(hass, config_2)
-    assert cond_func(hass, {}) is False
+    cond = await condition.async_from_config(hass, config_2)
+    assert cond.async_check(variables={}) is False
 
     with pytest.raises(KeyError):
         await condition.async_from_config(hass, config_3)
@@ -2390,11 +2449,11 @@ async def test_enabled_condition(
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("binary_sensor.test", "on")
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Still passes, condition is not enabled
     hass.states.async_set("binary_sensor.test", "off")
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 @pytest.mark.parametrize("enabled_value", [False, "{{ 1 == 9 }}"])
@@ -2413,11 +2472,11 @@ async def test_disabled_condition(
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("binary_sensor.test", "on")
-    assert test(hass) is None
+    assert test.async_check() is None
 
     # Still passes, condition is not enabled
     hass.states.async_set("binary_sensor.test", "off")
-    assert test(hass) is None
+    assert test.async_check() is None
 
 
 async def test_condition_enabled_template_limited(hass: HomeAssistant) -> None:
@@ -2459,7 +2518,7 @@ async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> Non
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -2478,7 +2537,7 @@ async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> Non
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -2489,7 +2548,7 @@ async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> Non
     )
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -2524,7 +2583,7 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("sensor.temperature", 120)
-    assert not test(hass)
+    assert not test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": False}}],
@@ -2543,7 +2602,7 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     )
 
     hass.states.async_set("sensor.temperature", 105)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -2554,7 +2613,7 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     )
 
     hass.states.async_set("sensor.temperature", 100)
-    assert test(hass)
+    assert test.async_check()
     assert_condition_trace(
         {
             "": [{"result": {"result": True}}],
@@ -3140,13 +3199,16 @@ _DEFAULT_DOMAIN_SPECS = {"test": DomainSpec()}
 async def _setup_numerical_condition(
     hass: HomeAssistant,
     condition_options: dict[str, Any],
-    entity_ids: str | list[str],
+    target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
-        domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
+        domain_specs or _DEFAULT_DOMAIN_SPECS,
+        valid_unit,
+        primary_entities_only=primary_entities_only,
     )
 
     async def async_get_conditions(
@@ -3159,12 +3221,9 @@ async def _setup_numerical_condition(
         hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
     )
 
-    if isinstance(entity_ids, str):
-        entity_ids = [entity_ids]
-
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target_config,
         CONF_OPTIONS: condition_options,
     }
 
@@ -3253,11 +3312,11 @@ async def test_numerical_condition_thresholds(
     test = await _setup_numerical_condition(
         hass,
         condition_options=condition_options,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
-    assert test(hass) is expected
+    assert test.async_check() is expected
 
 
 @pytest.mark.parametrize(
@@ -3271,11 +3330,11 @@ async def test_numerical_condition_invalid_state(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_attribute_value_source(
@@ -3286,20 +3345,20 @@ async def test_numerical_condition_attribute_value_source(
         hass,
         domain_specs={"test": DomainSpec(value_source="brightness")},
         condition_options={"threshold": {"type": "above", "value": {"number": 100}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
     )
 
     # Attribute above threshold -> True
     hass.states.async_set("test.entity_1", "on", {"brightness": 200})
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Attribute below threshold -> False
     hass.states.async_set("test.entity_1", "on", {"brightness": 50})
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Missing attribute -> False
     hass.states.async_set("test.entity_1", "on", {})
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_attribute_value_source_skips_unit_check(
@@ -3315,17 +3374,17 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         hass,
         domain_specs={"test": DomainSpec(value_source="humidity")},
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         valid_unit="%",
     )
 
     # Entity has no ATTR_UNIT_OF_MEASUREMENT but has the attribute value
     # The unit check should be skipped for attribute-based value sources
     hass.states.async_set("test.entity_1", "auto", {"humidity": 75})
-    assert test(hass) is True
+    assert test.async_check() is True
 
     hass.states.async_set("test.entity_1", "auto", {"humidity": 25})
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 @pytest.mark.parametrize(
@@ -3354,13 +3413,13 @@ async def test_numerical_condition_valid_unit(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         valid_unit=valid_unit,
     )
 
     attrs = {ATTR_UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
     hass.states.async_set("test.entity_1", "75", attrs)
-    assert test(hass) is expected
+    assert test.async_check() is expected
 
 
 @pytest.mark.parametrize(
@@ -3382,21 +3441,21 @@ async def test_numerical_condition_behavior(
             "threshold": {"type": "above", "value": {"number": 50}},
             ATTR_BEHAVIOR: behavior,
         },
-        entity_ids=["test.entity_1", "test.entity_2"],
+        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
     )
 
     # Both above -> True for any and all
     hass.states.async_set("test.entity_1", "75")
     hass.states.async_set("test.entity_2", "80")
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Only one above -> depends on behavior
     hass.states.async_set("test.entity_2", "25")
-    assert test(hass) is one_match_expected
+    assert test.async_check() is one_match_expected
 
     # Neither above -> False for any and all
     hass.states.async_set("test.entity_1", "25")
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_schema_requires_above_or_below(
@@ -3628,7 +3687,7 @@ async def test_numerical_condition_with_unit_thresholds(
         state_value,
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is expected
+    assert test.async_check() is expected
 
 
 async def test_numerical_condition_with_unit_entity_reference(
@@ -3655,7 +3714,7 @@ async def test_numerical_condition_with_unit_entity_reference(
         "75",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # 75°F ≈ 23.89°C, 20°C < 23.89°C → False
     hass.states.async_set(
@@ -3663,7 +3722,7 @@ async def test_numerical_condition_with_unit_entity_reference(
         "20",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
@@ -3689,7 +3748,7 @@ async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
         "75",
         {ATTR_UNIT_OF_MEASUREMENT: "%"},
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_with_unit_tracked_value_conversion(
@@ -3713,7 +3772,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
         "80",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Entity reports in °F: 50°F ≈ 10°C < 20°C → False
     hass.states.async_set(
@@ -3721,7 +3780,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
         "50",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_with_unit_attribute_value_source(
@@ -3751,7 +3810,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
             ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # 75°F ≈ 23.89°C, attribute=20°C < 23.89°C → False
     hass.states.async_set(
@@ -3762,11 +3821,11 @@ async def test_numerical_condition_with_unit_attribute_value_source(
             ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Missing attribute → False
     hass.states.async_set("test.entity_1", "on", {})
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_with_unit_get_entity_unit_override(
@@ -3811,11 +3870,11 @@ async def test_numerical_condition_with_unit_get_entity_unit_override(
     # Entity attribute is 80 — _get_entity_unit returns °F,
     # so 80°F ≈ 26.67°C > 20°C → True
     hass.states.async_set("test.entity_1", "on", {"temperature": 80})
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Entity attribute is 50 — 50°F ≈ 10°C < 20°C → False
     hass.states.async_set("test.entity_1", "on", {"temperature": 50})
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_with_unit_schema_accepts_valid_units(
@@ -3908,7 +3967,7 @@ async def test_numerical_condition_with_unit_invalid_state(
         state_value,
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_numerical_condition_with_unit_missing_entity_reference(
@@ -3928,7 +3987,7 @@ async def test_numerical_condition_with_unit_missing_entity_reference(
         "25",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 @pytest.mark.parametrize(
@@ -3967,7 +4026,7 @@ async def test_numerical_condition_with_unit_behavior(
         "80",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Only one above → depends on behavior
     hass.states.async_set(
@@ -3975,7 +4034,7 @@ async def test_numerical_condition_with_unit_behavior(
         "25",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is one_match_expected
+    assert test.async_check() is one_match_expected
 
     # Neither above → False for any and all
     hass.states.async_set(
@@ -3983,22 +4042,22 @@ async def test_numerical_condition_with_unit_behavior(
         "25",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def _setup_state_condition(
     hass: HomeAssistant,
-    entity_ids: str | list[str],
     states: str | bool | set[str | bool],
+    target_config: dict[str, Any],
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    support_duration: bool = False,
+    primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,
         states,
-        support_duration=support_duration,
+        primary_entities_only=primary_entities_only,
     )
 
     async def async_get_conditions(
@@ -4011,12 +4070,9 @@ async def _setup_state_condition(
         hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
     )
 
-    if isinstance(entity_ids, str):
-        entity_ids = [entity_ids]
-
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target_config,
         CONF_OPTIONS: condition_options or {},
     }
 
@@ -4029,30 +4085,30 @@ async def _setup_state_condition(
 async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
     """Test state condition with a single entity."""
     test = await _setup_state_condition(
-        hass, entity_ids="test.entity_1", states=STATE_ON
+        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
-    assert test(hass) is True
+    assert test.async_check() is True
 
     hass.states.async_set("test.entity_1", STATE_OFF)
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_multiple_target_states(hass: HomeAssistant) -> None:
     """Test state condition matching any of multiple target states."""
     test = await _setup_state_condition(
-        hass, entity_ids="test.entity_1", states={"on", "heat"}
+        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states={"on", "heat"}
     )
 
     hass.states.async_set("test.entity_1", "on")
-    assert test(hass) is True
+    assert test.async_check() is True
 
     hass.states.async_set("test.entity_1", "heat")
-    assert test(hass) is True
+    assert test.async_check() is True
 
     hass.states.async_set("test.entity_1", "off")
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 @pytest.mark.parametrize(
@@ -4072,76 +4128,80 @@ async def test_state_condition_unavailable_unknown(
     """
     # Single entity: unavailable/unknown → False
     test_single = await _setup_state_condition(
-        hass, entity_ids="test.entity_1", states=STATE_ON
+        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
     hass.states.async_set("test.entity_1", state_value)
-    assert test_single(hass) is False
+    assert test_single.async_check() is False
 
     # behavior any: entity_1=on, entity_2=unavailable, entity_3=off
     # → True (entity_1 matches, entity_2 is skipped)
     test_any = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY},
     )
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", state_value)
     hass.states.async_set("test.entity_3", STATE_OFF)
-    assert test_any(hass) is True
+    assert test_any.async_check() is True
 
     # behavior any: entity_1=off, entity_2=unavailable, entity_3=off
     # → False (no available entity matches)
     hass.states.async_set("test.entity_1", STATE_OFF)
-    assert test_any(hass) is False
+    assert test_any.async_check() is False
 
     # behavior all: entity_1=on, entity_2=unavailable, entity_3=on
     # → True (all *available* entities match, entity_2 is skipped)
     test_all = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
     )
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", state_value)
     hass.states.async_set("test.entity_3", STATE_ON)
-    assert test_all(hass) is True
+    assert test_all.async_check() is True
 
     # behavior all: entity_1=on, entity_2=unavailable, entity_3=off
     # → False (entity_3 is available and doesn't match)
     hass.states.async_set("test.entity_3", STATE_OFF)
-    assert test_all(hass) is False
+    assert test_all.async_check() is False
 
 
 async def test_state_condition_entity_not_found(hass: HomeAssistant) -> None:
     """Test state condition when entity does not exist."""
     test = await _setup_state_condition(
-        hass, entity_ids="test.nonexistent", states=STATE_ON
+        hass, target_config={CONF_ENTITY_ID: ["test.nonexistent"]}, states=STATE_ON
     )
 
     # Entity doesn't exist — condition should be false
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_attribute_value_source(hass: HomeAssistant) -> None:
     """Test state condition reads from attribute when value_source is set."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states="heat",
         domain_specs={"test": DomainSpec(value_source="hvac_action")},
     )
 
     hass.states.async_set("test.entity_1", "on", {"hvac_action": "heat"})
-    assert test(hass) is True
+    assert test.async_check() is True
 
     hass.states.async_set("test.entity_1", "on", {"hvac_action": "idle"})
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Missing attribute
     hass.states.async_set("test.entity_1", "on", {})
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 @pytest.mark.parametrize(
@@ -4154,7 +4214,7 @@ async def test_state_condition_behavior(
     """Test state condition with behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2"],
+        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior},
     )
@@ -4162,15 +4222,15 @@ async def test_state_condition_behavior(
     # Both on → True for any and all
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", STATE_ON)
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Only one on → depends on behavior
     hass.states.async_set("test.entity_2", STATE_OFF)
-    assert test(hass) is one_match_expected
+    assert test.async_check() is one_match_expected
 
     # Neither on → False for any and all
     hass.states.async_set("test.entity_1", STATE_OFF)
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_duration_not_met(
@@ -4179,21 +4239,20 @@ async def test_state_condition_duration_not_met(
     """Test state condition with duration: entity hasn't been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
     await hass.async_block_till_done()
 
     # Just turned on — duration not met
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Advance 5 seconds — still not enough
     freezer.tick(timedelta(seconds=5))
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_duration_met(
@@ -4202,10 +4261,9 @@ async def test_state_condition_duration_met(
     """Test state condition with duration: entity has been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4213,7 +4271,7 @@ async def test_state_condition_duration_met(
 
     # Advance past duration
     freezer.tick(timedelta(seconds=11))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_state_condition_duration_zero_behaves_like_no_duration(
@@ -4227,17 +4285,16 @@ async def test_state_condition_duration_zero_behaves_like_no_duration(
     """
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 0}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
     await hass.async_block_till_done()
 
     # Should pass immediately — zero duration is the same as no duration
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_state_condition_duration_wrong_state(
@@ -4246,17 +4303,16 @@ async def test_state_condition_duration_wrong_state(
     """Test state condition with duration: entity in wrong state even after duration."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_OFF)
     await hass.async_block_till_done()
 
     freezer.tick(timedelta(seconds=11))
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_duration_reset_on_state_change(
@@ -4265,10 +4321,9 @@ async def test_state_condition_duration_reset_on_state_change(
     """Test state condition with duration: timer resets when state changes."""
     test = await _setup_state_condition(
         hass,
-        entity_ids="test.entity_1",
+        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4283,11 +4338,11 @@ async def test_state_condition_duration_reset_on_state_change(
 
     # 5 seconds after retrigger — not enough
     freezer.tick(timedelta(seconds=5))
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # 6 more seconds (11 from retrigger) — now met
     freezer.tick(timedelta(seconds=6))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(
@@ -4303,10 +4358,9 @@ async def test_state_condition_duration_behavior(
     """Test state condition with duration and behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2"],
+        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4314,21 +4368,21 @@ async def test_state_condition_duration_behavior(
     await hass.async_block_till_done()
 
     # Both on but duration not met
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Advance past duration — both on for long enough
     freezer.tick(timedelta(seconds=11))
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Turn entity_2 off — only one on for duration → depends on behavior
     hass.states.async_set("test.entity_2", STATE_OFF)
     await hass.async_block_till_done()
-    assert test(hass) is one_match_expected
+    assert test.async_check() is one_match_expected
 
     # Neither on → False for any and all
     hass.states.async_set("test.entity_1", STATE_OFF)
     await hass.async_block_till_done()
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 @pytest.mark.parametrize(
@@ -4346,10 +4400,11 @@ async def test_state_condition_duration_unavailable_unknown(
     # → True (entity_1 matches and meets duration, entity_2 skipped)
     test_any = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", state_value)
@@ -4357,16 +4412,17 @@ async def test_state_condition_duration_unavailable_unknown(
     await hass.async_block_till_done()
 
     freezer.tick(timedelta(seconds=11))
-    assert test_any(hass) is True
+    assert test_any.async_check() is True
 
     # behavior all: entity_1=on, entity_2=unavailable, entity_3=on (all long enough)
     # → True (all available entities match and meet duration)
     test_all = await _setup_state_condition(
         hass,
-        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        target_config={
+            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+        },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
-        support_duration=True,
     )
     hass.states.async_set("test.entity_1", STATE_ON)
     hass.states.async_set("test.entity_2", state_value)
@@ -4374,13 +4430,30 @@ async def test_state_condition_duration_unavailable_unknown(
     await hass.async_block_till_done()
 
     freezer.tick(timedelta(seconds=11))
-    assert test_all(hass) is True
+    assert test_all.async_check() is True
 
     # entity_3 off → not all available match
     hass.states.async_set("test.entity_3", STATE_OFF)
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=11))
-    assert test_all(hass) is False
+    assert test_all.async_check() is False
+
+
+async def test_condition_checker_call_calls_async_check(
+    hass: HomeAssistant,
+) -> None:
+    """Test that __call__ calls async_check."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+    check_mock = Mock(wraps=checker.async_check)
+    checker.async_check = check_mock
+
+    assert checker(hass) is True
+    check_mock.assert_called_once()
 
 
 async def test_condition_checker_del_calls_async_unload(
@@ -4480,7 +4553,7 @@ async def test_compound_condition_forwards_async_unload(
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
 
-    # The compound checker should hold child conditions
+    # The compound checker should hold child checkers
     assert hasattr(test, "_conditions")
     assert len(test._conditions) == 2
 
@@ -4600,7 +4673,6 @@ async def _setup_attr_state_condition(
     condition_cls = make_entity_state_condition(
         _ATTR_DOMAIN_SPECS,
         states,
-        support_duration=True,
     )
 
     async def async_get_conditions(
@@ -4643,10 +4715,10 @@ async def test_state_condition_attr_duration_not_met(
     await hass.async_block_till_done()
 
     # Just set — duration not met
-    assert test(hass) is False
+    assert test.async_check() is False
 
     freezer.tick(timedelta(seconds=5))
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_attr_duration_met(
@@ -4664,7 +4736,7 @@ async def test_state_condition_attr_duration_met(
     await hass.async_block_till_done()
 
     freezer.tick(timedelta(seconds=11))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_state_condition_attr_duration_reset_on_attr_change(
@@ -4698,11 +4770,11 @@ async def test_state_condition_attr_duration_reset_on_attr_change(
 
     # 5s after re-set — not enough (timer was reset)
     freezer.tick(timedelta(seconds=5))
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # 6 more seconds (11 from re-set) — now met
     freezer.tick(timedelta(seconds=6))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(
@@ -4728,16 +4800,16 @@ async def test_state_condition_attr_duration_behavior(
     await hass.async_block_till_done()
 
     # Both matching but duration not met
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Advance past duration — both matching long enough
     freezer.tick(timedelta(seconds=11))
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Change entity_2 attribute — only one matching for duration
     hass.states.async_set("test.entity_2", STATE_ON, {"test_attr": False})
     await hass.async_block_till_done()
-    assert test(hass) is one_match_expected
+    assert test.async_check() is one_match_expected
 
 
 @dataclass
@@ -4850,7 +4922,7 @@ async def test_state_condition_attr_duration_initial_state(
         condition_options={CONF_FOR: {"seconds": 5}},
     )
 
-    assert test(hass) is initially_met
+    assert test.async_check() is initially_met
 
 
 async def _setup_attr_state_condition_with_target(
@@ -4863,7 +4935,6 @@ async def _setup_attr_state_condition_with_target(
     condition_cls = make_entity_state_condition(
         _ATTR_DOMAIN_SPECS,
         states,
-        support_duration=True,
     )
 
     async def async_get_conditions(
@@ -4919,7 +4990,7 @@ async def test_state_condition_attr_duration_entity_added_to_target(
 
     # No entities have the label yet — condition has no entities to check,
     # behavior "any" with no matching entities returns False
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Add the label to the entity — entity is already in valid state
     freezer.tick(timedelta(seconds=1))
@@ -4927,11 +4998,11 @@ async def test_state_condition_attr_duration_entity_added_to_target(
     await hass.async_block_till_done()
 
     # Just added — duration not met yet
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Wait past the duration from when entity was last_updated
     freezer.tick(timedelta(seconds=5))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_state_condition_attr_duration_entity_removed_from_target(
@@ -4969,21 +5040,21 @@ async def test_state_condition_attr_duration_entity_removed_from_target(
 
     # Wait past duration — both valid
     freezer.tick(timedelta(seconds=6))
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Remove label from entry2
     entity_reg.async_update_entity(entry2.entity_id, labels=set())
     await hass.async_block_till_done()
 
     # Condition should still be True — only entry1 is tracked now, and it's valid
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Now remove label from entry1 too
     entity_reg.async_update_entity(entry1.entity_id, labels=set())
     await hass.async_block_till_done()
 
     # No entities tracked — "all" with empty set is vacuously True
-    assert test(hass) is True
+    assert test.async_check() is True
 
     # Change entry1 to invalid state and re-add its label
     hass.states.async_set(entry1.entity_id, STATE_ON, {"test_attr": False})
@@ -4993,7 +5064,7 @@ async def test_state_condition_attr_duration_entity_removed_from_target(
 
     # entry1 is now tracked again but invalid — "all" fails
     freezer.tick(timedelta(seconds=10))
-    assert test(hass) is False
+    assert test.async_check() is False
 
 
 async def test_state_condition_attr_duration_entity_added_then_state_changes(
@@ -5023,7 +5094,7 @@ async def test_state_condition_attr_duration_entity_added_then_state_changes(
     # Add the label — entity is invalid, so no priming
     entity_reg.async_update_entity(entry.entity_id, labels={label.label_id})
     await hass.async_block_till_done()
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Now change to valid state
     freezer.tick(timedelta(seconds=1))
@@ -5032,11 +5103,11 @@ async def test_state_condition_attr_duration_entity_added_then_state_changes(
 
     # Just became valid — not long enough
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is False
+    assert test.async_check() is False
 
     # Now past the duration
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_state_condition_attr_duration_unrelated_attr_update(
@@ -5067,4 +5138,162 @@ async def test_state_condition_attr_duration_unrelated_attr_update(
     # should be met — the unrelated attribute change must NOT have
     # reset the timer.
     freezer.tick(timedelta(seconds=5))
+    assert test.async_check() is True
+
+
+@pytest.mark.parametrize(("primary_entities_only"), [True, False])
+async def test_state_condition_primary_entities_only(
+    hass: HomeAssistant, primary_entities_only: bool
+) -> None:
+    """Test make_entity_state_condition primary_entities_only flag."""
+    (
+        area_id,
+        primary_id,
+        diagnostic_id,
+    ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={ATTR_AREA_ID: area_id},
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
+        primary_entities_only=primary_entities_only,
+    )
+
+    # Primary on, diagnostic off
+    hass.states.async_set(primary_id, STATE_ON)
+    hass.states.async_set(diagnostic_id, STATE_OFF)
+    await hass.async_block_till_done()
+    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
+    # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
+    assert test(hass) is primary_entities_only
+
+    # Both on - true regardless of flag
+    hass.states.async_set(diagnostic_id, STATE_ON)
+    await hass.async_block_till_done()
     assert test(hass) is True
+
+
+@pytest.mark.parametrize(("primary_entities_only"), [True, False])
+async def test_numerical_condition_primary_entities_only(
+    hass: HomeAssistant,
+    primary_entities_only: bool,
+) -> None:
+    """Test make_entity_numerical_condition primary_entities_only flag."""
+    (
+        area_id,
+        primary_id,
+        diagnostic_id,
+    ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
+
+    test = await _setup_numerical_condition(
+        hass,
+        target_config={ATTR_AREA_ID: area_id},
+        condition_options={
+            "threshold": {"type": "above", "value": {"number": 50}},
+            ATTR_BEHAVIOR: BEHAVIOR_ALL,
+        },
+        primary_entities_only=primary_entities_only,
+    )
+
+    # Primary above threshold, diagnostic below
+    hass.states.async_set(primary_id, "75")
+    hass.states.async_set(diagnostic_id, "25")
+    await hass.async_block_till_done()
+    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
+    # the diagnostic value is below the threshold. If excluded, only the primary is
+    # checked and it's above.
+    assert test(hass) is primary_entities_only
+
+    # Both above threshold — true regardless of flag
+    hass.states.async_set(diagnostic_id, "75")
+    await hass.async_block_till_done()
+    assert test(hass) is True
+
+
+@pytest.mark.parametrize(("primary_entities_only"), [True, False])
+async def test_state_condition_primary_entities_only_with_duration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    primary_entities_only: bool,
+) -> None:
+    """Test make_entity_state_condition primary_entities_only flag with duration."""
+    (
+        area_id,
+        primary_id,
+        diagnostic_id,
+    ) = await _create_primary_and_diagnostic_entities_in_area(hass, "test")
+
+    # Primary starts with matching attribute, diagnostic with non-matching attribute
+    hass.states.async_set(primary_id, STATE_ON, {"test_attr": True})
+    hass.states.async_set(diagnostic_id, STATE_ON, {"test_attr": False})
+    await hass.async_block_till_done()
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={ATTR_AREA_ID: area_id},
+        states={True},
+        domain_specs={"test": DomainSpec(value_source="test_attr")},
+        condition_options={
+            ATTR_BEHAVIOR: BEHAVIOR_ALL,
+            CONF_FOR: {"seconds": 5},
+        },
+        primary_entities_only=primary_entities_only,
+    )
+
+    # 3s later, diagnostic transitions to matching. The state-change listener
+    freezer.tick(timedelta(seconds=3))
+    hass.states.async_set(diagnostic_id, STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+
+    # 3s after diagnostic became matching (6s total since primary became matching):
+    # - primary_entities_only=True: diagnostic is excluded from evaluation,
+    #   only primary is checked. Primary has been matching for 6s >= 5s → True.
+    # - primary_entities_only=False: diagnostic is included. Diagnostic has
+    #   only been matching for 3s < 5s → behavior=all is False.
+    freezer.tick(timedelta(seconds=3))
+    assert test(hass) is primary_entities_only
+
+    # 3 more seconds later (6s after diagnostic became matching). Now diagnostic
+    # has also been matching for >= 5s → True regardless of flag.
+    freezer.tick(timedelta(seconds=3))
+    assert test(hass) is True
+
+
+async def test_async_from_config_calls_async_setup_on_checker(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_from_config calls async_setup on ConditionChecker from factory path."""
+
+    class StubChecker(condition.ConditionChecker):
+        """Stub checker to track async_setup calls."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            super().__init__(hass)
+            self.setup_called = False
+
+        async def async_setup(self) -> None:
+            self.setup_called = True
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    stub = StubChecker(hass)
+
+    async def fake_factory(
+        hass: HomeAssistant, config: ConfigType
+    ) -> condition.ConditionChecker:
+        return stub
+
+    with (
+        patch.object(
+            condition, "async_stub_checker_from_config", fake_factory, create=True
+        ),
+        patch.dict(condition._PLATFORM_ALIASES, {"stub_checker": None}),
+    ):
+        config = {"condition": "stub_checker"}
+        config = cv.CONDITION_SCHEMA(config)
+        result = await condition.async_from_config(hass, config)
+
+    assert result is stub
+    assert stub.setup_called

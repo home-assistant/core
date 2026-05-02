@@ -1,7 +1,5 @@
 """Binary sensor platform for Rehlko integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

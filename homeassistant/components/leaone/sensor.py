@@ -1,7 +1,5 @@
 """Support for Leaone sensors."""
 
-from __future__ import annotations
-
 from leaone_ble import DeviceClass as LeaoneSensorDeviceClass, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (

@@ -1,7 +1,5 @@
 """Support for Modbus."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import namedtuple
 from typing import Any

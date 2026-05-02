@@ -1,7 +1,5 @@
 """FRITZ image integration."""
 
-from __future__ import annotations
-
 from io import BytesIO
 import logging
 

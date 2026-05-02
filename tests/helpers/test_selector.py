@@ -1127,6 +1127,17 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
     [
         (None, ("/dev/ttyUSB0", "/dev/ttyACM1", "COM3"), (None, 1, True)),
         ({}, ("/dev/ttyUSB0",), (None,)),
+        (
+            {
+                "extra_recommended_domains": [
+                    "homeassistant_yellow",
+                    "homeassistant_sky_connect",
+                ]
+            },
+            ("/dev/ttyUSB0",),
+            (None,),
+        ),
+        ({"extra_recommended_domains": []}, ("/dev/ttyUSB0",), (None,)),
     ],
 )
 def test_serial_port_selector_schema(
@@ -1185,6 +1196,24 @@ def test_serial_port_selector_schema(
             (),
             (),
         ),
+        (
+            {"primary_entities_only": True},
+            (),
+            (),
+        ),
+        (
+            {"primary_entities_only": False},
+            (),
+            (),
+        ),
+        (
+            {
+                "entity": {"domain": "light"},
+                "primary_entities_only": True,
+            },
+            (),
+            (),
+        ),
     ],
 )
 def test_target_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -1199,6 +1228,46 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections) ->
 def test_action_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test action sequence selector."""
     _test_selector("action", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"mode": "trigger"},
+            ("first", "last", "any"),
+            ("all", "invalid", None),
+        ),
+        (
+            {"mode": "condition"},
+            ("all", "any"),
+            ("first", "last", "invalid", None),
+        ),
+        (
+            {"mode": "trigger", "translation_key": "trigger_behavior"},
+            ("first", "last", "any"),
+            ("all", "invalid", None),
+        ),
+    ],
+)
+def test_automation_behavior_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test automation behavior selector."""
+    _test_selector("automation_behavior", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {},
+        {"mode": "invalid_mode"},
+    ],
+)
+def test_automation_behavior_selector_schema_error(schema) -> None:
+    """Test automation behavior selector config schema errors."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"automation_behavior": schema})
 
 
 @pytest.mark.parametrize(

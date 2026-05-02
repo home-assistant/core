@@ -146,6 +146,12 @@ async def test_timeout_manufacturer_data(
 
     inject_bluetooth_service_info(hass, MISSING_PRODUCT_SERVICE_INFO)
 
+    # The injected advertisement starts a bluetooth discovery flow which also
+    # calls async_get_manufacturer_data. Drain it first so it doesn't race
+    # with the user flow's own request.
+    await manufacturer_request_event.wait()
+    await scan_step()
+    await hass.async_block_till_done(wait_background_tasks=True)
     manufacturer_request_event.clear()
 
     async with asyncio.TaskGroup() as tg:

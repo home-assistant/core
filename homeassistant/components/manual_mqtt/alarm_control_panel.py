@@ -1,7 +1,5 @@
 """Support for manual alarms controllable via MQTT."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any

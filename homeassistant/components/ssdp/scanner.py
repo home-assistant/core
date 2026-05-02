@@ -1,7 +1,5 @@
 """The SSDP integration scanner."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
 from datetime import timedelta
