@@ -272,9 +272,12 @@ async def test_function_call(
         },
         "inline_data": None,
         "media_resolution": None,
+        "part_metadata": None,
         "text": None,
         "thought": None,
         "thought_signature": None,
+        "tool_call": None,
+        "tool_response": None,
         "video_metadata": None,
     }
 
