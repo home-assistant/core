@@ -161,7 +161,7 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        if segment != 0:
+        if segment != 0 or coordinator.keep_main_light:
             self._attr_translation_key = "segment_color_palette"
             self._attr_translation_placeholders = {"segment": str(segment)}
 

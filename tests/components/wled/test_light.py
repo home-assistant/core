@@ -340,23 +340,65 @@ async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
-async def test_single_segment_with_keep_main_light(
+@pytest.mark.parametrize(
+    ("device_fixture", "keep_main_light", "expected_entities"),
+    [
+        (
+            "rgb_single_segment",
+            False,
+            {"light.wled_rgb_light": "WLED RGB Light"},
+        ),
+        (
+            "rgb_single_segment",
+            True,
+            {
+                # Segment 0 keeps its existing entity_id (registry preserved).
+                # Main light is registered for the first time with _attr_name=None,
+                # whose slug collides with segment 0 → gets _2 suffix.
+                "light.wled_rgb_light": "WLED RGB Light Segment 0",
+                "light.wled_rgb_light_2": "WLED RGB Light",
+            },
+        ),
+        (
+            "rgb",
+            False,
+            {
+                "light.wled_rgb_light_main": "WLED RGB Light Main",
+                "light.wled_rgb_light": "WLED RGB Light",
+                "light.wled_rgb_light_segment_1": "WLED RGB Light Segment 1",
+            },
+        ),
+        (
+            "rgb",
+            True,
+            {
+                # Entity ids are preserved by the registry; only names change.
+                "light.wled_rgb_light_main": "WLED RGB Light",
+                "light.wled_rgb_light": "WLED RGB Light Segment 0",
+                "light.wled_rgb_light_segment_1": "WLED RGB Light Segment 1",
+            },
+        ),
+    ],
+)
+async def test_keep_main_light_entity_names(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    keep_main_light: bool,
+    expected_entities: dict[str, str],
 ) -> None:
-    """Test the behavior of the integration with a single segment."""
-    assert not hass.states.get("light.wled_rgb_light_main")
-
+    """Test entity friendly names with and without the keep_main_light option."""
     hass.config_entries.async_update_entry(
-        init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: keep_main_light}
     )
     await hass.config_entries.async_reload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("light.wled_rgb_light_main"))
-    assert state.state == STATE_ON
+    actual_entities = {
+        state.entity_id: state.attributes.get("friendly_name")
+        for state in hass.states.async_all("light")
+    }
+    assert actual_entities == expected_entities
 
 
 @pytest.mark.parametrize("device_fixture", ["cct"])

@@ -42,12 +42,14 @@ class WLEDNumberEntityDescription(NumberEntityDescription):
     """Class describing WLED number entities."""
 
     value_fn: Callable[[Segment], int | None]
+    segment_translation_key: str
 
 
 NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_SPEED,
         translation_key="speed",
+        segment_translation_key="segment_speed",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -57,6 +59,7 @@ NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_INTENSITY,
         translation_key="intensity",
+        segment_translation_key="segment_intensity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -83,8 +86,8 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        if segment != 0:
-            self._attr_translation_key = f"segment_{description.translation_key}"
+        if segment != 0 or coordinator.keep_main_light:
+            self._attr_translation_key = description.segment_translation_key
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = (

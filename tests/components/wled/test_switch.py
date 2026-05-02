@@ -9,7 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.wled.const import (
+    CONF_KEEP_MAIN_LIGHT,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -207,3 +211,76 @@ async def test_switch_dynamically_handle_segments(
         segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
     )
     assert segment1_reverse.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "keep_main_light", "expected_entities"),
+    [
+        (
+            "rgb_single_segment",
+            False,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_freeze": "WLED RGB Light Freeze",
+                "switch.wled_rgb_light_reverse": "WLED RGB Light Reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+        (
+            "rgb_single_segment",
+            True,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_freeze": "WLED RGB Light Segment 0 freeze",
+                "switch.wled_rgb_light_reverse": "WLED RGB Light Segment 0 reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+        (
+            "rgb",
+            False,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_freeze": "WLED RGB Light Freeze",
+                "switch.wled_rgb_light_reverse": "WLED RGB Light Reverse",
+                "switch.wled_rgb_light_segment_1_freeze": "WLED RGB Light Segment 1 freeze",
+                "switch.wled_rgb_light_segment_1_reverse": "WLED RGB Light Segment 1 reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+        (
+            "rgb",
+            True,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_freeze": "WLED RGB Light Segment 0 freeze",
+                "switch.wled_rgb_light_reverse": "WLED RGB Light Segment 0 reverse",
+                "switch.wled_rgb_light_segment_1_freeze": "WLED RGB Light Segment 1 freeze",
+                "switch.wled_rgb_light_segment_1_reverse": "WLED RGB Light Segment 1 reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+    ],
+)
+async def test_keep_main_light_entity_names(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    keep_main_light: bool,
+    expected_entities: dict[str, str],
+) -> None:
+    """Test entity friendly names with and without the keep_main_light option."""
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: keep_main_light}
+    )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    actual_entities = {
+        state.entity_id: state.attributes.get("friendly_name")
+        for state in hass.states.async_all("switch")
+    }
+    assert actual_entities == expected_entities

@@ -17,7 +17,11 @@ from wled import (
 )
 
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
-from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.wled.const import (
+    CONF_KEEP_MAIN_LIGHT,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_SELECT_OPTION,
@@ -269,3 +273,70 @@ async def test_select_load_new_options_after_update(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes["options"] == new_options
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "keep_main_light", "expected_entities"),
+    [
+        (
+            "rgb_single_segment",
+            False,
+            {
+                "select.wled_rgb_light_color_palette": "WLED RGB Light Color palette",
+                "select.wled_rgb_light_live_override": "WLED RGB Light Live override",
+                "select.wled_rgb_light_playlist": "WLED RGB Light Playlist",
+                "select.wled_rgb_light_preset": "WLED RGB Light Preset",
+            },
+        ),
+        (
+            "rgb_single_segment",
+            True,
+            {
+                "select.wled_rgb_light_color_palette": "WLED RGB Light Segment 0 color palette",
+                "select.wled_rgb_light_live_override": "WLED RGB Light Live override",
+                "select.wled_rgb_light_playlist": "WLED RGB Light Playlist",
+                "select.wled_rgb_light_preset": "WLED RGB Light Preset",
+            },
+        ),
+        (
+            "rgb",
+            False,
+            {
+                "select.wled_rgb_light_color_palette": "WLED RGB Light Color palette",
+                "select.wled_rgb_light_live_override": "WLED RGB Light Live override",
+                "select.wled_rgb_light_playlist": "WLED RGB Light Playlist",
+                "select.wled_rgb_light_preset": "WLED RGB Light Preset",
+                "select.wled_rgb_light_segment_1_color_palette": "WLED RGB Light Segment 1 color palette",
+            },
+        ),
+        (
+            "rgb",
+            True,
+            {
+                "select.wled_rgb_light_color_palette": "WLED RGB Light Segment 0 color palette",
+                "select.wled_rgb_light_live_override": "WLED RGB Light Live override",
+                "select.wled_rgb_light_playlist": "WLED RGB Light Playlist",
+                "select.wled_rgb_light_preset": "WLED RGB Light Preset",
+                "select.wled_rgb_light_segment_1_color_palette": "WLED RGB Light Segment 1 color palette",
+            },
+        ),
+    ],
+)
+async def test_keep_main_light_entity_names(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    keep_main_light: bool,
+    expected_entities: dict[str, str],
+) -> None:
+    """Test entity friendly names with and without the keep_main_light option."""
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: keep_main_light}
+    )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    actual_entities = {
+        state.entity_id: state.attributes.get("friendly_name")
+        for state in hass.states.async_all("select")
+    }
+    assert actual_entities == expected_entities

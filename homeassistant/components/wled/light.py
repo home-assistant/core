@@ -66,6 +66,8 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         """Initialize WLED main light."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = coordinator.data.info.mac_address
+        if coordinator.keep_main_light:
+            self._attr_name = None
 
     @property
     def brightness(self) -> int | None:
@@ -124,7 +126,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        if segment == 0:
+        if segment == 0 and not coordinator.keep_main_light:
             self._attr_name = None
         else:
             self._attr_translation_placeholders = {"segment": str(segment)}
