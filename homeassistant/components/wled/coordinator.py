@@ -85,9 +85,18 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     def segment_ids(self) -> set[int]:
         """Return the segment IDs of the coordinated device."""
         return {
-            light.segment_id
-            for light in self.data.state.segments.values()
-            if light.segment_id is not None
+            segment.segment_id
+            for segment in self.data.state.segments.values()
+            if segment.segment_id is not None
+        }
+
+    @property
+    def segment_names(self) -> set[str]:
+        """Return the segment names of the coordinated device."""
+        return {
+            segment.name
+            for segment in self.data.state.segments.values()
+            if segment.name is not None
         }
 
     @callback

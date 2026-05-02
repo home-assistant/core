@@ -39,7 +39,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED light based on a config entry."""
     coordinator = entry.runtime_data
-    new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
+    new_entities: list[WLEDEntity] = []
 
     if coordinator.has_main_light:
         new_entities.append(WLEDMainLight(coordinator=coordinator))
