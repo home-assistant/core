@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1776215051088Tas0hx",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "eb2836r4czgoufhx",
   "name": "INTELAR IR288",
   "category": "tzc1",
   "product_id": "5vlawhjm",
@@ -99,13 +97,6 @@
     "unit_switch": "kg",
     "heart_rate": 93,
     "data_report": "ATE4ZGFhMTcwNzYwMWMwMDABxSBsAF0="
-  },
-  "home_assistant": {
-    "name": "INTELAR IR288",
-    "name_by_user": null,
-    "disabled": false,
-    "disabled_by": null,
-    "entities": []
   },
   "set_up": false,
   "support_local": true,

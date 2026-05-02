@@ -4618,6 +4618,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[ifiw20mpsqld]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ifiw20mpsqld',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SPM02_WiFi',
+    'model_id': 'fygozcnralhwbauo',
+    'name': 'SPM02_WiFi',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ifzgvpgoodrfw2aksc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5696,6 +5727,37 @@
     'model': 'Indoor camera ',
     'model_id': 'drezasavompxpcgm',
     'name': 'CAM GARAGE',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[mjhwalv51czt]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'mjhwalv51czt',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'INTELAR IR288',
+    'model_id': '5vlawhjm',
+    'name': 'INTELAR IR288',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -9571,37 +9633,6 @@
     'model': 'Air Conditioner',
     'model_id': 'wxqdp6ecfkd78zzz',
     'name': 'Mini-Split',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_device_registry[ifiw20mpsqld]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tuya',
-        'ifiw20mpsqld',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Tuya',
-    'model': 'SPM02_WiFi',
-    'model_id': 'fygozcnralhwbauo',
-    'name': 'SPM02_WiFi',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
