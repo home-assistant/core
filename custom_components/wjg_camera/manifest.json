@@ -1,7 +1,7 @@
 {
   "domain": "wjg_camera",
   "name": "WJG XM-3820 Camera Bridge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/66Beastmaster/core/tree/main/custom_components/wjg_camera",
   "issue_tracker": "https://github.com/66Beastmaster/core/issues",
   "requirements": [
@@ -9,7 +9,9 @@
     "ffmpeg-python>=0.2.0"
   ],
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": [
+    "@66Beastmaster"
+  ],
   "config_flow": true,
   "iot_class": "local_polling",
   "quality_scale": "custom"
