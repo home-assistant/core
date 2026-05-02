@@ -1072,12 +1072,32 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     assert not mqtt_client_mock.subscribe.called
 
 
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1",
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1.1",
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "5",
+        },
+    ],
+)
 async def test_unsubscribe_race(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test not calling unsubscribe() when other subscribers are active."""
+    """Test not calling unsubscribe() when other subscribers are active.
+
+    Testing with simple topics.
+    """
     mqtt_client_mock = setup_with_birth_msg_client_mock
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
@@ -1105,16 +1125,89 @@ async def test_unsubscribe_race(
     # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
     # when both subscriptions were combined [subscribe]
     expected_calls_1 = [
-        call.subscribe([("test/state", 0)], properties=None),
+        call.subscribe([("test/state", 0)], properties=ANY),
         call.unsubscribe("test/state"),
-        call.subscribe([("test/state", 0)], properties=None),
+        call.subscribe([("test/state", 0)], properties=ANY),
     ]
     expected_calls_2 = [
-        call.subscribe([("test/state", 0)], properties=None),
-        call.subscribe([("test/state", 0)], properties=None),
+        call.subscribe([("test/state", 0)], properties=ANY),
+        call.subscribe([("test/state", 0)], properties=ANY),
     ]
     expected_calls_3 = [
-        call.subscribe([("test/state", 0)], properties=None),
+        call.subscribe([("test/state", 0)], properties=ANY),
+    ]
+    assert mqtt_client_mock.mock_calls in (
+        expected_calls_1,
+        expected_calls_2,
+        expected_calls_3,
+    )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1",
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1.1",
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "5",
+        },
+    ],
+    ids=["v3.1", "v3.3.1", "5"],
+)
+@pytest.mark.parametrize("mqtt_config_entry_options", [ENTRY_DEFAULT_BIRTH_MESSAGE])
+async def test_wildcard_unsubscribe_race(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test not calling unsubscribe() when other subscribers are active.
+
+    Testing with wildcard topics.
+    """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    @callback
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    @callback
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
+
+    mqtt_client_mock.reset_mock()
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, "test/#", _callback_a)
+    unsub()
+    await mqtt.async_subscribe(hass, "test/#", _callback_b)
+    await mock_debouncer.wait()
+
+    async_fire_mqtt_message(hass, "test/state", "online")
+    assert not calls_a
+    assert calls_b
+
+    # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
+    # when both subscriptions were combined [subscribe]
+    expected_calls_1 = [
+        call.subscribe("test/#", 0, properties=ANY),
+        call.unsubscribe("test/#"),
+        call.subscribe("test/#", 0, properties=ANY),
+    ]
+    expected_calls_2 = [
+        call.subscribe("test/#", 0, properties=ANY),
+        call.subscribe("test/#", 0, ANY),
+    ]
+    expected_calls_3 = [
+        call.subscribe("test/#", 0, properties=ANY),
     ]
     assert mqtt_client_mock.mock_calls in (
         expected_calls_1,
@@ -2404,7 +2497,7 @@ async def test_overlapping_subscriptions_only_processed_once(
     hass: HomeAssistant,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test message are only processed once per subscription in case of overlap.
+    """Test messages are only processed once per subscription in case of overlap.
 
     Overlapping subscriptions are only supported with MQTTv5
     """
