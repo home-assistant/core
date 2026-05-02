@@ -9,7 +9,7 @@
     "error": {
       "auto_configure_failed": "Failed to auto-configure the device for Local Push. You can configure it manually via the device web interface.",
       "no_device_info": "Could not connect to the WiBeee device. Verify the IP address and that the device is powered on.",
-      "unknown": "Unknown error occurred."
+      "unknown": "An unknown error occurred."
     },
     "step": {
       "mode": {

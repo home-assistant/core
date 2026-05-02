@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import ipaddress
 import logging
 import socket
+from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
 from pywibeee import WibeeeAPI, WibeeeDeviceInfo
@@ -23,6 +24,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MODE_LOCAL_PUSH,
     MODE_POLLING,
+    PUSH_STALE_AFTER,
 )
 from .coordinator import WibeeeCoordinator
 from .push_receiver import async_setup_push_receiver
@@ -95,19 +97,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
             config_entry=entry,
             name=f"Wibeee {device_info.mac_addr_short}",
             update_interval=None,
+            stale_after=PUSH_STALE_AFTER,
         )
         # Do one initial poll to discover available sensors
         try:
             initial_data = await api.async_fetch_sensors_data(retries=3)
-        except (TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError, XMLParseError) as err:
             raise ConfigEntryNotReady(f"Error connecting to Wibeee at {host}") from err
 
-        if not initial_data:
+        if not initial_data or not isinstance(initial_data, dict):
             raise ConfigEntryNotReady(
                 f"Could not fetch initial sensor data from Wibeee at {host}"
             )
 
-        coordinator.async_set_updated_data(initial_data)
+        # Seed the coordinator with the bootstrap data and arm the
+        # push staleness watchdog.
+        coordinator.async_push_update(initial_data)
 
         # Register with push receiver
         # Ensure we use a concrete IP even if host is a hostname for validation

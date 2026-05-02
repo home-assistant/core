@@ -72,12 +72,23 @@ PUSH_PARAM_TO_SENSOR: dict[str, str] = {
     "o": "energia_reactiva_ind",
 }
 
+# Sensor keys that the local-push parser can refresh.
+# Used to filter out polling-only metrics in push mode so the corresponding
+# entities are not created (they would otherwise become unavailable as soon
+# as the first push arrives).
+PUSH_REFRESHABLE_SENSOR_KEYS: frozenset[str] = frozenset(PUSH_PARAM_TO_SENSOR.values())
+
 PUSH_PHASE_MAP: dict[str, str] = {
     "1": "fase1",
     "2": "fase2",
     "3": "fase3",
     "t": "fase4",
 }
+
+# Maximum time without receiving a push before push-mode data is considered
+# stale and the coordinator marks itself as failed (so entities go
+# unavailable instead of reporting last-known values forever).
+PUSH_STALE_AFTER = timedelta(minutes=5)
 
 
 SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
