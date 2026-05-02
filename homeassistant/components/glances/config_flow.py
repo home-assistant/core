@@ -1,7 +1,5 @@
 """Config flow for Glances."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -93,7 +91,7 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
                 await get_api(self.hass, user_input)
             except GlancesApiAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except (GlancesApiConnectionError, ServerVersionMismatch):
+            except GlancesApiConnectionError, ServerVersionMismatch:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(

@@ -1,7 +1,5 @@
 """The sensor entity for the Youless integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     UnitOfElectricCurrent,
@@ -26,8 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DOMAIN
-from .coordinator import YouLessCoordinator
+from .const import DOMAIN
+from .coordinator import YouLessConfigEntry, YouLessCoordinator
 from .entity import YouLessEntity
 
 
@@ -68,9 +65,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_func=(
-            lambda device: device.current_power_usage.value
-            if device.current_power_usage
-            else None
+            lambda device: (
+                device.current_power_usage.value if device.current_power_usage else None
+            )
         ),
     ),
     YouLessSensorEntityDescription(
@@ -105,9 +102,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_func=(
-            lambda device: device.power_meter.total.value
-            if device.power_meter
-            else None
+            lambda device: (
+                device.power_meter.total.value if device.power_meter else None
+            )
         ),
     ),
     YouLessSensorEntityDescription(
@@ -253,9 +250,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_func=(
-            lambda device: device.delivery_meter.low.value
-            if device.delivery_meter
-            else None
+            lambda device: (
+                device.delivery_meter.low.value if device.delivery_meter else None
+            )
         ),
     ),
     YouLessSensorEntityDescription(
@@ -267,9 +264,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_func=(
-            lambda device: device.delivery_meter.high.value
-            if device.delivery_meter
-            else None
+            lambda device: (
+                device.delivery_meter.high.value if device.delivery_meter else None
+            )
         ),
     ),
     YouLessSensorEntityDescription(
@@ -280,9 +277,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_func=(
-            lambda device: device.extra_meter.total.value
-            if device.extra_meter
-            else None
+            lambda device: (
+                device.extra_meter.total.value if device.extra_meter else None
+            )
         ),
     ),
     YouLessSensorEntityDescription(
@@ -293,9 +290,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_func=(
-            lambda device: device.extra_meter.usage.value
-            if device.extra_meter
-            else None
+            lambda device: (
+                device.extra_meter.usage.value if device.extra_meter else None
+            )
         ),
     ),
 )
@@ -303,13 +300,13 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: YouLessConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize the integration."""
-    coordinator: YouLessCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     device = entry.data[CONF_DEVICE]
-    if (device := entry.data[CONF_DEVICE]) is None:
+    if device is None:
         device = entry.entry_id
 
     async_add_entities(

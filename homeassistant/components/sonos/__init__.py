@@ -1,6 +1,5 @@
 """Support to embed Sonos."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 import datetime
@@ -417,6 +416,7 @@ class SonosDiscoveryManager:
                     )
                     new_coordinator.setup(soco)
                     c_dict[soco.household_id] = new_coordinator
+                c_dict[soco.household_id].add_speaker(soco)
             speaker.setup(self.entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)

@@ -1,7 +1,5 @@
 """Component providing support for Reolink switch entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -129,9 +127,10 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="ptz_patrol",
+        cmd_key="64",
         translation_key="ptz_patrol",
         supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
-        value=lambda api, ch: None,
+        value=lambda api, ch: api.baichuan.ptz_patrol_cruising(ch),
         method=lambda api, ch, value: api.ctrl_ptz_patrol(ch, value),
     ),
     ReolinkSwitchEntityDescription(
@@ -322,7 +321,7 @@ RULE_SWITCH_ENTITY = ReolinkSwitchIndexEntityDescription(
     translation_key="rule",
     placeholder=lambda api, ch, idx: api.baichuan.rule_name(ch, idx),
     value=lambda api, ch, idx: api.baichuan.rule_enabled(ch, idx),
-    method=lambda api, ch, idx, value: (api.baichuan.set_rule_enabled(ch, idx, value)),
+    method=lambda api, ch, idx, value: api.baichuan.set_rule_enabled(ch, idx, value),
 )
 
 

@@ -1,7 +1,5 @@
 """Sensor entities for the madVR integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -57,7 +55,7 @@ def get_temperature(coordinator: MadVRCoordinator, key: str) -> float | None:
     """Get temperature value if valid, otherwise return None."""
     try:
         temp = float(coordinator.data.get(key, 0))
-    except (AttributeError, ValueError):
+    except AttributeError, ValueError:
         return None
     else:
         return temp if is_valid_temperature(temp) else None

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_snapshot[button.test_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_automatic_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +101,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_briefly_open-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,8 +151,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -198,8 +202,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_impulse_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -247,8 +252,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_impulse_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -296,8 +302,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -345,8 +352,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_open_partially-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -394,8 +402,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_open_permanently-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -443,8 +452,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_reset_meter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -492,8 +502,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_reset_meter_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -541,8 +552,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_ventilate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

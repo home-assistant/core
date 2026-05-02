@@ -1,7 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 

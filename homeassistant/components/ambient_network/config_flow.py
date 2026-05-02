@@ -1,7 +1,5 @@
 """Config flow for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioambient import OpenAPI
@@ -77,9 +75,11 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             # Filter out indoor stations
             self._stations = dict(
                 filter(
-                    lambda item: not item[1]
-                    .get(API_STATION_INFO, {})
-                    .get(API_STATION_INDOOR, False),
+                    lambda item: (
+                        not item[1]
+                        .get(API_STATION_INFO, {})
+                        .get(API_STATION_INDOOR, False)
+                    ),
                     self._stations.items(),
                 )
             )
@@ -113,7 +113,7 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id=CONF_USER, data_schema=schema, errors=errors if errors else {}
+            step_id=CONF_USER, data_schema=schema, errors=errors or {}
         )
 
     async def async_step_station(

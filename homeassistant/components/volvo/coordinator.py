@@ -1,7 +1,5 @@
 """Volvo coordinators."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -186,7 +184,7 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
-        raise NotImplementedError
+        """Determine which API calls to make for this coordinator."""
 
 
 class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):

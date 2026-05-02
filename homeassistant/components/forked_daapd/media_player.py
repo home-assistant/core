@@ -1,7 +1,5 @@
 """Support forked_daapd media player."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import logging
@@ -388,7 +386,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 for track in self._queue["items"]
                 if track["id"] == self._player["item_id"]
             )
-        except (StopIteration, TypeError, KeyError):
+        except StopIteration, TypeError, KeyError:
             _LOGGER.debug("Could not get track info")
             self._track_info = defaultdict(str)
 

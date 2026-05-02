@@ -1,7 +1,5 @@
 """Support for compensation sensor."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -186,7 +184,7 @@ class CompensationSensor(SensorEntity):
                 y_value = self._poly(x_value)
             self._attr_native_value = round(y_value, self._precision)
 
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             self._attr_native_value = None
             if self._source_attribute:
                 _LOGGER.warning(

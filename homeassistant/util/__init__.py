@@ -1,7 +1,5 @@
 """Helper methods for various modules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
@@ -64,7 +62,7 @@ def convert[_T, _U](
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value could not be converted
         return default
 

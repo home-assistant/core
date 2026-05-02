@@ -1,4 +1,57 @@
 # serializer version: 1
+# name: test_read_ac_charge_times
+  dict({
+    'charge_power': 100,
+    'charge_stop_soc': 90,
+    'mains_enabled': True,
+    'periods': list([
+      dict({
+        'enabled': True,
+        'end_time': '05:00',
+        'period_id': 1,
+        'start_time': '01:00',
+      }),
+      dict({
+        'enabled': False,
+        'end_time': '00:00',
+        'period_id': 2,
+        'start_time': '00:00',
+      }),
+      dict({
+        'enabled': False,
+        'end_time': '00:00',
+        'period_id': 3,
+        'start_time': '00:00',
+      }),
+    ]),
+  })
+# ---
+# name: test_read_ac_discharge_times
+  dict({
+    'discharge_power': 100,
+    'discharge_stop_soc': 10,
+    'periods': list([
+      dict({
+        'enabled': True,
+        'end_time': '16:00',
+        'period_id': 1,
+        'start_time': '10:00',
+      }),
+      dict({
+        'enabled': False,
+        'end_time': '00:00',
+        'period_id': 2,
+        'start_time': '00:00',
+      }),
+      dict({
+        'enabled': False,
+        'end_time': '00:00',
+        'period_id': 3,
+        'start_time': '00:00',
+      }),
+    ]),
+  })
+# ---
 # name: test_read_time_segments_single_device
   dict({
     'time_segments': list([

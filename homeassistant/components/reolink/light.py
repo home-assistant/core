@@ -1,7 +1,5 @@
 """Component providing support for Reolink light entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -70,8 +68,8 @@ LIGHT_ENTITIES = (
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
         set_brightness_fn=lambda api, ch, value: api.set_whiteled(ch, brightness=value),
         get_color_temp_fn=lambda api, ch: api.whiteled_color_temperature(ch),
-        set_color_temp_fn=lambda api, ch, value: (
-            api.baichuan.set_floodlight(ch, color_temp=value)
+        set_color_temp_fn=lambda api, ch, value: api.baichuan.set_floodlight(
+            ch, color_temp=value
         ),
     ),
     ReolinkLightEntityDescription(

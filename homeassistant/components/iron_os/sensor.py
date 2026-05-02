@@ -1,7 +1,5 @@
 """Sensor platform for IronOS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -165,9 +163,9 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[item.name.lower() for item in OperatingMode],
         value_fn=(
-            lambda data, _: data.operating_mode.name.lower()
-            if data.operating_mode
-            else None
+            lambda data, _: (
+                data.operating_mode.name.lower() if data.operating_mode else None
+            )
         ),
     ),
     IronOSSensorEntityDescription(

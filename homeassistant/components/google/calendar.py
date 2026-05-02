@@ -1,7 +1,5 @@
 """Support for Google Calendar Search binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import dataclasses
 from datetime import datetime, timedelta
@@ -101,7 +99,6 @@ class GoogleCalendarEntityDescription(CalendarEntityDescription):
     search: str | None
     local_sync: bool
     device_id: str
-    initial_color: str | None = None
     event_type: EventTypeEnum | None = None
 
 
@@ -361,7 +358,6 @@ class GoogleCalendarEntity(
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
-        self._attr_initial_color = entity_description.initial_color
         if not entity_description.read_only:
             self._attr_supported_features = (
                 CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT

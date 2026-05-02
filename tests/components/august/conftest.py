@@ -6,6 +6,7 @@ import pytest
 from yalexs.manager.ratelimit import _RateLimitChecker
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -106,7 +107,7 @@ def load_reauth_jwt_wrong_account_fixture() -> str:
 @pytest.fixture(name="client_credentials", autouse=True)
 async def mock_client_credentials_fixture(hass: HomeAssistant) -> None:
     """Mock client credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

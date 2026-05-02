@@ -1,7 +1,5 @@
 """SMA Solar Webconnect interface."""
 
-from __future__ import annotations
-
 from pysma.sensor import Sensor
 
 from homeassistant.components.sensor import (

@@ -1,4 +1,26 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
+  },
+  "conditions": {
+    "is_equal_to": {
+      "description": "Tests if one or more texts are equal to a specified value.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::text::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::text::common::condition_for_name%]"
+        },
+        "value": {
+          "description": "The value to compare the text to.",
+          "name": "Value"
+        }
+      },
+      "name": "Text is equal to"
+    }
+  },
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
@@ -32,14 +54,14 @@
   },
   "services": {
     "set_value": {
-      "description": "Sets the value.",
+      "description": "Sets the value of a text entity.",
       "fields": {
         "value": {
           "description": "Enter your text.",
           "name": "Value"
         }
       },
-      "name": "Set value"
+      "name": "Set text value"
     }
   },
   "title": "Text",

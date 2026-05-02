@@ -1,4 +1,4 @@
-stopped_playing:
+.trigger_common: &trigger_common
   target:
     entity:
       domain: media_player
@@ -7,9 +7,16 @@ stopped_playing:
       required: true
       default: any
       selector:
-        select:
-          translation_key: trigger_behavior
-          options:
-            - first
-            - last
-            - any
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+paused_playing: *trigger_common
+started_playing: *trigger_common
+stopped_playing: *trigger_common
+turned_off: *trigger_common
+turned_on: *trigger_common

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_blu_trv_climate_set_temperature[climate.trv_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -67,8 +68,9 @@
 # ---
 # name: test_climate_hvac_mode[climate.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -146,8 +148,9 @@
 # ---
 # name: test_rpc_climate_hvac_mode[climate.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -215,8 +218,9 @@
 # ---
 # name: test_rpc_linkedgo_st1820_thermostat[climate.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -292,8 +296,9 @@
 # ---
 # name: test_rpc_linkedgo_st802_thermostat[climate.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -393,8 +398,9 @@
 # ---
 # name: test_wall_display_thermostat_mode[climate.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

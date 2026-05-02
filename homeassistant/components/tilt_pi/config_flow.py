@@ -26,7 +26,7 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await client.get_hydrometers()
-        except (TiltPiError, TimeoutError, aiohttp.ClientError):
+        except TiltPiError, TimeoutError, aiohttp.ClientError:
             return "cannot_connect"
         return None
 

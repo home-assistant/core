@@ -1,7 +1,5 @@
 """The output limit which can be set in the APsystems local API integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientConnectorError
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
@@ -49,7 +47,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
         """Set the state with the value fetched from the inverter."""
         try:
             status = await self._api.get_max_power()
-        except (TimeoutError, ClientConnectorError):
+        except TimeoutError, ClientConnectorError:
             self._attr_available = False
         else:
             self._attr_available = True

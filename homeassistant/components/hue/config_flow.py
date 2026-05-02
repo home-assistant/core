@@ -1,7 +1,5 @@
 """Config flow to configure Philips Hue."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -315,7 +313,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             api = HueBridgeV2(bridge.host, conf_entry.data[CONF_API_KEY])
             try:
                 await api.fetch_full_state()
-            except (AiohueException, aiohttp.ClientError):
+            except AiohueException, aiohttp.ClientError:
                 continue
             old_bridge_id = conf_entry.unique_id
             assert old_bridge_id is not None

@@ -1,7 +1,5 @@
 """Support for Prometheus metrics export."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import astuple, dataclass
@@ -517,7 +515,7 @@ class PrometheusMetrics:
         for key, value in state.attributes.items():
             try:
                 value = float(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 continue
 
             self._metric(

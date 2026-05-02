@@ -1,14 +1,12 @@
 """Select for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.select import (
-    DOMAIN as SELECT_PLATFORM,
+    DOMAIN as SELECT_DOMAIN,
     SelectEntity,
     SelectEntityDescription,
 )
@@ -116,8 +114,8 @@ RPC_SELECT_ENTITIES: Final = {
     "enum_generic": RpcSelectDescription(
         key="enum",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
-            config, key, SELECT_PLATFORM
+        removal_condition=lambda config, _status, key: (
+            not is_view_for_platform(config, key, SELECT_DOMAIN)
         ),
         method="enum_set",
         role=ROLE_GENERIC,
@@ -154,13 +152,13 @@ def _async_setup_rpc_entry(
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
     virtual_text_ids = get_virtual_component_ids(
-        coordinator.device.config, SELECT_PLATFORM
+        coordinator.device.config, SELECT_DOMAIN
     )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         virtual_text_ids,
         "enum",
     )

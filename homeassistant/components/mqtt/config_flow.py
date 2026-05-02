@@ -1,7 +1,5 @@
 """Config flow for MQTT."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
@@ -477,7 +475,7 @@ _CODE_VALIDATION_MODE = {
     "remote_code": REMOTE_CODE,
     "remote_code_text": REMOTE_CODE_TEXT,
 }
-EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
+EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY, CONF_UNIT_OF_MEASUREMENT}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
@@ -1022,7 +1020,7 @@ def validate_field(
         return
     try:
         user_input[field] = validator(user_input[field])
-    except (ValueError, vol.Error, vol.Invalid):
+    except ValueError, vol.Error, vol.Invalid:
         errors[field] = error
 
 
@@ -1133,11 +1131,13 @@ def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
         errors[CONF_MIN] = "max_below_min"
         errors[CONF_MAX] = "max_below_min"
 
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
+        unit_of_measurement = None
+
     if (
         (device_class := config.get(CONF_DEVICE_CLASS)) is not None
         and device_class in NUMBER_DEVICE_CLASS_UNITS
-        and config.get(CONF_UNIT_OF_MEASUREMENT)
-        not in NUMBER_DEVICE_CLASS_UNITS[device_class]
+        and unit_of_measurement not in NUMBER_DEVICE_CLASS_UNITS[device_class]
     ):
         errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
 
@@ -1166,6 +1166,7 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
+    unit_of_measurement: str | None = None
     if (
         device_class in DEVICE_CLASS_UNITS
         and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
@@ -1174,6 +1175,10 @@ def validate_sensor_platform_config(
         # Do not allow an empty unit of measurement in a subentry data flow
         errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
         return errors
+
+    if unit_of_measurement == "None":
+        unit_of_measurement = None
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
 
     if (
         device_class is not None
@@ -1299,9 +1304,11 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=ALARM_CONTROL_PANEL_CODE_MODE,
             required=True,
             exclude_from_config=True,
-            default=lambda config: config[CONF_CODE].lower()
-            if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
-            else "local_code",
+            default=lambda config: (
+                config[CONF_CODE].lower()
+                if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
+                else "local_code"
+            ),
         ),
     },
     Platform.BINARY_SENSOR: {
@@ -1327,10 +1334,12 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=validate(cv.temperature_unit),
             required=True,
             exclude_from_reconfig=True,
-            default=lambda _: "C"
-            if async_get_hass().config.units.temperature_unit
-            is UnitOfTemperature.CELSIUS
-            else "F",
+            default=lambda _: (
+                "C"
+                if async_get_hass().config.units.temperature_unit
+                is UnitOfTemperature.CELSIUS
+                else "F"
+            ),
         ),
         "climate_feature_action": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -1431,9 +1440,11 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=True,
             exclude_from_config=True,
             default=(
-                lambda config: "image_url"
-                if config.get(CONF_IMAGE_TOPIC) is None
-                else "image_data"
+                lambda config: (
+                    "image_url"
+                    if config.get(CONF_IMAGE_TOPIC) is None
+                    else "image_data"
+                )
             ),
         )
     },
@@ -1517,10 +1528,12 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=validate(cv.temperature_unit),
             required=True,
             exclude_from_reconfig=True,
-            default=lambda _: "C"
-            if async_get_hass().config.units.temperature_unit
-            is UnitOfTemperature.CELSIUS
-            else "F",
+            default=lambda _: (
+                "C"
+                if async_get_hass().config.units.temperature_unit
+                is UnitOfTemperature.CELSIUS
+                else "F"
+            ),
         ),
         "water_heater_feature_current_temperature": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -3882,7 +3895,7 @@ def validate_user_input(
             merged_user_input[field] = (
                 validator(value) if validator is not None else value
             )
-        except (ValueError, vol.Error, vol.Invalid):
+        except ValueError, vol.Error, vol.Invalid:
             data_schema_field = data_schema_fields[field]
             errors[data_schema_field.section or field] = (
                 data_schema_field.error or "invalid_input"
@@ -4976,7 +4989,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
             for field in EXCLUDE_FROM_CONFIG_IF_NONE:
-                if field in component_config and component_config[field] is None:
+                if field in component_config and (
+                    component_config[field] is None or component_config[field] == "None"
+                ):
                     component_config.pop(field)
             mqtt_yaml_config.append({platform: component_config})
 
@@ -5025,7 +5040,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
             for field in EXCLUDE_FROM_CONFIG_IF_NONE:
-                if field in component_config and component_config[field] is None:
+                if field in component_config and (
+                    component_config[field] is None or component_config[field] == "None"
+                ):
                     component_config.pop(field)
             discovery_payload["cmps"][component_id] = component_config
 
@@ -5107,7 +5124,7 @@ def async_convert_to_pem(
             encryption_algorithm=NoEncryption(),
         )
         return pem_key_data.decode("utf-8")
-    except (TypeError, ValueError, SSLError):
+    except TypeError, ValueError, SSLError:
         _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
         return None
 
@@ -5507,7 +5524,7 @@ def check_certicate_chain() -> str | None:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)

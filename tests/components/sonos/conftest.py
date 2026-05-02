@@ -1,7 +1,5 @@
 """Configuration for Sonos tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
@@ -19,6 +17,7 @@ from soco.data_structures import (
     SearchResult,
 )
 from soco.events_base import Event as SonosEvent
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -295,7 +294,7 @@ class SoCoMockFactory:
         # Generate a different MAC for the non-default speakers.
         # otherwise new devices will not be created.
         if ip_address != "192.168.42.2":
-            last_octet = ip_address.split(".")[-1]
+            last_octet = ip_address.rsplit(".", maxsplit=1)[-1]
             my_speaker_info["mac_address"] = f"00-00-00-00-00-{last_octet.zfill(2)}"
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
@@ -309,6 +308,14 @@ class SoCoMockFactory:
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
+        mock_soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+            side_effect=SoCoUPnPException("Not supported", 714, "")
+        )
+        mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
+        mock_soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+            side_effect=SoCoUPnPException("Not supported", 714, "")
+        )
+        mock_soco.deviceProperties.SetAutoplayLinkedZones = Mock()
         mock_soco.zone_group_state = Mock()
         mock_soco.zone_group_state.processed_count = 10
         mock_soco.zone_group_state.total_requests = 12

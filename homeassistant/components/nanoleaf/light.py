@@ -1,7 +1,5 @@
 """Support for Nanoleaf Lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.light import (
@@ -85,7 +83,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         # According to API docs, color mode is "ct", "effect" or "hs"
         # https://forum.nanoleaf.me/docs/openapi#_4qgqrz96f44d

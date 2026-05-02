@@ -1,7 +1,5 @@
 """Config flow for the Anglian Water integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -73,7 +71,7 @@ async def validate_account(auth: MSOB2CAuth, account_number: str) -> str | MSOB2
     _aw = AnglianWater(authenticator=auth)
     try:
         await _aw.validate_smart_meter(account_number)
-    except (InvalidAccountIdError, SmartMeterUnavailableError):
+    except InvalidAccountIdError, SmartMeterUnavailableError:
         return "smart_meter_unavailable"
     return auth
 

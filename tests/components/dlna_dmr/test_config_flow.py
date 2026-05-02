@@ -1,7 +1,5 @@
 """Test the DLNA config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import dataclasses
 import logging

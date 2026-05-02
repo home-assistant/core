@@ -1,28 +1,42 @@
 """Base entity for Anthropic."""
 
 import base64
-from collections.abc import AsyncGenerator, Callable, Iterable
+from collections import deque
+from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
     Base64ImageSourceParam,
     Base64PDFSourceParam,
+    BashCodeExecutionToolResultBlock,
     CitationsDelta,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    CodeExecutionTool20250825Param,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockContent,
+    CodeExecutionToolResultBlockParamContentParam,
+    Container,
+    ContentBlock,
     ContentBlockParam,
     DocumentBlockParam,
     ImageBlockParam,
     InputJSONDelta,
+    JSONOutputFormatParam,
+    Message,
     MessageDeltaUsage,
     MessageParam,
     MessageStreamEvent,
+    ModelInfo,
+    OutputConfigParam,
+    RawContentBlockDelta,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
@@ -39,8 +53,10 @@ from anthropic.types import (
     TextCitation,
     TextCitationParam,
     TextDelta,
+    TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
     ThinkingBlockParam,
+    ThinkingConfigAdaptiveParam,
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
@@ -48,18 +64,39 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
-    ToolResultBlockParam,
+    ToolSearchToolBm25_20251119Param,
+    ToolSearchToolResultBlock,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
-    WebSearchToolRequestErrorParam,
+    WebSearchTool20260209Param,
     WebSearchToolResultBlock,
-    WebSearchToolResultBlockParam,
-    WebSearchToolResultError,
+    WebSearchToolResultBlockContent,
+    WebSearchToolResultBlockParamContentParam,
+)
+from anthropic.types.bash_code_execution_tool_result_block import (
+    Content as BashCodeExecutionToolResultBlockContent,
+)
+from anthropic.types.bash_code_execution_tool_result_block_param import (
+    Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
+from anthropic.types.raw_message_delta_event import Delta
+from anthropic.types.text_editor_code_execution_tool_result_block import (
+    Content as TextEditorCodeExecutionToolResultBlockContent,
+)
+from anthropic.types.text_editor_code_execution_tool_result_block_param import (
+    Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
+)
+from anthropic.types.tool_search_tool_result_block import (
+    Content as ToolSearchToolResultBlockContent,
+)
+from anthropic.types.tool_search_tool_result_block_param import (
+    Content as ToolSearchToolResultBlockParamContentParam,
+)
+from anthropic.types.tool_use_block import Caller
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -68,16 +105,19 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_TEMPERATURE,
+    CONF_PROMPT_CACHING,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -89,8 +129,9 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
-    NON_THINKING_MODELS,
+    PromptCaching,
 )
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -100,10 +141,14 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> ToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     return ToolParam(
         name=tool.name,
         description=tool.description or "",
-        input_schema=convert(tool.parameters, custom_serializer=custom_serializer),
+        input_schema=schema,
     )
 
 
@@ -126,10 +171,22 @@ class ContentDetails:
     """Native data for AssistantContent."""
 
     citation_details: list[CitationDetails] = field(default_factory=list)
+    thinking_signature: str | None = None
+    redacted_thinking: str | None = None
+    container: Container | None = None
 
     def has_content(self) -> bool:
-        """Check if there is any content."""
+        """Check if there is any text content."""
         return any(detail.length > 0 for detail in self.citation_details)
+
+    def __bool__(self) -> bool:
+        """Check if there is any thinking content or citations."""
+        return (
+            self.thinking_signature is not None
+            or self.redacted_thinking is not None
+            or self.container is not None
+            or self.has_citations()
+        )
 
     def has_citations(self) -> bool:
         """Check if there are any citations."""
@@ -170,32 +227,74 @@ class ContentDetails:
         ]
 
 
-def _convert_content(
+def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
-) -> list[MessageParam]:
+) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
+    container_id: str | None = None
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
+            external_tool = True
             if content.tool_name == "web_search":
-                tool_result_block: ContentBlockParam = WebSearchToolResultBlockParam(
-                    type="web_search_tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=content.tool_result["content"]
-                    if "content" in content.tool_result
-                    else WebSearchToolRequestErrorParam(
-                        type="web_search_tool_result_error",
-                        error_code=content.tool_result.get("error_code", "unavailable"),  # type: ignore[typeddict-item]
+                tool_result_block: ContentBlockParam = {
+                    "type": "web_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        WebSearchToolResultBlockParamContentParam,
+                        content.tool_result["content"]
+                        if "content" in content.tool_result
+                        else {
+                            "type": "web_search_tool_result_error",
+                            "error_code": content.tool_result.get(
+                                "error_code", "unavailable"
+                            ),
+                        },
                     ),
-                )
-                external_tool = True
+                }
+            elif content.tool_name == "code_execution":
+                tool_result_block = {
+                    "type": "code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        CodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "bash_code_execution":
+                tool_result_block = {
+                    "type": "bash_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        BashCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "text_editor_code_execution":
+                tool_result_block = {
+                    "type": "text_editor_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        TextEditorCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "tool_search":
+                tool_result_block = {
+                    "type": "tool_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        ToolSearchToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
             else:
-                tool_result_block = ToolResultBlockParam(
-                    type="tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=json_dumps(content.tool_result),
-                )
+                tool_result_block = {
+                    "type": "tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": json_dumps(content.tool_result),
+                }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
                 "assistant" if external_tool else "user"
@@ -240,29 +339,33 @@ def _convert_content(
                         content=[],
                     )
                 )
+            elif isinstance(messages[-1]["content"], str):
+                messages[-1]["content"] = [
+                    TextBlockParam(type="text", text=messages[-1]["content"]),
+                ]
 
-            if isinstance(content.native, ThinkingBlock):
-                messages[-1]["content"].append(  # type: ignore[union-attr]
-                    ThinkingBlockParam(
-                        type="thinking",
-                        thinking=content.thinking_content or "",
-                        signature=content.native.signature,
+            if isinstance(content.native, ContentDetails):
+                if content.native.thinking_signature:
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        ThinkingBlockParam(
+                            type="thinking",
+                            thinking=content.thinking_content or "",
+                            signature=content.native.thinking_signature,
+                        )
                     )
-                )
-            elif isinstance(content.native, RedactedThinkingBlock):
-                redacted_thinking_block = RedactedThinkingBlockParam(
-                    type="redacted_thinking",
-                    data=content.native.data,
-                )
-                if isinstance(messages[-1]["content"], str):
-                    messages[-1]["content"] = [
-                        TextBlockParam(type="text", text=messages[-1]["content"]),
-                        redacted_thinking_block,
-                    ]
-                else:
-                    messages[-1]["content"].append(  # type: ignore[attr-defined]
-                        redacted_thinking_block
+                if content.native.redacted_thinking:
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        RedactedThinkingBlockParam(
+                            type="redacted_thinking",
+                            data=content.native.redacted_thinking,
+                        )
                     )
+                if (
+                    content.native.container is not None
+                    and content.native.container.expires_at > datetime.now(UTC)
+                ):
+                    container_id = content.native.container.id
+
             if content.content:
                 current_index = 0
                 for detail in (
@@ -303,16 +406,34 @@ def _convert_content(
                             text=content.content[current_index:],
                         )
                     )
+
             if content.tool_calls:
                 messages[-1]["content"].extend(  # type: ignore[union-attr]
                     [
                         ServerToolUseBlockParam(
                             type="server_tool_use",
                             id=tool_call.id,
-                            name="web_search",
+                            name=cast(
+                                Literal[
+                                    "web_search",
+                                    "code_execution",
+                                    "bash_code_execution",
+                                    "text_editor_code_execution",
+                                    "tool_search_tool_bm25",
+                                ],
+                                tool_call.tool_name,
+                            ),
                             input=tool_call.tool_args,
                         )
-                        if tool_call.external and tool_call.tool_name == "web_search"
+                        if tool_call.external
+                        and tool_call.tool_name
+                        in [
+                            "web_search",
+                            "code_execution",
+                            "bash_code_execution",
+                            "text_editor_code_execution",
+                            "tool_search_tool_bm25",
+                        ]
                         else ToolUseBlockParam(
                             type="tool_use",
                             id=tool_call.id,
@@ -322,20 +443,26 @@ def _convert_content(
                         for tool_call in content.tool_calls
                     ]
                 )
+
+            if (
+                isinstance(messages[-1]["content"], list)
+                and len(messages[-1]["content"]) == 1
+                and messages[-1]["content"][0]["type"] == "text"
+            ):
+                # If there is only one text block, simplify the content to a string
+                messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
-            # Note: We don't pass SystemContent here as its passed to the API as the prompt
-            raise TypeError(f"Unexpected content type: {type(content)}")
+            # Note: We don't pass SystemContent here as it's passed to the API as the prompt
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_chat_log_content",
+                translation_placeholders={"type": type(content).__name__},
+            )
 
-    return messages
+    return messages, container_id
 
 
-async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
-    chat_log: conversation.ChatLog,
-    stream: AsyncStream[MessageStreamEvent],
-    output_tool: str | None = None,
-) -> AsyncGenerator[
-    conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
-]:
+class AnthropicDeltaStream:
     """Transform the response stream into HA format.
 
     A typical stream of responses might look something like the following:
@@ -365,211 +492,379 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
     Each message could contain multiple blocks of the same type.
     """
-    if stream is None:
-        raise TypeError("Expected a stream of messages")
 
-    current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
-    current_tool_args: str
-    content_details = ContentDetails()
-    content_details.add_citation_detail()
-    input_usage: Usage | None = None
-    has_native = False
-    first_block: bool
+    def __init__(
+        self,
+        chat_log: conversation.ChatLog,
+        stream: AsyncStream[MessageStreamEvent],
+        output_tool: str | None = None,
+    ) -> None:
+        """Initialize the delta stream."""
+        self._chat_log: conversation.ChatLog = chat_log
+        self._stream: AsyncStream[MessageStreamEvent] = stream
+        self._output_tool: str | None = output_tool
 
-    async for response in stream:
-        LOGGER.debug("Received response: %s", response)
+        self._buffer: deque[
+            conversation.AssistantContentDeltaDict
+            | conversation.ToolResultContentDeltaDict
+        ] = deque()
+        self._stream_iterator: AsyncIterator[MessageStreamEvent] | None = None
 
-        if isinstance(response, RawMessageStartEvent):
-            if response.message.role != "assistant":
-                raise ValueError("Unexpected message role")
-            input_usage = response.message.usage
-            first_block = True
-        elif isinstance(response, RawContentBlockStartEvent):
-            if isinstance(response.content_block, ToolUseBlock):
-                current_tool_block = ToolUseBlockParam(
-                    type="tool_use",
-                    id=response.content_block.id,
-                    name=response.content_block.name,
-                    input={},
-                )
-                current_tool_args = ""
-                if response.content_block.name == output_tool:
-                    if first_block or content_details.has_content():
-                        if content_details.has_citations():
-                            content_details.delete_empty()
-                            yield {"native": content_details}
-                        content_details = ContentDetails()
-                        content_details.add_citation_detail()
-                        yield {"role": "assistant"}
-                        has_native = False
-                        first_block = False
-            elif isinstance(response.content_block, TextBlock):
-                if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
-                    first_block
-                    or (
-                        not content_details.has_citations()
-                        and response.content_block.citations is None
-                        and content_details.has_content()
-                    )
-                ):
-                    if content_details.has_citations():
-                        content_details.delete_empty()
-                        yield {"native": content_details}
-                    content_details = ContentDetails()
-                    yield {"role": "assistant"}
-                    has_native = False
-                    first_block = False
-                content_details.add_citation_detail()
-                if response.content_block.text:
-                    content_details.citation_details[-1].length += len(
-                        response.content_block.text
-                    )
-                    yield {"content": response.content_block.text}
-            elif isinstance(response.content_block, ThinkingBlock):
-                if first_block or has_native:
-                    if content_details.has_citations():
-                        content_details.delete_empty()
-                        yield {"native": content_details}
-                    content_details = ContentDetails()
-                    content_details.add_citation_detail()
-                    yield {"role": "assistant"}
-                    has_native = False
-                    first_block = False
-            elif isinstance(response.content_block, RedactedThinkingBlock):
-                LOGGER.debug(
-                    "Some of Claude’s internal reasoning has been automatically "
-                    "encrypted for safety reasons. This doesn’t affect the quality of "
-                    "responses"
-                )
-                if has_native:
-                    if content_details.has_citations():
-                        content_details.delete_empty()
-                        yield {"native": content_details}
-                    content_details = ContentDetails()
-                    content_details.add_citation_detail()
-                    yield {"role": "assistant"}
-                    has_native = False
-                    first_block = False
-                yield {"native": response.content_block}
-                has_native = True
-            elif isinstance(response.content_block, ServerToolUseBlock):
-                current_tool_block = ServerToolUseBlockParam(
-                    type="server_tool_use",
-                    id=response.content_block.id,
-                    name=response.content_block.name,
-                    input={},
-                )
-                current_tool_args = ""
-            elif isinstance(response.content_block, WebSearchToolResultBlock):
-                if content_details.has_citations():
-                    content_details.delete_empty()
-                    yield {"native": content_details}
-                content_details = ContentDetails()
-                content_details.add_citation_detail()
-                yield {
-                    "role": "tool_result",
-                    "tool_call_id": response.content_block.tool_use_id,
-                    "tool_name": "web_search",
-                    "tool_result": {
-                        "type": "web_search_tool_result_error",
-                        "error_code": response.content_block.content.error_code,
-                    }
-                    if isinstance(
-                        response.content_block.content, WebSearchToolResultError
-                    )
-                    else {
-                        "content": [
-                            {
-                                "type": "web_search_result",
-                                "encrypted_content": block.encrypted_content,
-                                "page_age": block.page_age,
-                                "title": block.title,
-                                "url": block.url,
-                            }
-                            for block in response.content_block.content
-                        ]
-                    },
+        self._current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = (
+            None
+        )
+        self._current_tool_args: str = ""
+        self._content_details = ContentDetails()
+        self._content_details.add_citation_detail()
+        self._input_usage: Usage | None = None
+        self._first_block: bool = True
+
+    def __aiter__(
+        self,
+    ) -> AsyncIterator[
+        conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+    ]:
+        """Initialize the stream and return the async iterator."""
+        if self._stream is None or not hasattr(self._stream, "__aiter__"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unexpected_stream_object"
+            )
+        if self._stream_iterator is None:
+            self._stream_iterator = self._stream.__aiter__()
+        return self
+
+    async def __anext__(
+        self,
+    ) -> (
+        conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+    ):
+        """Get the next item from the stream."""
+        while True:
+            if self._buffer:
+                return self._buffer.popleft()
+
+            response = await self._stream_iterator.__anext__()  # type: ignore[union-attr]
+
+            LOGGER.debug("Received response: %s", response)
+            self.on_message_stream_event(response)
+
+    def on_message_stream_event(self, event: MessageStreamEvent) -> None:
+        """Handle MessageStreamEvent."""
+        if isinstance(event, RawMessageStartEvent):
+            self.on_message_start_event(event.message)
+            return
+        if isinstance(event, RawContentBlockStartEvent):
+            self.on_content_block_start_event(event.content_block, event.index)
+            return
+        if isinstance(event, RawContentBlockDeltaEvent):
+            self.on_content_block_delta_event(event.delta)
+            return
+        if isinstance(event, RawContentBlockStopEvent):
+            self.on_content_block_stop_event(event.index)
+            return
+        if isinstance(event, RawMessageDeltaEvent):
+            self.on_message_delta_event(event.delta, event.usage)
+            return
+        if isinstance(event, RawMessageStopEvent):
+            self.on_message_stop_event()
+            return
+        LOGGER.debug("Unhandled event type: %s", event.type)  # type: ignore[unreachable]  # pragma: no cover - All types are handled but we want to verify that
+
+    def on_message_start_event(self, message: Message) -> None:
+        """Handle RawMessageStartEvent."""
+        self._input_usage = message.usage
+        self._first_block = True
+
+    def on_content_block_start_event(
+        self, content_block: ContentBlock, index: int
+    ) -> None:
+        """Handle RawContentBlockStartEvent."""
+        if isinstance(content_block, ToolUseBlock):
+            self.on_tool_use_block(
+                content_block.id,
+                content_block.input,
+                content_block.name,
+                content_block.caller,
+            )
+            return
+        if isinstance(content_block, TextBlock):
+            self.on_text_block(content_block.text, content_block.citations)
+            return
+        if isinstance(content_block, ThinkingBlock):
+            self.on_thinking_block(content_block.thinking, content_block.signature)
+            return
+        if isinstance(content_block, RedactedThinkingBlock):
+            self.on_redacted_thinking_block(content_block.data)
+            return
+        if isinstance(content_block, ServerToolUseBlock):
+            self.on_server_tool_use_block(
+                content_block.id,
+                content_block.name,
+                content_block.input,
+                content_block.caller,
+            )
+            return
+        if isinstance(
+            content_block,
+            (
+                WebSearchToolResultBlock,
+                CodeExecutionToolResultBlock,
+                BashCodeExecutionToolResultBlock,
+                TextEditorCodeExecutionToolResultBlock,
+                ToolSearchToolResultBlock,
+            ),
+        ):
+            self.on_server_tool_result_block(
+                content_block.tool_use_id,
+                content_block.type,
+                content_block.content,
+                content_block.caller if hasattr(content_block, "caller") else None,
+            )
+            return
+        LOGGER.debug("Unhandled content block type: %s", content_block.type)
+
+    def on_tool_use_block(
+        self, id: str, input: dict[str, Any], name: str, caller: Caller | None
+    ) -> None:
+        """Handle ToolUseBlock."""
+        self._current_tool_block = ToolUseBlockParam(
+            type="tool_use",
+            id=id,
+            name=name,
+            input=input,
+        )
+        self._current_tool_args = ""
+        if name == self._output_tool:
+            if self._first_block or self._content_details.has_content():
+                if self._content_details:
+                    self._content_details.delete_empty()
+                    self._buffer.append({"native": self._content_details})
+                self._content_details = ContentDetails()
+                self._content_details.add_citation_detail()
+                self._buffer.append({"role": "assistant"})
+                self._first_block = False
+
+    def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
+        """Handle TextBlock."""
+        if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
+            self._first_block
+            or (
+                not self._content_details.has_citations()
+                and citations is None
+                and self._content_details.has_content()
+            )
+        ):
+            if self._content_details:
+                self._content_details.delete_empty()
+                self._buffer.append({"native": self._content_details})
+            self._content_details = ContentDetails()
+            self._buffer.append({"role": "assistant"})
+            self._first_block = False
+        self._content_details.add_citation_detail()
+        if text:
+            self._content_details.citation_details[-1].length += len(text)
+            self._buffer.append({"content": text})
+
+    def on_thinking_block(self, thinking: str, signature: str) -> None:
+        """Handle ThinkingBlock."""
+        if self._first_block or self._content_details.thinking_signature:
+            if self._content_details:
+                self._content_details.delete_empty()
+                self._buffer.append({"native": self._content_details})
+            self._content_details = ContentDetails()
+            self._content_details.add_citation_detail()
+            self._buffer.append({"role": "assistant"})
+            self._first_block = False
+
+    def on_redacted_thinking_block(self, data: str) -> None:
+        """Handle RedactedThinkingBlock."""
+        LOGGER.debug(
+            "Some of Claude’s internal reasoning has been automatically "
+            "encrypted for safety reasons. This doesn’t affect the quality of "
+            "responses"
+        )
+        if self._first_block or self._content_details.redacted_thinking:
+            if self._content_details:
+                self._content_details.delete_empty()
+                self._buffer.append({"native": self._content_details})
+            self._content_details = ContentDetails()
+            self._content_details.add_citation_detail()
+            self._buffer.append({"role": "assistant"})
+            self._first_block = False
+        self._content_details.redacted_thinking = data
+
+    def on_server_tool_use_block(
+        self,
+        id: str,
+        name: Literal[
+            "web_search",
+            "web_fetch",
+            "code_execution",
+            "bash_code_execution",
+            "text_editor_code_execution",
+            "tool_search_tool_regex",
+            "tool_search_tool_bm25",
+        ],
+        input: dict[str, Any],
+        caller: Caller | None,
+    ) -> None:
+        """Handle ServerToolUseBlock."""
+        self._current_tool_block = ServerToolUseBlockParam(
+            type="server_tool_use",
+            id=id,
+            name=name,
+            input=input,
+        )
+        self._current_tool_args = ""
+
+    def on_server_tool_result_block(
+        self,
+        tool_use_id: str,
+        tool_name: Literal[
+            "web_search_tool_result",
+            "code_execution_tool_result",
+            "bash_code_execution_tool_result",
+            "text_editor_code_execution_tool_result",
+            "tool_search_tool_result",
+        ],
+        content: WebSearchToolResultBlockContent
+        | CodeExecutionToolResultBlockContent
+        | BashCodeExecutionToolResultBlockContent
+        | TextEditorCodeExecutionToolResultBlockContent
+        | ToolSearchToolResultBlockContent,
+        caller: Caller | None,
+    ) -> None:
+        """Handle various server tool result blocks."""
+        if self._content_details:
+            self._content_details.delete_empty()
+            self._buffer.append({"native": self._content_details})
+        self._content_details = ContentDetails()
+        self._content_details.add_citation_detail()
+        self._buffer.append(
+            {
+                "role": "tool_result",
+                "tool_call_id": tool_use_id,
+                "tool_name": tool_name.removesuffix("_tool_result"),
+                "tool_result": {
+                    "content": cast(JsonArrayType, [x.to_dict() for x in content])
                 }
-                first_block = True
-        elif isinstance(response, RawContentBlockDeltaEvent):
-            if isinstance(response.delta, InputJSONDelta):
-                if (
-                    current_tool_block is not None
-                    and current_tool_block["name"] == output_tool
-                ):
-                    content_details.citation_details[-1].length += len(
-                        response.delta.partial_json
-                    )
-                    yield {"content": response.delta.partial_json}
-                else:
-                    current_tool_args += response.delta.partial_json
-            elif isinstance(response.delta, TextDelta):
-                content_details.citation_details[-1].length += len(response.delta.text)
-                yield {"content": response.delta.text}
-            elif isinstance(response.delta, ThinkingDelta):
-                yield {"thinking_content": response.delta.thinking}
-            elif isinstance(response.delta, SignatureDelta):
-                yield {
-                    "native": ThinkingBlock(
-                        type="thinking",
-                        thinking="",
-                        signature=response.delta.signature,
-                    )
-                }
-                has_native = True
-            elif isinstance(response.delta, CitationsDelta):
-                content_details.add_citation(response.delta.citation)
-        elif isinstance(response, RawContentBlockStopEvent):
-            if current_tool_block is not None:
-                if current_tool_block["name"] == output_tool:
-                    current_tool_block = None
-                    continue
-                tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                current_tool_block["input"] = tool_args
-                yield {
+                if isinstance(content, list)
+                else cast(JsonObjectType, content.to_dict()),
+            }
+        )
+        self._first_block = True
+
+    def on_content_block_delta_event(self, delta: RawContentBlockDelta) -> None:
+        """Handle RawContentBlockDeltaEvent."""
+        if isinstance(delta, InputJSONDelta):
+            self.on_input_json_delta(delta.partial_json)
+            return
+        if isinstance(delta, TextDelta):
+            self.on_text_delta(delta.text)
+            return
+        if isinstance(delta, ThinkingDelta):
+            self.on_thinking_delta(delta.thinking)
+            return
+        if isinstance(delta, SignatureDelta):
+            self.on_signature_delta(delta.signature)
+            return
+        if isinstance(delta, CitationsDelta):
+            self.on_citations_delta(delta.citation)
+            return
+        LOGGER.debug("Unhandled content delta type: %s", delta.type)  # type: ignore[unreachable]  # pragma: no cover - All types are handled but we want to verify that
+
+    def on_input_json_delta(self, partial_json: str) -> None:
+        """Handle InputJSONDelta."""
+        if (
+            self._current_tool_block is not None
+            and self._current_tool_block["name"] == self._output_tool
+        ):
+            self._content_details.citation_details[-1].length += len(partial_json)
+            self._buffer.append({"content": partial_json})
+        else:
+            self._current_tool_args += partial_json
+
+    def on_text_delta(self, text: str) -> None:
+        """Handle TextDelta."""
+        if text:
+            self._content_details.citation_details[-1].length += len(text)
+            self._buffer.append({"content": text})
+
+    def on_thinking_delta(self, thinking: str) -> None:
+        """Handle ThinkingDelta."""
+        if thinking:
+            self._buffer.append({"thinking_content": thinking})
+
+    def on_signature_delta(self, signature: str) -> None:
+        """Handle SignatureDelta."""
+        self._content_details.thinking_signature = signature
+
+    def on_citations_delta(self, citation: TextCitation) -> None:
+        """Handle CitationsDelta."""
+        self._content_details.add_citation(citation)
+
+    def on_content_block_stop_event(self, index: int) -> None:
+        """Handle RawContentBlockStopEvent."""
+        if self._current_tool_block is not None:
+            if self._current_tool_block["name"] == self._output_tool:
+                self._current_tool_block = None
+                return
+            tool_args = (
+                json.loads(self._current_tool_args) if self._current_tool_args else {}
+            )
+            self._current_tool_block["input"] |= tool_args
+            self._buffer.append(
+                {
                     "tool_calls": [
                         llm.ToolInput(
-                            id=current_tool_block["id"],
-                            tool_name=current_tool_block["name"],
-                            tool_args=tool_args,
-                            external=current_tool_block["type"] == "server_tool_use",
+                            id=self._current_tool_block["id"],
+                            tool_name=self._current_tool_block["name"],
+                            tool_args=self._current_tool_block["input"],
+                            external=self._current_tool_block["type"]
+                            == "server_tool_use",
                         )
                     ]
                 }
-                current_tool_block = None
-        elif isinstance(response, RawMessageDeltaEvent):
-            if (usage := response.usage) is not None:
-                chat_log.async_trace(_create_token_stats(input_usage, usage))
-            if response.delta.stop_reason == "refusal":
-                raise HomeAssistantError("Potential policy violation detected")
-        elif isinstance(response, RawMessageStopEvent):
-            if content_details.has_citations():
-                content_details.delete_empty()
-                yield {"native": content_details}
-            content_details = ContentDetails()
-            content_details.add_citation_detail()
+            )
+            self._current_tool_block = None
 
+    def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
+        """Handle RawMessageDeltaEvent."""
+        self._chat_log.async_trace(self._create_token_stats(self._input_usage, usage))
+        self._content_details.container = delta.container
+        if delta.stop_reason == "refusal":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_refusal"
+            )
 
-def _create_token_stats(
-    input_usage: Usage | None, response_usage: MessageDeltaUsage
-) -> dict[str, Any]:
-    """Create token stats for conversation agent tracing."""
-    input_tokens = 0
-    cached_input_tokens = 0
-    if input_usage:
-        input_tokens = input_usage.input_tokens
-        cached_input_tokens = input_usage.cache_creation_input_tokens or 0
-    output_tokens = response_usage.output_tokens
-    return {
-        "stats": {
-            "input_tokens": input_tokens,
-            "cached_input_tokens": cached_input_tokens,
-            "output_tokens": output_tokens,
+    def on_message_stop_event(self) -> None:
+        """Handle RawMessageStopEvent."""
+        if self._content_details:
+            self._content_details.delete_empty()
+            self._buffer.append({"native": self._content_details})
+        self._content_details = ContentDetails()
+        self._content_details.add_citation_detail()
+
+    def _create_token_stats(
+        self, input_usage: Usage | None, response_usage: MessageDeltaUsage
+    ) -> dict[str, Any]:
+        """Create token stats for conversation agent tracing."""
+        input_tokens = 0
+        cached_input_tokens = 0
+        if input_usage:
+            input_tokens = input_usage.input_tokens
+            cached_input_tokens = input_usage.cache_creation_input_tokens or 0
+        output_tokens = response_usage.output_tokens
+        return {
+            "stats": {
+                "input_tokens": input_tokens,
+                "cached_input_tokens": cached_input_tokens,
+                "output_tokens": output_tokens,
+            }
         }
-    }
 
 
-class AnthropicBaseLLMEntity(Entity):
+class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     """Anthropic base LLM entity."""
 
     _attr_has_entity_name = True
@@ -577,66 +872,102 @@ class AnthropicBaseLLMEntity(Entity):
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
+        coordinator = entry.runtime_data
+        self.model_info, _ = coordinator.get_model_info(
+            subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+        )
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Anthropic",
-            model=subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL]),
+            model=self.model_info.display_name,
+            model_id=self.model_info.id,
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _get_model_args(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
-    ) -> None:
-        """Generate an answer for the chat log."""
-        options = self.subentry.data
+    ) -> tuple[MessageCreateParamsStreaming, str | None]:
+        """Get the model arguments."""
+        options: dict[str, Any] = DEFAULT | self.subentry.data
+
+        preloaded_tools = [
+            "HassTurnOn",
+            "HassTurnOff",
+            "GetLiveContext",
+            "code_execution",
+            "web_search",
+        ]
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
-            raise TypeError("First message must be a system message")
-
-        # System prompt with caching enabled
-        system_prompt: list[TextBlockParam] = [
-            TextBlockParam(
-                type="text",
-                text=system.content,
-                cache_control={"type": "ephemeral"},
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
-        ]
 
-        messages = _convert_content(chat_log.content[1:])
+        messages, container_id = _convert_content(chat_log.content[1:])
 
-        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+        model = options[CONF_CHAT_MODEL]
 
         model_args = MessageCreateParamsStreaming(
             model=model,
             messages=messages,
-            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system_prompt,
+            max_tokens=options[CONF_MAX_TOKENS],
+            system=system.content,
             stream=True,
+            container=container_id,
         )
 
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-        )
+        if options[CONF_PROMPT_CACHING] == PromptCaching.PROMPT:
+            model_args["system"] = [
+                {
+                    "type": "text",
+                    "text": system.content,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+        elif options[CONF_PROMPT_CACHING] == PromptCaching.AUTOMATIC:
+            model_args["cache_control"] = {"type": "ephemeral"}
+
         if (
-            not model.startswith(tuple(NON_THINKING_MODELS))
-            and thinking_budget >= MIN_THINKING_BUDGET
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.types.adaptive.supported
         ):
-            model_args["thinking"] = ThinkingConfigEnabledParam(
-                type="enabled", budget_tokens=thinking_budget
-            )
+            thinking_effort = options[CONF_THINKING_EFFORT]
+            if thinking_effort != "none":
+                model_args["thinking"] = ThinkingConfigAdaptiveParam(
+                    type="adaptive", display="summarized"
+                )
+                model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
+            else:
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
         else:
-            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
-            )
+            thinking_budget = options[CONF_THINKING_BUDGET]
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.thinking.types.enabled.supported
+                and thinking_budget >= MIN_THINKING_BUDGET
+            ):
+                model_args["thinking"] = ThinkingConfigEnabledParam(
+                    type="enabled", display="summarized", budget_tokens=thinking_budget
+                )
+            else:
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.effort.supported
+            ):
+                model_args["output_config"] = OutputConfigParam(
+                    effort=options[CONF_THINKING_EFFORT]
+                )
 
         tools: list[ToolUnionParam] = []
         if chat_log.llm_api:
@@ -645,13 +976,40 @@ class AnthropicBaseLLMEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20250305Param(
-                name="web_search",
-                type="web_search_20250305",
-                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
-            )
-            if options.get(CONF_WEB_SEARCH_USER_LOCATION):
+        if options[CONF_CODE_EXECUTION]:
+            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options[CONF_WEB_SEARCH]
+            ):
+                tools.append(
+                    CodeExecutionTool20250825Param(
+                        name="code_execution",
+                        type="code_execution_20250825",
+                    ),
+                )
+
+        if options[CONF_WEB_SEARCH]:
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options[CONF_CODE_EXECUTION]
+            ):
+                web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
+                    WebSearchTool20250305Param(
+                        name="web_search",
+                        type="web_search_20250305",
+                        max_uses=options[CONF_WEB_SEARCH_MAX_USES],
+                    )
+                )
+            else:
+                web_search = WebSearchTool20260209Param(
+                    name="web_search",
+                    type="web_search_20260209",
+                    max_uses=options[CONF_WEB_SEARCH_MAX_USES],
+                )
+            if options[CONF_WEB_SEARCH_USER_LOCATION]:
                 web_search["user_location"] = {
                     "type": "approximate",
                     "city": options.get(CONF_WEB_SEARCH_CITY, ""),
@@ -667,7 +1025,7 @@ class AnthropicBaseLLMEntity(Entity):
             last_message = messages[-1]
             if last_message["role"] != "user":
                 raise HomeAssistantError(
-                    "Last message must be a user message to add attachments"
+                    translation_domain=DOMAIN, translation_key="user_message_not_found"
                 )
             if isinstance(last_message["content"], str):
                 last_message["content"] = [
@@ -675,13 +1033,35 @@ class AnthropicBaseLLMEntity(Entity):
                 ]
             last_message["content"].extend(  # type: ignore[union-attr]
                 await async_prepare_files_for_prompt(
-                    self.hass, [(a.path, a.mime_type) for a in last_content.attachments]
+                    self.hass,
+                    self.model_info,
+                    [(a.path, a.mime_type) for a in last_content.attachments],
                 )
             )
 
         if structure and structure_name:
-            structure_name = slugify(structure_name)
-            if model_args["thinking"]["type"] == "disabled":
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.structured_outputs.supported
+            ):
+                # Native structured output for those models who support it.
+                structure_name = None
+                model_args.setdefault("output_config", OutputConfigParam())[
+                    "format"
+                ] = JSONOutputFormatParam(
+                    type="json_schema",
+                    schema={
+                        **convert(
+                            structure,
+                            custom_serializer=chat_log.llm_api.custom_serializer
+                            if chat_log.llm_api
+                            else llm.selector_serializer,
+                        ),
+                        "additionalProperties": False,
+                    },
+                )
+            elif model_args["thinking"]["type"] == "disabled":
+                structure_name = slugify(structure_name)
                 if not tools:
                     # Simplest case: no tools and no extended thinking
                     # Add a tool and force its use
@@ -701,6 +1081,7 @@ class AnthropicBaseLLMEntity(Entity):
                 # force tool use or disable text responses, so we add a hint to the
                 # system prompt instead. With extended thinking, the model should be
                 # smart enough to use the tool.
+                structure_name = slugify(structure_name)
                 model_args["tool_choice"] = ToolChoiceAutoParam(
                     type="auto",
                 )
@@ -708,59 +1089,112 @@ class AnthropicBaseLLMEntity(Entity):
                 model_args["system"].append(  # type: ignore[union-attr]
                     TextBlockParam(
                         type="text",
-                        text=f"Claude MUST use the '{structure_name}' tool to provide the final answer instead of plain text.",
+                        text=f"Claude MUST use the '{structure_name}' tool to provide "
+                        "the final answer instead of plain text.",
                     )
                 )
 
-            tools.append(
-                ToolParam(
-                    name=structure_name,
-                    description="Use this tool to reply to the user",
-                    input_schema=convert(
-                        structure,
-                        custom_serializer=chat_log.llm_api.custom_serializer
-                        if chat_log.llm_api
-                        else llm.selector_serializer,
-                    ),
+            if structure_name:
+                tools.append(
+                    ToolParam(
+                        name=structure_name,
+                        description="Use this tool to reply to the user",
+                        input_schema=convert(
+                            structure,
+                            custom_serializer=chat_log.llm_api.custom_serializer
+                            if chat_log.llm_api
+                            else llm.selector_serializer,
+                        ),
+                    )
                 )
-            )
+                preloaded_tools.append(structure_name)
 
         if tools:
+            if options[CONF_TOOL_SEARCH] and len(tools) > len(preloaded_tools) + 1:
+                for tool in tools:
+                    if not tool["name"].endswith(tuple(preloaded_tools)):
+                        tool["defer_loading"] = True
+                tools.append(
+                    ToolSearchToolBm25_20251119Param(
+                        type="tool_search_tool_bm25_20251119",
+                        name="tool_search_tool_bm25",
+                    )
+                )
+
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        return model_args, structure_name
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        model_args, structure_name = await self._get_model_args(
+            chat_log, structure_name, structure
+        )
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
 
-                messages.extend(
-                    _convert_content(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(
-                                    chat_log,
-                                    stream,
-                                    output_tool=structure_name if structure else None,
-                                ),
-                            )
-                        ]
-                    )
+                new_messages, model_args["container"] = _convert_content(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            AnthropicDeltaStream(
+                                chat_log,
+                                stream,
+                                output_tool=structure_name or None,
+                            ),
+                        )
+                    ]
                 )
-            except anthropic.AnthropicError as err:
+                cast(list[MessageParam], model_args["messages"]).extend(new_messages)
+            except anthropic.AuthenticationError as err:
+                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                await coordinator.async_request_refresh()
                 raise HomeAssistantError(
-                    f"Sorry, I had a problem talking to Anthropic: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_authentication_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
+            except anthropic.APIConnectionError as err:
+                LOGGER.info("Connection error while talking to Anthropic: %s", err)
+                coordinator.mark_connection_error()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
+            except anthropic.AnthropicError as err:
+                # Non-connection error, mark connection as healthy
+                coordinator.async_set_updated_data(coordinator.data)
+                LOGGER.error("Error while talking to Anthropic: %s", err)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={
+                        "message": err.message
+                        if isinstance(err, anthropic.APIError)
+                        else str(err)
+                    },
                 ) from err
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(coordinator.data)
                 break
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[tuple[Path, str | None]]
+    hass: HomeAssistant, model_info: ModelInfo, files: list[tuple[Path, str | None]]
 ) -> Iterable[ImageBlockParam | DocumentBlockParam]:
     """Append files to a prompt.
 
@@ -772,15 +1206,36 @@ async def async_prepare_files_for_prompt(
 
         for file_path, mime_type in files:
             if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="wrong_file_path",
+                    translation_placeholders={"file_path": file_path.as_posix()},
+                )
 
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+            if (
+                not mime_type
+                or not mime_type.startswith(("image/", "application/pdf"))
+                or not model_info.capabilities
+                or (
+                    mime_type.startswith("image/")
+                    and not model_info.capabilities.image_input.supported
+                )
+                or (
+                    mime_type.startswith("application/pdf")
+                    and not model_info.capabilities.pdf_input.supported
+                )
+            ):
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the Anthropic API,"
-                    f"`{file_path}` is not an image file or PDF"
+                    translation_domain=DOMAIN,
+                    translation_key="wrong_file_type",
+                    translation_placeholders={
+                        "file_path": file_path.as_posix(),
+                        "mime_type": mime_type or "unknown",
+                        "model": model_info.display_name,
+                    },
                 )
             if mime_type == "image/jpg":
                 mime_type = "image/jpeg"

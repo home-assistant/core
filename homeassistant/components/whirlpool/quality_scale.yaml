@@ -62,7 +62,7 @@ rules:
     comment: The "unknown" state should not be part of the enum for the dispense level sensor.
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: todo
     comment: |

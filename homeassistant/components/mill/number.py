@@ -1,7 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
 
-from __future__ import annotations
-
 from mill import Heater, MillDevice
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
@@ -22,6 +20,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Mill Number."""
     if entry.data.get(CONNECTION_TYPE) == CLOUD:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         mill_data_coordinator: MillDataUpdateCoordinator = hass.data[DOMAIN][CLOUD][
             entry.data[CONF_USERNAME]
         ]

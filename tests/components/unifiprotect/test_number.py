@@ -1,7 +1,5 @@
 """Test the UniFi Protect number platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 

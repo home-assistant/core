@@ -1,0 +1,48 @@
+[
+  {
+    "seriesId": 105,
+    "tvdbId": 123456,
+    "episodeFileId": 0,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "The New Housekeeper",
+    "airDate": "1960-10-03",
+    "airDateUtc": "1960-10-03T00:00:00Z",
+    "overview": "Andy's housekeeper quits, and a new one arrives.",
+    "hasFile": false,
+    "monitored": true,
+    "runtime": 25,
+    "id": 1001
+  },
+  {
+    "seriesId": 105,
+    "tvdbId": 123457,
+    "episodeFileId": 5001,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "The Manhunt",
+    "airDate": "1960-10-10",
+    "airDateUtc": "1960-10-10T00:00:00Z",
+    "overview": "Andy leads a manhunt for an escaped convict.",
+    "hasFile": true,
+    "monitored": true,
+    "runtime": 25,
+    "id": 1002
+  },
+  {
+    "seriesId": 105,
+    "tvdbId": 123458,
+    "episodeFileId": 0,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Opie and the Bully",
+    "airDate": "1961-10-02",
+    "airDateUtc": "1961-10-02T00:00:00Z",
+    "overview": "Opie is being bullied at school.",
+    "hasFile": false,
+    "monitored": true,
+    "runtime": 25,
+    "finaleType": "season",
+    "id": 1003
+  }
+]

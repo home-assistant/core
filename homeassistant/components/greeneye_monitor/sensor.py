@@ -1,7 +1,5 @@
 """Support for the sensors in a GreenEye Monitor."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import greeneye
@@ -55,8 +53,9 @@ async def async_setup_platform(
     def on_new_monitor(monitor: greeneye.monitor.Monitor) -> None:
         monitor_config = next(
             filter(
-                lambda monitor_config: monitor_config[CONF_SERIAL_NUMBER]
-                == monitor.serial_number,
+                lambda monitor_config: (
+                    monitor_config[CONF_SERIAL_NUMBER] == monitor.serial_number
+                ),
                 monitor_configs,
             ),
             None,

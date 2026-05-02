@@ -1,7 +1,5 @@
 """Representation of Z-Wave updates."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
@@ -75,9 +73,10 @@ CONTROLLER_UPDATE_ENTITY_DESCRIPTION = ZWaveUpdateEntityDescription(
 NODE_UPDATE_ENTITY_DESCRIPTION = ZWaveUpdateEntityDescription(
     key="node_firmware_update",
     install_method=(
-        lambda entity,
-        firmware_update_info: entity.driver.controller.async_firmware_update_ota(
-            entity.node, cast(NodeFirmwareUpdateInfo, firmware_update_info)
+        lambda entity, firmware_update_info: (
+            entity.driver.controller.async_firmware_update_ota(
+                entity.node, cast(NodeFirmwareUpdateInfo, firmware_update_info)
+            )
         )
     ),
     progress_method=lambda entity: entity.node.on(

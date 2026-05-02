@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imgw_pib.const import DOMAIN, UPDATE_INTERVAL
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -79,7 +79,7 @@ async def test_remove_entity(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(
-        SENSOR_PLATFORM,
+        SENSOR_DOMAIN,
         DOMAIN,
         "123_flood_alarm_level",
         suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],

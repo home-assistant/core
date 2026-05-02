@@ -1,7 +1,5 @@
 """The Cambridge Audio integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -16,7 +14,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SELECT, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 

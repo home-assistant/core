@@ -1,6 +1,5 @@
 """Support for Netatmo Smart thermostats."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast
@@ -20,7 +19,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -54,7 +52,7 @@ from .const import (
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +118,7 @@ NA_VALVE = DeviceType.NRV
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform."""

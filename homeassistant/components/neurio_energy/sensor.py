@@ -1,7 +1,5 @@
 """Support for monitoring a Neurio energy sensor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -139,7 +137,7 @@ class NeurioData:
             sample = self.neurio_client.get_samples_live_last(self.sensor_id)
             self._active_power = sample["consumptionPower"]
             self._active_generation = sample.get("generationPower")
-        except (requests.exceptions.RequestException, ValueError, KeyError):
+        except requests.exceptions.RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update current power usage")
 
     def get_daily_usage(self) -> None:
@@ -155,7 +153,7 @@ class NeurioData:
             history = self.neurio_client.get_samples_stats(
                 self.sensor_id, start_time, "days", end_time
             )
-        except (requests.exceptions.RequestException, ValueError, KeyError):
+        except requests.exceptions.RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update daily power usage")
             return
 

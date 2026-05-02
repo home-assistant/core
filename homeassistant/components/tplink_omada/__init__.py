@@ -1,7 +1,5 @@
 """The TP-Link Omada integration."""
 
-from __future__ import annotations
-
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (

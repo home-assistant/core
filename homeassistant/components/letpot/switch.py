@@ -50,10 +50,12 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
         supported_fn=(
-            lambda coordinator: DeviceFeature.PUMP_AUTO
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.PUMP_AUTO
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
     ),
     LetPotSwitchEntityDescription(

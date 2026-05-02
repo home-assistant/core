@@ -1,7 +1,5 @@
 """Diagnostics support for Shelly."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.bluetooth import async_scanner_by_source
@@ -77,7 +75,7 @@ async def async_get_config_entry_diagnostics(
         }
         if rpc_coordinator.device.initialized:
             device_settings = {
-                k: v for k, v in rpc_coordinator.device.config.items() if k in ["cloud"]
+                k: v for k, v in rpc_coordinator.device.config.items() if k == "cloud"
             }
             if not (ws_config := rpc_coordinator.device.config.get("ws", {})):
                 device_settings["ws_outbound"] = "not supported"

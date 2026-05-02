@@ -1,7 +1,5 @@
 """Support for LinkPlay select."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import logging
@@ -52,9 +50,10 @@ SELECT_TYPES_WIIM: tuple[LinkPlaySelectEntityDescription, ...] = (
         translation_key="audio_output_hardware_mode",
         current_option_fn=_get_current_option,
         set_option_fn=(
-            lambda linkplay_bridge,
-            option: linkplay_bridge.player.set_audio_output_hw_mode(
-                AUDIO_OUTPUT_HW_MODE_MAP_INV[option]
+            lambda linkplay_bridge, option: (
+                linkplay_bridge.player.set_audio_output_hw_mode(
+                    AUDIO_OUTPUT_HW_MODE_MAP_INV[option]
+                )
             )
         ),
         options=list(AUDIO_OUTPUT_HW_MODE_MAP_INV),

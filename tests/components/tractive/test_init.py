@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tractive.const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
@@ -233,7 +233,7 @@ async def test_remove_unsupported_sensor_entity(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(
-        SENSOR_PLATFORM,
+        SENSOR_DOMAIN,
         DOMAIN,
         f"pet_id_123_{sensor}",
         suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],

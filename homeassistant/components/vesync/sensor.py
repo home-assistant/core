@@ -1,7 +1,5 @@
 """Support for voltage, power & energy sensors for VeSync outlets."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -167,8 +165,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.temperature,
-        exists_fn=lambda device: is_humidifier(device)
-        and device.state.temperature is not None,
+        exists_fn=lambda device: (
+            is_humidifier(device) and device.state.temperature is not None
+        ),
     ),
     VeSyncSensorEntityDescription(
         key="cook_status",

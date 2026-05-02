@@ -1,7 +1,5 @@
 """Sensor platform of the Pterodactyl integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -136,9 +134,11 @@ SENSOR_DESCRIPTIONS = [
         key=KEY_UPTIME,
         translation_key=KEY_UPTIME,
         value_fn=(
-            lambda data: dt_util.utcnow() - timedelta(milliseconds=data.uptime)
-            if data.uptime > 0
-            else None
+            lambda data: (
+                dt_util.utcnow() - timedelta(milliseconds=data.uptime)
+                if data.uptime > 0
+                else None
+            )
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),

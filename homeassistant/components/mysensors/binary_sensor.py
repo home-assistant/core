@@ -1,7 +1,5 @@
 """Support for MySensors binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -26,8 +24,8 @@ from .entity import MySensorsChildEntity
 class MySensorsBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a MySensors binary sensor entity."""
 
-    is_on: Callable[[int, dict[int, str]], bool] = (
-        lambda value_type, values: values[value_type] == "1"
+    is_on: Callable[[int, dict[int, str]], bool] = lambda value_type, values: (
+        values[value_type] == "1"
     )
 
 

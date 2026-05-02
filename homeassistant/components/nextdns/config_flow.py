@@ -1,7 +1,5 @@
 """Adds config flow for NextDNS."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -49,7 +47,7 @@ async def async_validate_new_api_key(
         await async_init_nextdns(hass, user_input[CONF_API_KEY], profile_id)
     except InvalidApiKeyError:
         errors["base"] = "invalid_api_key"
-    except (ApiError, ClientConnectorError, RetryError, TimeoutError):
+    except ApiError, ClientConnectorError, RetryError, TimeoutError:
         errors["base"] = "cannot_connect"
     except ProfileNotAvailable:
         errors["base"] = "profile_not_available"
@@ -82,7 +80,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.nextdns = await async_init_nextdns(self.hass, self.api_key)
             except InvalidApiKeyError:
                 errors["base"] = "invalid_api_key"
-            except (ApiError, ClientConnectorError, RetryError, TimeoutError):
+            except ApiError, ClientConnectorError, RetryError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

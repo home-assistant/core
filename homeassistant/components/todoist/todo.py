@@ -12,23 +12,21 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import TodoistCoordinator
+from .coordinator import TodoistConfigEntry, TodoistCoordinator
 from .util import parse_due_date
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TodoistConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Todoist todo platform config entry."""
-    coordinator: TodoistCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     projects = await coordinator.async_get_projects()
     async_add_entities(
         TodoistTodoListEntity(coordinator, entry.entry_id, project.id, project.name)
@@ -45,9 +43,9 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
     }
     if due := item.due:
         if isinstance(due, datetime.datetime):
-            item_data["due_datetime"] = due.isoformat()
+            item_data["due_datetime"] = due
         else:
-            item_data["due_date"] = due.isoformat()
+            item_data["due_date"] = due
         # In order to not lose any recurrence metadata for the task, we need to
         # ensure that we send the `due_string` param if the task has it set.
         # NOTE: It's ok to send stale data for non-recurring tasks. Any provided

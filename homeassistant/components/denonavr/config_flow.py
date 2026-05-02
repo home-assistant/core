@@ -1,7 +1,5 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -199,7 +197,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             success = await connect_denonavr.async_connect_receiver()
-        except (AvrNetworkError, AvrTimoutError):
+        except AvrNetworkError, AvrTimoutError:
             success = False
         if not success:
             return self.async_abort(reason="cannot_connect")

@@ -1,7 +1,5 @@
 """Adds config flow for Brother Printer."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from brother import Brother, SnmpError, UnsupportedModelError
@@ -127,7 +125,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 model, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except (ConnectionError, TimeoutError):
+            except ConnectionError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
@@ -163,7 +161,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.brother.async_update()
         except UnsupportedModelError:
             return self.async_abort(reason="unsupported_model")
-        except (ConnectionError, SnmpError, TimeoutError):
+        except ConnectionError, SnmpError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
@@ -211,7 +209,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input, entry.unique_id)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except (ConnectionError, TimeoutError):
+            except ConnectionError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"

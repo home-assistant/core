@@ -6,8 +6,6 @@ the APIs are used to add one or more client credentials. Integrations may also
 provide credentials from yaml for backwards compatibility.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Any, Protocol
@@ -155,7 +153,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_COMPONENT] = storage_collection
 
     collection.DictStorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection,
+        DOMAIN,
+        DOMAIN,
+        CREATE_FIELDS,
+        UPDATE_FIELDS,
+        admin_only=True,
     ).async_setup(hass)
 
     websocket_api.async_register_command(hass, handle_integration_list)
@@ -181,9 +184,9 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
-        CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
+        CONF_AUTH_DOMAIN: auth_domain or domain,
     }
-    item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
+    item[CONF_NAME] = credential.name or DEFAULT_IMPORT_NAME
     await hass.data[DATA_COMPONENT].async_import_item(item)
 
 
@@ -341,6 +344,7 @@ async def handle_integration_list(
         vol.Required("config_entry_id"): str,
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_config_entry(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

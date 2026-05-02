@@ -1,7 +1,5 @@
 """Support for Peblar selects."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -62,7 +60,7 @@ DESCRIPTIONS = [
         key="charge",
         translation_key="charge",
         entity_category=EntityCategory.CONFIG,
-        is_on_fn=lambda x: (x.ev.charge_current_limit >= 6000),
+        is_on_fn=lambda x: x.ev.charge_current_limit >= 6000,
         set_fn=_async_peblar_charge,
     ),
 ]

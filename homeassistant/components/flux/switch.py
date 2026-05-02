@@ -3,8 +3,6 @@
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any
@@ -223,7 +221,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
@@ -320,7 +318,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 temp = self._sunset_colortemp + temp_offset
         rgb = color_temperature_to_rgb(temp)
         x_val, y_val, b_val = color_RGB_to_xy_brightness(*rgb)
-        brightness = self._brightness if self._brightness else b_val
+        brightness = self._brightness or b_val
         if self._disable_brightness_adjust:
             brightness = None
         if self._mode == MODE_XY:

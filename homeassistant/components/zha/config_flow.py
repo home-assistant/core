@@ -1,7 +1,5 @@
 """Config flow for ZHA."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 import collections
@@ -9,7 +7,6 @@ from contextlib import suppress
 from enum import StrEnum
 import json
 import logging
-import os
 from typing import Any
 
 import voluptuous as vol
@@ -20,13 +17,9 @@ from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetwork
 
 from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     ZigbeeFlowStrategy,
 )
-from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
-from homeassistant.components.usb import USBDevice, scan_serial_ports
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
@@ -42,8 +35,12 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.hassio import is_hassio
-from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
+from homeassistant.helpers.selector import (
+    FileSelector,
+    FileSelectorConfig,
+    SerialPortSelector,
+    SerialPortSelectorConfig,
+)
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
@@ -60,7 +57,6 @@ from .radio_manager import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MANUAL_PATH = "Enter Manually"
 DECONZ_DOMAIN = "deconz"
 
 # The ZHA config flow takes different branches depending on if you are migrating to a
@@ -128,64 +124,12 @@ def _format_backup_choice(
     return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
-async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
-    """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports: list[USBDevice] = []
-    ports.extend(await hass.async_add_executor_job(scan_serial_ports))
-
-    # Add useful info to the Yellow's serial port selection screen
-    try:
-        yellow_hardware.async_info(hass)
-    except HomeAssistantError:
-        pass
-    else:
-        # PySerial does not properly handle the Yellow's serial port with the CM5
-        # so we manually include it
-        port = USBDevice(
-            device="/dev/ttyAMA1",
-            vid="ffff",  # This is technically not a USB device
-            pid="ffff",
-            serial_number=None,
-            manufacturer="Nabu Casa",
-            description="Yellow Zigbee module",
-        )
-
-        ports = [p for p in ports if not p.device.startswith("/dev/ttyAMA")]
-        ports.insert(0, port)
-
-    if is_hassio(hass):
-        # Present the multi-PAN addon as a setup option, if it's available
-        multipan_manager = (
-            await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(hass)
-        )
-
-        try:
-            addon_info = await multipan_manager.async_get_addon_info()
-        except (AddonError, KeyError):
-            addon_info = None
-
-        if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-            addon_port = USBDevice(
-                device=silabs_multiprotocol_addon.get_zigbee_socket(),
-                vid="ffff",  # This is technically not a USB device
-                pid="ffff",
-                serial_number=None,
-                manufacturer="Nabu Casa",
-                description="Silicon Labs Multiprotocol add-on",
-            )
-
-            ports.append(addon_port)
-
-    return ports
-
-
 class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
     _flow_strategy: ZigbeeFlowStrategy | None = None
     _overwrite_ieee_during_restore: bool = False
     _hass: HomeAssistant
-    _title: str
 
     def __init__(self) -> None:
         """Initialize flow instance."""
@@ -243,33 +187,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a serial port."""
-        ports = await list_serial_ports(self.hass)
-
-        # The full `/dev/serial/by-id/` path is too verbose to show
-        resolved_paths = {
-            p.device: await self.hass.async_add_executor_job(os.path.realpath, p.device)
-            for p in ports
-        }
-
-        list_of_ports = [
-            f"{resolved_paths[p.device]} - {p.description}{', s/n: ' + p.serial_number if p.serial_number else ''}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
-        ]
-
-        if not list_of_ports:
-            return await self.async_step_manual_pick_radio_type()
-
-        list_of_ports.append(CONF_MANUAL_PATH)
-
         if user_input is not None:
-            user_selection = user_input[CONF_DEVICE_PATH]
-
-            if user_selection == CONF_MANUAL_PATH:
-                return await self.async_step_manual_pick_radio_type()
-
-            port = ports[list_of_ports.index(user_selection)]
-            self._radio_mgr.device_path = port.device
+            device_path = user_input[CONF_DEVICE_PATH]
+            self._radio_mgr.device_path = device_path
 
             probe_result = await self._radio_mgr.detect_radio_type()
             if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
@@ -278,34 +198,25 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                     description_placeholders={"repair_url": REPAIR_MY_URL},
                 )
             if probe_result == ProbeResult.PROBING_FAILED:
-                # Did not autodetect anything, proceed to manual selection
+                # Did not autodetect anything, proceed to manual radio type
                 return await self.async_step_manual_pick_radio_type()
-
-            self._title = (
-                f"{port.description}{', s/n: ' + port.serial_number if port.serial_number else ''}"
-                f" - {port.manufacturer}"
-                if port.manufacturer
-                else ""
-            )
 
             return await self.async_step_verify_radio()
 
-        # Pre-select the currently configured port
-        default_port: vol.Undefined | str = vol.UNDEFINED
-
-        if self._radio_mgr.device_path is not None:
-            for description, port in zip(list_of_ports, ports, strict=False):
-                if port.device == self._radio_mgr.device_path:
-                    default_port = description
-                    break
-            else:
-                default_port = CONF_MANUAL_PATH
-
+        default_path = self._radio_mgr.device_path or vol.UNDEFINED
         schema = vol.Schema(
             {
-                vol.Required(CONF_DEVICE_PATH, default=default_port): vol.In(
-                    list_of_ports
-                )
+                vol.Required(
+                    CONF_DEVICE_PATH, default=default_path
+                ): SerialPortSelector(
+                    SerialPortSelectorConfig(
+                        extra_recommended_domains=[
+                            "homeassistant_yellow",
+                            "homeassistant_sky_connect",
+                            "homeassistant_connect_zbt2",
+                        ]
+                    )
+                ),
             }
         )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
@@ -320,7 +231,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             )
             return await self.async_step_manual_port_config()
 
-        # Pre-select the current radio type
+        # Preselect the current radio type
         default: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.radio_type is not None:
@@ -343,7 +254,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         errors = {}
 
         if user_input is not None:
-            self._title = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_path = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_settings = DEVICE_SCHEMA(
                 {
@@ -953,7 +863,11 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={CONF_NAME: self._title},
+            description_placeholders={
+                CONF_NAME: self.context.get("title_placeholders", {}).get(
+                    CONF_NAME, self._radio_mgr.device_path or ""
+                )
+            },
         )
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
@@ -979,15 +893,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
 
         self._radio_mgr.device_path = dev_path
-        self._title = description or usb.human_readable_device_name(
-            dev_path,
-            serial_number,
-            manufacturer,
-            description,
-            vid,
-            pid,
-        )
-        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        self.context["title_placeholders"] = {
+            CONF_NAME: description
+            or usb.human_readable_device_name(
+                dev_path,
+                serial_number,
+                manufacturer,
+                description,
+                vid,
+                pid,
+            )
+        }
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
@@ -1046,7 +962,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         )
 
         self.context["title_placeholders"] = {CONF_NAME: title}
-        self._title = title
         self._radio_mgr.device_path = device_path
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_settings = DEVICE_SCHEMA(
@@ -1079,7 +994,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             device_path=device_path,
         )
 
-        self._title = name
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
@@ -1100,7 +1014,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         if len(zha_config_entries) == 1:
             return self.async_update_reload_and_abort(
                 entry=zha_config_entries[0],
-                title=self._title,
                 data=data,
                 reload_even_if_entry_is_unchanged=True,
                 reason="reconfigure_successful",
@@ -1115,10 +1028,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             )
             await self.async_set_unique_id(unique_id)
 
-            return self.async_create_entry(
-                title=self._title,
-                data=data,
-            )
+            return self.async_create_entry(title="", data=data)
         # This should never be reached
         return self.async_abort(reason="single_instance_allowed")
 
@@ -1134,7 +1044,6 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         self._radio_mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
         self._radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
         self._radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
-        self._title = config_entry.title
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

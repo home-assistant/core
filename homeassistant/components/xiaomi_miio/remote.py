@@ -1,7 +1,5 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -211,7 +209,7 @@ class XiaomiMiioRemote(RemoteEntity):
         return self._timeout
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return False if device is unreachable, else True."""
         try:
             self.device.info()

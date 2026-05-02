@@ -1,7 +1,5 @@
 """Repairs for Z-Wave JS."""
 
-from __future__ import annotations
-
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant
@@ -66,12 +64,12 @@ class MigrateUniqueIDFlow(RepairsFlow):
 
         try:
             new_unique_id_hex = format_home_id_for_display(int(data["new_unique_id"]))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             new_unique_id_hex = data["new_unique_id"]
 
         try:
             old_unique_id_hex = format_home_id_for_display(int(data["old_unique_id"]))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             old_unique_id_hex = data["old_unique_id"]
 
         self.description_placeholders: dict[str, str] = {
@@ -117,10 +115,10 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
 
-    if issue_id.split(".")[0] == "device_config_file_changed":
+    if issue_id.split(".", maxsplit=1)[0] == "device_config_file_changed":
         assert data
         return DeviceConfigFileChangedFlow(data)
-    if issue_id.split(".")[0] == "migrate_unique_id":
+    if issue_id.split(".", maxsplit=1)[0] == "migrate_unique_id":
         assert data
         return MigrateUniqueIDFlow(data)
     return ConfirmRepairFlow()

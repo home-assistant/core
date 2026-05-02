@@ -1,7 +1,5 @@
 """Calendar platform for Habitica integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import asdict
 from datetime import date, datetime, timedelta
@@ -98,7 +96,9 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
                 start_date, end_date - timedelta(days=1), inc=True
             )
         # if no end_date is given, return only the next recurrence
-        return [recurrences.after(start_date, inc=True)]
+        if (next_date := recurrences.after(start_date, inc=True)) is None:
+            return []
+        return [next_date]
 
 
 class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):

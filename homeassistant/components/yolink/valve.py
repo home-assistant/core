@@ -1,7 +1,5 @@
 """YoLink Valve."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -22,13 +20,12 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
@@ -61,9 +58,10 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         translation_key="meter_valve_state",
         device_class=ValveDeviceClass.WATER,
         value=lambda value: value != "open" if value is not None else None,
-        exists_fn=lambda device: device.device_type
-        == ATTR_DEVICE_WATER_METER_CONTROLLER
-        and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+            and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007)
+        ),
     ),
     YoLinkValveEntityDescription(
         key="valve_1_state",
@@ -108,11 +106,11 @@ DEVICE_TYPE = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink valve from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     valve_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -133,7 +131,7 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkValveEntityDescription,
     ) -> None:

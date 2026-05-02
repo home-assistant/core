@@ -1,11 +1,9 @@
 """Husqvarna Automower lawn mower entity."""
 
 from datetime import timedelta
-import logging
 from typing import TYPE_CHECKING
 
 from aioautomower.model import MowerActivities, MowerStates, WorkArea
-import voluptuous as vol
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -14,15 +12,12 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN, ERROR_STATES
+from .const import DOMAIN, ERROR_STATES, MOW, PARK
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity, handle_sending_exception
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -41,9 +36,6 @@ SUPPORT_STATE_SERVICES = (
     | LawnMowerEntityFeature.PAUSE
     | LawnMowerEntityFeature.START_MOWING
 )
-MOW = "mow"
-PARK = "park"
-OVERRIDE_MODES = [MOW, PARK]
 
 
 async def async_setup_entry(
@@ -62,31 +54,6 @@ async def async_setup_entry(
     _async_add_new_devices(set(coordinator.data))
 
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        "override_schedule",
-        {
-            vol.Required("override_mode"): vol.In(OVERRIDE_MODES),
-            vol.Required("duration"): vol.All(
-                cv.time_period,
-                cv.positive_timedelta,
-                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
-            ),
-        },
-        "async_override_schedule",
-    )
-    platform.async_register_entity_service(
-        "override_schedule_work_area",
-        {
-            vol.Required("work_area_id"): vol.Coerce(int),
-            vol.Required("duration"): vol.All(
-                cv.time_period,
-                cv.positive_timedelta,
-                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
-            ),
-        },
-        "async_override_schedule_work_area",
-    )
 
 
 class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):

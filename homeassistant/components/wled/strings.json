@@ -89,7 +89,8 @@
         "name": "Free memory"
       },
       "info_leds_count": {
-        "name": "LED count"
+        "name": "LED count",
+        "unit_of_measurement": "LEDs"
       },
       "info_leds_max_power": {
         "name": "Max current"
@@ -114,11 +115,17 @@
       }
     },
     "switch": {
+      "freeze": {
+        "name": "Freeze"
+      },
       "nightlight": {
         "name": "Nightlight"
       },
       "reverse": {
         "name": "Reverse"
+      },
+      "segment_freeze": {
+        "name": "Segment {segment} freeze"
       },
       "segment_reverse": {
         "name": "Segment {segment} reverse"

@@ -119,7 +119,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     for item in data[API_TEMPERATURE][API_DATA]
                     if item[API_PLACE] == self.location
                 ),
-                0,
+                None,
             ),
         }
 

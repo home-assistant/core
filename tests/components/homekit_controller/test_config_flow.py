@@ -34,6 +34,7 @@ PAIRING_START_FORM_ERRORS = [
 ]
 
 PAIRING_START_ABORT_ERRORS = [
+    (aiohomekit.AccessoryDisconnectedError, "accessory_disconnected_error"),
     (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
     (aiohomekit.UnavailableError, "already_paired"),
 ]
@@ -53,7 +54,8 @@ PAIRING_FINISH_FORM_ERRORS = [
 ]
 
 PAIRING_FINISH_ABORT_ERRORS = [
-    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error")
+    (aiohomekit.AccessoryDisconnectedError, "accessory_disconnected_error"),
+    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
 ]
 
 
@@ -696,6 +698,7 @@ async def test_pair_form_errors_on_start(
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -744,6 +747,7 @@ async def test_pair_abort_errors_on_finish(
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -786,6 +790,7 @@ async def test_pair_form_errors_on_finish(
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -799,6 +804,7 @@ async def test_pair_form_errors_on_finish(
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -833,6 +839,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -849,6 +856,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
     )
 
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -1046,6 +1054,7 @@ async def test_mdns_update_to_paired_during_pairing(
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,

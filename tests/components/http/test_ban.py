@@ -245,14 +245,20 @@ async def test_ip_ban_manager_never_started(
         )
     ),
 )
+@pytest.mark.usefixtures(
+    "hassio_env",
+    "resolution_info",
+    "os_info",
+    "store_info",
+    "supervisor_info",
+    "ingress_panels",
+)
 async def test_access_from_supervisor_ip(
     remote_addr,
     bans,
     status,
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
-    hassio_env,
-    resolution_info: AsyncMock,
 ) -> None:
     """Test accessing to server from supervisor IP."""
     app = web.Application()
@@ -465,3 +471,34 @@ async def test_single_ban_file_entry(
         await manager.async_add_ban(remote_ip)
 
     assert m_open.call_count == 1
+
+
+async def test_unix_socket_skips_ban_check(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test that Unix socket requests bypass ban middleware."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={
+            banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS
+        },
+    ):
+        client = await aiohttp_client(app)
+
+    # Verify the IP is actually banned for normal requests
+    set_real_ip(BANNED_IPS[0])
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+    # Unix socket requests should bypass ban checks
+    with patch(
+        "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+        return_value=True,
+    ):
+        resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND

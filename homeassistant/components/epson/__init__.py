@@ -11,11 +11,15 @@ from epson_projector.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CONNECTION_TYPE, HTTP
+from .const import CONF_CONNECTION_TYPE, DOMAIN, HTTP
 from .exceptions import CannotConnect, PoweredOff
+from .services import async_setup_services
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +49,12 @@ async def validate_projector(
             _LOGGER.debug("Projector is off")
             raise PoweredOff
     return epson_proj
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EpsonConfigEntry) -> bool:

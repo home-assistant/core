@@ -1,7 +1,5 @@
 """Config flow for Aquacell integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -56,7 +54,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                 refresh_token = await api.authenticate(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
-            except (ApiException, TimeoutError):
+            except ApiException, TimeoutError:
                 errors["base"] = "cannot_connect"
             except AuthenticationFailed:
                 errors["base"] = "invalid_auth"

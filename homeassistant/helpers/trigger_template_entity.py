@@ -1,7 +1,5 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 import itertools
 import logging
 from typing import Any
@@ -90,7 +88,7 @@ def log_triggered_template_error(
     elif attribute:
         target = f" {CONF_ATTRIBUTES}.{attribute}"
 
-    logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
+    logging.getLogger(f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}").error(
         "Error rendering%s template for %s: %s",
         target,
         entity_id,
@@ -138,7 +136,9 @@ class ValueTemplate(Template):
             ).strip()
         except jinja2.TemplateError as ex:
             message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
-            logger = logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}")
+            logger = logging.getLogger(
+                f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
+            )
             logger.debug(message)
             return error_value
 
@@ -401,12 +401,13 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
         """Set native value with possible timestamp.
 
-        If self.device_class is `date` or `timestamp`,
+        If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
         if self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             self._attr_native_value = value
         elif value is not None:

@@ -1,7 +1,5 @@
 """Binary sensors for System Monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
@@ -85,9 +83,11 @@ BINARY_SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
     SysMonitorBinarySensorEntityDescription(
         key="battery_plugged",
         value_fn=(
-            lambda entity: entity.coordinator.data.battery.power_plugged
-            if entity.coordinator.data.battery
-            else None
+            lambda entity: (
+                entity.coordinator.data.battery.power_plugged
+                if entity.coordinator.data.battery
+                else None
+            )
         ),
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         add_to_update=lambda entity: ("battery", ""),

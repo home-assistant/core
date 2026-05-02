@@ -94,10 +94,10 @@
         "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
-      "entry_type": "Speech-to-Text",
+      "entry_type": "Speech-to-text",
       "initiate_flow": {
-        "reconfigure": "Reconfigure Speech-to-Text service",
-        "user": "Add Speech-to-Text service"
+        "reconfigure": "Reconfigure speech-to-text service",
+        "user": "Add speech-to-text service"
       },
       "step": {
         "set_options": {
@@ -126,10 +126,10 @@
         "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
-      "entry_type": "Text-to-Speech",
+      "entry_type": "Text-to-speech",
       "initiate_flow": {
-        "reconfigure": "Reconfigure Text-to-Speech service",
-        "user": "Add Text-to-Speech service"
+        "reconfigure": "Reconfigure text-to-speech service",
+        "user": "Add text-to-speech service"
       },
       "step": {
         "set_options": {
@@ -148,30 +148,6 @@
           }
         }
       }
-    }
-  },
-  "issues": {
-    "deprecated_generate_content": {
-      "description": "Action 'google_generative_ai_conversation.generate_content' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_data' action instead",
-      "title": "Deprecated 'generate_content' action"
-    }
-  },
-  "services": {
-    "generate_content": {
-      "description": "Generate content from a prompt consisting of text and optionally images (deprecated)",
-      "fields": {
-        "filenames": {
-          "description": "Attachments to add to the prompt (images, PDFs, etc)",
-          "example": "{example_image_path}",
-          "name": "Attachment filenames"
-        },
-        "prompt": {
-          "description": "The prompt",
-          "example": "Describe what you see in these images",
-          "name": "Prompt"
-        }
-      },
-      "name": "Generate content (deprecated)"
     }
   }
 }

@@ -1,7 +1,5 @@
 """Support for MQTT JSON lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -35,13 +33,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP,
     CONF_EFFECT,
-    CONF_HS,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_RGB,
-    CONF_XY,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -55,7 +49,6 @@ from homeassistant.util.json import json_loads_object
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
-    CONF_COLOR_MODE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -96,7 +89,7 @@ DEFAULT_NAME = "MQTT JSON Light"
 DEFAULT_FLASH = True
 DEFAULT_TRANSITION = True
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_JSON = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
@@ -139,24 +132,8 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Support for legacy color_mode handling was removed with HA Core 2025.3
-# The removed attributes can be removed from the schema's from HA Core 2026.3
 DISCOVERY_SCHEMA_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE, raise_if_present=False),
-    cv.removed(CONF_COLOR_TEMP, raise_if_present=False),
-    cv.removed(CONF_HS, raise_if_present=False),
-    cv.removed(CONF_RGB, raise_if_present=False),
-    cv.removed(CONF_XY, raise_if_present=False),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE),
-    cv.removed(CONF_COLOR_TEMP),
-    cv.removed(CONF_HS),
-    cv.removed(CONF_RGB),
-    cv.removed(CONF_XY),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_JSON.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -167,7 +144,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
-    _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
@@ -211,6 +187,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_TRANSITION] and LightEntityFeature.TRANSITION
         )
+        self._attr_color_mode = ColorMode.UNKNOWN
         if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
             self._attr_supported_color_modes = supported_color_modes
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
@@ -221,8 +198,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Brightness is supported and no supported_color_modes are set,
             # so set brightness as the supported color mode.
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     def _update_color(self, values: dict[str, Any]) -> None:
         color_mode: str = values["color_mode"]
@@ -276,7 +255,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 y = float(values["color"]["y"])
                 self._attr_color_mode = ColorMode.XY
                 self._attr_xy_color = (x, y)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             _LOGGER.warning(
                 "Invalid or incomplete color value '%s' received for entity %s",
                 values,
@@ -314,7 +293,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             except KeyError:
                 pass
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning(
                     "Invalid brightness value '%s' received for entity %s",
                     values["brightness"],
@@ -356,8 +335,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_brightness = last_attributes.get(
                 ATTR_BRIGHTNESS, self.brightness
             )
-            self._attr_color_mode = last_attributes.get(
-                ATTR_COLOR_MODE, self.color_mode
+            self._attr_color_mode = (
+                last_attributes.get(ATTR_COLOR_MODE) or self.color_mode
             )
             self._attr_color_temp_kelvin = last_attributes.get(
                 ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin

@@ -1,7 +1,5 @@
 """Config flow for the Deluge integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from ssl import SSLError
@@ -87,7 +85,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.hass.async_add_executor_job(api.connect)
-        except (ConnectionRefusedError, TimeoutError, SSLError):
+        except ConnectionRefusedError, TimeoutError, SSLError:
             return "cannot_connect"
         except Exception as ex:
             _LOGGER.exception("Unexpected error")

@@ -1,7 +1,5 @@
 """Support for VELUX KLF 200 devices."""
 
-from __future__ import annotations
-
 from pyvlx import PyVLX, PyVLXException
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -11,7 +9,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -127,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         connections=connections,
     )
 
-    async def on_hass_stop(event):
+    async def on_hass_stop(_: Event) -> None:
         """Close connection when hass stops."""
         LOGGER.debug("Velux interface terminated")
         await pyvlx.disconnect()

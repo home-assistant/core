@@ -1,7 +1,5 @@
 """Parent class for every Overkiz device."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState
@@ -82,7 +80,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
                 OverkizState.CORE_PRODUCT_MODEL_NAME,
                 OverkizState.IO_MODEL,
             )
-            or self.device.widget.value
+            or self.device.ui_class.value
         )
 
         suggested_area = (
@@ -100,6 +98,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
                 str,
                 self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION),
             ),
+            model_id=self.device.widget,
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
             via_device=(DOMAIN, self.executor.get_gateway_id()),

@@ -1,7 +1,5 @@
 """Support for esphome entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -189,6 +187,7 @@ async def platform_async_setup_entry(
     info_type: type[_InfoT],
     entity_type: type[_EntityT],
     state_type: type[_StateT],
+    info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
     """Set up an esphome platform.
 
@@ -208,10 +207,22 @@ async def platform_async_setup_entry(
         entity_type,
         state_type,
     )
+
+    if info_filter is not None:
+
+        def on_filtered_update(infos: list[EntityInfo]) -> None:
+            on_static_info_update(
+                [info for info in infos if info_filter(cast(_InfoT, info))]
+            )
+
+        info_callback = on_filtered_update
+    else:
+        info_callback = on_static_info_update
+
     entry_data.cleanup_callbacks.append(
         entry_data.async_register_static_info_callback(
             info_type,
-            on_static_info_update,
+            info_callback,
         )
     )
 
@@ -421,7 +432,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         # the friendly_name will be "{friendly_name} " with a trailing
         # space. ESPHome uses protobuf under the hood, and an empty field
         # gets a default value of "".
-        self._attr_name = static_info.name if static_info.name else None
+        self._attr_name = static_info.name or None
         if entity_category := static_info.entity_category:
             self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
         else:

@@ -1,7 +1,5 @@
 """Fully Kiosk Browser media player."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components import media_source
@@ -102,8 +100,10 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         return await media_source.async_browse_media(
             self.hass,
             media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/")
-            or item.media_content_type.startswith("video/"),
+            content_filter=lambda item: (
+                item.media_content_type.startswith("audio/")
+                or item.media_content_type.startswith("video/")
+            ),
         )
 
     @callback

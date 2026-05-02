@@ -18,7 +18,7 @@ from homeassistant.components.onedrive.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
@@ -64,9 +64,7 @@ def mock_upload_file(
         patch("pathlib.Path.stat") as mock_stat,
     ):
         mock_stat.return_value = Mock()
-        mock_stat.return_value.st_size = (
-            upload_file.size if upload_file.size else len(upload_file.content)
-        )
+        mock_stat.return_value.st_size = upload_file.size or len(upload_file.content)
         yield
 
 
@@ -93,7 +91,7 @@ async def test_upload_service(
 
     assert response
     assert response["files"]
-    assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "id"
+    assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "metadata_id"
 
 
 async def test_upload_service_no_response(
@@ -125,7 +123,7 @@ async def test_upload_service_config_entry_not_found(
 ) -> None:
     """Test upload service call with a config entry that does not exist."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -137,6 +135,7 @@ async def test_upload_service_config_entry_not_found(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_config_entry_not_loaded(
@@ -150,18 +149,19 @@ async def test_config_entry_not_loaded(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.unique_id,
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
                 CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize("upload_file", [MockUploadFile(is_allowed_path=False)])
@@ -194,7 +194,7 @@ async def test_filename_does_not_exist(
 ) -> None:
     """Test upload service call with a filename path that does not exist."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="does not exist"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -206,6 +206,33 @@ async def test_filename_does_not_exist(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "filenames_do_not_exist"
+    assert TEST_FILENAME in exc_info.value.translation_placeholders["filenames"]
+
+
+@pytest.mark.parametrize("upload_file", [MockUploadFile(exists=False)])
+async def test_multiple_filenames_do_not_exist(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test upload service reports all missing files, not just the first one."""
+    await setup_integration(hass, mock_config_entry)
+    second_filename = "other_snapshot.jpg"
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_FILENAME: [TEST_FILENAME, second_filename],
+                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "filenames_do_not_exist"
+    assert TEST_FILENAME in exc_info.value.translation_placeholders["filenames"]
+    assert second_filename in exc_info.value.translation_placeholders["filenames"]
 
 
 async def test_upload_service_fails_upload(

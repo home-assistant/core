@@ -25,6 +25,9 @@
           "device": "[%key:component::enocean::config::step::detect::data_description::device%]"
         },
         "description": "Enter the path to your EnOcean USB dongle."
+      },
+      "usb_confirm": {
+        "description": "{manufacturer} USB dongle detected at {device}. Do you want to set up this device?"
       }
     }
   },

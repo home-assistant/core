@@ -1,7 +1,5 @@
 """Support for the AccuWeather service."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from homeassistant.components.weather import (
@@ -191,7 +189,7 @@ class AccuWeatherEntity(
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
                 ATTR_FORECAST_CLOUD_COVERAGE: item["CloudCoverDay"],
-                ATTR_FORECAST_HUMIDITY: item["RelativeHumidityDay"]["Average"],
+                ATTR_FORECAST_HUMIDITY: item["RelativeHumidityDay"].get("Average"),
                 ATTR_FORECAST_NATIVE_TEMP: item["TemperatureMax"][ATTR_VALUE],
                 ATTR_FORECAST_NATIVE_TEMP_LOW: item["TemperatureMin"][ATTR_VALUE],
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: item["RealFeelTemperatureMax"][

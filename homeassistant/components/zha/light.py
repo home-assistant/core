@@ -1,7 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 import logging
@@ -157,10 +155,10 @@ class Light(LightEntity, ZHAEntity):
         )
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode."""
         if self.entity_data.entity.color_mode is None:
-            return None
+            return ColorMode.UNKNOWN
         return ZHA_TO_HA_COLOR_MODE[self.entity_data.entity.color_mode]
 
     @property

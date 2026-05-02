@@ -1,7 +1,5 @@
 """Support for Homekit sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
@@ -355,6 +353,13 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Filter lifetime",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    CharacteristicsTypes.WATER_LEVEL: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.WATER_LEVEL,
+        name="Water level",
+        translation_key="water_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,

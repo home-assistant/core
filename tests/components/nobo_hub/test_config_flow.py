@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -57,7 +59,6 @@ async def test_configure_with_discover(
         assert result3["data"] == {
             "ip_address": "1.1.1.1",
             "serial": "123456789012",
-            "auto_discovered": True,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -102,7 +103,6 @@ async def test_configure_manual(
         assert result2["data"] == {
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
-            "auto_discovered": False,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -154,7 +154,6 @@ async def test_configure_user_selected_manual(
         assert result2["data"] == {
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
-            "auto_discovered": False,
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
@@ -223,8 +222,27 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_ip"}
 
 
-async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+@pytest.mark.parametrize(
+    ("connect_outcome", "expected_error"),
+    [
+        ({"return_value": False}, "cannot_connect"),
+        ({"side_effect": ConnectionRefusedError(61, "")}, "cannot_connect_ip"),
+    ],
+    ids=["serial_mismatch", "tcp_failure"],
+)
+async def test_configure_cannot_connect(
+    hass: HomeAssistant,
+    connect_outcome: dict[str, object],
+    expected_error: str,
+) -> None:
+    """Connect failures map to distinct error keys.
+
+    pynobo's async_connect_hub returns False on a successful TCP connect
+    followed by a handshake REJECT (serial mismatch) and raises OSError
+    on TCP-level failure (wrong IP / hub offline). We surface these as
+    cannot_connect ("check serial number") and cannot_connect_ip
+    ("check IP address") respectively.
+    """
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
@@ -240,16 +258,13 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
         },
     )
 
-    with patch(
-        "pynobo.nobo.async_connect_hub",
-        return_value=False,
-    ) as mock_connect:
+    with patch("pynobo.nobo.async_connect_hub", **connect_outcome) as mock_connect:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"serial_suffix": "012"},
         )
         assert result3["type"] is FlowResultType.FORM
-        assert result3["errors"] == {"base": "cannot_connect"}
+        assert result3["errors"] == {"base": expected_error}
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
 
 
@@ -276,7 +291,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_OVERRIDE_TYPE: "Constant",
+            CONF_OVERRIDE_TYPE: "constant",
         },
     )
     await hass.async_block_till_done()
@@ -284,7 +299,7 @@ async def test_options_flow(
     assert mock_unload_entry.await_count == 1
     assert mock_setup_entry.await_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_OVERRIDE_TYPE: "Constant"}
+    assert config_entry.options == {CONF_OVERRIDE_TYPE: "constant"}
     mock_unload_entry.reset_mock()
     mock_setup_entry.reset_mock()
 
@@ -292,7 +307,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_OVERRIDE_TYPE: "Now",
+            CONF_OVERRIDE_TYPE: "now",
         },
     )
     await hass.async_block_till_done()
@@ -300,4 +315,4 @@ async def test_options_flow(
     assert mock_unload_entry.await_count == 1
     assert mock_setup_entry.await_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_OVERRIDE_TYPE: "Now"}
+    assert config_entry.options == {CONF_OVERRIDE_TYPE: "now"}

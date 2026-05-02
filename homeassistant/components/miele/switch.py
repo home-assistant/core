@@ -1,7 +1,5 @@
 """Switch platform for Miele switch integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging

@@ -1,7 +1,5 @@
 """Util functions for the dwd_weather_warnings integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

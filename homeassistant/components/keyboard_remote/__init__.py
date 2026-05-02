@@ -1,7 +1,5 @@
 """Receive signals from a keyboard and use it as a remote control."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import logging
@@ -364,7 +362,7 @@ class KeyboardRemote:
                         ):
                             repeat_tasks[event.code].cancel()
                             del repeat_tasks[event.code]
-            except (OSError, asyncio.CancelledError):
+            except OSError, asyncio.CancelledError:
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
                     task.cancel()

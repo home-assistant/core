@@ -1,7 +1,5 @@
 """Switches for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, cast
 

@@ -1,7 +1,5 @@
 """Tests for the lookin integration."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
@@ -49,6 +47,6 @@ def _patch_get_info(device=None, exception=None):
     async def _get_info(*args, **kwargs):
         if exception:
             raise exception
-        return device if device else _mocked_device()
+        return device or _mocked_device()
 
     return patch(f"{MODULE_CONFIG_FLOW}.LookInHttpProtocol.get_info", new=_get_info)

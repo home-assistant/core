@@ -1,7 +1,5 @@
 """Coordinator for the P1 Monitor integration."""
 
-from __future__ import annotations
-
 from typing import TypedDict
 
 from p1monitor import (
@@ -81,7 +79,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             try:
                 data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
                 self.has_water_meter = True
-            except (P1MonitorNoDataError, P1MonitorConnectionError):
+            except P1MonitorNoDataError, P1MonitorConnectionError:
                 LOGGER.debug("No water meter data received from P1 Monitor")
                 if self.has_water_meter is None:
                     self.has_water_meter = False

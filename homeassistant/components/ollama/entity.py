@@ -1,7 +1,5 @@
 """Base entity for the Ollama integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
@@ -16,6 +14,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 
 from . import OllamaConfigEntry
 from .const import (
@@ -93,7 +92,7 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json.dumps(chat_content.tool_result),
+            content=json_dumps(chat_content.tool_result),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(

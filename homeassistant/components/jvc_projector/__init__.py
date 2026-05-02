@@ -1,7 +1,5 @@
 """The jvc_projector integration."""
 
-from __future__ import annotations
-
 from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorTimeoutError
 
 from homeassistant.const import (
@@ -17,7 +15,13 @@ from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_e
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.REMOTE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> bool:

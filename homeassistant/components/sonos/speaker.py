@@ -1,7 +1,5 @@
 """Base class for common speaker tasks."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
@@ -165,6 +163,8 @@ class SonosSpeaker:
         self.dialog_level_enum: int | None = None
         self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
+        self.tv_autoplay: str | None = None
+        self.tv_ungroup_autoplay: bool | None = None
         self.sub_enabled: bool | None = None
         self.sub_crossover: int | None = None
         self.sub_gain: int | None = None
@@ -291,7 +291,7 @@ class SonosSpeaker:
         else:
             try:
                 value = int(state)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.error(
                     "Invalid value for %s %s",
                     speaker_attribute,
@@ -938,12 +938,14 @@ class SonosSpeaker:
 
             for uid in group:
                 speaker = self.data.discovered.get(uid)
-                if speaker:
+                entity_id = (
+                    entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
+                    if speaker
+                    else None
+                )
+                if speaker and entity_id:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = cast(
-                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
-                    )
                     sonos_group_entities.append(entity_id)
                 else:
                     self._group_members_missing.add(uid)

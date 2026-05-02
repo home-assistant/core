@@ -1,7 +1,5 @@
 """Config flow for the Sunricher DALI integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -111,7 +109,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_gateways:
             return self.async_show_form(
                 step_id="select_gateway",
-                errors=errors if errors else {"base": "no_devices_found"},
+                errors=errors or {"base": "no_devices_found"},
                 data_schema=vol.Schema({}),
             )
 

@@ -1,7 +1,5 @@
 """Tests for the Portainer button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from pyportainer.exceptions import (
@@ -91,7 +89,7 @@ async def test_buttons_containers_exceptions(
     """Test that Portainer buttons, but this time when they will do boom for sure."""
     await setup_integration(hass, mock_config_entry)
 
-    action = client_method.split("_")[0]
+    action = client_method.split("_", maxsplit=1)[0]
     entity_id = f"button.practical_morse_{action}_container"
 
     method_mock = getattr(mock_portainer_client, client_method)

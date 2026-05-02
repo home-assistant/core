@@ -1,1 +1,1 @@
-"""The ohmconnect component."""
+"""The OhmConnect integration."""

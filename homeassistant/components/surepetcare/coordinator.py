@@ -1,7 +1,5 @@
 """Coordinator for the surepetcare integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -29,13 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
+type SurePetcareConfigEntry = ConfigEntry[SurePetcareDataCoordinator]
+
 
 class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
     """Handle Surepetcare data."""
 
-    config_entry: ConfigEntry
+    config_entry: SurePetcareConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SurePetcareConfigEntry) -> None:
         """Initialize the data handler."""
         self.surepy = Surepy(
             entry.data[CONF_USERNAME],

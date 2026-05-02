@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.overseerr_audio_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -53,8 +54,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_available_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -106,8 +108,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_closed_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -158,8 +161,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_declined_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -211,8 +215,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_movie_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -264,8 +269,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_open_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -316,8 +322,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_pending_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -369,8 +376,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_processing_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -422,8 +430,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_subtitle_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -474,8 +483,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_total_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -526,8 +536,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_total_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -579,8 +590,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_tv_requests-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -632,8 +644,9 @@
 # ---
 # name: test_all_entities[sensor.overseerr_video_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,

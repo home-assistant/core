@@ -38,11 +38,25 @@ async def test_time(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "new_value", "called_function_name"),
+    [
+        ("time.home_assistant_test_bedtime_alarm", "20:00:00", "set_bedtime_alarm"),
+        (
+            "time.home_assistant_test_bedtime_end_time",
+            "06:30:00",
+            "set_bedtime_end_time",
+        ),
+    ],
+)
 async def test_set_time(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_client: AsyncMock,
     mock_nintendo_device: AsyncMock,
+    entity_id: str,
+    new_value: str,
+    called_function_name: str,
 ) -> None:
     """Test time platform service validation errors."""
     with patch(
@@ -53,21 +67,44 @@ async def test_set_time(
     await hass.services.async_call(
         TIME_DOMAIN,
         SERVICE_SET_VALUE,
-        service_data={ATTR_TIME: "20:00:00"},
-        target={ATTR_ENTITY_ID: "time.home_assistant_test_bedtime_alarm"},
+        service_data={ATTR_TIME: new_value},
+        target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert len(mock_nintendo_device.set_bedtime_alarm.mock_calls) == 1
+    assert len(getattr(mock_nintendo_device, called_function_name).mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "new_value", "translation_key", "called_function_name"),
+    [
+        (
+            "time.home_assistant_test_bedtime_alarm",
+            "03:00:00",
+            "bedtime_alarm_out_of_range",
+            "set_bedtime_alarm",
+        ),
+        (
+            "time.home_assistant_test_bedtime_end_time",
+            "10:00:00",
+            "bedtime_end_time_out_of_range",
+            "set_bedtime_end_time",
+        ),
+    ],
+)
 async def test_set_time_service_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_client: AsyncMock,
     mock_nintendo_device: AsyncMock,
+    entity_id: str,
+    new_value: str,
+    translation_key: str,
+    called_function_name: str,
 ) -> None:
     """Test time platform service validation errors."""
-    mock_nintendo_device.set_bedtime_alarm.side_effect = BedtimeOutOfRangeError(None)
+    getattr(
+        mock_nintendo_device, called_function_name
+    ).side_effect = BedtimeOutOfRangeError(None)
     with patch(
         "homeassistant.components.nintendo_parental_controls._PLATFORMS",
         [Platform.TIME],
@@ -77,9 +114,9 @@ async def test_set_time_service_exceptions(
         await hass.services.async_call(
             TIME_DOMAIN,
             SERVICE_SET_VALUE,
-            service_data={ATTR_TIME: "01:00:00"},
-            target={ATTR_ENTITY_ID: "time.home_assistant_test_bedtime_alarm"},
+            service_data={ATTR_TIME: new_value},
+            target={ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-    assert len(mock_nintendo_device.set_bedtime_alarm.mock_calls) == 1
-    assert err.value.translation_key == "bedtime_alarm_out_of_range"
+    assert len(getattr(mock_nintendo_device, called_function_name).mock_calls) == 1
+    assert err.value.translation_key == translation_key

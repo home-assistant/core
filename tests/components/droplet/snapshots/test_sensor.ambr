@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.mock_title_flow_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -61,8 +62,9 @@
 # ---
 # name: test_sensors[sensor.mock_title_server_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -122,8 +124,9 @@
 # ---
 # name: test_sensors[sensor.mock_title_signal_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -183,8 +186,9 @@
 # ---
 # name: test_sensors[sensor.mock_title_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,

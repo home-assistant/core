@@ -1,7 +1,5 @@
 """Config flow for Group integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
@@ -39,6 +37,7 @@ from .valve import async_create_preview_valve
 
 _STATISTIC_MEASURES = [
     "last",
+    "first_available",
     "max",
     "mean",
     "median",
