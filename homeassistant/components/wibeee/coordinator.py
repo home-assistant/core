@@ -4,11 +4,14 @@ Handles both update modes:
 - **Polling**: Periodically fetches status.xml (update_interval > 0).
 - **Push**: Receives data via HTTP push (update_interval=None).
   Push data is injected via :meth:`async_push_update`.
+  A staleness watchdog marks the coordinator as failed if no push arrives
+  within ``stale_after``, so entities go unavailable instead of reporting
+  stale last-known values.
 """
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 from xml.etree.ElementTree import ParseError as XMLParseError
@@ -17,7 +20,8 @@ import aiohttp
 from pywibeee import WibeeeAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,9 +48,17 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         config_entry: ConfigEntry,
         name: str | None = None,
         update_interval: timedelta | None = None,
+        stale_after: timedelta | None = None,
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the coordinator.
+
+        ``stale_after`` enables a watchdog (push mode only): if no push
+        data arrives within this interval, the coordinator is marked
+        as failed and entities become unavailable.
+        """
         self.api = api
+        self._stale_after = stale_after
+        self._stale_unsub: CALLBACK_TYPE | None = None
 
         super().__init__(
             hass,
@@ -91,3 +103,34 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
             )
             return
         self.async_set_updated_data(data)
+        self._reschedule_staleness_check()
+
+    @callback
+    def _reschedule_staleness_check(self) -> None:
+        """(Re)arm the push staleness watchdog."""
+        if self._stale_after is None:
+            return
+        if self._stale_unsub is not None:
+            self._stale_unsub()
+            self._stale_unsub = None
+        self._stale_unsub = async_call_later(
+            self.hass, self._stale_after, self._handle_stale_data
+        )
+
+    @callback
+    def _handle_stale_data(self, _now: datetime) -> None:
+        """Mark coordinator as failed when push data is stale."""
+        self._stale_unsub = None
+        message = (
+            f"No push data received from {self.api.host} for "
+            f"{self._stale_after}; marking sensors unavailable"
+        )
+        _LOGGER.warning(message)
+        self.async_set_update_error(UpdateFailed(message))
+
+    async def async_shutdown(self) -> None:
+        """Cancel the staleness watchdog and shut down the coordinator."""
+        if self._stale_unsub is not None:
+            self._stale_unsub()
+            self._stale_unsub = None
+        await super().async_shutdown()

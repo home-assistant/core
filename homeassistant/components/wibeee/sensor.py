@@ -28,7 +28,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WibeeeConfigEntry
-from .const import DOMAIN, KNOWN_MODELS, SENSOR_TYPES, WibeeeSensorEntityDescription
+from .const import (
+    CONF_UPDATE_MODE,
+    DOMAIN,
+    KNOWN_MODELS,
+    MODE_LOCAL_PUSH,
+    PUSH_REFRESHABLE_SENSOR_KEYS,
+    SENSOR_TYPES,
+    WibeeeSensorEntityDescription,
+)
 from .coordinator import WibeeeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +84,19 @@ async def async_setup_entry(
         )
         return
 
-    # Build entities: discovered phases x sensor types present in data
+    # Build entities: discovered phases x sensor types present in data.
+    # In push mode, restrict to keys the push parser can refresh; otherwise
+    # any extra sensor (THD, angle, capacitive-reactive, ...) would become
+    # unavailable as soon as the first push update arrives.
+    is_push_mode = (
+        entry.options.get(CONF_UPDATE_MODE, MODE_LOCAL_PUSH) == MODE_LOCAL_PUSH
+    )
+    eligible_sensor_types: dict[str, WibeeeSensorEntityDescription] = (
+        {k: v for k, v in SENSOR_TYPES.items() if k in PUSH_REFRESHABLE_SENSOR_KEYS}
+        if is_push_mode
+        else SENSOR_TYPES
+    )
+
     # Process fase4 (Total) first to ensure the parent device exists
     sorted_phases = sorted(
         discovered_phases,
@@ -91,7 +111,7 @@ async def async_setup_entry(
         )
         for phase_key in sorted_phases
         if isinstance(data.get(phase_key), dict)
-        for sensor_key, description in SENSOR_TYPES.items()
+        for sensor_key, description in eligible_sensor_types.items()
         if sensor_key in data[phase_key]
     ]
 
