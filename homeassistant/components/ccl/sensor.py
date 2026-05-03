@@ -189,7 +189,13 @@ async def async_setup_entry(
                     key=sensor.key,
                     name=sensor.name,
                 )
-                sensor_entities.append(CCLSensorEntity(coordinator, entity_description))
+                sensor_entities.append(
+                    CCLSensorEntity(
+                        coordinator,
+                        entity_description,
+                        coordinator.data[entity_description.key],
+                    )
+                )
 
         async_add_entities(sensor_entities)
 
@@ -208,10 +214,10 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
         self,
         coordinator: CCLCoordinator,
         entity_description: SensorEntityDescription,
+        internal: CCLSensor,
     ) -> None:
         """Initialize a CCL Sensor Entity."""
-        self._internal: CCLSensor = coordinator.data[entity_description.key]
-        super().__init__(self._internal, coordinator)
+        super().__init__(internal, coordinator)
 
         self.entity_description = entity_description
 

@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from aioccl import CCLDevice, CCLServer
-from aiohttp import web
-from aiohttp.hdrs import METH_POST
+from aioccl import CCLDevice
 
 from homeassistant.components import webhook
 from homeassistant.components.http import NoURLAvailableError
@@ -15,7 +12,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, NAME
+from .config_flow import register_webhook
 from .coordinator import CCLConfigEntry, CCLCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,37 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 
         devices[device.passkey] = device
 
-        async def register_webhook() -> None:
-            """Register webhook for the device."""
-
-            def handle_webhook(
-                hass: HomeAssistant, webhook_id: str, request: web.Request
-            ) -> Any:
-                """Handle incoming requests from CCL devices."""
-                return CCLServer.handler(request, devices)
-
-            try:
-                webhook_url = webhook.async_generate_url(
-                    hass,
-                    entry.data[CONF_WEBHOOK_ID],
-                    allow_ip=True,
-                )
-
-                webhook.async_register(
-                    hass,
-                    DOMAIN,
-                    f"{NAME}-{entry.data[CONF_WEBHOOK_ID]}",
-                    entry.data[CONF_WEBHOOK_ID],
-                    handle_webhook,
-                    allowed_methods=[METH_POST],
-                )
-                _LOGGER.debug("Webhook registered at hass: %s", webhook_url)
-
-            except (ValueError, NoURLAvailableError) as err:
-                _LOGGER.error("Failed to register webhook: %s", err)
-                raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
-
-        await register_webhook()
+        try:
+            webhook_url = await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
+            _LOGGER.debug("Webhook registered at hass: %s", webhook_url)
+        except (ValueError, NoURLAvailableError) as err:
+            _LOGGER.error("Failed to register webhook: %s", err)
+            raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
 
     else:
         device = devices[entry.data[CONF_WEBHOOK_ID]]

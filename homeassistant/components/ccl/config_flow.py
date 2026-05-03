@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import secrets
 from typing import Any
 
 from aioccl import CCLDevice, CCLServer
@@ -26,6 +25,33 @@ from .const import DOMAIN, NAME
 _LOGGER = logging.getLogger(__name__)
 
 
+async def register_webhook(hass, webhook_id) -> str:
+    """Register webhook for the device."""
+
+    async def handle_webhook(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> Any:
+        """Handle incoming requests from CCL devices."""
+        return CCLServer.handler(request, devices)
+
+    webhook_url = webhook.async_generate_url(
+        hass,
+        webhook_id,
+        allow_ip=True,
+    )
+
+    webhook.async_register(
+        hass,
+        DOMAIN,
+        f"{NAME}-{webhook_id}",
+        webhook_id,
+        handle_webhook,
+        allowed_methods=[METH_POST],
+    )
+
+    return webhook_url
+
+
 class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -45,13 +71,13 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Initial step, set up the webhook and device
         if CONF_PATH not in self.data:
-            self.data[CONF_WEBHOOK_ID] = secrets.token_hex(32)
+            self.data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
 
             try:
                 url = URL(get_url(self.hass))
             except NoURLAvailableError as err:
                 _LOGGER.error("Failed to generate webhook URL: %s", err)
-                return self.async_abort(reason="invalid_url")
+                return self.async_abort(reason="invalid_host")
 
             self.data[CONF_HOST] = url.host
             self.data[CONF_PORT] = str(url.port)
@@ -70,36 +96,14 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self.device = devices[self.data[CONF_WEBHOOK_ID]]
 
-            async def register_webhook() -> None:
-                """Register webhook for the device."""
-
-                def handle_webhook(
-                    hass: HomeAssistant, webhook_id: str, request: web.Request
-                ) -> Any:
-                    """Handle incoming requests from CCL devices."""
-                    return CCLServer.handler(request, devices)
-
-                try:
-                    webhook_url = webhook.async_generate_url(
-                        self.hass,
-                        self.data[CONF_WEBHOOK_ID],
-                        allow_ip=True,
-                    )
-
-                    webhook.async_register(
-                        self.hass,
-                        DOMAIN,
-                        f"{NAME}-{self.data[CONF_WEBHOOK_ID]}",
-                        self.data[CONF_WEBHOOK_ID],
-                        handle_webhook,
-                        allowed_methods=[METH_POST],
-                    )
-                    _LOGGER.debug("Webhook registered at hass: %s", webhook_url)
-
-                except ValueError as err:
-                    _LOGGER.error("Failed to register webhook: %s", err)
-
-            await register_webhook()
+            try:
+                webhook_url = await register_webhook(
+                    self.hass, self.data[CONF_WEBHOOK_ID]
+                )
+                _LOGGER.debug("Webhook registered at hass: %s", webhook_url)
+            except (ValueError, NoURLAvailableError) as err:
+                _LOGGER.error("Failed to register webhook: %s", err)
+                return self.async_abort(reason="invalid_webhook")
 
         # Create a task to wait for the first update from the device
         if not self.task_one:
@@ -131,7 +135,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.data[CONF_WEBHOOK_ID])
                 devices.pop(self.data[CONF_WEBHOOK_ID], None)
-                return self.async_abort(reason="cannot_connect")
+                return self.async_abort(reason="connect_timeout")
 
         if uncompleted_task:
             return self.async_show_progress(
@@ -160,3 +164,17 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self.data[CONF_PORT],
             },
         )
+
+    def async_remove(self) -> None:
+        """Clean up when config flow is cancelled or removed."""
+        # Cancel the task if it's still running
+        if self.task_one and not self.task_one.done():
+            self.task_one.cancel()
+
+        # Unregister the webhook
+        if CONF_WEBHOOK_ID in self.data:
+            webhook.async_unregister(self.hass, self.data[CONF_WEBHOOK_ID])
+
+        # Remove the device from the global devices dict
+        if CONF_WEBHOOK_ID in self.data:
+            devices.pop(self.data[CONF_WEBHOOK_ID], None)

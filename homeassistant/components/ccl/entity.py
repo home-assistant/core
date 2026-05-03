@@ -35,7 +35,7 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
             self.device_id = self._device.device_id
             self.device_name = self._device.name
 
-        self._attr_unique_id = f"{self._device.device_id}-{internal.key}"
+        self._attr_unique_id = f"{self.device_id}-{internal.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, self.device_id),

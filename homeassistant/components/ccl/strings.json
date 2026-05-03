@@ -1,5 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "This weather station is already configured.",
+      "connect_timeout": "Connection timed out while waiting for data from the weather station. Please ensure your network is properly configured and try again.",
+      "invalid_host": "Unable to fetch the Home Assistant URL. Please check your network configuration and try again.",
+      "invalid_webhook": "Failed to register webhook. Please check your network configuration and try again.",
+      "unknown": "An unknown error occurred. Please try again."
+    },
     "create_entry": {
       "default": "Configuration completed successfully!"
     },
@@ -14,24 +21,18 @@
   },
   "entity": {
     "sensor": {
+      "aqi": {
+        "name": "Air quality index"
+      },
+      "battery": {
+        "name": "Battery"
+      },
       "ch_sensor_type": {
         "state": {
           "pool": "Pool",
           "soil": "Soil",
           "thermo-hygro": "Thermo-hygro"
         }
-      },
-      "uvi": {
-        "name": "UV index"
-      },
-      "voc_level": {
-        "name": "VOC level"
-      },
-      "aqi": {
-        "name": "Air quality index"
-      },
-      "battery": {
-        "name": "Battery"
       },
       "lightning_distance": {
         "name": "Lightning distance"
@@ -41,6 +42,12 @@
       },
       "lightning_frequency": {
         "name": "Lightning frequency"
+      },
+      "uvi": {
+        "name": "UV index"
+      },
+      "voc_level": {
+        "name": "VOC level"
       }
     }
   }

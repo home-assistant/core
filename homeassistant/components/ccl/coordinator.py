@@ -7,6 +7,7 @@ import logging
 import time
 
 from aioccl import CCLDevice, CCLSensor
+from aioccl.exception import CCLDataUpdateException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,4 +57,7 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
             return {}
         if time.monotonic() - self.device.last_update_time >= _CHECKING_INTERVAL:
             raise UpdateFailed("Device timed out or is not responding")
-        return self.device.get_sensors()  # raise CCLDataUpdateException when failed
+        try:
+            return self.device.get_sensors()
+        except CCLDataUpdateException as err:
+            raise UpdateFailed(f"Error updating data: {err}") from err
