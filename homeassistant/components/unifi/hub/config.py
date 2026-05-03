@@ -56,9 +56,9 @@ class UnifiConfig:
 
     # Device tracker options
 
-    option_track_clients: list[str]
+    option_track_clients: bool
     """Config entry option to not track clients."""
-    option_track_wired_clients: list[str]
+    option_track_wired_clients: bool
     """Config entry option to not track wired clients."""
     option_track_devices: bool
     """Config entry option to not track devices."""

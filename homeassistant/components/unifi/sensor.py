@@ -107,6 +107,11 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 @callback
 def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is wired and allowed."""
+    if (
+        obj_id not in hub.config.option_supported_clients
+        and not hub.config.option_track_clients
+    ):
+        return False
     client = hub.api.clients[obj_id]
     if not client.is_wired or client.wired_rate_mbps <= 0:
         return False

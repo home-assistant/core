@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -577,6 +578,31 @@ async def test_wired_client_speed_sensor(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wired_client_speed_sensor_tracking_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify wired client speed sensor is not created when track_clients is disabled."""
+    assert hass.states.get("sensor.wired_client_link_speed") is None
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: [WIRED_CLIENT["mac"]]}],
+)
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wired_client_speed_sensor_supported_client_bypass(
+    hass: HomeAssistant,
+) -> None:
+    """Verify wired client speed sensor is created for supported clients even when tracking is disabled."""
+    assert hass.states.get("sensor.wired_client_link_speed").state == "1000"
 
 
 @pytest.mark.parametrize(
