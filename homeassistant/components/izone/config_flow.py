@@ -9,8 +9,7 @@ import asyncio
 from collections.abc import Iterable
 from contextlib import suppress
 import logging
-from types import SimpleNamespace
-from typing import Any, Self, cast
+from typing import Any, Self
 
 import pizone
 import voluptuous as vol
@@ -21,6 +20,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -35,27 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 # --- Flow identifiers and context keys (also used in tests) ---
 
 HOMEKIT_DISCOVERY_LOCK_ID = f"{IZONE}_homekit_discovery"
-# ``async_step_integration_discovery`` payload: when True, create the entry immediately
-# (YAML import fan-out path).
-RESOLVED_SKIP_CONFIRM = "skip_confirm"
 
 DISCOVERY_DATA_UID = "uid"
-
-# ``async_step_select_controller`` action values (stored in config entry flow data).
-SELECT_ACTION_CONFIGURE = "configure"
-SELECT_ACTION_IGNORE = "ignore"
-SELECT_ACTION_SKIP = "skip"
-SELECT_ACTION_CHOICES = [
-    SELECT_ACTION_CONFIGURE,
-    SELECT_ACTION_IGNORE,
-    SELECT_ACTION_SKIP,
-]
-
-SELECT_CONTROLLER_ACTION_TRANSLATION_KEY = "controller_action"
-
-TEMP_TESTING_MOCK_CONTROLLERS = (
-    0  # Number of mock controllers to add in user flow for UI testing (0 to disable)
-)
+SELECTED_CONTROLLER_UID = "selected_controller_uid"
 
 # ---------------------------------------------------------------------------
 # On-demand discovery (module scope for migration + tests)
@@ -275,18 +257,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         self._user_discovered_controllers = self._async_get_unconfigured_controllers(
             controllers
         )
-        if TEMP_TESTING_MOCK_CONTROLLERS:
-            # Mock controllers for UI testing.
-            for index in range(TEMP_TESTING_MOCK_CONTROLLERS):
-                self._user_discovered_controllers.append(
-                    cast(
-                        pizone.Controller,
-                        SimpleNamespace(
-                            device_uid=f"99999999{index}",
-                            device_ip=f"198.51.100.{99 + index}",
-                        ),
-                    )
-                )
         if not self._user_discovered_controllers:
             return self.async_abort(reason="already_configured")
         if len(self._user_discovered_controllers) > 1:
@@ -303,7 +273,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     async def async_step_select_controller(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose configure, ignore, or skip for each unconfigured unit after broadcast."""
+        """Choose one unconfigured controller after broadcast discovery."""
         if not self._user_discovered_controllers:
             return self.async_abort(reason="no_devices_found")
 
@@ -311,58 +281,47 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             controller.device_uid: controller
             for controller in self._user_discovered_controllers
         }
-        list_schema = vol.Schema(
+        selection_schema = vol.Schema(
             {
                 vol.Required(
-                    controller.device_uid, default=SELECT_ACTION_CONFIGURE
+                    SELECTED_CONTROLLER_UID,
+                    default=self._user_discovered_controllers[0].device_uid,
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=SELECT_ACTION_CHOICES,
+                        options=[
+                            SelectOptionDict(
+                                value=controller.device_uid,
+                                label=(
+                                    f"{controller.device_uid} ({controller.device_ip})"
+                                ),
+                            )
+                            for controller in self._user_discovered_controllers
+                        ],
                         mode=SelectSelectorMode.DROPDOWN,
-                        translation_key=SELECT_CONTROLLER_ACTION_TRANSLATION_KEY,
                     )
                 )
-                for controller in self._user_discovered_controllers
             }
         )
 
         if user_input is not None:
             try:
-                payload = list_schema(user_input)
+                payload = selection_schema(user_input)
             except vol.Invalid:
                 return self.async_abort(reason="no_devices_found")
 
-            to_configure: list[pizone.Controller] = []
-            skipped: list[pizone.Controller] = []
-            for uid_key, action in payload.items():
-                if (ctrl := by_uid.get(uid_key)) is None:
-                    _LOGGER.warning(
-                        "Unexpected controller selection key %s in config flow payload",
-                        uid_key,
-                    )
-                    return self.async_abort(reason="invalid_controller_selection")
-                if action == SELECT_ACTION_CONFIGURE:
-                    to_configure.append(ctrl)
-                elif action == SELECT_ACTION_IGNORE:
-                    self._async_ignore_discovered_controller(ctrl)
-                elif action == SELECT_ACTION_SKIP:
-                    skipped.append(ctrl)
+            selected_uid = payload[SELECTED_CONTROLLER_UID]
+            if (primary := by_uid.get(selected_uid)) is None:
+                return self.async_abort(reason="no_devices_found")
 
-            for ctrl in skipped:
-                self._async_offer_skipped_controller_discovery(ctrl)
-
-            if not to_configure:
-                if skipped:
-                    return self.async_abort(reason="skipped_pending_discovery")
-                return self.async_abort(reason="no_controller_chosen")
-
-            to_configure.sort(key=lambda c: c.device_uid)
-            primary, *secondaries = to_configure
-            for ctrl in secondaries:
+            for ctrl in self._user_discovered_controllers:
+                if ctrl.device_uid == primary.device_uid:
+                    continue
+                # Fan out confirm flows for all the other discovered controllers in parallel with the selected one.
+                # These will appear as discovered controllers, which is really the only way to manage this without
+                # it getting very messy.
                 self._async_schedule_integration_discovery_flow(
                     ctrl.device_uid,
                     ctrl.device_ip,
-                    skip_confirm=True,
                 )
             return await self._async_create_controller_entry(primary)
 
@@ -372,7 +331,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         )
         return self.async_show_form(
             step_id="select_controller",
-            data_schema=list_schema,
+            data_schema=selection_schema,
             description_placeholders={"controllers": controllers_lines},
         )
 
@@ -437,11 +396,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         # current device IP state and keeps it up to date independently of entry data.
         self._discovered_controller_ip = host
         self.context["title_placeholders"] = {"name": self._entry_title(uid)}
-        if discovery_info.get(RESOLVED_SKIP_CONFIRM) is True:
-            return self.async_create_entry(
-                title=self._entry_title(uid),
-                data={},
-            )
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -493,58 +447,17 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     # -- Private helpers
 
     @callback
-    def _async_ignore_discovered_controller(
-        self, controller: pizone.Controller
-    ) -> None:
-        """Create an ignore config entry (same outcome as ignoring from the UI)."""
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_init(
-                IZONE,
-                context={"source": config_entries.SOURCE_IGNORE},
-                data={
-                    "unique_id": controller.device_uid,
-                    "title": self._entry_title(controller.device_uid),
-                },
-            )
-        )
-
-    @callback
-    def _async_offer_skipped_controller_discovery(
-        self, controller: pizone.Controller
-    ) -> None:
-        """Offer a skipped unit again as a discovered integration flow (confirm step).
-
-        Uses :func:`discovery_flow.async_create_flow` instead of
-        :func:`async_note_integration_discovery` so devices still appear while this
-        user flow is on ``select_controller`` (runtime discovery is suppressed then).
-        """
-        discovery_flow.async_create_flow(
-            self.hass,
-            IZONE,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={
-                DISCOVERY_DATA_UID: controller.device_uid,
-                CONF_HOST: controller.device_ip,
-            },
-        )
-
-    @callback
     def _async_schedule_integration_discovery_flow(
         self,
         uid: str,
         host: str,
-        *,
-        skip_confirm: bool,
     ) -> None:
         """Queue integration discovery (import fan-out or manual discovery pick)."""
-        data: dict[str, Any] = {DISCOVERY_DATA_UID: uid, CONF_HOST: host}
-        if skip_confirm:
-            data[RESOLVED_SKIP_CONFIRM] = True
         discovery_flow.async_create_flow(
             self.hass,
             IZONE,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data=data,
+            data={DISCOVERY_DATA_UID: uid, CONF_HOST: host},
         )
 
     @staticmethod
@@ -617,5 +530,4 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             self._async_schedule_integration_discovery_flow(
                 candidate.device_uid,
                 candidate.device_ip,
-                skip_confirm=False,
             )

@@ -67,13 +67,6 @@ def mock_entry_setup() -> Generator[None]:
         yield
 
 
-@pytest.fixture(autouse=True)
-def disable_temp_mock_controllers() -> Generator[None]:
-    """Keep temporary UI-testing controller injection disabled in tests."""
-    with patch.object(config_flow, "TEMP_TESTING_MOCK_CONTROLLERS", 0):
-        yield
-
-
 # ---------------------------------------------------------------------------
 # Config flow – user source (broadcast discovery)
 # ---------------------------------------------------------------------------
@@ -122,10 +115,10 @@ async def test_user_discovery_success(
     assert result["data"] == {}
 
 
-async def test_user_discovery_default_configures_all_with_fanout(
+async def test_user_discovery_default_selects_first_and_queues_other(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
-    """Default selections configure lexical-primary and queue the rest without confirm."""
+    """Default dropdown selection configures first UID and queues the other for confirm."""
     first = _make_controller("000000001", "192.0.2.1")
     second = _make_controller("000000002", "192.0.2.2")
     both = {first.device_uid: first, second.device_uid: second}
@@ -140,13 +133,21 @@ async def test_user_discovery_default_configures_all_with_fanout(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_controller"
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
     assert result["data"] == {}
-    assert not hass.config_entries.flow.async_progress_by_handler(IZONE)
-    assert len(hass.config_entries.async_entries(IZONE)) == 2
+    assert len(hass.config_entries.async_entries(IZONE)) == 1
+
+    progress = [
+        p
+        for p in hass.config_entries.flow.async_progress_by_handler(IZONE)
+        if p["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+    ]
+    assert len(progress) == 1
+    assert progress[0]["step_id"] == "confirm"
+    assert progress[0]["context"]["unique_id"] == "000000002"
 
 
 async def test_broadcast_skips_already_configured_controller(
@@ -202,14 +203,10 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_controller"
         schema_keys = list(result["data_schema"].schema.keys())
-        assert len(schema_keys) == 2
-        assert {str(sch.schema) for sch in schema_keys} == {
-            "000000001",
-            "000000002",
-        }
+        assert len(schema_keys) == 1
+        assert str(schema_keys[0].schema) == config_flow.SELECTED_CONTROLLER_UID
 
-        # Default is configure for each: primary entry is lexically first UID, second
-        # is added via integration discovery without a confirm step.
+        # Choose one and queue the other as integration discovery (confirm step).
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -219,9 +216,17 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
     assert result["data"] == {}
 
     entries = hass.config_entries.async_entries(IZONE)
-    assert len(entries) == 2
-    hosts_by_uid = {e.unique_id: e.data for e in entries}
-    assert hosts_by_uid == {"000000001": {}, "000000002": {}}
+    assert len(entries) == 1
+    assert entries[0].unique_id == "000000001"
+
+    progress = [
+        p
+        for p in hass.config_entries.flow.async_progress_by_handler(IZONE)
+        if p["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+    ]
+    assert len(progress) == 1
+    assert progress[0]["step_id"] == "confirm"
+    assert progress[0]["context"]["unique_id"] == "000000002"
 
 
 async def test_select_controller_aborts_when_choices_missing(
@@ -271,96 +276,17 @@ async def test_select_controller_aborts_when_uid_not_in_choices(
 
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     result = await flow.async_step_select_controller(
-        {"000000099": config_flow.SELECT_ACTION_CONFIGURE}
+        {config_flow.SELECTED_CONTROLLER_UID: "000000099"}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
-async def test_select_controller_all_skipped_queues_discovery_flows(
-    hass: HomeAssistant,
-) -> None:
-    """Skipping every controller re-offers each as an integration-discovery flow."""
-    first_controller = _make_controller("000000001", "192.0.2.1")
-    second_controller = _make_controller("000000002", "192.0.2.2")
-
-    with patch(
-        "homeassistant.components.izone.config_flow._async_discover_controllers",
-        return_value={
-            first_controller.device_uid: first_controller,
-            second_controller.device_uid: second_controller,
-        },
-    ):
-        result = await hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_USER}
-        )
-
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-    result = await flow.async_step_select_controller(
-        {
-            "000000001": config_flow.SELECT_ACTION_SKIP,
-            "000000002": config_flow.SELECT_ACTION_SKIP,
-        }
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "skipped_pending_discovery"
-
-    progress = [
-        p
-        for p in hass.config_entries.flow.async_progress_by_handler(IZONE)
-        if p["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
-    ]
-    assert len(progress) == 2
-    assert {p["step_id"] for p in progress} == {"confirm"}
-    assert {p["context"]["unique_id"] for p in progress} == {
-        "000000001",
-        "000000002",
-    }
-
-
-async def test_select_controller_all_ignored_aborts_without_queued_discovery(
-    hass: HomeAssistant,
-) -> None:
-    """Ignoring every controller does not queue integration-discovery flows."""
-    first_controller = _make_controller("000000001", "192.0.2.1")
-    second_controller = _make_controller("000000002", "192.0.2.2")
-
-    with (
-        patch(
-            "homeassistant.components.izone.config_flow._async_discover_controllers",
-            return_value={
-                first_controller.device_uid: first_controller,
-                second_controller.device_uid: second_controller,
-            },
-        ),
-        patch(
-            "homeassistant.helpers.discovery_flow.async_create_flow"
-        ) as mock_create_flow,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_USER}
-        )
-
-        flow = hass.config_entries.flow._progress[result["flow_id"]]
-        result = await flow.async_step_select_controller(
-            {
-                "000000001": config_flow.SELECT_ACTION_IGNORE,
-                "000000002": config_flow.SELECT_ACTION_IGNORE,
-            }
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_controller_chosen"
-    mock_create_flow.assert_not_called()
-
-
-async def test_select_controller_only_one_configured_skips_fanout(
+async def test_select_controller_creates_selected_uid_and_queues_others(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
-    """Explicit skip avoids adding the other unconfigured controller."""
+    """A selected controller is configured and non-selected controllers are queued."""
     first_controller = _make_controller("000000002", "192.0.2.1")
     second_controller = _make_controller("000000001", "192.0.2.2")
 
@@ -377,15 +303,12 @@ async def test_select_controller_only_one_configured_skips_fanout(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "000000001": config_flow.SELECT_ACTION_CONFIGURE,
-                "000000002": config_flow.SELECT_ACTION_SKIP,
-            },
+            {config_flow.SELECTED_CONTROLLER_UID: "000000002"},
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "iZone 000000001"
+    assert result["title"] == "iZone 000000002"
     assert len(hass.config_entries.async_entries(IZONE)) == 1
 
     skipped_flows = [
@@ -395,7 +318,7 @@ async def test_select_controller_only_one_configured_skips_fanout(
     ]
     assert len(skipped_flows) == 1
     assert skipped_flows[0]["step_id"] == "confirm"
-    assert skipped_flows[0]["context"]["unique_id"] == "000000002"
+    assert skipped_flows[0]["context"]["unique_id"] == "000000001"
 
 
 async def test_broadcast_aborts_when_all_discovered_are_configured(

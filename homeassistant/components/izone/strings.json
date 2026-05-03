@@ -3,11 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "invalid_controller_selection": "The selected controller list is no longer valid. Restart setup and try again.",
       "invalid_flow_state": "iZone setup reached an unexpected internal state. Restart setup and try again.",
-      "no_controller_chosen": "No controllers were selected to set up.",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "skipped_pending_discovery": "Controllers you skipped are offered again as discovered iZone devices. Finish setup under **Settings** > **Devices & services** when you are ready."
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "flow_title": "{name}",
     "step": {
@@ -15,16 +12,7 @@
         "description": "Do you want to set up iZone?\n\nController UID: {controller_uid}\nController IP: {host}"
       },
       "select_controller": {
-        "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nFor each controller, choose whether to set it up, ignore future discovery offers for it, or skip it for now so it stays available as a discovered device you can add later. The default is to set up each controller."
-      }
-    }
-  },
-  "selector": {
-    "controller_action": {
-      "options": {
-        "configure": "Set up",
-        "ignore": "Ignore",
-        "skip": "Skip"
+        "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       }
     }
   },
