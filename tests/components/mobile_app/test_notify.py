@@ -916,7 +916,7 @@ async def test_notify_local_only_multiple_targets(
     """
     with pytest.raises(
         HomeAssistantError,
-        r"Device(s).*mock-webhook_id.*webhook_id_2.*not connected to local push notifications",
+        match=r"Device\(s\).*mock-webhook_id.*webhook_id_2.*not connected to local push notifications",
     ):
         await hass.services.async_call(
             "notify",
