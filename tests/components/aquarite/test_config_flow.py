@@ -21,7 +21,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import MOCK_PASSWORD, MOCK_USERNAME
 
 PATCH_AUTH = "homeassistant.components.aquarite.config_flow.AquariteAuth"
+PATCH_CLIENT = "homeassistant.components.aquarite.config_flow.AquariteClient"
 PATCH_SETUP = "homeassistant.components.aquarite.async_setup_entry"
+
+MOCK_POOLS = {"pool-1": "Main Pool"}
 
 
 @pytest.fixture
@@ -47,8 +50,14 @@ async def test_user_step_creates_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful authentication creates an entry."""
-    with patch(PATCH_AUTH) as mock_auth_cls:
+    with (
+        patch(PATCH_AUTH) as mock_auth_cls,
+        patch(PATCH_CLIENT) as mock_client_cls,
+    ):
         mock_auth_cls.return_value = AsyncMock()
+        mock_client = AsyncMock()
+        mock_client.get_pools = AsyncMock(return_value=MOCK_POOLS)
+        mock_client_cls.return_value = mock_client
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -107,12 +116,41 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "unknown"}
 
 
+async def test_no_pools(hass: HomeAssistant) -> None:
+    """Test that an account with no pools shows the no_pools error."""
+    with (
+        patch(PATCH_AUTH) as mock_auth_cls,
+        patch(PATCH_CLIENT) as mock_client_cls,
+    ):
+        mock_auth_cls.return_value = AsyncMock()
+        mock_client = AsyncMock()
+        mock_client.get_pools = AsyncMock(return_value={})
+        mock_client_cls.return_value = mock_client
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_pools"}
+
+
 async def test_duplicate_account_aborts(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that adding the same account twice aborts."""
-    with patch(PATCH_AUTH) as mock_auth_cls:
+    with (
+        patch(PATCH_AUTH) as mock_auth_cls,
+        patch(PATCH_CLIENT) as mock_client_cls,
+    ):
         mock_auth_cls.return_value = AsyncMock()
+        mock_client = AsyncMock()
+        mock_client.get_pools = AsyncMock(return_value=MOCK_POOLS)
+        mock_client_cls.return_value = mock_client
 
         # First entry
         result = await hass.config_entries.flow.async_init(

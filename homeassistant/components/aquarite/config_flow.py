@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioaquarite import AquariteAuth, AuthenticationError
+from aioaquarite import AquariteAuth, AquariteClient, AuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -42,22 +42,27 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 auth = AquariteAuth(session, username, password)
                 await auth.authenticate()
+                api = AquariteClient(auth)
+                pools = await api.get_pools()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected error during authentication")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(username.lower())
-                self._abort_if_unique_id_configured()
+                if not pools:
+                    errors["base"] = "no_pools"
+                else:
+                    await self.async_set_unique_id(username.lower())
+                    self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=username,
-                    data={
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
+                    return self.async_create_entry(
+                        title=username,
+                        data={
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=AUTH_SCHEMA, errors=errors

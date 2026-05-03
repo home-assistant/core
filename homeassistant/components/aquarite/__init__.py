@@ -12,7 +12,11 @@ from aioaquarite import AquariteAuth, AquariteClient, AquariteError, Authenticat
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import HEALTH_CHECK_INTERVAL
@@ -61,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
         raise ConfigEntryNotReady from exc
 
     if not pools:
-        raise ConfigEntryNotReady("No pools found for this account")
+        raise ConfigEntryError("No pools found for this account")
 
     data = AquariteData(auth=auth, api=api)
 
