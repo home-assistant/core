@@ -40,14 +40,12 @@ _SPEED_LEVEL_PERCENTAGES: list[int] = [
     for i, _ in enumerate(ORDERED_NAMED_FAN_SPEEDS)
 ]
 
-# Maps CNT states to their display percentage for the speed slider.
 _STATE_TO_PERCENTAGE: dict[VentilationState, int] = {
     VentilationState.CNT1: _SPEED_LEVEL_PERCENTAGES[0],
     VentilationState.CNT2: _SPEED_LEVEL_PERCENTAGES[1],
     VentilationState.CNT3: _SPEED_LEVEL_PERCENTAGES[2],
 }
 
-# Maps MAN states (including timed variants) and EMPT to their preset mode.
 _STATE_TO_PRESET: dict[VentilationState, str] = {
     VentilationState.AUTO: PRESET_AUTO,
     VentilationState.MAN1: PRESET_MAN1,
