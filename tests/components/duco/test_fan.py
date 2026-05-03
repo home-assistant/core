@@ -1,6 +1,5 @@
 """Tests for the Duco fan platform."""
 
-import logging
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError, DucoRateLimitError
@@ -126,10 +125,7 @@ async def test_fan_set_state_rate_limit_logs_warning(
         side_effect=DucoRateLimitError()
     )
 
-    with (
-        pytest.raises(HomeAssistantError),
-        caplog.at_level(logging.WARNING, logger="homeassistant.components.duco.fan"),
-    ):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
