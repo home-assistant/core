@@ -722,8 +722,12 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
 
     if entity.domain == climate.DOMAIN:
         temperature = attributes.get(ATTR_TEMPERATURE, 0)
-        # Convert 0-100 to 0-254
-        data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
+        # Handle climate device that returns null when switched off
+        if temperature is None:
+            data[STATE_BRIGHTNESS] = 0
+        else:
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == humidifier.DOMAIN:
         humidity = attributes.get(ATTR_HUMIDITY, 0)
         # Convert 0-100 to 0-254
