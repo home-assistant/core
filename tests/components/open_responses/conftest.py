@@ -1,7 +1,5 @@
 """Tests helpers for Open Responses."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.open_responses.const import (
@@ -56,9 +54,8 @@ async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Initialize integration."""
-    with patch("openai.AsyncOpenAI"):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)

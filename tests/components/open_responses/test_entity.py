@@ -1,19 +1,8 @@
 """Tests for Open Responses entity helpers."""
 
 from collections.abc import AsyncGenerator
-from typing import cast
+from unittest.mock import Mock
 
-from openai._streaming import AsyncStream
-from openai.types.responses import (
-    ResponseFunctionCallArgumentsDeltaEvent,
-    ResponseFunctionCallArgumentsDoneEvent,
-    ResponseFunctionToolCall,
-    ResponseOutputItemAddedEvent,
-    ResponseOutputItemDoneEvent,
-    ResponseOutputMessage,
-    ResponseReasoningItem,
-    ResponseStreamEvent,
-)
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -112,14 +101,14 @@ def test_convert_content_includes_attachment_only_user_message(
 
 def test_convert_content_preserves_native_output_message() -> None:
     """Test native Open Responses output messages are passed back unchanged."""
-    native_message = ResponseOutputMessage(
-        id="msg_1",
-        content=[],
-        role="assistant",
-        status="completed",
-        type="message",
-        phase="answer",
-    )
+    native_message = {
+        "id": "msg_1",
+        "content": [],
+        "role": "assistant",
+        "status": "completed",
+        "type": "message",
+        "phase": "answer",
+    }
 
     messages = _convert_content_to_param(
         [
@@ -174,28 +163,28 @@ def test_convert_content_preserves_native_dict_output_message() -> None:
 
 async def test_transform_stream_preserves_native_output_message() -> None:
     """Test output item metadata is preserved from the stream."""
-    native_message = ResponseOutputMessage(
-        id="msg_1",
-        content=[],
-        role="assistant",
-        status="completed",
-        type="message",
-        phase="answer",
-    )
+    native_message = {
+        "id": "msg_1",
+        "content": [],
+        "role": "assistant",
+        "status": "completed",
+        "type": "message",
+        "phase": "answer",
+    }
 
-    async def stream() -> AsyncGenerator[ResponseStreamEvent]:
-        yield ResponseOutputItemDoneEvent(
-            item=native_message,
-            output_index=0,
-            sequence_number=0,
-            type="response.output_item.done",
-        )
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "item": native_message,
+            "output_index": 0,
+            "sequence_number": 0,
+            "type": "response.output_item.done",
+        }
 
     deltas = [
         delta
         async for delta in _transform_stream(
-            cast(conversation.ChatLog, object()),
-            cast(AsyncStream[ResponseStreamEvent], stream()),
+            Mock(),
+            stream(),
         )
     ]
 
@@ -205,83 +194,83 @@ async def test_transform_stream_preserves_native_output_message() -> None:
 async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
     """Test interleaved function call deltas are correlated by item ID."""
 
-    async def stream() -> AsyncGenerator[ResponseStreamEvent]:
-        yield ResponseOutputItemAddedEvent(
-            item=ResponseFunctionToolCall(
-                id="fc_1",
-                arguments="",
-                call_id="call_1",
-                name="FirstTool",
-                type="function_call",
-                status="in_progress",
-            ),
-            output_index=0,
-            sequence_number=0,
-            type="response.output_item.added",
-        )
-        yield ResponseOutputItemAddedEvent(
-            item=ResponseFunctionToolCall(
-                id="fc_2",
-                arguments="",
-                call_id="call_2",
-                name="SecondTool",
-                type="function_call",
-                status="in_progress",
-            ),
-            output_index=1,
-            sequence_number=1,
-            type="response.output_item.added",
-        )
-        yield ResponseFunctionCallArgumentsDeltaEvent(
-            delta='{"value"',
-            item_id="fc_1",
-            output_index=0,
-            sequence_number=2,
-            type="response.function_call_arguments.delta",
-        )
-        yield ResponseFunctionCallArgumentsDeltaEvent(
-            delta='{"name"',
-            item_id="fc_2",
-            output_index=1,
-            sequence_number=3,
-            type="response.function_call_arguments.delta",
-        )
-        yield ResponseFunctionCallArgumentsDeltaEvent(
-            delta=":1}",
-            item_id="fc_1",
-            output_index=0,
-            sequence_number=4,
-            type="response.function_call_arguments.delta",
-        )
-        yield ResponseFunctionCallArgumentsDeltaEvent(
-            delta=':"kitchen"}',
-            item_id="fc_2",
-            output_index=1,
-            sequence_number=5,
-            type="response.function_call_arguments.delta",
-        )
-        yield ResponseFunctionCallArgumentsDoneEvent(
-            arguments='{"name":"kitchen"}',
-            item_id="fc_2",
-            name="SecondTool",
-            output_index=1,
-            sequence_number=6,
-            type="response.function_call_arguments.done",
-        )
-        yield ResponseFunctionCallArgumentsDoneEvent(
-            arguments='{"value":1}',
-            item_id="fc_1",
-            name="FirstTool",
-            output_index=0,
-            sequence_number=7,
-            type="response.function_call_arguments.done",
-        )
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "item": {
+                "id": "fc_1",
+                "arguments": "",
+                "call_id": "call_1",
+                "name": "FirstTool",
+                "type": "function_call",
+                "status": "in_progress",
+            },
+            "output_index": 0,
+            "sequence_number": 0,
+            "type": "response.output_item.added",
+        }
+        yield {
+            "item": {
+                "id": "fc_2",
+                "arguments": "",
+                "call_id": "call_2",
+                "name": "SecondTool",
+                "type": "function_call",
+                "status": "in_progress",
+            },
+            "output_index": 1,
+            "sequence_number": 1,
+            "type": "response.output_item.added",
+        }
+        yield {
+            "delta": '{"value"',
+            "item_id": "fc_1",
+            "output_index": 0,
+            "sequence_number": 2,
+            "type": "response.function_call_arguments.delta",
+        }
+        yield {
+            "delta": '{"name"',
+            "item_id": "fc_2",
+            "output_index": 1,
+            "sequence_number": 3,
+            "type": "response.function_call_arguments.delta",
+        }
+        yield {
+            "delta": ":1}",
+            "item_id": "fc_1",
+            "output_index": 0,
+            "sequence_number": 4,
+            "type": "response.function_call_arguments.delta",
+        }
+        yield {
+            "delta": ':"kitchen"}',
+            "item_id": "fc_2",
+            "output_index": 1,
+            "sequence_number": 5,
+            "type": "response.function_call_arguments.delta",
+        }
+        yield {
+            "arguments": '{"name":"kitchen"}',
+            "item_id": "fc_2",
+            "name": "SecondTool",
+            "output_index": 1,
+            "sequence_number": 6,
+            "type": "response.function_call_arguments.done",
+        }
+        yield {
+            "arguments": '{"value":1}',
+            "item_id": "fc_1",
+            "name": "FirstTool",
+            "output_index": 0,
+            "sequence_number": 7,
+            "type": "response.function_call_arguments.done",
+        }
 
     deltas = [
         delta
         async for delta in _transform_stream(
-            cast(conversation.ChatLog, object()),
-            cast(AsyncStream[ResponseStreamEvent], stream()),
+            Mock(),
+            stream(),
         )
     ]
 
@@ -311,54 +300,60 @@ async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
 
 async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
     """Test each reasoning item starts a separate assistant message."""
-    first_reasoning = ResponseReasoningItem(
-        id="reasoning_1",
-        summary=[],
-        type="reasoning",
-    )
-    second_reasoning = ResponseReasoningItem(
-        id="reasoning_2",
-        summary=[],
-        type="reasoning",
-    )
+    first_reasoning = {"id": "reasoning_1", "summary": [], "type": "reasoning"}
+    second_reasoning = {"id": "reasoning_2", "summary": [], "type": "reasoning"}
 
-    async def stream() -> AsyncGenerator[ResponseStreamEvent]:
-        yield ResponseOutputItemAddedEvent(
-            item=first_reasoning,
-            output_index=0,
-            sequence_number=0,
-            type="response.output_item.added",
-        )
-        yield ResponseOutputItemDoneEvent(
-            item=first_reasoning,
-            output_index=0,
-            sequence_number=0,
-            type="response.output_item.done",
-        )
-        yield ResponseOutputItemAddedEvent(
-            item=second_reasoning,
-            output_index=1,
-            sequence_number=0,
-            type="response.output_item.added",
-        )
-        yield ResponseOutputItemDoneEvent(
-            item=second_reasoning,
-            output_index=1,
-            sequence_number=0,
-            type="response.output_item.done",
-        )
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "item": first_reasoning,
+            "output_index": 0,
+            "sequence_number": 0,
+            "type": "response.output_item.added",
+        }
+        yield {
+            "item": first_reasoning,
+            "output_index": 0,
+            "sequence_number": 0,
+            "type": "response.output_item.done",
+        }
+        yield {
+            "item": second_reasoning,
+            "output_index": 1,
+            "sequence_number": 0,
+            "type": "response.output_item.added",
+        }
+        yield {
+            "item": second_reasoning,
+            "output_index": 1,
+            "sequence_number": 0,
+            "type": "response.output_item.done",
+        }
 
     deltas = [
         delta
         async for delta in _transform_stream(
-            cast(conversation.ChatLog, object()),
-            cast(AsyncStream[ResponseStreamEvent], stream()),
+            Mock(),
+            stream(),
         )
     ]
 
     assert deltas == [
         {"role": "assistant"},
-        {"native": first_reasoning},
+        {
+            "native": {
+                "encrypted_content": None,
+                "id": "reasoning_1",
+                "summary": [],
+                "type": "reasoning",
+            }
+        },
         {"role": "assistant"},
-        {"native": second_reasoning},
+        {
+            "native": {
+                "encrypted_content": None,
+                "id": "reasoning_2",
+                "summary": [],
+                "type": "reasoning",
+            }
+        },
     ]

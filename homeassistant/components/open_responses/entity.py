@@ -1,41 +1,12 @@
 """Base entity for Open Responses."""
 
 import base64
-from collections.abc import AsyncGenerator, Callable, Iterable
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-import openai
-from openai._streaming import AsyncStream
-from openai.types.responses import (
-    EasyInputMessageParam,
-    FunctionToolParam,
-    ResponseCompletedEvent,
-    ResponseErrorEvent,
-    ResponseFailedEvent,
-    ResponseFunctionCallArgumentsDeltaEvent,
-    ResponseFunctionCallArgumentsDoneEvent,
-    ResponseFunctionToolCall,
-    ResponseFunctionToolCallParam,
-    ResponseIncompleteEvent,
-    ResponseInputFileParam,
-    ResponseInputImageParam,
-    ResponseInputMessageContentListParam,
-    ResponseInputParam,
-    ResponseOutputItemAddedEvent,
-    ResponseOutputItemDoneEvent,
-    ResponseOutputMessage,
-    ResponseReasoningItem,
-    ResponseReasoningItemParam,
-    ResponseReasoningSummaryTextDeltaEvent,
-    ResponseStreamEvent,
-    ResponseTextDeltaEvent,
-    ToolParam,
-)
-from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
-from openai.types.responses.response_input_param import FunctionCallOutput
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -49,6 +20,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
+from .client import (
+    OpenResponsesAuthError,
+    OpenResponsesConnectionError,
+    OpenResponsesRateLimitError,
+)
 from .const import (
     CONF_MAX_OUTPUT_TOKENS,
     CONF_STORE_RESPONSES,
@@ -63,6 +39,11 @@ if TYPE_CHECKING:
 
 
 MAX_TOOL_ITERATIONS = 10
+
+type ResponseInputParam = list[dict[str, Any]]
+type ResponseInputMessageContentListParam = list[dict[str, Any]]
+type FunctionToolParam = dict[str, Any]
+type ToolParam = dict[str, Any]
 
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
@@ -126,13 +107,13 @@ def _format_tool(
     schema = convert(tool.parameters, custom_serializer=custom_serializer)
     _strip_unsupported_tool_schema_keys(schema)
 
-    return FunctionToolParam(
-        type="function",
-        name=tool.name,
-        parameters=schema,
-        description=tool.description,
-        strict=False,
-    )
+    return {
+        "type": "function",
+        "name": tool.name,
+        "parameters": schema,
+        "description": tool.description,
+        "strict": False,
+    }
 
 
 def _convert_content_to_param(
@@ -140,16 +121,15 @@ def _convert_content_to_param(
 ) -> ResponseInputParam:
     """Convert native Home Assistant chat content to Open Responses input items."""
     messages: ResponseInputParam = []
-    reasoning_summary: list[str] = []
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
             messages.append(
-                FunctionCallOutput(
-                    type="function_call_output",
-                    call_id=content.tool_call_id,
-                    output=json_dumps(content.tool_result),
-                )
+                {
+                    "type": "function_call_output",
+                    "call_id": content.tool_call_id,
+                    "output": json_dumps(content.tool_result),
+                }
             )
             continue
 
@@ -160,174 +140,141 @@ def _convert_content_to_param(
         ):
             messages.append(cast(Any, content.native))
             continue
-        if isinstance(content, conversation.AssistantContent) and isinstance(
-            content.native, ResponseOutputMessage
-        ):
-            messages.append(
-                cast(
-                    Any,
-                    content.native.model_dump(exclude_none=True),
-                )
-            )
-            continue
-        if (
-            isinstance(content, conversation.AssistantContent)
-            and not isinstance(content.native, ResponseReasoningItem)
-            and hasattr(content.native, "model_dump")
-        ):
-            messages.append(cast(Any, content.native.model_dump(exclude_none=True)))
-            continue
 
         if content.content or (
             isinstance(content, conversation.UserContent) and content.attachments
         ):
             messages.append(
-                EasyInputMessageParam(
-                    type="message", role=content.role, content=content.content or ""
-                )
+                {
+                    "type": "message",
+                    "role": content.role,
+                    "content": content.content or "",
+                }
             )
 
         if isinstance(content, conversation.AssistantContent):
             if content.tool_calls:
                 messages.extend(
-                    ResponseFunctionToolCallParam(
-                        type="function_call",
-                        name=tool_call.tool_name,
-                        arguments=json_dumps(tool_call.tool_args),
-                        call_id=tool_call.id,
-                        status="completed",
-                    )
+                    {
+                        "type": "function_call",
+                        "name": tool_call.tool_name,
+                        "arguments": json_dumps(tool_call.tool_args),
+                        "call_id": tool_call.id,
+                        "status": "completed",
+                    }
                     for tool_call in content.tool_calls
                 )
-
-            if content.thinking_content:
-                reasoning_summary.append(content.thinking_content)
-
-            if isinstance(content.native, ResponseReasoningItem):
-                messages.append(
-                    ResponseReasoningItemParam(
-                        type="reasoning",
-                        id=content.native.id,
-                        summary=(
-                            [
-                                {
-                                    "type": "summary_text",
-                                    "text": summary,
-                                }
-                                for summary in reasoning_summary
-                            ]
-                            if content.thinking_content
-                            else []
-                        ),
-                        encrypted_content=content.native.encrypted_content,
-                        status="completed",
-                    )
-                )
-                reasoning_summary = []
 
     return messages
 
 
 async def _transform_stream(
     chat_log: conversation.ChatLog,
-    stream: AsyncStream[ResponseStreamEvent],
+    stream: AsyncIterable[dict[str, Any]],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an Open Responses stream into Home Assistant chat deltas."""
-    current_tool_calls: dict[str, ResponseFunctionToolCall] = {}
+    current_tool_calls: dict[str, dict[str, Any]] = {}
     last_summary_index: int | None = None
     last_role: Literal["assistant"] | None = None
 
     async for event in stream:
         LOGGER.debug("Received event: %s", event)
 
-        if isinstance(event, ResponseOutputItemAddedEvent):
-            if isinstance(event.item, ResponseFunctionToolCall):
-                if event.item.id is None:
+        event_type = event.get("type")
+
+        if event_type == "response.output_item.added":
+            item = cast(dict[str, Any], event.get("item") or {})
+            item_type = item.get("type")
+            if item_type == "function_call":
+                if item.get("id") is None:
                     raise HomeAssistantError("Received tool call without an item ID")
                 yield {"role": "assistant"}
                 last_role = "assistant"
                 last_summary_index = None
-                current_tool_calls[event.item.id] = event.item
-            elif (
-                isinstance(event.item, (ResponseReasoningItem, ResponseOutputMessage))
-                or last_role != "assistant"
-            ):
+                current_tool_calls[item["id"]] = item.copy()
+            elif item_type in ("reasoning", "message") or last_role != "assistant":
                 yield {"role": "assistant"}
                 last_role = "assistant"
                 last_summary_index = None
-        elif isinstance(event, ResponseOutputItemDoneEvent):
-            if isinstance(event.item, ResponseReasoningItem):
+        elif event_type == "response.output_item.done":
+            item = cast(dict[str, Any], event.get("item") or {})
+            item_type = item.get("type")
+            if item_type == "reasoning":
                 yield {
-                    "native": ResponseReasoningItem(
-                        type="reasoning",
-                        id=event.item.id,
-                        summary=[],
-                        encrypted_content=event.item.encrypted_content,
-                    )
+                    "native": {
+                        "type": "reasoning",
+                        "id": item.get("id"),
+                        "summary": [],
+                        "encrypted_content": item.get("encrypted_content"),
+                    }
                 }
-                last_summary_index = len(event.item.summary) - 1
-            elif not isinstance(event.item, ResponseFunctionToolCall):
-                yield {"native": event.item}
-        elif isinstance(event, ResponseTextDeltaEvent):
-            yield {"content": event.delta}
-        elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
-            if (
-                last_summary_index is not None
-                and event.summary_index != last_summary_index
-            ):
+                last_summary_index = len(item.get("summary") or []) - 1
+            elif item_type != "function_call":
+                yield {"native": item}
+        elif event_type == "response.output_text.delta":
+            yield {"content": event["delta"]}
+        elif event_type in (
+            "response.reasoning_summary.delta",
+            "response.reasoning_summary_text.delta",
+        ):
+            summary_index = cast(int, event.get("summary_index", 0))
+            if last_summary_index is not None and summary_index != last_summary_index:
                 yield {"role": "assistant"}
                 last_role = "assistant"
-            last_summary_index = event.summary_index
-            yield {"thinking_content": event.delta}
-        elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
-            if current_tool_call := current_tool_calls.get(event.item_id):
-                current_tool_call.arguments += event.delta
-        elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
+            last_summary_index = summary_index
+            yield {"thinking_content": event["delta"]}
+        elif event_type == "response.function_call_arguments.delta":
+            if current_tool_call := current_tool_calls.get(event["item_id"]):
+                current_tool_call["arguments"] = (
+                    current_tool_call.get("arguments", "") + event["delta"]
+                )
+        elif event_type == "response.function_call_arguments.done":
             if (
-                current_tool_call := current_tool_calls.pop(event.item_id, None)
+                current_tool_call := current_tool_calls.pop(event["item_id"], None)
             ) is None:
                 raise HomeAssistantError("Received tool arguments without a tool call")
-            current_tool_call.arguments = event.arguments
-            current_tool_call.status = "completed"
+            current_tool_call["arguments"] = event["arguments"]
+            current_tool_call["status"] = "completed"
             yield {
                 "tool_calls": [
                     llm.ToolInput(
-                        id=current_tool_call.call_id,
-                        tool_name=current_tool_call.name,
-                        tool_args=json.loads(current_tool_call.arguments),
+                        id=current_tool_call["call_id"],
+                        tool_name=current_tool_call["name"],
+                        tool_args=json.loads(current_tool_call["arguments"]),
                     )
                 ]
             }
-        elif isinstance(
-            event,
-            (ResponseCompletedEvent, ResponseIncompleteEvent, ResponseFailedEvent),
+        elif event_type in (
+            "response.completed",
+            "response.incomplete",
+            "response.failed",
         ):
-            if event.response.usage is not None:
+            response = cast(dict[str, Any], event.get("response") or {})
+            if usage := response.get("usage"):
                 chat_log.async_trace(
                     {
                         "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
+                            "input_tokens": usage["input_tokens"],
+                            "output_tokens": usage["output_tokens"],
                         }
                     }
                 )
-            if isinstance(event, ResponseIncompleteEvent):
+            if event_type == "response.incomplete":
                 reason = "unknown reason"
-                if (
-                    event.response.incomplete_details
-                    and event.response.incomplete_details.reason
-                ):
-                    reason = event.response.incomplete_details.reason
+                if incomplete_details := response.get("incomplete_details"):
+                    reason = incomplete_details.get("reason") or reason
                 raise HomeAssistantError(
                     f"Open Responses response incomplete: {reason}"
                 )
-            if isinstance(event, ResponseFailedEvent):
+            if event_type == "response.failed":
                 reason = "unknown reason"
-                if event.response.error is not None:
-                    reason = event.response.error.message
+                if error := response.get("error"):
+                    reason = error.get("message") or reason
                 raise HomeAssistantError(f"Open Responses response failed: {reason}")
-        elif isinstance(event, ResponseErrorEvent):
-            raise HomeAssistantError(f"Open Responses response error: {event.message}")
+        elif event_type == "response.error":
+            raise HomeAssistantError(
+                f"Open Responses response error: {event['message']}"
+            )
 
 
 class OpenResponsesEntity(Entity):
@@ -362,16 +309,15 @@ class OpenResponsesEntity(Entity):
         options = self.subentry.data
         messages = _convert_content_to_param(chat_log.content)
 
-        model_args = ResponseCreateParamsStreaming(
-            model=options.get(CONF_MODEL, self.entry.data[CONF_MODEL]),
-            input=messages,
-            max_output_tokens=options.get(
+        model_args: dict[str, Any] = {
+            "model": options.get(CONF_MODEL, self.entry.data[CONF_MODEL]),
+            "input": messages,
+            "max_output_tokens": options.get(
                 CONF_MAX_OUTPUT_TOKENS, RECOMMENDED_MAX_OUTPUT_TOKENS
             ),
-            user=chat_log.conversation_id,
-            store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
-            stream=True,
-        )
+            "user": chat_log.conversation_id,
+            "store": options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
+        }
 
         tools: list[ToolParam] = []
         if chat_log.llm_api:
@@ -416,33 +362,30 @@ class OpenResponsesEntity(Entity):
 
         for _iteration in range(max_iterations):
             try:
-                stream = await client.responses.create(**model_args)
-            except openai.AuthenticationError as err:
+                stream = client.stream_response(**model_args)
+                new_contents = [
+                    content
+                    async for content in chat_log.async_add_delta_content_stream(
+                        self.entity_id,
+                        _transform_stream(chat_log, stream),
+                    )
+                ]
+            except OpenResponsesAuthError as err:
                 raise ConfigEntryAuthFailed(
                     "Authentication failed with Open Responses endpoint"
                 ) from err
-            except openai.RateLimitError as err:
+            except OpenResponsesRateLimitError as err:
                 LOGGER.error("Rate limited by Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
                     "Rate limited by Open Responses endpoint"
                 ) from err
-            except openai.OpenAIError as err:
+            except OpenResponsesConnectionError as err:
                 LOGGER.error("Error talking to Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
                     "Error talking to Open Responses endpoint"
                 ) from err
 
-            messages.extend(
-                _convert_content_to_param(
-                    [
-                        content
-                        async for content in chat_log.async_add_delta_content_stream(
-                            self.entity_id,
-                            _transform_stream(chat_log, stream),
-                        )
-                    ]
-                )
-            )
+            messages.extend(_convert_content_to_param(new_contents))
             if not chat_log.unresponded_tool_results:
                 break
 
@@ -475,19 +418,19 @@ async def async_prepare_files_for_prompt(
 
             if mime_type.startswith("image/"):
                 content.append(
-                    ResponseInputImageParam(
-                        type="input_image",
-                        image_url=f"data:{mime_type};base64,{base64_file}",
-                        detail="auto",
-                    )
+                    {
+                        "type": "input_image",
+                        "image_url": f"data:{mime_type};base64,{base64_file}",
+                        "detail": "auto",
+                    }
                 )
             elif mime_type.startswith("application/pdf"):
                 content.append(
-                    ResponseInputFileParam(
-                        type="input_file",
-                        filename=str(file_path),
-                        file_data=f"data:{mime_type};base64,{base64_file}",
-                    )
+                    {
+                        "type": "input_file",
+                        "filename": str(file_path),
+                        "file_data": f"data:{mime_type};base64,{base64_file}",
+                    }
                 )
 
         return content
