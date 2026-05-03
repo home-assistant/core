@@ -153,6 +153,13 @@ def _convert_content_to_param(
             )
             continue
 
+        if (
+            isinstance(content, conversation.AssistantContent)
+            and isinstance(content.native, dict)
+            and content.native.get("type")
+        ):
+            messages.append(cast(Any, content.native))
+            continue
         if isinstance(content, conversation.AssistantContent) and isinstance(
             content.native, ResponseOutputMessage
         ):
