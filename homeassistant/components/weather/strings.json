@@ -95,6 +95,7 @@
       "options": {
         "daily": "Daily",
         "hourly": "Hourly",
+        "minutely": "Minutely",
         "twice_daily": "Twice daily"
       }
     }

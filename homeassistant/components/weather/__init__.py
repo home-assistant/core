@@ -152,6 +152,11 @@ _TwiceDailyForecastUpdateCoordinatorT = TypeVar(
     bound=TimestampDataUpdateCoordinator[Any],
     default=_DailyForecastUpdateCoordinatorT,
 )
+_MinutelyForecastUpdateCoordinatorT = TypeVar(
+    "_MinutelyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
+)
 
 # mypy: disallow-any-generics
 
@@ -210,12 +215,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_GET_FORECASTS,
-        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
+        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily", "minutely"))},
         async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,
             WeatherEntityFeature.FORECAST_HOURLY,
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
+            WeatherEntityFeature.FORECAST_MINUTELY,
         ],
         supports_response=SupportsResponse.ONLY,
     )
@@ -305,7 +311,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     _attr_native_dew_point: float | None = None
 
     _forecast_listeners: dict[
-        Literal["daily", "hourly", "twice_daily"],
+        Literal["daily", "hourly", "twice_daily", "minutely"],
         list[Callable[[list[JsonValueType] | None], None]],
     ]
 
@@ -317,7 +323,12 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def __post_init__(self, *args: Any, **kwargs: Any) -> None:
         """Finish initializing."""
-        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
+        self._forecast_listeners = {
+            "daily": [],
+            "hourly": [],
+            "twice_daily": [],
+            "minutely": [],
+        }
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
@@ -512,6 +523,10 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
+        raise NotImplementedError
+
+    async def async_forecast_minutely(self) -> list[Forecast] | None:
+        """Return the minutely forecast in native units."""
         raise NotImplementedError
 
     @cached_property
@@ -927,14 +942,14 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     @callback
     def _async_subscription_started(
         self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"],
     ) -> None:
         """Start subscription to forecast_type."""
 
     @callback
     def _async_subscription_ended(
         self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"],
     ) -> None:
         """End subscription to forecast_type."""
 
@@ -942,7 +957,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     @callback
     def async_subscribe_forecast(
         self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"],
         forecast_listener: Callable[[list[JsonValueType] | None], None],
     ) -> CALLBACK_TYPE:
         """Subscribe to forecast updates.
@@ -964,11 +979,13 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @final
     async def async_update_listeners(
-        self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
+        self,
+        forecast_types: Iterable[Literal["daily", "hourly", "twice_daily", "minutely"]]
+        | None,
     ) -> None:
         """Push updated forecast to all listeners."""
         if forecast_types is None:
-            forecast_types = {"daily", "hourly", "twice_daily"}
+            forecast_types = {"daily", "hourly", "twice_daily", "minutely"}
         for forecast_type in forecast_types:
             if not self._forecast_listeners[forecast_type]:
                 continue
@@ -1015,6 +1032,10 @@ async def async_get_forecasts_service(
         if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
             raise_unsupported_forecast(weather.entity_id, forecast_type)
         native_forecast_list = await weather.async_forecast_hourly()
+    elif forecast_type == "minutely":
+        if (supported_features & WeatherEntityFeature.FORECAST_MINUTELY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_minutely()
     else:
         if (supported_features & WeatherEntityFeature.FORECAST_TWICE_DAILY) == 0:
             raise_unsupported_forecast(weather.entity_id, forecast_type)
@@ -1036,6 +1057,7 @@ class CoordinatorWeatherEntity(
         _DailyForecastUpdateCoordinatorT,
         _HourlyForecastUpdateCoordinatorT,
         _TwiceDailyForecastUpdateCoordinatorT,
+        _MinutelyForecastUpdateCoordinatorT,
     ],
 ):
     """A class for weather entities using DataUpdateCoordinators."""
@@ -1048,9 +1070,11 @@ class CoordinatorWeatherEntity(
         daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
         hourly_coordinator: _HourlyForecastUpdateCoordinatorT | None = None,
         twice_daily_coordinator: _TwiceDailyForecastUpdateCoordinatorT | None = None,
+        minutely_coordinator: _MinutelyForecastUpdateCoordinatorT | None = None,
         daily_forecast_valid: timedelta | None = None,
         hourly_forecast_valid: timedelta | None = None,
         twice_daily_forecast_valid: timedelta | None = None,
+        minutely_forecast_valid: timedelta | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(observation_coordinator, context)
@@ -1058,16 +1082,19 @@ class CoordinatorWeatherEntity(
             "daily": daily_coordinator,
             "hourly": hourly_coordinator,
             "twice_daily": twice_daily_coordinator,
+            "minutely": minutely_coordinator,
         }
         self.forecast_valid = {
             "daily": daily_forecast_valid,
             "hourly": hourly_forecast_valid,
             "twice_daily": twice_daily_forecast_valid,
+            "minutely": minutely_forecast_valid,
         }
         self.unsub_forecast: dict[str, Callable[[], None] | None] = {
             "daily": None,
             "hourly": None,
             "twice_daily": None,
+            "minutely": None,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -1076,9 +1103,10 @@ class CoordinatorWeatherEntity(
         self.async_on_remove(partial(self._remove_forecast_listener, "daily"))
         self.async_on_remove(partial(self._remove_forecast_listener, "hourly"))
         self.async_on_remove(partial(self._remove_forecast_listener, "twice_daily"))
+        self.async_on_remove(partial(self._remove_forecast_listener, "minutely"))
 
     def _remove_forecast_listener(
-        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+        self, forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"]
     ) -> None:
         """Remove weather forecast listener."""
         if unsub_fn := self.unsub_forecast[forecast_type]:
@@ -1088,7 +1116,7 @@ class CoordinatorWeatherEntity(
     @callback
     def _async_subscription_started(
         self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"],
     ) -> None:
         """Start subscription to forecast_type."""
         if not (coordinator := self.forecast_coordinators[forecast_type]):
@@ -1109,10 +1137,14 @@ class CoordinatorWeatherEntity(
     def _handle_twice_daily_forecast_coordinator_update(self) -> None:
         """Handle updated data from the twice daily forecast coordinator."""
 
+    @callback
+    def _handle_minutely_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the minutely forecast coordinator."""
+
     @final
     @callback
     def _handle_forecast_update(
-        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+        self, forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"]
     ) -> None:
         """Update forecast data."""
         coordinator = self.forecast_coordinators[forecast_type]
@@ -1126,7 +1158,7 @@ class CoordinatorWeatherEntity(
     @callback
     def _async_subscription_ended(
         self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"],
     ) -> None:
         """End subscription to forecast_type."""
         self._remove_forecast_listener(forecast_type)
@@ -1169,9 +1201,14 @@ class CoordinatorWeatherEntity(
         """Return the twice daily forecast in native units."""
         raise NotImplementedError
 
+    @callback
+    def _async_forecast_minutely(self) -> list[Forecast] | None:
+        """Return the minutely forecast in native units."""
+        raise NotImplementedError
+
     @final
     async def _async_forecast(
-        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+        self, forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"]
     ) -> list[Forecast] | None:
         """Return the forecast in native units."""
         coordinator = self.forecast_coordinators[forecast_type]
@@ -1197,6 +1234,11 @@ class CoordinatorWeatherEntity(
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         return await self._async_forecast("twice_daily")
+
+    @final
+    async def async_forecast_minutely(self) -> list[Forecast] | None:
+        """Return the minutely forecast in native units."""
+        return await self._async_forecast("minutely")
 
 
 class SingleCoordinatorWeatherEntity(

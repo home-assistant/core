@@ -6,6 +6,7 @@ get_forecast:
         - weather.WeatherEntityFeature.FORECAST_DAILY
         - weather.WeatherEntityFeature.FORECAST_HOURLY
         - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
+        - weather.WeatherEntityFeature.FORECAST_MINUTELY
   fields:
     type:
       required: true
@@ -15,6 +16,7 @@ get_forecast:
             - "daily"
             - "hourly"
             - "twice_daily"
+            - "minutely"
           translation_key: forecast_type
 get_forecasts:
   target:
@@ -24,6 +26,7 @@ get_forecasts:
         - weather.WeatherEntityFeature.FORECAST_DAILY
         - weather.WeatherEntityFeature.FORECAST_HOURLY
         - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
+        - weather.WeatherEntityFeature.FORECAST_MINUTELY
   fields:
     type:
       required: true
@@ -33,4 +36,5 @@ get_forecasts:
             - "daily"
             - "hourly"
             - "twice_daily"
+            - "minutely"
           translation_key: forecast_type
