@@ -35,11 +35,13 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_COMPENSATED_VALUE,
     CONF_DATAPOINTS,
     CONF_DEGREE,
     CONF_LOWER_LIMIT,
     CONF_POLYNOMIAL_CONFIG,
     CONF_PRECISION,
+    CONF_UNCOMPENSATED_VALUE,
     CONF_UPPER_LIMIT,
     DEFAULT_DEGREE,
     DEFAULT_NAME,
@@ -64,7 +66,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                                 multiple=True,
                                 translation_key=CONF_DATAPOINTS,
                                 fields={
-                                    "uncompensated_value": ObjectSelectorField(
+                                    CONF_UNCOMPENSATED_VALUE: ObjectSelectorField(
                                         required=True,
                                         selector=NumberSelector(
                                             NumberSelectorConfig(
@@ -72,7 +74,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                                             )
                                         ),
                                     ),
-                                    "compensated_value": ObjectSelectorField(
+                                    CONF_COMPENSATED_VALUE: ObjectSelectorField(
                                         required=True,
                                         selector=NumberSelector(
                                             NumberSelectorConfig(

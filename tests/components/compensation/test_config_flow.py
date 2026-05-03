@@ -3,11 +3,13 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.compensation.const import (
+    CONF_COMPENSATED_VALUE,
     CONF_DATAPOINTS,
     CONF_DEGREE,
     CONF_LOWER_LIMIT,
     CONF_POLYNOMIAL_CONFIG,
     CONF_PRECISION,
+    CONF_UNCOMPENSATED_VALUE,
     CONF_UPPER_LIMIT,
     DEFAULT_NAME,
     DOMAIN,
@@ -43,8 +45,8 @@ async def test_user_flow(
             CONF_LOWER_LIMIT: False,
             CONF_POLYNOMIAL_CONFIG: {
                 CONF_DATAPOINTS: [
-                    {"compensated_value": 6, "uncompensated_value": 5},
-                    {"compensated_value": 8, "uncompensated_value": 7},
+                    {CONF_COMPENSATED_VALUE: 6, CONF_UNCOMPENSATED_VALUE: 5},
+                    {CONF_COMPENSATED_VALUE: 8, CONF_UNCOMPENSATED_VALUE: 7},
                 ],
                 CONF_DEGREE: 1,
             },
@@ -62,8 +64,8 @@ async def test_user_flow(
         CONF_NAME: "Compensation",
         CONF_POLYNOMIAL_CONFIG: {
             CONF_DATAPOINTS: [
-                {"compensated_value": 6, "uncompensated_value": 5},
-                {"compensated_value": 8, "uncompensated_value": 7},
+                {CONF_COMPENSATED_VALUE: 6, CONF_UNCOMPENSATED_VALUE: 5},
+                {CONF_COMPENSATED_VALUE: 8, CONF_UNCOMPENSATED_VALUE: 7},
             ],
             CONF_DEGREE: 1,
         },
