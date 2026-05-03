@@ -49,8 +49,8 @@ CONF_SUBTYPE: Final = "subtype"
 TRIGGER_TYPES: Final[dict[str, str]] = {
     "on": CMD_ON,
     "off": CMD_OFF,
-    "on_fast": CMD_ON_FAST,
-    "off_fast": CMD_OFF_FAST,
+    "fast_on": CMD_ON_FAST,
+    "fast_off": CMD_OFF_FAST,
     "fade_up": CMD_FADE_UP,
     "fade_down": CMD_FADE_DOWN,
     "fade_stop": CMD_FADE_STOP,

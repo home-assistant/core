@@ -213,8 +213,8 @@ async def test_get_triggers_unsupported_node_def_returns_empty(
 @pytest.mark.parametrize(
     ("trigger_type", "control_code", "should_fire"),
     [
-        ("on_fast", "DFON", True),
-        ("on_fast", "DON", False),
+        ("fast_on", "DFON", True),
+        ("fast_on", "DON", False),
         ("on", "DON", True),
         ("fade_up", "FDUP", True),
         ("fade_stop", "FDSTOP", True),
@@ -339,7 +339,7 @@ async def test_trigger_isolated_per_button(
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: device.id,
-                        CONF_TYPE: "on_fast",
+                        CONF_TYPE: "fast_on",
                         CONF_SUBTYPE: button_b_addr,
                     },
                     "action": {"service": "test.automation"},
