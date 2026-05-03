@@ -3,6 +3,13 @@
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError, DucoRateLimitError
+from duco.models import (
+    Node,
+    NodeGeneralInfo,
+    NodeSensorInfo,
+    NodeVentilationInfo,
+    VentilationState,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -85,6 +92,87 @@ async def test_fan_set_state(
     mock_duco_client.async_set_ventilation_state.assert_called_once_with(
         1, expected_duco_state
     )
+
+
+def _box_node_with_state(state: VentilationState) -> Node:
+    """Return a BOX node fixture with the given ventilation state."""
+    return Node(
+        node_id=1,
+        general=NodeGeneralInfo(
+            node_type="BOX",
+            sub_type=1,
+            network_type="VIRT",
+            parent=0,
+            asso=0,
+            name="Living",
+            identify=0,
+        ),
+        ventilation=NodeVentilationInfo(
+            state=state.value,
+            time_state_remain=0,
+            time_state_end=0,
+            mode="AUTO",
+            flow_lvl_tgt=0,
+        ),
+        sensor=NodeSensorInfo(
+            co2=None,
+            iaq_co2=None,
+            rh=None,
+            iaq_rh=None,
+            temp=27.9,
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("ventilation_state", "expected_preset", "expected_percentage"),
+    [
+        (VentilationState.AUTO, "auto", None),
+        (VentilationState.AUT1, "auto", None),
+        (VentilationState.AUT2, "auto", None),
+        (VentilationState.AUT3, "auto", None),
+        (VentilationState.MAN1, "man1", 33),
+        (VentilationState.MAN1x2, "man1", 33),
+        (VentilationState.MAN1x3, "man1", 33),
+        (VentilationState.MAN2, "man2", 66),
+        (VentilationState.MAN2x2, "man2", 66),
+        (VentilationState.MAN2x3, "man2", 66),
+        (VentilationState.MAN3, "man3", 100),
+        (VentilationState.MAN3x2, "man3", 100),
+        (VentilationState.MAN3x3, "man3", 100),
+        (VentilationState.EMPT, "empt", None),
+        (VentilationState.CNT1, None, 33),
+        (VentilationState.CNT2, None, 66),
+        (VentilationState.CNT3, None, 100),
+    ],
+)
+async def test_fan_read_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    ventilation_state: VentilationState,
+    expected_preset: str | None,
+    expected_percentage: int | None,
+) -> None:
+    """Test that preset_mode and percentage reflect the reported VentilationState."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.duco.PLATFORMS", [Platform.FAN]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    updated_nodes = [_box_node_with_state(ventilation_state), *mock_nodes[1:]]
+    mock_duco_client.async_get_nodes = AsyncMock(return_value=updated_nodes)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(_FAN_ENTITY)
+    assert state is not None
+    assert state.attributes.get("preset_mode") == expected_preset
+    assert state.attributes.get("percentage") == expected_percentage
 
 
 @pytest.mark.usefixtures("init_integration")
