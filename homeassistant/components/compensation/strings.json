@@ -47,7 +47,7 @@
           "entity_id": "Entity to use as source.",
           "name": "Name of the compensation sensor."
         },
-        "description": "Create a compensation sensor that enhances the accuracy of a source sensors value. This is done by calculating a new state using an nth degree polynomial with the source sensors value."
+        "description": "Create a compensation sensor that enhances the accuracy of a source sensor's value. This is done by calculating a new state using an nth degree polynomial with the source sensor's value."
       }
     }
   },
