@@ -10,6 +10,7 @@ from homeassistant.components.open_responses.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
@@ -29,11 +30,10 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_API_KEY: "bla",
             CONF_BASE_URL: "https://example.local/v1",
         },
-        version=2,
-        minor_version=7,
+        version=1,
         subentries_data=[
             ConfigSubentryData(
-                data={},
+                data=RECOMMENDED_CONVERSATION_OPTIONS,
                 subentry_type="conversation",
                 title=DEFAULT_CONVERSATION_NAME,
                 unique_id=None,
@@ -55,7 +55,7 @@ async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Initialize integration."""
-    with patch("openai.resources.models.AsyncModels.list"):
+    with patch("openai.AsyncOpenAI"):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 

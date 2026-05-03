@@ -1,17 +1,13 @@
 """Config flow for Open Responses integration."""
 
 from collections.abc import Mapping
-import json
-import logging
 from typing import Any
 
-import openai
 import voluptuous as vol
-from voluptuous_openapi import convert
 
-from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_USER,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -19,80 +15,34 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LLM_HASS_API,
-    CONF_NAME,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers import llm
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
-    SelectSelectorMode,
     TemplateSelector,
 )
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BASE_URL,
-    CONF_CHAT_MODEL,
-    CONF_CODE_INTERPRETER,
-    CONF_IMAGE_MODEL,
-    CONF_MAX_TOKENS,
+    CONF_MAX_OUTPUT_TOKENS,
     CONF_PROMPT,
-    CONF_REASONING_EFFORT,
-    CONF_REASONING_SUMMARY,
-    CONF_RECOMMENDED,
-    CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
-    CONF_TEMPERATURE,
-    CONF_TOP_P,
-    CONF_VERBOSITY,
-    CONF_WEB_SEARCH,
-    CONF_WEB_SEARCH_CITY,
-    CONF_WEB_SEARCH_CONTEXT_SIZE,
-    CONF_WEB_SEARCH_COUNTRY,
-    CONF_WEB_SEARCH_INLINE_CITATIONS,
-    CONF_WEB_SEARCH_REGION,
-    CONF_WEB_SEARCH_TIMEZONE,
-    CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    RECOMMENDED_IMAGE_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_REASONING_EFFORT,
-    RECOMMENDED_REASONING_SUMMARY,
-    RECOMMENDED_SERVICE_TIER,
+    RECOMMENDED_MAX_OUTPUT_TOKENS,
+    RECOMMENDED_MODEL,
     RECOMMENDED_STORE_RESPONSES,
-    RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_TOP_P,
-    RECOMMENDED_VERBOSITY,
-    RECOMMENDED_WEB_SEARCH,
-    RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
-    RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
-    RECOMMENDED_WEB_SEARCH_USER_LOCATION,
-    UNSUPPORTED_CODE_INTERPRETER_MODELS,
-    UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS,
-    UNSUPPORTED_IMAGE_MODELS,
-    UNSUPPORTED_MODELS,
-    UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS,
-    UNSUPPORTED_WEB_SEARCH_MODELS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -102,24 +52,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    client = openai.AsyncOpenAI(
-        api_key=data[CONF_API_KEY],
-        base_url=data[CONF_BASE_URL],
-        http_client=get_async_client(hass),
-    )
-    await client.models.list(timeout=10.0)
-
-
-class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
+class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Open Responses."""
 
-    VERSION = 2
-    MINOR_VERSION = 7
+    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -130,38 +66,28 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            try:
-                await validate_input(self.hass, user_input)
-            except openai.APIConnectionError:
-                errors["base"] = "cannot_connect"
-            except openai.AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-                return self.async_create_entry(
-                    title="Open Responses",
-                    data=user_input,
-                    subentries=[
-                        {
-                            "subentry_type": "conversation",
-                            "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                            "title": DEFAULT_CONVERSATION_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "ai_task_data",
-                            "data": RECOMMENDED_AI_TASK_OPTIONS,
-                            "title": DEFAULT_AI_TASK_NAME,
-                            "unique_id": None,
-                        },
-                    ],
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
                 )
+            return self.async_create_entry(
+                title="Open Responses",
+                data=user_input,
+                subentries=[
+                    {
+                        "subentry_type": "conversation",
+                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                        "title": DEFAULT_CONVERSATION_NAME,
+                        "unique_id": None,
+                    },
+                    {
+                        "subentry_type": "ai_task_data",
+                        "data": RECOMMENDED_AI_TASK_OPTIONS,
+                        "title": DEFAULT_AI_TASK_NAME,
+                        "unique_id": None,
+                    },
+                ],
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -184,9 +110,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        if not user_input:
+        if user_input is None:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, self._get_reauth_entry().data
+                ),
             )
 
         return await self.async_step_user(user_input)
@@ -198,12 +127,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
-            "conversation": OpenAISubentryFlowHandler,
-            "ai_task_data": OpenAISubentryFlowHandler,
+            "conversation": OpenResponsesSubentryFlowHandler,
+            "ai_task_data": OpenResponsesSubentryFlowHandler,
         }
 
 
-class OpenAISubentryFlowHandler(ConfigSubentryFlow):
+class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing Open Responses subentries."""
 
     options: dict[str, Any]
@@ -211,7 +140,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
     @property
     def _is_new(self) -> bool:
         """Return if this is a new subentry."""
-        return self.source == "user"
+        return self.source == SOURCE_USER
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -221,25 +150,37 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             self.options = RECOMMENDED_AI_TASK_OPTIONS.copy()
         else:
             self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
-        return await self.async_step_init()
+        return await self.async_step_init(user_input)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle reconfiguration of a subentry."""
         self.options = self._get_reconfigure_subentry().data.copy()
-        return await self.async_step_init()
+        return await self.async_step_init(user_input)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage initial options."""
-        # abort if entry is not loaded
+        """Manage subentry options."""
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        options = self.options
+        if user_input is not None:
+            if not user_input.get(CONF_LLM_HASS_API):
+                user_input.pop(CONF_LLM_HASS_API, None)
+            if self._is_new:
+                return self.async_create_entry(
+                    title=user_input.pop(CONF_NAME),
+                    data=user_input,
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+            )
 
+        options = self.options
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=api.name,
@@ -248,21 +189,40 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             for api in llm.async_get_apis(self.hass)
         ]
         if suggested_llm_apis := options.get(CONF_LLM_HASS_API):
-            if isinstance(suggested_llm_apis, str):
-                suggested_llm_apis = [suggested_llm_apis]
             valid_apis = {api.id for api in llm.async_get_apis(self.hass)}
             options[CONF_LLM_HASS_API] = [
                 api for api in suggested_llm_apis if api in valid_apis
             ]
 
+        default_name = (
+            DEFAULT_AI_TASK_NAME
+            if self._subentry_type == "ai_task_data"
+            else DEFAULT_CONVERSATION_NAME
+        )
         step_schema: VolDictType = {}
-
         if self._is_new:
-            if self._subentry_type == "ai_task_data":
-                default_name = DEFAULT_AI_TASK_NAME
-            else:
-                default_name = DEFAULT_CONVERSATION_NAME
             step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+
+        step_schema.update(
+            {
+                vol.Required(
+                    CONF_MODEL,
+                    default=options.get(CONF_MODEL, RECOMMENDED_MODEL),
+                ): str,
+                vol.Optional(
+                    CONF_MAX_OUTPUT_TOKENS,
+                    default=options.get(
+                        CONF_MAX_OUTPUT_TOKENS, RECOMMENDED_MAX_OUTPUT_TOKENS
+                    ),
+                ): NumberSelector(NumberSelectorConfig(min=1, max=128000, step=100)),
+                vol.Optional(
+                    CONF_STORE_RESPONSES,
+                    default=options.get(
+                        CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
+                    ),
+                ): bool,
+            }
+        )
 
         if self._subentry_type == "conversation":
             step_schema.update(
@@ -275,36 +235,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                    vol.Optional(
+                        CONF_LLM_HASS_API,
+                        default=options.get(
+                            CONF_LLM_HASS_API,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
+                        ),
+                    ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
                 }
             )
-
-        step_schema[
-            vol.Required(CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False))
-        ] = bool
-
-        if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
-                user_input.pop(CONF_LLM_HASS_API, None)
-
-            if user_input[CONF_RECOMMENDED]:
-                if self._is_new:
-                    return self.async_create_entry(
-                        title=user_input.pop(CONF_NAME),
-                        data=user_input,
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data=user_input,
-                )
-
-            options.update(user_input)
-            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
-                options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_advanced()
 
         return self.async_show_form(
             step_id="init",
@@ -312,349 +253,3 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 vol.Schema(step_schema), options
             ),
         )
-
-    async def async_step_advanced(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage advanced options."""
-        options = self.options
-        errors: dict[str, str] = {}
-
-        step_schema: VolDictType = {
-            vol.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_TOP_P,
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            vol.Optional(
-                CONF_STORE_RESPONSES,
-                default=RECOMMENDED_STORE_RESPONSES,
-            ): bool,
-        }
-
-        if user_input is not None:
-            options.update(user_input)
-            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
-                errors[CONF_CHAT_MODEL] = "model_not_supported"
-
-            if not errors:
-                return await self.async_step_model()
-
-        return self.async_show_form(
-            step_id="advanced",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
-            ),
-            errors=errors,
-        )
-
-    async def async_step_model(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage model-specific options."""
-        options = self.options
-        errors: dict[str, str] = {}
-
-        step_schema: VolDictType = {}
-
-        model = options[CONF_CHAT_MODEL]
-
-        if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_CODE_INTERPRETER,
-                        default=RECOMMENDED_CODE_INTERPRETER,
-                    ): bool,
-                }
-            )
-        elif CONF_CODE_INTERPRETER in options:
-            options.pop(CONF_CODE_INTERPRETER)
-
-        if reasoning_options := self._get_reasoning_options(model):
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_REASONING_EFFORT,
-                        default=RECOMMENDED_REASONING_EFFORT,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=reasoning_options,
-                            translation_key=CONF_REASONING_EFFORT,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            )
-        elif CONF_REASONING_EFFORT in options:
-            options.pop(CONF_REASONING_EFFORT)
-
-        if model.startswith("gpt-5"):
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_VERBOSITY,
-                        default=RECOMMENDED_VERBOSITY,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=["low", "medium", "high"],
-                            translation_key=CONF_VERBOSITY,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            )
-        elif CONF_VERBOSITY in options:
-            options.pop(CONF_VERBOSITY)
-
-        if model.startswith(("o", "gpt-5")):
-            reasoning_summary_options = ["off", "auto", "concise", "detailed"]
-            if model.startswith("o"):
-                reasoning_summary_options.remove("concise")
-            stored_summary = options.get(
-                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-            )
-            if stored_summary not in reasoning_summary_options:
-                stored_summary = RECOMMENDED_REASONING_SUMMARY
-                options[CONF_REASONING_SUMMARY] = stored_summary
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_REASONING_SUMMARY,
-                        default=stored_summary,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=reasoning_summary_options,
-                            translation_key=CONF_REASONING_SUMMARY,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            )
-        elif CONF_REASONING_SUMMARY in options:
-            options.pop(CONF_REASONING_SUMMARY)
-
-        service_tiers = self._get_service_tiers(model)
-        if "flex" in service_tiers or "priority" in service_tiers:
-            step_schema[
-                vol.Optional(
-                    CONF_SERVICE_TIER,
-                    default=RECOMMENDED_SERVICE_TIER,
-                )
-            ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=service_tiers,
-                    translation_key=CONF_SERVICE_TIER,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            )
-        else:
-            options.pop(CONF_SERVICE_TIER, None)
-        if options.get(CONF_SERVICE_TIER) not in service_tiers:
-            options.pop(CONF_SERVICE_TIER, None)
-
-        if self._subentry_type == "conversation" and not model.startswith(
-            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
-        ):
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_WEB_SEARCH,
-                        default=RECOMMENDED_WEB_SEARCH,
-                    ): bool,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_CONTEXT_SIZE,
-                        default=RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=["low", "medium", "high"],
-                            translation_key=CONF_WEB_SEARCH_CONTEXT_SIZE,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    vol.Optional(
-                        CONF_WEB_SEARCH_USER_LOCATION,
-                        default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
-                    ): bool,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_INLINE_CITATIONS,
-                        default=RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
-                    ): bool,
-                }
-            )
-        elif CONF_WEB_SEARCH in options:
-            options = {
-                k: v
-                for k, v in options.items()
-                if k
-                not in (
-                    CONF_WEB_SEARCH,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE,
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    CONF_WEB_SEARCH_CITY,
-                    CONF_WEB_SEARCH_REGION,
-                    CONF_WEB_SEARCH_COUNTRY,
-                    CONF_WEB_SEARCH_TIMEZONE,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS,
-                )
-            }
-
-        if self._subentry_type == "ai_task_data" and not model.startswith(
-            tuple(UNSUPPORTED_IMAGE_MODELS)
-        ):
-            step_schema[
-                vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
-            ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        "gpt-image-2",
-                        "gpt-image-1.5",
-                        "gpt-image-1",
-                        "gpt-image-1-mini",
-                    ],
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            )
-
-        if user_input is not None:
-            if user_input.get(CONF_WEB_SEARCH):
-                if user_input.get(CONF_REASONING_EFFORT) == "minimal":
-                    errors[CONF_WEB_SEARCH] = "web_search_minimal_reasoning"
-                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION) and not errors:
-                    user_input.update(await self._get_location_data())
-                else:
-                    options.pop(CONF_WEB_SEARCH_CITY, None)
-                    options.pop(CONF_WEB_SEARCH_REGION, None)
-                    options.pop(CONF_WEB_SEARCH_COUNTRY, None)
-                    options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
-            if (
-                user_input.get(CONF_CODE_INTERPRETER)
-                and user_input.get(CONF_REASONING_EFFORT) == "minimal"
-            ):
-                errors[CONF_CODE_INTERPRETER] = "code_interpreter_minimal_reasoning"
-
-            options.update(user_input)
-            if not errors:
-                if self._is_new:
-                    return self.async_create_entry(
-                        title=options.pop(CONF_NAME),
-                        data=options,
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data=options,
-                )
-
-        return self.async_show_form(
-            step_id="model",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
-            ),
-            errors=errors,
-        )
-
-    def _get_reasoning_options(self, model: str) -> list[str]:
-        """Get reasoning effort options based on model."""
-        if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
-            return []
-
-        models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
-            ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [
-                "none",
-                "low",
-                "medium",
-                "high",
-                "xhigh",
-            ],
-            "gpt-5.1": ["none", "low", "medium", "high"],
-            "gpt-5": ["minimal", "low", "medium", "high"],
-            "": ["low", "medium", "high"],  # The default case
-        }
-
-        for prefix, options in models_reasoning_map.items():
-            if model.startswith(prefix):
-                return options
-        return []  # pragma: no cover
-
-    def _get_service_tiers(self, model: str) -> list[str]:
-        """Get service tier options based on model."""
-        service_tiers = ["auto"]
-
-        if not model.startswith(tuple(UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS)):
-            service_tiers.append("flex")
-
-        service_tiers.append("default")
-
-        if not model.startswith(tuple(UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS)):
-            service_tiers.append("priority")
-
-        return service_tiers
-
-    async def _get_location_data(self) -> dict[str, str]:
-        """Get approximate location data of the user."""
-        location_data: dict[str, str] = {}
-        zone_home = self.hass.states.get(ENTITY_ID_HOME)
-        if zone_home is not None:
-            client = openai.AsyncOpenAI(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                base_url=self._get_entry().data[CONF_BASE_URL],
-                http_client=get_async_client(self.hass),
-            )
-            location_schema = vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_WEB_SEARCH_CITY,
-                        description="Free text input for the city, e.g. `San Francisco`",
-                    ): str,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_REGION,
-                        description="Free text input for the region, e.g. `California`",
-                    ): str,
-                }
-            )
-            response = await client.responses.create(
-                model=RECOMMENDED_CHAT_MODEL,
-                input=[
-                    {
-                        "role": "system",
-                        "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
-                    }
-                ],
-                text={
-                    "format": {
-                        "type": "json_schema",
-                        "name": "approximate_location",
-                        "description": "Approximate location data of the user "
-                        "for refined web search results",
-                        "schema": convert(location_schema),
-                        "strict": False,
-                    }
-                },
-                store=self.options.get(
-                    CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
-                ),
-            )
-            location_data = location_schema(json.loads(response.output_text) or {})
-
-        if self.hass.config.country:
-            location_data[CONF_WEB_SEARCH_COUNTRY] = self.hass.config.country
-        location_data[CONF_WEB_SEARCH_TIMEZONE] = self.hass.config.time_zone
-
-        _LOGGER.debug("Location data: %s", location_data)
-
-        return location_data

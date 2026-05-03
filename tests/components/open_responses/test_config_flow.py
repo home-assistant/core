@@ -1,9 +1,8 @@
 """Test the Open Responses config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-import httpx
-from openai import APIConnectionError, AuthenticationError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.open_responses.const import (
@@ -16,7 +15,7 @@ from homeassistant.components.open_responses.const import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -29,16 +28,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.open_responses.config_flow.openai.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.open_responses.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
+    with patch(
+        "homeassistant.components.open_responses.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -68,8 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
             "unique_id": None,
         },
     ]
-    assert result2["version"] == 2
-    assert result2["minor_version"] == 7
+    assert result2["version"] == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -89,75 +81,16 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with patch(
-        "homeassistant.components.open_responses.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "bla",
-                CONF_BASE_URL: "https://example.local/v1",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "bla",
+            CONF_BASE_URL: "https://example.local/v1",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_endpoint_errors(hass: HomeAssistant) -> None:
-    """Test we handle endpoint errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.open_responses.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-        side_effect=APIConnectionError(
-            request=httpx.Request("GET", "https://example.local/v1/models")
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "bla",
-                CONF_BASE_URL: "https://example.local/v1",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_auth_errors(hass: HomeAssistant) -> None:
-    """Test we handle authentication errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.open_responses.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-        side_effect=AuthenticationError(
-            message="bad key",
-            response=httpx.Response(
-                status_code=401,
-                request=httpx.Request("GET", "https://example.local/v1/models"),
-            ),
-            body=None,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "bla",
-                CONF_BASE_URL: "https://example.local/v1",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_invalid_base_url(hass: HomeAssistant) -> None:
@@ -166,16 +99,16 @@ async def test_invalid_base_url(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_KEY: "bla",
-            CONF_BASE_URL: "not a url",
-        },
-    )
+    with pytest.raises(InvalidData) as err:
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "not a url",
+            },
+        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_BASE_URL: "invalid_url"}
+    assert err.value.schema_errors == {CONF_BASE_URL: "invalid url"}
 
 
 async def test_creating_conversation_subentry(
