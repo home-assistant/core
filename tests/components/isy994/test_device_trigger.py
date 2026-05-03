@@ -5,9 +5,18 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.isy994.const import DOMAIN, EVENT_ISY994_CONTROL
-from homeassistant.components.isy994.device_trigger import CONF_SUBTYPE, TRIGGER_TYPES
+from homeassistant.components.isy994.device_trigger import (
+    CONF_SUBTYPE,
+    TRIGGER_TYPES,
+    async_attach_trigger,
+    async_get_trigger_capabilities,
+    async_get_triggers,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -353,3 +362,145 @@ async def test_trigger_isolated_per_button(
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_get_triggers_unknown_device_returns_empty(
+    hass: HomeAssistant,
+) -> None:
+    """An unknown device id yields no triggers."""
+    assert await async_get_triggers(hass, "does-not-exist") == []
+
+
+async def test_get_triggers_returns_empty_when_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+) -> None:
+    """A device whose ISY config entry is not LOADED yields no triggers."""
+    nodes = {
+        ROOT_ADDRESS: _make_node(ROOT_ADDRESS, "Office Dimmer", "DimmerSwitchOnly_ADV")
+    }
+    device = _wire_runtime(hass, mock_config_entry, mock_isy, nodes)
+    mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert [t for t in triggers if t.get(CONF_DOMAIN) == DOMAIN] == []
+
+
+async def test_get_triggers_skips_non_isy_and_unresolvable_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+) -> None:
+    """Entities from other platforms or with no backing node are skipped."""
+    missing_addr = "11 22 33 9"
+    nodes = {
+        ROOT_ADDRESS: _make_node(ROOT_ADDRESS, "Office Dimmer", "DimmerSwitchOnly_ADV"),
+    }
+    device = _wire_runtime(hass, mock_config_entry, mock_isy, nodes)
+    _register_entity(
+        hass,
+        mock_config_entry,
+        device,
+        domain="light",
+        address=ROOT_ADDRESS,
+        object_id="office_dimmer",
+    )
+    er.async_get(hass).async_get_or_create(
+        domain="sensor",
+        platform="other_integration",
+        unique_id="other-1",
+        config_entry=mock_config_entry,
+        device_id=device.id,
+    )
+    _register_entity(
+        hass,
+        mock_config_entry,
+        device,
+        domain="sensor",
+        address=missing_addr,
+        object_id="ghost",
+    )
+
+    triggers = [
+        t
+        for t in await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device.id
+        )
+        if t.get(CONF_DOMAIN) == DOMAIN
+    ]
+    assert {t[CONF_SUBTYPE] for t in triggers} == {ROOT_ADDRESS}
+
+
+async def test_get_trigger_capabilities_is_empty(hass: HomeAssistant) -> None:
+    """Triggers expose no extra capability fields."""
+    assert await async_get_trigger_capabilities(hass, {}) == {}
+
+
+async def test_attach_trigger_unknown_device_raises(hass: HomeAssistant) -> None:
+    """Attaching a trigger for an unknown device raises."""
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_attach_trigger(
+            hass,
+            {
+                CONF_PLATFORM: "device",
+                CONF_DOMAIN: DOMAIN,
+                CONF_DEVICE_ID: "does-not-exist",
+                CONF_TYPE: "on",
+                CONF_SUBTYPE: ROOT_ADDRESS,
+            },
+            MagicMock(),
+            MagicMock(),
+        )
+
+
+async def test_attach_trigger_unsupported_subtype_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+) -> None:
+    """Subtypes whose node_def_id is not supported are rejected."""
+    nodes = {
+        ROOT_ADDRESS: _make_node(ROOT_ADDRESS, "Motion", "MotionSensor_ADV"),
+    }
+    device = _wire_runtime(hass, mock_config_entry, mock_isy, nodes)
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_attach_trigger(
+            hass,
+            {
+                CONF_PLATFORM: "device",
+                CONF_DOMAIN: DOMAIN,
+                CONF_DEVICE_ID: device.id,
+                CONF_TYPE: "on",
+                CONF_SUBTYPE: ROOT_ADDRESS,
+            },
+            MagicMock(),
+            MagicMock(),
+        )
+
+
+async def test_attach_trigger_missing_entity_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+) -> None:
+    """A supported node with no registered entity is rejected."""
+    nodes = {
+        ROOT_ADDRESS: _make_node(ROOT_ADDRESS, "Office Dimmer", "DimmerSwitchOnly_ADV"),
+    }
+    device = _wire_runtime(hass, mock_config_entry, mock_isy, nodes)
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_attach_trigger(
+            hass,
+            {
+                CONF_PLATFORM: "device",
+                CONF_DOMAIN: DOMAIN,
+                CONF_DEVICE_ID: device.id,
+                CONF_TYPE: "on",
+                CONF_SUBTYPE: ROOT_ADDRESS,
+            },
+            MagicMock(),
+            MagicMock(),
+        )
