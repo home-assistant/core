@@ -170,7 +170,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
-        data = {ATTR_MESSAGE: message}
+        data: dict[str, Any] = {ATTR_MESSAGE: message}
 
         # Remove default title from notifications.
         if (
@@ -180,15 +180,14 @@ class MobileAppNotificationService(BaseNotificationService):
         if not (targets := kwargs.get(ATTR_TARGET)):
             targets = push_registrations(self.hass).values()
 
+        force_local_notification = False
         if (data_arg := kwargs.get(ATTR_DATA)) is not None:
-            data[ATTR_DATA] = data_arg
+            data_arg = data[ATTR_DATA] = data_arg.copy()
+            force_local_notification = data_arg.pop(ATTR_LOCAL_ONLY, False)
 
         local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][
             DATA_PUSH_CHANNEL
         ]
-        force_local_notification = (kwargs.get(ATTR_DATA) or {}).pop(
-            ATTR_LOCAL_ONLY, False
-        )
 
         failed_targets = []
         for target in targets:
