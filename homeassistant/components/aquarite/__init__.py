@@ -127,7 +127,13 @@ async def _token_refresh_loop(hass: HomeAssistant, data: AquariteData) -> None:
                 _, refreshed = await data.auth.get_client()
                 if refreshed:
                     for coordinator in data.coordinators.values():
-                        await coordinator.refresh_subscription()
+                        try:
+                            await coordinator.refresh_subscription()
+                        except Exception as refresh_err:  # noqa: BLE001
+                            _LOGGER.error(
+                                "Error refreshing subscription after token renewal: %s",
+                                refresh_err,
+                            )
             retry_delay = 10
             sleep_time = data.auth.calculate_sleep_duration()
             await asyncio.sleep(sleep_time)
@@ -152,4 +158,10 @@ async def _periodic_health_check(hass: HomeAssistant, data: AquariteData) -> Non
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Health check failed, resubscribing: %s", err)
             for coordinator in data.coordinators.values():
-                await coordinator.refresh_subscription()
+                try:
+                    await coordinator.refresh_subscription()
+                except Exception as refresh_err:  # noqa: BLE001
+                    _LOGGER.error(
+                        "Error refreshing subscription during health check: %s",
+                        refresh_err,
+                    )
