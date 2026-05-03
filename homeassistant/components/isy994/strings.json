@@ -33,6 +33,17 @@
       }
     }
   },
+  "device_automation": {
+    "trigger_type": {
+      "fade_down": "{entity_name} was switched Fade Down",
+      "fade_stop": "{entity_name} was switched Fade Stop",
+      "fade_up": "{entity_name} was switched Fade Up",
+      "off": "{entity_name} was switched Off",
+      "off_fast": "{entity_name} was switched Fast Off",
+      "on": "{entity_name} was switched On",
+      "on_fast": "{entity_name} was switched Fast On"
+    }
+  },
   "options": {
     "step": {
       "init": {
