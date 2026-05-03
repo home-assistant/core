@@ -183,7 +183,7 @@ def _convert_content_to_param(
         ):
             messages.append(
                 EasyInputMessageParam(
-                    type="message", role=content.role, content=content.content
+                    type="message", role=content.role, content=content.content or ""
                 )
             )
 
@@ -242,6 +242,8 @@ async def _transform_stream(
 
         if isinstance(event, ResponseOutputItemAddedEvent):
             if isinstance(event.item, ResponseFunctionToolCall):
+                if event.item.id is None:
+                    raise HomeAssistantError("Received tool call without an item ID")
                 yield {"role": "assistant"}
                 last_role = "assistant"
                 last_summary_index = None
