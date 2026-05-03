@@ -86,11 +86,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
         raise
 
     # Start shared background tasks (one per account, shared across pools)
-    data.token_task = hass.async_create_background_task(
-        _token_refresh_loop(hass, data), "Aquarite token refresh"
+    data.token_task = entry.async_create_background_task(
+        hass, _token_refresh_loop(hass, data), "Aquarite token refresh"
     )
-    data.health_task = hass.async_create_background_task(
-        _periodic_health_check(hass, data), "Aquarite health check"
+    data.health_task = entry.async_create_background_task(
+        hass, _periodic_health_check(hass, data), "Aquarite health check"
     )
 
     entry.runtime_data = data
