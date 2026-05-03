@@ -12,7 +12,6 @@ from homeassistant.components.openai_conversation.config_flow import (
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from homeassistant.components.openai_conversation.const import (
-    CONF_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
@@ -52,12 +51,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
-
-
-def _schema_has_key(schema, key: str) -> bool:
-    """Test if a voluptuous schema includes a key."""
-    return any(schema_key == key for schema_key in schema)
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -74,7 +68,6 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert not _schema_has_key(result["data_schema"].schema, CONF_BASE_URL)
 
     with (
         patch(
@@ -130,21 +123,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_shows_base_url_in_advanced_options(hass: HomeAssistant) -> None:
-    """Test the custom base URL is hidden behind advanced options."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-    assert _schema_has_key(result["data_schema"].schema, CONF_BASE_URL)
-
-
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we abort on duplicate config entry."""
     MockConfigEntry(
@@ -171,146 +149,6 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_duplicate_entry_with_custom_base_url(hass: HomeAssistant) -> None:
-    """Test the API key remains the duplicate-entry discriminator."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "bla"},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
-
-    with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "bla",
-                CONF_BASE_URL: "http://example.local:2455/v1",
-            },
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_duplicate_reauth_entry(hass: HomeAssistant) -> None:
-    """Test reauthentication aborts when the API key belongs to another entry."""
-    hass.config.components.add("openai_conversation")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "old_api_key"},
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "other_api_key"},
-        state=config_entries.ConfigEntryState.LOADED,
-    ).add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "other_api_key",
-            },
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_form_with_custom_base_url(hass: HomeAssistant) -> None:
-    """Test creating a config entry with an OpenAI-compatible base URL."""
-    hass.config.components.add("openai_conversation")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
-    )
-
-    with (
-        patch(
-            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
-        ) as mock_openai,
-        patch(
-            "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        mock_openai.return_value.models.list = AsyncMock()
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "bla",
-                CONF_BASE_URL: "http://example.local:2455/v1",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        CONF_API_KEY: "bla",
-        CONF_BASE_URL: "http://example.local:2455/v1",
-    }
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] == "http://example.local:2455/v1"
-
-
-async def test_form_omits_blank_base_url(hass: HomeAssistant) -> None:
-    """Test a blank base URL uses the OpenAI SDK default endpoint."""
-    hass.config.components.add("openai_conversation")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
-    )
-
-    with (
-        patch(
-            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
-        ) as mock_openai,
-        patch(
-            "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        mock_openai.return_value.models.list = AsyncMock()
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "bla",
-                CONF_BASE_URL: "   ",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {CONF_API_KEY: "bla"}
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] is None
 
 
 async def test_creating_conversation_subentry(
@@ -1329,14 +1167,10 @@ async def test_subentry_web_search_user_location(
     hass.states.async_set(
         "zone.home", "0", {"latitude": 37.7749, "longitude": -122.4194}
     )
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={CONF_API_KEY: "bla", CONF_BASE_URL: "http://example.local:2455/v1"},
-    )
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
-    ) as mock_openai:
-        mock_create = mock_openai.return_value.responses.create = AsyncMock()
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+    ) as mock_create:
         mock_create.return_value = Response(
             object="response",
             id="resp_A",
@@ -1376,7 +1210,6 @@ async def test_subentry_web_search_user_location(
         mock_create.call_args.kwargs["input"][0]["content"] == "Where are the following"
         " coordinates located: (37.7749, -122.4194)?"
     )
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] == "http://example.local:2455/v1"
     assert mock_create.call_args.kwargs["store"] is store_responses
     assert subentry_flow["type"] is FlowResultType.ABORT
     assert subentry_flow["reason"] == "reconfigure_successful"
@@ -1729,186 +1562,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
-
-
-async def test_reauth_uses_existing_custom_base_url(hass: HomeAssistant) -> None:
-    """Test reauthentication keeps the configured base URL when omitted."""
-    hass.config.components.add("openai_conversation")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_API_KEY: "old_api_key",
-            CONF_BASE_URL: "http://example.local:2455/v1",
-        },
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
-        ) as mock_openai,
-        patch(
-            "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        mock_openai.return_value.models.list = AsyncMock()
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "new_api_key",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] == "http://example.local:2455/v1"
-    assert mock_config_entry.data == {
-        CONF_API_KEY: "new_api_key",
-        CONF_BASE_URL: "http://example.local:2455/v1",
-    }
-
-
-async def test_reauth_updates_custom_base_url(hass: HomeAssistant) -> None:
-    """Test reauthentication stores a new custom base URL."""
-    hass.config.components.add("openai_conversation")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_API_KEY: "old_api_key",
-            CONF_BASE_URL: "http://example.local:2455/v1",
-        },
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
-        ) as mock_openai,
-        patch(
-            "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        mock_openai.return_value.models.list = AsyncMock()
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "new_api_key",
-                CONF_BASE_URL: "http://gateway.local:2455/v1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] == "http://gateway.local:2455/v1"
-    assert mock_config_entry.data == {
-        CONF_API_KEY: "new_api_key",
-        CONF_BASE_URL: "http://gateway.local:2455/v1",
-    }
-
-
-async def test_reauth_clears_blank_base_url(hass: HomeAssistant) -> None:
-    """Test submitting a blank base URL during reauth clears a custom endpoint."""
-    hass.config.components.add("openai_conversation")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_API_KEY: "old_api_key",
-            CONF_BASE_URL: "http://example.local:2455/v1",
-        },
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI"
-        ) as mock_openai,
-        patch(
-            "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        mock_openai.return_value.models.list = AsyncMock()
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "new_api_key",
-                CONF_BASE_URL: "   ",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] is None
-    assert mock_config_entry.data == {CONF_API_KEY: "new_api_key"}
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "error"),
-    [
-        (APIConnectionError(request=None), "cannot_connect"),
-        (
-            AuthenticationError(
-                response=httpx.Response(status_code=None, request=""),
-                body=None,
-                message=None,
-            ),
-            "invalid_auth",
-        ),
-        (
-            BadRequestError(
-                response=httpx.Response(status_code=None, request=""),
-                body=None,
-                message=None,
-            ),
-            "unknown",
-        ),
-    ],
-)
-async def test_reauth_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
-    """Test reauthentication handles validation errors."""
-    hass.config.components.add("openai_conversation")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_API_KEY: "old_api_key",
-            CONF_BASE_URL: "http://example.local:2455/v1",
-        },
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "new_api_key",
-                CONF_BASE_URL: "http://gateway.local:2455/v1",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": error}
-    assert (
-        get_schema_suggested_value(result["data_schema"].schema, CONF_BASE_URL)
-        == "http://gateway.local:2455/v1"
-    )
 
 
 @pytest.mark.parametrize(
