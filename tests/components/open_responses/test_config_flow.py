@@ -82,6 +82,12 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert result2["version"] == 1
+    mock_open_responses_client.return_value.create_response.assert_awaited_once_with(
+        model="open-responses-model",
+        input=[{"type": "message", "role": "user", "content": "ping"}],
+        max_output_tokens=16,
+        store=False,
+    )
     assert len(mock_setup_entry.mock_calls) == 1
 
 
