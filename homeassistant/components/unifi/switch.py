@@ -37,10 +37,7 @@ from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
-from aiounifi.models.object_oriented_network_config import (
-    ObjectOrientedNetworkConfig,
-    ObjectOrientedNetworkConfigUpdateRequest,
-)
+from aiounifi.models.object_oriented_network_config import ObjectOrientedNetworkConfig
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
@@ -165,9 +162,22 @@ async def async_object_oriented_network_config_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control Policy Engine rule state."""
-    config = hub.api.object_oriented_network_configs[obj_id].raw
-    await hub.api.request(
-        ObjectOrientedNetworkConfigUpdateRequest.create(config, target)
+    config = hub.api.object_oriented_network_configs[obj_id]
+    await hub.api.object_oriented_network_configs.save(config, target)
+
+
+@callback
+def async_object_oriented_network_config_supported_fn(
+    hub: UnifiHub, obj_id: str
+) -> bool:
+    """Check if Policy Engine rule can be controlled as a switch."""
+    config = hub.api.object_oriented_network_configs[obj_id]
+    secure = config.secure
+    internet = secure.get("internet")
+    return (
+        secure.get("enabled") is True
+        and internet is not None
+        and internet.get("mode") == "TURN_OFF_INTERNET"
     )
 
 
@@ -314,6 +324,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda hub, config: config.enabled,
         name_fn=lambda config: config.name,
         object_fn=lambda api, obj_id: api.object_oriented_network_configs[obj_id],
+        supported_fn=async_object_oriented_network_config_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"object_oriented_network_config-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Outlets, Outlet](

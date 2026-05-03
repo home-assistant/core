@@ -889,6 +889,15 @@ OBJECT_ORIENTED_NETWORK_CONFIG = {
     },
 }
 
+OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG = {
+    "_id": "69f6b0eae0e3ee2d4614cb91",
+    "enabled": True,
+    "name": "VPN traffic route",
+    "target_type": "NETWORKS",
+    "targets": ["6060b00f45de3905133cea14"],
+    "route": {"enabled": True},
+}
+
 
 @pytest.mark.parametrize(
     "config_entry_options", [{CONF_BLOCK_CLIENT: [BLOCKED["mac"]]}]
@@ -1369,7 +1378,8 @@ async def test_firewall_policies(
 
 
 @pytest.mark.parametrize(
-    ("object_oriented_network_config_payload"), [([OBJECT_ORIENTED_NETWORK_CONFIG])]
+    ("object_oriented_network_config_payload"),
+    [([OBJECT_ORIENTED_NETWORK_CONFIG, OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG])],
 )
 async def test_object_oriented_network_configs(
     hass: HomeAssistant,
@@ -1379,6 +1389,7 @@ async def test_object_oriented_network_configs(
 ) -> None:
     """Test control of UniFi Policy Engine rules."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
 
     # Validate state object
     assert (
