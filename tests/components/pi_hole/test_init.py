@@ -35,6 +35,56 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+async def test_determine_api_version_v6(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test detecting a Pi-hole v6 API without authentication."""
+    aioclient_mock.get(
+        "http://1.2.3.4:80/api/info/version",
+        status=401,
+        json={"error": {"key": "unauthorized", "message": "Unauthorized"}},
+    )
+
+    assert await pi_hole.determine_api_version(hass, CONFIG_DATA_DEFAULTS) == 6
+
+
+async def test_determine_api_version_v6_without_authentication(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test detecting a Pi-hole v6 API with authentication disabled."""
+    aioclient_mock.get(
+        "http://1.2.3.4:80/api/info/version",
+        status=200,
+        json={"version": {"core": {"local": {"version": "v6.0.0"}}}},
+    )
+
+    assert await pi_hole.determine_api_version(hass, CONFIG_DATA_DEFAULTS) == 6
+
+
+@pytest.mark.parametrize(
+    ("status", "response_json"),
+    [
+        (200, []),
+        (500, {"error": {"key": "internal_error"}}),
+    ],
+)
+async def test_is_v6_api_with_unexpected_response(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    status: int,
+    response_json: object,
+) -> None:
+    """Test ignoring unexpected responses from the Pi-hole v6 version API."""
+    aioclient_mock.get(
+        "http://1.2.3.4:80/api/info/version",
+        status=status,
+        json=response_json,
+    )
+
+    assert not await pi_hole._async_is_v6_api(hass, CONFIG_DATA_DEFAULTS)
 
 
 @pytest.mark.parametrize(

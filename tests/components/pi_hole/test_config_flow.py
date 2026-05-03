@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    APP_PASSWORD,
     CONFIG_DATA_DEFAULTS,
     CONFIG_ENTRY_WITH_API_KEY,
     CONFIG_FLOW_USER,
@@ -65,6 +66,35 @@ async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_flow_user_with_app_password_v6(hass: HomeAssistant) -> None:
+    """Test user initialized flow with a v6 app password."""
+    mocked_hole = _create_mocked_hole(
+        has_data=False, api_version=6, require_cookie_free_app_password=True
+    )
+    app_password_input = {**CONFIG_FLOW_USER, CONF_API_KEY: APP_PASSWORD}
+    with (
+        _patch_init_hole(mocked_hole),
+        _patch_config_flow_hole(mocked_hole),
+        _patch_setup_hole() as mock_setup,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=app_password_input,
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == {
+            **CONFIG_ENTRY_WITH_API_KEY,
+            CONF_API_KEY: APP_PASSWORD,
+        }
+        mock_setup.assert_called_once()
 
 
 async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
