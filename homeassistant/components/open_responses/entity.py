@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
@@ -139,13 +139,21 @@ def _convert_content_to_param(
             )
             continue
 
+        if isinstance(content, conversation.AssistantContent) and isinstance(
+            content.native, ResponseOutputMessage
+        ):
+            messages.append(
+                cast(
+                    Any,
+                    content.native.model_dump(exclude_none=True),
+                )
+            )
+            continue
+
         if content.content:
-            role: Literal["user", "assistant", "system", "developer"] = content.role
-            if role == "system":
-                role = "developer"
             messages.append(
                 EasyInputMessageParam(
-                    type="message", role=role, content=content.content
+                    type="message", role=content.role, content=content.content
                 )
             )
 
@@ -157,6 +165,7 @@ def _convert_content_to_param(
                         name=tool_call.tool_name,
                         arguments=json_dumps(tool_call.tool_args),
                         call_id=tool_call.id,
+                        status="completed",
                     )
                     for tool_call in content.tool_calls
                 )
@@ -181,6 +190,7 @@ def _convert_content_to_param(
                             else []
                         ),
                         encrypted_content=content.native.encrypted_content,
+                        status="completed",
                     )
                 )
                 reasoning_summary = []
@@ -224,6 +234,8 @@ async def _transform_stream(
                     )
                 }
                 last_summary_index = len(event.item.summary) - 1
+            elif isinstance(event.item, ResponseOutputMessage):
+                yield {"native": event.item}
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
         elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
