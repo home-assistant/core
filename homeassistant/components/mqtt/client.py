@@ -994,15 +994,15 @@ class MQTT:
             del self._retained_topics[subscription]
         # Only unsubscribe if currently connected
         if self.connected:
-            self._async_unsubscribe(subscription.topic)
+            self._async_unsubscribe(subscription.topic, subscription.subscription_id)
 
     @callback
-    def _async_unsubscribe(self, topic: str) -> None:
+    def _async_unsubscribe(self, topic: str, subscription_id: int) -> None:
         """Unsubscribe from a topic."""
         if self.is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
-            subs = self._matching_subscriptions(topic)
+            subs = self._matching_subscriptions(topic, (subscription_id,))
             self._max_qos[topic] = max(sub.qos for sub in subs)
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
@@ -1215,16 +1215,27 @@ class MQTT:
         )
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
-    def _matching_subscriptions(self, topic: str) -> list[Subscription]:
+    def _matching_subscriptions(
+        self, topic: str, identifiers: tuple[int,] | None
+    ) -> list[Subscription]:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
-            subscriptions.extend(self._simple_subscriptions[topic])
+            simple_subscriptions_for_topic = self._simple_subscriptions[topic]
+            if identifiers is None:
+                subscriptions.extend(simple_subscriptions_for_topic)
+            else:
+                subscriptions.extend(
+                    subscription
+                    for subscription in simple_subscriptions_for_topic
+                    if subscription.subscription_id in identifiers
+                )
         subscriptions.extend(
             subscription
             for subscription in self._wildcard_subscriptions
             # mypy doesn't know that complex_matcher is always set when
             # is_simple_match is False
             if subscription.complex_matcher(topic)  # type: ignore[misc]
+            and (identifiers is None or subscription.subscription_id in identifiers)
         )
         return subscriptions
 
@@ -1232,7 +1243,7 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
-        identifiers: list[int] | None = None
+        identifiers: tuple[int,] | None = None
         if self.is_mqttv5:
             # It is possible we have multiple messages if there
             # are overlapping wildcard subscriptions.
@@ -1242,7 +1253,7 @@ class MQTT:
             if msg.properties is not None and hasattr(
                 msg.properties, "SubscriptionIdentifier"
             ):
-                identifiers = msg.properties.SubscriptionIdentifier
+                identifiers = tuple(msg.properties.SubscriptionIdentifier)
         try:
             # msg.topic is a property that decodes the topic to a string
             # every time it is accessed. Save the result to avoid
@@ -1268,11 +1279,7 @@ class MQTT:
         )
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
-        for subscription in [
-            subscription
-            for subscription in self._matching_subscriptions(topic)
-            if identifiers is None or subscription.subscription_id in identifiers
-        ]:
+        for subscription in self._matching_subscriptions(topic, identifiers):
             if msg.retain:
                 retained_topics = self._retained_topics[subscription]
                 # Skip if the subscription already received a retained message
