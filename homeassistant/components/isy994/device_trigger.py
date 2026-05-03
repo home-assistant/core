@@ -158,7 +158,14 @@ async def async_attach_trigger(
             f"ISY device {device_id} not found or not loaded"
         )
 
-    target_unique_id = f"{isy_data.uuid}_{config[CONF_SUBTYPE]}"
+    address = config[CONF_SUBTYPE]
+    node = isy_data.root.nodes.get_by_id(address)
+    if node is None or getattr(node, "node_def_id", None) not in SUPPORTED_NODE_DEF_IDS:
+        raise InvalidDeviceAutomationConfig(
+            f"ISY node {address} is not a supported device-trigger source"
+        )
+
+    target_unique_id = f"{isy_data.uuid}_{address}"
     target_entity_id: str | None = None
     for entry in er.async_entries_for_device(
         er.async_get(hass), device_id, include_disabled_entities=True
@@ -168,7 +175,7 @@ async def async_attach_trigger(
             break
     if target_entity_id is None:
         raise InvalidDeviceAutomationConfig(
-            f"No ISY entity found for device {device_id} subtype {config[CONF_SUBTYPE]}"
+            f"No ISY entity found for device {device_id} subtype {address}"
         )
 
     event_config = event_trigger.TRIGGER_SCHEMA(

@@ -134,7 +134,7 @@ async def test_get_triggers_keypad_dimmer_with_buttons(
         hass,
         mock_config_entry,
         device,
-        domain="switch",
+        domain="sensor",
         address=button_b_addr,
         object_id="kpl_b",
     )
@@ -142,7 +142,7 @@ async def test_get_triggers_keypad_dimmer_with_buttons(
         hass,
         mock_config_entry,
         device,
-        domain="switch",
+        domain="sensor",
         address=button_c_addr,
         object_id="kpl_c",
     )
@@ -299,7 +299,7 @@ async def test_trigger_isolated_per_button(
         hass,
         mock_config_entry,
         device,
-        domain="switch",
+        domain="sensor",
         address=button_b_addr,
         object_id="kpl_b",
     )
@@ -307,7 +307,7 @@ async def test_trigger_isolated_per_button(
         hass,
         mock_config_entry,
         device,
-        domain="switch",
+        domain="sensor",
         address=button_c_addr,
         object_id="kpl_c",
     )
