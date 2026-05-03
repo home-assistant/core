@@ -439,8 +439,6 @@ async def async_sync_energy_history_window(
     existing = await async_get_imported_statistics_state(hass, stat_id)
     if full_rebuild:
         base_sum_kwh = await async_get_total_before_window(client, normalized_start)
-        if existing.exists:
-            await async_clear_statistics(hass, stat_id)
     else:
         if not existing.exists:
             return await async_full_rebuild_energy_history(
@@ -462,6 +460,8 @@ async def async_sync_energy_history_window(
         window_start=normalized_start,
         base_sum_kwh=base_sum_kwh,
     )
+    if full_rebuild and existing.exists:
+        await async_clear_statistics(hass, stat_id)
     async_add_external_statistics(hass, metadata, statistics)
     await async_save_sync_state(hass, config_entry)
 

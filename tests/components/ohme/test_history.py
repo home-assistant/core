@@ -13,6 +13,7 @@ from homeassistant.components.ohme.const import CONF_BACKFILL_DAYS
 from homeassistant.components.ohme.history import (
     ImportedStatisticsState,
     async_ensure_energy_history,
+    async_sync_energy_history_window,
     history_window_start,
     repair_window_start,
 )
@@ -221,6 +222,56 @@ async def test_ensure_energy_history_rebuilds_if_backfill_days_changes(
         mock_config_entry,
         reason="backfill_days_changed",
     )
+
+
+async def test_full_rebuild_does_not_clear_existing_statistics_before_refetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a failed rebuild leaves existing imported statistics untouched."""
+    runtime_data = MagicMock()
+    runtime_data.charge_session_coordinator.client = mock_client
+    mock_config_entry.runtime_data = runtime_data
+
+    imported_state = ImportedStatisticsState(
+        first_start=datetime(2026, 4, 1, tzinfo=dt_util.UTC),
+        last_start=datetime(2026, 4, 5, 10, tzinfo=dt_util.UTC),
+        last_sum_kwh=12.345,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.ohme.history.async_get_imported_statistics_state",
+            new=AsyncMock(return_value=imported_state),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_get_total_before_window",
+            new=AsyncMock(return_value=5.0),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_fetch_hourly_energy_points",
+            new=AsyncMock(side_effect=RuntimeError("summary fetch failed")),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_clear_statistics",
+            new=AsyncMock(),
+        ) as mock_clear_statistics,
+        patch(
+            "homeassistant.components.ohme.history.async_add_external_statistics"
+        ) as mock_add_statistics,
+    ):
+        with pytest.raises(RuntimeError, match="summary fetch failed"):
+            await async_sync_energy_history_window(
+                hass,
+                mock_config_entry,
+                window_start=history_window_start(mock_config_entry),
+                reason="test_failed_rebuild",
+                full_rebuild=True,
+            )
+
+    mock_clear_statistics.assert_not_awaited()
+    mock_add_statistics.assert_not_called()
 
 
 async def test_session_finalize_triggers_sync_from_session_start(
