@@ -69,7 +69,7 @@ async def test_user_step_creates_entry(
 # ── Error Handling ────────────────────────────────────────────────
 
 
-async def test_auth_error(hass: HomeAssistant) -> None:
+async def test_invalid_auth(hass: HomeAssistant) -> None:
     """Test authentication error is handled."""
     with patch(PATCH_AUTH) as mock_auth_cls:
         mock_auth = AsyncMock()
@@ -85,10 +85,10 @@ async def test_auth_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "auth_error"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_unknown_error(hass: HomeAssistant) -> None:
+async def test_unknown_exception(hass: HomeAssistant) -> None:
     """Test unknown error during auth is handled."""
     with patch(PATCH_AUTH) as mock_auth_cls:
         mock_auth = AsyncMock()
@@ -104,7 +104,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown_error"}
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_duplicate_account_aborts(

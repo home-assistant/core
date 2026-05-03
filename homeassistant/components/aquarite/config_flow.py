@@ -43,10 +43,10 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 auth = AquariteAuth(session, username, password)
                 await auth.authenticate()
             except AuthenticationError:
-                errors["base"] = "auth_error"
+                errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected error during authentication")
-                errors["base"] = "unknown_error"
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(username.lower())
                 self._abort_if_unique_id_configured()
