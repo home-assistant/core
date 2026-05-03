@@ -80,7 +80,7 @@ async def test_setup_platform_yaml(
         DOMAIN, "binary_sensor_platform_yaml_not_supported"
     )
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {"platform": BINARY_SENSOR_DOMAIN}
 
 

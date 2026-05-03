@@ -59,7 +59,7 @@ async def test_setup_platform_yaml(
     assert len(hass.states.async_all()) == 0
     issue = issue_registry.async_get_issue(DOMAIN, "cover_platform_yaml_not_supported")
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {"platform": COVER_DOMAIN}
 
 
