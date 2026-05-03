@@ -1,7 +1,5 @@
 """AVM FRITZ!Box binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -294,7 +292,6 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
 DEVICE_SENSOR_TYPES: tuple[FritzDeviceSensorEntityDescription, ...] = (
     FritzDeviceSensorEntityDescription(
         key="device_uptime",
-        translation_key="device_uptime",
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,

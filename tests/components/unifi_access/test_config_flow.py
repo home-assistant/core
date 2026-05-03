@@ -1,7 +1,5 @@
 """Tests for the UniFi Access config flow."""
 
-from __future__ import annotations
-
 import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
 

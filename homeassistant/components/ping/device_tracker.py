@@ -1,7 +1,5 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from homeassistant.components.device_tracker import (

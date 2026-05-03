@@ -1,7 +1,5 @@
 """Support for interacting with Linode nodes."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

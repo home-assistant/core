@@ -1,7 +1,5 @@
 """The WeatherflowCloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from weatherflow4py.api import WeatherFlowRestAPI

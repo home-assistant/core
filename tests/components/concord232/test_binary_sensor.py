@@ -1,7 +1,5 @@
 """Tests for the Concord232 binary sensor platform."""
 
-from __future__ import annotations
-
 import datetime
 from unittest.mock import MagicMock
 

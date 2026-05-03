@@ -1,7 +1,5 @@
 """Support for Velux exterior heating number entities."""
 
-from __future__ import annotations
-
 from pyvlx import ExteriorHeating, Intensity
 
 from homeassistant.components.number import NumberEntity
