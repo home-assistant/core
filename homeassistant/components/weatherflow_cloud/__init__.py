@@ -73,6 +73,7 @@ async def async_setup_entry(
     )
 
     async def _async_disconnect_websocket() -> None:
+        """Disconnect the WeatherFlow websocket."""
         await websocket_api.stop_all_listeners()
         await websocket_api.close()
 
