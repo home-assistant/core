@@ -90,6 +90,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "nvr_alarm": {
+        "name": "Alarm Manager"
+      }
+    },
     "binary_sensor": {
       "alarm_sound_detection": {
         "name": "Alarm sound detection"
@@ -403,8 +408,17 @@
           "window": "Window"
         }
       },
+      "nvr_arm_profile": {
+        "name": "Alarm profile"
+      },
       "paired_camera": {
         "name": "Paired camera"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol",
+        "state": {
+          "stop": "[%key:common::state::stopped%]"
+        }
       },
       "recording_mode": {
         "name": "Recording mode",
@@ -630,6 +644,9 @@
       "privacy_mode": {
         "name": "Privacy mode"
       },
+      "relay_output": {
+        "name": "Output {output_name}"
+      },
       "ssh_enabled": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::ssh_enabled::name%]"
       },
@@ -662,11 +679,17 @@
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },
+    "global_alarm_manager": {
+      "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
+    },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },
     "not_authorized": {
       "message": "Not authorized to perform this action on the UniFi Protect controller"
+    },
+    "not_ptz_camera": {
+      "message": "Camera {camera_name} does not support PTZ"
     },
     "only_music_supported": {
       "message": "Only music media type is supported"
@@ -677,8 +700,20 @@
     "protect_version": {
       "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}"
     },
+    "ptz_preset_not_found": {
+      "message": "Could not find PTZ preset with name {preset_name} on camera {camera_name}"
+    },
+    "relay_not_available": {
+      "message": "Relay is no longer available"
+    },
     "service_error": {
       "message": "Error calling UniFi Protect service, check the logs for more details"
+    },
+    "siren_invalid_duration": {
+      "message": "Invalid siren duration {duration}s. Valid values are: {valid} seconds"
+    },
+    "siren_not_available": {
+      "message": "Siren is no longer available"
     },
     "stream_error": {
       "message": "Error playing audio, check the logs for more details"
@@ -775,6 +810,20 @@
         }
       },
       "name": "Get user keyring info"
+    },
+    "ptz_goto_preset": {
+      "description": "Moves a PTZ camera to a saved preset position.",
+      "fields": {
+        "device_id": {
+          "description": "The PTZ camera to move.",
+          "name": "[%key:component::camera::title%]"
+        },
+        "preset": {
+          "description": "The name of the preset position to move to. Use 'Home' for the home position.",
+          "name": "Preset"
+        }
+      },
+      "name": "PTZ go to preset"
     },
     "remove_doorbell_text": {
       "description": "Removes an existing custom message for doorbells.",

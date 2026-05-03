@@ -4,9 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from visionpluspython.models import create_device_from_data
+from visionpluspython.models import Device, create_device_from_data
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -33,7 +34,7 @@ TEST_EXPIRES_AT = 9999999999
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Ensure the application credentials are registered for each test."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
 
     await async_import_client_credential(
         hass,
@@ -64,6 +65,7 @@ def mock_watts_client() -> Generator[AsyncMock]:
         discover_data = load_json_array_fixture("discover_devices.json", DOMAIN)
         device_report_data = load_json_object_fixture("device_report.json", DOMAIN)
         device_detail_data = load_json_object_fixture("device_detail.json", DOMAIN)
+        switch_detail_data = load_json_object_fixture("switch_detail.json", DOMAIN)
 
         discovered_devices = [
             create_device_from_data(device_data)  # type: ignore[arg-type]
@@ -74,10 +76,22 @@ def mock_watts_client() -> Generator[AsyncMock]:
             for device_id, device_data in device_report_data.items()
         }
         device_detail = create_device_from_data(device_detail_data)  # type: ignore[arg-type]
+        switch_detail = create_device_from_data(switch_detail_data)  # type: ignore[arg-type]
+
+        device_details = {
+            device_detail_data["deviceId"]: device_detail,
+            switch_detail_data["deviceId"]: switch_detail,
+        }
+
+        async def get_device_side_effect(
+            device_id: str, refresh: bool = False
+        ) -> Device:
+            """Return the appropriate device based on device_id."""
+            return device_details.get(device_id, device_detail)
 
         client.discover_devices.return_value = discovered_devices
         client.get_devices_report.return_value = device_report
-        client.get_device.return_value = device_detail
+        client.get_device.side_effect = get_device_side_effect
 
         yield client
 

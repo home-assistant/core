@@ -1,6 +1,5 @@
 """Utils for sql."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import date
 from decimal import Decimal
@@ -137,7 +136,7 @@ def validate_query(
         query_str = Template(query_template, hass).async_render()
     redacted_query = redact_credentials(query_str)
 
-    issue_key = unique_id if unique_id else redacted_query
+    issue_key = unique_id or redacted_query
     # If the query has a unique id and they fix it we can dismiss the issue
     # but if it doesn't have a unique id they have to ignore it instead
 
@@ -261,7 +260,7 @@ def check_and_render_sql_query(hass: HomeAssistant, query: Template | str) -> st
         raise MultipleQueryError("Multiple SQL statements are not allowed")
     if (
         len(rendered_queries) == 0
-        or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"
+        or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"  # type: ignore[no-untyped-call]
     ):
         raise UnknownQueryTypeError("SQL query is empty or unknown type")
     if query_type != "SELECT":

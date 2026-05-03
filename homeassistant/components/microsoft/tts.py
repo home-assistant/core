@@ -1,6 +1,7 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
 
 import logging
+from typing import Any
 
 from pycsspeechtts import pycsspeechtts
 from requests.exceptions import HTTPError
@@ -10,6 +11,7 @@ from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TtsAudioType,
 )
 from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
 from homeassistant.generated.microsoft_tts import SUPPORTED_LANGUAGES
@@ -89,26 +91,28 @@ class MicrosoftProvider(Provider):
         self.name = "Microsoft"
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return SUPPORTED_LANGUAGES
+        return list(SUPPORTED_LANGUAGES)
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
         return [CONF_GENDER, CONF_TYPE]
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any]:
         """Return a dict include default options."""
         return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
 
-    def get_tts_audio(self, message, language, options):
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang

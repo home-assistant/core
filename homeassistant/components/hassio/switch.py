@@ -1,7 +1,5 @@
 """Switch platform for Hass.io addons."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

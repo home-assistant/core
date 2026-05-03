@@ -17,13 +17,11 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudConfigEntry
 from .const import (
-    DOMAIN,
     VACUUM_FAN_SPEED_MAX,
     VACUUM_FAN_SPEED_QUIET,
     VACUUM_FAN_SPEED_STANDARD,
@@ -35,11 +33,11 @@ from .entity import SwitchBotCloudEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.vacuums
@@ -167,8 +165,7 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
             parameters={
                 "action": VacuumCleanMode.SWEEP.value,
                 "param": {
-                    "fanLevel": int(fan_level if fan_level else VACUUM_FAN_SPEED_QUIET)
-                    + 1,
+                    "fanLevel": int(fan_level or VACUUM_FAN_SPEED_QUIET) + 1,
                     "times": 1,
                 },
             },
@@ -222,7 +219,7 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumV2):
             parameters={
                 "action": VacuumCleanMode.SWEEP.value,
                 "param": {
-                    "fanLevel": int(fan_level if fan_level else VACUUM_FAN_SPEED_QUIET),
+                    "fanLevel": int(fan_level or VACUUM_FAN_SPEED_QUIET),
                     "waterLevel": 1,
                     "times": 1,
                 },

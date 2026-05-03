@@ -17,6 +17,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -39,6 +40,10 @@ CACHE_TTL = 300
 # Timeout for upload operations (in seconds)
 # This prevents uploads from hanging indefinitely
 UPLOAD_TIMEOUT = 43200  # 12 hours (matches B2 HTTP timeout)
+
+# Timeout for metadata download operations (in seconds)
+# This prevents the backup system from hanging when B2 connections fail
+METADATA_DOWNLOAD_TIMEOUT = 60
 
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -96,8 +101,7 @@ def handle_b2_errors[T](
         try:
             return await func(*args, **kwargs)
         except B2Error as err:
-            error_msg = f"Failed during {func.__name__}"
-            raise BackupAgentError(error_msg) from err
+            raise BackupAgentError(f"Failed during {func.__name__}: {err}") from err
 
     return wrapper
 
@@ -165,8 +169,7 @@ class BackblazeBackupAgent(BackupAgent):
     async def _cleanup_failed_upload(self, filename: str) -> None:
         """Clean up a partially uploaded file after upload failure."""
         _LOGGER.warning(
-            "Attempting to delete partially uploaded main backup file %s "
-            "due to metadata upload failure",
+            "Attempting to delete partially uploaded backup file %s",
             filename,
         )
         try:
@@ -175,11 +178,10 @@ class BackblazeBackupAgent(BackupAgent):
             )
             await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
         except B2Error:
-            _LOGGER.debug(
-                "Failed to clean up partially uploaded main backup file %s. "
-                "Manual intervention may be required to delete it from Backblaze B2",
+            _LOGGER.warning(
+                "Failed to clean up partially uploaded backup file %s;"
+                " manual deletion from Backblaze B2 may be required",
                 filename,
-                exc_info=True,
             )
         else:
             _LOGGER.debug(
@@ -226,6 +228,7 @@ class BackblazeBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup to Backblaze B2.
@@ -250,9 +253,10 @@ class BackblazeBackupAgent(BackupAgent):
             prefixed_metadata_filename,
         )
 
-        upload_successful = False
+        tar_uploaded = False
         try:
             await self._upload_backup_file(prefixed_tar_filename, open_stream, {})
+            tar_uploaded = True
             _LOGGER.debug(
                 "Main backup file upload finished for %s", prefixed_tar_filename
             )
@@ -264,15 +268,14 @@ class BackblazeBackupAgent(BackupAgent):
             _LOGGER.debug(
                 "Metadata file upload finished for %s", prefixed_metadata_filename
             )
-            upload_successful = True
-        finally:
-            if upload_successful:
-                _LOGGER.debug("Backup upload complete: %s", prefixed_tar_filename)
-                self._invalidate_caches(
-                    backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
-                )
-            else:
+            _LOGGER.debug("Backup upload complete: %s", prefixed_tar_filename)
+            self._invalidate_caches(
+                backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
+            )
+        except B2Error:
+            if tar_uploaded:
                 await self._cleanup_failed_upload(prefixed_tar_filename)
+            raise
 
     def _upload_metadata_file_sync(
         self, metadata_content: bytes, filename: str
@@ -413,12 +416,21 @@ class BackblazeBackupAgent(BackupAgent):
             backups = {}
             for file_name, file_version in all_files_in_prefix.items():
                 if file_name.endswith(METADATA_FILE_SUFFIX):
-                    backup = await self._hass.async_add_executor_job(
-                        self._process_metadata_file_sync,
-                        file_name,
-                        file_version,
-                        all_files_in_prefix,
-                    )
+                    try:
+                        backup = await asyncio.wait_for(
+                            self._hass.async_add_executor_job(
+                                self._process_metadata_file_sync,
+                                file_name,
+                                file_version,
+                                all_files_in_prefix,
+                            ),
+                            timeout=METADATA_DOWNLOAD_TIMEOUT,
+                        )
+                    except TimeoutError:
+                        _LOGGER.warning(
+                            "Timeout downloading metadata file %s", file_name
+                        )
+                        continue
                     if backup:
                         backups[backup.backup_id] = backup
             self._backup_list_cache = backups
@@ -442,10 +454,18 @@ class BackblazeBackupAgent(BackupAgent):
         if not file or not metadata_file_version:
             raise BackupNotFound(f"Backup {backup_id} not found")
 
-        metadata_content = await self._hass.async_add_executor_job(
-            self._download_and_parse_metadata_sync,
-            metadata_file_version,
-        )
+        try:
+            metadata_content = await asyncio.wait_for(
+                self._hass.async_add_executor_job(
+                    self._download_and_parse_metadata_sync,
+                    metadata_file_version,
+                ),
+                timeout=METADATA_DOWNLOAD_TIMEOUT,
+            )
+        except TimeoutError:
+            raise BackupAgentError(
+                f"Timeout downloading metadata for backup {backup_id}"
+            ) from None
 
         _LOGGER.debug(
             "Successfully retrieved metadata for backup ID %s from file %s",
@@ -468,16 +488,27 @@ class BackblazeBackupAgent(BackupAgent):
         # Process metadata files sequentially to avoid exhausting executor pool
         for file_name, file_version in all_files_in_prefix.items():
             if file_name.endswith(METADATA_FILE_SUFFIX):
-                (
-                    result_backup_file,
-                    result_metadata_file_version,
-                ) = await self._hass.async_add_executor_job(
-                    self._process_metadata_file_for_id_sync,
-                    file_name,
-                    file_version,
-                    backup_id,
-                    all_files_in_prefix,
-                )
+                try:
+                    (
+                        result_backup_file,
+                        result_metadata_file_version,
+                    ) = await asyncio.wait_for(
+                        self._hass.async_add_executor_job(
+                            self._process_metadata_file_for_id_sync,
+                            file_name,
+                            file_version,
+                            backup_id,
+                            all_files_in_prefix,
+                        ),
+                        timeout=METADATA_DOWNLOAD_TIMEOUT,
+                    )
+                except TimeoutError:
+                    _LOGGER.warning(
+                        "Timeout downloading metadata file %s while searching for backup %s",
+                        file_name,
+                        backup_id,
+                    )
+                    continue
                 if result_backup_file and result_metadata_file_version:
                     return result_backup_file, result_metadata_file_version
 

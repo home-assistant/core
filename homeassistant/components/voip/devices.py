@@ -1,7 +1,5 @@
 """Class to manage devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 import logging
@@ -143,7 +141,7 @@ class VoIPDevices:
             fw_version = user_agent_parts[2]
         else:
             manuf = None
-            model = user_agent if user_agent else None
+            model = user_agent or None
             fw_version = None
 
         dev_reg = dr.async_get(self.hass)

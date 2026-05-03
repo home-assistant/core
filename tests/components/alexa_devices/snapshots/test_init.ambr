@@ -9,7 +9,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -19,8 +19,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Amazon',
-    'model': None,
+    'manufacturer': 'Test manufacturer',
+    'model': 'Test model',
     'model_id': 'echo',
     'name': 'Echo Test',
     'name_by_user': None,

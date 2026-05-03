@@ -13,7 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import API_TIMEOUT, ATTR_PUMPS
 from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
-from .helpers import get_spa_name
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -45,21 +46,19 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         self.pump_id = pump.id
         self.pump_type = pump.type
         self._attr_unique_id = f"{super().unique_id}-{pump.id}"
+        if pump.type == SpaPump.PumpType.CIRCULATION:
+            self._attr_translation_key = "circulation_pump"
+        elif pump.type == SpaPump.PumpType.JET:
+            self._attr_translation_key = "jet"
+            self._attr_translation_placeholders = {"pump_id": str(pump.id)}
+        else:
+            self._attr_translation_key = "pump"
+            self._attr_translation_placeholders = {"pump_id": str(pump.id)}
 
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
-
-    @property
-    def name(self) -> str:
-        """Return a name for this pump entity."""
-        spa_name = get_spa_name(self.spa)
-        if self.pump_type == SpaPump.PumpType.CIRCULATION:
-            return f"{spa_name} Circulation Pump"
-        if self.pump_type == SpaPump.PumpType.JET:
-            return f"{spa_name} Jet {self.pump_id}"
-        return f"{spa_name} pump {self.pump_id}"
 
     @property
     def is_on(self) -> bool:

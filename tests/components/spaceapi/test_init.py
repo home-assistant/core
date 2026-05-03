@@ -1,7 +1,6 @@
 """The tests for the Home Assistant SpaceAPI component."""
 
 from http import HTTPStatus
-from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
@@ -98,8 +97,7 @@ async def mock_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component."""
-    with patch("homeassistant.components.spaceapi", return_value=True):
-        await async_setup_component(hass, "spaceapi", CONFIG)
+    await async_setup_component(hass, "spaceapi", CONFIG)
 
     hass.states.async_set(
         "test.temp1",
@@ -131,7 +129,7 @@ async def mock_client(
     return await hass_client()
 
 
-async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_get(hass: HomeAssistant, mock_client: TestClient) -> None:
     """Test response after start-up Home Assistant."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK
@@ -175,7 +173,7 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
-async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_state_get(hass: HomeAssistant, mock_client: TestClient) -> None:
     """Test response if the state entity was set."""
     hass.states.async_set("test.test_door", True)
 
@@ -186,10 +184,48 @@ async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
     assert data["state"]["open"] == bool(1)
 
 
-async def test_spaceapi_sensors_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_sensors_get(
+    hass: HomeAssistant, mock_client: TestClient
+) -> None:
     """Test the response for the sensors."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
     assert data["sensors"] == SENSOR_OUTPUT
+
+
+async def test_spaceapi_no_auth_required(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test SpaceAPI is accessible without authentication."""
+    assert await async_setup_component(hass, "spaceapi", CONFIG)
+
+    hass.states.async_set("test.test_door", "on")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+
+    data = await resp.json()
+    assert data["space"] == "Home"
+
+
+async def test_spaceapi_cors_headers(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test CORS headers are present on SpaceAPI responses."""
+    assert await async_setup_component(hass, "spaceapi", CONFIG)
+
+    hass.states.async_set("test.test_door", "on")
+
+    client = await hass_client_no_auth()
+    resp = await client.options(
+        URL_API_SPACEAPI,
+        headers={
+            "origin": "http://example.com",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert resp.headers["Access-Control-Allow-Origin"] == "http://example.com"
+    assert "GET" in resp.headers["Access-Control-Allow-Methods"]

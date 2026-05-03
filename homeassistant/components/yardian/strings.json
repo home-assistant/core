@@ -38,7 +38,7 @@
     "sensor": {
       "active_zone_count": {
         "name": "Active zones",
-        "unit_of_measurement": "Zones"
+        "unit_of_measurement": "zones"
       },
       "rain_delay": {
         "name": "Rain delay"

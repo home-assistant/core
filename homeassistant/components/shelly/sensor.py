@@ -1,15 +1,14 @@
 """Sensor for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -41,6 +40,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
 from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -62,7 +62,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_device_uptime,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
@@ -365,8 +364,9 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda block: cast(int, block.extTemp) != 999
-        and not getattr(block, "sensorError", False),
+        available=lambda block: (
+            cast(int, block.extTemp) != 999 and not getattr(block, "sensorError", False)
+        ),
     ),
     ("sensor", "humidity"): BlockSensorDescription(
         key="sensor|humidity",
@@ -374,8 +374,10 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda block: cast(int, block.humidity) != 999
-        and not getattr(block, "sensorError", False),
+        available=lambda block: (
+            cast(int, block.humidity) != 999
+            and not getattr(block, "sensorError", False)
+        ),
     ),
     ("sensor", "luminosity"): BlockSensorDescription(
         key="sensor|luminosity",
@@ -463,9 +465,8 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        translation_key="last_restart",
-        value=lambda status, last: get_device_uptime(status["uptime"], last),
-        device_class=SensorDeviceClass.TIMESTAMP,
+        value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -865,9 +866,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        removal_condition=lambda _, status, key: (
-            status[key].get("ret_aenergy") is None
-        ),
+        removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
     "consumed_energy_switch": RpcSensorDescription(
         key="switch",
@@ -881,9 +880,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         entity_class=RpcEnergyConsumedSensor,
-        removal_condition=lambda _, status, key: (
-            status[key].get("ret_aenergy") is None
-        ),
+        removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
     "energy_light": RpcSensorDescription(
         key="light",
@@ -1221,7 +1218,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
-    "temperature_0": RpcSensorDescription(
+    "temperature_tc": RpcSensorDescription(
         key="temperature",
         sub_key="tC",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -1243,14 +1240,13 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        translation_key="last_restart",
-        value=get_device_uptime,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
+        value=lambda status, _: utcnow() - timedelta(seconds=status),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
-    "humidity_0": RpcSensorDescription(
+    "humidity_rh": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
         native_unit_of_measurement=PERCENTAGE,
@@ -1266,7 +1262,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda _, status, key: (status[key]["battery"] is None),
+        removal_condition=lambda _, status, key: status[key]["battery"] is None,
     ),
     "voltmeter": RpcSensorDescription(
         key="voltmeter",
@@ -1283,7 +1279,8 @@ RPC_SENSORS: Final = {
         key="voltmeter",
         sub_key="xvoltage",
         translation_key="voltmeter_value",
-        removal_condition=lambda _, status, key: (status[key].get("xvoltage") is None),
+        state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: status[key].get("xvoltage") is None,
         unit=lambda config: config["xvoltage"]["unit"] or None,
     ),
     "analoginput": RpcSensorDescription(
@@ -1300,6 +1297,7 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="xpercent",
         translation_key="analog_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "analog"
             or config[key]["enable"] is False
@@ -1344,6 +1342,7 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="xfreq",
         translation_key="pulse_counter_frequency_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
             or config[key]["enable"] is False
@@ -1354,16 +1353,16 @@ RPC_SENSORS: Final = {
     "text_generic": RpcSensorDescription(
         key="text",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
     "number_generic": RpcSensorDescription(
         key="number",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         unit=get_virtual_component_unit,
         role=ROLE_GENERIC,
@@ -1371,8 +1370,8 @@ RPC_SENSORS: Final = {
     "enum_generic": RpcSensorDescription(
         key="enum",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         device_class=SensorDeviceClass.ENUM,
         role=ROLE_GENERIC,
@@ -1384,8 +1383,9 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda config, _, key: config[key].get("enable", False)
-        is False,
+        removal_condition=lambda config, _, key: (
+            config[key].get("enable", False) is False
+        ),
         entity_class=RpcBluTrvSensor,
     ),
     "blutrv_battery": RpcSensorDescription(
@@ -1421,8 +1421,8 @@ RPC_SENSORS: Final = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         role="average_temperature",
-        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
-            "weather_api", False
+        removal_condition=lambda config, _s, _k: (
+            not config.get("service:0", {}).get("weather_api", False)
         ),
     ),
     "number_last_precipitation": RpcSensorDescription(
@@ -1432,8 +1432,8 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         role="last_precipitation",
-        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
-            "weather_api", False
+        removal_condition=lambda config, _s, _k: (
+            not config.get("service:0", {}).get("weather_api", False)
         ),
     ),
     "number_current_humidity": RpcSensorDescription(
@@ -1679,8 +1679,10 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_left_vial": RpcSensorDescription(
         key="cury",
@@ -1688,8 +1690,10 @@ RPC_SENSORS: Final = {
         translation_key="left_slot_vial",
         value=lambda status, _: status["left"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_level": RpcSensorDescription(
         key="cury",
@@ -1699,8 +1703,10 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_vial": RpcSensorDescription(
         key="cury",
@@ -1708,8 +1714,10 @@ RPC_SENSORS: Final = {
         translation_key="right_slot_vial",
         value=lambda status, _: status["right"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
 }
 
@@ -1781,7 +1789,7 @@ def _async_setup_rpc_entry(
             hass,
             config_entry.entry_id,
             coordinator.mac,
-            SENSOR_PLATFORM,
+            SENSOR_DOMAIN,
             coordinator.device.status,
         )
 

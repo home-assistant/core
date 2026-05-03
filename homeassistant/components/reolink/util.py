@@ -1,7 +1,5 @@
 """Utility functions for the Reolink component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -28,11 +26,11 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_exception_message
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
+    from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
     from .host import ReolinkHost
 
 STORAGE_VERSION = 1
@@ -45,8 +43,8 @@ class ReolinkData:
     """Data for the Reolink integration."""
 
     host: ReolinkHost
-    device_coordinator: DataUpdateCoordinator[None]
-    firmware_coordinator: DataUpdateCoordinator[None]
+    device_coordinator: ReolinkDeviceCoordinator
+    firmware_coordinator: ReolinkFirmwareCoordinator
 
 
 def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> bool:

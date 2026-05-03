@@ -4,10 +4,9 @@ Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyfido import FidoClient
 from pyfido.client import PyFidoError
@@ -226,7 +225,7 @@ class FidoSensor(SensorEntity):
         self._attr_name = f"{name} {number} {description.name}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {"number": self._number}
 

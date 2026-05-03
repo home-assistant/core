@@ -1,7 +1,5 @@
 """Support for getting the disk temperature of a host."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import socket

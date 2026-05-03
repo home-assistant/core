@@ -1,7 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -126,7 +124,7 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
         """Initialize a cover for another device."""
         cover_node = next(
             filter(
-                lambda x: (x["name"] == self._sensor_name and x["ep_type"] == "signal"),
+                lambda x: x["name"] == self._sensor_name and x["ep_type"] == "signal",
                 node["type"]["endpoints"],
             ),
             None,

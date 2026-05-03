@@ -1,7 +1,5 @@
 """Demo platform that has a couple of fake sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -101,6 +99,8 @@ async def async_setup_entry(
     )
 
     for subentry_id, subentry in config_entry.subentries.items():
+        if subentry.subentry_type != "entity":
+            continue
         async_add_entities(
             [
                 DemoSensor(

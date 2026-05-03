@@ -1,7 +1,5 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -115,7 +113,7 @@ class PALoopbackSwitch(SwitchEntity):
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._module_idx is not None
 

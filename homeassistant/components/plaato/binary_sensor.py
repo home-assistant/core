@@ -1,24 +1,22 @@
 """Support for Plaato Airlock sensors."""
 
-from __future__ import annotations
-
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_USE_WEBHOOK, COORDINATOR, DOMAIN
+from .const import CONF_USE_WEBHOOK
+from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 from .entity import PlaatoEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PlaatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plaato from a config entry."""
@@ -26,10 +24,12 @@ async def async_setup_entry(
     if config_entry.data[CONF_USE_WEBHOOK]:
         return
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    entry_data = config_entry.runtime_data
+    coordinator = entry_data.coordinator
+    assert coordinator is not None
     async_add_entities(
         PlaatoBinarySensor(
-            hass.data[DOMAIN][config_entry.entry_id],
+            entry_data,
             sensor_type,
             coordinator,
         )
@@ -40,7 +40,12 @@ async def async_setup_entry(
 class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
     """Representation of a Binary Sensor."""
 
-    def __init__(self, data, sensor_type, coordinator=None) -> None:
+    def __init__(
+        self,
+        data: PlaatoData,
+        sensor_type: str,
+        coordinator: PlaatoCoordinator | None = None,
+    ) -> None:
         """Initialize plaato binary sensor."""
         super().__init__(data, sensor_type, coordinator)
         if sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:
@@ -49,7 +54,7 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
             self._attr_device_class = BinarySensorDeviceClass.OPENING
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         if self._coordinator is not None:
             return self._coordinator.data.binary_sensors.get(self._sensor_type)

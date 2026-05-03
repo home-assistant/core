@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[climate.air_conditioner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -77,8 +78,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.anbau-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -90,7 +92,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'target_temp_step': 1.0,
     }),
@@ -137,7 +138,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
       'target_temp_step': 1.0,
@@ -152,8 +152,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.bathroom_radiator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -211,7 +212,7 @@
       ]),
       'max_temp': 70.0,
       'min_temp': 1.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'holiday',
         'auto',
@@ -232,8 +233,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.boiler_temperature_controller-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -298,8 +300,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.clima_cucina-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -380,8 +383,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.el_termostato_de_la_cocina-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -447,8 +451,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.empore-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -460,7 +465,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'target_temp_step': 1.0,
     }),
@@ -505,11 +509,10 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
       'target_temp_step': 1.0,
@@ -525,8 +528,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.floor_thermostat_kitchen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -538,7 +542,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'target_temp_step': 1.0,
     }),
@@ -583,11 +586,10 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 1.0,
@@ -603,8 +605,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.geti_solar_pv_water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -665,8 +668,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.itc_308_wifi_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -728,8 +732,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.kabinet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -804,8 +809,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.master_bedroom_ac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -880,8 +886,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.mini_split-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -964,8 +971,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.mr_pure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1026,8 +1034,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.polotentsosushitel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1100,8 +1109,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.salon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1158,7 +1168,7 @@
       ]),
       'max_temp': 5.9,
       'min_temp': 0.1,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
@@ -1178,8 +1188,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.smart_thermostats-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1235,7 +1246,7 @@
       ]),
       'max_temp': 90.0,
       'min_temp': 5.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
@@ -1254,8 +1265,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.sove-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -1330,8 +1342,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.term_prizemi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1397,8 +1410,9 @@
 # ---
 # name: test_platform_setup_and_discovery[climate.wifi_smart_gas_boiler_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

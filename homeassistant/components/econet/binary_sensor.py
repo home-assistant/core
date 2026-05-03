@@ -1,7 +1,5 @@
 """Support for Rheem EcoNet water heaters."""
 
-from __future__ import annotations
-
 from pyeconet.equipment import Equipment, EquipmentType
 
 from homeassistant.components.binary_sensor import (
@@ -74,6 +72,6 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return getattr(self._econet, self.entity_description.key)

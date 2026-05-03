@@ -1,9 +1,8 @@
 """Details about the built-in battery."""
 
-from __future__ import annotations
-
 import logging
 import os
+from typing import Any
 
 from batinfo import Batteries
 import voluptuous as vol
@@ -97,7 +96,7 @@ class LinuxBatterySensor(SensorEntity):
         self._system = system
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         if self._system == "android":
             return {

@@ -1,7 +1,5 @@
 """Config flow for IronOS integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -52,7 +50,7 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
             device = Pynecil(discovery_info.address)
             try:
                 await device.connect()
-            except (CommunicationError, BleakError, TimeoutError):
+            except CommunicationError, BleakError, TimeoutError:
                 _LOGGER.debug("Cannot connect:", exc_info=True)
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -87,7 +85,7 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
             device = Pynecil(address)
             try:
                 await device.connect()
-            except (CommunicationError, BleakError, TimeoutError):
+            except CommunicationError, BleakError, TimeoutError:
                 _LOGGER.debug("Cannot connect:", exc_info=True)
                 errors["base"] = "cannot_connect"
             except Exception:

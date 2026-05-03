@@ -6,10 +6,16 @@ from unittest.mock import call, patch
 import pytest
 from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.quirks.v2 import QuirkBuilder
+from zigpy.quirks.v2.homeassistant.number import NumberDeviceClass
 from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -88,14 +94,18 @@ async def test_number(
     entity_id = find_entity_id(Platform.NUMBER, zha_device_proxy, hass)
     assert entity_id is not None
 
-    assert hass.states.get(entity_id).state == "15.0"
+    hass_state = hass.states.get(entity_id)
+    assert hass_state is not None
+    assert hass_state.state == "15.0"
 
     # test attributes
-    assert hass.states.get(entity_id).attributes.get("min") == 1.0
-    assert hass.states.get(entity_id).attributes.get("max") == 100.0
-    assert hass.states.get(entity_id).attributes.get("step") == 1.1
-    assert hass.states.get(entity_id).attributes.get("icon") == "mdi:percent"
-    assert hass.states.get(entity_id).attributes.get("unit_of_measurement") == "%"
+    assert hass_state.attributes.get("min") == 1.0
+    assert hass_state.attributes.get("max") == 100.0
+    assert hass_state.attributes.get("step") == 1.1
+    assert hass_state.attributes.get("icon") == "mdi:percent"
+    assert hass_state.attributes.get("unit_of_measurement") == "%"
+    assert hass_state.attributes.get("mode") == "auto"
+    assert hass_state.attributes.get("device_class") is None
 
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
@@ -130,11 +140,62 @@ async def test_number(
     # update device value with failed attribute report
     cluster.PLUGGED_ATTR_READS["present_value"] = 40.0
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {"entity_id": entity_id},
+        blocking=True,
     )
     assert hass.states.get(entity_id).state == "40.0"
     assert "present_value" in cluster.read_attributes.call_args[0][0]
+
+
+async def test_number_quirks_v2_metadata(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test that mode and device_class from quirks v2 metadata are passed through."""
+    (
+        QuirkBuilder("Test Manf", "Test Number Model")
+        .number(
+            attribute_name="current_level",
+            cluster_id=general.LevelControl.cluster_id,
+            min_value=0,
+            max_value=254,
+            mode="box",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            fallback_name="Level",
+        )
+        .add_to_registry()
+    )
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.LevelControl.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        manufacturer="Test Manf",
+        model="Test Number Model",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "number.test_manf_test_number_model"
+    hass_state = hass.states.get(entity_id)
+    assert hass_state is not None
+
+    assert hass_state.attributes.get("mode") == "box"
+    assert hass_state.attributes.get("device_class") == "temperature"

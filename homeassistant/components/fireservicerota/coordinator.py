@@ -1,7 +1,5 @@
 """The FireServiceRota integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -173,7 +171,7 @@ class FireServiceRotaClient:
 
         try:
             return await self._hass.async_add_executor_job(func, *args)
-        except (ExpiredTokenError, InvalidTokenError):
+        except ExpiredTokenError, InvalidTokenError:
             await self._hass.async_add_executor_job(self.websocket.stop_listener)
             self.token_refresh_failure = True
 

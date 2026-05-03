@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN as SELECT_PLATFORM,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.shelly.const import DOMAIN
@@ -91,7 +91,7 @@ async def test_rpc_device_virtual_enum(
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 1")
     await hass.services.async_call(
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Title 1"},
         blocking=True,
@@ -131,7 +131,7 @@ async def test_rpc_remove_virtual_enum_when_mode_label(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         "test_name_enum_200",
         "enum:200-enum_generic",
         config_entry,
@@ -155,7 +155,7 @@ async def test_rpc_remove_virtual_enum_when_orphaned(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         "test_name_enum_200",
         "enum:200-enum_generic",
         config_entry,
@@ -212,10 +212,10 @@ async def test_select_set_exc(
 
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
-            SELECT_PLATFORM,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: f"{SELECT_PLATFORM}.test_name_enum_203",
+                ATTR_ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
                 ATTR_OPTION: "option 2",
             },
             blocking=True,
@@ -250,10 +250,10 @@ async def test_select_set_reauth_error(
     mock_rpc_device.enum_set.side_effect = InvalidAuthError
 
     await hass.services.async_call(
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"{SELECT_PLATFORM}.test_name_enum_203",
+            ATTR_ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
             ATTR_OPTION: "option 2",
         },
         blocking=True,
@@ -280,7 +280,7 @@ async def test_rpc_cury_mode_select(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Cury Mode select entity."""
-    entity_id = f"{SELECT_PLATFORM}.test_name_mode"
+    entity_id = f"{SELECT_DOMAIN}.test_name_mode"
     status = {"cury:0": {"id": 0, "mode": "hall"}}
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
@@ -310,7 +310,7 @@ async def test_rpc_cury_mode_select(
 
     monkeypatch.setitem(mock_rpc_device.status["cury:0"], "mode", "reception")
     await hass.services.async_call(
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "reception"},
         blocking=True,

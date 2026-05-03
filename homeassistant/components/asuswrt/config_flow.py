@@ -1,7 +1,5 @@
 """Config flow to configure the AsusWrt integration."""
 
-from __future__ import annotations
-
 import logging
 import os
 import socket
@@ -189,7 +187,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api.async_connect()
 
-        except (AsusRouterError, OSError):
+        except AsusRouterError, OSError:
             _LOGGER.error(
                 "Error connecting to the AsusWrt router at %s using protocol %s",
                 host,

@@ -1,7 +1,5 @@
 """Constants for the KNX integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
@@ -168,6 +166,7 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -229,6 +228,14 @@ class FanConf:
     """Common config keys for fan."""
 
     MAX_STEP: Final = "max_step"
+
+
+class NumberConf:
+    """Common config keys for number."""
+
+    MAX: Final = "max"
+    MIN: Final = "min"
+    STEP: Final = "step"
 
 
 class SceneConf:

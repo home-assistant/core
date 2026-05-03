@@ -1,7 +1,5 @@
 """Config flow for Ecovacs mqtt integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 import ssl

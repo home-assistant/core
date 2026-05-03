@@ -95,6 +95,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
         device,
@@ -337,7 +339,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except (ReadError, StorageError):
+                except ReadError, StorageError:
                     continue
                 return b64encode(code).decode("utf8")
 
@@ -413,7 +415,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except (ReadError, StorageError):
+                except ReadError, StorageError:
                     continue
                 return b64encode(code).decode("utf8")
 

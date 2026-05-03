@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -244,9 +242,9 @@ HEAT_METER_SENSOR_TYPES = (
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: dt_util.as_utc(res.meter_date_time)
-        if res.meter_date_time
-        else None,
+        value_fn=lambda res: (
+            dt_util.as_utc(res.meter_date_time) if res.meter_date_time else None
+        ),
     ),
     HeatMeterSensorEntityDescription(
         key="measuring_range_m3ph",

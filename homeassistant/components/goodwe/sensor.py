@@ -1,7 +1,5 @@
 """Support for GoodWe inverter via UDP."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -41,6 +39,9 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .coordinator import GoodweConfigEntry, GoodweUpdateCoordinator
 
+# Coordinator handles all data updates, so parallel updates are not needed
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor name of battery SoC
@@ -79,11 +80,11 @@ _ICONS: dict[SensorKind, str] = {
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[[GoodweUpdateCoordinator, str], Any] = (
-        lambda coordinator, sensor: coordinator.sensor_value(sensor)
+    value: Callable[[GoodweUpdateCoordinator, str], Any] = lambda coordinator, sensor: (
+        coordinator.sensor_value(sensor)
     )
-    available: Callable[[GoodweUpdateCoordinator], bool] = (
-        lambda coordinator: coordinator.last_update_success
+    available: Callable[[GoodweUpdateCoordinator], bool] = lambda coordinator: (
+        coordinator.last_update_success
     )
 
 

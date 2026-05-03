@@ -41,6 +41,8 @@ class BTHomePassiveBluetoothProcessorCoordinator(
         self.discovered_event_classes = discovered_event_classes
         self.device_data = device_data
         self.entry = entry
+        # Track whether we've already logged the encryption downgrade this session.
+        self.encryption_downgrade_logged = False
 
     @property
     def sleepy_device(self) -> bool:

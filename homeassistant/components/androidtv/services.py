@@ -1,7 +1,5 @@
 """Services for Android/Fire TV devices."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -16,11 +14,6 @@ ATTR_DEVICE_PATH = "device_path"
 ATTR_HDMI_INPUT = "hdmi_input"
 ATTR_LOCAL_PATH = "local_path"
 
-SERVICE_ADB_COMMAND = "adb_command"
-SERVICE_DOWNLOAD = "download"
-SERVICE_LEARN_SENDEVENT = "learn_sendevent"
-SERVICE_UPLOAD = "upload"
-
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -29,7 +22,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ADB_COMMAND,
+        "adb_command",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={vol.Required(ATTR_COMMAND): cv.string},
         func="adb_command",
@@ -37,7 +30,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_LEARN_SENDEVENT,
+        "learn_sendevent",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="learn_sendevent",
@@ -45,7 +38,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_DOWNLOAD,
+        "download",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
             vol.Required(ATTR_DEVICE_PATH): cv.string,
@@ -56,7 +49,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_UPLOAD,
+        "upload",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
             vol.Required(ATTR_DEVICE_PATH): cv.string,

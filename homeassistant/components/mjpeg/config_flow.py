@@ -1,7 +1,5 @@
 """Config flow to configure the MJPEG IP Camera integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
@@ -123,7 +121,7 @@ async def async_validate_input(
             )
     except InvalidAuth:
         errors["username"] = "invalid_auth"
-    except (OSError, HTTPError, Timeout):
+    except OSError, HTTPError, Timeout:
         LOGGER.exception("Cannot connect to %s", user_input[CONF_MJPEG_URL])
         errors[field] = "cannot_connect"
 

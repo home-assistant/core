@@ -9,10 +9,7 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AgentDVRConfigEntry
 from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN
@@ -20,20 +17,6 @@ from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
 _LOGGER = logging.getLogger(__name__)
-
-_DEV_EN_ALT = "enable_alerts"
-_DEV_DS_ALT = "disable_alerts"
-_DEV_EN_REC = "start_recording"
-_DEV_DS_REC = "stop_recording"
-_DEV_SNAP = "snapshot"
-
-CAMERA_SERVICES = {
-    _DEV_EN_ALT: "async_enable_alerts",
-    _DEV_DS_ALT: "async_disable_alerts",
-    _DEV_EN_REC: "async_start_recording",
-    _DEV_DS_REC: "async_stop_recording",
-    _DEV_SNAP: "async_snapshot",
-}
 
 
 async def async_setup_entry(
@@ -56,10 +39,6 @@ async def async_setup_entry(
             cameras.append(camera)
 
     async_add_entities(cameras)
-
-    platform = async_get_current_platform()
-    for service, method in CAMERA_SERVICES.items():
-        platform.async_register_entity_service(service, None, method)
 
 
 class AgentCamera(MjpegCamera):

@@ -1,7 +1,5 @@
 """Numeric integration of data coming from a source sensor over time."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -170,7 +168,7 @@ class _Right(_IntegrationMethod):
 def _decimal_state(state: str) -> Decimal | None:
     try:
         return Decimal(state)
-    except (InvalidOperation, TypeError):
+    except InvalidOperation, TypeError:
         return None
 
 

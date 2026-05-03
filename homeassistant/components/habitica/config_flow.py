@@ -1,7 +1,5 @@
 """Config flow for habitica integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
@@ -350,7 +348,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except NotAuthorizedError:
             errors["base"] = "invalid_auth"
-        except (HabiticaException, ClientError):
+        except HabiticaException, ClientError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -379,7 +377,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             user = await api.get_user(user_fields="profile")
         except NotAuthorizedError:
             errors["base"] = "invalid_auth"
-        except (HabiticaException, ClientError):
+        except HabiticaException, ClientError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

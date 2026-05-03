@@ -1,7 +1,5 @@
 """Support for TPLink Omada device toggle options."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
@@ -43,6 +41,8 @@ from .entity import OmadaDeviceEntity
 TPort = TypeVar("TPort")
 TDevice = TypeVar("TDevice", bound="OmadaDevice")
 TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -211,9 +211,11 @@ SWITCH_PORT_DETAILS_SWITCHES: list[OmadaSwitchPortSwitchEntityDescription] = [
         key="poe",
         translation_key="poe_control",
         exists_func=(
-            lambda d, p: d.device_capabilities.supports_poe
-            and p.supports_poe
-            and p.type != PortType.SFP
+            lambda d, p: (
+                d.device_capabilities.supports_poe
+                and p.supports_poe
+                and p.type != PortType.SFP
+            )
         ),
         set_func=(
             lambda client, device, port, enable: client.update_switch_port(

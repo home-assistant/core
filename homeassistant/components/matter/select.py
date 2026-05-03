@@ -1,7 +1,5 @@
 """Matter ModeSelect Cluster Support."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
@@ -11,13 +9,12 @@ from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterComm
 from chip.clusters.Types import Nullable
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 DOOR_LOCK_OPERATING_MODE_MAP = {
@@ -66,11 +63,11 @@ type SelectCluster = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter ModeSelect from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SELECT, async_add_entities)
 
 
@@ -456,8 +453,10 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterListSelectEntityDescription(
             key="TemperatureControlSelectedTemperatureLevel",
             translation_key="temperature_level",
-            command=lambda selected_index: clusters.TemperatureControl.Commands.SetTemperature(
-                targetTemperatureLevel=selected_index
+            command=lambda selected_index: (
+                clusters.TemperatureControl.Commands.SetTemperature(
+                    targetTemperatureLevel=selected_index
+                )
             ),
             list_attribute=clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
         ),
@@ -506,8 +505,10 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterListSelectEntityDescription(
             key="MicrowaveOvenControlSelectedWattIndex",
             translation_key="power_level",
-            command=lambda selected_index: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
-                wattSettingIndex=selected_index
+            command=lambda selected_index: (
+                clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                    wattSettingIndex=selected_index
+                )
             ),
             list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
         ),
@@ -556,11 +557,15 @@ DISCOVERY_SCHEMAS = [
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
     ),
+    # Keep the legacy vendor-specific select entities until HA 2026.11.0,
+    # so existing users can migrate before we remove them in favor of the
+    # generic number slider.
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
@@ -580,12 +585,14 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4447,),
         product_id=(8194,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
             device_to_ha={
@@ -608,12 +615,14 @@ DISCOVERY_SCHEMAS = [
             8197,
             8195,
         ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
             device_to_ha={
@@ -633,6 +642,7 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4619,),
         product_id=(4097,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,

@@ -1,7 +1,5 @@
 """Xbox Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -212,7 +210,7 @@ class XboxSource(MediaSource):
                         to_https(images[int(identifier.media_id)].url),
                         MIME_TYPE_MAP[ATTR_SCREENSHOTS],
                     )
-                except (ValueError, IndexError):
+                except ValueError, IndexError:
                     pass
 
         raise Unresolvable(

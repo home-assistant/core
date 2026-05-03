@@ -1,7 +1,5 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import statistics
@@ -365,7 +363,7 @@ class MinMaxSensor(SensorEntity):
                     device_classes.append(SensorDeviceClass(device_class))
                 else:
                     device_classes.append(None)
-            except (HomeAssistantError, ValueError):
+            except HomeAssistantError, ValueError:
                 # If we can't get device class for any entity, don't set it
                 device_classes.append(None)
 

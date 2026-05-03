@@ -1,7 +1,5 @@
 """Support for Honeywell Lyric climate platform."""
 
-from __future__ import annotations
-
 import asyncio
 import enum
 import logging
@@ -254,7 +252,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current hvac action."""
-        action = HVAC_ACTIONS.get(self.device.operation_status.mode, None)
+        action = HVAC_ACTIONS.get(self.device.operation_status.mode)
         if action == HVACAction.OFF and self.hvac_mode != HVACMode.OFF:
             action = HVACAction.IDLE
         return action

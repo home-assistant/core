@@ -1,7 +1,5 @@
 """Support for monitoring if a sensor value is below/above a threshold."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Final
@@ -221,7 +219,7 @@ class ThresholdSensor(BinarySensorEntity):
                     if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
                     else float(new_state.state)
                 )
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 self.sensor_value = None
                 _LOGGER.warning("State is not numerical")
 

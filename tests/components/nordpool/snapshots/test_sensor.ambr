@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.nord_pool_se3_currency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_current_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -106,8 +108,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_daily_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -162,8 +165,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_exchange_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -214,8 +218,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -269,8 +274,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_last_updated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -319,8 +325,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -374,8 +381,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_next_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -427,8 +435,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -483,8 +492,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -539,8 +549,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -595,8 +606,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -645,8 +657,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -695,8 +708,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -751,8 +765,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -807,8 +822,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -863,8 +879,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -913,8 +930,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -963,8 +981,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1019,8 +1038,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1075,8 +1095,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1131,8 +1152,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1181,8 +1203,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1231,8 +1254,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se3_previous_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1284,8 +1308,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_currency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1333,8 +1358,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_current_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1389,8 +1415,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_daily_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1445,8 +1472,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_exchange_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1497,8 +1525,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1552,8 +1581,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_last_updated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1602,8 +1632,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1657,8 +1688,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_next_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1710,8 +1742,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1766,8 +1799,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1822,8 +1856,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1878,8 +1913,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1928,8 +1964,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1978,8 +2015,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2034,8 +2072,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2090,8 +2129,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2146,8 +2186,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2196,8 +2237,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2246,8 +2288,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2302,8 +2345,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2358,8 +2402,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2414,8 +2459,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2464,8 +2510,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2514,8 +2561,9 @@
 # ---
 # name: test_sensor[sensor.nord_pool_se4_previous_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

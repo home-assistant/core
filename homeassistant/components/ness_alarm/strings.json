@@ -1,4 +1,91 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "infer_arming_state": "Infer arming state",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Ness alarm panel.",
+          "infer_arming_state": "Attempt to infer the arming state from zone activity.",
+          "port": "The port on which the Ness alarm panel is accessible."
+        },
+        "description": "Configure connection to your Ness D8X/D16X alarm panel.",
+        "title": "Set up Ness Alarm"
+      }
+    }
+  },
+  "config_subentries": {
+    "zone": {
+      "entry_type": "Zone",
+      "error": {
+        "already_configured": "Zone with this number is already configured"
+      },
+      "initiate_flow": {
+        "user": "Add zone"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "type": "[%key:component::ness_alarm::config_subentries::zone::step::user::data::type%]"
+          },
+          "data_description": {
+            "type": "[%key:component::ness_alarm::config_subentries::zone::step::user::data_description::type%]"
+          },
+          "title": "Reconfigure zone {zone_number}"
+        },
+        "user": {
+          "data": {
+            "type": "Zone type",
+            "zone_number": "Zone number"
+          },
+          "data_description": {
+            "type": "Choose the device class you would like the sensor to show as",
+            "zone_number": "Enter zone number to configure (1-32)"
+          },
+          "title": "Configure zone"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_config_entry": {
+      "message": "No Ness Alarm configuration entry is loaded"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unknown error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_home_mode": "Show arm home mode"
+        },
+        "data_description": {
+          "show_home_mode": "Enable this to show the arm home option on the alarm panel."
+        }
+      }
+    }
+  },
   "services": {
     "aux": {
       "description": "Changes the state of an aux output.",

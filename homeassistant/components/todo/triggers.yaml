@@ -1,0 +1,8 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: todo
+
+item_added: *trigger_common
+item_completed: *trigger_common
+item_removed: *trigger_common

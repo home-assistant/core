@@ -1,7 +1,5 @@
 """Config flow for EZVIZ."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
@@ -296,13 +294,13 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 return await self._validate_and_create_camera_rtsp(user_input)
 
-            except (InvalidHost, InvalidURL):
+            except InvalidHost, InvalidURL:
                 errors["base"] = "invalid_host"
 
             except EzvizAuthVerificationCode:
                 errors["base"] = "mfa_required"
 
-            except (PyEzvizError, AuthTestResultFailed):
+            except PyEzvizError, AuthTestResultFailed:
                 errors["base"] = "invalid_auth"
 
             except Exception:
@@ -357,13 +355,13 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     _validate_and_create_auth, user_input
                 )
 
-            except (InvalidHost, InvalidURL):
+            except InvalidHost, InvalidURL:
                 errors["base"] = "invalid_host"
 
             except EzvizAuthVerificationCode:
                 errors["base"] = "mfa_required"
 
-            except (PyEzvizError, AuthTestResultFailed):
+            except PyEzvizError, AuthTestResultFailed:
                 errors["base"] = "invalid_auth"
 
             except Exception:

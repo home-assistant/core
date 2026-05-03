@@ -1,7 +1,5 @@
 """Config flow for Overkiz integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 
@@ -164,7 +162,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"

@@ -1,7 +1,5 @@
 """Mail (SMTP) notification service."""
 
-from __future__ import annotations
-
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -170,7 +168,7 @@ class MailNotificationService(BaseNotificationService):
         server = None
         try:
             server = self.connect()
-        except (socket.gaierror, ConnectionRefusedError):
+        except socket.gaierror, ConnectionRefusedError:
             _LOGGER.exception(
                 (
                     "SMTP server not found or refused connection (%s:%s). Please check"

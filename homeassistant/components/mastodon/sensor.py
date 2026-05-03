@@ -1,7 +1,5 @@
 """Mastodon platform for sensor components."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -71,9 +69,9 @@ ENTITY_DESCRIPTIONS = (
         translation_key="last_post",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
-            lambda data, _: dt_util.as_local(data.last_status_at)
-            if data.last_status_at
-            else None
+            lambda data, _: (
+                dt_util.as_local(data.last_status_at) if data.last_status_at else None
+            )
         ),
     ),
     MastodonSensorEntityDescription(

@@ -2,7 +2,7 @@
   "operating_mode": {
     "name": "DHW operating mode",
     "error": 0,
-    "value": "On",
+    "value": "1",
     "desc": "On",
     "dataType": 1,
     "readonly": 0,

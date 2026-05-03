@@ -16,8 +16,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: |
-      The integration does not provide any entities.
+    comment: Entities do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -47,7 +46,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: done
   discovery-update-info:
     status: exempt
@@ -55,29 +54,39 @@ rules:
   discovery:
     status: exempt
     comment: the service cannot be discovered
-  docs-data-update: todo
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: the integration is a service
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: There is always one device per config entry.
+  entity-category:
+    status: exempt
+    comment: Entities do not require a specific category.
+  entity-device-class:
+    status: exempt
+    comment: Entities do not have a specific device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: No noisy/non-essential entities.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: Integration does not raise repair issues.
   stale-devices:
     status: exempt
     comment: only one device per entry, is deleted with the entry.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: todo
   strict-typing: done

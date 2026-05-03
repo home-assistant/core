@@ -1,7 +1,5 @@
 """Config flow for qBittorrent."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -45,7 +43,7 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     user_input[CONF_VERIFY_SSL],
                 )
-            except (LoginFailed, Forbidden403Error):
+            except LoginFailed, Forbidden403Error:
                 errors = {"base": "invalid_auth"}
             except APIConnectionError:
                 errors = {"base": "cannot_connect"}

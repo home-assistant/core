@@ -1,7 +1,5 @@
 """Coordinator for the Philips TV integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -101,7 +99,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         while self._notify_wanted:
             try:
                 res = await self.api.notifyChange(130)
-            except (ConnectionFailure, AutenticationFailure):
+            except ConnectionFailure, AutenticationFailure:
                 res = None
 
             if res:

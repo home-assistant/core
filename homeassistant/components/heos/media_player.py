@@ -1,7 +1,5 @@
 """Denon HEOS Media Player."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
 import dataclasses
@@ -554,7 +552,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Image url of current playing media."""
         # May be an empty string, if so, return None
         image_url = self._player.now_playing_media.image_url
-        return image_url if image_url else None
+        return image_url or None
 
     @property
     def media_title(self) -> str | None:

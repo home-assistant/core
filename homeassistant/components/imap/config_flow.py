@@ -1,7 +1,5 @@
 """Config flow for imap integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import ssl
 from typing import Any
@@ -130,7 +128,7 @@ async def validate_input(
         # See https://github.com/bamthomas/aioimaplib/issues/91
         # This handler is added to be able to supply a better error message
         errors["base"] = "ssl_error"
-    except (TimeoutError, AioImapException, ConnectionRefusedError):
+    except TimeoutError, AioImapException, ConnectionRefusedError:
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":

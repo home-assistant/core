@@ -1,7 +1,5 @@
 """Alexa configuration for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
@@ -373,7 +371,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             if self.should_report_state:
                 try:
                     await self.async_enable_proactive_mode()
-                except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+                except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
                     await self.set_authorized(False)
             else:
                 await self.async_disable_proactive_mode()

@@ -233,7 +233,7 @@ def find_paths_unserializable_data(
         try:
             dump(obj)
             continue
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
 
         # We convert objects with as_dict to their dict values

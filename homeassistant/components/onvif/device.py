@@ -1,7 +1,5 @@
 """ONVIF device abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import datetime as dt
@@ -41,8 +39,10 @@ from .const import (
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
-from .event import EventManager
+from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+type ONVIFConfigEntry = ConfigEntry[ONVIFDevice]
 
 
 class ONVIFDevice:
@@ -165,7 +165,7 @@ class ONVIFDevice:
         # Bind the listener to the ONVIFDevice instance since
         # async_update_listener only creates a weak reference to the listener
         # and we need to make sure it doesn't get garbage collected since only
-        # the ONVIFDevice instance is stored in hass.data
+        # the ONVIFDevice instance is stored in config_entry.runtime_data
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(self._async_update_listener)
         )
@@ -220,7 +220,7 @@ class ONVIFDevice:
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
-            except (IndexError, Fault):
+            except IndexError, Fault:
                 if idx == timezone_max_idx:
                     raise
             else:
@@ -303,7 +303,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
+        except TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault:
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 

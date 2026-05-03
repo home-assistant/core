@@ -7,7 +7,7 @@ LABS_PREVIEW_FEATURES = {
     "analytics": {
         "snapshots": {
             "feedback_url": "https://forms.gle/GqvRmgmghSDco8M46",
-            "learn_more_url": "",
+            "learn_more_url": "https://www.home-assistant.io/blog/2026/02/02/about-device-database/",
             "report_issue_url": "https://github.com/OHF-Device-Database/device-database/issues/new",
         },
     },

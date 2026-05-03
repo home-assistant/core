@@ -1,7 +1,5 @@
 """Number platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
@@ -27,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import TeslemetryConfigEntry
 from .entity import (
@@ -296,7 +293,6 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_icon = icon_for_battery_level(self.native_value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""

@@ -1,7 +1,5 @@
 """Support for TPLink siren entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import math
@@ -44,9 +42,11 @@ class TPLinkSirenEntityDescription(
     """Base class for siren entity description."""
 
     unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
-        lambda device, desc: legacy_device_id(device)
-        if desc.key == "siren"
-        else f"{legacy_device_id(device)}-{desc.key}"
+        lambda device, desc: (
+            legacy_device_id(device)
+            if desc.key == "siren"
+            else f"{legacy_device_id(device)}-{desc.key}"
+        )
     )
 
 

@@ -1,7 +1,5 @@
 """The Overkiz (by Somfy) integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -160,10 +158,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
-            model=gateway.sub_type.beautify_name if gateway.sub_type else None,
+            model=gateway.type.beautify_name if gateway.type else None,
+            model_id=str(gateway.type),
             manufacturer=client.server.manufacturer,
             name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
+            hw_version=f"{gateway.type}:{gateway.sub_type}"
+            if gateway.type and gateway.sub_type
+            else None,
             configuration_url=client.server.configuration_url,
         )
 

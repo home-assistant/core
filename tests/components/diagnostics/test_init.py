@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.diagnostics import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -45,7 +46,7 @@ async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
         "integration_without_diagnostics.diagnostics",
         Mock(),
     )
-    assert await async_setup_component(hass, "diagnostics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 async def test_websocket(
@@ -328,6 +329,22 @@ async def test_download_diagnostics(
         ],
         "setup_times": {},
     }
+
+
+async def test_download_diagnostics_requires_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test diagnostics download is restricted to admin users."""
+    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry.add_to_hass(hass)
+
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}"
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_failure_scenarios(

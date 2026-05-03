@@ -1,7 +1,5 @@
 """Constants for sensor."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -60,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -110,6 +109,20 @@ class SensorDeviceClass(StrEnum):
 
     TIMESTAMP = "timestamp"
     """Timestamp.
+
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    UPTIME = "uptime"
+    """Uptime.
+
+    Represents the point in time when a device or service last restarted.
+
+    Small drift between updates is automatically suppressed in
+    `SensorEntity.state` to avoid unnecessary state changes caused by clock
+    jitter.
 
     Unit of measurement: `None`
 
@@ -180,7 +193,7 @@ class SensorDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`, `mA`
+    Unit of measurement: `A`, `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -238,7 +251,7 @@ class SensorDeviceClass(StrEnum):
     FREQUENCY = "frequency"
     """Frequency.
 
-    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    Unit of measurement: `mHz`, `Hz`, `kHz`, `MHz`, `GHz`
     """
 
     GAS = "gas"
@@ -286,7 +299,7 @@ class SensorDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -304,7 +317,7 @@ class SensorDeviceClass(StrEnum):
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `ppb` (parts per billion),`μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     PH = "ph"
@@ -515,6 +528,7 @@ NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.DATE,
     SensorDeviceClass.ENUM,
     SensorDeviceClass.TIMESTAMP,
+    SensorDeviceClass.UPTIME,
 }
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
@@ -565,6 +579,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    SensorDeviceClass.FREQUENCY: FrequencyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     SensorDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,
@@ -639,6 +654,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     SensorDeviceClass.NITROGEN_MONOXIDE: {
@@ -648,6 +664,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.OZONE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     SensorDeviceClass.PH: {None},
@@ -812,6 +829,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TEMPERATURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TEMPERATURE_DELTA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TIMESTAMP: set(),
+    SensorDeviceClass.UPTIME: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},
@@ -835,7 +853,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
 }
 
 
-STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
+STATE_CLASS_UNITS: dict[SensorStateClass, set[type[StrEnum] | str | None]] = {
     SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
 }
 

@@ -1,8 +1,6 @@
 """The Fjäråskupan data update coordinator."""
 
-from __future__ import annotations
-
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import timedelta
 import logging
@@ -132,7 +130,7 @@ class FjaraskupanCoordinator(DataUpdateCoordinator[State]):
         self.async_set_updated_data(self.device.state)
 
     @asynccontextmanager
-    async def async_connect_and_update(self) -> AsyncIterator[Device]:
+    async def async_connect_and_update(self) -> AsyncGenerator[Device]:
         """Provide an up-to-date device for use during connections."""
         if (
             ble_device := async_ble_device_from_address(

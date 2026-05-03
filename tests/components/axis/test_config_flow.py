@@ -505,6 +505,30 @@ async def test_discovery_flow_updated_configuration(
 
 
 @pytest.mark.parametrize(
+    "axis_oui",
+    ["00408C", "ACCC8E", "B8A44F", "E82725"],
+)
+async def test_discovery_flow_allowed_oui(hass: HomeAssistant, axis_oui: str) -> None:
+    """Test that discovery flow accepts Axis OUI."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            upnp={
+                "friendlyName": f"AXIS M1065-LW - {axis_oui}",
+                "serialNumber": f"{axis_oui}123456",
+                "presentationURL": "http://2.3.4.5:8080/",
+            },
+        ),
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+@pytest.mark.parametrize(
     ("source", "discovery_info"),
     [
         (

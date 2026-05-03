@@ -1,7 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -83,7 +81,7 @@ class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
         # Add a dataCoordinator for each sensor that have slaves
         # this ensures that idx = bit position of value in result
         # polling is done with the base class
-        name = self._attr_name if self._attr_name else "modbus_sensor"
+        name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,

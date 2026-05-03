@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_snapshot[number.test_number_button_brightness_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -60,8 +61,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_button_brightness_dimmed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -119,8 +121,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_display_brightness_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -178,8 +181,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_display_brightness_dimmed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -237,8 +241,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_down_movement_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 240,
@@ -297,8 +302,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_down_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -356,8 +362,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_down_slat_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75,
@@ -415,8 +422,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_end_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 130,
@@ -473,8 +481,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_external_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 6,
@@ -532,8 +541,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_floor_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 6,
@@ -591,8 +601,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_maximum_slat_angle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 127,
@@ -650,8 +661,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_minimum_slat_angle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 127,
@@ -709,8 +721,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_motion_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15300,
@@ -769,8 +782,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_polling_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 45,
@@ -829,8 +843,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_slat_steps-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20,
@@ -887,8 +902,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_slat_turn_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 24,
@@ -947,8 +963,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 128,
@@ -1006,8 +1023,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_temperature_report_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 32767,
@@ -1066,8 +1084,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 22.5,
@@ -1126,8 +1145,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_up_movement_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 240,
@@ -1186,8 +1206,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_wake_up_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 7200,
@@ -1246,8 +1267,9 @@
 # ---
 # name: test_number_snapshot[number.test_number_window_open_sensibility-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3,

@@ -1,7 +1,5 @@
 """Config flow for the Daikin platform."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -93,7 +91,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     password=password,
                     ssl_context=client_context_no_verify(),
                 )
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             self.host = None
             return self.async_show_form(
                 step_id="user",

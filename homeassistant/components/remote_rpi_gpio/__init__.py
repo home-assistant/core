@@ -21,7 +21,7 @@ def setup_output(address, port, invert_logic):
         return LED(
             port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address)
         )
-    except (ValueError, IndexError, KeyError):
+    except ValueError, IndexError, KeyError:
         return None
 
 
@@ -40,7 +40,7 @@ def setup_input(address, port, pull_mode, bouncetime):
             bounce_time=bouncetime,
             pin_factory=PiGPIOFactory(address),
         )
-    except (ValueError, IndexError, KeyError, OSError):
+    except ValueError, IndexError, KeyError, OSError:
         return None
 
 

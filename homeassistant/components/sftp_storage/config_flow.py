@@ -1,7 +1,5 @@
 """Config flow to configure the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from pathlib import Path
 import shutil
@@ -123,6 +121,17 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_BACKUP_LOCATION: user_input[CONF_BACKUP_LOCATION],
                 }
             )
+
+            if not user_input[CONF_BACKUP_LOCATION].startswith("/"):
+                errors[CONF_BACKUP_LOCATION] = "backup_location_relative"
+                return self.async_show_form(
+                    step_id=step_id,
+                    data_schema=self.add_suggested_values_to_schema(
+                        DATA_SCHEMA, user_input
+                    ),
+                    description_placeholders=placeholders,
+                    errors=errors,
+                )
 
             try:
                 # Validate auth input and save uploaded key file if provided

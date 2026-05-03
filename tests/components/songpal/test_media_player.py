@@ -17,10 +17,8 @@ from songpal.notification import SettingChange
 
 from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.components.songpal.const import (
-    ERROR_REQUEST_RETRY,
-    SET_SOUND_SETTING,
-)
+from homeassistant.components.songpal.const import ERROR_REQUEST_RETRY
+from homeassistant.components.songpal.services import SET_SOUND_SETTING
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

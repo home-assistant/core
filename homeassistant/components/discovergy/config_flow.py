@@ -1,7 +1,5 @@
 """Config flow for Discovergy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -72,7 +70,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                     httpx_client=get_async_client(self.hass),
                     authentication=BasicAuth(),
                 ).meters()
-            except (discovergyError.HTTPError, discovergyError.DiscovergyClientError):
+            except discovergyError.HTTPError, discovergyError.DiscovergyClientError:
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"

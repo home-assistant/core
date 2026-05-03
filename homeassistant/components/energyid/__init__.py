@@ -1,7 +1,5 @@
 """The EnergyID integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime as dt
 from datetime import timedelta
@@ -225,7 +223,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
                     value = float(current_state.state)
                     timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
-                except (ValueError, TypeError):
+                except ValueError, TypeError:
                     _LOGGER.debug(
                         "Could not convert initial state of %s to float: %s",
                         ha_entity_id,
@@ -357,7 +355,7 @@ def _async_handle_state_change(
 
     try:
         value = float(new_state.state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return
 
     client.get_or_create_sensor(energyid_key).update(value, new_state.last_updated)

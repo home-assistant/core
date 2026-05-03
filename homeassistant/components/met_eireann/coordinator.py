@@ -1,7 +1,5 @@
 """The met_eireann component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
@@ -21,6 +19,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=60)
+
+type MetEireannConfigEntry = ConfigEntry[MetEireannUpdateCoordinator]
 
 
 class MetEireannWeatherData:

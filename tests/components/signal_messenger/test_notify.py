@@ -448,7 +448,7 @@ def assert_sending_requests(
     body_request = json.loads(send_request.text)
     assert body_request["message"] == MESSAGE
     assert body_request["number"] == NUMBER_FROM
-    assert body_request["recipients"] == (recipients if recipients else NUMBERS_TO)
+    assert body_request["recipients"] == (recipients or NUMBERS_TO)
     assert len(body_request["base64_attachments"]) == attachments_num
 
     for attachment in body_request["base64_attachments"]:

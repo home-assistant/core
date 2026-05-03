@@ -1,7 +1,5 @@
 """Config flow for MyPermobil integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -140,7 +138,7 @@ class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
                 token, ttl = await self.p_api.request_application_token()
                 self.data[CONF_TOKEN] = token
                 self.data[CONF_TTL] = ttl
-            except (MyPermobilAPIException, MyPermobilClientException):
+            except MyPermobilAPIException, MyPermobilClientException:
                 # the code did not pass validation by the api client
                 # or the backend returned an error when trying to validate the code
                 _LOGGER.exception("Error verifying code")

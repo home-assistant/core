@@ -1,6 +1,6 @@
 """The Tomorrow.io integration."""
 
-from __future__ import annotations
+from typing import Any
 
 from pytomorrowio.const import CURRENT
 
@@ -36,7 +36,7 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
         )
 
-    def _get_current_property(self, property_name: str) -> int | str | float | None:
+    def _get_current_property(self, property_name: str) -> Any | None:
         """Get property from current conditions.
 
         Used for V4 API.

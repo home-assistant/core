@@ -1,7 +1,5 @@
 """Config flow to configure the Twinkly integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -43,7 +41,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_info = await Twinkly(
                     host, async_get_clientsession(self.hass)
                 ).get_details()
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 errors[CONF_HOST] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
