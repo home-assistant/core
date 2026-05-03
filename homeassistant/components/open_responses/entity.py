@@ -43,7 +43,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
@@ -55,7 +55,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     RECOMMENDED_MAX_OUTPUT_TOKENS,
-    RECOMMENDED_MODEL,
     RECOMMENDED_STORE_RESPONSES,
 )
 
@@ -106,11 +105,26 @@ def _format_structured_output(
     return result
 
 
+def _strip_unsupported_tool_schema_keys(schema: Any) -> None:
+    """Strip JSON Schema keywords unsupported for Open Responses tools."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
+
+    if isinstance(schema, dict):
+        for key in unsupported_keys:
+            schema.pop(key, None)
+        for value in schema.values():
+            _strip_unsupported_tool_schema_keys(value)
+    elif isinstance(schema, list):
+        for item in schema:
+            _strip_unsupported_tool_schema_keys(item)
+
+
 def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> FunctionToolParam:
     """Format Home Assistant LLM tool metadata for Open Responses."""
     schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    _strip_unsupported_tool_schema_keys(schema)
 
     return FunctionToolParam(
         type="function",
@@ -148,6 +162,13 @@ def _convert_content_to_param(
                     content.native.model_dump(exclude_none=True),
                 )
             )
+            continue
+        if (
+            isinstance(content, conversation.AssistantContent)
+            and not isinstance(content.native, ResponseReasoningItem)
+            and hasattr(content.native, "model_dump")
+        ):
+            messages.append(cast(Any, content.native.model_dump(exclude_none=True)))
             continue
 
         if content.content:
@@ -217,7 +238,7 @@ async def _transform_stream(
                 last_summary_index = None
                 current_tool_call = event.item
             elif (
-                isinstance(event.item, ResponseOutputMessage)
+                isinstance(event.item, (ResponseReasoningItem, ResponseOutputMessage))
                 or last_role != "assistant"
             ):
                 yield {"role": "assistant"}
@@ -234,7 +255,7 @@ async def _transform_stream(
                     )
                 }
                 last_summary_index = len(event.item.summary) - 1
-            elif isinstance(event.item, ResponseOutputMessage):
+            elif not isinstance(event.item, ResponseFunctionToolCall):
                 yield {"native": event.item}
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
@@ -312,7 +333,7 @@ class OpenResponsesEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Open Responses",
-            model=subentry.data.get(CONF_MODEL, RECOMMENDED_MODEL),
+            model=subentry.data.get(CONF_MODEL, entry.data[CONF_MODEL]),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -328,7 +349,7 @@ class OpenResponsesEntity(Entity):
         messages = _convert_content_to_param(chat_log.content)
 
         model_args = ResponseCreateParamsStreaming(
-            model=options.get(CONF_MODEL, RECOMMENDED_MODEL),
+            model=options.get(CONF_MODEL, self.entry.data[CONF_MODEL]),
             input=messages,
             max_output_tokens=options.get(
                 CONF_MAX_OUTPUT_TOKENS, RECOMMENDED_MAX_OUTPUT_TOKENS
@@ -379,6 +400,10 @@ class OpenResponsesEntity(Entity):
         for _iteration in range(max_iterations):
             try:
                 stream = await client.responses.create(**model_args)
+            except openai.AuthenticationError as err:
+                raise ConfigEntryAuthFailed(
+                    "Authentication failed with Open Responses endpoint"
+                ) from err
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
