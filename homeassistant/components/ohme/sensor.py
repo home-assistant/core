@@ -100,12 +100,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    charge_session_coordinator = config_entry.runtime_data.charge_session_coordinator
+    coordinator = config_entry.runtime_data.charge_session_coordinator
 
     async_add_entities(
-        OhmeSensor(charge_session_coordinator, description)
+        OhmeSensor(coordinator, description)
         for description in SENSORS
-        if description.is_supported_fn(charge_session_coordinator.client)
+        if description.is_supported_fn(coordinator.client)
     )
 
 
