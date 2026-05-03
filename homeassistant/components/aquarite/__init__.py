@@ -129,6 +129,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: AquariteConfigEntry) ->
     return unloaded
 
 
+async def _refresh_all_subscriptions(data: AquariteData, log_context: str) -> None:
+    """Refresh every pool subscription, logging per-pool failures."""
+    for coordinator in data.coordinators.values():
+        try:
+            await coordinator.refresh_subscription()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Error refreshing subscription %s: %s", log_context, err
+            )
+
+
 async def _token_refresh_loop(hass: HomeAssistant, data: AquariteData) -> None:
     """Maintain token validity; refresh all pool subscriptions on renewal."""
     retry_delay = 10
@@ -138,14 +149,7 @@ async def _token_refresh_loop(hass: HomeAssistant, data: AquariteData) -> None:
                 _LOGGER.debug("Token expiring soon, refreshing")
                 _, refreshed = await data.auth.get_client()
                 if refreshed:
-                    for coordinator in data.coordinators.values():
-                        try:
-                            await coordinator.refresh_subscription()
-                        except Exception as refresh_err:  # noqa: BLE001
-                            _LOGGER.error(
-                                "Error refreshing subscription after token renewal: %s",
-                                refresh_err,
-                            )
+                    await _refresh_all_subscriptions(data, "after token renewal")
             retry_delay = 10
             sleep_time = data.auth.calculate_sleep_duration()
             await asyncio.sleep(sleep_time)
@@ -169,11 +173,4 @@ async def _periodic_health_check(hass: HomeAssistant, data: AquariteData) -> Non
             raise
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Health check failed, resubscribing: %s", err)
-            for coordinator in data.coordinators.values():
-                try:
-                    await coordinator.refresh_subscription()
-                except Exception as refresh_err:  # noqa: BLE001
-                    _LOGGER.error(
-                        "Error refreshing subscription during health check: %s",
-                        refresh_err,
-                    )
+            await _refresh_all_subscriptions(data, "during health check")
