@@ -135,9 +135,7 @@ async def _refresh_all_subscriptions(data: AquariteData, log_context: str) -> No
         try:
             await coordinator.refresh_subscription()
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error(
-                "Error refreshing subscription %s: %s", log_context, err
-            )
+            _LOGGER.error("Error refreshing subscription %s: %s", log_context, err)
 
 
 async def _token_refresh_loop(hass: HomeAssistant, data: AquariteData) -> None:

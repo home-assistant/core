@@ -49,7 +49,7 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 pools = await api.get_pools()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected error during authentication")
                 errors["base"] = "unknown"
             else:
