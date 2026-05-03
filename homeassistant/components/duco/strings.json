@@ -42,9 +42,9 @@
             "state": {
               "auto": "[%key:common::state::auto%]",
               "empt": "Empty house",
-              "man1": "Manual low speed",
-              "man2": "Manual medium speed",
-              "man3": "Manual high speed"
+              "man1": "Timed low speed",
+              "man2": "Timed medium speed",
+              "man3": "Timed high speed"
             }
           }
         }
