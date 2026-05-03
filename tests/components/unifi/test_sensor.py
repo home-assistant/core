@@ -24,6 +24,7 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
@@ -588,6 +589,17 @@ async def test_wired_client_speed_sensor_tracking_disabled(
     hass: HomeAssistant,
 ) -> None:
     """Verify wired client speed sensor is not created when track_clients is disabled."""
+    assert hass.states.get("sensor.wired_client_link_speed") is None
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_WIRED_CLIENTS: False}])
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wired_client_speed_sensor_wired_tracking_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify wired client speed sensor is not created when track_wired_clients is disabled."""
     assert hass.states.get("sensor.wired_client_link_speed") is None
 
 
