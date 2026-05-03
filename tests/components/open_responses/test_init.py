@@ -1,6 +1,6 @@
 """Tests for the Open Responses integration."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components.open_responses.const import CONF_BASE_URL, DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -13,10 +13,9 @@ from tests.common import MockConfigEntry
 async def test_setup_entry_passes_base_url(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup passes the configured base URL to the OpenAI SDK."""
+    """Test setup passes the configured base URL to the SDK."""
     mock_client = Mock()
     mock_client.platform_headers = Mock(return_value={})
-    mock_client.models.list = AsyncMock()
 
     with patch(
         "homeassistant.components.open_responses.openai.AsyncOpenAI",
