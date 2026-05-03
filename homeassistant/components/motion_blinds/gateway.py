@@ -1,5 +1,6 @@
 """Code to handle a Motion Gateway."""
 
+import asyncio
 import contextlib
 import logging
 import socket
@@ -79,7 +80,7 @@ class ConnectMotionGateway:
         interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
         enabled_interfaces = []
         default_interface = DEFAULT_INTERFACE
-
+    
         adapters = await network.async_get_adapters(self._hass)
         for adapter in adapters:
             if ipv4s := adapter["ipv4"]:
@@ -89,16 +90,19 @@ class ConnectMotionGateway:
                     enabled_interfaces.append(ip4)
                     if adapter["default"]:
                         default_interface = ip4
-
+    
         if len(enabled_interfaces) == 1:
             default_interface = enabled_interfaces[0]
+    
+        # Prioritize default interface regardless of how many NICs are present
+        if default_interface != DEFAULT_INTERFACE:
             interfaces.remove(default_interface)
             interfaces.insert(0, default_interface)
-
+    
         if self._interface is not None:
             interfaces.remove(self._interface)
             interfaces.insert(0, self._interface)
-
+    
         return interfaces
 
     async def async_check_interface(self, host, key):
@@ -108,7 +112,6 @@ class ConnectMotionGateway:
             _LOGGER.debug(
                 "Checking Motionblinds interface '%s' with host %s", interface, host
             )
-            # initialize multicast listener
             check_multicast = AsyncMotionMulticast(interface=interface)
             try:
                 await check_multicast.Start_listen()
@@ -116,28 +119,31 @@ class ConnectMotionGateway:
                 continue
             except OSError:
                 continue
-
-            # trigger test multicast
+    
             self._gateway_device = MotionGateway(
                 ip=host, key=key, multicast=check_multicast
             )
-            result = await self._hass.async_add_executor_job(self.check_interface)
-
-            # close multicast listener again
+    
+            # Fail fast per interface instead of waiting for full socket timeout
+            try:
+                async with asyncio.timeout(5):
+                    result = await self._hass.async_add_executor_job(self.check_interface)
+            except TimeoutError:
+                result = False
+    
             try:
                 check_multicast.Stop_listen()
             except socket.gaierror:
                 continue
-
+    
             if result:
-                # successfully received multicast
                 _LOGGER.debug(
                     "Success using Motionblinds interface '%s' with host %s",
                     interface,
                     host,
                 )
                 return interface
-
+    
         _LOGGER.error(
             (
                 "Could not find working interface for Motionblinds host %s, using"
