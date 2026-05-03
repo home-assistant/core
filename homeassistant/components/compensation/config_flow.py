@@ -1,4 +1,4 @@
-"""Config flow for statistics."""
+"""Config flow for Compensation integration."""
 
 from __future__ import annotations
 
