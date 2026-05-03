@@ -1,12 +1,14 @@
 """Tests for Open Responses entity helpers."""
 
 from collections.abc import AsyncGenerator
+from pathlib import Path
 from unittest.mock import Mock
 
 import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.open_responses.entity import (
+    _async_prepare_message_attachments,
     _convert_content_to_param,
     _format_tool,
     _transform_stream,
@@ -159,6 +161,48 @@ def test_convert_content_preserves_native_dict_output_message() -> None:
     )
 
     assert messages == [native_message]
+
+
+async def test_prepare_message_attachments_preserves_earlier_turns(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test attachments on previous user turns remain in the request input."""
+    image_path = tmp_path / "door.jpg"
+    image_path.write_bytes(b"image")
+    chat_content = [
+        conversation.UserContent(
+            content="",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="media-source://media/door.jpg",
+                    mime_type="image/jpeg",
+                    path=image_path,
+                )
+            ],
+        ),
+        conversation.AssistantContent(
+            agent_id="agent",
+            content="I can see it.",
+            native={"type": "message", "id": "msg_1"},
+        ),
+        conversation.UserContent(content="What color is it?"),
+    ]
+    messages = _convert_content_to_param(chat_content)
+
+    await _async_prepare_message_attachments(hass, chat_content, messages)
+
+    assert messages[0]["content"] == [
+        {
+            "type": "input_image",
+            "image_url": "data:image/jpeg;base64,aW1hZ2U=",
+            "detail": "auto",
+        }
+    ]
+    assert messages[2] == {
+        "type": "message",
+        "role": "user",
+        "content": "What color is it?",
+    }
 
 
 async def test_transform_stream_preserves_native_output_message() -> None:

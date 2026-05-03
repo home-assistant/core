@@ -168,6 +168,58 @@ def _convert_content_to_param(
     return messages
 
 
+async def _async_prepare_message_attachments(
+    hass: HomeAssistant,
+    chat_content: Iterable[conversation.Content],
+    messages: ResponseInputParam,
+) -> None:
+    """Attach files to all matching user messages."""
+    message_index = 0
+
+    for content in chat_content:
+        if isinstance(content, conversation.ToolResultContent):
+            message_index += 1
+            continue
+
+        if (
+            isinstance(content, conversation.AssistantContent)
+            and isinstance(content.native, dict)
+            and content.native.get("type")
+        ):
+            message_index += 1
+            continue
+
+        if content.content or (
+            isinstance(content, conversation.UserContent) and content.attachments
+        ):
+            if isinstance(content, conversation.UserContent) and content.attachments:
+                files = await async_prepare_files_for_prompt(
+                    hass,
+                    [
+                        (attachment.path, attachment.mime_type)
+                        for attachment in content.attachments
+                    ],
+                )
+                message = messages[message_index]
+                assert (
+                    message["type"] == "message"
+                    and message["role"] == "user"
+                    and isinstance(message["content"], str)
+                )
+                message_content: ResponseInputMessageContentListParam = []
+                if message["content"]:
+                    message_content.append(
+                        {"type": "input_text", "text": message["content"]}
+                    )
+                message_content.extend(files)
+                message["content"] = message_content
+
+            message_index += 1
+
+        if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+            message_index += len(content.tool_calls)
+
+
 async def _transform_stream(
     chat_log: conversation.ChatLog,
     stream: AsyncIterable[dict[str, Any]],
@@ -307,7 +359,9 @@ class OpenResponsesEntity(Entity):
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
-        messages = _convert_content_to_param(chat_log.content)
+        chat_content = list(chat_log.content)
+        messages = _convert_content_to_param(chat_content)
+        await _async_prepare_message_attachments(self.hass, chat_content, messages)
 
         model_args: dict[str, Any] = {
             "model": options.get(CONF_MODEL, self.entry.data[CONF_MODEL]),
@@ -328,26 +382,6 @@ class OpenResponsesEntity(Entity):
 
         if tools:
             model_args["tools"] = tools
-
-        last_content = chat_log.content[-1]
-        if last_content.role == "user" and last_content.attachments:
-            files = await async_prepare_files_for_prompt(
-                self.hass,
-                [(a.path, a.mime_type) for a in last_content.attachments],
-            )
-            last_message = messages[-1]
-            assert (
-                last_message["type"] == "message"
-                and last_message["role"] == "user"
-                and isinstance(last_message["content"], str)
-            )
-            last_message_content: ResponseInputMessageContentListParam = []
-            if last_message["content"]:
-                last_message_content.append(
-                    {"type": "input_text", "text": last_message["content"]}
-                )
-            last_message_content.extend(files)
-            last_message["content"] = last_message_content
 
         if structure and structure_name:
             model_args["text"] = {

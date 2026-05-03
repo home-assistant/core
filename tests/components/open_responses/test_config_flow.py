@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.open_responses.client import OpenResponsesConnectionError
+from homeassistant.components.open_responses.client import (
+    OpenResponsesConnectionError,
+    OpenResponsesInvalidModelError,
+)
 from homeassistant.components.open_responses.const import (
     CONF_BASE_URL,
     DEFAULT_AI_TASK_NAME,
@@ -182,6 +185,72 @@ async def test_form_validates_endpoint(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_handles_invalid_model(hass: HomeAssistant) -> None:
+    """Test model validation errors are shown on the model field."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
+    ) as mock_open_responses_client:
+        mock_open_responses_client.return_value.create_response = AsyncMock(
+            side_effect=OpenResponsesInvalidModelError("boom")
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "https://example.local/v1",
+                CONF_MODEL: "missing-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_MODEL: "invalid_model"}
+
+
+async def test_reauth_updates_default_subentry_models(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauth model changes are propagated to generated subentries."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
+        ) as mock_open_responses_client,
+        patch(
+            "homeassistant.components.open_responses.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.open_responses.async_unload_entry",
+            return_value=True,
+        ),
+    ):
+        mock_open_responses_client.return_value.create_response = AsyncMock()
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "https://example.local/v1",
+                CONF_MODEL: "new-open-responses-model",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_MODEL] == "new-open-responses-model"
+    assert {
+        subentry.data[CONF_MODEL] for subentry in mock_config_entry.subentries.values()
+    } == {"new-open-responses-model"}
 
 
 async def test_creating_conversation_subentry(

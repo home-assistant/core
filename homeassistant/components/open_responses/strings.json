@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_model": "The endpoint rejected the configured model.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
