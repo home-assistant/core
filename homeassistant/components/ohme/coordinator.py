@@ -244,8 +244,6 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
         }
 
         if session_start is not None and session_finish is None:
-            if self._tracked_session_start != session_start:
-                self._cancel_delayed_retry()
             self._tracked_session_start = session_start
 
         if session_start is not None and session_finish is not None:
