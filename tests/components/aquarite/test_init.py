@@ -167,7 +167,7 @@ async def test_setup_entry_aquarite_error_during_get_pools(
 async def test_setup_entry_no_pools(
     hass: HomeAssistant, mock_entry: MockConfigEntry
 ) -> None:
-    """Test setup raises ConfigEntryNotReady when the account has no pools."""
+    """Test setup raises ConfigEntryError when the account has no pools."""
     mock_entry.add_to_hass(hass)
     patch_auth, patch_client, patch_coord, _ = _patch_setup({})
 
@@ -175,7 +175,7 @@ async def test_setup_entry_no_pools(
         assert not await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_aquarite_error_during_subscribe(
