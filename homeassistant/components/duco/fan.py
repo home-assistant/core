@@ -27,6 +27,10 @@ ORDERED_NAMED_FAN_SPEEDS: list[VentilationState] = [
 ]
 
 PRESET_AUTO = "auto"
+PRESET_MAN1 = "man1"
+PRESET_MAN2 = "man2"
+PRESET_MAN3 = "man3"
+PRESET_EMPT = "empt"
 
 # Upper-bound percentages for 3 speed levels: 33 / 66 / 100.
 # Using upper bounds guarantees that reading a percentage back and writing it
@@ -36,21 +40,34 @@ _SPEED_LEVEL_PERCENTAGES: list[int] = [
     for i, _ in enumerate(ORDERED_NAMED_FAN_SPEEDS)
 ]
 
-# Maps every active Duco state (including timed MAN variants) to its
-# display percentage so externally-set timed modes show the correct level.
+# Maps CNT states to their display percentage for the speed slider.
 _STATE_TO_PERCENTAGE: dict[VentilationState, int] = {
     VentilationState.CNT1: _SPEED_LEVEL_PERCENTAGES[0],
-    VentilationState.MAN1: _SPEED_LEVEL_PERCENTAGES[0],
-    VentilationState.MAN1x2: _SPEED_LEVEL_PERCENTAGES[0],
-    VentilationState.MAN1x3: _SPEED_LEVEL_PERCENTAGES[0],
     VentilationState.CNT2: _SPEED_LEVEL_PERCENTAGES[1],
-    VentilationState.MAN2: _SPEED_LEVEL_PERCENTAGES[1],
-    VentilationState.MAN2x2: _SPEED_LEVEL_PERCENTAGES[1],
-    VentilationState.MAN2x3: _SPEED_LEVEL_PERCENTAGES[1],
     VentilationState.CNT3: _SPEED_LEVEL_PERCENTAGES[2],
-    VentilationState.MAN3: _SPEED_LEVEL_PERCENTAGES[2],
-    VentilationState.MAN3x2: _SPEED_LEVEL_PERCENTAGES[2],
-    VentilationState.MAN3x3: _SPEED_LEVEL_PERCENTAGES[2],
+}
+
+# Maps MAN states (including timed variants) and EMPT to their preset mode.
+_STATE_TO_PRESET: dict[VentilationState, str] = {
+    VentilationState.AUTO: PRESET_AUTO,
+    VentilationState.MAN1: PRESET_MAN1,
+    VentilationState.MAN1x2: PRESET_MAN1,
+    VentilationState.MAN1x3: PRESET_MAN1,
+    VentilationState.MAN2: PRESET_MAN2,
+    VentilationState.MAN2x2: PRESET_MAN2,
+    VentilationState.MAN2x3: PRESET_MAN2,
+    VentilationState.MAN3: PRESET_MAN3,
+    VentilationState.MAN3x2: PRESET_MAN3,
+    VentilationState.MAN3x3: PRESET_MAN3,
+    VentilationState.EMPT: PRESET_EMPT,
+}
+
+_PRESET_TO_STATE: dict[str, VentilationState] = {
+    PRESET_AUTO: VentilationState.AUTO,
+    PRESET_MAN1: VentilationState.MAN1,
+    PRESET_MAN2: VentilationState.MAN2,
+    PRESET_MAN3: VentilationState.MAN3,
+    PRESET_EMPT: VentilationState.EMPT,
 }
 
 
@@ -76,7 +93,13 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     _attr_translation_key = "ventilation"
     _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-    _attr_preset_modes = [PRESET_AUTO]
+    _attr_preset_modes = [
+        PRESET_AUTO,
+        PRESET_MAN1,
+        PRESET_MAN2,
+        PRESET_MAN3,
+        PRESET_EMPT,
+    ]
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
@@ -86,7 +109,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     @property
     def percentage(self) -> int | None:
-        """Return the current speed as a percentage, or None when in AUTO mode."""
+        """Return the current speed as a percentage, or None when a preset is active."""
         node = self._node
         if node.ventilation is None:
             return None
@@ -94,18 +117,16 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the current preset mode (auto when Duco controls, else None)."""
+        """Return the active preset, or None when a CNT speed level is set."""
         node = self._node
         if node.ventilation is None:
             return None
-        if node.ventilation.state not in _STATE_TO_PERCENTAGE:
-            return PRESET_AUTO
-        return None
+        return _STATE_TO_PRESET.get(node.ventilation.state)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set preset mode: 'auto' hands control back to Duco."""
+        """Set the ventilation preset mode."""
         self._valid_preset_mode_or_raise(preset_mode)
-        await self._async_set_state(VentilationState.AUTO)
+        await self._async_set_state(_PRESET_TO_STATE[preset_mode])
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed as a percentage (maps to low/medium/high)."""

@@ -8,6 +8,10 @@
     'capabilities': dict({
       'preset_modes': list([
         'auto',
+        'man1',
+        'man2',
+        'man3',
+        'empt',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -49,6 +53,10 @@
       'preset_mode': 'auto',
       'preset_modes': list([
         'auto',
+        'man1',
+        'man2',
+        'man3',
+        'empt',
       ]),
       'supported_features': <FanEntityFeature: 9>,
     }),

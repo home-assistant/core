@@ -60,6 +60,10 @@ async def test_fan_entity_state(
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
         (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "man1"}, "MAN1"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "man2"}, "MAN2"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "man3"}, "MAN3"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "empt"}, "EMPT"),
     ],
 )
 async def test_fan_set_state(

@@ -40,7 +40,11 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "[%key:common::state::auto%]"
+              "auto": "[%key:common::state::auto%]",
+              "empt": "Empty house",
+              "man1": "Manual low speed",
+              "man2": "Manual medium speed",
+              "man3": "Manual high speed"
             }
           }
         }
