@@ -112,6 +112,34 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_duplicate_entry_normalizes_base_url(hass: HomeAssistant) -> None:
+    """Test equivalent base URLs are treated as duplicate entries."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "bla",
+            CONF_BASE_URL: "https://example.local/v1",
+            CONF_MODEL: "open-responses-model",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "bla",
+            CONF_BASE_URL: "https://example.local/v1/",
+            CONF_MODEL: "open-responses-model",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_invalid_base_url(hass: HomeAssistant) -> None:
     """Test the base URL is validated by the form schema."""
     result = await hass.config_entries.flow.async_init(
