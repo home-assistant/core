@@ -173,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_DATAPOINTS
     ]
     new_data_points = [
-        [data_point["compensated_value"], data_point["uncompensated_value"]]
+        [data_point["uncompensated_value"], data_point["compensated_value"]]
         for data_point in data_points
     ]
     config[CONF_DEGREE] = config[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
