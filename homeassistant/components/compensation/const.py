@@ -18,6 +18,8 @@ CONF_DEGREE = "degree"
 CONF_PRECISION = "precision"
 CONF_POLYNOMIAL = "polynomial"
 CONF_POLYNOMIAL_CONFIG = "polynomial_config"
+CONF_COMPENSATED_VALUE = "compensated_value"
+CONF_UNCOMPENSATED_VALUE = "uncompensated_value"
 
 
 DATA_COMPENSATION: HassKey[dict[str, Any]] = HassKey("compensation_data")

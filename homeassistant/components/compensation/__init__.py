@@ -30,6 +30,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_COMPENSATED_VALUE,
     CONF_COMPENSATION,
     CONF_DATAPOINTS,
     CONF_DEGREE,
@@ -37,6 +38,7 @@ from .const import (
     CONF_POLYNOMIAL,
     CONF_POLYNOMIAL_CONFIG,
     CONF_PRECISION,
+    CONF_UNCOMPENSATED_VALUE,
     CONF_UPPER_LIMIT,
     DATA_COMPENSATION,
     DEFAULT_DEGREE,
@@ -173,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_DATAPOINTS
     ]
     new_data_points = [
-        [data_point["uncompensated_value"], data_point["compensated_value"]]
+        [data_point[CONF_UNCOMPENSATED_VALUE], data_point[CONF_COMPENSATED_VALUE]]
         for data_point in data_points
     ]
     config[CONF_DEGREE] = config[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
