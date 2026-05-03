@@ -7074,13 +7074,19 @@ async def test_update_entry_and_reload_with_listener_logs(
         " for scheduling a reload. This will stop working in Home Assistant 2026.11.0"
     )
 
-    with mock_config_flow("comp", MockFlowHandler):
+    with (
+        mock_config_flow("comp", MockFlowHandler),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
         await entry.start_reauth_flow(hass)
 
     assert message in caplog.text
     caplog.clear()
 
-    with mock_config_flow("comp", MockFlowHandler):
+    with (
+        mock_config_flow("comp", MockFlowHandler),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
         await entry.start_reconfigure_flow(hass)
 
     assert message in caplog.text
