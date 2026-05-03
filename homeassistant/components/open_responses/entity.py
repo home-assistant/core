@@ -178,7 +178,9 @@ def _convert_content_to_param(
             messages.append(cast(Any, content.native.model_dump(exclude_none=True)))
             continue
 
-        if content.content:
+        if content.content or (
+            isinstance(content, conversation.UserContent) and content.attachments
+        ):
             messages.append(
                 EasyInputMessageParam(
                     type="message", role=content.role, content=content.content
@@ -231,7 +233,7 @@ async def _transform_stream(
     stream: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an Open Responses stream into Home Assistant chat deltas."""
-    current_tool_call: ResponseFunctionToolCall | None = None
+    current_tool_calls: dict[str, ResponseFunctionToolCall] = {}
     last_summary_index: int | None = None
     last_role: Literal["assistant"] | None = None
 
@@ -243,7 +245,7 @@ async def _transform_stream(
                 yield {"role": "assistant"}
                 last_role = "assistant"
                 last_summary_index = None
-                current_tool_call = event.item
+                current_tool_calls[event.item.id] = event.item
             elif (
                 isinstance(event.item, (ResponseReasoningItem, ResponseOutputMessage))
                 or last_role != "assistant"
@@ -276,11 +278,14 @@ async def _transform_stream(
             last_summary_index = event.summary_index
             yield {"thinking_content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
-            if current_tool_call is not None:
+            if current_tool_call := current_tool_calls.get(event.item_id):
                 current_tool_call.arguments += event.delta
         elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
-            if current_tool_call is None:
+            if (
+                current_tool_call := current_tool_calls.pop(event.item_id, None)
+            ) is None:
                 raise HomeAssistantError("Received tool arguments without a tool call")
+            current_tool_call.arguments = event.arguments
             current_tool_call.status = "completed"
             yield {
                 "tool_calls": [
@@ -388,10 +393,13 @@ class OpenResponsesEntity(Entity):
                 and last_message["role"] == "user"
                 and isinstance(last_message["content"], str)
             )
-            last_message["content"] = [
-                {"type": "input_text", "text": last_message["content"]},
-                *files,
-            ]
+            last_message_content: ResponseInputMessageContentListParam = []
+            if last_message["content"]:
+                last_message_content.append(
+                    {"type": "input_text", "text": last_message["content"]}
+                )
+            last_message_content.extend(files)
+            last_message["content"] = last_message_content
 
         if structure and structure_name:
             model_args["text"] = {

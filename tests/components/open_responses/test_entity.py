@@ -5,6 +5,9 @@ from typing import cast
 
 from openai._streaming import AsyncStream
 from openai.types.responses import (
+    ResponseFunctionCallArgumentsDeltaEvent,
+    ResponseFunctionCallArgumentsDoneEvent,
+    ResponseFunctionToolCall,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
@@ -83,6 +86,28 @@ def test_convert_content_adds_function_call_status() -> None:
             "status": "completed",
         }
     ]
+
+
+def test_convert_content_includes_attachment_only_user_message(
+    hass: HomeAssistant,
+) -> None:
+    """Test attachment-only user content remains addressable for file assembly."""
+    messages = _convert_content_to_param(
+        [
+            conversation.UserContent(
+                content="",
+                attachments=[
+                    conversation.Attachment(
+                        media_content_id="media-source://media/door.jpg",
+                        mime_type="image/jpeg",
+                        path=hass.config.path("door.jpg"),
+                    )
+                ],
+            )
+        ]
+    )
+
+    assert messages == [{"type": "message", "role": "user", "content": ""}]
 
 
 def test_convert_content_preserves_native_output_message() -> None:
@@ -175,6 +200,113 @@ async def test_transform_stream_preserves_native_output_message() -> None:
     ]
 
     assert deltas == [{"native": native_message}]
+
+
+async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
+    """Test interleaved function call deltas are correlated by item ID."""
+
+    async def stream() -> AsyncGenerator[ResponseStreamEvent]:
+        yield ResponseOutputItemAddedEvent(
+            item=ResponseFunctionToolCall(
+                id="fc_1",
+                arguments="",
+                call_id="call_1",
+                name="FirstTool",
+                type="function_call",
+                status="in_progress",
+            ),
+            output_index=0,
+            sequence_number=0,
+            type="response.output_item.added",
+        )
+        yield ResponseOutputItemAddedEvent(
+            item=ResponseFunctionToolCall(
+                id="fc_2",
+                arguments="",
+                call_id="call_2",
+                name="SecondTool",
+                type="function_call",
+                status="in_progress",
+            ),
+            output_index=1,
+            sequence_number=1,
+            type="response.output_item.added",
+        )
+        yield ResponseFunctionCallArgumentsDeltaEvent(
+            delta='{"value"',
+            item_id="fc_1",
+            output_index=0,
+            sequence_number=2,
+            type="response.function_call_arguments.delta",
+        )
+        yield ResponseFunctionCallArgumentsDeltaEvent(
+            delta='{"name"',
+            item_id="fc_2",
+            output_index=1,
+            sequence_number=3,
+            type="response.function_call_arguments.delta",
+        )
+        yield ResponseFunctionCallArgumentsDeltaEvent(
+            delta=":1}",
+            item_id="fc_1",
+            output_index=0,
+            sequence_number=4,
+            type="response.function_call_arguments.delta",
+        )
+        yield ResponseFunctionCallArgumentsDeltaEvent(
+            delta=':"kitchen"}',
+            item_id="fc_2",
+            output_index=1,
+            sequence_number=5,
+            type="response.function_call_arguments.delta",
+        )
+        yield ResponseFunctionCallArgumentsDoneEvent(
+            arguments='{"name":"kitchen"}',
+            item_id="fc_2",
+            name="SecondTool",
+            output_index=1,
+            sequence_number=6,
+            type="response.function_call_arguments.done",
+        )
+        yield ResponseFunctionCallArgumentsDoneEvent(
+            arguments='{"value":1}',
+            item_id="fc_1",
+            name="FirstTool",
+            output_index=0,
+            sequence_number=7,
+            type="response.function_call_arguments.done",
+        )
+
+    deltas = [
+        delta
+        async for delta in _transform_stream(
+            cast(conversation.ChatLog, object()),
+            cast(AsyncStream[ResponseStreamEvent], stream()),
+        )
+    ]
+
+    assert deltas == [
+        {"role": "assistant"},
+        {"role": "assistant"},
+        {
+            "tool_calls": [
+                llm.ToolInput(
+                    id="call_2",
+                    tool_name="SecondTool",
+                    tool_args={"name": "kitchen"},
+                )
+            ]
+        },
+        {
+            "tool_calls": [
+                llm.ToolInput(
+                    id="call_1",
+                    tool_name="FirstTool",
+                    tool_args={"value": 1},
+                )
+            ]
+        },
+    ]
 
 
 async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
