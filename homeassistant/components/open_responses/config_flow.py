@@ -71,7 +71,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     await client.create_response(
         model=data[CONF_MODEL],
-        input="ping",
+        input=[{"type": "message", "role": "user", "content": "ping"}],
         max_output_tokens=16,
         store=False,
     )
