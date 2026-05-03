@@ -65,7 +65,9 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             box_name, mac = await self._validate_input(discovery_info.host)
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except DucoError:
+        except DucoError as err:
+            if _is_connection_error(err):
+                return self.async_abort(reason="cannot_connect")
             _LOGGER.exception("Unexpected error discovering Duco box via zeroconf")
             return self.async_abort(reason="unknown")
 
@@ -106,9 +108,12 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
-            except DucoError:
-                _LOGGER.exception("Unexpected error connecting to Duco box")
-                errors["base"] = "unknown"
+            except DucoError as err:
+                if _is_connection_error(err):
+                    errors["base"] = "cannot_connect"
+                else:
+                    _LOGGER.exception("Unexpected error connecting to Duco box")
+                    errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_mismatch()
@@ -137,9 +142,12 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
-            except DucoError:
-                _LOGGER.exception("Unexpected error connecting to Duco box")
-                errors["base"] = "unknown"
+            except DucoError as err:
+                if _is_connection_error(err):
+                    errors["base"] = "cannot_connect"
+                else:
+                    _LOGGER.exception("Unexpected error connecting to Duco box")
+                    errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(format_mac(mac), raise_on_progress=False)
                 self._abort_if_unique_id_configured()
@@ -169,3 +177,13 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         board_info = await client.async_get_board_info()
         lan_info = await client.async_get_lan_info()
         return board_info.box_name, lan_info.mac
+
+
+def _is_connection_error(err: BaseException) -> bool:
+    """Return if an error was ultimately caused by a connection failure."""
+    current: BaseException | None = err
+    while current is not None:
+        if isinstance(current, DucoConnectionError):
+            return True
+        current = current.__cause__
+    return False

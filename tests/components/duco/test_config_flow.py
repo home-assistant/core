@@ -6,7 +6,7 @@ from ipaddress import IPv4Address
 from ssl import SSLContext
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
+from duco.exceptions import DucoAuthenticationError, DucoConnectionError, DucoError
 from duco.models import BoardInfo, LanInfo
 import pytest
 
@@ -39,6 +39,13 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
+def _wrapped_connection_error() -> DucoAuthenticationError:
+    """Return an authentication error caused by a connection failure."""
+    err = DucoAuthenticationError("Failed to fetch device info for API key generation")
+    err.__cause__ = DucoConnectionError("Connection refused")
+    return err
+
+
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -66,6 +73,7 @@ async def test_user_flow_success(
     ("exception", "expected_error"),
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
+        (_wrapped_connection_error(), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
     ],
 )
@@ -195,6 +203,7 @@ async def test_zeroconf_discovery_already_configured_same_ip(
     ("exception", "expected_reason"),
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
+        (_wrapped_connection_error(), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
     ],
 )
@@ -290,6 +299,7 @@ async def test_reconfigure_flow_wrong_device(
     ("exception", "expected_error"),
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
+        (_wrapped_connection_error(), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
     ],
 )
