@@ -36,7 +36,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
     discovered_host: str
     discovered_device: Device
 

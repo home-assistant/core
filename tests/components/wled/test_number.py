@@ -13,11 +13,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.wled.const import (
-    CONF_KEEP_MAIN_LIGHT,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -125,13 +121,13 @@ async def test_numbers(
     ("entity_id_segment0", "state_segment0", "entity_id_segment1", "state_segment1"),
     [
         (
-            "number.wled_rgb_light_speed",
+            "number.wled_rgb_light_segment_0_speed",
             "32",
             "number.wled_rgb_light_segment_1_speed",
             "16",
         ),
         (
-            "number.wled_rgb_light_intensity",
+            "number.wled_rgb_light_segment_0_intensity",
             "128",
             "number.wled_rgb_light_segment_1_intensity",
             "64",
@@ -180,30 +176,30 @@ async def test_speed_dynamically_handle_segments(
 
 
 @pytest.mark.parametrize(
-    ("device_fixture", "keep_main_light", "expected_entities"),
+    ("device_fixture", "opt_keep_main_light", "expected_entities"),
     [
         (
             "rgb_single_segment",
             False,
             {
-                "number.wled_rgb_light_speed": "WLED RGB Light Speed",
-                "number.wled_rgb_light_intensity": "WLED RGB Light Intensity",
+                "number.wled_rgb_light_segment_0_speed": "WLED RGB Light Speed",
+                "number.wled_rgb_light_segment_0_intensity": "WLED RGB Light Intensity",
             },
         ),
         (
             "rgb_single_segment",
             True,
             {
-                "number.wled_rgb_light_speed": "WLED RGB Light Segment 0 speed",
-                "number.wled_rgb_light_intensity": "WLED RGB Light Segment 0 intensity",
+                "number.wled_rgb_light_segment_0_speed": "WLED RGB Light Segment 0 speed",
+                "number.wled_rgb_light_segment_0_intensity": "WLED RGB Light Segment 0 intensity",
             },
         ),
         (
             "rgb",
             False,
             {
-                "number.wled_rgb_light_speed": "WLED RGB Light Speed",
-                "number.wled_rgb_light_intensity": "WLED RGB Light Intensity",
+                "number.wled_rgb_light_segment_0_speed": "WLED RGB Light Speed",
+                "number.wled_rgb_light_segment_0_intensity": "WLED RGB Light Intensity",
                 "number.wled_rgb_light_segment_1_speed": "WLED RGB Light Segment 1 speed",
                 "number.wled_rgb_light_segment_1_intensity": "WLED RGB Light Segment 1 intensity",
             },
@@ -212,8 +208,8 @@ async def test_speed_dynamically_handle_segments(
             "rgb",
             True,
             {
-                "number.wled_rgb_light_speed": "WLED RGB Light Segment 0 speed",
-                "number.wled_rgb_light_intensity": "WLED RGB Light Segment 0 intensity",
+                "number.wled_rgb_light_segment_0_speed": "WLED RGB Light Segment 0 speed",
+                "number.wled_rgb_light_segment_0_intensity": "WLED RGB Light Segment 0 intensity",
                 "number.wled_rgb_light_segment_1_speed": "WLED RGB Light Segment 1 speed",
                 "number.wled_rgb_light_segment_1_intensity": "WLED RGB Light Segment 1 intensity",
             },
@@ -223,16 +219,10 @@ async def test_speed_dynamically_handle_segments(
 async def test_keep_main_light_entity_names(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    keep_main_light: bool,
+    opt_keep_main_light: bool,
     expected_entities: dict[str, str],
 ) -> None:
     """Test entity friendly names with and without the keep_main_light option."""
-    hass.config_entries.async_update_entry(
-        init_integration, options={CONF_KEEP_MAIN_LIGHT: keep_main_light}
-    )
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
     actual_entities = {
         state.entity_id: state.attributes.get("friendly_name")
         for state in hass.states.async_all("number")

@@ -194,13 +194,13 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         self.entity_description = description
         self._segment = segment
 
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
-        if segment != 0 or coordinator.keep_main_light:
+        # With keep_main_light disabled, a single-segment setup uses segment 0
+        # as the primary entity — it drops the "Segment N" qualifier.
+        if segment == 0 and not coordinator.keep_main_light:
+            self._attr_translation_key = description.translation_key
+        else:
             self._attr_translation_key = description.segment_translation_key
             self._attr_translation_placeholders = {"segment": str(segment)}
-        else:
-            self._attr_translation_key = description.translation_key
 
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_{description.key}_{segment}"

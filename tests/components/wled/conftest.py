@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import Device as WLEDDevice, Releases
 
+from homeassistant.components.wled.config_flow import CONF_KEEP_MAIN_LIGHT
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -22,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.123"},
         unique_id="aabbccddeeff",
-        minor_version=2,
+        minor_version=3,
     )
 
 
@@ -90,11 +91,18 @@ def mock_wled(
 
 
 @pytest.fixture
+def opt_keep_main_light() -> bool | None:
+    """Return the conf_keep_main_light option."""
+    return None
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
+    opt_keep_main_light: bool | None,
 ) -> MockConfigEntry:
     """Set up the WLED integration for testing."""
     mock_config_entry.add_to_hass(hass)
@@ -105,5 +113,12 @@ async def init_integration(
     # Let some time pass so coordinators can be reliably triggered by bumping
     # time by SCAN_INTERVAL
     freezer.tick(1)
+
+    if opt_keep_main_light is not None:
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={CONF_KEEP_MAIN_LIGHT: opt_keep_main_light}
+        )
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry

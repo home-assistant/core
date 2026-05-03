@@ -159,8 +159,8 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
         """Initialize WLED ."""
         super().__init__(coordinator=coordinator)
 
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
+        # With keep_main_light disabled, a single-segment setup uses segment 0
+        # as the primary entity — it drops the "Segment N" qualifier.
         if segment != 0 or coordinator.keep_main_light:
             self._attr_translation_key = "segment_color_palette"
             self._attr_translation_placeholders = {"segment": str(segment)}

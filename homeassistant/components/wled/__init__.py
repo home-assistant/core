@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from .coordinator import (
     WLEDConfigEntry,
     WLEDDataUpdateCoordinator,
@@ -126,6 +126,14 @@ async def async_migrate_entry(
                 unique_id=normalized_mac_address,
                 version=1,
                 minor_version=2,
+            )
+        if config_entry.minor_version < 3:
+            # 1.3: Keep existing behavior for users upgrading — new installs default to True.
+            hass.config_entries.async_update_entry(
+                config_entry,
+                options={CONF_KEEP_MAIN_LIGHT: False} | config_entry.options,
+                version=1,
+                minor_version=3,
             )
 
     _LOGGER.debug(

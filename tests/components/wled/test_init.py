@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from wled import WLEDConnectionError
 
-from homeassistant.components.wled.const import DOMAIN
+from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -100,10 +100,10 @@ async def test_migrate_entry_future_version_is_downgrade(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
-async def test_migrate_entry_v1_to_1_2_no_duplicates(
+async def test_migrate_entry_v1_to_1_3_no_duplicates(
     hass: HomeAssistant, config_entry_v1: MockConfigEntry
 ) -> None:
-    """Migrate from 1.x to 1.2 when there are no other entries with same MAC."""
+    """Migrate from 1.x to 1.3 when there are no other entries with same MAC."""
     config_entry_v1.add_to_hass(hass)
 
     result = await hass.config_entries.async_setup(config_entry_v1.entry_id)
@@ -112,8 +112,9 @@ async def test_migrate_entry_v1_to_1_2_no_duplicates(
     assert result is True
     assert config_entry_v1.state == ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
-    assert config_entry_v1.minor_version == 2
+    assert config_entry_v1.minor_version == 3
     assert config_entry_v1.unique_id == "aabbccddeeff"
+    assert config_entry_v1.options[CONF_KEEP_MAIN_LIGHT] is False
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -151,8 +152,9 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
     assert result is True
     assert config_entry_v1.state == ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
-    assert config_entry_v1.minor_version == 2
+    assert config_entry_v1.minor_version == 3
     assert config_entry_v1.unique_id == "aabbccddeeff"
+    assert config_entry_v1.options[CONF_KEEP_MAIN_LIGHT] is False
 
     assert ignored_1.state is ConfigEntryState.NOT_LOADED
     assert ignored_2.state is ConfigEntryState.NOT_LOADED
@@ -189,10 +191,20 @@ async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
-async def test_migrate_entry_already_at_1_2_is_noop(
+@pytest.mark.parametrize(
+    ("initial_options", "expected_options"),
+    [
+        ({}, {CONF_KEEP_MAIN_LIGHT: False}),
+        ({CONF_KEEP_MAIN_LIGHT: True}, {CONF_KEEP_MAIN_LIGHT: True}),
+        ({CONF_KEEP_MAIN_LIGHT: False}, {CONF_KEEP_MAIN_LIGHT: False}),
+    ],
+)
+async def test_migrate_entry_v1_2_to_1_3_sets_keep_main_light_false(
     hass: HomeAssistant,
+    initial_options: dict[str, bool],
+    expected_options: dict[str, bool],
 ) -> None:
-    """Do nothing when entry is already at version 1.2."""
+    """Migrate from 1.2 to 1.3, setting keep_main_light=False to preserve existing behavior."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="WLED Already 1.2",
@@ -200,6 +212,7 @@ async def test_migrate_entry_already_at_1_2_is_noop(
         version=1,
         minor_version=2,
         data={"host": "wled.local"},
+        options=initial_options,
     )
     entry.add_to_hass(hass)
 
@@ -209,5 +222,6 @@ async def test_migrate_entry_already_at_1_2_is_noop(
     assert result is True
     assert entry.state == ConfigEntryState.LOADED
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == "aabbccddeeff"
+    assert entry.options == expected_options
