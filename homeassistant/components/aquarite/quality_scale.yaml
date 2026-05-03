@@ -55,9 +55,7 @@ rules:
   docs-supported-devices: todo
   docs-supported-functions: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: Single pool device per config entry
+  dynamic-devices: todo
   entity-translations: done
   exception-translations:
     status: exempt
@@ -67,9 +65,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No known repair scenarios
-  stale-devices:
-    status: exempt
-    comment: Single device per entry
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
