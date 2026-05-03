@@ -407,6 +407,7 @@ async def test_dhcp_discovery_already_configured_same_ip(
     ("exception", "expected_reason"),
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
+        (_wrapped_connection_error(), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
     ],
 )

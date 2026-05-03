@@ -47,7 +47,9 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             box_name, _ = await self._validate_input(discovery_info.ip)
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except DucoError:
+        except DucoError as err:
+            if _is_connection_error(err):
+                return self.async_abort(reason="cannot_connect")
             _LOGGER.exception("Unexpected error discovering Duco box via DHCP")
             return self.async_abort(reason="unknown")
 
