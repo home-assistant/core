@@ -122,6 +122,8 @@ async def _token_refresh_loop(hass: HomeAssistant, data: AquariteData) -> None:
             retry_delay = 10
             sleep_time = data.auth.calculate_sleep_duration()
             await asyncio.sleep(sleep_time)
+        except asyncio.CancelledError:
+            raise
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error maintaining token: %s. Retrying in %ss", err, retry_delay
@@ -136,6 +138,8 @@ async def _periodic_health_check(hass: HomeAssistant, data: AquariteData) -> Non
         await asyncio.sleep(HEALTH_CHECK_INTERVAL)
         try:
             await data.auth.get_client()
+        except asyncio.CancelledError:
+            raise
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Health check failed, resubscribing: %s", err)
             for coordinator in data.coordinators.values():
