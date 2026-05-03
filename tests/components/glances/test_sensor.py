@@ -181,3 +181,59 @@ async def test_dynamic_sensor_auto_added(
     eth1_rx_state = hass.states.get("sensor.0_0_0_0_eth1_rx")
     assert eth1_rx_state is not None
     assert eth1_rx_state.state != STATE_UNAVAILABLE
+
+
+async def test_orphan_entities_cleaned_at_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_api: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Stale registry entries from removed devices are cleaned up at setup."""
+
+    freezer.move_to(MOCK_REFERENCE_DATE)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
+    entry.add_to_hass(hass)
+
+    # Pre-register orphans for devices that no longer appear in the API data:
+    # a removed Docker bridge network and a removed mount point.
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="test-veth1234abc-rx",
+        config_entry=entry,
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="test-veth1234abc-tx",
+        config_entry=entry,
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="test-/old/mount-disk_use",
+        config_entry=entry,
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Orphans are gone.
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "test-veth1234abc-rx")
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "test-veth1234abc-tx")
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test-/old/mount-disk_use"
+        )
+        is None
+    )
+    # Live entities are still registered.
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test-eth0-rx")
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test-/ssl-disk_use")

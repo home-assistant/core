@@ -294,6 +294,58 @@ SENSOR_TYPES = {
 }
 
 
+def _cleanup_orphan_entities(
+    hass: HomeAssistant,
+    config_entry: GlancesConfigEntry,
+    coordinator: GlancesDataUpdateCoordinator,
+) -> None:
+    """Remove registry entries for dynamic devices no longer in the API data.
+
+    Runs once at setup so entities registered before the dynamic-removal
+    behavior was added (or while Home Assistant was offline) get cleaned up
+    instead of lingering as STATE_UNAVAILABLE.
+    """
+    if not coordinator.data:
+        return
+
+    # Map description.key -> set of dynamic sensor_types that use it. Used to
+    # locate which top-level data dict a registry entry belonged to, given
+    # only its unique_id suffix.
+    key_to_types: dict[str, set[str]] = {}
+    for (sensor_type, _param), description in SENSOR_TYPES.items():
+        if sensor_type in DYNAMIC_TYPES:
+            key_to_types.setdefault(description.key, set()).add(sensor_type)
+
+    entry_id = config_entry.entry_id
+    prefix = f"{entry_id}-"
+    ent_reg = er.async_get(hass)
+
+    for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
+        if entry.domain != "sensor" or not entry.unique_id.startswith(prefix):
+            continue
+        rest = entry.unique_id.removeprefix(prefix)
+        # Static singleton entities have an empty sensor_label, producing a
+        # "--key" suffix; skip them so we don't remove them during a
+        # transient API gap.
+        if rest.startswith("-"):
+            continue
+        for desc_key, types in key_to_types.items():
+            if not rest.endswith(f"-{desc_key}"):
+                continue
+            label = rest[: -(len(desc_key) + 1)]
+            present_parents = [
+                coordinator.data[t] for t in types if t in coordinator.data
+            ]
+            # Only remove when at least one candidate parent dict is present
+            # and the label is missing from every present parent — mirrors the
+            # guard in GlancesSensor._handle_coordinator_update.
+            if present_parents and all(
+                label not in parent for parent in present_parents
+            ):
+                ent_reg.async_remove(entry.entity_id)
+            break
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: GlancesConfigEntry,
@@ -302,6 +354,7 @@ async def async_setup_entry(
     """Set up the Glances sensors."""
 
     coordinator = config_entry.runtime_data
+    _cleanup_orphan_entities(hass, config_entry, coordinator)
     created: set[tuple[str, str, str]] = set()
 
     @callback
