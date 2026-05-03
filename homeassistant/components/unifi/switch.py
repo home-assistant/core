@@ -5,6 +5,7 @@ Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 Support for controlling WLAN availability.
 Support for controlling zone based traffic rules.
+Support for controlling Policy Engine rules.
 """
 
 import asyncio
@@ -17,6 +18,9 @@ from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
+from aiounifi.interfaces.object_oriented_network_configs import (
+    ObjectOrientedNetworkConfigs,
+)
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
@@ -33,6 +37,10 @@ from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
+from aiounifi.models.object_oriented_network_config import (
+    ObjectOrientedNetworkConfig,
+    ObjectOrientedNetworkConfigUpdateRequest,
+)
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
@@ -151,6 +159,16 @@ def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if firewall policy is able to be controlled. Predefined policies are unable to be turned off."""
     policy = hub.api.firewall_policies[obj_id]
     return not policy.predefined
+
+
+async def async_object_oriented_network_config_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Control Policy Engine rule state."""
+    config = hub.api.object_oriented_network_configs[obj_id].raw
+    await hub.api.request(
+        ObjectOrientedNetworkConfigUpdateRequest.create(config, target)
+    )
 
 
 @callback
@@ -283,6 +301,20 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
         unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
         supported_fn=async_firewall_policy_supported_fn,
+    ),
+    UnifiSwitchEntityDescription[
+        ObjectOrientedNetworkConfigs, ObjectOrientedNetworkConfig
+    ](
+        key="Policy Engine rule control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.object_oriented_network_configs,
+        control_fn=async_object_oriented_network_config_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, config: config.enabled,
+        name_fn=lambda config: config.name,
+        object_fn=lambda api, obj_id: api.object_oriented_network_configs[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"object_oriented_network_config-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Outlets, Outlet](
         key="Outlet control",

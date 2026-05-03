@@ -872,6 +872,23 @@ FIREWALL_POLICY = {
     },
 }
 
+OBJECT_ORIENTED_NETWORK_CONFIG = {
+    "_id": "69f6b0a5e0e3ee2d4614cb5c",
+    "enabled": True,
+    "name": "Nintendo Switch - Block Internet",
+    "target_type": "CLIENTS",
+    "targets": [CLIENT_1["mac"]],
+    "qos": {"enabled": False},
+    "route": {"enabled": False},
+    "secure": {
+        "enabled": True,
+        "internet": {
+            "mode": "TURN_OFF_INTERNET",
+            "schedule": {"mode": "ALWAYS"},
+        },
+    },
+}
+
 
 @pytest.mark.parametrize(
     "config_entry_options", [{CONF_BLOCK_CLIENT: [BLOCKED["mac"]]}]
@@ -1348,6 +1365,65 @@ async def test_firewall_policies(
     expected_enable_call["enabled"] = True
 
     assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+
+
+@pytest.mark.parametrize(
+    ("object_oriented_network_config_payload"), [([OBJECT_ORIENTED_NETWORK_CONFIG])]
+)
+async def test_object_oriented_network_configs(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    object_oriented_network_config_payload: list[dict[str, Any]],
+) -> None:
+    """Test control of UniFi Policy Engine rules."""
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    # Validate state object
+    assert (
+        hass.states.get("switch.unifi_network_nintendo_switch_block_internet").state
+        == STATE_ON
+    )
+
+    config = deepcopy(object_oriented_network_config_payload[0])
+
+    # Disable Policy Engine rule
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/object-oriented-network-config/{config['_id']}",
+    )
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.unifi_network_nintendo_switch_block_internet"},
+        blocking=True,
+    )
+    # Updating the value for Policy Engine rules will make another call to retrieve the values
+    assert aioclient_mock.call_count == call_count + 2
+    expected_disable_call = deepcopy(config)
+    expected_disable_call["enabled"] = False
+
+    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+
+    call_count = aioclient_mock.call_count
+
+    # Enable Policy Engine rule
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.unifi_network_nintendo_switch_block_internet"},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(config)
+    expected_enable_call["enabled"] = True
+
+    assert aioclient_mock.call_count == call_count + 1
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
