@@ -394,7 +394,7 @@ class ProxmoxNoNodesFound(ProxmoxError):
 
 
 class ProxmoxNoVMLXCFound(ProxmoxError):
-    """Error to indicate no lxc or vm found."""
+    """Error to indicate no LXC or VM found."""
 
 
 class ProxmoxInitFailed(ProxmoxError):
