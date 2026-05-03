@@ -60,8 +60,14 @@ def _patch_setup(pools: dict[str, str], coord_factory: Any = None) -> Any:
     api = AsyncMock()
     api.get_pools = AsyncMock(return_value=pools)
 
+    auth = MagicMock()
+    auth.authenticate = AsyncMock()
+    auth.is_token_expiring = MagicMock(return_value=False)
+    auth.calculate_sleep_duration = MagicMock(return_value=3600)
+    auth.get_client = AsyncMock(return_value=(api, False))
+
     return (
-        patch(PATCH_AUTH, return_value=AsyncMock()),
+        patch(PATCH_AUTH, return_value=auth),
         patch(PATCH_CLIENT, return_value=api),
         patch(PATCH_COORDINATOR, side_effect=_make),
         coords,
