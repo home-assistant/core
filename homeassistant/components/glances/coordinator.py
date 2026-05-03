@@ -46,7 +46,7 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except exceptions.GlancesApiAuthorizationError as err:
             raise ConfigEntryAuthFailed from err
         except exceptions.GlancesApiError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(str(err)) from err
         # Update computed values
         uptime: datetime | None = None
         up_duration: timedelta | None = None

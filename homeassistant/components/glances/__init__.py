@@ -26,8 +26,9 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
+from .const import DEFAULT_TIMEOUT
 from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -65,7 +66,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> 
 
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
-    httpx_client = get_async_client(hass, verify_ssl=entry_data[CONF_VERIFY_SSL])
+    httpx_client = create_async_httpx_client(
+        hass, verify_ssl=entry_data[CONF_VERIFY_SSL], timeout=DEFAULT_TIMEOUT
+    )
     for version in (4, 3):
         api = Glances(
             host=entry_data[CONF_HOST],
