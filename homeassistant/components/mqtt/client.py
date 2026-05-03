@@ -1064,7 +1064,8 @@ class MQTT:
             result, mid = self._mqttc.subscribe(topic, qos, properties=properties)
             if debug_enabled:
                 _LOGGER.debug(
-                    "Subscribing with mid: %s to topic %s with qos: %s and properties: %s",
+                    "Subscribing with mid: %s to topic %s "
+                    "with qos: %s and properties: %s",
                     mid,
                     topic,
                     qos,
