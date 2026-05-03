@@ -399,7 +399,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.24.2
+aioshelly==13.25.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1245,7 +1245,7 @@ hole==0.9.0
 holidays==0.95
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260429.0
+home-assistant-frontend==20260429.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1329,7 +1329,7 @@ imgw_pib==2.1.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.6.5
+indevolt-api==1.7.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1748,7 +1748,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.18.1
+opower==0.18.2
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -1837,7 +1837,7 @@ proliphix==0.4.1
 prometheus-client==0.21.0
 
 # homeassistant.components.prowl
-prowlpy==1.1.1
+prowlpy==1.1.5
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.3.0
@@ -2581,7 +2581,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.3
 
 # homeassistant.components.duco
-python-duco-client==0.3.9
+python-duco-client==0.3.10
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2708,7 +2708,7 @@ python-xbox==0.2.0
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.5.0
+pythonkuma==0.5.1
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2900,7 +2900,7 @@ samsungtvws[async,encrypted]==2.7.2
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.2.2
+satel-integra==1.3.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -3419,7 +3419,7 @@ zinvolt==0.4.3
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.68.0
+zwave-js-server-python==0.70.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
