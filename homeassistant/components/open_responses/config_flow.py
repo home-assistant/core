@@ -3,7 +3,6 @@
 from collections.abc import Mapping
 from typing import Any
 
-import openai
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -31,6 +30,11 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
+from .client import (
+    OpenResponsesAuthError,
+    OpenResponsesClient,
+    OpenResponsesConnectionError,
+)
 from .const import (
     CONF_BASE_URL,
     CONF_MAX_OUTPUT_TOKENS,
@@ -58,16 +62,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate Open Responses connection details."""
-    client = openai.AsyncOpenAI(
+    client = OpenResponsesClient(
+        get_async_client(hass),
         api_key=data[CONF_API_KEY],
         base_url=data[CONF_BASE_URL],
-        http_client=get_async_client(hass),
     )
 
-    await client.responses.create(
+    await client.create_response(
         model=data[CONF_MODEL],
         input="ping",
-        max_output_tokens=1,
+        max_output_tokens=16,
         store=False,
     )
 
@@ -101,9 +105,9 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match(entry_identity)
             try:
                 await validate_input(self.hass, user_input)
-            except openai.AuthenticationError:
+            except OpenResponsesAuthError:
                 errors["base"] = "invalid_auth"
-            except openai.OpenAIError:
+            except OpenResponsesConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 default_conversation_options = {

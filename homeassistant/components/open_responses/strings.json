@@ -30,11 +30,11 @@
           "model": "Model"
         },
         "data_description": {
-          "api_key": "The API key for your OpenAI Responses API-compatible endpoint.",
-          "base_url": "The full API base URL for an endpoint that implements the OpenAI Responses API.",
+          "api_key": "The API key for your Open Responses-compatible endpoint.",
+          "base_url": "The full API base URL for an endpoint that implements Open Responses.",
           "model": "The model ID to validate and use for the default conversation and AI task entities."
         },
-        "description": "Set up Open Responses by providing an API key and an OpenAI Responses API-compatible base URL."
+        "description": "Set up Open Responses by providing an API key and an Open Responses-compatible base URL."
       }
     }
   },

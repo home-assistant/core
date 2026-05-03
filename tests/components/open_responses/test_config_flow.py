@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-import openai
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.open_responses.client import OpenResponsesConnectionError
 from homeassistant.components.open_responses.const import (
     CONF_BASE_URL,
     DEFAULT_AI_TASK_NAME,
@@ -31,14 +31,14 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.open_responses.config_flow.openai.AsyncOpenAI"
-        ) as mock_openai,
+            "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
+        ) as mock_open_responses_client,
         patch(
             "homeassistant.components.open_responses.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
     ):
-        mock_openai.return_value.responses.create = AsyncMock()
+        mock_open_responses_client.return_value.create_response = AsyncMock()
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -166,10 +166,10 @@ async def test_form_validates_endpoint(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.open_responses.config_flow.openai.AsyncOpenAI"
-    ) as mock_openai:
-        mock_openai.return_value.responses.create = AsyncMock(
-            side_effect=openai.OpenAIError("boom")
+        "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
+    ) as mock_open_responses_client:
+        mock_open_responses_client.return_value.create_response = AsyncMock(
+            side_effect=OpenResponsesConnectionError("boom")
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
