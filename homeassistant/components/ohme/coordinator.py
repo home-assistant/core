@@ -111,6 +111,7 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
             return
 
         self._history_sync_enabled = True
+        _LOGGER.debug("Enabled Ohme history sync orchestration for %s", self.name)
         self._remove_daily_repair_listener = async_track_time_interval(
             self.hass,
             self._async_daily_repair_listener,
@@ -122,6 +123,7 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
         self._history_sync_enabled = False
         self._pending_history_sync = None
         self._tracked_session_start = None
+        _LOGGER.debug("Disabled Ohme history sync orchestration for %s", self.name)
         if self._remove_daily_repair_listener is not None:
             self._remove_daily_repair_listener()
             self._remove_daily_repair_listener = None
@@ -142,6 +144,14 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
         self._completed_session_marker = None
         self._tracked_session_start = (
             session_start if session_start is not None and session_finish is None else None
+        )
+        _LOGGER.debug(
+            "Seeded Ohme history sync state: status=%s session_start=%s session_finish=%s tracked_session_start=%s completed_marker=%s",
+            status,
+            session_start,
+            session_finish,
+            self._tracked_session_start,
+            self._completed_session_marker,
         )
 
     async def _async_daily_repair_listener(self, _: datetime) -> None:
@@ -171,8 +181,18 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
             self._pending_history_sync = self._merge_history_sync_requests(
                 self._pending_history_sync, request
             )
+            _LOGGER.debug(
+                "Merged pending Ohme history sync request: reason=%s session_start=%s",
+                self._pending_history_sync.reason,
+                self._pending_history_sync.session_start,
+            )
             return
 
+        _LOGGER.debug(
+            "Queueing Ohme history sync: reason=%s session_start=%s",
+            request.reason,
+            request.session_start,
+        )
         self._history_sync_task = self.config_entry.async_create_background_task(
             self.hass,
             self._async_run_history_sync(request),
@@ -209,10 +229,19 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
     def _schedule_delayed_retry(self, session_start: datetime | None) -> None:
         """Schedule one delayed sync retry for late Ohme finalization."""
         self._cancel_delayed_retry()
+        _LOGGER.debug(
+            "Scheduling delayed Ohme history sync retry: session_start=%s delay=%s",
+            session_start,
+            FINALIZED_SYNC_RETRY_DELAY,
+        )
 
         @callback
         def _retry(_: datetime) -> None:
             self._remove_delayed_retry_listener = None
+            _LOGGER.debug(
+                "Running delayed Ohme history sync retry: session_start=%s",
+                session_start,
+            )
             self._queue_history_sync(
                 HistorySyncRequest(
                     reason="session_finalized_retry",
@@ -251,6 +280,12 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
             if completed_marker != self._completed_session_marker:
                 self._completed_session_marker = completed_marker
                 self._tracked_session_start = None
+                _LOGGER.debug(
+                    "Detected finalized Ohme session marker: status=%s session_start=%s session_finish=%s",
+                    status,
+                    session_start,
+                    session_finish,
+                )
                 self._queue_history_sync(
                     HistorySyncRequest(
                         reason="session_finalized",
@@ -266,6 +301,11 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
         ):
             session_anchor = self._tracked_session_start
             self._tracked_session_start = None
+            _LOGGER.debug(
+                "Detected Ohme unplug after tracked session: last_status=%s session_start=%s",
+                self._last_status,
+                session_anchor,
+            )
             self._queue_history_sync(
                 HistorySyncRequest(
                     reason="session_unplugged",
@@ -273,10 +313,17 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
                 )
             )
             self._schedule_delayed_retry(session_anchor)
+        elif was_active_status and status is ChargerStatus.FINISHED:
+            _LOGGER.debug(
+                "Observed Ohme finished state without session_finish; waiting for disconnect before syncing"
+            )
         # A real 2026-04-05 Ohme probe stayed FINISHED_CHARGE for ~87 minutes
         # with stale summary/session totals; the meaningful summary update only
         # appeared once the charger transitioned to DISCONNECTED / unplugged.
         elif was_active_status and status is ChargerStatus.UNPLUGGED:
+            _LOGGER.debug(
+                "Detected Ohme unplug without usable session markers; running bounded repair sync"
+            )
             self._queue_history_sync(
                 HistorySyncRequest(reason="session_marker_missing")
             )

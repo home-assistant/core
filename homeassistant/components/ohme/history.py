@@ -239,6 +239,12 @@ async def async_fetch_active_month_ranges(
     if pending_range is not None:
         active_ranges.append(pending_range)
 
+    _LOGGER.debug(
+        "Ohme month prefilter found %s active range(s) between %s and %s",
+        len(active_ranges),
+        start,
+        end,
+    )
     return active_ranges
 
 
@@ -413,6 +419,9 @@ async def async_remove_energy_history(
         else config_entry.unique_id
     )
     if serial is not None:
+        _LOGGER.debug(
+            "Removing imported Ohme energy history for serial %s", serial
+        )
         await async_clear_statistics(hass, statistic_id_from_serial(serial))
     await async_remove_sync_state(hass, config_entry)
 
@@ -442,11 +451,24 @@ async def async_sync_energy_history_window(
             "window_end": query_end.isoformat(),
         }
 
+    _LOGGER.debug(
+        "Starting Ohme energy history sync (%s): full_rebuild=%s window_start=%s query_end=%s desired_window_start=%s",
+        reason,
+        full_rebuild,
+        normalized_start,
+        query_end,
+        desired_window_start,
+    )
+
     existing = await async_get_imported_statistics_state(hass, stat_id)
     if full_rebuild:
         base_sum_kwh = await async_get_total_before_window(client, normalized_start)
     else:
         if not existing.exists:
+            _LOGGER.debug(
+                "Ohme history sync (%s) found no imported statistics; falling back to full rebuild",
+                reason,
+            )
             return await async_full_rebuild_energy_history(
                 hass,
                 config_entry,
@@ -587,6 +609,10 @@ async def async_ensure_energy_history(
     backfill_days = get_backfill_days(config_entry)
 
     if not imported_state.exists:
+        _LOGGER.debug(
+            "Ohme energy history missing for entry %s; starting full rebuild",
+            config_entry.entry_id,
+        )
         return await async_full_rebuild_energy_history(
             hass,
             config_entry,
@@ -594,14 +620,28 @@ async def async_ensure_energy_history(
         )
 
     if sync_state is None:
+        _LOGGER.debug(
+            "Ohme energy history has no persisted sync state for entry %s; saving current settings",
+            config_entry.entry_id,
+        )
         await async_save_sync_state(hass, config_entry)
     elif sync_state.get(CONF_BACKFILL_DAYS) != backfill_days:
+        _LOGGER.debug(
+            "Ohme backfill_days changed for entry %s: previous=%s current=%s; rebuilding history",
+            config_entry.entry_id,
+            sync_state.get(CONF_BACKFILL_DAYS),
+            backfill_days,
+        )
         return await async_full_rebuild_energy_history(
             hass,
             config_entry,
             reason="backfill_days_changed",
         )
 
+    _LOGGER.debug(
+        "Ohme energy history present for entry %s; running startup recovery",
+        config_entry.entry_id,
+    )
     return await async_recover_energy_history(
         hass,
         config_entry,
