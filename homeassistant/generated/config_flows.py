@@ -527,6 +527,7 @@ FLOWS = {
         "onkyo",
         "onvif",
         "open_meteo",
+        "open_responses",
         "open_router",
         "openai_conversation",
         "opendisplay",

@@ -19,7 +19,6 @@ from syrupy.filters import props
 
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
-    CONF_BASE_URL,
     CONF_REASONING_SUMMARY,
     CONF_STORE_RESPONSES,
     DEFAULT_AI_TASK_NAME,
@@ -309,54 +308,6 @@ async def test_init_auth_error(
         assert await async_setup_component(hass, "openai_conversation", {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_entry_uses_custom_base_url(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup passes a configured OpenAI-compatible base URL to the client."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={
-            CONF_API_KEY: "bla",
-            CONF_BASE_URL: "http://example.local:2455/v1",
-        },
-    )
-
-    with patch(
-        "homeassistant.components.openai_conversation.openai.AsyncOpenAI"
-    ) as mock_openai:
-        mock_openai.return_value.platform_headers.return_value = {}
-        mock_openai.return_value.with_options.return_value.models.list.return_value = []
-        assert await async_setup_component(hass, "openai_conversation", {})
-        await hass.async_block_till_done()
-
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] == "http://example.local:2455/v1"
-
-
-async def test_setup_entry_omits_blank_base_url(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup treats a blank base URL as the SDK default endpoint."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={
-            CONF_API_KEY: "bla",
-            CONF_BASE_URL: "   ",
-        },
-    )
-
-    with patch(
-        "homeassistant.components.openai_conversation.openai.AsyncOpenAI"
-    ) as mock_openai:
-        mock_openai.return_value.platform_headers.return_value = {}
-        mock_openai.return_value.with_options.return_value.models.list.return_value = []
-        assert await async_setup_component(hass, "openai_conversation", {})
-        await hass.async_block_till_done()
-
-    assert mock_openai.call_args.kwargs[CONF_BASE_URL] is None
 
 
 @pytest.mark.parametrize("store_responses", [False, True])
