@@ -1126,6 +1126,10 @@
         }
       },
       "title": "KNX Data Secure telegrams can't be decrypted"
+    },
+    "telegram_storage_error": {
+      "description": "The configured KNX telegram storage backend failed to initialize. Home Assistant has fallen back to memory-only storage. Telegram history will be lost on restart until the issue is resolved.\n\nCheck the persistent notifications or logs for more details.",
+      "title": "KNX telegram storage error"
     }
   },
   "options": {
@@ -1134,14 +1138,53 @@
         "data": {
           "rate_limit": "Rate limit",
           "state_updater": "State updater",
-          "telegram_log_size": "Telegram history limit"
+          "telegram_backend": "Telegram storage backend",
+          "telegram_load_minutes": "Group monitor history"
         },
         "data_description": {
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
           "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
+          "telegram_backend": "Select where to store KNX telegram history.",
+          "telegram_load_minutes": "Number of minutes of telegram history to load when the group monitor is opened."
         },
         "title": "Communication settings"
+      },
+      "telegram_store_memory": {
+        "data": {
+          "telegram_log_size": "Telegram history limit"
+        },
+        "data_description": {
+          "telegram_log_size": "Maximum number of telegrams to keep in memory. Maximum: {telegram_log_size_max}"
+        },
+        "title": "Memory store settings"
+      },
+      "telegram_store_postgres": {
+        "data": {
+          "database": "Database name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "telegram_retention_days": "Retention period (days)",
+          "tls": "Use TLS",
+          "user": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "telegram_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly.",
+          "tls": "Enable TLS encryption for the PostgreSQL connection."
+        },
+        "description": "DSN Preview: `{dsn_preview}`",
+        "title": "PostgreSQL store settings"
+      },
+      "telegram_store_sqlite": {
+        "data": {
+          "telegram_db_path": "Database path",
+          "telegram_retention_days": "Retention period (days)"
+        },
+        "data_description": {
+          "telegram_db_path": "Path to SQLite database file relative to Home Assistant storage directory. {db_exists_info}",
+          "telegram_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly."
+        },
+        "title": "SQLite store settings"
       }
     }
   },

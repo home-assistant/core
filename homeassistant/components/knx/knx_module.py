@@ -43,13 +43,11 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
-    TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
 from .entity import KnxEntityIdentifier
@@ -103,7 +101,7 @@ class KNXModule:
             hass=hass,
             xknx=self.xknx,
             project=self.project,
-            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
+            config=entry.data,
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
@@ -125,7 +123,7 @@ class KNXModule:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.project.load_project(self.xknx)
         await self.config_store.load_data()
-        await self.telegrams.load_history()
+        self.hass.async_create_task(self.telegrams.load_history())
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:

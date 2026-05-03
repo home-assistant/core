@@ -53,6 +53,20 @@ CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
 TELEGRAM_LOG_DEFAULT: Final = 1000
 TELEGRAM_LOG_MAX: Final = 25000  # ~10 MB or ~25 hours of reasonable bus load
 
+CONF_KNX_TELEGRAM_BACKEND: Final = "telegram_backend"
+CONF_KNX_TELEGRAM_RETENTION_DAYS: Final = "telegram_retention_days"
+CONF_KNX_TELEGRAM_LOAD_MINUTES: Final = "telegram_load_minutes"
+CONF_KNX_TELEGRAM_DB_PATH: Final = "telegram_db_path"
+CONF_KNX_TELEGRAM_DSN: Final = "telegram_dsn"
+
+TELEGRAM_BACKEND_MEMORY: Final = "memory"
+TELEGRAM_BACKEND_SQLITE: Final = "sqlite"
+TELEGRAM_BACKEND_POSTGRES: Final = "postgres"
+
+TELEGRAM_RETENTION_DEFAULT: Final = 10  # days
+TELEGRAM_LOAD_MINUTES_DEFAULT: Final = 60  # 1 hour
+TELEGRAM_DB_PATH_DEFAULT: Final = "knx/telegrams.db"  # relative to STORAGE_DIR
+
 ##
 # Secure constants
 ##
@@ -93,6 +107,7 @@ SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
 
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 
 class KNXConfigEntryData(TypedDict, total=False):
@@ -120,6 +135,11 @@ class KNXConfigEntryData(TypedDict, total=False):
     rate_limit: int
     #   Integration only (not forwarded to xknx)
     telegram_log_size: int  # not required
+    telegram_backend: str  # memory | sqlite | postgres
+    telegram_retention_days: int
+    telegram_load_minutes: int
+    telegram_db_path: str
+    telegram_dsn: str
 
 
 class ColorTempModes(Enum):

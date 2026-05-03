@@ -5,8 +5,12 @@ from __future__ import annotations
 from knx_telegram_store import TelegramQuery
 
 from homeassistant.components.knx.const import (
+    CONF_KNX_TELEGRAM_BACKEND,
+    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_LOG_SIZE,
     KNX_MODULE_KEY,
+    TELEGRAM_BACKEND_MEMORY,
+    TELEGRAM_BACKEND_SQLITE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -47,7 +51,11 @@ async def test_log_size_zero(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data | {CONF_KNX_TELEGRAM_LOG_SIZE: 0},
+        data=knx.mock_config_entry.data
+        | {
+            CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_MEMORY,
+            CONF_KNX_TELEGRAM_LOG_SIZE: 0,
+        },
     )
     await knx.setup_integration(add_entry_to_hass=False)
 
@@ -59,3 +67,29 @@ async def test_log_size_zero(
     # store should also be empty
     result = await hass.data[KNX_MODULE_KEY].telegrams.store.query(TelegramQuery())
     assert len(result.telegrams) == 0
+
+
+async def test_store_telegram_history_sqlite(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test storing telegram history in SQLite."""
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        data=knx.mock_config_entry.data
+        | {
+            CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_SQLITE,
+            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
+        },
+    )
+    await knx.setup_integration(add_entry_to_hass=False)
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+
+    await knx.receive_write("1/3/4", True)
+    await hass.async_block_till_done()
+
+    # Verify in SQLite store
+    result = await telegrams_module.store.query(TelegramQuery())
+    assert len(result.telegrams) == 1
+    assert result.telegrams[0].destination == "1/3/4"

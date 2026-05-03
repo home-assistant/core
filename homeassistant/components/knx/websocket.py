@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
+from datetime import timedelta
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
@@ -22,9 +23,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .const import (
+    CONF_KNX_TELEGRAM_LOAD_MINUTES,
+    DOMAIN,
+    KNX_MODULE_KEY,
+    SUPPORTED_PLATFORMS_UI,
+)
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
@@ -196,6 +203,13 @@ def ws_get_base_data(
         "version": knx.xknx.version,
         "connected": knx.xknx.connection_manager.connected.is_set(),
         "current_address": str(knx.xknx.current_address),
+        "telegram_backend": knx.telegrams.store.__class__.__name__.replace("Store", ""),
+        "telegram_retention": knx.telegrams.store.retention_days
+        if hasattr(knx.telegrams.store, "retention_days")
+        else None,
+        "telegram_max_count": knx.telegrams.store.max_telegrams
+        if hasattr(knx.telegrams.store, "max_telegrams")
+        else None,
     }
 
     connection.send_result(
@@ -289,21 +303,29 @@ async def ws_project_file_remove(
         vol.Required("type"): "knx/group_monitor_info",
     }
 )
+@websocket_api.async_response
 @provide_knx
-@callback
-def ws_group_monitor_info(
+async def ws_group_monitor_info(
     hass: HomeAssistant,
     knx: KNXModule,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
     """Handle get info command of group monitor."""
-    recent_telegrams = [*knx.telegrams.recent_telegrams]
+    start_time = None
+    if load_minutes := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_MINUTES):
+        start_time = dt_util.now() - timedelta(minutes=load_minutes)
+
+    query = TelegramQuery(start_time=start_time, limit=10_000, order_descending=False)
+    result = await knx.telegrams.store.query(query)
+
     connection.send_result(
         msg["id"],
         {
             "project_loaded": knx.project.loaded,
-            "recent_telegrams": recent_telegrams,
+            "recent_telegrams": [
+                knx.telegrams.model_to_dict(t) for t in result.telegrams
+            ],
         },
     )
 
@@ -356,13 +378,19 @@ async def ws_query_telegrams(
     msg: dict,
 ) -> None:
     """Handle query telegrams command."""
+    start_time = msg.get("start_time")
+    if start_time is None and (
+        load_minutes := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_MINUTES)
+    ):
+        start_time = dt_util.now() - timedelta(minutes=load_minutes)
+
     query = TelegramQuery(
         sources=msg.get("sources", []),
         destinations=msg.get("destinations", []),
         telegram_types=msg.get("telegram_types", []),
         directions=msg.get("directions", []),
         dpt_mains=msg.get("dpt_mains", []),
-        start_time=msg.get("start_time"),
+        start_time=start_time,
         end_time=msg.get("end_time"),
         delta_before_ms=msg.get("delta_before_ms", 0),
         delta_after_ms=msg.get("delta_after_ms", 0),

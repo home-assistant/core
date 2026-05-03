@@ -141,6 +141,7 @@ class KNXTestKit:
             if not state_updater:
                 state_updater_patcher.start()
 
+            await async_setup_component(self.hass, "persistent_notification", {})
             await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
             # remove patch after setup so state_updater can be tested

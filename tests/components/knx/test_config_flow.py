@@ -40,16 +40,26 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_BACKEND,
+    CONF_KNX_TELEGRAM_DB_PATH,
+    CONF_KNX_TELEGRAM_LOAD_MINUTES,
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TELEGRAM_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
+    TELEGRAM_BACKEND_MEMORY,
+    TELEGRAM_BACKEND_SQLITE,
+    TELEGRAM_DB_PATH_DEFAULT,
+    TELEGRAM_LOAD_MINUTES_DEFAULT,
+    TELEGRAM_RETENTION_DEFAULT,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, get_fixture_path
 
@@ -68,7 +78,7 @@ async def _mock_validate_ip_for_invalid_local(ip_address: str) -> str:
 
 
 @pytest.fixture(name="knx_setup")
-def fixture_knx_setup():
+async def fixture_knx_setup(hass: HomeAssistant):
     """Mock KNX entry setup."""
     with (
         patch("homeassistant.components.knx.async_setup", return_value=True),
@@ -76,6 +86,7 @@ def fixture_knx_setup():
             "homeassistant.components.knx.async_setup_entry", return_value=True
         ) as mock_async_setup_entry,
     ):
+        await async_setup_component(hass, "persistent_notification", {})
         yield mock_async_setup_entry
 
 
@@ -1042,7 +1053,10 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_STATE_UPDATER: True,
-        CONF_KNX_TELEGRAM_LOG_SIZE: 1000,
+        CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_SQLITE,
+        CONF_KNX_TELEGRAM_DB_PATH: TELEGRAM_DB_PATH_DEFAULT,
+        CONF_KNX_TELEGRAM_RETENTION_DAYS: TELEGRAM_RETENTION_DEFAULT,
+        CONF_KNX_TELEGRAM_LOAD_MINUTES: TELEGRAM_LOAD_MINUTES_DEFAULT,
     }
     knx_setup.assert_called_once()
 
@@ -1642,16 +1656,27 @@ async def test_options_communication_settings(
         user_input={
             CONF_KNX_STATE_UPDATER: False,
             CONF_KNX_RATE_LIMIT: 40,
+            CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_MEMORY,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "telegram_store_memory"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_KNX_TELEGRAM_LOG_SIZE: 3000,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not result.get("data")
     assert initial_data != dict(mock_config_entry.data)
-    assert mock_config_entry.data == {
+    assert dict(mock_config_entry.data) == {
         **initial_data,
         CONF_KNX_STATE_UPDATER: False,
         CONF_KNX_RATE_LIMIT: 40,
+        CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_MEMORY,
         CONF_KNX_TELEGRAM_LOG_SIZE: 3000,
+        CONF_KNX_TELEGRAM_LOAD_MINUTES: TELEGRAM_LOAD_MINUTES_DEFAULT,
     }
     knx_setup.assert_called_once()
