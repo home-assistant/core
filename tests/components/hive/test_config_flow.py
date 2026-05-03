@@ -324,6 +324,11 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
                 "AccessToken": "mock-access-token",
                 "RefreshToken": "mock-refresh-token",
             },
+            "device_data": [
+                "mock-device-group-key",
+                "mock-device-key",
+                "mock-device-password",
+            ],
         },
     )
     mock_config.add_to_hass(hass)
@@ -370,6 +375,11 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
 
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == PASSWORD
+    assert mock_config.data.get("device_data") == [
+        "mock-device-group-key",
+        "mock-device-key",
+        "mock-device-password",
+    ]
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     mock_setup_entry.assert_called_once()
@@ -521,21 +531,23 @@ async def test_reauth_2fa_flow_device_registration_check_fails(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configuration"
-    assert result["errors"] == {}
+    assert result["step_id"] == CONF_CODE
+    assert result["errors"] == {"base": "no_internet_available"}
 
     with (
         patch(
-            "homeassistant.components.hive.config_flow.Auth.device_registration",
-            return_value=True,
+            "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+            return_value={
+                "ChallengeName": "SUCCESS",
+                "AuthenticationResult": {
+                    "RefreshToken": "mock-refresh-token",
+                    "AccessToken": "mock-access-token",
+                },
+            },
         ),
         patch(
-            "homeassistant.components.hive.config_flow.Auth.get_device_data",
-            return_value=[
-                "mock-device-group-key",
-                "mock-device-key",
-                "mock-device-password",
-            ],
+            "homeassistant.components.hive.config_flow.Auth.is_device_registered",
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
@@ -545,7 +557,7 @@ async def test_reauth_2fa_flow_device_registration_check_fails(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_DEVICE_NAME: DEVICE_NAME,
+                CONF_CODE: MFA_CODE,
             },
         )
         await hass.async_block_till_done()
@@ -554,7 +566,7 @@ async def test_reauth_2fa_flow_device_registration_check_fails(
     assert mock_config.data.get("password") == PASSWORD
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_setup_entry.assert_called_once()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 

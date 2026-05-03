@@ -126,13 +126,15 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                             "Failed to check whether the Hive device is registered during reauthentication: %s",
                             err,
                         )
-                        device_registered = False
-
-                    if device_registered:
-                        return await self.async_setup_hive_entry()
-
-                self.device_registration = True
-                return await self.async_step_configuration()
+                        errors["base"] = "no_internet_available"
+                    else:
+                        if device_registered:
+                            return await self.async_setup_hive_entry()
+                        self.device_registration = True
+                        return await self.async_step_configuration()
+                else:
+                    self.device_registration = True
+                    return await self.async_step_configuration()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
@@ -184,6 +186,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Re Authenticate a user."""
+        self.data = dict(entry_data)
         data = {
             CONF_USERNAME: entry_data[CONF_USERNAME],
             CONF_PASSWORD: entry_data[CONF_PASSWORD],
