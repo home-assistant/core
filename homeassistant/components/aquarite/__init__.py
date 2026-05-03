@@ -65,16 +65,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
 
     data = AquariteData(auth=auth, api=api)
 
-    for pool_id, pool_name in pools.items():
-        coordinator = AquariteDataUpdateCoordinator(
-            hass, entry, auth, api, pool_id, pool_name
-        )
-        await coordinator.async_config_entry_first_refresh()
-        try:
-            await coordinator.subscribe()
-        except AquariteError as exc:
-            raise ConfigEntryNotReady from exc
-        data.coordinators[pool_id] = coordinator
+    try:
+        for pool_id, pool_name in pools.items():
+            coordinator = AquariteDataUpdateCoordinator(
+                hass, entry, auth, api, pool_id, pool_name
+            )
+            data.coordinators[pool_id] = coordinator
+            await coordinator.async_config_entry_first_refresh()
+            try:
+                await coordinator.subscribe()
+            except AquariteError as exc:
+                raise ConfigEntryNotReady from exc
+    except Exception:
+        for coordinator in data.coordinators.values():
+            await coordinator.async_shutdown()
+        raise
 
     # Start shared background tasks (one per account, shared across pools)
     data.token_task = hass.async_create_background_task(
