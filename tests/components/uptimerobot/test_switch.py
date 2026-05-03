@@ -160,7 +160,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
     assert exc_info.value.translation_domain == "uptimerobot"
     assert exc_info.value.translation_key == "api_exception"
     assert exc_info.value.translation_placeholders == {
-        "error": "Generic UptimeRobot exception"
+        "error": repr(UptimeRobotException())
     }
 
 
@@ -188,7 +188,7 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
     assert exc_info.value.translation_domain == "uptimerobot"
     assert exc_info.value.translation_key == "api_exception"
     assert exc_info.value.translation_placeholders == {
-        "error": "Generic UptimeRobot exception"
+        "error": repr(UptimeRobotException())
     }
 
 

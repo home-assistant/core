@@ -34,7 +34,7 @@ def uptimerobot_api_call[_T: UptimeRobotEntity, **_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_exception",
-                translation_placeholders={"error": "Generic UptimeRobot exception"},
+                translation_placeholders={"error": repr(exception)},
             ) from exception
 
     return cmd_wrapper
