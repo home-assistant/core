@@ -110,17 +110,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> bool:
     """Unload Aquarite config entry."""
+    data = entry.runtime_data
+
+    # Cancel shared tasks first so the resubscription paths stop firing
+    # before platforms (and their coordinators) are torn down.
+    for task in (data.health_task, data.token_task):
+        if task:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unloaded:
-        data = entry.runtime_data
-        # Cancel shared tasks first (stop sources of resubscription)
-        for task in (data.health_task, data.token_task):
-            if task:
-                task.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await task
-        # Then shut down per-pool coordinators
         for coordinator in data.coordinators.values():
             await coordinator.async_shutdown()
 
