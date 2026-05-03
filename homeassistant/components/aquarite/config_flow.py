@@ -38,6 +38,9 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
+            await self.async_set_unique_id(username.lower())
+            self._abort_if_unique_id_configured()
+
             session = async_get_clientsession(self.hass)
             try:
                 auth = AquariteAuth(session, username, password)
@@ -53,9 +56,6 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not pools:
                     errors["base"] = "no_pools"
                 else:
-                    await self.async_set_unique_id(username.lower())
-                    self._abort_if_unique_id_configured()
-
                     return self.async_create_entry(
                         title=username,
                         data={
