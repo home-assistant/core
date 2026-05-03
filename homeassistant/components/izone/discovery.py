@@ -129,21 +129,29 @@ async def async_start_discovery_service(hass: HomeAssistant):
 
 @callback
 def _async_is_ignored_or_excluded_uid(hass: HomeAssistant, uid: str) -> bool:
-    """Return True when UID is excluded by YAML or ignored by config entries."""
+    """Return True when UID is excluded by YAML or ignored/disabled by config entries."""
     conf = hass.data.get(DATA_CONFIG)
     if conf and uid in conf.get(CONF_EXCLUDE, []):
         return True
 
-    if not (entries := hass.config_entries.async_entries(IZONE)):
-        return True
-
-    return any(entry.unique_id == uid for entry in entries)
+    return any(
+        entry.unique_id == uid
+        and (
+            entry.source == config_entries.SOURCE_IGNORE
+            or entry.disabled_by is not None
+        )
+        for entry in hass.config_entries.async_entries(IZONE)
+    )
 
 
 @callback
 def _async_has_actionable_entries(hass: HomeAssistant) -> bool:
     """Return True when there is at least one enabled, non-ignored iZone entry."""
-    return bool(hass.config_entries.async_entries(IZONE))
+    return any(
+        hass.config_entries.async_entries(
+            IZONE, include_ignore=False, include_disabled=False
+        )
+    )
 
 
 @callback
