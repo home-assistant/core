@@ -905,6 +905,44 @@ async def test_notify_local_only(
 
 
 @pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_local_only_not_confirming(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that cloud fallback is skipped when confirmation fails and local_only is True."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    with patch(
+        "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT", 0
+    ):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_test",
+            {"message": "Hello world", "data": {"local_only": True}},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        # We need a second one because otherwise, if local_only
+        # is removed, the test still passes and should not, as
+        # the fallback should be executed.
+        await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
 async def test_notify_local_only_multiple_targets(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

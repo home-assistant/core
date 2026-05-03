@@ -197,7 +197,9 @@ class MobileAppNotificationService(BaseNotificationService):
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(
                     data,
-                    partial(self._async_send_remote_message_target, entry),
+                    partial(self._async_send_remote_message_target, entry)
+                    if not force_local_notification
+                    else None,
                 )
                 continue
 
