@@ -16,12 +16,15 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CPU_ICON, DOMAIN
 from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
+
+DYNAMIC_TYPES = {"fs", "diskio", "sensors", "raid", "gpu", "network"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -299,31 +302,40 @@ async def async_setup_entry(
     """Set up the Glances sensors."""
 
     coordinator = config_entry.runtime_data
-    entities: list[GlancesSensor] = []
+    created: set[tuple[str, str, str]] = set()
 
-    for sensor_type, sensors in coordinator.data.items():
-        if sensor_type in ["fs", "diskio", "sensors", "raid", "gpu", "network"]:
-            entities.extend(
-                GlancesSensor(
-                    coordinator,
-                    sensor_description,
-                    sensor_label,
-                )
-                for sensor_label, params in sensors.items()
-                for param in params
-                if (sensor_description := SENSOR_TYPES.get((sensor_type, param)))
-            )
-        else:
-            entities.extend(
-                GlancesSensor(
-                    coordinator,
-                    sensor_description,
-                )
-                for sensor in sensors
-                if (sensor_description := SENSOR_TYPES.get((sensor_type, sensor)))
-            )
+    @callback
+    def _add_new_entities() -> None:
+        new_entities: list[GlancesSensor] = []
+        for sensor_type, sensors in coordinator.data.items():
+            if sensor_type in DYNAMIC_TYPES:
+                for sensor_label, params in sensors.items():
+                    for param in params:
+                        key = (sensor_type, sensor_label, param)
+                        if key in created:
+                            continue
+                        if (
+                            description := SENSOR_TYPES.get((sensor_type, param))
+                        ) is None:
+                            continue
+                        created.add(key)
+                        new_entities.append(
+                            GlancesSensor(coordinator, description, sensor_label)
+                        )
+            else:
+                for sensor in sensors:
+                    key = (sensor_type, "", sensor)
+                    if key in created:
+                        continue
+                    if (description := SENSOR_TYPES.get((sensor_type, sensor))) is None:
+                        continue
+                    created.add(key)
+                    new_entities.append(GlancesSensor(coordinator, description))
+        if new_entities:
+            async_add_entities(new_entities)
 
-    async_add_entities(entities)
+    _add_new_entities()
+    config_entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
 class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntity):
@@ -363,6 +375,14 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if self.entity_description.type in DYNAMIC_TYPES:
+            parent = self.coordinator.data.get(self.entity_description.type)
+            # Only auto-remove when the parent type is present but the label is
+            # missing — a missing parent type is treated as a transient API
+            # gap and leaves the entity unavailable instead.
+            if parent is not None and self._sensor_label not in parent:
+                er.async_get(self.hass).async_remove(self.entity_id)
+                return
         self._update_native_value()
         super()._handle_coordinator_update()
 
