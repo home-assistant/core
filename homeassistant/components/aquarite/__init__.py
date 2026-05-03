@@ -94,7 +94,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
     )
 
     entry.runtime_data = data
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        for task in (data.health_task, data.token_task):
+            if task:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+        for coordinator in data.coordinators.values():
+            await coordinator.async_shutdown()
+        raise
     return True
 
 
