@@ -166,6 +166,6 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         return self.data.entries[current_day]
 
     def get_data_tomorrow(self) -> DeliveryPeriodData | None:
-        """Return the current day data."""
+        """Return tomorrow's day data if available."""
         tomorrow = dt_util.now().date() + timedelta(days=1)
         return self.data.entries.get(tomorrow)

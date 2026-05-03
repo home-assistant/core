@@ -34,7 +34,7 @@ def get_tomorrow_price_available(
 
 @dataclass(frozen=True, kw_only=True)
 class NordpoolBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Nord Pool default sensor entity."""
+    """Describes Nord Pool binary sensor entity."""
 
     value_fn: Callable[[NordpoolPriceBinarySensor], bool | None]
 
@@ -54,7 +54,7 @@ async def async_setup_entry(
     entry: NordPoolConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Nord Pool sensor platform."""
+    """Set up Nord Pool binary sensor platform."""
 
     coordinator = entry.runtime_data
     areas = coordinator.config_entry.data[CONF_AREAS]

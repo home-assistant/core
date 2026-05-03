@@ -1,4 +1,4 @@
-"""The test for the Nord Pool sensor platform."""
+"""The test for the Nord Pool binary sensor platform."""
 
 from datetime import timedelta
 from http import HTTPStatus
