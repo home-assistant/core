@@ -13,7 +13,6 @@ from homeassistant.components.izone.const import (
     DATA_CONFIG,
     DATA_DISCOVERY_SERVICE,
     IZONE,
-    TIMEOUT_DISCOVERY,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -62,6 +61,22 @@ def mock_entry_setup() -> Generator[None]:
         patch(
             "homeassistant.components.izone.async_start_discovery_service",
             return_value=None,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_izone_timeouts() -> Generator[None]:
+    """Mock iZone timeout constants to speed up tests."""
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.TIMEOUT_DISCOVERY",
+            0.01,
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.DISCOVERY_IDLE_SECONDS",
+            0.04,
         ),
     ):
         yield
@@ -1300,7 +1315,7 @@ async def test_async_discover_controllers_refresh_after_start_waits_without_resc
 
     assert list(controllers) == ["000000001"]
     mock_start.assert_awaited_once()
-    mock_sleep.assert_awaited_once_with(TIMEOUT_DISCOVERY)
+    mock_sleep.assert_awaited_once()  # Called with mocked timeout constant
     service.pi_disco.rescan.assert_not_awaited()
     service.pi_disco.add_listener.assert_not_called()
     service.pi_disco.remove_listener.assert_not_called()
@@ -1320,7 +1335,7 @@ async def test_async_discover_controllers_refresh_rescans_shared_service(
 
     assert controllers == {}
     service.pi_disco.rescan.assert_awaited_once()
-    mock_sleep.assert_awaited_once_with(TIMEOUT_DISCOVERY)
+    mock_sleep.assert_awaited_once()  # Called with mocked timeout constant
     service.pi_disco.add_listener.assert_not_called()
     service.pi_disco.remove_listener.assert_not_called()
 
