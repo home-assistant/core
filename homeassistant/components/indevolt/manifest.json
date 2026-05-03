@@ -3,7 +3,7 @@
   "name": "Indevolt",
   "codeowners": ["@xirt"],
   "config_flow": true,
-  "dhcp": [{ "macaddress": "1C784B*" }],
+  "dhcp": [{ "macaddress": "1C784B*" }, { "macaddress": "7C3E82*" }],
   "documentation": "https://www.home-assistant.io/integrations/indevolt",
   "integration_type": "device",
   "iot_class": "local_polling",
