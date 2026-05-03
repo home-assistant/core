@@ -1,7 +1,5 @@
 """The ws66i integration models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from pyws66i import WS66i

@@ -1,7 +1,5 @@
 """Offer reusable conditions."""
 
-from __future__ import annotations
-
 import abc
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
@@ -16,6 +14,7 @@ import sys
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Final,
     Literal,
     Never,
@@ -424,22 +423,13 @@ BEHAVIOR_ALL: Final = "all"
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): {
+        vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
-)
-
-ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
-    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
-        {
-            vol.Required(CONF_OPTIONS): {
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
-            },
-        }
-    )
 )
 
 
@@ -448,6 +438,9 @@ class EntityConditionBase(Condition):
 
     _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    # When True, indirect target expansion (via device/area/floor) skips
+    # entities with an entity_category.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -554,6 +547,7 @@ class EntityConditionBase(Condition):
             _state_change_listener,
             self.entity_filter,
             _on_entities_update,
+            primary_entities_only=self._primary_entities_only,
         )
         self._on_unload.append(unsub)
 
@@ -615,7 +609,10 @@ class EntityConditionBase(Condition):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
-            self._hass, self._target_selection, expand_group=False
+            self._hass,
+            self._target_selection,
+            expand_group=False,
+            primary_entities_only=self._primary_entities_only,
         )
         referenced_entity_ids = targeted_entities.referenced.union(
             targeted_entities.indirectly_referenced
@@ -662,7 +659,7 @@ def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     states: str | bool | set[str | bool],
     *,
-    support_duration: bool = False,
+    primary_entities_only: bool = True,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -680,12 +677,8 @@ def make_entity_state_condition(
         """Condition for entity state."""
 
         _domain_specs = specs
-        _schema = (
-            ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
-            if support_duration
-            else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-        )
         _states = states_set
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
@@ -793,6 +786,8 @@ class EntityNumericalConditionBase(EntityConditionBase):
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
     """Create a condition for numerical state comparisons."""
     specs = _normalize_domain_specs(domain_specs)
@@ -802,6 +797,7 @@ def make_entity_numerical_condition(
 
         _domain_specs = specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 

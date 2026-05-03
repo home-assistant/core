@@ -1,7 +1,5 @@
 """Backup platform for the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 from http import HTTPStatus

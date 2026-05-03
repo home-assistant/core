@@ -6,8 +6,6 @@ used by Home Assistant Core 2021.10.0, which adds a table for
 It is used to test the schema migration logic.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json

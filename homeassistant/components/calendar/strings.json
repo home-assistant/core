@@ -64,12 +64,6 @@
     }
   },
   "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "trigger_offset_type": {
       "options": {
         "after": "After",

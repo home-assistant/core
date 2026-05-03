@@ -1,7 +1,5 @@
 """Utility functions for the Reolink component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any

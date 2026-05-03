@@ -1,7 +1,5 @@
 """Support to send and receive Telegram messages."""
 
-from __future__ import annotations
-
 import logging
 from typing import Protocol, cast
 
