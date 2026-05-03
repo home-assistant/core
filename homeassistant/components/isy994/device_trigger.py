@@ -167,9 +167,7 @@ async def async_attach_trigger(
 
     target_unique_id = f"{isy_data.uuid}_{address}"
     target_entity_id: str | None = None
-    for entry in er.async_entries_for_device(
-        er.async_get(hass), device_id, include_disabled_entities=True
-    ):
+    for entry in er.async_entries_for_device(er.async_get(hass), device_id):
         if entry.platform == DOMAIN and entry.unique_id == target_unique_id:
             target_entity_id = entry.entity_id
             break
