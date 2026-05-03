@@ -125,9 +125,24 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
         if self._remove_daily_repair_listener is not None:
             self._remove_daily_repair_listener()
             self._remove_daily_repair_listener = None
-        if self._remove_delayed_retry_listener is not None:
-            self._remove_delayed_retry_listener()
-            self._remove_delayed_retry_listener = None
+        self._cancel_delayed_retry()
+
+    def seed_history_sync_state(self) -> None:
+        """Seed transition tracking from the coordinator's current client state."""
+        status = self.client.status
+        session_start = _client_session_timestamp(self.client, "session_start")
+        session_finish = _client_session_timestamp(self.client, "session_finish")
+
+        self._last_status = status
+        if session_start is not None and session_finish is not None:
+            self._completed_session_marker = (session_start, session_finish)
+            self._tracked_session_start = None
+            return
+
+        self._completed_session_marker = None
+        self._tracked_session_start = (
+            session_start if session_start is not None and session_finish is None else None
+        )
 
     async def _async_daily_repair_listener(self, _: datetime) -> None:
         """Run the bounded daily repair sync."""
@@ -193,8 +208,7 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
 
     def _schedule_delayed_retry(self, session_start: datetime | None) -> None:
         """Schedule one delayed sync retry for late Ohme finalization."""
-        if self._remove_delayed_retry_listener is not None:
-            self._remove_delayed_retry_listener()
+        self._cancel_delayed_retry()
 
         @callback
         def _retry(_: datetime) -> None:
@@ -212,6 +226,12 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
             _retry,
         )
 
+    def _cancel_delayed_retry(self) -> None:
+        """Cancel any pending delayed retry."""
+        if self._remove_delayed_retry_listener is not None:
+            self._remove_delayed_retry_listener()
+            self._remove_delayed_retry_listener = None
+
     def _handle_charge_session_transition(self) -> None:
         """Detect finalized-session boundaries and trigger bounded history syncs."""
         status = self.client.status
@@ -224,6 +244,8 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
         }
 
         if session_start is not None and session_finish is None:
+            if self._tracked_session_start != session_start:
+                self._cancel_delayed_retry()
             self._tracked_session_start = session_start
 
         if session_start is not None and session_finish is not None:

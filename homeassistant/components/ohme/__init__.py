@@ -61,6 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
     charge_session_coordinator = OhmeChargeSessionCoordinator(hass, entry, client)
     device_info_coordinator = OhmeDeviceInfoCoordinator(hass, entry, client)
 
+    if entry.unique_id != client.serial:
+        hass.config_entries.async_update_entry(entry, unique_id=client.serial)
+
     entry.runtime_data = OhmeRuntimeData(
         charge_session_coordinator=charge_session_coordinator,
         device_info_coordinator=device_info_coordinator,
@@ -78,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
     else:
         _LOGGER.debug("Initialized Ohme energy history sync: %s", result)
 
+    charge_session_coordinator.seed_history_sync_state()
     charge_session_coordinator.enable_history_sync()
 
     return True

@@ -19,6 +19,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
+    get_last_statistics,
     statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
@@ -52,7 +53,6 @@ MONTH_GRANULARITY: Any = getattr(SummaryGranularity, "MONTH", "MONTH")
 class ImportedStatisticsState:
     """Summarize imported statistics for the Ohme energy statistic."""
 
-    first_start: datetime | None = None
     last_start: datetime | None = None
     last_sum_kwh: float | None = None
 
@@ -165,9 +165,14 @@ async def async_remove_sync_state(
     await _store(hass, config_entry).async_remove()
 
 
+def statistic_id_from_serial(serial: str) -> str:
+    """Return the external statistic id used for Ohme charged energy history."""
+    return f"{DOMAIN}:total_charged_energy_{serial.lower().replace('-', '_')}"
+
+
 def statistic_id(client: OhmeApiClient) -> str:
     """Return the external statistic id used for Ohme charged energy history."""
-    return f"{DOMAIN}:total_charged_energy_{client.serial.lower().replace('-', '_')}"
+    return statistic_id_from_serial(client.serial)
 
 
 def statistics_metadata(client: OhmeApiClient) -> StatisticMetaData:
@@ -343,13 +348,11 @@ async def async_get_imported_statistics_state(
 ) -> ImportedStatisticsState:
     """Return the current recorder statistics bounds for this sensor."""
     stats = await get_instance(hass).async_add_executor_job(
-        statistics_during_period,
+        get_last_statistics,
         hass,
-        FULL_HISTORY_START,
-        None,
-        {stat_id},
-        "hour",
-        None,
+        1,
+        stat_id,
+        False,
         {"sum"},
     )
     rows = stats.get(stat_id, [])
@@ -358,7 +361,6 @@ async def async_get_imported_statistics_state(
 
     last_sum = rows[-1]["sum"]
     return ImportedStatisticsState(
-        first_start=_coerce_row_start(rows[0]["start"]),
         last_start=_coerce_row_start(rows[-1]["start"]),
         last_sum_kwh=float(last_sum) if last_sum is not None else None,
     )
@@ -405,9 +407,13 @@ async def async_remove_energy_history(
 ) -> None:
     """Remove imported Ohme energy history and persisted sync state."""
     runtime_data = getattr(config_entry, "runtime_data", None)
-    if runtime_data is not None:
-        client = runtime_data.charge_session_coordinator.client
-        await async_clear_statistics(hass, statistic_id(client))
+    serial = (
+        runtime_data.charge_session_coordinator.client.serial
+        if runtime_data is not None
+        else config_entry.unique_id
+    )
+    if serial is not None:
+        await async_clear_statistics(hass, statistic_id_from_serial(serial))
     await async_remove_sync_state(hass, config_entry)
 
 

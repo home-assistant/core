@@ -63,3 +63,21 @@ async def test_remove_entry_cleans_up_imported_history(
         await hass.async_block_till_done()
 
     mock_remove_history.assert_awaited_once_with(hass, mock_config_entry)
+
+
+async def test_remove_entry_cleans_up_imported_history_when_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing an unloaded entry still cleans up imported history state."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="chargerid")
+
+    with patch(
+        "homeassistant.components.ohme.async_remove_energy_history",
+        new=AsyncMock(),
+    ) as mock_remove_history:
+        await hass.config_entries.async_remove(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_remove_history.assert_awaited_once_with(hass, mock_config_entry)
