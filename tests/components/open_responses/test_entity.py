@@ -118,6 +118,35 @@ def test_convert_content_preserves_native_output_message() -> None:
     ]
 
 
+def test_convert_content_preserves_native_dict_output_message() -> None:
+    """Test native dict output messages with phase labels are preserved."""
+    native_message = {
+        "id": "msg_1",
+        "content": [
+            {
+                "type": "output_text",
+                "text": "Done",
+            }
+        ],
+        "role": "assistant",
+        "status": "completed",
+        "type": "message",
+        "phase": "answer",
+    }
+
+    messages = _convert_content_to_param(
+        [
+            conversation.AssistantContent(
+                agent_id="agent",
+                content="Done",
+                native=native_message,
+            )
+        ]
+    )
+
+    assert messages == [native_message]
+
+
 async def test_transform_stream_preserves_native_output_message() -> None:
     """Test output item metadata is preserved from the stream."""
     native_message = ResponseOutputMessage(
