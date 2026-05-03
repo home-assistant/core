@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from unittest.mock import Mock
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -12,8 +13,10 @@ from homeassistant.components.open_responses.entity import (
     _convert_content_to_param,
     _format_tool,
     _transform_stream,
+    async_prepare_files_for_prompt,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 
@@ -205,6 +208,24 @@ async def test_prepare_message_attachments_preserves_earlier_turns(
     }
 
 
+async def test_prepare_pdf_file_uses_basename(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test PDF filenames do not expose the local path."""
+    pdf_path = tmp_path / "invoice.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4")
+
+    assert await async_prepare_files_for_prompt(
+        hass, [(pdf_path, "application/pdf")]
+    ) == [
+        {
+            "type": "input_file",
+            "filename": "invoice.pdf",
+            "file_data": "data:application/pdf;base64,JVBERi0xLjQ=",
+        }
+    ]
+
+
 async def test_transform_stream_preserves_native_output_message() -> None:
     """Test output item metadata is preserved from the stream."""
     native_message = {
@@ -344,7 +365,11 @@ async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
 
 async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
     """Test each reasoning item starts a separate assistant message."""
-    first_reasoning = {"id": "reasoning_1", "summary": [], "type": "reasoning"}
+    first_reasoning = {
+        "id": "reasoning_1",
+        "summary": [{"type": "summary_text", "text": "Checked the state."}],
+        "type": "reasoning",
+    }
     second_reasoning = {"id": "reasoning_2", "summary": [], "type": "reasoning"}
 
     async def stream() -> AsyncGenerator[dict]:
@@ -387,7 +412,7 @@ async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
             "native": {
                 "encrypted_content": None,
                 "id": "reasoning_1",
-                "summary": [],
+                "summary": [{"type": "summary_text", "text": "Checked the state."}],
                 "type": "reasoning",
             }
         },
@@ -401,3 +426,31 @@ async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
             }
         },
     ]
+
+
+async def test_transform_stream_handles_spec_error_envelope() -> None:
+    """Test streaming error events use the Open Responses error envelope."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "error": {
+                "code": "invalid_request",
+                "message": "Invalid tool result.",
+                "param": "input",
+                "type": "invalid_request_error",
+            },
+            "sequence_number": 0,
+            "type": "response.error",
+        }
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Open Responses response error: Invalid tool result.",
+    ):
+        [
+            delta
+            async for delta in _transform_stream(
+                Mock(),
+                stream(),
+            )
+        ]

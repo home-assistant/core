@@ -23,6 +23,7 @@ from homeassistant.util import slugify
 from .client import (
     OpenResponsesAuthError,
     OpenResponsesConnectionError,
+    OpenResponsesInvalidModelError,
     OpenResponsesRateLimitError,
 )
 from .const import (
@@ -256,7 +257,7 @@ async def _transform_stream(
                     "native": {
                         "type": "reasoning",
                         "id": item.get("id"),
-                        "summary": [],
+                        "summary": item.get("summary") or [],
                         "encrypted_content": item.get("encrypted_content"),
                     }
                 }
@@ -324,9 +325,9 @@ async def _transform_stream(
                     reason = error.get("message") or reason
                 raise HomeAssistantError(f"Open Responses response failed: {reason}")
         elif event_type == "response.error":
-            raise HomeAssistantError(
-                f"Open Responses response error: {event['message']}"
-            )
+            error = cast(dict[str, Any], event.get("error") or {})
+            reason = error.get("message") or event.get("message") or "unknown reason"
+            raise HomeAssistantError(f"Open Responses response error: {reason}")
 
 
 class OpenResponsesEntity(Entity):
@@ -413,6 +414,9 @@ class OpenResponsesEntity(Entity):
                 raise HomeAssistantError(
                     "Rate limited by Open Responses endpoint"
                 ) from err
+            except OpenResponsesInvalidModelError as err:
+                LOGGER.error("Invalid Open Responses model: %s", err)
+                raise HomeAssistantError("Invalid Open Responses model") from err
             except OpenResponsesConnectionError as err:
                 LOGGER.error("Error talking to Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
@@ -462,7 +466,7 @@ async def async_prepare_files_for_prompt(
                 content.append(
                     {
                         "type": "input_file",
-                        "filename": str(file_path),
+                        "filename": file_path.name,
                         "file_data": f"data:{mime_type};base64,{base64_file}",
                     }
                 )
