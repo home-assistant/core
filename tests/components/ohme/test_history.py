@@ -247,6 +247,64 @@ async def test_ensure_energy_history_rebuilds_if_backfill_days_changes(
         hass,
         mock_config_entry,
         reason="backfill_days_changed",
+        base_sum_kwh_override=None,
+    )
+
+
+async def test_ensure_energy_history_backfill_shrink_reuses_existing_baseline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test shrinking backfill reuses the existing recorder baseline.
+
+    This avoids a large provider-side "total before window" query when we
+    already have a wider imported statistics window locally.
+    """
+    mock_config_entry.add_to_hass(hass)
+    runtime_data = MagicMock()
+    runtime_data.charge_session_coordinator.client = mock_client
+    mock_config_entry.runtime_data = runtime_data
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_BACKFILL_DAYS: 365},
+    )
+
+    imported_state = ImportedStatisticsState(
+        last_start=datetime(2026, 4, 5, 10, tzinfo=dt_util.UTC),
+        last_sum_kwh=12.345,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.ohme.history.async_get_imported_statistics_state",
+            new=AsyncMock(return_value=imported_state),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_load_sync_state",
+            new=AsyncMock(return_value={CONF_BACKFILL_DAYS: 0}),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_get_sum_before",
+            new=AsyncMock(return_value=456.789),
+        ) as mock_get_sum_before,
+        patch(
+            "homeassistant.components.ohme.history.async_full_rebuild_energy_history",
+            new=AsyncMock(return_value={"action": "full_rebuild"}),
+        ) as mock_full_rebuild,
+    ):
+        await async_ensure_energy_history(hass, mock_config_entry)
+
+    mock_get_sum_before.assert_awaited_once_with(
+        hass,
+        statistic_id_from_serial(mock_client.serial),
+        history_window_start(mock_config_entry),
+    )
+    mock_full_rebuild.assert_awaited_once_with(
+        hass,
+        mock_config_entry,
+        reason="backfill_days_changed",
+        base_sum_kwh_override=456.789,
     )
 
 
@@ -297,6 +355,61 @@ async def test_full_rebuild_does_not_clear_existing_statistics_before_refetch(
 
     mock_clear_statistics.assert_not_awaited()
     mock_add_statistics.assert_not_called()
+
+
+async def test_full_rebuild_uses_override_without_provider_total(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a rebuild can use a supplied local baseline instead of provider total."""
+    runtime_data = MagicMock()
+    runtime_data.charge_session_coordinator.client = mock_client
+    mock_config_entry.runtime_data = runtime_data
+
+    imported_state = ImportedStatisticsState(
+        last_start=datetime(2026, 4, 5, 10, tzinfo=dt_util.UTC),
+        last_sum_kwh=12.345,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.ohme.history.async_get_imported_statistics_state",
+            new=AsyncMock(return_value=imported_state),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_get_total_before_window",
+            new=AsyncMock(side_effect=AssertionError("should not query provider total")),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_fetch_hourly_energy_points",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_clear_statistics",
+            new=AsyncMock(),
+        ) as mock_clear_statistics,
+        patch(
+            "homeassistant.components.ohme.history.async_save_sync_state",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.ohme.history.async_add_external_statistics"
+        ) as mock_add_statistics,
+    ):
+        await async_sync_energy_history_window(
+            hass,
+            mock_config_entry,
+            window_start=history_window_start(mock_config_entry),
+            reason="test_override_baseline",
+            full_rebuild=True,
+            base_sum_kwh_override=7.5,
+        )
+
+    mock_clear_statistics.assert_awaited_once()
+    rows = mock_add_statistics.call_args.args[2]
+    assert len(rows) == 1
+    assert rows[0]["sum"] == 7.5
 
 
 async def test_session_finalize_triggers_sync_from_session_start(

@@ -70,6 +70,17 @@ def get_backfill_days(config_entry: OhmeConfigEntry) -> int:
     )
 
 
+def backfill_window_covers(
+    previous_backfill_days: int, current_backfill_days: int
+) -> bool:
+    """Return True if the previous backfill window fully covers the current one."""
+    if previous_backfill_days == 0:
+        return True
+    if current_backfill_days == 0:
+        return False
+    return previous_backfill_days >= current_backfill_days
+
+
 def floor_to_hour(timestamp: datetime) -> datetime:
     """Return a UTC datetime rounded down to the hour."""
     return dt_util.as_utc(timestamp).replace(minute=0, second=0, microsecond=0)
@@ -433,6 +444,7 @@ async def async_sync_energy_history_window(
     window_start: datetime,
     reason: str,
     full_rebuild: bool = False,
+    base_sum_kwh_override: float | None = None,
 ) -> dict[str, Any]:
     """Sync Ohme finalized hourly history into recorder statistics."""
     client = config_entry.runtime_data.charge_session_coordinator.client
@@ -462,7 +474,15 @@ async def async_sync_energy_history_window(
 
     existing = await async_get_imported_statistics_state(hass, stat_id)
     if full_rebuild:
-        base_sum_kwh = await async_get_total_before_window(client, normalized_start)
+        if base_sum_kwh_override is not None:
+            base_sum_kwh = base_sum_kwh_override
+            _LOGGER.debug(
+                "Using existing imported Ohme baseline before %s: %s kWh",
+                normalized_start,
+                base_sum_kwh,
+            )
+        else:
+            base_sum_kwh = await async_get_total_before_window(client, normalized_start)
     else:
         if not existing.exists:
             _LOGGER.debug(
@@ -520,6 +540,7 @@ async def async_full_rebuild_energy_history(
     config_entry: OhmeConfigEntry,
     *,
     reason: str,
+    base_sum_kwh_override: float | None = None,
 ) -> dict[str, Any]:
     """Perform a full history rebuild for the configured backfill window."""
     return await async_sync_energy_history_window(
@@ -528,6 +549,7 @@ async def async_full_rebuild_energy_history(
         window_start=history_window_start(config_entry),
         full_rebuild=True,
         reason=reason,
+        base_sum_kwh_override=base_sum_kwh_override,
     )
 
 
@@ -626,16 +648,34 @@ async def async_ensure_energy_history(
         )
         await async_save_sync_state(hass, config_entry)
     elif sync_state.get(CONF_BACKFILL_DAYS) != backfill_days:
+        previous_backfill_days = max(
+            0, int(sync_state.get(CONF_BACKFILL_DAYS, DEFAULT_BACKFILL_DAYS))
+        )
+        base_sum_kwh_override: float | None = None
+        if backfill_window_covers(previous_backfill_days, backfill_days):
+            base_sum_kwh_override = await async_get_sum_before(
+                hass,
+                stat_id,
+                history_window_start(config_entry),
+            )
+            _LOGGER.debug(
+                "Ohme backfill shrink for entry %s can reuse recorder baseline: previous=%s current=%s baseline=%s kWh",
+                config_entry.entry_id,
+                previous_backfill_days,
+                backfill_days,
+                base_sum_kwh_override,
+            )
         _LOGGER.debug(
             "Ohme backfill_days changed for entry %s: previous=%s current=%s; rebuilding history",
             config_entry.entry_id,
-            sync_state.get(CONF_BACKFILL_DAYS),
+            previous_backfill_days,
             backfill_days,
         )
         return await async_full_rebuild_energy_history(
             hass,
             config_entry,
             reason="backfill_days_changed",
+            base_sum_kwh_override=base_sum_kwh_override,
         )
 
     _LOGGER.debug(
