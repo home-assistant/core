@@ -57,7 +57,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
             vol.Required(CONF_POLYNOMIAL_CONFIG): section(
                 vol.Schema(
                     {
-                        vol.Required(CONF_DATAPOINTS): ObjectSelector(
+                        vol.Optional(CONF_DATAPOINTS): ObjectSelector(
                             ObjectSelectorConfig(
                                 label_field="uncompensated_value",
                                 description_field="compensated_value",
@@ -112,10 +112,18 @@ async def validate_options(
 ) -> dict[str, Any]:
     """Validate options selected."""
 
-    user_input[CONF_PRECISION] = int(user_input[CONF_PRECISION])
-    user_input[CONF_DEGREE] = int(user_input[CONF_DEGREE])
+    if not user_input[CONF_POLYNOMIAL_CONFIG].get(CONF_DATAPOINTS):
+        raise SchemaFlowError("not_enough_datapoints")
 
-    if len(user_input[CONF_DATAPOINTS]) <= user_input[CONF_DEGREE]:
+    user_input[CONF_PRECISION] = int(user_input[CONF_PRECISION])
+    user_input[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE] = int(
+        user_input[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
+    )
+
+    if (
+        len(user_input[CONF_POLYNOMIAL_CONFIG][CONF_DATAPOINTS])
+        <= user_input[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
+    ):
         raise SchemaFlowError("not_enough_datapoints")
 
     handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
