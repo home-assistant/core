@@ -968,3 +968,34 @@ async def test_notify_local_only_multiple_targets(
         )
 
     assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_local_only_validation_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test `local_only` option sends only via local push."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Invalid value for data\[local_only\]: must be a boolean",
+    ):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_test",
+            {"message": "Hello world", "data": {"local_only": "true"}},
+            blocking=True,
+        )

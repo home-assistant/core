@@ -184,6 +184,10 @@ class MobileAppNotificationService(BaseNotificationService):
         if (data_arg := kwargs.get(ATTR_DATA)) is not None:
             data_arg = data[ATTR_DATA] = data_arg.copy()
             force_local_notification = data_arg.pop(ATTR_LOCAL_ONLY, False)
+            if not isinstance(force_local_notification, bool):
+                raise HomeAssistantError(
+                    "Invalid value for data[local_only]: must be a boolean"
+                )
 
         local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][
             DATA_PUSH_CHANNEL
