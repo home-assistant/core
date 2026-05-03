@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
+import openai
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -16,9 +17,10 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -40,7 +42,6 @@ from .const import (
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_OUTPUT_TOKENS,
-    RECOMMENDED_MODEL,
     RECOMMENDED_STORE_RESPONSES,
 )
 
@@ -48,8 +49,25 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_BASE_URL): vol.All(str, str.strip, cv.url),
+        vol.Required(CONF_MODEL): str,
     }
 )
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Validate Open Responses connection details."""
+    client = openai.AsyncOpenAI(
+        api_key=data[CONF_API_KEY],
+        base_url=data[CONF_BASE_URL],
+        http_client=get_async_client(hass),
+    )
+
+    await client.responses.create(
+        model=data[CONF_MODEL],
+        input="ping",
+        max_output_tokens=1,
+        store=False,
+    )
 
 
 class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -65,29 +83,57 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
+            entry_identity = {
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_BASE_URL: user_input[CONF_BASE_URL],
+            }
             if self.source == SOURCE_REAUTH:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(), data_updates=user_input
+                reauth_entry = self._get_reauth_entry()
+                for entry in self._async_current_entries(include_ignore=False):
+                    if entry.entry_id != reauth_entry.entry_id and all(
+                        entry.data.get(key) == value
+                        for key, value in entry_identity.items()
+                    ):
+                        return self.async_abort(reason="already_configured")
+            else:
+                self._async_abort_entries_match(entry_identity)
+            try:
+                await validate_input(self.hass, user_input)
+            except openai.AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except openai.OpenAIError:
+                errors["base"] = "cannot_connect"
+            else:
+                default_conversation_options = {
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_MODEL: user_input[CONF_MODEL],
+                }
+                default_ai_task_options = {
+                    **RECOMMENDED_AI_TASK_OPTIONS,
+                    CONF_MODEL: user_input[CONF_MODEL],
+                }
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
+                return self.async_create_entry(
+                    title="Open Responses",
+                    data=user_input,
+                    subentries=[
+                        {
+                            "subentry_type": "conversation",
+                            "data": default_conversation_options,
+                            "title": DEFAULT_CONVERSATION_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "ai_task_data",
+                            "data": default_ai_task_options,
+                            "title": DEFAULT_AI_TASK_NAME,
+                            "unique_id": None,
+                        },
+                    ],
                 )
-            return self.async_create_entry(
-                title="Open Responses",
-                data=user_input,
-                subentries=[
-                    {
-                        "subentry_type": "conversation",
-                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                        "title": DEFAULT_CONVERSATION_NAME,
-                        "unique_id": None,
-                    },
-                    {
-                        "subentry_type": "ai_task_data",
-                        "data": RECOMMENDED_AI_TASK_OPTIONS,
-                        "title": DEFAULT_AI_TASK_NAME,
-                        "unique_id": None,
-                    },
-                ],
-            )
 
         return self.async_show_form(
             step_id="user",
@@ -207,7 +253,7 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
             {
                 vol.Required(
                     CONF_MODEL,
-                    default=options.get(CONF_MODEL, RECOMMENDED_MODEL),
+                    default=options.get(CONF_MODEL, self._get_entry().data[CONF_MODEL]),
                 ): str,
                 vol.Optional(
                     CONF_MAX_OUTPUT_TOKENS,

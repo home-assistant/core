@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.open_responses.const import CONF_BASE_URL, DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -29,4 +29,5 @@ async def test_setup_entry_passes_base_url(
     assert (
         mock_async_openai.call_args.kwargs[CONF_BASE_URL] == "https://example.local/v1"
     )
+    assert mock_config_entry.data[CONF_MODEL] == "open-responses-model"
     assert mock_config_entry.runtime_data is mock_client

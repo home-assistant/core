@@ -13,7 +13,7 @@ from homeassistant.components.open_responses.const import (
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -29,6 +29,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             CONF_API_KEY: "bla",
             CONF_BASE_URL: "https://example.local/v1",
+            CONF_MODEL: "open-responses-model",
         },
         version=1,
         subentries_data=[
