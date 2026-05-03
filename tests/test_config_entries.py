@@ -7067,7 +7067,7 @@ async def test_update_entry_and_reload_with_listener_logs(
 
         async def async_step_reconfigure(self, data):
             """Mock Reconfigure."""
-            return self.async_update_reload_and_abort(entry, data={"vendor": "data2"})
+            return self.async_update_reload_and_abort(entry, data={"vendor": "data3"})
 
     message = (
         "Detected that integration 'comp' has an update listener and should use it"
@@ -7079,6 +7079,7 @@ async def test_update_entry_and_reload_with_listener_logs(
         patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
     ):
         await entry.start_reauth_flow(hass)
+    await hass.async_block_till_done()
 
     assert message in caplog.text
     caplog.clear()
@@ -7088,6 +7089,7 @@ async def test_update_entry_and_reload_with_listener_logs(
         patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
     ):
         await entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
 
     assert message in caplog.text
 
