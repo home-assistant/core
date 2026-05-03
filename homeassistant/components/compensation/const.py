@@ -1,6 +1,9 @@
 """Compensation constants."""
 
+from typing import Any
+
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "compensation"
 PLATFORMS = [Platform.SENSOR]
@@ -16,7 +19,8 @@ CONF_PRECISION = "precision"
 CONF_POLYNOMIAL = "polynomial"
 CONF_POLYNOMIAL_CONFIG = "polynomial_config"
 
-DATA_COMPENSATION = "compensation_data"
+
+DATA_COMPENSATION: HassKey[dict[str, Any]] = HassKey("compensation_data")
 
 DEFAULT_DEGREE = 1
 DEFAULT_NAME = "Compensation"
