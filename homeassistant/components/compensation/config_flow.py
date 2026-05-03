@@ -87,7 +87,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                             CONF_DEGREE, default=DEFAULT_DEGREE
                         ): NumberSelector(
                             NumberSelectorConfig(
-                                min=0, max=7, step=1, mode=NumberSelectorMode.BOX
+                                min=1, max=7, step=1, mode=NumberSelectorMode.BOX
                             )
                         ),
                     },
