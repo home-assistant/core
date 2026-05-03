@@ -64,7 +64,7 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
         self._unique_id = generate_unique_id(
-            element, elk_data.prefix, elk_data.mac or "time"
+            element, elk_data.prefix, elk_data.mac or "number"
         )
         if element.value_format == SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
