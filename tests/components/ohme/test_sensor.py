@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -29,7 +29,18 @@ async def test_sensors(
     with patch("homeassistant.components.ohme.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    entity_entries = sorted(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id),
+        key=lambda entry: entry.entity_id,
+    )
+    assert entity_entries
+
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_sensors_unavailable(
