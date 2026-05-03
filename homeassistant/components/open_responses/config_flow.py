@@ -12,6 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentry,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -60,6 +61,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+DEFAULT_SUBENTRY_TITLES = {
+    "ai_task_data": DEFAULT_AI_TASK_NAME,
+    "conversation": DEFAULT_CONVERSATION_NAME,
+}
+
+
+def _is_default_subentry(subentry: ConfigSubentry) -> bool:
+    """Return whether a subentry is the generated default subentry."""
+    return subentry.title == DEFAULT_SUBENTRY_TITLES.get(subentry.subentry_type)
+
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate Open Responses connection details."""
@@ -84,7 +95,9 @@ def _async_update_default_subentry_models(
     old_model = entry.data[CONF_MODEL]
 
     for subentry in entry.subentries.values():
-        if subentry.data.get(CONF_MODEL) != old_model:
+        if subentry.data.get(CONF_MODEL) != old_model or not _is_default_subentry(
+            subentry
+        ):
             continue
 
         hass.config_entries.async_update_subentry(

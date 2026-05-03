@@ -35,7 +35,11 @@ class OpenResponsesClient:
         """Initialize the client."""
         self._http_client = http_client
         self._url = f"{base_url.rstrip('/')}/responses"
-        self._headers = {
+        self._json_headers = {
+            "authorization": f"Bearer {api_key}",
+            "accept": "application/json",
+        }
+        self._stream_headers = {
             "authorization": f"Bearer {api_key}",
             "accept": "text/event-stream",
         }
@@ -48,7 +52,7 @@ class OpenResponsesClient:
             response = await self._http_client.post(
                 self._url,
                 json=body,
-                headers=self._headers,
+                headers=self._json_headers,
             )
             response.raise_for_status()
         except HTTPStatusError as err:
@@ -69,7 +73,7 @@ class OpenResponsesClient:
                 "POST",
                 self._url,
                 json=body,
-                headers=self._headers,
+                headers=self._stream_headers,
             ) as response:
                 response.raise_for_status()
                 async for event in _iter_sse_events(response.aiter_lines()):
@@ -104,10 +108,38 @@ def _strip_none_values(value: Any) -> Any:
 async def _iter_sse_events(lines: AsyncIterable[str]) -> AsyncGenerator[dict[str, Any]]:
     """Yield JSON server-sent events from an Open Responses stream."""
     event_type: str | None = None
+    data_lines: list[str] = []
+    done = False
+
+    async def flush_event() -> dict[str, Any] | None:
+        nonlocal done, event_type, data_lines
+
+        if not data_lines:
+            event_type = None
+            return None
+
+        data = "\n".join(data_lines)
+        event_type_for_payload = event_type
+        event_type = None
+        data_lines = []
+
+        if data == "[DONE]":
+            done = True
+            return None
+
+        event = json.loads(data)
+        if event_type_for_payload and "type" not in event:
+            event["type"] = event_type_for_payload
+        return event
 
     async for line in lines:
+        if done:
+            return
         if not line:
-            event_type = None
+            if event := await flush_event():
+                yield event
+            if done:
+                return
             continue
         if line.startswith("event:"):
             event_type = line.split(":", 1)[1].strip()
@@ -115,15 +147,10 @@ async def _iter_sse_events(lines: AsyncIterable[str]) -> AsyncGenerator[dict[str
         if not line.startswith("data:"):
             continue
 
-        data = line.split(":", 1)[1].strip()
-        if data == "[DONE]":
-            return
+        data_lines.append(line.split(":", 1)[1].strip())
 
-        event = json.loads(data)
-        if event_type and "type" not in event:
-            event["type"] = event_type
+    if event := await flush_event():
         yield event
-        event_type = None
 
 
 def _raise_client_error(err: HTTPStatusError) -> None:

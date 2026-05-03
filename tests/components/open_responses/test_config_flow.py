@@ -219,9 +219,49 @@ async def test_form_handles_invalid_model(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_updates_default_subentry_models(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """Test reauth model changes are propagated to generated subentries."""
+    mock_config_entry = MockConfigEntry(
+        title="Open Responses",
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "bla",
+            CONF_BASE_URL: "https://example.local/v1",
+            CONF_MODEL: "open-responses-model",
+        },
+        version=1,
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_MODEL: "open-responses-model",
+                },
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            ),
+            config_entries.ConfigSubentryData(
+                data={
+                    **RECOMMENDED_AI_TASK_OPTIONS,
+                    CONF_MODEL: "open-responses-model",
+                },
+                subentry_type="ai_task_data",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+            config_entries.ConfigSubentryData(
+                data={
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_MODEL: "open-responses-model",
+                },
+                subentry_type="conversation",
+                title="My Custom Agent",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -254,9 +294,15 @@ async def test_reauth_updates_default_subentry_models(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_MODEL] == "new-open-responses-model"
-    assert {
-        subentry.data[CONF_MODEL] for subentry in mock_config_entry.subentries.values()
-    } == {"new-open-responses-model"}
+    subentry_models = {
+        subentry.title: subentry.data[CONF_MODEL]
+        for subentry in mock_config_entry.subentries.values()
+    }
+    assert subentry_models == {
+        DEFAULT_AI_TASK_NAME: "new-open-responses-model",
+        DEFAULT_CONVERSATION_NAME: "new-open-responses-model",
+        "My Custom Agent": "open-responses-model",
+    }
 
 
 async def test_creating_conversation_subentry(
