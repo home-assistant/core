@@ -34,6 +34,7 @@ from .client import (
     OpenResponsesAuthError,
     OpenResponsesClient,
     OpenResponsesConnectionError,
+    OpenResponsesInvalidModelError,
 )
 from .const import (
     CONF_BASE_URL,
@@ -76,6 +77,23 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
 
 
+def _async_update_default_subentry_models(
+    hass: HomeAssistant, entry: ConfigEntry, model: str
+) -> None:
+    """Update generated default subentries when reauth changes the model."""
+    old_model = entry.data[CONF_MODEL]
+
+    for subentry in entry.subentries.values():
+        if subentry.data.get(CONF_MODEL) != old_model:
+            continue
+
+        hass.config_entries.async_update_subentry(
+            entry,
+            subentry,
+            data={**subentry.data, CONF_MODEL: model},
+        )
+
+
 class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Open Responses."""
 
@@ -107,6 +125,8 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except OpenResponsesAuthError:
                 errors["base"] = "invalid_auth"
+            except OpenResponsesInvalidModelError:
+                errors[CONF_MODEL] = "invalid_model"
             except OpenResponsesConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -119,8 +139,12 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_MODEL: user_input[CONF_MODEL],
                 }
                 if self.source == SOURCE_REAUTH:
+                    reauth_entry = self._get_reauth_entry()
+                    _async_update_default_subentry_models(
+                        self.hass, reauth_entry, user_input[CONF_MODEL]
+                    )
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                        reauth_entry, data_updates=user_input
                     )
                 return self.async_create_entry(
                     title="Open Responses",

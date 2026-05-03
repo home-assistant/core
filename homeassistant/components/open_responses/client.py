@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, AsyncIterable
 import json
 from typing import Any
 
-from httpx import AsyncClient, HTTPStatusError, RequestError
+from httpx import AsyncClient, HTTPStatusError, RequestError, Response
 from openresponses_types.types import CreateResponseBody
 
 
@@ -18,6 +18,10 @@ class OpenResponsesAuthError(OpenResponsesError):
 
 class OpenResponsesRateLimitError(OpenResponsesError):
     """Open Responses rate limit error."""
+
+
+class OpenResponsesInvalidModelError(OpenResponsesError):
+    """Open Responses model validation error."""
 
 
 class OpenResponsesConnectionError(OpenResponsesError):
@@ -129,4 +133,23 @@ def _raise_client_error(err: HTTPStatusError) -> None:
         raise OpenResponsesAuthError("Authentication failed")
     if status_code == 429:
         raise OpenResponsesRateLimitError("Rate limited")
+    if status_code == 400 and _response_error_mentions_model(err.response):
+        raise OpenResponsesInvalidModelError("Invalid model")
     raise OpenResponsesConnectionError("Open Responses endpoint error")
+
+
+def _response_error_mentions_model(response: Response) -> bool:
+    """Return whether an error response points at the requested model."""
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+
+    error = body.get("error") if isinstance(body, dict) else None
+    if not isinstance(error, dict):
+        return False
+
+    return any(
+        "model" in str(error.get(key, "")).lower()
+        for key in ("code", "param", "message")
+    )

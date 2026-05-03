@@ -32,13 +32,19 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         version=1,
         subentries_data=[
             ConfigSubentryData(
-                data=RECOMMENDED_CONVERSATION_OPTIONS,
+                data={
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_MODEL: "open-responses-model",
+                },
                 subentry_type="conversation",
                 title=DEFAULT_CONVERSATION_NAME,
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=RECOMMENDED_AI_TASK_OPTIONS,
+                data={
+                    **RECOMMENDED_AI_TASK_OPTIONS,
+                    CONF_MODEL: "open-responses-model",
+                },
                 subentry_type="ai_task_data",
                 title=DEFAULT_AI_TASK_NAME,
                 unique_id=None,
