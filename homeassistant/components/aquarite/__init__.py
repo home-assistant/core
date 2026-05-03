@@ -12,11 +12,7 @@ from aioaquarite import AquariteAuth, AquariteClient, AquariteError, Authenticat
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import HEALTH_CHECK_INTERVAL
@@ -54,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
     try:
         await auth.authenticate()
     except AuthenticationError as exc:
-        raise ConfigEntryAuthFailed from exc
+        raise ConfigEntryError("Invalid Aquarite credentials") from exc
     except AquariteError as exc:
         raise ConfigEntryNotReady from exc
 

@@ -114,7 +114,7 @@ async def test_setup_entry_success_multiple_pools(
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant, mock_entry: MockConfigEntry
 ) -> None:
-    """Test setup raises ConfigEntryAuthFailed on AuthenticationError."""
+    """Test setup raises ConfigEntryError on AuthenticationError."""
     mock_entry.add_to_hass(hass)
 
     with patch(PATCH_AUTH) as mock_auth_cls:
