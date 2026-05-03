@@ -42,17 +42,8 @@ _SPEED_LEVEL_PERCENTAGES: list[int] = [
 
 _STATE_TO_PERCENTAGE: dict[VentilationState, int] = {
     VentilationState.CNT1: _SPEED_LEVEL_PERCENTAGES[0],
-    VentilationState.MAN1: _SPEED_LEVEL_PERCENTAGES[0],
-    VentilationState.MAN1x2: _SPEED_LEVEL_PERCENTAGES[0],
-    VentilationState.MAN1x3: _SPEED_LEVEL_PERCENTAGES[0],
     VentilationState.CNT2: _SPEED_LEVEL_PERCENTAGES[1],
-    VentilationState.MAN2: _SPEED_LEVEL_PERCENTAGES[1],
-    VentilationState.MAN2x2: _SPEED_LEVEL_PERCENTAGES[1],
-    VentilationState.MAN2x3: _SPEED_LEVEL_PERCENTAGES[1],
     VentilationState.CNT3: _SPEED_LEVEL_PERCENTAGES[2],
-    VentilationState.MAN3: _SPEED_LEVEL_PERCENTAGES[2],
-    VentilationState.MAN3x2: _SPEED_LEVEL_PERCENTAGES[2],
-    VentilationState.MAN3x3: _SPEED_LEVEL_PERCENTAGES[2],
 }
 
 _STATE_TO_PRESET: dict[VentilationState, str] = {
