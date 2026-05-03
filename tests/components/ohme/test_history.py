@@ -305,7 +305,13 @@ async def test_session_finalize_triggers_sync_from_session_start(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test a finalized session schedules a bounded sync from the session start."""
+    """Test an explicit finalized marker syncs from the recorded session start.
+
+    Our 2026-04-05 real-session probe showed that finalized summary data only
+    became visible once Ohme exposed a true completion edge. When the API does
+    provide both ``session_start`` and ``session_finish``, we can safely anchor
+    the resync to that completed session.
+    """
     session_start = datetime(2026, 4, 6, 10, 15, tzinfo=dt_util.UTC)
     session_finish = datetime(2026, 4, 6, 12, 5, tzinfo=dt_util.UTC)
 
@@ -357,7 +363,12 @@ async def test_finished_session_does_not_resync_after_restart(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test seeded finished-session state does not retrigger a finalize sync."""
+    """Test seeded finished-session state does not retrigger a finalize sync.
+
+    Startup recovery already reimports from the last imported hour overlap, so
+    a restart into an already-finalized session should not look like a fresh
+    completion event and cause a second bounded session sync.
+    """
     session_start = datetime(2026, 4, 6, 10, 15, tzinfo=dt_util.UTC)
     session_finish = datetime(2026, 4, 6, 12, 5, tzinfo=dt_util.UTC)
     mock_client.status = ChargerStatus.FINISHED
@@ -398,13 +409,95 @@ async def test_finished_session_does_not_resync_after_restart(
     mock_sync_repair.assert_not_awaited()
 
 
+async def test_finished_without_marker_waits_for_disconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test plain finished state waits for disconnect before syncing.
+
+    The 2026-04-05 probe entered ``FINISHED_CHARGE`` at 07:54 local time, but
+    ``charge_stats_energy_wh`` and the fixed-range summary total both stayed
+    stale until the charger became ``DISCONNECTED`` at 09:21. Only that
+    disconnect edge exposed ``finish_time_local`` and the finalized summary
+    totals, so a bare finished state without a finish marker must not trigger
+    an early sync.
+    """
+    session_start = datetime(2026, 4, 6, 10, 15, tzinfo=dt_util.UTC)
+    session_finish = datetime(2026, 4, 6, 14, 21, tzinfo=dt_util.UTC)
+
+    with patch(
+        "homeassistant.components.ohme.async_ensure_energy_history",
+        new=AsyncMock(return_value={"action": "noop"}),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_charge_session = _make_charge_session_side_effect(
+        mock_client,
+        [
+            {
+                "status": ChargerStatus.CHARGING,
+                "session_start": session_start,
+                "session_finish": None,
+            },
+            {
+                "status": ChargerStatus.FINISHED,
+                "session_start": session_start,
+                "session_finish": None,
+            },
+            {
+                "status": ChargerStatus.UNPLUGGED,
+                "session_start": session_start,
+                "session_finish": session_finish,
+            },
+        ],
+    )
+
+    with (
+        patch(
+            "homeassistant.components.ohme.coordinator.async_sync_session_energy_history",
+            new=AsyncMock(return_value={"action": "window_sync"}),
+        ) as mock_sync_session,
+        patch(
+            "homeassistant.components.ohme.coordinator.async_sync_repair_energy_history",
+            new=AsyncMock(return_value={"action": "window_sync"}),
+        ) as mock_sync_repair,
+    ):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_sync_repair.assert_not_awaited()
+    mock_sync_session.assert_awaited_once_with(
+        hass,
+        mock_config_entry,
+        session_start=session_start,
+        reason="session_finalized",
+    )
+
+
 async def test_missing_session_marker_falls_back_to_repair_sync(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test finalize without a session marker falls back to bounded repair sync."""
+    """Test unplug without session markers falls back to bounded repair sync.
+
+    The same probe showed unplug as the point where finalized summary data
+    becomes visible. If Ohme gives us that disconnect edge but no usable
+    ``session_start`` / ``session_finish`` anchors, we still repair the recent
+    bounded window rather than guessing a full-session anchor.
+    """
     with patch(
         "homeassistant.components.ohme.async_ensure_energy_history",
         new=AsyncMock(return_value={"action": "noop"}),
@@ -452,7 +545,13 @@ async def test_finalize_schedules_one_delayed_retry(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test a finalized session schedules exactly one delayed retry."""
+    """Test a finalized session schedules exactly one delayed retry.
+
+    Ohme summary data is convergent rather than live. We resync immediately
+    when a completion edge appears, then schedule one delayed retry so a late
+    finalized summary bucket can still be picked up without polling summary
+    endpoints continuously.
+    """
     session_start = datetime(2026, 4, 6, 10, 15, tzinfo=dt_util.UTC)
     session_finish = datetime(2026, 4, 6, 12, 5, tzinfo=dt_util.UTC)
 

@@ -273,10 +273,10 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
                 )
             )
             self._schedule_delayed_retry(session_anchor)
-        elif was_active_status and status in {
-            ChargerStatus.FINISHED,
-            ChargerStatus.UNPLUGGED,
-        }:
+        # A real 2026-04-05 Ohme probe stayed FINISHED_CHARGE for ~87 minutes
+        # with stale summary/session totals; the meaningful summary update only
+        # appeared once the charger transitioned to DISCONNECTED / unplugged.
+        elif was_active_status and status is ChargerStatus.UNPLUGGED:
             self._queue_history_sync(
                 HistorySyncRequest(reason="session_marker_missing")
             )
