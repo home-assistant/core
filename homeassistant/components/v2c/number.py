@@ -11,7 +11,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import EntityCategory, UnitOfElectricCurrent
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,13 +24,15 @@ from .entity import V2CBaseEntity
 
 MIN_INTENSITY = 6
 MAX_INTENSITY = 32
+MIN_VOLTAGE = 1
+MAX_VOLTAGE = 500
 
 
 @dataclass(frozen=True, kw_only=True)
 class V2CSettingsNumberEntityDescription(NumberEntityDescription):
     """Describes V2C EVSE number entity."""
 
-    value_fn: Callable[[TrydanData], int]
+    value_fn: Callable[[TrydanData], int | None]
     update_fn: Callable[[Trydan, int], Coroutine[Any, Any, None]]
 
 
@@ -63,6 +69,17 @@ TRYDAN_NUMBER_SETTINGS = (
         value_fn=lambda evse_data: evse_data.max_intensity,
         update_fn=lambda evse, value: evse.max_intensity(value),
     ),
+    V2CSettingsNumberEntityDescription(
+        key="voltage_installation",
+        translation_key="voltage_installation",
+        device_class=NumberDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        native_min_value=MIN_VOLTAGE,
+        native_max_value=MAX_VOLTAGE,
+        value_fn=lambda evse_data: evse_data.voltage_installation,
+        update_fn=lambda evse, value: evse.voltage_installation(value),
+    ),
 )
 
 
@@ -96,7 +113,7 @@ class V2CSettingsNumberEntity(V2CBaseEntity, NumberEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the setting entity."""
         return self.entity_description.value_fn(self.data)
 

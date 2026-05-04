@@ -1,5 +1,6 @@
 """Diagnostics support for V2C."""
 
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -21,11 +22,12 @@ async def async_get_config_entry_diagnostics(
         assert coordinator.evse
 
     coordinator_data = coordinator.evse.data
+    assert coordinator_data is not None
     evse_raw_data = coordinator.evse.raw_data
 
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": str(coordinator_data),
-        "raw_data": evse_raw_data["content"].decode("utf-8"),  # type: ignore[attr-defined]
+        "raw_data": asdict(coordinator_data),
         "host_status": evse_raw_data["status_code"],
     }
