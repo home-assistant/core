@@ -1,0 +1,11 @@
+{
+  "domain": "mitsubishi_comfort",
+  "name": "Mitsubishi Comfort",
+  "codeowners": ["@nikolairahimi"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mitsubishi_comfort",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["mitsubishi-comfort==0.3.0"]
+}
