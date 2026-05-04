@@ -814,6 +814,11 @@ ZEROCONF = {
             "domain": "bluesound",
         },
     ],
+    "_mypv._tcp.local.": [
+        {
+            "domain": "mypv",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
