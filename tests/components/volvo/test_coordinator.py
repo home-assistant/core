@@ -143,6 +143,10 @@ async def test_coordinator_location_auth_exception(
     )
     assert await setup_integration()
 
+    # Verify no reauthentication flow is started
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert not flows
+
     # Verify integration loads without location entity
     device_tracker_states = hass.states.async_all(domain_filter="device_tracker")
     assert len(device_tracker_states) == 0
