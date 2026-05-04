@@ -17,7 +17,7 @@ from homeassistant.components.open_responses.const import (
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
-from homeassistant.const import CONF_API_KEY, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
@@ -320,11 +320,52 @@ async def test_creating_conversation_subentry(
     assert result["step_id"] == "init"
     assert not result["errors"]
 
-    result2 = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {"name": "My Custom Agent", **RECOMMENDED_CONVERSATION_OPTIONS},
-    )
+    with patch(
+        "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
+    ) as mock_open_responses_client:
+        mock_open_responses_client.return_value.create_response = AsyncMock()
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "My Custom Agent", **RECOMMENDED_CONVERSATION_OPTIONS},
+        )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Custom Agent"
+    mock_open_responses_client.return_value.create_response.assert_awaited_once_with(
+        model=mock_config_entry.data[CONF_MODEL],
+        input=[{"type": "message", "role": "user", "content": "ping"}],
+        max_output_tokens=16,
+        store=False,
+    )
+
+
+async def test_creating_subentry_validates_model(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test subentry creation validates the selected model."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with patch(
+        "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
+    ) as mock_open_responses_client:
+        mock_open_responses_client.return_value.create_response = AsyncMock(
+            side_effect=OpenResponsesInvalidModelError
+        )
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My Custom Agent",
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_MODEL: "missing-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "init"
+    assert result2["errors"] == {CONF_MODEL: "invalid_model"}
