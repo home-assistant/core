@@ -55,9 +55,7 @@ class NetatmoCoverPreferredPositionButton(NetatmoModuleEntity, ButtonEntity):
                 },
             ]
         )
-        self._attr_unique_id = (
-            f"{self.device.entity_id}-{self.device_type}-preferred_position"
-        )
+        self._attr_unique_id = f"{self.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}-preferred_position"
 
     @callback
     def async_update_callback(self) -> None:
