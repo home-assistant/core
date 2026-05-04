@@ -80,7 +80,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
             device_reg, self.config_entry.entry_id
         ):
             if not set(device.identifiers) & identifiers:
-                _LOGGER.warning("Removing stale device entry %s", device.name)
+                _LOGGER.debug("Removing stale device entry %s", device.name)
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
