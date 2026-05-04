@@ -1,6 +1,5 @@
 """Test the File Upload integration."""
 
-import asyncio
 from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
@@ -51,10 +50,8 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
         assert file_path.parent == uploaded_file_dir
         assert file_path.read_bytes() == TEST_IMAGE.read_bytes()
 
-    # Test it's removed, will wait 5 secs as this gets scheduled by hass.add_job
-    async with asyncio.timeout(5):
-        while uploaded_file_dir.exists():
-            await asyncio.sleep(1)
+    # Block until the file_dir is removed
+    await hass.async_block_till_done()
 
     assert not uploaded_file_dir.exists()
 
