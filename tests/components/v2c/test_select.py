@@ -52,7 +52,7 @@ async def test_select_option(
         blocking=True,
     )
 
-    mock_v2c_client.charge_mode.assert_called_once_with(ChargeMode.MIXED)
+    mock_v2c_client.charge_mode.assert_awaited_once_with(ChargeMode.MIXED)
 
 
 async def test_select_disabled_when_missing(
