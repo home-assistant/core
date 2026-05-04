@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Whois integration."""
 
-from whois import Domain, query as whois_query
-from whois.exceptions import (
+from whoisdomain import Domain, query as whoisdomain_query
+from whoisdomain.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
     UnknownTld,
