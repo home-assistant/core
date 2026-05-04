@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'preferred_position',
-    'unique_id': '0009999993-DeviceType.NBO-preferred_position',
+    'unique_id': '0009999993-NBO-preferred_position',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'preferred_position',
-    'unique_id': '0009999992-DeviceType.NBR-preferred_position',
+    'unique_id': '0009999992-NBR-preferred_position',
     'unit_of_measurement': None,
   })
 # ---
