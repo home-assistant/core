@@ -1,7 +1,5 @@
 """The HTTP api to control the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
@@ -615,6 +613,7 @@ class DownloadSupportPackageView(HomeAssistantView):
 
         return markdown
 
+    @require_admin
     async def get(self, request: web.Request) -> web.Response:
         """Download support package file."""
 
@@ -709,6 +708,7 @@ def _require_cloud_login(
     return with_cloud_auth
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
@@ -750,6 +750,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     return value
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -809,6 +810,7 @@ async def websocket_update_prefs(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -829,6 +831,7 @@ async def websocket_hook_create(
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {

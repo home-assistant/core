@@ -89,6 +89,10 @@ def mock_tractive_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.tractive.aiotractive.Tractive", autospec=True
         ) as mock_client,
+        patch(
+            "homeassistant.components.tractive.asyncio.sleep",
+            new_callable=AsyncMock,
+        ),
     ):
         client = mock_client.return_value
         client.authenticate.return_value = {"user_id": "12345"}

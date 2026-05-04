@@ -4,8 +4,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections import UserDict, defaultdict
 from collections.abc import (
@@ -557,6 +555,14 @@ class HomeAssistant:
             self.loop.call_soon_threadsafe(
                 functools.partial(self.async_create_task, target, eager_start=True)
             )
+            return
+        # For @callback targets, schedule directly via call_soon_threadsafe
+        # to avoid the extra deferral through _async_add_hass_job + call_soon.
+        # Check iscoroutinefunction to gracefully handle incorrectly labeled @callback functions.
+        if is_callback_check_partial(target) and not inspect.iscoroutinefunction(
+            target
+        ):
+            self.loop.call_soon_threadsafe(target, *args)
             return
         self.loop.call_soon_threadsafe(
             functools.partial(self._async_add_hass_job, HassJob(target), *args)

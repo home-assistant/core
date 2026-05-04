@@ -1,7 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection, Generator, Sequence
 import logging

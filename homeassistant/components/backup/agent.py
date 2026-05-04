@@ -1,7 +1,5 @@
 """Backup agents for the Backup integration."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path

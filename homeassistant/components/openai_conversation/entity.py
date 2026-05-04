@@ -1,7 +1,5 @@
 """Base entity for OpenAI."""
 
-from __future__ import annotations
-
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
@@ -43,7 +41,10 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
-from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
+from openai.types.responses.response_create_params import (
+    Reasoning,
+    ResponseCreateParamsStreaming,
+)
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
@@ -114,7 +115,7 @@ MAX_TOOL_ITERATIONS = 10
 
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
-    """Adjust the schema to be compatible with OpenAI API."""
+    """Adjust the output schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
         schema.setdefault("strict", True)
         schema.setdefault("additionalProperties", False)
@@ -158,10 +159,15 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> FunctionToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    if unsupported_keys.intersection(schema):
+        schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     return FunctionToolParam(
         type="function",
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=schema,
         description=tool.description,
         strict=False,
     )
@@ -515,16 +521,19 @@ class OpenAIBaseLLMEntity(Entity):
         )
 
         if model_args["model"].startswith(("o", "gpt-5")):
-            model_args["reasoning"] = {
+            reasoning: Reasoning = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
-                "summary": options.get(
-                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-                ),
             }
+            reasoning_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
+            if reasoning_summary != "off":
+                reasoning["summary"] = reasoning_summary
+            model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 
         if (
@@ -610,7 +619,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model != "gpt-image-1-mini":
+            if image_model not in ("gpt-image-1-mini", "gpt-image-2"):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             # Keep image state on OpenAI so follow-up prompts can continue by
@@ -636,8 +645,8 @@ class OpenAIBaseLLMEntity(Entity):
                 and isinstance(last_message["content"], str)
             )
             last_message["content"] = [
-                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
-                *files,  # type: ignore[list-item]
+                {"type": "input_text", "text": last_message["content"]},
+                *files,
             ]
 
         if structure and structure_name:

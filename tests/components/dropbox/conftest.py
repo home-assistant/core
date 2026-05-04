@@ -1,7 +1,5 @@
 """Shared fixtures for Dropbox integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch

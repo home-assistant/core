@@ -1,6 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import mill
 

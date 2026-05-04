@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_select_entities[select.test_player_1_link_audio_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'audio_sync_translation',
+        'balanced_translation',
+        'lip_sync_translation',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_player_1_link_audio_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Link audio delay',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Link audio delay',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'link_audio_delay',
+    'unique_id': '00:00:00:00:00:01_link_audio_delay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.test_player_1_link_audio_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Player 1 Link audio delay',
+      'options': list([
+        'audio_sync_translation',
+        'balanced_translation',
+        'lip_sync_translation',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_player_1_link_audio_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'lip_sync_translation',
+  })
+# ---

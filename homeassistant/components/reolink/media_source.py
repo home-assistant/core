@@ -1,7 +1,5 @@
 """Expose Reolink IP camera VODs as media sources."""
 
-from __future__ import annotations
-
 import datetime as dt
 import logging
 

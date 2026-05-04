@@ -225,7 +225,13 @@ async def test_generate_data_with_attachments(
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
 @pytest.mark.parametrize("configured_store", [False, True])
 @pytest.mark.parametrize(
-    "image_model", ["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"]
+    ("image_model", "input_fidelity_present"),
+    [
+        ("gpt-image-2", False),
+        ("gpt-image-1.5", True),
+        ("gpt-image-1", True),
+        ("gpt-image-1-mini", False),
+    ],
 )
 async def test_generate_image(
     hass: HomeAssistant,
@@ -234,6 +240,7 @@ async def test_generate_image(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     image_model: str,
+    input_fidelity_present: bool,
     configured_store: bool,
 ) -> None:
     """Test AI Task image generation."""
@@ -296,6 +303,14 @@ async def test_generate_image(
     mock_upload_media.assert_called_once()
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is True
+    image_tool = next(
+        iter(
+            tool
+            for tool in mock_create_stream.call_args.kwargs["tools"]
+            if tool["type"] == "image_generation"
+        ),
+    )
+    assert ("input_fidelity" in image_tool) == input_fidelity_present
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"A"
     assert image_data.content_type == "image/png"

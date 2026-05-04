@@ -17,6 +17,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -92,6 +93,34 @@ def parametrize_muted_trigger_states() -> list[
                 {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
             ),
         ],
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("media_player.paused_playing", {}, True, True),
+        ("media_player.started_playing", {}, True, True),
+        ("media_player.stopped_playing", {}, True, True),
+        ("media_player.turned_off", {}, True, True),
+        ("media_player.turned_on", {}, True, True),
+    ],
+)
+async def test_media_player_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that media_player triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
     )
 
 

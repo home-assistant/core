@@ -1,7 +1,5 @@
 """Validate requirements."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Collection
 from functools import cache
@@ -41,6 +39,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
+    "serialx": "SemVer",
     "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
@@ -728,7 +727,7 @@ def check_dependency_files(
             if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
                 top_level.add(top)
             if (name := str(file).lower()) in FORBIDDEN_FILE_NAMES or (
-                name.endswith(".pth") and len(file.parts) == 1
+                name.endswith((".pth", ".start")) and len(file.parts) == 1
             ):
                 file_names.add(str(file))
         results = _PackageFilesCheckResult(

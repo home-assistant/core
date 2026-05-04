@@ -1,7 +1,5 @@
 """SFR Box coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -29,6 +27,7 @@ class SFRRuntimeData:
     """Runtime data for SFR Box."""
 
     box: SFRBox
+    has_authentication: bool
     dsl: SFRDataUpdateCoordinator[DslInfo]
     ftth: SFRDataUpdateCoordinator[FtthInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]

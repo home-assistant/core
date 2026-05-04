@@ -1,7 +1,5 @@
 """Roborock Coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -550,6 +548,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.WIND,
             RoborockB01Props.WATER,
             RoborockB01Props.MODE,
+            RoborockB01Props.CLEAN_PATH_PREFERENCE,
             RoborockB01Props.QUANTITY,
         ]
 

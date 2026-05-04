@@ -1,7 +1,5 @@
 """Switches on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 import functools
 import logging
 from typing import Any

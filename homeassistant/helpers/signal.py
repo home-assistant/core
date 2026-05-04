@@ -6,7 +6,6 @@ import signal
 
 from homeassistant.const import RESTART_EXIT_CODE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,7 +14,6 @@ KEY_HA_STOP: HassKey[asyncio.Task[None]] = HassKey("homeassistant_stop")
 
 
 @callback
-@bind_hass
 def async_register_signal_handling(hass: HomeAssistant) -> None:
     """Register system signal handler for core."""
 
