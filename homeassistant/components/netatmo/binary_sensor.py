@@ -76,7 +76,7 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str:
         return category
 
     # Iterate through each home in the raw data.
-    # Candidate for removal after requirements dump pyatmo v9.4.0+ as we should have
+    # Candidate for removal after requirements bump pyatmo v9.4.0+ as we should have
     # category available directly on the device object by then this will be dead code
     for home in netatmo_device.data_handler.account.raw_data["homes"]:
         # Check if the modules list exists for the current home.
