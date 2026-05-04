@@ -15,6 +15,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 ENTITY_IR_EMITTER = "infrared.ir_blaster_infrared_emitter"
+ENTITY_IR_RECEIVER = "infrared.ir_blaster_infrared_receiver"
 
 
 @pytest.fixture
@@ -228,6 +229,7 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
         user_input={
             "name": "Living Room Fan",
             "infrared_entity_id": ENTITY_IR_EMITTER,
+            "infrared_receiver_entity_id": ENTITY_IR_RECEIVER,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -237,7 +239,10 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
         if s.subentry_type == "infrared_fan"
     ][0]
     assert config_entry.subentries[subentry_id] == config_entries.ConfigSubentry(
-        data={"infrared_entity_id": ENTITY_IR_EMITTER},
+        data={
+            "infrared_entity_id": ENTITY_IR_EMITTER,
+            "infrared_receiver_entity_id": ENTITY_IR_RECEIVER,
+        },
         subentry_id=subentry_id,
         subentry_type="infrared_fan",
         title="Living Room Fan",

@@ -79,29 +79,46 @@ class DemoInfraredEvent(EventEntity):
         remove_signal_subscription: CALLBACK_TYPE | None = None
 
         @callback
-        def _async_subscribe_when_available() -> None:
-            """Subscribe to the IR receiver when it becomes available."""
+        def _async_unsubscribe_receiver() -> None:
+            """Unsubscribe from the current IR receiver."""
+            nonlocal remove_signal_subscription
+
+            if remove_signal_subscription is None:
+                return
+            remove_signal_subscription()
+            remove_signal_subscription = None
+
+        @callback
+        def _async_update_receiver_subscription(write_state: bool = True) -> None:
+            """Update the IR receiver subscription when availability changes."""
             nonlocal remove_signal_subscription
 
             ir_state = self.hass.states.get(self._receiver_entity_id)
-            self._attr_available = (
+            receiver_available = (
                 ir_state is not None and ir_state.state != STATE_UNAVAILABLE
             )
-            if not self._attr_available:
+
+            if not receiver_available:
+                _async_unsubscribe_receiver()
+            elif remove_signal_subscription is None:
+                remove_signal_subscription = async_subscribe_receiver(
+                    self.hass, self._receiver_entity_id, _handle_signal
+                )
+
+            if self._attr_available == receiver_available:
                 return
-            if remove_signal_subscription is not None:
-                return
-            remove_signal_subscription = async_subscribe_receiver(
-                self.hass, self._receiver_entity_id, _handle_signal
-            )
-            self.async_on_remove(remove_signal_subscription)
+
+            self._attr_available = receiver_available
+            if write_state:
+                self.async_write_ha_state()
 
         @callback
         def _async_ir_state_changed(event: Event[EventStateChangedData]) -> None:
             """Handle infrared entity state changes."""
-            _async_subscribe_when_available()
+            _async_update_receiver_subscription()
 
-        _async_subscribe_when_available()
+        _async_update_receiver_subscription(write_state=False)
+        self.async_on_remove(_async_unsubscribe_receiver)
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, [self._receiver_entity_id], _async_ir_state_changed
