@@ -63,7 +63,6 @@ from .const import (
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
-    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
@@ -74,6 +73,7 @@ from .const import (
     MQTT_PROCESSED_SUBSCRIPTIONS,
     PROTOCOL_5,
     PROTOCOL_31,
+    PROTOCOL_311,
     TRANSPORT_WEBSOCKETS,
 )
 from .models import (
@@ -331,7 +331,9 @@ class MqttClientSetup:
 
         config = self._config
         clean_session: bool | None = None
-        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
+        # If not protocol setting is set in config
+        # we assume legacy version 3.1.1 is in use
+        if (protocol := config.get(CONF_PROTOCOL, PROTOCOL_311)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
             clean_session = True
         elif protocol == PROTOCOL_5:
@@ -420,7 +422,9 @@ class MQTT:
         self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
-        self.is_mqttv5 = conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_5
+        # If not protocol setting is set in config
+        # we assume legacy version 3.1.1 is in use
+        self.is_mqttv5 = conf.get(CONF_PROTOCOL, PROTOCOL_311) == PROTOCOL_5
 
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set

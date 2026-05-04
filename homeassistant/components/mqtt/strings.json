@@ -1120,6 +1120,20 @@
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
     },
+    "protocol_5_migration": {
+      "fix_flow": {
+        "abort": {
+          "mqtt_broker_migration_to_v5_failed": "Migrating the broker ({broker}) protocol version from \"{protocol}\"to \"5\" failed. The migration was aborted, [please manually reconfigure your MQTT broker settings]({url_mqtt_broker_configuration}) to fix this issue."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant is migrating to MQTT protocol version \"5\". The currently configured protocol version, to broker {broker}, \"{protocol}\" is deprecated, and support will be removed.\n\nSubmitting this form will try to migrate your MQTT broker configuration to use protocol version \"5\" to fix this issue.",
+            "title": "MQTT protocol change required"
+          }
+        }
+      },
+      "title": "Deprecated protocol MQTT {protocol} in use"
+    },
     "subentry_migration_discovery": {
       "fix_flow": {
         "step": {
