@@ -1,7 +1,5 @@
 """Config flow for Geniushub integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import socket

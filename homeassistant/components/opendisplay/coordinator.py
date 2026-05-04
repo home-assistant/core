@@ -1,7 +1,5 @@
 """Passive BLE coordinator for OpenDisplay devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
 

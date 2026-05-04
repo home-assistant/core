@@ -1,7 +1,5 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from env_canada import ECWeather

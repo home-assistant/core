@@ -1,7 +1,5 @@
 """UptimeRobot switch platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyuptimerobot import (

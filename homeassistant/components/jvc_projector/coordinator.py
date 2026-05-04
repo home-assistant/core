@@ -1,7 +1,5 @@
 """Data update coordinator for the jvc_projector integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging

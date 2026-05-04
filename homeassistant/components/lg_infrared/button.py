@@ -1,7 +1,5 @@
 """Button platform for LG IR integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from infrared_protocols.codes.lg.tv import LGTVCode

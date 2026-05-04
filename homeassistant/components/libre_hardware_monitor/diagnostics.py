@@ -1,7 +1,5 @@
 """Diagnostics support for Libre Hardware Monitor."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, replace
 from typing import Any
 
