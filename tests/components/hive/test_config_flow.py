@@ -470,6 +470,11 @@ async def test_reauth_2fa_flow_device_not_registered(hass: HomeAssistant) -> Non
 
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == PASSWORD
+    assert mock_config.data.get("device_data") == [
+        "mock-device-group-key",
+        "mock-device-key",
+        "mock-device-password",
+    ]
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
