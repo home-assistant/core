@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import urlencode
 
 from openaq import (
     ApiKeyMissingError,
@@ -24,6 +25,8 @@ from openaq import (
     TimeoutError as OpenAQTimeoutError,
     ValidationError,
 )
+from openaq._async.transport import AsyncTransport
+from openaq.shared.client import DEFAULT_BASE_URL
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
@@ -32,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import location as location_util
 
 from .const import CONF_LOCATION_ID, DOMAIN, LOGGER
 
@@ -62,6 +66,7 @@ class OpenAQLocationData:
 
     location_id: int
     name: str
+    distance_to_home: float | None
     measurements: MappingProxyType[str, OpenAQMeasurement]
 
 
@@ -74,6 +79,46 @@ class OpenAQRuntimeData:
 
 
 type OpenAQConfigEntry = ConfigEntry[OpenAQRuntimeData]
+
+
+type OpenAQScalarQueryValue = str | int | float | bool
+type OpenAQQueryValue = (
+    OpenAQScalarQueryValue
+    | list[OpenAQScalarQueryValue]
+    | tuple[OpenAQScalarQueryValue, ...]
+)
+
+
+def create_openaq_client(api_key: str) -> AsyncOpenAQ:
+    """Create an OpenAQ client with an independent transport."""
+    return AsyncOpenAQ(api_key=api_key, transport=AsyncTransport())
+
+
+async def async_create_openaq_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:
+    """Create an OpenAQ client without blocking the event loop."""
+    return await hass.async_add_executor_job(create_openaq_client, api_key)
+
+
+def format_openaq_url(
+    path: str, params: Mapping[str, OpenAQQueryValue | None] | None = None
+) -> str:
+    """Format an OpenAQ API URL for debug logging."""
+    url = f"{DEFAULT_BASE_URL.rstrip('/')}/{path.lstrip('/')}"
+    if not params:
+        return url
+
+    query_params: dict[str, str | int | float | bool] = {}
+    for key, value in params.items():
+        if value is None:
+            continue
+        if isinstance(value, (list, tuple)):
+            query_params[key] = ",".join(str(item) for item in value)
+        else:
+            query_params[key] = value
+
+    if not query_params:
+        return url
+    return f"{url}?{urlencode(query_params)}"
 
 
 def get_openaq_value(data: object, *names: str) -> Any:
@@ -115,6 +160,59 @@ def _normalize_unit(unit: object) -> str | None:
     if not isinstance(unit, str):
         return None
     return OPENAQ_UNIT_ALIASES.get(unit, unit)
+
+
+def _coordinate_value(coordinates: object, name: str) -> float | None:
+    """Return a numeric coordinate value."""
+    value = get_openaq_value(coordinates, name)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _distance_to_home(hass: HomeAssistant, location: object) -> float | None:
+    """Return the distance in meters from Home Assistant to the OpenAQ location."""
+    coordinates = get_openaq_value(location, "coordinates")
+    latitude = _coordinate_value(coordinates, "latitude")
+    longitude = _coordinate_value(coordinates, "longitude")
+    if latitude is None or longitude is None:
+        return None
+    return location_util.distance(
+        hass.config.latitude,
+        hass.config.longitude,
+        latitude,
+        longitude,
+    )
+
+
+def _debug_sensor_summary(sensors: Sequence[object]) -> list[dict[str, object]]:
+    """Return a compact sensor summary for debug logging."""
+    summary: list[dict[str, object]] = []
+    for sensor in sensors:
+        parameter = get_openaq_value(sensor, "parameter")
+        latest = get_openaq_value(sensor, "latest")
+        summary.append(
+            {
+                "id": get_openaq_value(sensor, "id"),
+                "parameter": get_openaq_value(parameter, "name"),
+                "units": get_openaq_value(parameter, "units"),
+                "latest": get_openaq_value(latest, "value")
+                if latest is not None
+                else None,
+            }
+        )
+    return summary
+
+
+def _debug_latest_summary(latest_results: Sequence[object]) -> list[dict[str, object]]:
+    """Return a compact latest measurement summary for debug logging."""
+    return [
+        {
+            "sensor_id": get_openaq_value(latest, "sensors_id", "sensorsId"),
+            "value": get_openaq_value(latest, "value"),
+        }
+        for latest in latest_results
+    ]
 
 
 def _sensor_metadata_by_id(
@@ -200,9 +298,31 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
         try:
+            LOGGER.debug(
+                "Querying OpenAQ URL: %s",
+                format_openaq_url(f"/locations/{self.location_id}"),
+            )
             location_response = await self.client.locations.get(self.location_id)
+            LOGGER.debug(
+                "Querying OpenAQ URL: %s",
+                format_openaq_url(f"/locations/{self.location_id}/latest"),
+            )
             latest_response = await self.client.locations.latest(self.location_id)
+            LOGGER.debug(
+                "Querying OpenAQ URL: %s",
+                format_openaq_url(f"/locations/{self.location_id}/sensors"),
+            )
             sensors_response = await self.client.locations.sensors(self.location_id)
+            LOGGER.debug(
+                "OpenAQ latest response for location %s: %s",
+                self.location_id,
+                _debug_latest_summary(latest_response.results),
+            )
+            LOGGER.debug(
+                "OpenAQ sensors response for location %s: %s",
+                self.location_id,
+                _debug_sensor_summary(sensors_response.results),
+            )
         except (
             BadGatewayError,
             BadRequestError,
@@ -230,12 +350,19 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
             )
 
         location = location_response.results[0]
+        measurements = normalize_latest_measurements(
+            latest_response.results, sensors_response.results
+        )
+        LOGGER.debug(
+            "Normalized OpenAQ measurements for location %s: %s",
+            self.location_id,
+            sorted(measurements),
+        )
         return OpenAQLocationData(
             location_id=self.location_id,
             name=str(get_openaq_value(location, "name")),
-            measurements=normalize_latest_measurements(
-                latest_response.results, sensors_response.results
-            ),
+            distance_to_home=_distance_to_home(self.hass, location),
+            measurements=measurements,
         )
 
 
@@ -245,6 +372,9 @@ __all__ = [
     "OpenAQLocationData",
     "OpenAQMeasurement",
     "OpenAQRuntimeData",
+    "async_create_openaq_client",
+    "create_openaq_client",
+    "format_openaq_url",
     "get_openaq_value",
     "normalize_latest_measurements",
 ]

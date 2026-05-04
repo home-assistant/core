@@ -24,10 +24,28 @@ def make_response(results: list[object]) -> SimpleNamespace:
 
 
 def make_location(
-    location_id: int = LOCATION_ID, name: str = LOCATION_NAME
+    location_id: int = LOCATION_ID,
+    name: str = LOCATION_NAME,
+    locality: str | None = "Albuquerque",
+    coordinates: tuple[float, float] = (35.1, -106.6),
+    distance: float | None = 0.0,
+    sensor_parameters: tuple[str, ...] = ("pm25",),
 ) -> SimpleNamespace:
     """Return an OpenAQ location."""
-    return SimpleNamespace(id=location_id, name=name, locality="Albuquerque")
+    return SimpleNamespace(
+        id=location_id,
+        name=name,
+        locality=locality,
+        coordinates=SimpleNamespace(
+            latitude=coordinates[0],
+            longitude=coordinates[1],
+        ),
+        distance=distance,
+        sensors=[
+            make_sensor(sensor_id, parameter)
+            for sensor_id, parameter in enumerate(sensor_parameters, start=1)
+        ],
+    )
 
 
 def make_parameter(
@@ -90,9 +108,12 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_openaq_client() -> Generator[AsyncMock]:
     """Mock the OpenAQ client."""
     with (
-        patch("homeassistant.components.openaq.AsyncOpenAQ") as mock_init,
         patch(
-            "homeassistant.components.openaq.config_flow.AsyncOpenAQ",
+            "homeassistant.components.openaq.async_create_openaq_client",
+            new_callable=AsyncMock,
+        ) as mock_init,
+        patch(
+            "homeassistant.components.openaq.config_flow.async_create_openaq_client",
             new=mock_init,
         ),
     ):

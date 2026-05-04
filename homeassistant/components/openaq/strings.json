@@ -28,7 +28,6 @@
       "entry_type": "Monitoring location",
       "error": {
         "cannot_connect": "Failed to connect",
-        "invalid_location": "Invalid OpenAQ location ID",
         "no_locations_found": "No OpenAQ monitoring locations were found nearby.",
         "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
         "unknown": "Unexpected error"
@@ -37,14 +36,6 @@
         "user": "Add monitoring location"
       },
       "step": {
-        "location_id": {
-          "data": {
-            "location_id": "Location ID"
-          },
-          "data_description": {
-            "location_id": "The OpenAQ location ID"
-          }
-        },
         "map": {
           "data": {
             "limit": "Maximum locations",
@@ -59,14 +50,6 @@
           "data": {
             "location_id": "Monitoring location"
           }
-        },
-        "user": {
-          "description": "How do you want to select an OpenAQ monitoring location?",
-          "menu_options": {
-            "location_id": "Location ID",
-            "map": "Location"
-          },
-          "title": "Add monitoring location"
         }
       }
     }
@@ -81,6 +64,9 @@
       },
       "co2": {
         "name": "Carbon dioxide"
+      },
+      "distance_from_home": {
+        "name": "Distance from Home Assistant"
       },
       "no": {
         "name": "Nitrogen monoxide"
