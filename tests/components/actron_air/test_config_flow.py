@@ -350,4 +350,48 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 
-    result = await hass.config
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "test_refresh_token"
+
+
+async def test_reconfigure_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow aborts when wrong account is used."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_actron_api.get_user_info = AsyncMock(
+        return_value=ActronAirUserInfo(
+            id="different_user_id", email="different@example.com"
+        )
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"

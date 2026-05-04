@@ -6,7 +6,12 @@ from typing import Any
 
 from actron_neo_api import ActronAirAPI, ActronAirAuthError
 
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 
@@ -159,7 +164,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_user()
         return self.async_show_form(step_id="reconfigure_confirm")
-    
+
     async def async_step_connection_error(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
