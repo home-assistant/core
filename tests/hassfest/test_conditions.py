@@ -35,6 +35,9 @@ CONDITION_DESCRIPTIONS = {
                 after_offset:
                   selector:
                     time: null
+                after_offset_no_description:
+                  selector:
+                    time: null
         """,
         CONDITION_ICONS_FILENAME: {"conditions": {"_": {"condition": "mdi:flash"}}},
         CONDITION_STRINGS_FILENAME: {
@@ -47,6 +50,9 @@ CONDITION_DESCRIPTIONS = {
                         "after_offset": {
                             "name": "Offset",
                             "description": "The offset.",
+                        },
+                        "after_offset_no_description": {
+                            "name": "Offset",
                         },
                     },
                 }
@@ -105,10 +111,8 @@ CONDITION_DESCRIPTIONS = {
             "has no name",
             "has no description",
             "field after with no name",
-            "field after with no description",
             "field after with a selector with a translation key",
             "field after_offset with no name",
-            "field after_offset with no description",
         ],
     },
 }

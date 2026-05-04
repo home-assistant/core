@@ -1,7 +1,5 @@
 """Diagnostics support for Nest."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from google_nest_sdm import diagnostics

@@ -1,7 +1,5 @@
 """Support for Nexia / Trane XL Thermostats."""
 
-from __future__ import annotations
-
 from nexia.thermostat import NexiaThermostat
 
 from homeassistant.components.number import NumberEntity

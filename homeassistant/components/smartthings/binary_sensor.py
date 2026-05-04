@@ -1,7 +1,5 @@
 """Support for binary sensors through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -206,6 +204,44 @@ CAPABILITY_TO_SENSORS: dict[
             translation_key="cooktop_operating_state",
             is_on_key="run",
             supported_states_attributes=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
+        )
+    },
+    Capability.SAMSUNG_CE_CLEAN_STATION_STICK_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            component_translation_key={
+                "station": "stick_cleaner_status",
+            },
+            exists_fn=lambda component, _: component == "station",
+            is_on_key="attached",
+        )
+    },
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            translation_key="microfiber_filter_blockage",
+            is_on_key="blockage",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUST_BAG: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="full",
+            component_translation_key={
+                "station": "stick_cleaner_dust_bag",
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            exists_fn=lambda component, _: component == "station",
+        )
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_STICK_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="charging",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
     },
 }

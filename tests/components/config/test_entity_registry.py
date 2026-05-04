@@ -58,6 +58,15 @@ async def test_list_entities(
                 unique_id="6789",
                 platform="test_platform",
             ),
+            "test_domain.unprefixed": RegistryEntryWithDefaults(
+                device_id="device123",
+                entity_id="test_domain.unprefixed",
+                has_entity_name=False,
+                original_name="Device Bla Sensor",
+                original_name_unprefixed="Sensor",
+                platform="test_platform",
+                unique_id="AAAA",
+            ),
         },
     )
 
@@ -107,6 +116,29 @@ async def test_list_entities(
             "name": None,
             "options": {},
             "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": ANY,
+        },
+        {
+            "area_id": None,
+            "categories": {},
+            "config_entry_id": None,
+            "config_subentry_id": None,
+            "created_at": utcnow().timestamp(),
+            "device_id": "device123",
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.unprefixed",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "labels": [],
+            "modified_at": utcnow().timestamp(),
+            "name": None,
+            "options": {},
+            "original_name": "Sensor",
             "platform": "test_platform",
             "translation_key": None,
             "unique_id": ANY,
@@ -213,10 +245,19 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="3456",
             ),
+            "test_domain.unprefixed": RegistryEntryWithDefaults(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.unprefixed",
+                original_name="Device Name Sensor",
+                original_name_unprefixed="Sensor",
+                platform="test_platform",
+                unique_id="4567",
+            ),
             "test_domain.boring": RegistryEntryWithDefaults(
                 entity_id="test_domain.boring",
                 platform="test_platform",
-                unique_id="4567",
+                unique_id="5678",
             ),
             "test_domain.disabled": RegistryEntryWithDefaults(
                 disabled_by=RegistryEntryDisabler.USER,
@@ -289,6 +330,14 @@ async def test_list_entities_for_display(
                 "ei": "test_domain.renamed",
                 "en": "User name",
                 "hn": True,
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.unprefixed",
+                "en": "Sensor",
                 "lb": [],
                 "pl": "test_platform",
             },
@@ -1021,7 +1070,7 @@ async def test_enable_entity_disabled_device(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test enabling entity of disabled device."""
-    entity_id = "test_domain.test_platform_1234"
+    entity_id = "test_domain.test_device"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
 
@@ -1031,6 +1080,7 @@ async def test_enable_entity_disabled_device(
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
+        name="Test Device",
         disabled_by=DeviceEntryDisabler.USER,
     )
     device_info = {

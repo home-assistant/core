@@ -16119,7 +16119,7 @@
               'event_types': list([
                 'single_press',
               ]),
-              'friendly_name': 'Hue dimmer switch button 1',
+              'friendly_name': 'Hue dimmer switch Button 1',
             }),
             'entity_id': 'event.hue_dimmer_switch_button_1',
             'state': 'unknown',
@@ -16172,7 +16172,7 @@
               'event_types': list([
                 'single_press',
               ]),
-              'friendly_name': 'Hue dimmer switch button 2',
+              'friendly_name': 'Hue dimmer switch Button 2',
             }),
             'entity_id': 'event.hue_dimmer_switch_button_2',
             'state': 'unknown',
@@ -16225,7 +16225,7 @@
               'event_types': list([
                 'single_press',
               ]),
-              'friendly_name': 'Hue dimmer switch button 3',
+              'friendly_name': 'Hue dimmer switch Button 3',
             }),
             'entity_id': 'event.hue_dimmer_switch_button_3',
             'state': 'unknown',
@@ -16278,7 +16278,7 @@
               'event_types': list([
                 'single_press',
               ]),
-              'friendly_name': 'Hue dimmer switch button 4',
+              'friendly_name': 'Hue dimmer switch Button 4',
             }),
             'entity_id': 'event.hue_dimmer_switch_button_4',
             'state': 'unknown',
@@ -16325,7 +16325,7 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'battery',
-              'friendly_name': 'Hue dimmer switch battery',
+              'friendly_name': 'Hue dimmer switch Battery',
               'icon': 'mdi:battery',
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
@@ -17654,7 +17654,7 @@
           }),
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Koogeek-P1-A00AA0 outlet',
+              'friendly_name': 'Koogeek-P1-A00AA0 Outlet',
               'outlet_in_use': True,
             }),
             'entity_id': 'switch.koogeek_p1_a00aa0_outlet',

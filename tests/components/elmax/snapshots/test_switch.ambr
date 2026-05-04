@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switches[switch.uscita_02-entry]
+# name: test_switches[switch.direct_panel_https_1_1_1_1_443_api_v2_uscita_02-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.uscita_02',
+    'entity_id': 'switch.direct_panel_https_1_1_1_1_443_api_v2_uscita_02',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.uscita_02-state]
+# name: test_switches[switch.direct_panel_https_1_1_1_1_443_api_v2_uscita_02-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'USCITA 02',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 USCITA 02',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.uscita_02',
+    'entity_id': 'switch.direct_panel_https_1_1_1_1_443_api_v2_uscita_02',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

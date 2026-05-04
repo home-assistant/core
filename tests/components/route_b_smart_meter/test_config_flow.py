@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from momonga import MomongaSkJoinFailure, MomongaSkScanFailure
 import pytest
-from serial.tools.list_ports_linux import SysFS
 
 from homeassistant.components.route_b_smart_meter.const import DOMAIN, ENTRY_TITLE
+from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -15,18 +15,27 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture
-def mock_comports() -> Generator[AsyncMock]:
-    """Override comports."""
-    device = SysFS("/dev/ttyUSB42")
-    device.vid = 0x1234
-    device.pid = 0x5678
-    device.serial_number = "123456"
-    device.manufacturer = "Test"
-    device.description = "Test Device"
+def mock_serial_ports() -> Generator[AsyncMock]:
+    """Override scan_serial_ports."""
+    device = USBDevice(
+        device="/dev/ttyUSB42",
+        vid="1234",
+        pid="5678",
+        serial_number="123456",
+        manufacturer="Test",
+        description="Test Device",
+    )
+
+    unrelated_device = SerialDevice(
+        device="/dev/ttyUSB41",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
 
     with patch(
-        "homeassistant.components.route_b_smart_meter.config_flow.comports",
-        return_value=[SysFS("/dev/ttyUSB41"), device],
+        "homeassistant.components.route_b_smart_meter.config_flow.async_scan_serial_ports",
+        return_value=[unrelated_device, device],
     ) as mock:
         yield mock
 
@@ -34,7 +43,7 @@ def mock_comports() -> Generator[AsyncMock]:
 async def test_step_user_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_comports: AsyncMock,
+    mock_serial_ports: AsyncMock,
     mock_momonga: Mock,
     user_input: dict[str, str],
 ) -> None:
@@ -55,7 +64,7 @@ async def test_step_user_form(
     assert result["data"] == user_input
     assert result["result"].unique_id == user_input[CONF_ID]
     mock_setup_entry.assert_called_once()
-    mock_comports.assert_called()
+    mock_serial_ports.assert_called()
     mock_momonga.assert_called_once_with(
         dev=user_input[CONF_DEVICE],
         rbid=user_input[CONF_ID],
@@ -76,7 +85,7 @@ async def test_step_user_form_errors(
     error: Exception,
     message: str,
     mock_setup_entry: AsyncMock,
-    mock_comports: AsyncMock,
+    mock_serial_ports: AsyncMock,
     mock_momonga: AsyncMock,
     user_input: dict[str, str],
 ) -> None:
@@ -93,7 +102,7 @@ async def test_step_user_form_errors(
     assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == {"base": message}
     await hass.async_block_till_done()
-    mock_comports.assert_called()
+    mock_serial_ports.assert_called()
     mock_momonga.assert_called_once_with(
         dev=user_input[CONF_DEVICE],
         rbid=user_input[CONF_ID],

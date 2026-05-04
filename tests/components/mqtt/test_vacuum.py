@@ -27,7 +27,12 @@ from homeassistant.components.vacuum import (
     SERVICE_STOP,
     VacuumActivity,
 )
-from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    ENTITY_MATCH_ALL,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -87,23 +92,13 @@ DEFAULT_CONFIG = {
     }
 }
 
-CONFIG_CLEAN_SEGMENTS_1 = {
+CONFIG_CLEAN_SEGMENTS = {
     mqtt.DOMAIN: {
         vacuum.DOMAIN: {
-            "name": "test",
+            CONF_NAME: "test",
+            CONF_STATE_TOPIC: STATE_TOPIC,
             "unique_id": "veryunique",
-            "segments": ["Livingroom", "Kitchen"],
-            "clean_segments_command_topic": "vacuum/clean_segment",
-        }
-    }
-}
-CONFIG_CLEAN_SEGMENTS_2 = {
-    mqtt.DOMAIN: {
-        vacuum.DOMAIN: {
-            "name": "test",
-            "unique_id": "veryunique",
-            "segments": ["1.Livingroom", "2.Kitchen"],
-            "clean_segments_command_topic": "vacuum/clean_segment",
+            mqttvacuum.CONF_CLEAN_SEGMENTS_COMMAND_TOPIC: "vacuum/clean_segment",
         }
     }
 }
@@ -320,25 +315,46 @@ async def test_command_without_command_topic(
     mqtt_mock.async_publish.reset_mock()
 
 
-@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
 async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test cleanable segments initial setup does not fire repair flow."""
+    """Test initial setup does not fire repair flow after cleanable segments are received."""
     await mqtt_mock_entry()
+    # Receive a valid state
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen",
+            "3":"Diningroom"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == VacuumActivity.CLEANING
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 0
 
 
-@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])
-async def test_clean_segments_command_without_id(
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
+async def test_clean_segments_command(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test cleanable segments without ID."""
+    """Test cleaning segments and repair flow."""
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     entity_registry.async_get_or_create(
         vacuum.DOMAIN,
@@ -351,132 +367,54 @@ async def test_clean_segments_command_without_id(
         "vacuum.test",
         vacuum.DOMAIN,
         {
-            "area_mapping": {"Nabu Casa": ["Kitchen", "Livingroom"]},
+            "area_mapping": {"Nabu Casa": ["1", "2"]},
             "last_seen_segments": [
-                {"id": "Livingroom", "name": "Livingroom"},
-                {"id": "Kitchen", "name": "Kitchen"},
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
             ],
         },
     )
     mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
+    message = """{
+        "battery_level": 54,
+        "state": "idle",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == VacuumActivity.IDLE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
+
     issue_registry = ir.async_get(hass)
-    # We do not expect a repair flow
+    # We do not expect a repair flow as the segments did not change
     assert len(issue_registry.issues) == 0
 
-    state = hass.states.get("vacuum.test")
-    assert state.state == STATE_UNKNOWN
     await common.async_clean_area(hass, ["Nabu Casa"], entity_id="vacuum.test")
     assert (
-        call("vacuum/clean_segment", '["Kitchen","Livingroom"]', 0, False)
+        call("vacuum/clean_segment", '["1","2"]', 0, False)
         in mqtt_mock.async_publish.mock_calls
     )
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"]["segments"] == [
-        {"id": "Livingroom", "name": "Livingroom", "group": None},
-        {"id": "Kitchen", "name": "Kitchen", "group": None},
-    ]
-
-
-@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_2])
-async def test_clean_segments_command_with_id(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-) -> None:
-    """Test cleanable segments with ID."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Set the area mapping
-    entity_registry.async_update_entity_options(
-        "vacuum.test",
-        vacuum.DOMAIN,
-        {
-            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
-            "last_seen_segments": [
-                {"id": "1", "name": "Livingroom"},
-                {"id": "2", "name": "Kitchen"},
-            ],
-        },
-    )
     await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.test")
-    assert state.state == STATE_UNKNOWN
-    await common.async_clean_area(hass, ["Kitchen"], entity_id="vacuum.test")
-    assert (
-        call("vacuum/clean_segment", '["2"]', 0, False)
-        in mqtt_mock.async_publish.mock_calls
-    )
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"]["segments"] == [
-        {"id": "1", "name": "Livingroom", "group": None},
-        {"id": "2", "name": "Kitchen", "group": None},
-    ]
-
-
-async def test_clean_segments_command_update(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test cleanable segments update via discovery."""
-    # Prepare original entity config entry
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    entity_registry.async_get_or_create(
-        vacuum.DOMAIN,
-        mqtt.DOMAIN,
-        "veryunique",
-        config_entry=config_entry,
-        suggested_object_id="test",
-    )
-    entity_registry.async_update_entity_options(
-        "vacuum.test",
-        vacuum.DOMAIN,
-        {
-            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
-            "last_seen_segments": [
-                {"id": "1", "name": "Livingroom"},
-                {"id": "2", "name": "Kitchen"},
-            ],
-        },
-    )
-    await mqtt_mock_entry()
-    # Do initial discovery
-    config1 = CONFIG_CLEAN_SEGMENTS_2[mqtt.DOMAIN][vacuum.DOMAIN]
-    payload1 = json.dumps(config1)
-    config_topic = "homeassistant/vacuum/bla/config"
-    async_fire_mqtt_message(hass, config_topic, payload1)
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen",
+            "3": "Diningroom"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
     await hass.async_block_till_done()
-    state = hass.states.get("vacuum.test")
-    assert state.state == STATE_UNKNOWN
-
-    issue_registry = ir.async_get(hass)
-    # We do not expect a repair flow
-    assert len(issue_registry.issues) == 0
-
-    # Update the segments
-    config2 = config1.copy()
-    config2["segments"] = ["1.Livingroom", "2.Kitchen", "3.Diningroom"]
-    payload2 = json.dumps(config2)
-    async_fire_mqtt_message(hass, config_topic, payload2)
-    await hass.async_block_till_done()
-
-    # A repair flow should start
+    # We expect a repair issue now as the available segments have changed
     assert len(issue_registry.issues) == 1
 
     client = await hass_ws_client(hass)
@@ -491,134 +429,18 @@ async def test_clean_segments_command_update(
         {"id": "3", "name": "Diningroom", "group": None},
     ]
 
-    # Test update with a non-unique segment list fails
-    config3 = config1.copy()
-    config3["segments"] = ["1.Livingroom", "2.Kitchen", "2.Diningroom"]
-    payload3 = json.dumps(config3)
-    async_fire_mqtt_message(hass, config_topic, payload3)
-    await hass.async_block_till_done()
-    assert (
-        "Error 'The `segments` option contains an invalid or non-unique segment ID '2'"
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            mqtt.DOMAIN: {
-                vacuum.DOMAIN: {
-                    "name": "test",
-                    "unique_id": "veryunique",
-                    "segments": ["Livingroom", "Kitchen", "Kitchen"],
-                    "clean_segments_command_topic": "vacuum/clean_segment",
-                }
-            }
-        },
-        {
-            mqtt.DOMAIN: {
-                vacuum.DOMAIN: {
-                    "name": "test",
-                    "unique_id": "veryunique",
-                    "segments": ["Livingroom", "Kitchen", ""],
-                    "clean_segments_command_topic": "vacuum/clean_segment",
-                }
-            }
-        },
-        {
-            mqtt.DOMAIN: {
-                vacuum.DOMAIN: {
-                    "name": "test",
-                    "unique_id": "veryunique",
-                    "segments": ["1.Livingroom", "1.Kitchen"],
-                    "clean_segments_command_topic": "vacuum/clean_segment",
-                }
-            }
-        },
-        {
-            mqtt.DOMAIN: {
-                vacuum.DOMAIN: {
-                    "name": "test",
-                    "unique_id": "veryunique",
-                    "segments": ["1.Livingroom", "1.Kitchen", ".Diningroom"],
-                    "clean_segments_command_topic": "vacuum/clean_segment",
-                }
-            }
-        },
-    ],
-)
-async def test_non_unique_segments(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test with non-unique list of cleanable segments with valid segment IDs."""
-    await mqtt_mock_entry()
-    assert (
-        "The `segments` option contains an invalid or non-unique segment ID"
-        in caplog.text
-    )
-
-
-@pytest.mark.usefixtures("hass")
-@pytest.mark.parametrize(
-    ("hass_config", "error_message"),
-    [
-        (
-            help_custom_config(
-                vacuum.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"clean_segments_command_topic": "test-topic"},),
-            ),
-            "Options `segments` and "
-            "`clean_segments_command_topic` must be defined together",
-        ),
-        (
-            help_custom_config(
-                vacuum.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"segments": ["Livingroom"]},),
-            ),
-            "Options `segments` and "
-            "`clean_segments_command_topic` must be defined together",
-        ),
-        (
-            help_custom_config(
-                vacuum.DOMAIN,
-                DEFAULT_CONFIG,
-                (
-                    {
-                        "segments": ["Livingroom"],
-                        "clean_segments_command_topic": "test-topic",
-                    },
-                ),
-            ),
-            "Option `segments` requires `unique_id` to be configured",
-        ),
-    ],
-)
-async def test_clean_segments_config_validation(
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    error_message: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test status clean segment config validation."""
-    await mqtt_mock_entry()
-    assert error_message in caplog.text
-
 
 @pytest.mark.parametrize(
     "hass_config",
     [
         help_custom_config(
             vacuum.DOMAIN,
-            CONFIG_CLEAN_SEGMENTS_2,
+            CONFIG_CLEAN_SEGMENTS,
             ({"clean_segments_command_template": "{{ ';'.join(value) }}"},),
         )
     ],
 )
-async def test_clean_segments_command_with_id_and_command_template(
+async def test_clean_segments_command_template(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
@@ -638,9 +460,23 @@ async def test_clean_segments_command_with_id_and_command_template(
         },
     )
     await hass.async_block_till_done()
-
+    message = """{
+        "battery_level": 54,
+        "state": "idle",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
     state = hass.states.get("vacuum.test")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == VacuumActivity.IDLE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
+
     await common.async_clean_area(
         hass, ["Livingroom", "Kitchen"], entity_id="vacuum.test"
     )
@@ -659,6 +495,101 @@ async def test_clean_segments_command_with_id_and_command_template(
         {"id": "1", "name": "Livingroom", "group": None},
         {"id": "2", "name": "Kitchen", "group": None},
     ]
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("hass_config", "error_message"),
+    [
+        (
+            help_custom_config(
+                vacuum.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "clean_segments_command_topic": "test-topic",
+                    },
+                ),
+            ),
+            "Option `clean_segments_command_topic` requires `unique_id` to be configured",
+        ),
+    ],
+)
+async def test_clean_segments_config_validation(
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    error_message: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test status clean segment config validation."""
+    await mqtt_mock_entry()
+    assert error_message in caplog.text
+
+
+async def test_removing_clean_segments_command_topic_resets_feature(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the clean area feature is reset if the vacuum is reconfigured.
+
+    The `clean_segments_command_topic` is required to support clean area support.
+    When this option is removed, the clean area feature should be reset.
+    """
+    await mqtt_mock_entry()
+
+    config_with_clean_segments_command_topic = CONFIG_CLEAN_SEGMENTS[mqtt.DOMAIN][
+        vacuum.DOMAIN
+    ]
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/vacuum/bla/config",
+        json.dumps(config_with_clean_segments_command_topic),
+    )
+    await hass.async_block_till_done()
+    message = """{
+        "battery_level": 54,
+        "state": "idle",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == VacuumActivity.IDLE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
+
+    config_without_clean_segments_command_topic = (
+        config_with_clean_segments_command_topic.copy()
+    )
+    config_without_clean_segments_command_topic.pop(
+        mqttvacuum.CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/vacuum/bla/config",
+        json.dumps(config_without_clean_segments_command_topic),
+    )
+    await hass.async_block_till_done()
+    message = """{
+        "battery_level": 30,
+        "state": "cleaning",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == VacuumActivity.CLEANING
+    assert not (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])

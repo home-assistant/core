@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_plants": "No plants have been found on this account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Cannot connect to Growatt servers. Please check your internet connection and try again.",
@@ -48,6 +49,22 @@
         },
         "description": "Re-enter your credentials to continue using this integration.",
         "title": "Re-authenticate with Growatt"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
+          "token": "[%key:component::growatt_server::config::step::token_auth::data::token%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::growatt_server::config::step::password_auth::data_description::password%]",
+          "region": "[%key:component::growatt_server::config::step::password_auth::data_description::region%]",
+          "token": "[%key:component::growatt_server::config::step::token_auth::data_description::token%]",
+          "username": "[%key:component::growatt_server::config::step::password_auth::data_description::username%]"
+        },
+        "description": "Update your credentials to continue using this integration.",
+        "title": "Reconfigure Growatt"
       },
       "token_auth": {
         "data": {
@@ -574,6 +591,56 @@
       }
     }
   },
+  "exceptions": {
+    "api_error": {
+      "message": "Growatt API error: {error}"
+    },
+    "device_not_configured": {
+      "message": "{device_type} device {serial_number} is not configured for actions."
+    },
+    "device_not_found": {
+      "message": "Device {device_id} not found in the device registry."
+    },
+    "device_not_growatt": {
+      "message": "Device {device_id} is not a Growatt device."
+    },
+    "invalid_batt_mode": {
+      "message": "{batt_mode} is not a valid battery mode. Allowed values: {allowed_modes}."
+    },
+    "invalid_charge_power": {
+      "message": "'Charge power' must be between 0 and 100, got {value}."
+    },
+    "invalid_charge_stop_soc": {
+      "message": "'Charge stop SOC' must be between 0 and 100, got {value}."
+    },
+    "invalid_discharge_power": {
+      "message": "'Discharge power' must be between 0 and 100, got {value}."
+    },
+    "invalid_discharge_stop_soc": {
+      "message": "'Discharge stop SOC' must be between 0 and 100, got {value}."
+    },
+    "invalid_segment_id": {
+      "message": "'Segment ID' must be between 1 and 9, got {segment_id}."
+    },
+    "invalid_time_format_end_time": {
+      "message": "'End time' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_period_end": {
+      "message": "'Period {period} end' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_period_start": {
+      "message": "'Period {period} start' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_start_time": {
+      "message": "'Start time' must be in HH:MM or HH:MM:SS format."
+    },
+    "no_devices_configured": {
+      "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
+    },
+    "token_auth_required": {
+      "message": "This action requires token authentication (V1 API)."
+    }
+  },
   "selector": {
     "batt_mode": {
       "options": {
@@ -595,27 +662,27 @@
   },
   "services": {
     "read_ac_charge_times": {
-      "description": "Read AC charge time periods from an SPH device.",
+      "description": "Reads AC charge time periods from an SPH device.",
       "fields": {
         "device_id": {
-          "description": "The Growatt SPH device to read from.",
-          "name": "Device"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         }
       },
       "name": "Read AC charge times"
     },
     "read_ac_discharge_times": {
-      "description": "Read AC discharge time periods from an SPH device.",
+      "description": "Reads AC discharge time periods from an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         }
       },
       "name": "Read AC discharge times"
     },
     "read_time_segments": {
-      "description": "Read all time segments from a supported inverter.",
+      "description": "Reads all time segments from a supported inverter.",
       "fields": {
         "device_id": {
           "description": "The Growatt device to perform the action on.",
@@ -625,7 +692,7 @@
       "name": "Read time segments"
     },
     "update_time_segment": {
-      "description": "Update a time segment for supported inverters.",
+      "description": "Updates a time segment for supported inverters.",
       "fields": {
         "batt_mode": {
           "description": "Battery operation mode for this time segment.",
@@ -655,7 +722,7 @@
       "name": "Update time segment"
     },
     "write_ac_charge_times": {
-      "description": "Write AC charge time periods to an SPH device.",
+      "description": "Writes AC charge time periods to an SPH device.",
       "fields": {
         "charge_power": {
           "description": "Charge power limit (%).",
@@ -666,8 +733,8 @@
           "name": "Charge stop SOC"
         },
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "mains_enabled": {
           "description": "Enable AC (mains) charging.",
@@ -713,11 +780,11 @@
       "name": "Write AC charge times"
     },
     "write_ac_discharge_times": {
-      "description": "Write AC discharge time periods to an SPH device.",
+      "description": "Writes AC discharge time periods to an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "discharge_power": {
           "description": "Discharge power limit (%).",

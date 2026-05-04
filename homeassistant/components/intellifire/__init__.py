@@ -1,7 +1,5 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from intellifire4py import UnifiedFireplace
@@ -143,7 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     try:
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
-                _construct_common_data(entry)
+                _construct_common_data(entry),
+                polling_enabled=False,
             )
         )
         LOGGER.debug("Waiting for Fireplace to Initialize")

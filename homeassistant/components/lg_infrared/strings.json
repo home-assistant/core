@@ -1,0 +1,117 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This LG device has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_type": "Device type",
+          "infrared_entity_id": "Infrared transmitter"
+        },
+        "data_description": {
+          "device_type": "The type of LG device to control.",
+          "infrared_entity_id": "The infrared transmitter entity to use for sending commands."
+        },
+        "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
+        "title": "Set up LG IR Remote"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "back": {
+        "name": "Back"
+      },
+      "down": {
+        "name": "Down"
+      },
+      "exit": {
+        "name": "Exit"
+      },
+      "guide": {
+        "name": "Guide"
+      },
+      "hdmi_1": {
+        "name": "HDMI 1"
+      },
+      "hdmi_2": {
+        "name": "HDMI 2"
+      },
+      "hdmi_3": {
+        "name": "HDMI 3"
+      },
+      "hdmi_4": {
+        "name": "HDMI 4"
+      },
+      "home": {
+        "name": "Home"
+      },
+      "info": {
+        "name": "Info"
+      },
+      "input": {
+        "name": "Input"
+      },
+      "left": {
+        "name": "Left"
+      },
+      "menu": {
+        "name": "Menu"
+      },
+      "num_0": {
+        "name": "Number 0"
+      },
+      "num_1": {
+        "name": "Number 1"
+      },
+      "num_2": {
+        "name": "Number 2"
+      },
+      "num_3": {
+        "name": "Number 3"
+      },
+      "num_4": {
+        "name": "Number 4"
+      },
+      "num_5": {
+        "name": "Number 5"
+      },
+      "num_6": {
+        "name": "Number 6"
+      },
+      "num_7": {
+        "name": "Number 7"
+      },
+      "num_8": {
+        "name": "Number 8"
+      },
+      "num_9": {
+        "name": "Number 9"
+      },
+      "ok": {
+        "name": "OK"
+      },
+      "power_off": {
+        "name": "Power off"
+      },
+      "power_on": {
+        "name": "Power on"
+      },
+      "right": {
+        "name": "Right"
+      },
+      "up": {
+        "name": "Up"
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "tv": "TV"
+      }
+    }
+  }
+}

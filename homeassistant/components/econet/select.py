@@ -1,7 +1,5 @@
 """Support for Rheem EcoNet thermostats with variable fan speeds and fan modes."""
 
-from __future__ import annotations
-
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import Thermostat, ThermostatFanMode
 

@@ -269,6 +269,42 @@ async def test_recurring_event(
     ]
 
 
+@pytest.mark.parametrize(
+    "time_zone",
+    ["America/Los_Angeles", "America/New_York", "Europe/London", "Asia/Tokyo"],
+)
+async def test_recurring_event_with_until_non_utc_timezone(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+    get_events: GetEventsFn,
+) -> None:
+    """Test creating a recurring event with UNTIL in a non-UTC timezone.
+
+    Regression test: When HA is configured with a non-UTC timezone, creating
+    a recurring event with an UNTIL date was failing because _parse_event()
+    strips tzinfo from dtstart (making it floating) but was not stripping
+    tzinfo from UNTIL in the rrule, causing a naive/aware datetime mismatch.
+    """
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Weekly meeting",
+                "dtstart": "2022-08-29T09:00:00+00:00",
+                "dtend": "2022-08-29T10:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;UNTIL=20220912T235959Z",
+            },
+        },
+    )
+
+    events = await get_events("2022-08-20T00:00:00", "2022-09-20T00:00:00")
+    summaries = [event["summary"] for event in events]
+    assert summaries.count("Weekly meeting") == 3
+
+
 async def test_websocket_delete(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
 ) -> None:

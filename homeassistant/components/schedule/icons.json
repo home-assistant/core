@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:calendar-blank"
+    },
+    "is_on": {
+      "condition": "mdi:calendar-clock"
+    }
+  },
   "services": {
     "get_schedule": {
       "service": "mdi:calendar-export"

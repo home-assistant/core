@@ -499,7 +499,7 @@ async def test_history_conversion(
                 "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
                 "response_type": "action_done",
                 "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
-                "data": {"targets": [], "success": [], "failed": []},
+                "data": {"success": [], "failed": []},
             },
         )
     )
@@ -547,7 +547,7 @@ async def test_history_conversion(
             ),
             Message(
                 role="tool",
-                content='{"speech":{"plain":{"speech":"4:24 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"16:24:17.813343"},"data":{"targets":[],"success":[],"failed":[]}}',
+                content='{"speech":{"plain":{"speech":"4:24 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"16:24:17.813343"},"data":{"success":[],"failed":[]}}',
             ),
             Message(role="assistant", content="4:24 PM"),
             Message(role="user", content="test message"),

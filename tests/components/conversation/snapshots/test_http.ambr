@@ -11,6 +11,7 @@
           'bn',
           'ca',
           'cs',
+          'cy',
           'da',
           'de',
           'de-CH',
@@ -27,6 +28,7 @@
           'hi',
           'hr',
           'hu',
+          'hy',
           'id',
           'is',
           'it',
@@ -283,8 +285,6 @@
             'type': 'entity',
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -313,8 +313,6 @@
             'name': 'kitchen',
             'type': 'entity',
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',

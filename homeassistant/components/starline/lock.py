@@ -1,26 +1,23 @@
 """Support for StarLine lock."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import StarlineConfigEntry
 from .account import StarlineAccount, StarlineDevice
-from .const import DOMAIN
 from .entity import StarlineEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StarlineConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine lock."""
-    account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
+    account = entry.runtime_data
     entities = []
     for device in account.api.devices.values():
         if device.support_state:

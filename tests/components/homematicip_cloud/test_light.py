@@ -69,8 +69,8 @@ async def test_hmip_notification_light(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipNotificationLight."""
-    entity_id = "light.alarm_status"
-    entity_name = "Alarm Status"
+    entity_id = "light.treppe_alarm_status"
+    entity_name = "Treppe Alarm Status"
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Treppe"]
@@ -168,8 +168,8 @@ async def test_hmip_notification_light_2(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipNotificationLight."""
-    entity_id = "light.led_oben"
-    entity_name = "Led Oben"
+    entity_id = "light.bsl2_led_oben"
+    entity_name = "BSL2 Led Oben"
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["BSL2"])
 
@@ -203,8 +203,8 @@ async def test_hmip_notification_light_2_without_brightness_and_light(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipNotificationLight."""
-    entity_id = "light.led_oben"
-    entity_name = "Led Oben"
+    entity_id = "light.bsl2_led_oben"
+    entity_name = "BSL2 Led Oben"
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["BSL2"])
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -236,8 +236,8 @@ async def test_hmip_notification_light_2_turn_off(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipNotificationLight."""
-    entity_id = "light.led_oben"
-    entity_name = "Led Oben"
+    entity_id = "light.bsl2_led_oben"
+    entity_name = "BSL2 Led Oben"
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["BSL2"])
 
@@ -369,8 +369,8 @@ async def test_hmip_wired_multi_dimmer(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipMultiDimmer."""
-    entity_id = "light.raumlich_kuche"
-    entity_name = "Raumlich (Küche)"
+    entity_id = "light.wired_dimmaktor_3_fach_kuche_raumlich_kuche"
+    entity_name = "Wired Dimmaktor – 3-fach (Küche) Raumlich (Küche)"
     device_model = "HmIPW-DRD3"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Dimmaktor – 3-fach (Küche)"]
@@ -547,8 +547,8 @@ async def test_hmip_din_rail_dimmer_3_channel3(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicIP DinRailDimmer3 Channel 3."""
-    entity_id = "light.esstisch"
-    entity_name = "Esstisch"
+    entity_id = "light.3_dimmer_esstisch"
+    entity_name = "3-Dimmer Esstisch"
     device_model = "HmIP-DRDI3"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["3-Dimmer"]
@@ -725,8 +725,8 @@ async def test_hmip_wired_push_button_led(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipOpticalSignalLight."""
-    entity_id = "light.led_1"
-    entity_name = "LED 1"
+    entity_id = "light.wired_taster_6_fach_led_1"
+    entity_name = "Wired Taster 6-fach LED 1"
     device_model = "HmIPW-WRC6"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Taster 6-fach"]
@@ -780,8 +780,8 @@ async def test_hmip_wired_push_button_led_turn_off(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipOpticalSignalLight turn off."""
-    entity_id = "light.led_1"
-    entity_name = "LED 1"
+    entity_id = "light.wired_taster_6_fach_led_1"
+    entity_name = "Wired Taster 6-fach LED 1"
     device_model = "HmIPW-WRC6"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Taster 6-fach"]
@@ -826,8 +826,8 @@ async def test_hmip_wired_push_button_led_2(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipOpticalSignalLight second LED."""
-    entity_id = "light.led_2"
-    entity_name = "LED 2"
+    entity_id = "light.wired_taster_6_fach_led_2"
+    entity_name = "Wired Taster 6-fach LED 2"
     device_model = "HmIPW-WRC6"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Taster 6-fach"]

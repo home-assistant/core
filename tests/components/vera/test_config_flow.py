@@ -15,7 +15,6 @@ from homeassistant.components.vera.const import (
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -66,60 +65,6 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
     assert entries
 
 
-async def test_async_step_import_success(hass: HomeAssistant) -> None:
-    """Test import step success."""
-    with patch("pyvera.VeraController") as vera_controller_class_mock:
-        controller = MagicMock()
-        controller.refresh_data = MagicMock()
-        controller.serial_number = "serial_number_1"
-        vera_controller_class_mock.return_value = controller
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "http://127.0.0.1:123"
-        assert result["data"] == {
-            CONF_CONTROLLER: "http://127.0.0.1:123",
-            CONF_SOURCE: config_entries.SOURCE_IMPORT,
-            CONF_LEGACY_UNIQUE_ID: False,
-        }
-        assert result["result"].unique_id == controller.serial_number
-
-
-async def test_async_step_import_success_with_legacy_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test import step success with legacy unique id."""
-    entity_registry.async_get_or_create(
-        domain="switch", platform=DOMAIN, unique_id="12"
-    )
-
-    with patch("pyvera.VeraController") as vera_controller_class_mock:
-        controller = MagicMock()
-        controller.refresh_data = MagicMock()
-        controller.serial_number = "serial_number_1"
-        vera_controller_class_mock.return_value = controller
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "http://127.0.0.1:123"
-        assert result["data"] == {
-            CONF_CONTROLLER: "http://127.0.0.1:123",
-            CONF_SOURCE: config_entries.SOURCE_IMPORT,
-            CONF_LEGACY_UNIQUE_ID: True,
-        }
-        assert result["result"].unique_id == controller.serial_number
-
-
 async def test_async_step_finish_error(hass: HomeAssistant) -> None:
     """Test finish step with error."""
     with patch("pyvera.VeraController") as vera_controller_class_mock:
@@ -129,7 +74,7 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
+            context={"source": config_entries.SOURCE_USER},
             data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
         )
 

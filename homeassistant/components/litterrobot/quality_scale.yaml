@@ -42,9 +42,7 @@ rules:
   discovery-update-info:
     status: done
     comment: The integration is cloud-based
-  discovery:
-    status: todo
-    comment: Need to validate discovery
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors[Keg][binary_sensor.plaato_plaatodevicetype_keg_device_name_leaking-entry]
+# name: test_binary_sensors[Keg][binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_leaking-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.plaato_plaatodevicetype_keg_device_name_leaking',
+    'entity_id': 'binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_leaking',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -36,24 +36,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[Keg][binary_sensor.plaato_plaatodevicetype_keg_device_name_leaking-state]
+# name: test_binary_sensors[Keg][binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_leaking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'beer_name': 'Beer',
       'device_class': 'problem',
-      'friendly_name': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
+      'friendly_name': 'device_name Plaato Plaatodevicetype.Keg Device_Name Leaking',
       'keg_date': '05/24/24',
       'mode': 'Co2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.plaato_plaatodevicetype_keg_device_name_leaking',
+    'entity_id': 'binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_leaking',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[Keg][binary_sensor.plaato_plaatodevicetype_keg_device_name_pouring-entry]
+# name: test_binary_sensors[Keg][binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_pouring-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -67,7 +67,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.plaato_plaatodevicetype_keg_device_name_pouring',
+    'entity_id': 'binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_pouring',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -90,17 +90,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[Keg][binary_sensor.plaato_plaatodevicetype_keg_device_name_pouring-state]
+# name: test_binary_sensors[Keg][binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_pouring-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'beer_name': 'Beer',
       'device_class': 'opening',
-      'friendly_name': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',
+      'friendly_name': 'device_name Plaato Plaatodevicetype.Keg Device_Name Pouring',
       'keg_date': '05/24/24',
       'mode': 'Co2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.plaato_plaatodevicetype_keg_device_name_pouring',
+    'entity_id': 'binary_sensor.device_name_plaato_plaatodevicetype_keg_device_name_pouring',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
