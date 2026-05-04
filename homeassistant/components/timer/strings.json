@@ -183,6 +183,15 @@
         }
       },
       "name": "Timer started"
+    },
+    "time_remaining": {
+      "description": "Triggers when a timer reaches a specific remaining time.",
+      "fields": {
+        "remaining": {
+          "name": "Time remaining"
+        }
+      },
+      "name": "Timer time remaining"
     }
   }
 }
