@@ -1,7 +1,5 @@
 """Translation string lookup helpers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextlib import suppress

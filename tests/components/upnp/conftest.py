@@ -1,7 +1,5 @@
 """Configuration for SSDP tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator
 import copy
 from datetime import datetime

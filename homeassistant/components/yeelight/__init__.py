@@ -1,7 +1,5 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -37,7 +35,7 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CUSTOM_EFFECTS,
+    DATA_CUSTOM_EFFECTS_KEY,
     DEFAULT_MODE_MUSIC,
     DEFAULT_NAME,
     DEFAULT_NIGHTLIGHT_SWITCH,
@@ -116,10 +114,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
-    # pylint: disable-next=hass-use-runtime-data
-    hass.data[DOMAIN] = {
-        DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
-    }
+    hass.data[DATA_CUSTOM_EFFECTS_KEY] = conf.get(CONF_CUSTOM_EFFECTS, [])
     # Make sure the scanner is always started in case we are
     # going to retry via ConfigEntryNotReady and the bulb has changed
     # ip

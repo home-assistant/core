@@ -25,6 +25,9 @@ def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock
     transport = MagicMock(spec=asyncio.Transport)
     protocol = MagicMock(spec=DSMRProtocol)
 
+    closed = asyncio.Event()
+    protocol.wait_closed = closed.wait
+
     async def connection_factory(*args, **kwargs):
         """Return mocked out Asyncio classes."""
         return (transport, protocol)
@@ -42,6 +45,7 @@ def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock
         ),
     ):
         yield (connection_factory, transport, protocol)
+        closed.set()
 
 
 @pytest.fixture
@@ -52,6 +56,9 @@ def rfxtrx_dsmr_connection_fixture() -> Generator[
 
     transport = MagicMock(spec=asyncio.Transport)
     protocol = MagicMock(spec=RFXtrxDSMRProtocol)
+
+    closed = asyncio.Event()
+    protocol.wait_closed = closed.wait
 
     async def connection_factory(*args, **kwargs):
         """Return mocked out Asyncio classes."""
@@ -70,6 +77,7 @@ def rfxtrx_dsmr_connection_fixture() -> Generator[
         ),
     ):
         yield (connection_factory, transport, protocol)
+        closed.set()
 
 
 @pytest.fixture

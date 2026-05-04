@@ -1,7 +1,5 @@
 """Support for SUPLA covers - curtains, rollershutters, entry gate etc."""
 
-from __future__ import annotations
-
 import logging
 from pprint import pformat
 from typing import Any

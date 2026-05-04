@@ -1,7 +1,5 @@
 """YoLink Lock V1/V2."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from yolink.client_request import ClientRequest

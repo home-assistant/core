@@ -1,7 +1,5 @@
 """The tests for the google calendar platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus

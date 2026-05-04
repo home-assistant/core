@@ -1,7 +1,5 @@
 """The OneDrive integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from html import unescape
 from json import dumps, loads

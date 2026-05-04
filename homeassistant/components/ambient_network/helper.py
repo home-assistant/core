@@ -1,7 +1,5 @@
 """Helper class for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from .const import (

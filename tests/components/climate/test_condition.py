@@ -65,10 +65,10 @@ async def test_climate_conditions_gated_by_labs_flag(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("climate.is_off", {}, True, True),
-        ("climate.is_on", {}, True, False),
-        ("climate.is_cooling", {}, True, False),
-        ("climate.is_drying", {}, True, False),
-        ("climate.is_heating", {}, True, False),
+        ("climate.is_on", {}, True, True),
+        ("climate.is_cooling", {}, True, True),
+        ("climate.is_drying", {}, True, True),
+        ("climate.is_heating", {}, True, True),
     ],
 )
 async def test_climate_condition_options_validation(

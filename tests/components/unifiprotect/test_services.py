@@ -1,7 +1,5 @@
 """Test the UniFi Protect global services."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest
