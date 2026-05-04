@@ -155,20 +155,23 @@ async def async_setup_entry(
     """Set up PTDevices sensors from config entries."""
     coordinator = config_entry.runtime_data
 
-    known_devices: set[str] = set()
+    known_sensors: set[tuple[str, str]] = set()
 
     def _check_device() -> None:
-        current_devices = set(coordinator.data.keys())
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            for device_id in sorted(new_devices):
-                device = coordinator.data[device_id]
-                async_add_entity(
-                    PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
-                    for sensor in SENSOR_DESCRIPTIONS
-                    if sensor.key in device
-                )
+        for device_id in sorted(coordinator.data):
+            device = coordinator.data[device_id]
+            new_sensors = [
+                sensor
+                for sensor in SENSOR_DESCRIPTIONS
+                if sensor.key in device and (device_id, sensor.key) not in known_sensors
+            ]
+            if not new_sensors:
+                continue
+            known_sensors.update((device_id, sensor.key) for sensor in new_sensors)
+            async_add_entity(
+                PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
+                for sensor in new_sensors
+            )
 
     _check_device()
     config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
