@@ -98,7 +98,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             device_data = await self._async_get_device_data(host)
-        except TimeoutError, ConnectionError, ClientError, KeyError:
+        except OSError, ClientError, KeyError:
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
