@@ -1,7 +1,5 @@
 """Matter vacuum platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 import logging

@@ -15,8 +15,6 @@ tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 import copy

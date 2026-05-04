@@ -1,7 +1,5 @@
 """The weather websocket API."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
 import voluptuous as vol

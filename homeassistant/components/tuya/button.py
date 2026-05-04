@@ -1,9 +1,7 @@
 """Support for Tuya buttons."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.button import (
-    TuyaButtonDefinition,
+    ButtonDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -106,7 +104,7 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ButtonEntityDescription,
-        definition: TuyaButtonDefinition,
+        definition: ButtonDefinition,
     ) -> None:
         """Init Tuya button."""
         super().__init__(device, device_manager, description)
