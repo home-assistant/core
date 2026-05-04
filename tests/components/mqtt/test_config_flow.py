@@ -1130,7 +1130,10 @@ async def test_option_flow(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert config_entry.data == {mqtt.CONF_BROKER: "mock-broker", "protocol": "5"}
+        assert config_entry.data == {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "5",
+        }
         assert config_entry.options == {
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
