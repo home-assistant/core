@@ -1,5 +1,6 @@
 """Test the OpenAQ config flow."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 from openaq import (
@@ -159,6 +160,40 @@ async def test_location_subentry_map_flow(
     )
 
 
+async def test_location_subentry_map_flow_without_locality(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding an OpenAQ location without a separate locality."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response(
+        [make_location(location_id=9999, name="Albuquerque")]
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "map"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
+            CONF_RADIUS: 5000,
+            CONF_LIMIT: 10,
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: "9999"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Albuquerque"
+
+
 async def test_location_subentry_no_locations_found(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
@@ -167,6 +202,38 @@ async def test_location_subentry_no_locations_found(
     """Test map search with no matching OpenAQ locations."""
     mock_config_entry.add_to_hass(hass)
     mock_openaq_client.locations.list.return_value = make_response([])
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "map"}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
+            CONF_RADIUS: 5000,
+            CONF_LIMIT: 10,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "map"
+    assert result["errors"] == {"base": "no_locations_found"}
+
+
+async def test_location_subentry_invalid_map_location_id(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test map search ignores locations without integer IDs."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response(
+        [SimpleNamespace(id="bad", name="Bad", locality="Albuquerque")]
+    )
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "location"),
         context={"source": config_entries.SOURCE_USER},
@@ -333,6 +400,38 @@ async def test_duplicate_location_subentry(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_LOCATION_ID: LOCATION_ID}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_duplicate_location_subentry_from_map_selection(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate OpenAQ location selected from map aborts."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response([make_location()])
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "map"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
+            CONF_RADIUS: 5000,
+            CONF_LIMIT: 10,
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: str(LOCATION_ID)}
     )
 
     assert result["type"] is FlowResultType.ABORT
