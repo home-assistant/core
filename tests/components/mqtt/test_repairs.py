@@ -227,10 +227,11 @@ async def test_subentry_reconfigure_export_settings(
         "entry_with_protocol_3.1.1",
     ],
 )
-async def test_mqtt_protocol_successfull_migration_to_v5(
+async def test_mqtt_protocol_successful_migration_to_v5(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     hass_client: ClientSessionGenerator,
+    mqtt_config_entry_data: dict[str, Any],
     current_protocol: str,
     mock_try_connection: MagicMock,
 ) -> None:
@@ -268,6 +269,8 @@ async def test_mqtt_protocol_successfull_migration_to_v5(
     mock_try_connection.side_effect = lambda x: True
     data = await process_repair_fix_flow(client, flow_id)
     assert data["type"] == "create_entry"
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert entry.data == mqtt_config_entry_data | {CONF_PROTOCOL: "5", CONF_PORT: 1883}
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
