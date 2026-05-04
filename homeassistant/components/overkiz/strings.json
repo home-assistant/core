@@ -179,5 +179,26 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "unsupported_set_position_and_tilt": {
+      "message": "This device does not support setting position and tilt simultaneously."
+    }
+  },
+  "services": {
+    "set_cover_position_and_tilt": {
+      "description": "Moves the cover and tilt to the target position simultaneously, preventing the motor from stopping between movements.",
+      "fields": {
+        "position": {
+          "description": "Target vertical position. 0 means closed, 100 means fully open.",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "Target tilt position. 0 means closed, 100 means fully open.",
+          "name": "Tilt position"
+        }
+      },
+      "name": "Set cover position and tilt"
+    }
   }
 }
