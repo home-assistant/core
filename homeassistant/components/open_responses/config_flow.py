@@ -252,24 +252,45 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage subentry options."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        entry = self._get_entry()
+        if entry.state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
-                user_input.pop(CONF_LLM_HASS_API, None)
-            if self._is_new:
-                return self.async_create_entry(
-                    title=user_input.pop(CONF_NAME),
-                    data=user_input,
+            form_options = self.options | user_input
+            try:
+                await validate_input(
+                    self.hass,
+                    {
+                        CONF_API_KEY: entry.data[CONF_API_KEY],
+                        CONF_BASE_URL: entry.data[CONF_BASE_URL],
+                        CONF_MODEL: user_input[CONF_MODEL],
+                    },
                 )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=user_input,
-            )
+            except OpenResponsesAuthError:
+                errors["base"] = "invalid_auth"
+            except OpenResponsesInvalidModelError:
+                errors[CONF_MODEL] = "invalid_model"
+            except OpenResponsesConnectionError:
+                errors["base"] = "cannot_connect"
+            else:
+                subentry_data = user_input.copy()
+                if not subentry_data.get(CONF_LLM_HASS_API):
+                    subentry_data.pop(CONF_LLM_HASS_API, None)
+                if self._is_new:
+                    return self.async_create_entry(
+                        title=subentry_data.pop(CONF_NAME),
+                        data=subentry_data,
+                    )
+                return self.async_update_and_abort(
+                    entry,
+                    self._get_reconfigure_subentry(),
+                    data=subentry_data,
+                )
+        else:
+            form_options = self.options
 
-        options = self.options
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=api.name,
@@ -277,9 +298,9 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        if suggested_llm_apis := options.get(CONF_LLM_HASS_API):
+        if suggested_llm_apis := form_options.get(CONF_LLM_HASS_API):
             valid_apis = {api.id for api in llm.async_get_apis(self.hass)}
-            options[CONF_LLM_HASS_API] = [
+            form_options[CONF_LLM_HASS_API] = [
                 api for api in suggested_llm_apis if api in valid_apis
             ]
 
@@ -296,17 +317,17 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
             {
                 vol.Required(
                     CONF_MODEL,
-                    default=options.get(CONF_MODEL, self._get_entry().data[CONF_MODEL]),
+                    default=form_options.get(CONF_MODEL, entry.data[CONF_MODEL]),
                 ): str,
                 vol.Optional(
                     CONF_MAX_OUTPUT_TOKENS,
-                    default=options.get(
+                    default=form_options.get(
                         CONF_MAX_OUTPUT_TOKENS, RECOMMENDED_MAX_OUTPUT_TOKENS
                     ),
                 ): NumberSelector(NumberSelectorConfig(min=1, max=128000, step=100)),
                 vol.Optional(
                     CONF_STORE_RESPONSES,
-                    default=options.get(
+                    default=form_options.get(
                         CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
                     ),
                 ): bool,
@@ -319,14 +340,14 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Optional(
                         CONF_PROMPT,
                         description={
-                            "suggested_value": options.get(
+                            "suggested_value": form_options.get(
                                 CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                             )
                         },
                     ): TemplateSelector(),
                     vol.Optional(
                         CONF_LLM_HASS_API,
-                        default=options.get(
+                        default=form_options.get(
                             CONF_LLM_HASS_API,
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
@@ -339,6 +360,7 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
+                vol.Schema(step_schema), form_options
             ),
+            errors=errors,
         )

@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.open_responses.client import (
     OpenResponsesClient,
+    OpenResponsesConnectionError,
     OpenResponsesInvalidModelError,
     _format_request_body,
     _iter_sse_events,
@@ -78,6 +79,24 @@ async def test_create_response_requests_json() -> None:
     assert http_client.post.await_args.kwargs["headers"]["accept"] == "application/json"
 
 
+async def test_create_response_wraps_malformed_json() -> None:
+    """Test non-JSON response bodies become client errors."""
+    response = httpx.Response(
+        200,
+        text="<html>not json</html>",
+        request=httpx.Request("POST", "https://example.local/v1/responses"),
+    )
+    http_client = AsyncMock()
+    http_client.post.return_value = response
+    client = OpenResponsesClient(http_client, "api-key", "https://example.local/v1")
+
+    with pytest.raises(OpenResponsesConnectionError):
+        await client.create_response(
+            model="model",
+            input=[{"type": "message", "role": "user", "content": "ping"}],
+        )
+
+
 async def test_stream_response_requests_event_stream() -> None:
     """Test streaming responses request server-sent events."""
     requests: list[httpx.Request] = []
@@ -119,6 +138,29 @@ async def test_iter_sse_events_accumulates_multiline_data() -> None:
             "type": "response.output_text.delta",
         }
     ]
+
+
+async def test_iter_sse_events_preserves_data_payload_whitespace() -> None:
+    """Test SSE data parsing keeps payload whitespace after the separator."""
+
+    async def lines() -> AsyncGenerator[str]:
+        yield 'data: {"delta": " trailing  "}'
+        yield ""
+
+    assert [event async for event in _iter_sse_events(lines())] == [
+        {"delta": " trailing  "}
+    ]
+
+
+async def test_iter_sse_events_wraps_malformed_json() -> None:
+    """Test malformed SSE payloads become client errors."""
+
+    async def lines() -> AsyncGenerator[str]:
+        yield "data: {not-json"
+        yield ""
+
+    with pytest.raises(OpenResponsesConnectionError):
+        [event async for event in _iter_sse_events(lines())]
 
 
 async def test_iter_sse_events_stops_on_done() -> None:

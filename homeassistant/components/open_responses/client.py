@@ -62,7 +62,12 @@ class OpenResponsesClient:
                 "Error connecting to Open Responses endpoint"
             ) from err
 
-        return response.json()
+        try:
+            return response.json()
+        except ValueError as err:
+            raise OpenResponsesConnectionError(
+                "Open Responses endpoint returned invalid JSON"
+            ) from err
 
     async def stream_response(self, **params: Any) -> AsyncGenerator[dict[str, Any]]:
         """Create a streaming response."""
@@ -127,7 +132,12 @@ async def _iter_sse_events(lines: AsyncIterable[str]) -> AsyncGenerator[dict[str
             done = True
             return None
 
-        event = json.loads(data)
+        try:
+            event = json.loads(data)
+        except json.JSONDecodeError as err:
+            raise OpenResponsesConnectionError(
+                "Open Responses endpoint returned invalid event data"
+            ) from err
         if event_type_for_payload and "type" not in event:
             event["type"] = event_type_for_payload
         return event
@@ -147,7 +157,7 @@ async def _iter_sse_events(lines: AsyncIterable[str]) -> AsyncGenerator[dict[str
         if not line.startswith("data:"):
             continue
 
-        data_lines.append(line.split(":", 1)[1].strip())
+        data_lines.append(line.split(":", 1)[1].removeprefix(" "))
 
     if event := await flush_event():
         yield event
