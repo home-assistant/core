@@ -1403,6 +1403,9 @@
     "start_program": {
       "message": "Error starting program {program}: {error}"
     },
+    "start_program_option_not_writable": {
+      "message": "Option {option} is not writable for program {program}"
+    },
     "stop_program": {
       "message": "Error stopping program: {error}"
     },

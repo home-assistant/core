@@ -265,7 +265,7 @@ _FINISH_IN_RELATIVE_OPTION = Option(
     key=OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
     value=1200,
 )
-_WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
+_WASHER_CLOUD_OPTIONS_NOT_IN_ALLOWLIST: list[Option] = [
     Option(key=OptionKey.BSH_COMMON_ENERGY_FORECAST, value=60, unit="%"),
     Option(key=OptionKey.BSH_COMMON_WATER_FORECAST, value=60, unit="%"),
     Option(
@@ -276,6 +276,21 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
     Option(key=OptionKey.LAUNDRY_CARE_WASHER_PREWASH, value=False),
     Option(key=OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING, value=False),
 ]
+
+# Map OptionKey to the Home Connect API ``type`` string. Numeric/duration keys
+# are reported as ``Int`` by the cloud while toggle keys are ``Boolean``. The
+# production code only reads ``.key`` today, but using accurate metadata keeps
+# the stub aligned with reality if future logic depends on it.
+_OPTION_KEY_TO_TYPE: dict[OptionKey, str] = {
+    OptionKey.BSH_COMMON_START_IN_RELATIVE: "Int",
+    OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: "Int",
+    OptionKey.BSH_COMMON_ENERGY_FORECAST: "Int",
+    OptionKey.BSH_COMMON_WATER_FORECAST: "Int",
+    OptionKey.LAUNDRY_CARE_COMMON_LOAD_RECOMMENDATION: "Int",
+    OptionKey.LAUNDRY_CARE_WASHER_PREWASH: "Boolean",
+    OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING: "Boolean",
+    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: "Boolean",
+}
 
 
 @pytest.mark.parametrize(
@@ -288,6 +303,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
         "expected_options",
         "get_active_program_side_effect",
         "get_selected_program_call_count",
+        "expected_get_available_program_call_count",
     ),
     [
         # --- Dishwasher / active program path (no NoProgramActiveError) ---
@@ -299,6 +315,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             set(),
             None,
             None,
+            0,
             0,
             id="dishwasher_active_no_existing_no_user",
         ),
@@ -317,6 +334,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_START_IN_RELATIVE_OPTION, _FINISH_IN_RELATIVE_OPTION],
             None,
             0,
+            1,
             id="dishwasher_active_user_start_and_finish",
         ),
         pytest.param(
@@ -328,6 +346,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_START_IN_RELATIVE_OPTION],
             None,
             0,
+            1,
             id="dishwasher_active_user_start_only",
         ),
         pytest.param(
@@ -339,6 +358,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_FINISH_IN_RELATIVE_OPTION],
             None,
             0,
+            1,
             id="dishwasher_active_user_finish_only",
         ),
         pytest.param(
@@ -350,6 +370,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_DISHWASHER_HALF_LOAD_OPTION],
             None,
             0,
+            1,
             id="dishwasher_active_existing_half_load",
         ),
         pytest.param(
@@ -372,6 +393,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             ],
             None,
             0,
+            1,
             id="dishwasher_active_existing_half_load_user_start_and_finish",
         ),
         pytest.param(
@@ -386,6 +408,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_DISHWASHER_HALF_LOAD_OPTION, _START_IN_RELATIVE_OPTION],
             None,
             0,
+            1,
             id="dishwasher_active_existing_half_load_user_start",
         ),
         pytest.param(
@@ -400,6 +423,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_DISHWASHER_HALF_LOAD_OPTION, _FINISH_IN_RELATIVE_OPTION],
             None,
             0,
+            1,
             id="dishwasher_active_existing_half_load_user_finish",
         ),
         # --- Dishwasher / fallback to selected program (NoProgramActiveError) ---
@@ -412,6 +436,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             None,
             NoProgramActiveError("error.key"),
             1,
+            0,
             id="dishwasher_selected_no_existing_no_user",
         ),
         pytest.param(
@@ -429,6 +454,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_START_IN_RELATIVE_OPTION, _FINISH_IN_RELATIVE_OPTION],
             NoProgramActiveError("error.key"),
             1,
+            1,
             id="dishwasher_selected_user_start_and_finish",
         ),
         pytest.param(
@@ -439,6 +465,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             {OptionKey.BSH_COMMON_START_IN_RELATIVE},
             [_START_IN_RELATIVE_OPTION],
             NoProgramActiveError("error.key"),
+            1,
             1,
             id="dishwasher_selected_user_start_only",
         ),
@@ -451,6 +478,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_FINISH_IN_RELATIVE_OPTION],
             NoProgramActiveError("error.key"),
             1,
+            1,
             id="dishwasher_selected_user_finish_only",
         ),
         pytest.param(
@@ -461,6 +489,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             {OptionKey.DISHCARE_DISHWASHER_HALF_LOAD},
             [_DISHWASHER_HALF_LOAD_OPTION],
             NoProgramActiveError("error.key"),
+            1,
             1,
             id="dishwasher_selected_existing_half_load",
         ),
@@ -484,6 +513,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             ],
             NoProgramActiveError("error.key"),
             1,
+            1,
             id="dishwasher_selected_existing_half_load_user_start_and_finish",
         ),
         pytest.param(
@@ -497,6 +527,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             },
             [_DISHWASHER_HALF_LOAD_OPTION, _START_IN_RELATIVE_OPTION],
             NoProgramActiveError("error.key"),
+            1,
             1,
             id="dishwasher_selected_existing_half_load_user_start",
         ),
@@ -512,6 +543,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             [_DISHWASHER_HALF_LOAD_OPTION, _FINISH_IN_RELATIVE_OPTION],
             NoProgramActiveError("error.key"),
             1,
+            1,
             id="dishwasher_selected_existing_half_load_user_finish",
         ),
         # --- Washer regression cases for #167619 (cloud-reported options
@@ -519,12 +551,13 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
         pytest.param(
             "Washer",
             ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
-            _WASHER_NON_WRITABLE_OPTIONS,
+            _WASHER_CLOUD_OPTIONS_NOT_IN_ALLOWLIST,
             {},
             set(),
             None,
             None,
             0,
+            1,
             id="washer_drops_all_non_writable_cloud_options",
         ),
         pytest.param(
@@ -544,6 +577,7 @@ _WASHER_NON_WRITABLE_OPTIONS: list[Option] = [
             ],
             None,
             0,
+            1,
             id="washer_keeps_user_options_only",
         ),
     ],
@@ -563,6 +597,7 @@ async def test_start_selected_program(
     expected_options: list[Option] | None,
     get_active_program_side_effect: NoProgramActiveError | None,
     get_selected_program_call_count: int,
+    expected_get_available_program_call_count: int,
 ) -> None:
     """Test starting the selected program — verifies the writable-keys filter.
 
@@ -591,7 +626,9 @@ async def test_start_selected_program(
         return_value=ProgramDefinition(
             key=program_key,
             options=[
-                ProgramDefinitionOption(key=key, type="Boolean")
+                ProgramDefinitionOption(
+                    key=key, type=_OPTION_KEY_TO_TYPE.get(key, "Boolean")
+                )
                 for key in writable_option_keys
             ],
         )
@@ -618,6 +655,12 @@ async def test_start_selected_program(
 
     client.get_active_program.assert_awaited_once_with(appliance.ha_id)
     assert client.get_selected_program.call_count == get_selected_program_call_count
+    if expected_get_available_program_call_count == 0:
+        client.get_available_program.assert_not_called()
+    else:
+        client.get_available_program.assert_awaited_once_with(
+            appliance.ha_id, program_key=program_key
+        )
     client.start_program.assert_awaited_once_with(
         appliance.ha_id,
         program_key=program_key,
@@ -655,7 +698,7 @@ async def test_start_selected_program_user_option_not_writable_raises(
         identifiers={(DOMAIN, appliance.ha_id)},
     )
 
-    with pytest.raises(HomeAssistantError, match=r"is not writable"):
+    with pytest.raises(HomeAssistantError, match=r"is not writable") as exc_info:
         await hass.services.async_call(
             domain=DOMAIN,
             service="start_selected_program",
@@ -666,6 +709,11 @@ async def test_start_selected_program_user_option_not_writable_raises(
             blocking=True,
         )
 
+    assert exc_info.value.translation_key == "start_program_option_not_writable"
+    assert exc_info.value.translation_placeholders == {
+        "option": OptionKey.BSH_COMMON_START_IN_RELATIVE.value,
+        "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
+    }
     assert client.start_program.call_count == 0
 
 
