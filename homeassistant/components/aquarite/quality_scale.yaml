@@ -43,12 +43,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: Cloud API only, no local discovery possible
-  discovery-update-info:
-    status: exempt
-    comment: Cloud API only, no local discovery possible
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
