@@ -1,6 +1,6 @@
 {
   "domain": "echonet_lite",
-  "name": "HEMS echonet lite",
+  "name": "HEMS Echonet Lite",
   "codeowners": ["@sayurin"],
   "config_flow": true,
   "dependencies": ["network"],
@@ -9,6 +9,6 @@
   "iot_class": "local_polling",
   "loggers": ["pyhems"],
   "quality_scale": "bronze",
-  "requirements": ["pyhems==0.4.0"],
+  "requirements": ["pyhems==0.5.1"],
   "single_config_entry": true
 }

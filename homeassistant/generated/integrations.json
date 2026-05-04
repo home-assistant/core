@@ -1558,7 +1558,7 @@
       "iot_class": "local_polling"
     },
     "echonet_lite": {
-      "name": "HEMS echonet lite",
+      "name": "HEMS Echonet Lite",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling",

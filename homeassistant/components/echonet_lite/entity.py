@@ -1,10 +1,11 @@
-"""Base entity classes for the HEMS integration."""
+"""Base entity classes for the HEMS Echonet Lite integration."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+import time
 from typing import Literal
 
 from pyhems import EntityDefinition, NodeState, Property
@@ -16,7 +17,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTR_EPC, DOMAIN, RUNTIME_MONITOR_MAX_SILENCE
 from .coordinator import EchonetLiteCoordinator
 from .types import EchonetLiteConfigEntry
 
@@ -81,6 +82,11 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
 
     _attr_has_entity_name = True
 
+    # Threshold after which a lack of runtime activity marks the entity
+    # as unavailable. Matches the inactivity repair issue threshold so
+    # UI availability and the repair issue rise/fall together.
+    _runtime_silence_threshold: float = RUNTIME_MONITOR_MAX_SILENCE.total_seconds()
+
     def __init__(
         self,
         coordinator: EchonetLiteCoordinator,
@@ -94,7 +100,9 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
         # Build device_info once; sources are immutable after node creation
         manufacturer: str | None = None
         if node.manufacturer_code is not None:
-            manufacturer = f"0x{node.manufacturer_code:06X}"
+            manufacturer = (
+                node.manufacturer_name_en or f"0x{node.manufacturer_code:06X}"
+            )
         name = node.product_code or f"ECHONET Lite node {node.device_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, node.device_key)},
@@ -103,6 +111,24 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
             model=node.product_code,
             serial_number=node.serial_number,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if the underlying runtime is still receiving activity.
+
+        Falls back to ``CoordinatorEntity.available`` first so disabled
+        coordinators still mark entities unavailable. Additionally, if the
+        runtime has been silent for longer than ``RUNTIME_MONITOR_MAX_SILENCE``,
+        the entity is reported as unavailable even while the coordinator
+        itself is considered healthy.
+        """
+        if not super().available:
+            return False
+        last_activity_at = self.coordinator.last_runtime_activity_at
+        if last_activity_at is None:
+            # No baseline yet: rely on the coordinator's own availability.
+            return True
+        return time.monotonic() - last_activity_at < self._runtime_silence_threshold
 
     async def _async_send_property(self, epc: int, value: bytes) -> None:
         """Send a SetC request for a single EPC/value pair.
@@ -131,19 +157,27 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
         ]
         if not_writable:
             hex_list = ", ".join(f"0x{epc:02X}" for epc in not_writable)
-            raise HomeAssistantError(f"EPC {hex_list} is not writable by the device")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="epc_not_writable",
+                translation_placeholders={"epc_list": hex_list},
+            )
         sent = await self.coordinator.config_entry.runtime_data.client.set_properties(
             node_id=node.node_id,
             deoj=node.eoj,
             properties=properties,
         )
         if not sent:
-            raise HomeAssistantError("The target node address is unknown")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="target_node_unknown",
+            )
 
         # After a Set operation, schedule an earlier poll so the UI reflects the
         # updated device state sooner.
-        if runtime_data := self.coordinator.config_entry.runtime_data:
-            runtime_data.property_poller.schedule_immediate_poll(node.device_key)
+        self.coordinator.config_entry.runtime_data.property_poller.schedule_immediate_poll(
+            node.device_key
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -227,10 +261,11 @@ class EchonetLiteDescribedEntity[DescriptionT: EchonetLiteEntityDescription](
         Raises:
             AssertionError: If description.should_create(node) returns False.
         """
-        assert description.should_create(node), (
-            f"Entity created for EPC 0x{description.epc:02X} "
-            "that doesn't meet creation criteria"
-        )
+        if not description.should_create(node):
+            raise ValueError(
+                f"Entity created for EPC 0x{description.epc:02X} "
+                "that doesn't meet creation criteria"
+            )
         super().__init__(coordinator, node)
         self.description = description
         self.entity_description = description  # HA standard attribute
@@ -241,6 +276,11 @@ class EchonetLiteDescribedEntity[DescriptionT: EchonetLiteEntityDescription](
         elif description.fallback_name:
             self._attr_name = description.fallback_name
         self._epc = description.epc
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return extra state attributes exposing the ECHONET Property Code."""
+        return {ATTR_EPC: f"0x{self._epc:02X}"}
 
 
 def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
@@ -256,24 +296,21 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     This helper handles:
     - Retrieving entity definitions from the definitions registry
     - Building entity descriptions from definitions (filtered by platform_type)
-    - Filtering out dedicated platform EPCs (from DEDICATED_PLATFORM_EPCS)
     - Creating entities for existing devices
-    - Subscribing to coordinator updates for new device discovery
+    - Subscribing to device-added notifications for new device discovery
     - Logging skipped entities for debugging
 
     Args:
         entry: The config entry
         async_add_entities: Callback to add entities
-        platform_type: Type of platform (e.g. "sensor", "switch", "number")
+        platform_type: Type of platform (e.g. "switch")
         description_factory: Factory function to create descriptions from definitions.
             Args: (class_code, entity_def)
         entity_factory: Factory function to create entity instances
-        platform_name: Name of the platform for logging (e.g., "sensor", "switch")
+        platform_name: Name of the platform for logging (e.g., "switch")
 
     """
     runtime_data = entry.runtime_data
-    assert runtime_data is not None
-    coordinator = runtime_data.coordinator
     definitions = runtime_data.definitions
 
     # Build descriptions from entity definitions, filtering by platform
@@ -288,38 +325,62 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
         ]
 
     @callback
-    def _async_add_entities_for_devices(device_keys: set[str]) -> None:
-        """Create entities for the given device keys."""
-        new_entities: list[Entity] = []
-
-        for device_key in device_keys:
-            node = coordinator.data.get(device_key)
-            if not node:
+    def _entity_factory(
+        coordinator: EchonetLiteCoordinator, node: NodeState
+    ) -> list[Entity]:
+        entities: list[Entity] = []
+        for description in descriptions_by_class_code.get(node.eoj.class_code, []):
+            if not description.should_create(node):
+                _LOGGER.debug(
+                    "Skipping %s %s for %s: EPC 0x%02X not meeting criteria",
+                    platform_name,
+                    description.key,
+                    node.device_key,
+                    description.epc,
+                )
                 continue
+            entities.append(entity_factory(coordinator, node, description))
+        return entities
 
-            for description in descriptions_by_class_code.get(node.eoj.class_code, []):
-                if not description.should_create(node):
-                    _LOGGER.debug(
-                        "Skipping %s %s for %s: EPC 0x%02X not meeting criteria",
-                        platform_name,
-                        description.key,
-                        device_key,
-                        description.epc,
-                    )
-                    continue
-                new_entities.append(entity_factory(coordinator, node, description))
+    setup_echonet_lite_device_platform(
+        entry,
+        async_add_entities,
+        entity_factory=_entity_factory,
+    )
 
-        if new_entities:
-            async_add_entities(new_entities)
+
+def setup_echonet_lite_device_platform(
+    entry: EchonetLiteConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    *,
+    entity_factory: Callable[[EchonetLiteCoordinator, NodeState], list[Entity]],
+) -> None:
+    """Set up a platform that emits zero or more entities per discovered device.
+
+    The ``entity_factory`` receives a node and returns the list of entities
+    to create for it (empty list if the node is not handled by this platform).
+    This is the generic building block used both by description-driven
+    platforms (via ``setup_echonet_lite_platform``) and by platforms that
+    create one dedicated entity per matching class code (climate, fan).
+
+    Args:
+        entry: The config entry
+        async_add_entities: Callback to add entities
+        entity_factory: Callable building entities for a given node.
+    """
+    coordinator = entry.runtime_data.coordinator
 
     @callback
-    def _async_process_coordinator_update() -> None:
-        """Handle coordinator updates - add entities for newly discovered devices."""
-        if coordinator.new_device_keys:
-            _async_add_entities_for_devices(coordinator.new_device_keys)
+    def _async_add_entities_for_device(device_key: str) -> None:
+        node = coordinator.data.get(device_key)
+        if not node:
+            return
+        if entities := entity_factory(coordinator, node):
+            async_add_entities(entities)
 
     entry.async_on_unload(
-        coordinator.async_add_listener(_async_process_coordinator_update)
+        coordinator.async_add_device_added_listener(_async_add_entities_for_device)
     )
     # Initial setup: create entities for all existing devices
-    _async_add_entities_for_devices(set(coordinator.data.keys()))
+    for device_key in coordinator.data:
+        _async_add_entities_for_device(device_key)

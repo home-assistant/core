@@ -56,7 +56,6 @@ async def test_async_setup_and_unload_entry(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.runtime_data.interface == "192.168.1.100"
     assert entry.runtime_data.definitions is not None
     assert entry.runtime_data.coordinator is not None
     assert entry.runtime_data.client is mock_echonet_lite_client

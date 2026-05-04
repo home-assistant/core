@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from pyhems import EOJ, EPC_MANUFACTURER_CODE
+from unittest.mock import AsyncMock
+
+from pyhems import EOJ
 import pytest
 
-from homeassistant.components.echonet_lite.const import DOMAIN
+from homeassistant.components.echonet_lite.const import DOMAIN, EPC_MANUFACTURER_CODE
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_MANUFACTURER_CODE, TestFrame, TestProperty, make_frame_event
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="platforms")
@@ -128,42 +132,11 @@ async def test_operation_status_switch(
     assert call.kwargs["properties"][0].edt == b"\x31"  # 0x31 = off
 
 
-@pytest.mark.usefixtures("mock_definitions_registry", "mock_echonet_lite_client")
-async def test_switch_created_for_climate_class(
-    hass: HomeAssistant, init_integration
-) -> None:
-    """Test that switch entity IS created for climate class (0x0130).
-
-    Air conditioners no longer have a dedicated climate platform, so EPC 0x80
-    (operation status) is handled as a regular switch entity.
-    """
-    entry = init_integration
-    coordinator = entry.runtime_data.coordinator
-
-    entry.runtime_data.client.get.return_value = [
-        TestProperty(epc=0x9E, edt=b"\x01\x80"),
-        TestProperty(epc=0x9F, edt=b"\x01\x80"),
-        TestProperty(
-            epc=EPC_MANUFACTURER_CODE,
-            edt=TEST_MANUFACTURER_CODE.to_bytes(3, "big"),
-        ),
-        TestProperty(epc=0x80, edt=b"\x30"),
-    ]
-
-    await coordinator.device_manager.setup_device("010107", EOJ(0x013001))
-    await hass.async_block_till_done()
-
-    # Verify switch entity was created for the air conditioner
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "switch", DOMAIN, "010107-013001-80"
-    )
-    assert entity_id is not None
-
-
 @pytest.mark.usefixtures("mock_definitions_registry")
 async def test_switch_not_writable_raises_error(
-    hass: HomeAssistant, init_integration, mock_echonet_lite_client
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_echonet_lite_client: AsyncMock,
 ) -> None:
     """Test that turning on a switch with non-writable EPC raises an error.
 
@@ -193,12 +166,13 @@ async def test_switch_not_writable_raises_error(
     )
     assert entity_id is not None
 
-    with pytest.raises(HomeAssistantError, match="not writable"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             "switch",
             "turn_on",
             {"entity_id": entity_id},
             blocking=True,
         )
+    assert exc_info.value.translation_key == "epc_not_writable"
 
     mock_echonet_lite_client.set_properties.assert_not_awaited()

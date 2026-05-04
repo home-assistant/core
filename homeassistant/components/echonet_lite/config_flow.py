@@ -1,4 +1,4 @@
-"""Config flow for the HEMS echonet lite integration."""
+"""Config flow for the HEMS Echonet Lite integration."""
 
 from __future__ import annotations
 
@@ -13,27 +13,14 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.util.network import is_ipv4_address
 
-from .const import (
-    CONF_ENABLE_EXPERIMENTAL,
-    CONF_INTERFACE,
-    CONF_POLL_INTERVAL,
-    DEFAULT_INTERFACE,
-    DEFAULT_POLL_INTERVAL,
-    DOMAIN,
-    MAX_POLL_INTERVAL,
-    MIN_POLL_INTERVAL,
-    UNIQUE_ID,
-)
+from .const import CONF_ENABLE_EXPERIMENTAL, CONF_INTERFACE, DEFAULT_INTERFACE, DOMAIN
+from .types import EchonetLiteConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +33,11 @@ class EchonetLiteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """
 
     VERSION = 1
-    MINOR_VERSION = 0
+    MINOR_VERSION = 1
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: EchonetLiteConfigEntry,
     ) -> EchonetLiteOptionsFlow:
         """Get the options flow for this handler."""
         return EchonetLiteOptionsFlow()
@@ -59,9 +46,6 @@ class EchonetLiteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial step (UI setup)."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self._async_handle_interface_step("user", user_input)
 
     async def async_step_reconfigure(
@@ -76,7 +60,7 @@ class EchonetLiteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle interface selection for both user and reconfigure steps."""
         entry = self._get_reconfigure_entry() if step_id == "reconfigure" else None
         current_interface = (
-            entry.options.get(CONF_INTERFACE, DEFAULT_INTERFACE)
+            entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
             if entry
             else DEFAULT_INTERFACE
         )
@@ -118,41 +102,12 @@ class EchonetLiteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if entry is None:
             return self.async_create_entry(
                 title="HEMS",
-                data={},
-                options=_build_default_options(interface),
+                data={CONF_INTERFACE: interface},
+                options=_build_default_options(),
             )
-        # Preserve existing options, only update interface
-        new_options = dict(entry.options)
-        new_options[CONF_INTERFACE] = interface
-        return self.async_update_reload_and_abort(entry, options=new_options)
-
-    async def async_step_import(
-        self, import_info: Mapping[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle automatic setup during startup."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        # Validate interface from external source (may be invalid)
-        interface = DEFAULT_INTERFACE
-        if import_info and (candidate := import_info.get(CONF_INTERFACE)):
-            if _is_valid_interface(candidate):
-                interface = candidate
-            else:
-                _LOGGER.debug(
-                    "Ignoring invalid interface '%s' during import", candidate
-                )
-
-        if error := await self._async_test_multicast(interface):
-            return self.async_abort(reason=error)
-
-        await self.async_set_unique_id(UNIQUE_ID)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title="HEMS",
-            data={},
-            options=_build_default_options(interface),
+        # Update interface in data; preserve existing options
+        return self.async_update_reload_and_abort(
+            entry, data={CONF_INTERFACE: interface}
         )
 
     async def _async_test_multicast(self, interface: str) -> str | None:
@@ -162,9 +117,6 @@ class EchonetLiteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             protocol.close()
         except OSError:
             return "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception during network validation")
-            return "unknown"
         else:
             return None
 
@@ -172,7 +124,7 @@ class EchonetLiteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class EchonetLiteOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for ECHONET Lite.
 
-    OptionsFlow manages polling interval and experimental features.
+    OptionsFlow manages experimental features.
     Network interface is configured in ConfigFlow/Reconfigure.
     """
 
@@ -181,40 +133,21 @@ class EchonetLiteOptionsFlow(config_entries.OptionsFlow):
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            # Preserve interface from existing options
-            new_options = {
-                CONF_INTERFACE: self.config_entry.options.get(
-                    CONF_INTERFACE, DEFAULT_INTERFACE
-                ),
-                CONF_POLL_INTERVAL: user_input.get(
-                    CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
-                ),
-                CONF_ENABLE_EXPERIMENTAL: user_input.get(
-                    CONF_ENABLE_EXPERIMENTAL, False
-                ),
-            }
-            return self.async_create_entry(title="", data=new_options)
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_ENABLE_EXPERIMENTAL: user_input.get(
+                        CONF_ENABLE_EXPERIMENTAL, False
+                    ),
+                },
+            )
 
-        current_poll = self.config_entry.options.get(
-            CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
-        )
         current_experimental = self.config_entry.options.get(
             CONF_ENABLE_EXPERIMENTAL, False
         )
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_POLL_INTERVAL, default=current_poll): (
-                    NumberSelector(
-                        NumberSelectorConfig(
-                            min=MIN_POLL_INTERVAL,
-                            max=MAX_POLL_INTERVAL,
-                            step=1,
-                            unit_of_measurement="seconds",
-                            mode=NumberSelectorMode.BOX,
-                        )
-                    )
-                ),
                 vol.Optional(
                     CONF_ENABLE_EXPERIMENTAL, default=current_experimental
                 ): bool,
@@ -223,20 +156,11 @@ class EchonetLiteOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=schema)
 
 
-def _build_default_options(interface: str) -> dict[str, Any]:
-    """Build default options with the specified interface."""
+def _build_default_options() -> dict[str, Any]:
+    """Build default options."""
     return {
-        CONF_INTERFACE: interface,
-        CONF_POLL_INTERVAL: DEFAULT_POLL_INTERVAL,
         CONF_ENABLE_EXPERIMENTAL: False,
     }
-
-
-def _is_valid_interface(value: Any) -> bool:
-    """Check if value is a valid interface (DEFAULT_INTERFACE or IPv4)."""
-    if not isinstance(value, str):
-        return False
-    return value == DEFAULT_INTERFACE or is_ipv4_address(value)
 
 
 async def _async_get_interface_options(hass: HomeAssistant) -> list[SelectOptionDict]:

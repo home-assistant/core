@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
-from pyhems import EOJ, DeviceManager, HemsInstanceListEvent
+from pyhems import EOJ, DeviceManager, HemsInstanceListEvent, load_definitions_registry
 
 from homeassistant.components.echonet_lite.const import DOMAIN, STABLE_CLASS_CODES
 from homeassistant.components.echonet_lite.coordinator import EchonetLiteCoordinator
@@ -14,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from .conftest import make_frame_event
 
 from tests.common import MockConfigEntry
+
+_DEFINITIONS = load_definitions_registry()
 
 
 @dataclass(slots=True)
@@ -51,6 +53,7 @@ def _make_coordinator(
     dm = DeviceManager(
         client=client,
         monitored_epcs=monitored_epcs or {},
+        definitions=_DEFINITIONS,
         class_code_filter=class_code_filter,
     )
     coordinator = EchonetLiteCoordinator(

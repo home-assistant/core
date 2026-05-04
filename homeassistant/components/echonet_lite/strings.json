@@ -2,7 +2,6 @@
   "common": {
     "cooling": "Cooling",
     "electric_lock_setting": "Electric lock setting",
-    "heat_exchanger_on": "Heat exchanger ON",
     "lock": "Lock",
     "mute_off": "Mute OFF",
     "mute_on": "Mute ON",
@@ -16,12 +15,11 @@
     "prohibited": "Prohibited",
     "re_interconnection_permission_setting": "Re-interconnection permission setting",
     "reservation_off": "Reservation OFF",
-    "reservation_off_2": "Reservation off",
     "reservation_on": "Reservation ON",
-    "reservation_on_2": "Reservation on",
     "set": "Set",
     "timer_operation_setting": "Timer operation setting",
-    "unlock": "Unlock"
+    "unlock": "Unlock",
+    "ventilation_auto_setting": "Ventilation Auto setting"
   },
   "config": {
     "abort": {
@@ -31,27 +29,27 @@
       "unknown": "Unexpected error while validating the configuration"
     },
     "error": {
-      "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
+      "cannot_connect": "[%key:component::echonet_lite::config::abort::cannot_connect%]",
       "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0).",
-      "unknown": "Unexpected error while validating the configuration"
+      "unknown": "[%key:component::echonet_lite::config::abort::unknown%]"
     },
     "step": {
       "reconfigure": {
         "data": {
-          "interface": "[%key:component::echonet_lite::config::step::user::data::interface%]"
+          "interface": "Network interface"
         },
         "data_description": {
-          "interface": "[%key:component::echonet_lite::config::step::user::data_description::interface%]"
+          "interface": "Select the network interface to use for ECHONET Lite communication. Select Auto to let Home Assistant automatically detect the appropriate interface."
         },
         "description": "Change the network interface for ECHONET Lite communication.",
         "title": "Reconfigure ECHONET Lite"
       },
       "user": {
         "data": {
-          "interface": "Network interface"
+          "interface": "[%key:component::echonet_lite::config::step::reconfigure::data::interface%]"
         },
         "data_description": {
-          "interface": "Select the network interface to use for ECHONET Lite communication. Select Auto to let Home Assistant automatically detect the appropriate interface."
+          "interface": "[%key:component::echonet_lite::config::step::reconfigure::data_description::interface%]"
         },
         "description": "Home Assistant automatically binds to the ECHONET Lite multicast channel (224.0.23.0:3610) and begins listening for devices.",
         "title": "Set up ECHONET Lite"
@@ -96,7 +94,7 @@
         }
       },
       "class_0133_epc_bf": {
-        "name": "Ventilation Auto setting",
+        "name": "[%key:component::echonet_lite::common::ventilation_auto_setting%]",
         "state": {
           "off": "[%key:component::echonet_lite::common::non_auto%]",
           "on": "[%key:common::state::auto%]"
@@ -117,7 +115,7 @@
         }
       },
       "class_0134_epc_bf": {
-        "name": "Ventilation auto setting",
+        "name": "[%key:component::echonet_lite::common::ventilation_auto_setting%]",
         "state": {
           "off": "[%key:component::echonet_lite::common::non_auto%]",
           "on": "[%key:common::state::auto%]"
@@ -126,8 +124,8 @@
       "class_0134_epc_e0": {
         "name": "Heat exchanger operation setting",
         "state": {
-          "off": "[%key:component::echonet_lite::common::heat_exchanger_on%]",
-          "on": "[%key:component::echonet_lite::common::heat_exchanger_on%]"
+          "off": "Heat exchanger OFF",
+          "on": "Heat exchanger ON"
         }
       },
       "class_0135_epc_c2": {
@@ -236,7 +234,7 @@
         }
       },
       "class_026f_epc_e0": {
-        "name": "Lock setting1",
+        "name": "Lock setting 1",
         "state": {
           "off": "[%key:component::echonet_lite::common::unlock%]",
           "on": "[%key:component::echonet_lite::common::lock%]"
@@ -322,15 +320,15 @@
       "class_0273_epc_90": {
         "name": "On timer reservation setting 1",
         "state": {
-          "off": "[%key:component::echonet_lite::common::reservation_off_2%]",
-          "on": "[%key:component::echonet_lite::common::reservation_on_2%]"
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
         }
       },
       "class_0273_epc_94": {
-        "name": "Off timer reservation setting",
+        "name": "[%key:component::echonet_lite::common::off_timer_reservation_setting%]",
         "state": {
-          "off": "[%key:component::echonet_lite::common::reservation_off_2%]",
-          "on": "[%key:component::echonet_lite::common::reservation_on_2%]"
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
         }
       },
       "class_0273_epc_cf": {
@@ -504,8 +502,8 @@
       "class_03bb_epc_90": {
         "name": "Rice cooking reservation setting",
         "state": {
-          "off": "[%key:component::echonet_lite::common::reservation_off_2%]",
-          "on": "[%key:component::echonet_lite::common::reservation_on_2%]"
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
         }
       },
       "class_03bb_epc_b2": {
@@ -544,10 +542,10 @@
         }
       },
       "class_03d3_epc_90": {
-        "name": "On timer reservation setting",
+        "name": "[%key:component::echonet_lite::common::on_timer_reservation_setting%]",
         "state": {
-          "off": "[%key:component::echonet_lite::common::reservation_off_2%]",
-          "on": "[%key:component::echonet_lite::common::reservation_on_2%]"
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
         }
       },
       "class_03d3_epc_ec": {
@@ -587,27 +585,21 @@
       }
     }
   },
+  "exceptions": {
+    "epc_not_writable": {
+      "message": "EPC {epc_list} is not writable by the device."
+    },
+    "target_node_unknown": {
+      "message": "The target node address is unknown."
+    }
+  },
   "issues": {
     "runtime_client_error": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The ECHONET Lite integration encountered an error: {error}. This may be caused by network issues or device disconnection.\n\nPress Submit to restart the ECHONET Lite integration and attempt recovery. If the problem persists, check your network configuration.",
-            "title": "Restart ECHONET Lite integration"
-          }
-        }
-      },
+      "description": "The ECHONET Lite integration encountered an error: {error}. This may be caused by network issues or device disconnection. Check your network configuration and ensure your ECHONET Lite devices are powered on.",
       "title": "ECHONET Lite runtime error"
     },
     "runtime_inactive": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "No frames have been received from ECHONET Lite devices for more than {minutes} minutes. This may indicate that devices are offline or there is a network issue.\n\nPress Submit to restart the ECHONET Lite integration. Check that your ECHONET Lite devices are powered on and connected to the network.",
-            "title": "Restart ECHONET Lite integration"
-          }
-        }
-      },
+      "description": "No frames have been received from ECHONET Lite devices for more than {minutes} minutes. This may indicate that devices are offline or there is a network issue. Check that your ECHONET Lite devices are powered on and connected to the network.",
       "title": "ECHONET Lite devices not responding"
     }
   },
@@ -615,12 +607,10 @@
     "step": {
       "init": {
         "data": {
-          "enable_experimental": "Enable experimental device classes",
-          "poll_interval": "Polling interval"
+          "enable_experimental": "Enable experimental device classes"
         },
         "data_description": {
-          "enable_experimental": "When enabled, device classes that have not been verified with real hardware will also be registered. These may not work correctly.",
-          "poll_interval": "How often to poll device properties (in seconds). Lower values provide faster updates but increase network traffic."
+          "enable_experimental": "When enabled, device classes that have not been verified with real hardware will also be registered. These may not work correctly."
         }
       }
     }

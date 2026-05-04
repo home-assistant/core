@@ -10,9 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.echonet_lite.const import (
     CONF_ENABLE_EXPERIMENTAL,
     CONF_INTERFACE,
-    CONF_POLL_INTERVAL,
     DEFAULT_INTERFACE,
-    DEFAULT_POLL_INTERVAL,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -40,10 +38,8 @@ async def test_user_flow_success(
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
+    assert result["data"] == {CONF_INTERFACE: DEFAULT_INTERFACE}
     assert result["options"] == {
-        CONF_INTERFACE: DEFAULT_INTERFACE,
-        CONF_POLL_INTERVAL: DEFAULT_POLL_INTERVAL,
         CONF_ENABLE_EXPERIMENTAL: False,
     }
 
@@ -65,10 +61,8 @@ async def test_user_flow_with_custom_interface(
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
+    assert result["data"] == {CONF_INTERFACE: "10.10.10.10"}
     assert result["options"] == {
-        CONF_INTERFACE: "10.10.10.10",
-        CONF_POLL_INTERVAL: DEFAULT_POLL_INTERVAL,
         CONF_ENABLE_EXPERIMENTAL: False,
     }
 
@@ -115,10 +109,8 @@ async def test_reconfigure_flow(
     """Test reconfiguring an existing entry changes interface only."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={},
+        data={CONF_INTERFACE: "192.168.1.50"},
         options={
-            CONF_INTERFACE: "192.168.1.50",
-            CONF_POLL_INTERVAL: 120,
             CONF_ENABLE_EXPERIMENTAL: True,
         },
     )
@@ -142,29 +134,10 @@ async def test_reconfigure_flow(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    # Interface changed, but other options preserved
+    # Interface changed in data, options preserved
+    assert entry.data == {CONF_INTERFACE: "10.10.10.10"}
     assert entry.options == {
-        CONF_INTERFACE: "10.10.10.10",
-        CONF_POLL_INTERVAL: 120,
         CONF_ENABLE_EXPERIMENTAL: True,
-    }
-
-
-async def test_integration_discovery_creates_entry(
-    hass: HomeAssistant, mock_async_validate_network: AsyncMock
-) -> None:
-    """Test the automatic flow path used during setup."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
-    assert result["options"] == {
-        CONF_INTERFACE: DEFAULT_INTERFACE,
-        CONF_POLL_INTERVAL: DEFAULT_POLL_INTERVAL,
-        CONF_ENABLE_EXPERIMENTAL: False,
     }
 
 
@@ -173,7 +146,7 @@ async def test_options_flow(
     mock_config_entry: MockConfigEntry,
     mock_echonet_lite_client,
 ) -> None:
-    """Test the options flow for poll interval and experimental device classes."""
+    """Test the options flow for experimental device classes."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -187,15 +160,13 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_POLL_INTERVAL: 120,
             CONF_ENABLE_EXPERIMENTAL: True,
         },
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    # Interface should be preserved from original config
-    assert mock_config_entry.options[CONF_INTERFACE] == DEFAULT_INTERFACE
-    assert mock_config_entry.options[CONF_POLL_INTERVAL] == 120
+    # Interface remains in data, options only has experimental flag
+    assert mock_config_entry.data[CONF_INTERFACE] == DEFAULT_INTERFACE
     assert mock_config_entry.options[CONF_ENABLE_EXPERIMENTAL] is True
 
 
@@ -203,13 +174,11 @@ async def test_options_flow_preserves_interface(
     hass: HomeAssistant,
     mock_echonet_lite_client,
 ) -> None:
-    """Test options flow preserves the interface setting."""
+    """Test options flow does not affect interface in data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={},
+        data={CONF_INTERFACE: "192.168.1.100"},
         options={
-            CONF_INTERFACE: "192.168.1.100",
-            CONF_POLL_INTERVAL: DEFAULT_POLL_INTERVAL,
             CONF_ENABLE_EXPERIMENTAL: False,
         },
     )
@@ -225,34 +194,11 @@ async def test_options_flow_preserves_interface(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_POLL_INTERVAL: 90,
             CONF_ENABLE_EXPERIMENTAL: True,
         },
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    # Interface should be preserved
-    assert entry.options[CONF_INTERFACE] == "192.168.1.100"
-    assert entry.options[CONF_POLL_INTERVAL] == 90
+    # Interface remains in data, unaffected by options flow
+    assert entry.data[CONF_INTERFACE] == "192.168.1.100"
     assert entry.options[CONF_ENABLE_EXPERIMENTAL] is True
-
-
-async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
-    """Test unknown error is surfaced when unexpected exception occurs."""
-    with patch(
-        "homeassistant.components.echonet_lite.config_flow.create_multicast_socket",
-        AsyncMock(side_effect=RuntimeError("Unexpected error")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
