@@ -164,12 +164,20 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
     @property
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        return self.coordinator.data.measurements[self.entity_description.key].value
+        measurement = self.coordinator.data.measurements.get(
+            self.entity_description.key
+        )
+        return measurement.value if measurement is not None else None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement."""
-        unit = self.coordinator.data.measurements[self.entity_description.key].unit
+        measurement = self.coordinator.data.measurements.get(
+            self.entity_description.key
+        )
+        if measurement is None:
+            return None
+        unit = measurement.unit
         if unit is None:
             return None
         return UNIT_MAP.get(unit, unit)

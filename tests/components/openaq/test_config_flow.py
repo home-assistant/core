@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from openaq import GatewayTimeoutError, HTTPRateLimitError, NotAuthorizedError
+from openaq import (
+    GatewayTimeoutError,
+    HTTPRateLimitError,
+    NotAuthorizedError,
+    NotFoundError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -44,6 +49,7 @@ async def test_user_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenAQ"
     assert result["data"] == {CONF_API_KEY: API_KEY}
+    assert result["result"].unique_id == DOMAIN
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,16 +97,17 @@ async def test_duplicate_parent_entry(
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test duplicate API key setup aborts."""
+    """Test duplicate parent setup aborts."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
+        data={CONF_API_KEY: "other-api-key"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_openaq_client.parameters.list.assert_not_awaited()
 
 
 async def test_location_subentry_map_flow(
@@ -206,6 +213,31 @@ async def test_location_subentry_location_id_flow(
     assert result["data"] == {CONF_LOCATION_ID: 9999}
     assert list(mock_config_entry.subentries.values())[1].unique_id == "9999"
     mock_openaq_client.locations.get.assert_awaited_once_with(9999)
+
+
+async def test_location_subentry_location_id_not_found(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding an invalid OpenAQ location ID."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.get.side_effect = NotFoundError("Location not found")
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": CONF_LOCATION_ID}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: 9999}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_LOCATION_ID
+    assert result["errors"] == {"base": "invalid_location"}
 
 
 async def test_duplicate_location_subentry(
