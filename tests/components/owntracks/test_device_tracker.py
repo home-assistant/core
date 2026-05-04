@@ -392,6 +392,12 @@ def assert_location_source_type(hass: HomeAssistant, source_type: str) -> None:
     assert state.attributes.get("source_type") == source_type
 
 
+def assert_location_altitude(hass: HomeAssistant, altitude: float) -> None:
+    """Test the assertion of a location altitude."""
+    state = hass.states.get(DEVICE_TRACKER_STATE)
+    assert state.attributes.get("altitude") == altitude
+
+
 def assert_mobile_tracker_state(
     hass: HomeAssistant, location: str, beacon: str = IBEACON_DEVICE
 ) -> None:
@@ -1613,6 +1619,7 @@ async def test_restore_state(
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+    assert state_1.attributes["altitude"] == state_2.attributes["altitude"]
 
 
 async def test_returns_empty_friends(
@@ -1686,3 +1693,18 @@ async def test_returns_array_friends(
     assert response_json[0]["lat"] == 10
     assert response_json[0]["lon"] == 20
     assert response_json[0]["tid"] == "p1"
+
+
+@pytest.mark.usefixtures("context")
+async def test_location_altitude(hass: HomeAssistant) -> None:
+    """Test that altitude from OwnTracks message appears in entity attributes."""
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
+    assert_location_altitude(hass, LOCATION_MESSAGE["alt"])
+
+
+@pytest.mark.usefixtures("context")
+async def test_location_altitude_zero(hass: HomeAssistant) -> None:
+    """Test that altitude=0 (sea level) is correctly passed through and not dropped."""
+    message = build_message({"alt": 0}, LOCATION_MESSAGE)
+    await send_message(hass, LOCATION_TOPIC, message)
+    assert_location_altitude(hass, 0)
