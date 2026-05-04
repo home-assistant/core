@@ -57,6 +57,7 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.BUTTON,
     Platform.FAN,
+    Platform.EVENT,
     Platform.IMAGE,
     Platform.INFRARED,
     Platform.LAWN_MOWER,
