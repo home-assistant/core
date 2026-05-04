@@ -7,6 +7,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError, HTTPE
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
@@ -14,6 +15,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
