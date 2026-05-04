@@ -298,12 +298,12 @@ async def test_start_selected_program(
     get_selected_program_call_count: int,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test starting the selected program with optional parameter overrides.
+    """Test starting the selected program — verifies the writable-keys filter.
 
-    Only the options passed explicitly to the service call should be forwarded
-    to ``client.start_program``; any options already attached to the selected
-    program (``options_already_set``) must be dropped, because they may be
-    read-only or not writable in the current appliance state. See #167619.
+    The handler fetches ``get_available_program`` and treats the keys it
+    reports as the writable allowlist. Options already attached to the
+    selected program are forwarded when their key is in that allowlist;
+    user-provided overrides override matching options on top. See #167619.
     """
     client.get_active_program = AsyncMock(
         return_value=Program(

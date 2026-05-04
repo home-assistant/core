@@ -309,13 +309,8 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         )
 
     program = program_obj.key
-    # ``GET /programs/selected`` exposes neither ``constraints.access`` per
-    # option nor whether an option is currently writable. Forwarding the full
-    # response to ``PUT /programs/active`` triggers ``SDK.Error.UnsupportedOption``
-    # for read-only values like ``BSH.Common.Option.EnergyForecast`` (see issue
-    # #167619). Fetch the program definition from
-    # ``GET /programs/available/{programKey}`` and treat only those option keys
-    # as writable.
+    # Fetch the options that can be used from ``get_available_program``
+    # (see #167619).
     try:
         available_program = await client.get_available_program(
             ha_id, program_key=program
