@@ -43,6 +43,12 @@ class MigrateToGroupSensorFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the migration step of a fix flow."""
         errors: dict[str, str] = {}
+        entity_reg = er.async_get(self.hass)
+        old_entity = entity_reg.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, self.entry.entry_id
+        )
+        assert old_entity
+
         if user_input is not None:
             config = dict(self.entry.options)
             config[CONF_ENTITIES] = config.pop(CONF_ENTITY_IDS)
@@ -65,25 +71,30 @@ class MigrateToGroupSensorFlow(RepairsFlow):
                 version=1,
             )
 
-            entity_reg = er.async_get(self.hass)
-            if old_entity := entity_reg.async_get_entity_id(
-                SENSOR_DOMAIN, DOMAIN, self.entry.entry_id
-            ):
+            await self.hass.config_entries.async_unload_platforms(
+                self.entry, [SENSOR_DOMAIN]
+            )
+            await self.hass.config_entries.async_unload(self.entry.entry_id)
+            await self.hass.config_entries.async_add(new_config_entry)
+            if old_entity:
                 entity_reg.async_update_entity_platform(
                     old_entity,
                     GROUP_DOMAIN,
                     new_config_entry_id=new_config_entry.entry_id,
                 )
-
-            await self.hass.config_entries.async_add(new_config_entry)
             await self.hass.config_entries.async_remove(self.entry.entry_id)
 
             return self.async_create_entry(data={})
+
+        entity_info = entity_reg.async_get(old_entity)
+        assert entity_info
+        title = er.async_get_full_entity_name(self.hass, entity_info)
 
         return self.async_show_form(
             step_id="migrate",
             data_schema=vol.Schema({}),
             errors=errors,
+            description_placeholders={"title": title},
         )
 
 
