@@ -68,6 +68,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="OpenAQ",
         data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
         subentries_data=[
             ConfigSubentryData(
                 data={CONF_LOCATION_ID: LOCATION_ID},
