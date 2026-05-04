@@ -13,6 +13,7 @@ DEFAULT_AI_TASK_NAME = "Open Responses AI Task"
 DEFAULT_NAME = "Open Responses"
 
 CONF_BASE_URL = "base_url"
+CONF_GENERATED_DEFAULT_SUBENTRY = "generated_default_subentry"
 CONF_MAX_OUTPUT_TOKENS = "max_output_tokens"
 CONF_PROMPT = "prompt"
 CONF_STORE_RESPONSES = "store_responses"

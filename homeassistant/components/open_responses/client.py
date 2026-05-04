@@ -80,6 +80,8 @@ class OpenResponsesClient:
                 json=body,
                 headers=self._stream_headers,
             ) as response:
+                if response.is_error:
+                    await response.aread()
                 response.raise_for_status()
                 async for event in _iter_sse_events(response.aiter_lines()):
                     yield event
