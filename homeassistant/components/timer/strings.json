@@ -1,15 +1,19 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted timers.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_active": {
       "description": "Tests if one or more timers are active.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is active"
@@ -18,8 +22,10 @@
       "description": "Tests if one or more timers are idle.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is idle"
@@ -28,8 +34,10 @@
       "description": "Tests if one or more timers are paused.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is paused"
@@ -57,20 +65,22 @@
         "finishes_at": {
           "name": "Finishes at"
         },
+        "last_transition": {
+          "name": "Last transition",
+          "state": {
+            "cancelled": "Cancelled",
+            "finished": "Finished",
+            "paused": "Paused",
+            "restarted": "Restarted",
+            "started": "Started"
+          }
+        },
         "remaining": {
           "name": "Remaining"
         },
         "restore": {
           "name": "Restore"
         }
-      }
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
       }
     }
   },
@@ -112,5 +122,67 @@
       "name": "Start timer"
     }
   },
-  "title": "Timer"
+  "title": "Timer",
+  "triggers": {
+    "cancelled": {
+      "description": "Triggers when one or more timers are cancelled.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::trigger_for_name%]"
+        }
+      },
+      "name": "Timer cancelled"
+    },
+    "finished": {
+      "description": "Triggers when one or more timers finish.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::trigger_for_name%]"
+        }
+      },
+      "name": "Timer finished"
+    },
+    "paused": {
+      "description": "Triggers when one or more timers are paused.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::trigger_for_name%]"
+        }
+      },
+      "name": "Timer paused"
+    },
+    "restarted": {
+      "description": "Triggers when one or more timers are restarted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::trigger_for_name%]"
+        }
+      },
+      "name": "Timer restarted"
+    },
+    "started": {
+      "description": "Triggers when one or more timers are started.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::timer::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::trigger_for_name%]"
+        }
+      },
+      "name": "Timer started"
+    }
+  }
 }

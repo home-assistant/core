@@ -1,7 +1,5 @@
 """Provides triggers for humidity."""
 
-from __future__ import annotations
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,

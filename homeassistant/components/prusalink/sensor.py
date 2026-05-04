@@ -1,7 +1,5 @@
 """PrusaLink sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -16,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
@@ -29,8 +26,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
-from .coordinator import PrusaLinkUpdateCoordinator
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
@@ -204,13 +200,11 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PrusaLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink sensor based on a config entry."""
-    coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinators = entry.runtime_data
 
     entities: list[PrusaLinkEntity] = []
 

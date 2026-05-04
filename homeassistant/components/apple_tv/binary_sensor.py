@@ -1,7 +1,5 @@
 """Binary sensor support for Apple TV."""
 
-from __future__ import annotations
-
 from pyatv.const import FeatureName, FeatureState, KeyboardFocusState
 from pyatv.interface import AppleTV, KeyboardListener
 
@@ -13,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SIGNAL_CONNECTED, AppleTvConfigEntry
 from .entity import AppleTVEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

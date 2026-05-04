@@ -1,7 +1,5 @@
 """Validate manifests."""
 
-from __future__ import annotations
-
 import argparse
 from operator import attrgetter
 from pathlib import Path

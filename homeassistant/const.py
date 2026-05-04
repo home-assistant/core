@@ -1,7 +1,5 @@
 """Constants used by Home Assistant components."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -16,7 +14,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -523,6 +521,7 @@ class UnitOfEnergyDistance(StrEnum):
 class UnitOfElectricCurrent(StrEnum):
     """Electric current units."""
 
+    MICROAMPERE = "μA"
     MILLIAMPERE = "mA"
     AMPERE = "A"
 
@@ -590,6 +589,7 @@ class UnitOfLength(StrEnum):
 class UnitOfFrequency(StrEnum):
     """Frequency units."""
 
+    MILLIHERTZ = "mHz"
     HERTZ = "Hz"
     KILOHERTZ = "kHz"
     MEGAHERTZ = "MHz"

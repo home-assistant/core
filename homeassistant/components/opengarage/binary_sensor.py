@@ -1,7 +1,5 @@
 """Platform for the opengarage.io binary sensor component."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -9,12 +7,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import OpenGarageDataUpdateCoordinator
+from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,13 +26,11 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OpenGarageConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OpenGarage binary sensors."""
-    open_garage_data_coordinator: OpenGarageDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    open_garage_data_coordinator = entry.runtime_data
     async_add_entities(
         OpenGarageBinarySensor(
             open_garage_data_coordinator,

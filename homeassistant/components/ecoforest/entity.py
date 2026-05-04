@@ -1,7 +1,5 @@
 """Base Entity for Ecoforest."""
 
-from __future__ import annotations
-
 from pyecoforest.models.device import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -132,7 +132,7 @@ async def test_turn_on_safety_exception(
     mock_huum_client.turn_on.side_effect = SafetyException("Door is open")
     mock_huum_client.status.return_value.status = SaunaStatus.ONLINE_HEATING
 
-    with pytest.raises(HomeAssistantError, match="Unable to turn on sauna"):
+    with pytest.raises(HomeAssistantError, match="Unable to turn on the sauna"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,

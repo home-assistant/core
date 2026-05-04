@@ -1,7 +1,5 @@
 """Support for interfacing to the SqueezeBox API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import json
@@ -292,9 +290,16 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+        self.coordinator.async_shutdown_dispatcher()
+
+        self.coordinator.config_entry.runtime_data.known_player_ids.discard(
             self.coordinator.player.player_id
         )
+
+        self.coordinator.config_entry.runtime_data.player_coordinators.pop(
+            self.coordinator.player.player_id, None
+        )
+        await super().async_will_remove_from_hass()
 
     @property
     def volume_level(self) -> float | None:

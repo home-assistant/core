@@ -1,4 +1,5 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any
 
@@ -21,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_entry(

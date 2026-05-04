@@ -12,13 +12,12 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
-from .const import AFTER_COMMAND_REFRESH, DOMAIN, HUMIDITY_LEVELS, Humidifier2Mode
+from . import SwitchbotCloudConfigEntry
+from .const import AFTER_COMMAND_REFRESH, HUMIDITY_LEVELS, Humidifier2Mode
 from .entity import SwitchBotCloudEntity
 
 PARALLEL_UPDATES = 0
@@ -26,11 +25,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot based on a config entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(
         SwitchBotHumidifier(data.api, device, coordinator)
         if device.device_type == "Humidifier"

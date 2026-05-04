@@ -1,7 +1,5 @@
 """Support for lights."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON

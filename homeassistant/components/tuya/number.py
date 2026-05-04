@@ -1,9 +1,7 @@
 """Support for Tuya number."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.number import (
-    TuyaNumberDefinition,
+    NumberDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -19,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -28,6 +25,7 @@ from .const import (
     DeviceCategory,
     DPCode,
 )
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
@@ -487,7 +485,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
-        definition: TuyaNumberDefinition,
+        definition: NumberDefinition,
     ) -> None:
         """Initialize a Tuya number entity."""
         super().__init__(device, device_manager, description)

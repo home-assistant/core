@@ -102,6 +102,9 @@
       }
     },
     "button": {
+      "light_sensor": {
+        "name": "Light sensor"
+      },
       "next_image": {
         "name": "Next image"
       },
@@ -288,6 +291,15 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "battery_range": {
+        "name": "Battery range",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
       "bluetooth_signal": {
         "name": "Bluetooth signal"
       },
@@ -323,6 +335,12 @@
             }
           }
         }
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "wireless_charging": {
+        "name": "Wireless charging"
       }
     },
     "vacuum": {

@@ -12,11 +12,11 @@
   },
   "services": {
     "clear": {
-      "description": "Deletes all log entries.",
-      "name": "Clear"
+      "description": "Deletes all system log entries.",
+      "name": "Clear system log"
     },
     "write": {
-      "description": "Write log entry.",
+      "description": "Writes a system log entry.",
       "fields": {
         "level": {
           "description": "Log level.",
@@ -31,7 +31,7 @@
           "name": "Message"
         }
       },
-      "name": "Write"
+      "name": "Write to system log"
     }
   }
 }

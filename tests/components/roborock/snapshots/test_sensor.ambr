@@ -407,6 +407,700 @@
     'state': '3.55',
   })
 # ---
+# name: test_sensors[sensor.roborock_q10_s5_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'battery_q10_duid',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Roborock Q10 S5+ Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_cleaning_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_cleaning_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning area',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning area',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleaning_area',
+    'unique_id': 'cleaning_area_q10_duid',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_cleaning_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Cleaning area',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_cleaning_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_cleaning_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_cleaning_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning progress',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_percent',
+    'unique_id': 'clean_percent_q10_duid',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_cleaning_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Cleaning progress',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_cleaning_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Cleaning time',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleaning_time',
+    'unique_id': 'cleaning_time_q10_duid',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Cleaning time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.0',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_filter_time_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_filter_time_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filter time used',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Filter time used',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_life',
+    'unique_id': 'filter_life_q10_duid',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_filter_time_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Filter time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_filter_time_used',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_main_brush_time_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_main_brush_time_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Main brush time used',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Main brush time used',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'main_brush_life',
+    'unique_id': 'main_brush_life_q10_duid',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_main_brush_time_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Main brush time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_main_brush_time_used',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_sensor_time_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_sensor_time_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensor time used',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Sensor time used',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensor_life',
+    'unique_id': 'sensor_life_q10_duid',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_sensor_time_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Sensor time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_sensor_time_used',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_side_brush_time_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_side_brush_time_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Side brush time used',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Side brush time used',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'side_brush_life',
+    'unique_id': 'side_brush_life_q10_duid',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_side_brush_time_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Side brush time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_side_brush_time_used',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unknown',
+        'sleeping',
+        'idle',
+        'cleaning',
+        'returning_home',
+        'remote_control_active',
+        'charging',
+        'paused',
+        'error',
+        'updating',
+        'emptying_the_bin',
+        'mapping',
+        'saving_map',
+        'relocating',
+        'sweeping',
+        'mopping',
+        'sweep_and_mop',
+        'transitioning',
+        'waiting_to_charge',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'status_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Roborock Q10 S5+ Status',
+      'options': list([
+        'unknown',
+        'sleeping',
+        'idle',
+        'cleaning',
+        'returning_home',
+        'remote_control_active',
+        'charging',
+        'paused',
+        'error',
+        'updating',
+        'emptying_the_bin',
+        'mapping',
+        'saving_map',
+        'relocating',
+        'sweeping',
+        'mopping',
+        'sweep_and_mop',
+        'transitioning',
+        'waiting_to_charge',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_total_cleaning_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_total_cleaning_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total cleaning area',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning area',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_area',
+    'unique_id': 'total_cleaning_area_q10_duid',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_total_cleaning_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Total cleaning area',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_total_cleaning_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_total_cleaning_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_total_cleaning_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total cleaning count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning count',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_count',
+    'unique_id': 'total_cleaning_count_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_total_cleaning_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Total cleaning count',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_total_cleaning_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_total_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q10_s5_total_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total cleaning time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Total cleaning time',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_time',
+    'unique_id': 'total_cleaning_time_q10_duid',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.roborock_q10_s5_total_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Total cleaning time',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q10_s5_total_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[sensor.roborock_q7_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
