@@ -1112,7 +1112,7 @@ hole==0.9.0
 holidays==0.95
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260429.1
+home-assistant-frontend==20260429.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -2341,7 +2341,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==24.0.1
+pyuptimerobot==25.0.0
 
 # homeassistant.components.vera
 pyvera==0.3.16
