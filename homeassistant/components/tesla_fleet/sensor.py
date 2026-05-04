@@ -182,7 +182,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
     ),
     TeslaFleetSensorEntityDescription(
         key="vehicle_state_odometer",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=0,
@@ -530,26 +530,6 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         ):
             self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
-        # Merge restored state into the monotonic baseline so post-restart
-        # jitter cannot regress the exported value.
-        if (
-            self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
-            and restored_sensor_data is not None
-            and isinstance(restored_sensor_data.native_value, float | int)
-        ):
-            restored = float(restored_sensor_data.native_value)
-            self._previous_value = (
-                max(self._previous_value, restored)
-                if self._previous_value is not None
-                else restored
-            )
-            # Only refresh attrs from the coordinator when the key is present.
-            # If the vehicle is asleep/offline the coordinator data does not
-            # include this sensor and re-running _async_update_attrs would
-            # discard the restored native value via the has=False branch.
-            if self.has:
-                self._async_update_attrs()
-
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.has:
@@ -563,20 +543,6 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
                 ):
                     self._attr_last_reset = dt_util.utcnow()
                 self._previous_value = float(new_value)
-            elif (
-                self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
-                and isinstance(new_value, float | int)
-            ):
-                # Clamp Fleet API jitter to the last maximum, but pass through
-                # a real reset to zero so statistics detect meter cycles.
-                if (
-                    self._previous_value is not None
-                    and new_value < self._previous_value
-                    and new_value != 0
-                ):
-                    new_value = self._previous_value
-                else:
-                    self._previous_value = float(new_value)
             self._attr_native_value = new_value
         else:
             self._attr_native_value = None
