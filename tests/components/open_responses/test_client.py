@@ -78,6 +78,32 @@ async def test_create_response_requests_json() -> None:
     assert http_client.post.await_args.kwargs["headers"]["accept"] == "application/json"
 
 
+async def test_stream_response_requests_event_stream() -> None:
+    """Test streaming responses request server-sent events."""
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            200,
+            content=b'data: {"type": "response.created"}\n\ndata: [DONE]\n\n',
+            request=request,
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        client = OpenResponsesClient(http_client, "api-key", "https://example.local/v1")
+
+        assert [
+            event
+            async for event in client.stream_response(
+                model="model",
+                input=[{"type": "message", "role": "user", "content": "ping"}],
+            )
+        ] == [{"type": "response.created"}]
+
+    assert requests[0].headers["accept"] == "text/event-stream"
+
+
 async def test_iter_sse_events_accumulates_multiline_data() -> None:
     """Test SSE data lines are joined until the event delimiter."""
 
