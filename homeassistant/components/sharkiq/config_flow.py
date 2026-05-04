@@ -1,7 +1,5 @@
 """Config flow for Shark IQ integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from typing import Any

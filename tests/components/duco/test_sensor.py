@@ -1,11 +1,16 @@
 """Tests for the Duco sensor platform."""
 
-from __future__ import annotations
-
+import logging
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import Node, NodeGeneralInfo, NodeSensorInfo, NodeVentilationInfo
+from duco.models import (
+    Node,
+    NodeGeneralInfo,
+    NodeSensorInfo,
+    NodeType,
+    NodeVentilationInfo,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -51,6 +56,7 @@ async def test_iaq_sensor_entities_disabled_by_default(
     """Test that IAQ sensor entities are disabled by default."""
     for entity_id in (
         "sensor.bathroom_rh_humidity_air_quality_index",
+        "sensor.kitchen_rh_humidity_air_quality_index",
         "sensor.office_co2_co2_air_quality_index",
     ):
         entry = entity_registry.async_get(entity_id)
@@ -64,7 +70,10 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that diagnostic sensor entities are disabled by default."""
-    for entity_id in ("sensor.living_signal_strength",):
+    for entity_id in (
+        "sensor.living_signal_strength",
+        "sensor.living_box_temperature",
+    ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
@@ -161,6 +170,7 @@ async def test_new_node_added_dynamically(
             iaq_co2=None,
             rh=55.0,
             iaq_rh=70,
+            temp=21.0,
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [*mock_nodes, new_node]
@@ -205,3 +215,145 @@ async def test_deregistered_node_removes_device(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
     )
     assert device is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_node_type_logs_warning_and_creates_no_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a node with an unknown type logs a warning and creates no entities."""
+    unknown_node = Node(
+        node_id=99,
+        general=NodeGeneralInfo(
+            node_type=NodeType.UNKNOWN,
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="Unsupported device",
+            identify=0,
+        ),
+        ventilation=None,
+        sensor=None,
+    )
+
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "99" in caplog.text
+    assert "unsupported" in caplog.text.lower()
+    assert hass.states.get("sensor.unsupported_device_humidity") is None
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
+    )
+    assert device is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a node with UNKNOWN type is retried and gets entities once the type resolves."""
+    node_id = 99
+    ventilation = NodeVentilationInfo(
+        state="AUTO", time_state_remain=0, time_state_end=0, mode="-", flow_lvl_tgt=None
+    )
+    sensor = NodeSensorInfo(co2=None, iaq_co2=None, rh=62.0, iaq_rh=70, temp=21.0)
+
+    def _make_node(node_type: NodeType | str) -> Node:
+        """Create a Node with the given node type for use in tests."""
+        return Node(
+            node_id=node_id,
+            general=NodeGeneralInfo(
+                node_type=node_type,
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Future sensor",
+                identify=0,
+            ),
+            ventilation=ventilation,
+            sensor=sensor,
+        )
+
+    # First poll: UNKNOWN type — no entities created.
+    mock_duco_client.async_get_nodes.return_value = [
+        *mock_nodes,
+        _make_node(NodeType.UNKNOWN),
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.future_sensor_humidity") is None
+
+    # Second poll: type now resolved — entities must be created.
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, _make_node("BSRH")]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.future_sensor_humidity")
+    assert state is not None
+    assert state.state == "62.0"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_node_logged_at_debug(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that UNKNOWN nodes are logged at DEBUG level on every coordinator update."""
+    unknown_node = Node(
+        node_id=99,
+        general=NodeGeneralInfo(
+            node_type=NodeType.UNKNOWN,
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="Future sensor",
+            identify=0,
+        ),
+        ventilation=NodeVentilationInfo(
+            state="AUTO",
+            time_state_remain=0,
+            time_state_end=0,
+            mode="-",
+            flow_lvl_tgt=None,
+        ),
+        sensor=NodeSensorInfo(co2=None, iaq_co2=None, rh=None, iaq_rh=None, temp=None),
+    )
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+
+    with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "has an unsupported device type" not in caplog.text
+
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.duco"):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "has an unsupported device type" in caplog.text

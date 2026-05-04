@@ -1,10 +1,9 @@
 """Test Tuya initialization."""
 
-from __future__ import annotations
-
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import (
@@ -18,7 +17,13 @@ from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import DEVICE_MOCKS, create_device, create_manager, initialize_entry
+from . import (
+    DEVICE_MOCKS,
+    TuyaNotificationHelper,
+    create_device,
+    create_manager,
+    initialize_entry,
+)
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
@@ -134,6 +139,96 @@ async def test_device_registry(
                 include_disabled_entities=True,
             )
         )
+
+
+@patch.object(
+    TUYA_QUIRKS_REGISTRY,
+    "initialise_device_quirk",
+    wraps=TUYA_QUIRKS_REGISTRY.initialise_device_quirk,
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [])
+async def test_dynamic_add_device(
+    mock_initialise_device_quirk: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_manager: Manager,
+    notification_helper: TuyaNotificationHelper,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Ensure add device event works correctly.
+
+    - the device should be added to the device registry
+    even if there are no platforms (i.e. no entities created)
+    - the device should have the quirk applied
+    """
+    main_device = await create_device(hass, "mcs_8yhypbo7")
+    second_device = await create_device(hass, "clkg_y7j64p60glp8qpx7")
+
+    # Initialize with a single device
+    await initialize_entry(hass, mock_manager, mock_config_entry, [main_device])
+
+    # Should now have one device in the registry
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 1
+    assert any(
+        (DOMAIN, main_device.id) in device_registry_entry.identifiers
+        for device_registry_entry in all_entries
+    )
+    mock_initialise_device_quirk.assert_called_once_with(main_device)
+
+    # Trigger add second device from the manager
+    mock_initialise_device_quirk.reset_mock()
+    await notification_helper.async_send_add_device(second_device)
+
+    # Should now have two devices in the registry
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 2
+    assert any(
+        (DOMAIN, main_device.id) in device_registry_entry.identifiers
+        for device_registry_entry in all_entries
+    )
+    assert any(
+        (DOMAIN, second_device.id) in device_registry_entry.identifiers
+        for device_registry_entry in all_entries
+    )
+    mock_initialise_device_quirk.assert_called_once_with(second_device)
+
+
+async def test_dynamic_remove_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_manager: Manager,
+    notification_helper: TuyaNotificationHelper,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Ensure remove device event works correctly."""
+    # Initialize with two devices
+    main_device = await create_device(hass, "mcs_8yhypbo7")
+    second_device = await create_device(hass, "clkg_y7j64p60glp8qpx7")
+    await initialize_entry(
+        hass, mock_manager, mock_config_entry, [main_device, second_device]
+    )
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 2
+
+    # Trigger remove second device from the manager
+    await notification_helper.async_send_remove_device(second_device)
+
+    # Only the main device should remain
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 1
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, main_device.id)})
+        in all_entries
+    )
 
 
 async def test_fixtures_valid(hass: HomeAssistant) -> None:

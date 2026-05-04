@@ -94,7 +94,7 @@
       "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]"
     },
     "country_not_configured": {
-      "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below.",
+      "description": "No country has been configured. Click the \"Learn more\" button below to set your country.",
       "title": "The country has not been configured"
     },
     "deprecated_architecture": {

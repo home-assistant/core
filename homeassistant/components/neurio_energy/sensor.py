@@ -1,7 +1,5 @@
 """Support for monitoring a Neurio energy sensor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

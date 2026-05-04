@@ -1,7 +1,5 @@
 """Base workday entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
 

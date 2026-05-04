@@ -1,7 +1,5 @@
 """Define services for the Apple TV integration."""
 
-from __future__ import annotations
-
 from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 from pyatv.interface import AppleTV as AppleTVInterface

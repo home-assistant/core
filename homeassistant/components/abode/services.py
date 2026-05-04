@@ -1,7 +1,5 @@
 """Support for the Abode Security System."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from jaraco.abode.exceptions import Exception as AbodeException

@@ -1,7 +1,5 @@
 """Support for MQTT message handling."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
