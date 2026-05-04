@@ -41,6 +41,16 @@
         "name": "Min intensity"
       }
     },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "mixed": "Mixed",
+          "monophasic": "Monophasic",
+          "threephasic": "Three-phase"
+        }
+      }
+    },
     "sensor": {
       "battery_power": {
         "name": "Battery power"
