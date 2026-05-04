@@ -25,11 +25,11 @@
   },
   "entity": {
     "sensor": {
-      "cd": {
-        "name": "CD"
+      "chlorine": {
+        "name": "Chlorine"
       },
-      "cl": {
-        "name": "CL"
+      "conductivity": {
+        "name": "Conductivity"
       },
       "electrolysis": {
         "name": "Electrolysis"
@@ -40,11 +40,11 @@
       "hydrolysis": {
         "name": "Hydrolysis"
       },
+      "redox_potential": {
+        "name": "Redox potential"
+      },
       "rssi": {
         "name": "Wi-Fi signal strength"
-      },
-      "rx": {
-        "name": "Rx"
       },
       "uv": {
         "name": "UV"

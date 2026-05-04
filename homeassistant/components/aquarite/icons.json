@@ -1,10 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "cd": {
+      "chlorine": {
         "default": "mdi:gauge"
       },
-      "cl": {
+      "conductivity": {
         "default": "mdi:gauge"
       },
       "electrolysis": {
@@ -16,7 +16,7 @@
       "hydrolysis": {
         "default": "mdi:flash"
       },
-      "rx": {
+      "redox_potential": {
         "default": "mdi:gauge"
       },
       "uv": {

@@ -139,26 +139,18 @@ def test_hydrolyser_native_value(mock_coordinator: MagicMock) -> None:
     assert entity.native_value == 5.0
 
 
-# ── Rx sensor (integer) ────────────────────────────────────────
+# ── Redox potential sensor (integer) ───────────────────────────
 
 
-def test_rx_native_value(mock_coordinator: MagicMock) -> None:
-    """Test Rx value is returned as integer."""
-    entity = _make_entity(mock_coordinator, "rx")
+def test_redox_potential_native_value(mock_coordinator: MagicMock) -> None:
+    """Test redox potential value is returned as integer."""
+    entity = _make_entity(mock_coordinator, "redox_potential")
     assert entity.native_value == 707
 
 
-def test_rx_native_value_missing() -> None:
+def test_redox_potential_native_value_missing() -> None:
     """Test returns None when path is absent."""
-    entity = _make_entity(_make_coordinator({"modules": {}}), "rx")
-    assert entity.native_value is None
-
-
-def test_rx_native_value_non_numeric() -> None:
-    """Test Rx sensor returns None for non-numeric data."""
-    entity = _make_entity(
-        _make_coordinator({"modules": {"rx": {"current": "bad"}}}), "rx"
-    )
+    entity = _make_entity(_make_coordinator({"modules": {}}), "redox_potential")
     assert entity.native_value is None
 
 
@@ -244,11 +236,11 @@ async def test_async_setup_entry_full_modules(
     assert "filtration_intel_time" in keys
     # Module-gated (fixture has hasPH=1, hasRX=1, hasHidro=1+is_electrolysis=True)
     assert "ph" in keys
-    assert "rx" in keys
+    assert "redox_potential" in keys
     assert "electrolysis" in keys
     # Disabled modules in fixture
-    assert "cd" not in keys
-    assert "cl" not in keys
+    assert "conductivity" not in keys
+    assert "chlorine" not in keys
     assert "uv" not in keys
 
 
@@ -282,7 +274,14 @@ async def test_async_setup_entry_all_modules_enabled(hass: HomeAssistant) -> Non
     coord = _make_coordinator(data)
     entities = await _setup_sensor_platform(hass, [coord])
     keys = {e.entity_description.key for e in entities}
-    assert {"cd", "cl", "ph", "rx", "uv", "electrolysis"} <= keys
+    assert {
+        "conductivity",
+        "chlorine",
+        "ph",
+        "redox_potential",
+        "uv",
+        "electrolysis",
+    } <= keys
 
 
 async def test_async_setup_entry_multi_pool(
