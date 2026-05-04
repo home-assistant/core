@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.util.ssl import client_context
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +21,7 @@ async def test_websocket_connect_called_once(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_websocket_api.connect.assert_awaited_once()
+    mock_websocket_api.connect.assert_awaited_once_with(client_context())
 
 
 async def test_entry_unload(
@@ -78,6 +79,6 @@ async def test_websocket_connect_failure_sets_entry_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_websocket_api.connect.assert_awaited_once()
+    mock_websocket_api.connect.assert_awaited_once_with(client_context())
     mock_websocket_api.stop_all_listeners.assert_not_awaited()
     mock_websocket_api.close.assert_not_awaited()
