@@ -442,6 +442,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
         }
       },
       "name": "Media player muted"
