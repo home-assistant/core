@@ -55,7 +55,7 @@ DATA_SCHEMA = vol.Schema(
 async def test_api(hass: HomeAssistant, user_input: dict[str, Any]) -> dict[str, str]:
     """Test fetch data from Nord Pool."""
     if not user_input.get(CONF_AREAS):
-        return {"base": "no_areas"}
+        return {CONF_AREAS: "no_areas"}
     client = NordPoolClient(async_get_clientsession(hass))
     try:
         await client.async_get_delivery_period(
