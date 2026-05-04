@@ -32,6 +32,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tomorrow_price_available": {
+        "name": "Tomorrow price available"
+      }
+    },
     "sensor": {
       "block_average": {
         "name": "{block} average"
