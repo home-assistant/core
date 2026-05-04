@@ -2849,7 +2849,7 @@ xiaomi-ble==1.10.1
 xknx==3.15.0
 
 # homeassistant.components.knx
-xknxproject==3.8.2
+xknxproject==3.9.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
