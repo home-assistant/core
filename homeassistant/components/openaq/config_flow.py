@@ -59,7 +59,7 @@ from .const import (
     MAX_RADIUS,
     SUBENTRY_TYPE_LOCATION,
 )
-from .coordinator import async_create_openaq_client, format_openaq_url, get_openaq_value
+from .coordinator import async_create_openaq_client, get_openaq_value
 from .sensor import SENSOR_DESCRIPTIONS
 
 _LOGGER = logging.getLogger(__name__)
@@ -301,18 +301,6 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
             try:
                 locations: dict[int, OpenAQLocationFlowData] = {}
                 for radius in _search_radii(user_input[CONF_RADIUS]):
-                    _LOGGER.debug(
-                        "Querying OpenAQ URL: %s",
-                        format_openaq_url(
-                            "/locations",
-                            {
-                                "page": 1,
-                                "limit": user_input[CONF_LIMIT],
-                                "radius": radius,
-                                "coordinates": coordinates,
-                            },
-                        ),
-                    )
                     response = await client.locations.list(
                         coordinates=coordinates,
                         radius=radius,
