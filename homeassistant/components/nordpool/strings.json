@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_areas": "No area(s) selected",
       "no_data": "API connected but the response was empty"
     },
     "step": {
