@@ -323,6 +323,8 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                         if location_data is None:
                             continue
                         locations.setdefault(location_data.location_id, location_data)
+            except ApiKeyMissingError, ForbiddenError, NotAuthorizedError:
+                errors["base"] = "invalid_auth"
             except HTTPRateLimitError, RateLimitError:
                 errors["base"] = "rate_limited"
             except (

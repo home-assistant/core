@@ -28,6 +28,7 @@
       "entry_type": "Monitoring location",
       "error": {
         "cannot_connect": "Failed to connect",
+        "invalid_auth": "Invalid authentication",
         "no_locations_found": "No OpenAQ monitoring locations were found nearby.",
         "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
         "unknown": "Unexpected error"
