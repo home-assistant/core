@@ -2,7 +2,7 @@
   "domain": "insteon",
   "name": "Insteon",
   "after_dependencies": ["panel_custom", "usb"],
-  "codeowners": ["@teharris1"],
+  "codeowners": ["@teharris1", "@ssyrell"],
   "config_flow": true,
   "dependencies": ["http", "websocket_api"],
   "dhcp": [
@@ -19,7 +19,7 @@
   "loggers": ["pyinsteon", "pypubsub"],
   "requirements": [
     "pyinsteon==1.6.4",
-    "insteon-frontend-home-assistant==0.6.1"
+    "insteon-frontend-home-assistant==0.6.2"
   ],
   "single_config_entry": true,
   "usb": [
