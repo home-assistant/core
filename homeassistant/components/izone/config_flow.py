@@ -353,6 +353,10 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         if self.hass.config_entries.async_entry_for_domain_unique_id(IZONE, device_uid):
             return self.async_abort(reason="already_configured")
 
+        # Expose advertised UID for matching before switching to the shared lock.
+        await self.async_set_unique_id(device_uid)
+        self._abort_if_unique_id_configured()
+
         # Serialize HomeKit-driven discovery until the real UID is known.
         await self.async_set_unique_id(HOMEKIT_DISCOVERY_LOCK_ID)
 
@@ -388,6 +392,8 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         uid = discovery_info.get(DISCOVERY_DATA_UID)
         host = discovery_info.get(CONF_HOST)
         if not isinstance(uid, str) or not isinstance(host, str):
+            return self.async_abort(reason="no_devices_found")
+        if uid in _yaml_excluded_uids(self.hass) or self._async_is_ignored_uid(uid):
             return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(uid)
@@ -484,6 +490,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         self, controllers: dict[str, pizone.Controller]
     ) -> list[pizone.Controller]:
         """Return sorted unconfigured controllers for the interactive user flow."""
+        controllers = self._filter_yaml_exclude(self.hass, controllers)
         configured_uids = self._async_current_ids(include_ignore=False)
         return sorted(
             (

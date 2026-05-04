@@ -197,6 +197,34 @@ async def test_broadcast_skips_already_configured_controller(
     assert result["data"] == {}
 
 
+async def test_user_discovery_skips_yaml_excluded_controllers(
+    hass: HomeAssistant, mock_entry_setup: None
+) -> None:
+    """User flow should not offer controllers excluded by deprecated YAML config."""
+    excluded_controller = _make_controller("000000001", "192.0.2.1")
+    allowed_controller = _make_controller("000000002", "192.0.2.2")
+    hass.data[DATA_CONFIG] = {"exclude": [excluded_controller.device_uid]}
+
+    with patch(
+        "homeassistant.components.izone.config_flow._async_discover_controllers",
+        return_value={
+            excluded_controller.device_uid: excluded_controller,
+            allowed_controller.device_uid: allowed_controller,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "iZone 000000002"
+    assert result["data"] == {}
+
+
 async def test_broadcast_multiple_unconfigured_shows_choice(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
@@ -560,6 +588,45 @@ async def test_homekit_fans_out_other_discovered_controllers(
     assert fanout_flow["context"]["unique_id"] == "000000002"
 
 
+async def test_homekit_sets_advertised_uid_before_lock_id(
+    hass: HomeAssistant,
+) -> None:
+    """HomeKit flow should expose controller UID for matching before lock serialization."""
+    controller = _make_controller("000000001", "192.0.2.3")
+    set_unique_id_calls: list[str] = []
+    original_set_unique_id = config_flow.IZoneConfigFlow.async_set_unique_id
+
+    async def _recording_set_unique_id(
+        self: config_flow.IZoneConfigFlow, uid: str
+    ) -> None:
+        set_unique_id_calls.append(uid)
+        await original_set_unique_id(self, uid)
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow._async_discover_controllers",
+            return_value={controller.device_uid: controller},
+        ),
+        patch.object(
+            config_flow.IZoneConfigFlow,
+            "async_set_unique_id",
+            _recording_set_unique_id,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert set_unique_id_calls[:2] == [
+        "000000001",
+        config_flow.HOMEKIT_DISCOVERY_LOCK_ID,
+    ]
+
+
 async def test_homekit_proceeds_while_user_confirm_is_open(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
@@ -851,6 +918,22 @@ async def test_integration_discovery_aborts_on_invalid_payload(
         IZONE,
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data={"uid": 1, "host": "192.0.2.1"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_integration_discovery_aborts_for_yaml_excluded_uid(
+    hass: HomeAssistant,
+) -> None:
+    """Integration discovery should abort for UIDs excluded in YAML config."""
+    hass.data[DATA_CONFIG] = {"exclude": ["000000002"]}
+
+    result = await hass.config_entries.flow.async_init(
+        IZONE,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={"uid": "000000002", "host": "192.0.2.2"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -1159,7 +1242,11 @@ async def test_async_setup_entry_migrates_legacy_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test legacy config entries are migrated to the discovered controller UID."""
-    entry = MockConfigEntry(domain=IZONE, unique_id=IZONE, data={})
+    entry = MockConfigEntry(
+        domain=IZONE,
+        unique_id=IZONE,
+        data={"host": "198.51.100.7"},
+    )
     entry.add_to_hass(hass)
     controller = _make_controller("000000001", "192.0.2.1")
 
@@ -1677,6 +1764,31 @@ async def test_async_migrate_entry_returns_false_for_current_version(
     assert migrated is False
 
 
+async def test_async_migrate_entry_clears_legacy_data(
+    hass: HomeAssistant,
+) -> None:
+    """Version migration should clear legacy entry data when switching to UID-only state."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id="000000001",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    controller = _make_controller("000000001", "192.0.2.2")
+
+    with patch(
+        "homeassistant.components.izone.config_flow._async_discover_controllers",
+        return_value={controller.device_uid: controller},
+    ):
+        migrated = await izone_component.async_migrate_entry(hass, entry)
+
+    assert migrated is True
+    assert entry.version == 2
+    assert entry.unique_id == controller.device_uid
+    assert entry.data == {}
+
+
 def test_discovery_listener_methods_dispatch_expected_signals(
     hass: HomeAssistant,
 ) -> None:
@@ -1700,6 +1812,71 @@ def test_discovery_listener_methods_dispatch_expected_signals(
         ((hass, izone_discovery.DISPATCH_CONTROLLER_UPDATE, controller),),
         ((hass, izone_discovery.DISPATCH_ZONE_UPDATE, controller, zone),),
     ]
+
+
+def test_controller_discovered_dispatches_signal_and_reschedules_idle_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Discovered controller should dispatch signal and cancel prior idle-stop handle."""
+    service = izone_discovery.DiscoveryService(hass)
+    previous_handle = Mock()
+    new_handle = Mock()
+    service._idle_stop_handle = previous_handle
+    controller = _make_controller("000000001", "192.0.2.1")
+
+    with (
+        patch.object(hass.loop, "call_later", return_value=new_handle),
+        patch(
+            "homeassistant.components.izone.discovery.async_dispatcher_send"
+        ) as mock_send,
+    ):
+        service.controller_discovered(controller)
+
+    previous_handle.cancel.assert_called_once()
+    assert service._idle_stop_handle is new_handle
+    mock_send.assert_called_once_with(
+        hass,
+        izone_discovery.DISPATCH_CONTROLLER_DISCOVERED,
+        controller,
+    )
+
+
+async def test_start_discovery_listener_forwards_discovered_controller_to_flow(
+    hass: HomeAssistant,
+    mock_pizone_discovery_service: Mock,
+) -> None:
+    """Discovery dispatcher callback should forward discovered controllers to config flow."""
+    captured_listener = None
+
+    def _capture_listener(*args: object) -> Mock:
+        nonlocal captured_listener
+        captured_listener = args[2]
+        return Mock()
+
+    controller = _make_controller("000000004", "192.0.2.4")
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.discovery",
+            return_value=mock_pizone_discovery_service,
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.async_dispatcher_connect",
+            side_effect=_capture_listener,
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.async_note_integration_discovery"
+        ) as mock_note,
+    ):
+        await izone_discovery.async_start_discovery_service(hass)
+        assert captured_listener is not None
+        captured_listener(controller)
+
+    mock_note.assert_called_once_with(hass, controller)
 
 
 def test_is_ignored_or_excluded_uid_returns_true_for_yaml_exclude(

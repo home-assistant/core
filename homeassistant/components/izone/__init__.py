@@ -91,7 +91,7 @@ async def _async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -
     hass.config_entries.async_update_entry(
         entry,
         unique_id=controller.device_uid,
-        data=dict(entry.data),
+        data={},
         title=f"iZone {controller.device_uid}",
     )
 
@@ -128,7 +128,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             version=2,
             unique_id=controller.device_uid,
-            data=dict(entry.data),
+            data={},
             title=f"iZone {controller.device_uid}",
         )
         return True
