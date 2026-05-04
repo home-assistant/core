@@ -1,7 +1,5 @@
 """Tests for the Novy Hood light platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, call
 
 from homeassistant.components.light import (
@@ -9,7 +7,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.novy_cooker_hood.light import COMMAND_LIGHT
+from homeassistant.components.novy_cooker_hood.commands import COMMAND_LIGHT
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,

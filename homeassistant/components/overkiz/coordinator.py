@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging

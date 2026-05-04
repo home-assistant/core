@@ -1,7 +1,5 @@
 """Common fixtures for the Novy Cooker Hood tests."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -33,7 +31,7 @@ def mock_get_codes() -> Iterator[MagicMock]:
         side_effect=lambda name: MockRadioFrequencyCommand()
     )
     with patch(
-        "homeassistant.components.novy_cooker_hood.light.get_codes",
+        "homeassistant.components.novy_cooker_hood.commands.get_codes",
         return_value=fake_collection,
     ):
         yield fake_collection

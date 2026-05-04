@@ -39,7 +39,7 @@ _PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("counter.is_value", _PLAIN_THRESHOLD, True, False),
+        ("counter.is_value", _PLAIN_THRESHOLD, True, True),
     ],
 )
 async def test_counter_condition_options_validation(

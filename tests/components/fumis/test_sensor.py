@@ -66,6 +66,33 @@ async def test_sensors_unknown_status(
         assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize("device_fixture", ["info_error_alert"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensors_active_error_and_alert(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test error and alert sensors with active codes."""
+    error_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "fumis", f"{UNIQUE_ID}_error"
+    )
+    assert error_entity_id is not None
+    assert (state := hass.states.get(error_entity_id))
+    assert state == snapshot
+    assert state.state == "ignition_failed"
+    assert state.attributes["code"] == "E101"
+
+    alert_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "fumis", f"{UNIQUE_ID}_alert"
+    )
+    assert alert_entity_id is not None
+    assert (state := hass.states.get(alert_entity_id))
+    assert state == snapshot
+    assert state.state == "low_fuel"
+    assert state.attributes["code"] == "A001"
+
+
 @pytest.mark.parametrize("device_fixture", ["info_minimal"])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_sensors_conditional_creation(
@@ -93,7 +120,9 @@ async def test_sensors_conditional_creation(
 
     # These should still exist
     for key in (
+        "alert",
         "detailed_stove_status",
+        "error",
         "power_output",
         "stove_status",
         "wifi_rssi",

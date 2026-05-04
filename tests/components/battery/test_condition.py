@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 
@@ -32,13 +33,17 @@ _BATTERY_UNIT_ATTRS = {ATTR_UNIT_OF_MEASUREMENT: "%"}
 @pytest.fixture
 async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple binary sensor entities associated with different targets."""
-    return await target_entities(hass, "binary_sensor")
+    return await target_entities(
+        hass, "binary_sensor", entity_category=EntityCategory.DIAGNOSTIC
+    )
 
 
 @pytest.fixture
 async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple sensor entities associated with different targets."""
-    return await target_entities(hass, "sensor")
+    return await target_entities(
+        hass, "sensor", entity_category=EntityCategory.DIAGNOSTIC
+    )
 
 
 @pytest.mark.parametrize(
