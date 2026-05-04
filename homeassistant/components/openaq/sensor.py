@@ -11,12 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,19 +25,6 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-UNIT_MAP = {
-    "µg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "µg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "ug/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "ug/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "μg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "μg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "mg/m³": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    "mg/m3": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    "ppm": CONCENTRATION_PARTS_PER_MILLION,
-    "ppb": CONCENTRATION_PARTS_PER_BILLION,
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -177,10 +158,7 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
         )
         if measurement is None:
             return None
-        unit = measurement.unit
-        if unit is None:
-            return None
-        return UNIT_MAP.get(unit, unit)
+        return measurement.unit
 
 
 __all__ = ["SENSOR_DESCRIPTIONS", "OpenAQLocationData", "OpenAQSensor"]
