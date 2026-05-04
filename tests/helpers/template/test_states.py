@@ -1,7 +1,5 @@
 """Test state wrapper classes and helpers for Home Assistant templates."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 import pytest

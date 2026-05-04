@@ -1,7 +1,5 @@
 """Platform for Sunricher DALI sensor entities."""
 
-from __future__ import annotations
-
 import logging
 
 from PySrDaliGateway import CallbackEventType, Device

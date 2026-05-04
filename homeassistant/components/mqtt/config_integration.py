@@ -1,7 +1,5 @@
 """Support for MQTT platform config setup."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -37,6 +35,8 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
         Platform.CLIMATE.value: vol.All(cv.ensure_list, [dict]),
         Platform.COVER.value: vol.All(cv.ensure_list, [dict]),
+        Platform.DATE.value: vol.All(cv.ensure_list, [dict]),
+        Platform.DATETIME.value: vol.All(cv.ensure_list, [dict]),
         Platform.DEVICE_TRACKER.value: vol.All(cv.ensure_list, [dict]),
         Platform.EVENT.value: vol.All(cv.ensure_list, [dict]),
         Platform.FAN.value: vol.All(cv.ensure_list, [dict]),

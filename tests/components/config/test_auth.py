@@ -26,7 +26,7 @@ async def test_list_requires_admin(
     """Test get users requires auth."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
-    await client.send_json({"id": 5, "type": auth_config.WS_TYPE_LIST})
+    await client.send_json({"id": 5, "type": "config/auth/list"})
 
     result = await client.receive_json()
     assert not result["success"], result
@@ -65,7 +65,7 @@ async def test_list(
     access_token = hass.auth.async_create_access_token(refresh_token)
 
     client = await hass_ws_client(hass, access_token)
-    await client.send_json({"id": 5, "type": auth_config.WS_TYPE_LIST})
+    await client.send_json({"id": 5, "type": "config/auth/list"})
 
     result = await client.receive_json()
     assert result["success"], result
@@ -125,9 +125,7 @@ async def test_delete_requires_admin(
     """Test delete command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
-    await client.send_json(
-        {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": "abcd"}
-    )
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": "abcd"})
 
     result = await client.receive_json()
     assert not result["success"], result
@@ -142,7 +140,7 @@ async def test_delete_unable_self_account(
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     await client.send_json(
-        {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": refresh_token.user.id}
+        {"id": 5, "type": "config/auth/delete", "user_id": refresh_token.user.id}
     )
 
     result = await client.receive_json()
@@ -156,9 +154,7 @@ async def test_delete_unknown_user(
     """Test we cannot delete an unknown user."""
     client = await hass_ws_client(hass, hass_access_token)
 
-    await client.send_json(
-        {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": "abcd"}
-    )
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": "abcd"})
 
     result = await client.receive_json()
     assert not result["success"], result
@@ -175,7 +171,7 @@ async def test_delete(
     cur_users = len(await hass.auth.async_get_users())
 
     await client.send_json(
-        {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": test_user.id}
+        {"id": 5, "type": "config/auth/delete", "user_id": test_user.id}
     )
 
     result = await client.receive_json()

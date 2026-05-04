@@ -1,7 +1,5 @@
 """Support for Vallox ventilation unit binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (

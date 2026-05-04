@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
 from pyfritzhome import FritzhomeDevice

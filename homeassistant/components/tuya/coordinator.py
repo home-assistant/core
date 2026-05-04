@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from tuya_device_handlers.devices import register_tuya_quirks
+from tuya_device_handlers.devices import TUYA_QUIRKS_REGISTRY, register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -121,15 +121,39 @@ class DeviceListener(SharingDeviceListener):
             device.function,
             device.status_range,
         )
-        self.hass.add_job(self.async_add_device, device.id)
+        self.hass.add_job(self.async_add_device, device)
 
     @callback
-    def async_add_device(self, device_id: str) -> None:
+    def async_add_device(self, device: CustomerDevice) -> None:
         """Add device to Home Assistant."""
         # Ensure the (stale) device isn't present in the device registry
-        self.async_remove_device(device_id)
+        self.async_remove_device(device.id)
 
-        async_dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device_id])
+        # Register quirk, and add device to the device registry
+        device_registry = dr.async_get(self.hass)
+        self.async_register_device(device_registry, device)
+
+        # Notify platforms of new device so entities can be created
+        async_dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+
+    @callback
+    def async_register_device(
+        self, device_registry: dr.DeviceRegistry, device: CustomerDevice
+    ) -> None:
+        """Register device with Home Assistant."""
+        TUYA_QUIRKS_REGISTRY.initialise_device_quirk(device)
+
+        device_registry.async_get_or_create(
+            config_entry_id=self._entry.entry_id,
+            identifiers={(DOMAIN, device.id)},
+            manufacturer="Tuya",
+            name=device.name,
+            # Note: the model is overridden via entity.device_info property
+            # when the entity is created. If no entities are generated, it will
+            # stay as unsupported
+            model=f"{device.product_name} (unsupported)",
+            model_id=device.product_id,
+        )
 
     def remove_device(self, device_id: str) -> None:
         """Handle device removal event."""

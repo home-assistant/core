@@ -1,7 +1,5 @@
 """Helper methods for common PlayStation Network integration operations."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from functools import partial
 from typing import Any
