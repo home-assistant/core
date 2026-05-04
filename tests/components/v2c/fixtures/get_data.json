@@ -5,7 +5,6 @@
   "ChargePower": 1500.27,
   "VoltageInstallation": 230,
   "ChargeEnergy": 1.8,
-  "ChargeMode": 1,
   "SlaveError": 4,
   "ChargeTime": 4355,
   "HousePower": 0.0,
@@ -19,8 +18,6 @@
   "MinIntensity": 6,
   "MaxIntensity": 16,
   "PauseDynamic": 0,
-  "LightLED": 25,
-  "LogoLED": 75,
   "FirmwareVersion": "2.1.7",
   "DynamicPowerMode": 2,
   "ContractedPower": 4600

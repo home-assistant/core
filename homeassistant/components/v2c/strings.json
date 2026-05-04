@@ -30,14 +30,6 @@
         "name": "Ready"
       }
     },
-    "light": {
-      "light_led": {
-        "name": "Light LED"
-      },
-      "logo_led": {
-        "name": "Logo LED"
-      }
-    },
     "number": {
       "intensity": {
         "name": "Intensity"
@@ -50,16 +42,6 @@
       },
       "voltage_installation": {
         "name": "Installation voltage"
-      }
-    },
-    "select": {
-      "charge_mode": {
-        "name": "Charge mode",
-        "state": {
-          "mixed": "Mixed",
-          "monophasic": "Monophasic",
-          "threephasic": "Three-phase"
-        }
       }
     },
     "sensor": {
