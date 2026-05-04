@@ -22,7 +22,7 @@
     "flow_title": "{name} ({category})",
     "step": {
       "busy_error": {
-        "description": "Abort pairing on all controllers, or try restarting the device, then try again.",
+        "description": "Abort pairing on all controllers, or try restarting the device, then try pairing again.",
         "title": "The device is already pairing with another controller"
       },
       "max_tries_error": {
