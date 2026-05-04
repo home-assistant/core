@@ -5,7 +5,6 @@ from types import MappingProxyType, SimpleNamespace
 from homeassistant.components.openaq.coordinator import (
     OpenAQMeasurement,
     create_openaq_client,
-    format_openaq_url,
     get_openaq_value,
     normalize_latest_measurements,
 )
@@ -36,22 +35,6 @@ def test_get_openaq_value_dict() -> None:
 
     assert get_openaq_value(data, "id") == 123
     assert get_openaq_value(data, "missing") is None
-
-
-def test_format_openaq_url() -> None:
-    """Test formatting OpenAQ API URLs for debug logging."""
-    assert format_openaq_url(
-        "/locations",
-        {
-            "page": 1,
-            "limit": 10,
-            "radius": 5000,
-            "coordinates": (35.1, -106.6),
-        },
-    ) == (
-        "https://api.openaq.org/v3/locations"
-        "?page=1&limit=10&radius=5000&coordinates=35.1%2C-106.6"
-    )
 
 
 def test_normalize_latest_measurements_ignores_invalid_data() -> None:
