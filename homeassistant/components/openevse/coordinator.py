@@ -4,9 +4,11 @@ from datetime import timedelta
 import logging
 
 from openevsehttp.__main__ import OpenEVSE
+from openevsehttp.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -63,3 +65,5 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 f"Timeout communicating with charger: {error}"
             ) from error
+        except AuthenticationError as error:
+            raise ConfigEntryAuthFailed("Invalid credentials for charger") from error
