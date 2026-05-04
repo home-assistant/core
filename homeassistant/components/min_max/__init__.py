@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_create_issue(
         hass,
         DOMAIN,
-        "migrate_to_group_sensor",
+        f"migrate_to_group_sensor-{entry.entry_id}",
         is_fixable=True,
         is_persistent=False,
         severity=IssueSeverity.WARNING,
