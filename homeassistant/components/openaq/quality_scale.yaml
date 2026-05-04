@@ -6,9 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Subentry API error branches still need full config flow test coverage.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:

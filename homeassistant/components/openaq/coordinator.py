@@ -26,12 +26,25 @@ from openaq import (
 )
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LOCATION_ID, DOMAIN, LOGGER
 
 UPDATE_INTERVAL = timedelta(minutes=10)
+
+OPENAQ_UNIT_ALIASES = {
+    "µg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "µg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "ug/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "ug/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "mg/m3": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+}
 
 
 @dataclass(slots=True)
@@ -97,6 +110,13 @@ def _as_float(value: object) -> float | None:
     return float(value)
 
 
+def _normalize_unit(unit: object) -> str | None:
+    """Normalize an OpenAQ unit string to Home Assistant's canonical unit."""
+    if not isinstance(unit, str):
+        return None
+    return OPENAQ_UNIT_ALIASES.get(unit, unit)
+
+
 def _sensor_metadata_by_id(
     sensors: Sequence[object],
 ) -> dict[int, tuple[str, str | None]]:
@@ -108,8 +128,10 @@ def _sensor_metadata_by_id(
         parameter_name = _normalize_parameter(parameter)
         if sensor_id is None or parameter_name is None:
             continue
-        unit = get_openaq_value(parameter, "units")
-        metadata[sensor_id] = (parameter_name, unit if isinstance(unit, str) else None)
+        metadata[sensor_id] = (
+            parameter_name,
+            _normalize_unit(get_openaq_value(parameter, "units")),
+        )
     return metadata
 
 
@@ -142,9 +164,10 @@ def normalize_latest_measurements(
         )
         if parameter_name is None or parameter_name in measurements or value is None:
             continue
-        unit = get_openaq_value(parameter, "units")
         measurements[parameter_name] = OpenAQMeasurement(
-            parameter_name, value, unit if isinstance(unit, str) else None
+            parameter_name,
+            value,
+            _normalize_unit(get_openaq_value(parameter, "units")),
         )
 
     return MappingProxyType(measurements)
@@ -199,6 +222,12 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
             ) from err
+
+        if not location_response.results:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_fetch",
+            )
 
         location = location_response.results[0]
         return OpenAQLocationData(

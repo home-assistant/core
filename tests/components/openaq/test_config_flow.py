@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from openaq import (
+    BadGatewayError,
     GatewayTimeoutError,
     HTTPRateLimitError,
     NotAuthorizedError,
@@ -188,6 +189,46 @@ async def test_location_subentry_no_locations_found(
     assert result["errors"] == {"base": "no_locations_found"}
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (HTTPRateLimitError("Rate limited"), "rate_limited"),
+        (BadGatewayError("Bad gateway"), "cannot_connect"),
+        (Exception("Unexpected"), "unknown"),
+    ],
+)
+async def test_location_subentry_map_flow_errors(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test map search API errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.side_effect = exception
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "map"}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
+            CONF_RADIUS: 5000,
+            CONF_LIMIT: 10,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "map"
+    assert result["errors"] == {"base": error}
+
+
 async def test_location_subentry_location_id_flow(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
@@ -238,6 +279,41 @@ async def test_location_subentry_location_id_not_found(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_LOCATION_ID
     assert result["errors"] == {"base": "invalid_location"}
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (HTTPRateLimitError("Rate limited"), "rate_limited"),
+        (BadGatewayError("Bad gateway"), "cannot_connect"),
+        (Exception("Unexpected"), "unknown"),
+    ],
+)
+async def test_location_subentry_location_id_flow_errors(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test location ID API errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.get.side_effect = exception
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": CONF_LOCATION_ID}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: 9999}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_LOCATION_ID
+    assert result["errors"] == {"base": error}
 
 
 async def test_duplicate_location_subentry(
