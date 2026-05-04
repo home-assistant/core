@@ -1,0 +1,115 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This service is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "API key for OpenAQ"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "already_configured": "This service is already configured"
+      },
+      "entry_type": "Monitoring location",
+      "error": {
+        "cannot_connect": "Failed to connect",
+        "no_locations_found": "No OpenAQ monitoring locations were found nearby.",
+        "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
+        "unknown": "Unexpected error"
+      },
+      "initiate_flow": {
+        "user": "Add monitoring location"
+      },
+      "step": {
+        "location_id": {
+          "data": {
+            "location_id": "Location ID"
+          },
+          "data_description": {
+            "location_id": "The OpenAQ location ID"
+          }
+        },
+        "map": {
+          "data": {
+            "limit": "Maximum locations",
+            "location": "Location",
+            "radius": "Search radius"
+          },
+          "data_description": {
+            "radius": "Search radius in meters, up to 25000"
+          }
+        },
+        "select": {
+          "data": {
+            "location_id": "Monitoring location"
+          }
+        },
+        "user": {
+          "description": "How do you want to select an OpenAQ monitoring location?",
+          "menu_options": {
+            "location_id": "Location ID",
+            "map": "Location"
+          },
+          "title": "Add monitoring location"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bc": {
+        "name": "Black carbon"
+      },
+      "co": {
+        "name": "Carbon monoxide"
+      },
+      "co2": {
+        "name": "Carbon dioxide"
+      },
+      "no": {
+        "name": "Nitrogen monoxide"
+      },
+      "no2": {
+        "name": "Nitrogen dioxide"
+      },
+      "nox": {
+        "name": "Nitrogen oxides"
+      },
+      "o3": {
+        "name": "Ozone"
+      },
+      "pm1": {
+        "name": "PM1"
+      },
+      "pm10": {
+        "name": "PM10"
+      },
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "so2": {
+        "name": "Sulphur dioxide"
+      }
+    }
+  },
+  "exceptions": {
+    "unable_to_fetch": {
+      "message": "Unable to fetch data from OpenAQ"
+    }
+  }
+}
