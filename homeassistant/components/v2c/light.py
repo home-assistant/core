@@ -68,10 +68,7 @@ async def async_setup_entry(
                 description,
                 entity_registry_enabled_default=(
                     description.key != "light_led"
-                    and (
-                        description.entity_registry_enabled_default
-                        or description.value_fn(data) is not None
-                    )
+                    and description.value_fn(data) is not None
                 ),
             ),
             config_entry.entry_id,
