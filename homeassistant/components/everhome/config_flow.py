@@ -51,7 +51,7 @@ class EcoTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
-        """Handle zeroconf discovery Todo add check."""
+        """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._serial = discovery_info.properties["serial"]
         await self.async_set_unique_id(self._serial)
