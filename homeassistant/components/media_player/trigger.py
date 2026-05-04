@@ -18,6 +18,42 @@ class MediaPlayerMutedTrigger(EntityTriggerBase):
 
     _domain_specs = {DOMAIN: DomainSpec()}
 
+    def _has_volume_attributes(self, state: State) -> bool:
+        """Check if the state has volume muted or volume level attributes."""
+        return (
+            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is not None
+            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+        )
+
+    def _should_include(self, state: State) -> bool:
+        """Check if an entity should participate in all/count checks.
+
+        Entities without volume attributes cannot be muted, so they are
+        excluded from the check - otherwise an "all" check would never
+        pass when there are media players without volume support.
+        """
+        return state.state not in self._excluded_states and self._has_volume_attributes(
+            state
+        )
+
+    def check_all_match(self, entity_ids: set[str]) -> bool:
+        """Check if all mutable entity states match."""
+        return all(
+            self.is_valid_state(state)
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+            and self._should_include(state)
+        )
+
+    def count_matches(self, entity_ids: set[str]) -> int:
+        """Count matching mutable entities."""
+        return sum(
+            self.is_valid_state(state)
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+            and self._should_include(state)
+        )
+
     def is_muted(self, state: State) -> bool:
         """Check if the media player is muted."""
         return (
@@ -30,10 +66,15 @@ class MediaPlayerMutedTrigger(EntityTriggerBase):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
+        if not self._has_volume_attributes(to_state):
+            return False
+
         return self.is_muted(from_state) != self.is_muted(to_state)
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state."""
+        if not self._has_volume_attributes(state):
+            return False
         return self.is_muted(state)
 
 
