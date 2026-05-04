@@ -9,7 +9,6 @@ from switchbot_api import (
     SwitchBotAPI,
     SwitchBotConnectionError,
     SwitchBotDeviceOfflineError,
-    SwitchBotError,
 )
 
 from homeassistant.core import callback
@@ -65,7 +64,7 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
 
     async def _send_api_command(
         self,
-        device_id: str,
+        device_id: str | None,
         command: Commands | str,
         command_type: str = "command",
         parameters: dict | str | int = "default",
@@ -94,15 +93,6 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={
-                    "name": self._device_name_for_error(),
-                    "error": str(err),
-                },
-            ) from err
-        except SwitchBotError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
                 translation_placeholders={
                     "name": self._device_name_for_error(),
                     "error": str(err),

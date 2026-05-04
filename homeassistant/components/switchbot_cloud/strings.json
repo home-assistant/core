@@ -17,17 +17,6 @@
       }
     }
   },
-  "exceptions": {
-    "device_offline": {
-      "message": "SwitchBot Cloud device \"{name}\" is offline."
-    },
-    "connection_error": {
-      "message": "Error communicating with SwitchBot Cloud for \"{name}\": {error}"
-    },
-    "command_failed": {
-      "message": "SwitchBot Cloud command for \"{name}\" failed: {error}"
-    }
-  },
   "entity": {
     "button": {
       "art_frame_next_picture": {
@@ -100,6 +89,14 @@
           "unlocking": "Unlocking"
         }
       }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error communicating with SwitchBot Cloud for \"{name}\": {error}"
+    },
+    "device_offline": {
+      "message": "SwitchBot Cloud device \"{name}\" is offline."
     }
   }
 }
