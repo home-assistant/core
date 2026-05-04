@@ -22,14 +22,9 @@ PARALLEL_UPDATES = 0
 def get_tomorrow_price_available(
     entity: NordpoolPriceBinarySensor,
 ) -> bool:
-    """Return tomorrow price availability.
-
-    Output: True or False
-    """
+    """Return tomorrow price availability."""
     data = entity.coordinator.get_data_tomorrow()
-    if data and data.entries and entity.area in data.entries[0].entry:
-        return True
-    return False
+    return bool(data and data.entries and entity.area in data.entries[0].entry)
 
 
 @dataclass(frozen=True, kw_only=True)
