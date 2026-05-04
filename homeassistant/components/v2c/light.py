@@ -113,9 +113,10 @@ class V2CLightEntity(V2CBaseEntity, LightEntity):
         """Turn on the LED."""
         value = LED_ON_VALUE
         if self.entity_description.supports_brightness:
-            value = round(
-                brightness_to_value(BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255))
-            )
+            brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+            value = round(brightness_to_value(BRIGHTNESS_SCALE, brightness))
+            if brightness:
+                value = max(value, 1)
         await self.entity_description.update_fn(self.coordinator.evse, value)
         await self.coordinator.async_request_refresh()
 

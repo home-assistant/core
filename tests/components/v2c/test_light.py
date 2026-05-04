@@ -86,6 +86,28 @@ async def test_logo_led_set_brightness(
     mock_v2c_client.logo_led.assert_called_once_with(50)
 
 
+async def test_logo_led_set_low_brightness(
+    hass: HomeAssistant,
+    mock_v2c_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting Logo LED low brightness."""
+    with patch("homeassistant.components.v2c.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.evse_1_1_1_1_logo_led",
+            ATTR_BRIGHTNESS: 1,
+        },
+        blocking=True,
+    )
+
+    mock_v2c_client.logo_led.assert_called_once_with(1)
+
+
 async def test_light_led_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
