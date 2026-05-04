@@ -786,3 +786,35 @@ async def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
 
         info = render_to_info(hass, time_until_template)
         assert info.has_time is True
+
+
+@pytest.mark.parametrize(
+    ("template_str", "expected"),
+    [
+        ("{{ timedelta(seconds=0) | timedelta_string }}", "0 seconds"),
+        ("{{ timedelta(seconds=1) | timedelta_string }}", "1 second"),
+        ("{{ timedelta(hours=1) | timedelta_string }}", "1 hour"),
+        ("{{ timedelta(hours=2) | timedelta_string }}", "2 hours"),
+        ("{{ timedelta(hours=1, minutes=30) | timedelta_string }}", "2 hours"),
+        (
+            "{{ timedelta(hours=1, minutes=30) | timedelta_string(precision=2) }}",
+            "1 hour 30 minutes",
+        ),
+        (
+            "{{ timedelta(hours=1, minutes=54, seconds=33) | timedelta_string(precision=3) }}",
+            "1 hour 54 minutes 33 seconds",
+        ),
+        (
+            "{{ timedelta(hours=1, minutes=54, seconds=33) | timedelta_string(precision=0) }}",
+            "1 hour 54 minutes 33 seconds",
+        ),
+        ("{{ timedelta_string(timedelta(hours=1), precision=2) }}", "1 hour"),
+        ("{{ timedelta_string('string') }}", "string"),
+        ("{{ timedelta_string(42) }}", 42),
+    ],
+)
+def test_timedelta_string(
+    hass: HomeAssistant, template_str: str, expected: str
+) -> None:
+    """Test timedelta_string function and filter."""
+    assert render(hass, template_str) == expected

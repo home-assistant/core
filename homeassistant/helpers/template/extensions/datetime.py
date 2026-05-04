@@ -118,6 +118,12 @@ class DateTimeExtension(BaseTemplateExtension):
                     limited_ok=False,
                 ),
                 TemplateFunction(
+                    "timedelta_string",
+                    self.timedelta_string,
+                    as_global=True,
+                    as_filter=True,
+                ),
+                TemplateFunction(
                     "today_at",
                     self.today_at,
                     as_global=True,
@@ -254,6 +260,29 @@ class DateTimeExtension(BaseTemplateExtension):
 
         return datetime.combine(today, time_today, today.tzinfo)
 
+    def _datetime_as_string(self, value: Any, precision: int, future: bool) -> Any:
+        """Shared implementation for relative datetime formatting.
+
+        If future is False, formats time since value (past datetime).
+        If future is True, formats time until value (future datetime).
+        Returns value unmodified if it is not a datetime or points the wrong direction.
+        """
+        if (render_info := render_info_cv.get()) is not None:
+            render_info.has_time = True
+
+        if not isinstance(value, datetime):
+            return value
+        if not value.tzinfo:
+            value = dt_util.as_local(value)
+        now = dt_util.now()
+        if future:
+            if now > value:
+                return value
+            return dt_util.get_time_remaining(value, precision)
+        if now < value:
+            return value
+        return dt_util.get_age(value, precision)
+
     def relative_time(self, value: Any) -> Any:
         """Take a datetime and return its "age" as a string.
 
@@ -268,16 +297,7 @@ class DateTimeExtension(BaseTemplateExtension):
         Note: This template function is deprecated in favor of `time_until`, but is still
         supported so as not to break old templates.
         """
-        if (render_info := render_info_cv.get()) is not None:
-            render_info.has_time = True
-
-        if not isinstance(value, datetime):
-            return value
-        if not value.tzinfo:
-            value = dt_util.as_local(value)
-        if dt_util.now() < value:
-            return value
-        return dt_util.get_age(value)
+        return self._datetime_as_string(value, precision=1, future=False)
 
     def time_since(self, value: Any | datetime, precision: int = 1) -> Any:
         """Take a datetime and return its "age" as a string.
@@ -288,17 +308,7 @@ class DateTimeExtension(BaseTemplateExtension):
 
         If the value not a datetime object the input will be returned unmodified.
         """
-        if (render_info := render_info_cv.get()) is not None:
-            render_info.has_time = True
-
-        if not isinstance(value, datetime):
-            return value
-        if not value.tzinfo:
-            value = dt_util.as_local(value)
-        if dt_util.now() < value:
-            return value
-
-        return dt_util.get_age(value, precision)
+        return self._datetime_as_string(value, precision=precision, future=False)
 
     def time_until(self, value: Any | datetime, precision: int = 1) -> Any:
         """Take a datetime and return the amount of time until that time as a string.
@@ -309,14 +319,19 @@ class DateTimeExtension(BaseTemplateExtension):
 
         If the value not a datetime object the input will be returned unmodified.
         """
-        if (render_info := render_info_cv.get()) is not None:
-            render_info.has_time = True
+        return self._datetime_as_string(value, precision=precision, future=True)
 
-        if not isinstance(value, datetime):
-            return value
-        if not value.tzinfo:
-            value = dt_util.as_local(value)
-        if dt_util.now() > value:
-            return value
+    def timedelta_string(self, value: Any, precision: int = 1) -> Any:
+        """Take a timedelta and return a human-readable string representation.
 
-        return dt_util.get_time_remaining(value, precision)
+        The result can be in seconds, minutes, hours, days, months and years.
+
+        precision is the number of units to return, with the last unit rounded.
+
+        Negative timedeltas are formatted using their absolute value.
+
+        If the value is not a timedelta object the input will be returned unmodified.
+        """
+        if not isinstance(value, timedelta):
+            return value
+        return dt_util.timedelta_as_string(value, precision)
