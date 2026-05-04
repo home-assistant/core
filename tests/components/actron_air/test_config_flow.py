@@ -312,7 +312,6 @@ async def test_user_flow_timeout(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
 
-
 async def test_finish_login_auth_error(
     hass: HomeAssistant, mock_actron_api: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
@@ -336,3 +335,19 @@ async def test_finish_login_auth_error(
     # Should abort with oauth2_error
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth2_error"
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test successful reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config
