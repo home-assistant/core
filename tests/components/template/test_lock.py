@@ -850,7 +850,7 @@ async def test_nested_unique_id(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.usefixtures("setup_lock")
-async def test_emtpy_action_config(hass: HomeAssistant) -> None:
+async def test_empty_action_config(hass: HomeAssistant) -> None:
     """Test configuration with empty script."""
     state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes["supported_features"] == LockEntityFeature.OPEN
