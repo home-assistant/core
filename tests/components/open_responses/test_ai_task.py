@@ -4,10 +4,15 @@ from collections.abc import AsyncGenerator
 from copy import deepcopy
 from typing import Any
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.components import ai_task
+from homeassistant.components.open_responses.client import (
+    OpenResponsesInvalidModelError,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from tests.common import MockConfigEntry
@@ -91,3 +96,26 @@ async def test_generate_structured_data(
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
     assert calls[0]["text"]["format"]["type"] == "json_schema"
+
+
+async def test_generate_data_handles_invalid_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test runtime model errors are surfaced as Home Assistant errors."""
+
+    async def stream_response(**params: Any) -> AsyncGenerator[dict[str, Any]]:
+        if params["model"] == "open-responses-model":
+            raise OpenResponsesInvalidModelError("missing model")
+        yield {}
+
+    mock_config_entry.runtime_data.stream_response = stream_response
+
+    with pytest.raises(HomeAssistantError, match="Invalid Open Responses model"):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.open_responses_ai_task",
+            instructions="Generate test data",
+        )
