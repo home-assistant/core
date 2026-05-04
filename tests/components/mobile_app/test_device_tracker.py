@@ -483,37 +483,104 @@ async def test_restoring_state(
 
 
 @pytest.mark.usefixtures("setup_zone")
+@pytest.mark.parametrize(
+    ("restored_state", "restored_attributes", "expected_state", "expected_attributes"),
+    [
+        # Full attributes, coordinates inside the home zone
+        (
+            "home",
+            {
+                "source_type": "gps",
+                "latitude": 10.0,
+                "longitude": 20.0,
+                "gps_accuracy": 30,
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+            },
+            "home",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "latitude": 10.0,
+                "longitude": 20.0,
+                "gps_accuracy": 30,
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+                "in_zones": ["zone.home"],
+            },
+        ),
+        # Coordinates outside any zone
+        (
+            "not_home",
+            {
+                "source_type": "gps",
+                "latitude": 1.0,
+                "longitude": 2.0,
+                "gps_accuracy": 3,
+                "battery_level": 4,
+            },
+            "not_home",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "latitude": 1.0,
+                "longitude": 2.0,
+                "gps_accuracy": 3,
+                "battery_level": 4,
+                "in_zones": [],
+            },
+        ),
+        # Last update was a named location only (no coords). The location name
+        # is not persisted, so the entity falls back to "unknown" on restore.
+        (
+            "Office",
+            {
+                "source_type": "gps",
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+                "in_zones": [],
+            },
+            "unknown",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+                "in_zones": [],
+            },
+        ),
+    ],
+)
 async def test_restoring_state_legacy_fallback(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    restored_state: str,
+    restored_attributes: dict[str, Any],
+    expected_state: str,
+    expected_attributes: dict[str, Any],
 ) -> None:
     """Test fallback to legacy state attributes when no extra_data is stored.
 
     Covers entries persisted before MobileAppDeviceTrackerExtraStoredData existed.
     """
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
-
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     mock_restore_cache(
         hass,
-        [
-            State(
-                "device_tracker.test_1_2",
-                "home",
-                {
-                    "source_type": "gps",
-                    "latitude": 10.0,
-                    "longitude": 20.0,
-                    "gps_accuracy": 30,
-                    "battery_level": 40,
-                    "altitude": 50.0,
-                    "course": 60,
-                    "speed": 70,
-                    "vertical_accuracy": 80,
-                },
-            )
-        ],
+        [State("device_tracker.test_1_2", restored_state, restored_attributes)],
     )
 
     # Reload the config entry
@@ -522,20 +589,8 @@ async def test_restoring_state_legacy_fallback(
 
     state = hass.states.get("device_tracker.test_1_2")
     assert state is not None
-    assert state.state == "home"
-    assert state.attributes == {
-        "friendly_name": "Test 1",
-        "source_type": "gps",
-        "latitude": 10.0,
-        "longitude": 20.0,
-        "gps_accuracy": 30,
-        "battery_level": 40,
-        "altitude": 50.0,
-        "course": 60,
-        "speed": 70,
-        "vertical_accuracy": 80,
-        "in_zones": ["zone.home"],
-    }
+    assert state.state == expected_state
+    assert state.attributes == expected_attributes
 
 
 @pytest.mark.parametrize(
