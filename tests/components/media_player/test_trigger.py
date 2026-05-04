@@ -102,6 +102,7 @@ def parametrize_muted_trigger_states() -> list[
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
+        ("media_player.muted", {}, True, True),
         ("media_player.paused_playing", {}, True, True),
         ("media_player.started_playing", {}, True, True),
         ("media_player.stopped_playing", {}, True, True),
