@@ -125,7 +125,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 2
-    MINOR_VERSION = 6
+    MINOR_VERSION = 7
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -433,23 +433,37 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
+                }
+            )
+        elif CONF_VERBOSITY in options:
+            options.pop(CONF_VERBOSITY)
+
+        if model.startswith(("o", "gpt-5")):
+            reasoning_summary_options = ["off", "auto", "concise", "detailed"]
+            if model.startswith("o"):
+                reasoning_summary_options.remove("concise")
+            stored_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
+            if stored_summary not in reasoning_summary_options:
+                stored_summary = RECOMMENDED_REASONING_SUMMARY
+                options[CONF_REASONING_SUMMARY] = stored_summary
+            step_schema.update(
+                {
                     vol.Optional(
                         CONF_REASONING_SUMMARY,
-                        default=RECOMMENDED_REASONING_SUMMARY,
+                        default=stored_summary,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["off", "auto", "short", "detailed"],
+                            options=reasoning_summary_options,
                             translation_key=CONF_REASONING_SUMMARY,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                 }
             )
-        elif CONF_VERBOSITY in options:
-            options.pop(CONF_VERBOSITY)
-        if CONF_REASONING_SUMMARY in options:
-            if not model.startswith("gpt-5"):
-                options.pop(CONF_REASONING_SUMMARY)
+        elif CONF_REASONING_SUMMARY in options:
+            options.pop(CONF_REASONING_SUMMARY)
 
         service_tiers = self._get_service_tiers(model)
         if "flex" in service_tiers or "priority" in service_tiers:
