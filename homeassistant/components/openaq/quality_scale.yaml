@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration registers no actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: Pending the separate OpenAQ brands PR.
+  brands: done
   common-modules: done
   config-flow-test-coverage:
     status: todo
