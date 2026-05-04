@@ -182,6 +182,7 @@ class SupervisorIssues:
         self._issues: dict[UUID, Issue] = {}
         self._supervisor_client = get_supervisor_client(hass)
         self._disconnect: Callable[[], None] | None = None
+        self._cancel_update_retry: Callable[[], None] | None = None
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -363,6 +364,9 @@ class SupervisorIssues:
         if self._disconnect is not None:
             self._disconnect()
             self._disconnect = None
+        if self._cancel_update_retry is not None:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
 
     async def _update(self, _: datetime | None = None) -> None:
         """Update issues from Supervisor resolution center."""
@@ -370,12 +374,13 @@ class SupervisorIssues:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
             _LOGGER.error("Failed to update supervisor issues: %r", err)
-            async_call_later(
+            self._cancel_update_retry = async_call_later(
                 self._hass,
                 REQUEST_REFRESH_DELAY,
                 HassJob(self._update, cancel_on_shutdown=True),
             )
             return
+        self._cancel_update_retry = None
         self.unhealthy_reasons = set(data.unhealthy)
         self.unsupported_reasons = set(data.unsupported)
 

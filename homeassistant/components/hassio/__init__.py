@@ -1,5 +1,6 @@
 """Support for Hass.io."""
 
+import asyncio
 from dataclasses import replace
 from datetime import datetime
 import logging
@@ -395,21 +396,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Failed to update Home Assistant options in Supervisor: %s", err
             )
 
-    update_hass_api_task = hass.async_create_task(
-        update_hass_api(refresh_token), eager_start=True
+    await asyncio.gather(
+        update_hass_api(refresh_token),
+        push_config(None),
+        issues.setup(),
+        async_setup_addon_panel(hass),
     )
-    push_config_task = hass.async_create_task(push_config(None), eager_start=True)
-    issues_task = hass.async_create_task(issues.setup(), eager_start=True)
-
-    # Init add-on ingress panels
-    panels_task = hass.async_create_task(
-        async_setup_addon_panel(hass), eager_start=True
-    )
-
-    await update_hass_api_task
-    await panels_task
-    await push_config_task
-    await issues_task
 
     # Setup hardware integration for the detected board type
     @callback
