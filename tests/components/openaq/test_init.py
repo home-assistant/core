@@ -10,7 +10,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import API_KEY
+from .conftest import API_KEY, make_response
 
 from tests.common import MockConfigEntry
 
@@ -35,6 +35,20 @@ async def test_setup_retry_on_first_refresh_failure(
 ) -> None:
     """Test setup retry when first coordinator refresh fails."""
     mock_openaq_client.locations.latest.side_effect = ServerError("API error")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_openaq_client.close.assert_awaited_once()
+
+
+async def test_setup_retry_on_empty_location_response(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retry when OpenAQ returns no location."""
+    mock_openaq_client.locations.get.return_value = make_response([])
 
     await setup_integration(hass, mock_config_entry)
 
