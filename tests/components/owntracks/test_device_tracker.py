@@ -13,9 +13,11 @@ import pytest
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.owntracks.const import ATTR_UPDATE_TIMESTAMP
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import ClientSessionGenerator, MqttMockHAClient
@@ -392,6 +394,14 @@ def assert_location_source_type(hass: HomeAssistant, source_type: str) -> None:
     assert state.attributes.get("source_type") == source_type
 
 
+def assert_location_update_timestamp(hass: HomeAssistant, timestamp: int) -> None:
+    """Test the assertion of update_timestamp."""
+    state = hass.states.get(DEVICE_TRACKER_STATE)
+    assert state.attributes.get(ATTR_UPDATE_TIMESTAMP) == dt_util.utc_from_timestamp(
+        timestamp
+    )
+
+
 def assert_mobile_tracker_state(
     hass: HomeAssistant, location: str, beacon: str = IBEACON_DEVICE
 ) -> None:
@@ -435,6 +445,7 @@ async def test_location_update(hass: HomeAssistant) -> None:
     assert_location_source_type(hass, "gps")
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
     assert_location_accuracy(hass, LOCATION_MESSAGE["acc"])
+    assert_location_update_timestamp(hass, LOCATION_MESSAGE["tst"])
     assert_location_state(hass, "outer")
 
 
