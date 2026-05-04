@@ -42,26 +42,32 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 auth = AquariteAuth(session, username, password)
                 await auth.authenticate()
-                api = AquariteClient(auth)
-                pools = await api.get_pools()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected error during authentication")
                 errors["base"] = "unknown"
             else:
-                if not pools:
-                    errors["base"] = "no_pools"
+                await self.async_set_unique_id(auth.user_id)
+                self._abort_if_unique_id_configured()
+
+                api = AquariteClient(auth)
+                try:
+                    pools = await api.get_pools()
+                except Exception:
+                    _LOGGER.exception("Unexpected error fetching pools")
+                    errors["base"] = "unknown"
                 else:
-                    await self.async_set_unique_id(auth.user_id)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=username,
-                        data={
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                    )
+                    if not pools:
+                        errors["base"] = "no_pools"
+                    else:
+                        return self.async_create_entry(
+                            title=username,
+                            data={
+                                CONF_USERNAME: username,
+                                CONF_PASSWORD: password,
+                            },
+                        )
 
         return self.async_show_form(
             step_id="user", data_schema=AUTH_SCHEMA, errors=errors
