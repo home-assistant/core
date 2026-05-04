@@ -1,5 +1,6 @@
 """Test the File Upload integration."""
 
+import asyncio
 from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
@@ -50,8 +51,34 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
         assert file_path.parent == uploaded_file_dir
         assert file_path.read_bytes() == TEST_IMAGE.read_bytes()
 
-    # Test it's removed
+    # Test it's removed, will wait 5 secs as this gets scheduled by hass.add_job
+    async with asyncio.timeout(5):
+        while uploaded_file_dir.exists():
+            await asyncio.sleep(1)
+
     assert not uploaded_file_dir.exists()
+
+
+async def test_domain_not_registered(hass: HomeAssistant) -> None:
+    """Test ValueError raised when domain not initialized."""
+
+    with (
+        pytest.raises(ValueError),
+        file_upload.process_uploaded_file(hass, "fake_file"),
+    ):
+        # we should never reach this code.
+        pass
+
+
+async def test_unknown_file_id(hass: HomeAssistant, uploaded_file_dir) -> None:
+    """Test ValueError raised with wrong file id."""
+
+    with (
+        pytest.raises(ValueError),
+        file_upload.process_uploaded_file(hass, "fake_file"),
+    ):
+        # we should never reach this code.
+        pass
 
 
 async def test_removing_file(

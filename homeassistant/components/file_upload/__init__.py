@@ -34,6 +34,7 @@ TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+@callback
 @contextmanager
 def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
@@ -52,7 +53,8 @@ def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
         yield file_upload_data.file_path(file_id)
     finally:
         file_upload_data.files.pop(file_id)
-        shutil.rmtree(file_upload_data.file_dir(file_id))
+        # Make this non-blocking by default
+        hass.add_job(shutil.rmtree, file_upload_data.file_dir(file_id))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
