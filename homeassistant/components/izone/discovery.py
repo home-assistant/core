@@ -1,4 +1,4 @@
-"""Internal discovery service for  iZone AC."""
+"""Internal discovery service for iZone AC."""
 
 import asyncio
 from collections.abc import Callable
