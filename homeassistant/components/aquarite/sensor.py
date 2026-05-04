@@ -189,7 +189,4 @@ class AquariteSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value(self.entity_description.value_path)
         if value is None:
             return None
-        try:
-            return self.entity_description.value_fn(value)
-        except TypeError, ValueError:
-            return None
+        return self.entity_description.value_fn(value)
