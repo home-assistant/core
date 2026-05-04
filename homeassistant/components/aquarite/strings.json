@@ -56,5 +56,13 @@
         "name": "UV"
       }
     }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Invalid Aquarite credentials."
+    },
+    "no_pools": {
+      "message": "No pools were found on this account."
+    }
   }
 }

@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import HEALTH_CHECK_INTERVAL
+from .const import DOMAIN, HEALTH_CHECK_INTERVAL
 from .coordinator import AquariteDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
     try:
         await auth.authenticate()
     except AuthenticationError as exc:
-        raise ConfigEntryError("Invalid Aquarite credentials") from exc
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from exc
     except AquariteError as exc:
         raise ConfigEntryNotReady from exc
 
@@ -61,7 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
         raise ConfigEntryNotReady from exc
 
     if not pools:
-        raise ConfigEntryError("No pools found for this account")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_pools",
+        )
 
     data = AquariteData(auth=auth, api=api)
 
