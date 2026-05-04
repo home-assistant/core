@@ -69,12 +69,18 @@ class ConnectMotionGateway:
         )
         return True
 
-    def check_interface(self):
+    def check_interface(self, timeout=5):
         """Check if the current interface supports multicast."""
-        with contextlib.suppress(socket.timeout):
-            return self.gateway_device.Check_gateway_multicast()
-        return False
+        old_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(timeout)
+        try:
+            with contextlib.suppress(socket.timeout):
+                return self.gateway_device.Check_gateway_multicast()
+            return False
+        finally:
+            socket.setdefaulttimeout(old_timeout)
 
+    
     async def async_get_interfaces(self):
         """Get list of interface to use."""
         interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
@@ -119,23 +125,18 @@ class ConnectMotionGateway:
                 continue
             except OSError:
                 continue
-    
+
             self._gateway_device = MotionGateway(
                 ip=host, key=key, multicast=check_multicast
             )
-    
-            # Fail fast per interface instead of waiting for full socket timeout
-            try:
-                async with asyncio.timeout(5):
-                    result = await self._hass.async_add_executor_job(self.check_interface)
-            except TimeoutError:
-                result = False
-    
+
+            result = await self._hass.async_add_executor_job(self.check_interface)
+
             try:
                 check_multicast.Stop_listen()
             except socket.gaierror:
                 continue
-    
+
             if result:
                 _LOGGER.debug(
                     "Success using Motionblinds interface '%s' with host %s",
@@ -143,7 +144,7 @@ class ConnectMotionGateway:
                     host,
                 )
                 return interface
-    
+
         _LOGGER.error(
             (
                 "Could not find working interface for Motionblinds host %s, using"
