@@ -48,7 +48,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
         return_value=RetrieveDNS(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -91,7 +91,7 @@ async def test_legacy_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
         return_value=RetrieveDNS(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -137,7 +137,7 @@ async def test_sensor_no_response(
 
     dns_mock = RetrieveDNS()
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
         return_value=dns_mock,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -148,24 +148,19 @@ async def test_sensor_no_response(
     assert state.state == "1.1.1.1"
 
     dns_mock.error = DNSError()
-    with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=dns_mock,
-    ):
-        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
-        async_fire_time_changed(hass)
-        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+    async_fire_time_changed(hass)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        # Allows 2 retries before going unavailable
-        state = hass.states.get("sensor.home_assistant_io")
-        assert state.state == "1.1.1.1"
-        assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
+    state = hass.states.get("sensor.home_assistant_io")
+    assert state.state == "1.1.1.1"
+    assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
 
-        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.home_assistant_io")
     assert state.state == STATE_UNAVAILABLE
@@ -197,7 +192,7 @@ async def test_sensor_timeout(
 
     dns_mock = RetrieveDNS()
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
         return_value=dns_mock,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -207,21 +202,14 @@ async def test_sensor_timeout(
 
     assert state.state == "1.1.1.1"
 
-    with (
-        patch(
-            "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-            return_value=dns_mock,
-        ),
-        patch(
-            "homeassistant.components.dnsip.sensor.asyncio.timeout",
-            side_effect=TimeoutError(),
-        ),
+    with patch(
+        "homeassistant.components.dnsip.sensor.asyncio.timeout",
+        side_effect=TimeoutError(),
     ):
         freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        # Allows 2 retries before going unavailable
         state = hass.states.get("sensor.home_assistant_io")
         assert state.state == "1.1.1.1"
         assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
