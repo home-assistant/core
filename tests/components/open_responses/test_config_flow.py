@@ -235,9 +235,12 @@ async def test_form_validates_stream_endpoint(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    async def failing_stream_response(**_: Any) -> AsyncGenerator[dict[str, Any]]:
+    async def failing_stream_response(
+        **params: Any,
+    ) -> AsyncGenerator[dict[str, Any]]:
+        if not params:
+            yield {}
         raise OpenResponsesConnectionError("boom")
-        yield {}
 
     with patch(
         "homeassistant.components.open_responses.config_flow.OpenResponsesClient"
