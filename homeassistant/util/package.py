@@ -144,10 +144,12 @@ def install_package(
         "install",
         "--quiet",
         package,
-        # We need to use unsafe-best-match for custom components
-        # which can use a different version of a package or a
-        # different wheel tags (e.g. different Python version)
-        # than the one we have built the wheel for.
+        # We need to use unsafe-best-match for custom components so uv can
+        # select wheels with different tags (for example for a different
+        # Python version) than the ones we built. Runtime installs still run
+        # under homeassistant/package_constraints.txt via pip_kwargs(), so a
+        # different package version is only possible when that package is not
+        # constrained.
         "--index-strategy",
         "unsafe-best-match",
     ]
