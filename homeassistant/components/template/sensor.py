@@ -191,7 +191,7 @@ def validate_datetime(
     """Converts the template result into a datetime or date."""
 
     def convert(result: Any) -> datetime | date | None:
-        if resolve_as == SensorDeviceClass.TIMESTAMP:
+        if resolve_as in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             if isinstance(result, datetime):
                 return result
 
@@ -263,6 +263,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             return result
 
