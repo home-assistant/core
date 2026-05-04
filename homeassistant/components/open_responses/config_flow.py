@@ -39,6 +39,7 @@ from .client import (
 )
 from .const import (
     CONF_BASE_URL,
+    CONF_GENERATED_DEFAULT_SUBENTRY,
     CONF_MAX_OUTPUT_TOKENS,
     CONF_PROMPT,
     CONF_STORE_RESPONSES,
@@ -61,15 +62,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_SUBENTRY_TITLES = {
-    "ai_task_data": DEFAULT_AI_TASK_NAME,
-    "conversation": DEFAULT_CONVERSATION_NAME,
-}
-
 
 def _is_default_subentry(subentry: ConfigSubentry) -> bool:
     """Return whether a subentry is the generated default subentry."""
-    return subentry.title == DEFAULT_SUBENTRY_TITLES.get(subentry.subentry_type)
+    return subentry.data.get(CONF_GENERATED_DEFAULT_SUBENTRY) is True
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -79,13 +75,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         api_key=data[CONF_API_KEY],
         base_url=data[CONF_BASE_URL],
     )
+    ping_input = [{"type": "message", "role": "user", "content": "ping"}]
 
     await client.create_response(
         model=data[CONF_MODEL],
-        input=[{"type": "message", "role": "user", "content": "ping"}],
+        input=ping_input,
         max_output_tokens=16,
         store=False,
     )
+    async for _event in client.stream_response(
+        model=data[CONF_MODEL],
+        input=ping_input,
+        max_output_tokens=16,
+        store=False,
+    ):
+        pass
 
 
 def _async_update_default_subentry_models(
@@ -145,10 +149,12 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 default_conversation_options = {
                     **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_GENERATED_DEFAULT_SUBENTRY: True,
                     CONF_MODEL: user_input[CONF_MODEL],
                 }
                 default_ai_task_options = {
                     **RECOMMENDED_AI_TASK_OPTIONS,
+                    CONF_GENERATED_DEFAULT_SUBENTRY: True,
                     CONF_MODEL: user_input[CONF_MODEL],
                 }
                 if self.source == SOURCE_REAUTH:
@@ -276,6 +282,10 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "cannot_connect"
             else:
                 subentry_data = user_input.copy()
+                if not self._is_new and self._get_reconfigure_subentry().data.get(
+                    CONF_GENERATED_DEFAULT_SUBENTRY
+                ):
+                    subentry_data[CONF_GENERATED_DEFAULT_SUBENTRY] = True
                 if not subentry_data.get(CONF_LLM_HASS_API):
                     subentry_data.pop(CONF_LLM_HASS_API, None)
                 if self._is_new:

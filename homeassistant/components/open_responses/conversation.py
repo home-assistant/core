@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenResponsesConfigEntry
-from .const import CONF_PROMPT, DOMAIN
+from .const import CONF_GENERATED_DEFAULT_SUBENTRY, CONF_PROMPT, DOMAIN
 from .entity import OpenResponsesEntity
 
 # Max number of back and forth with the LLM to generate a response
@@ -58,11 +58,13 @@ class OpenResponsesConversationEntity(
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        conversation.async_set_agent(self.hass, self.entry, self)
+        if self.subentry.data.get(CONF_GENERATED_DEFAULT_SUBENTRY):
+            conversation.async_set_agent(self.hass, self.entry, self)
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
-        conversation.async_unset_agent(self.hass, self.entry)
+        if self.subentry.data.get(CONF_GENERATED_DEFAULT_SUBENTRY):
+            conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
     async def _async_handle_message(

@@ -3,9 +3,20 @@
 from collections.abc import AsyncGenerator
 from copy import deepcopy
 from typing import Any
+from unittest.mock import patch
 
 from homeassistant.components import conversation
+from homeassistant.components.open_responses.const import (
+    CONF_BASE_URL,
+    CONF_GENERATED_DEFAULT_SUBENTRY,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -70,3 +81,49 @@ async def test_conversation_turn(
         "role": "user",
         "content": "hello",
     }
+
+
+async def test_only_generated_default_subentry_registers_entry_agent(
+    hass: HomeAssistant,
+) -> None:
+    """Test custom subentries do not override the config-entry agent."""
+    entry = MockConfigEntry(
+        title="Open Responses",
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "bla",
+            CONF_BASE_URL: "https://example.local/v1",
+            CONF_MODEL: "open-responses-model",
+        },
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_GENERATED_DEFAULT_SUBENTRY: True,
+                    CONF_MODEL: "open-responses-model",
+                },
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data={
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_MODEL: "open-responses-model",
+                },
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.open_responses.conversation.conversation.async_set_agent"
+    ) as mock_set_agent:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert mock_set_agent.call_count == 1
+    assert mock_set_agent.call_args.args[1] is entry
