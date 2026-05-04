@@ -355,34 +355,43 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
     _cleanup_orphan_entities(hass, config_entry, coordinator)
-    created: set[tuple[str, str, str]] = set()
+    entry_id = config_entry.entry_id
 
     @callback
     def _add_new_entities() -> None:
+        # Use the entity registry as source of truth for "already added" so
+        # that an entity which got auto-removed (because its device
+        # disappeared) is recreated when the device reappears under the same
+        # name on a later coordinator update.
+        ent_reg = er.async_get(hass)
+        known_unique_ids: set[str] = {
+            entry.unique_id
+            for entry in er.async_entries_for_config_entry(ent_reg, entry_id)
+        }
         new_entities: list[GlancesSensor] = []
         for sensor_type, sensors in coordinator.data.items():
             if sensor_type in DYNAMIC_TYPES:
                 for sensor_label, params in sensors.items():
                     for param in params:
-                        key = (sensor_type, sensor_label, param)
-                        if key in created:
-                            continue
                         if (
                             description := SENSOR_TYPES.get((sensor_type, param))
                         ) is None:
                             continue
-                        created.add(key)
+                        unique_id = f"{entry_id}-{sensor_label}-{description.key}"
+                        if unique_id in known_unique_ids:
+                            continue
+                        known_unique_ids.add(unique_id)
                         new_entities.append(
                             GlancesSensor(coordinator, description, sensor_label)
                         )
             else:
                 for sensor in sensors:
-                    key = (sensor_type, "", sensor)
-                    if key in created:
-                        continue
                     if (description := SENSOR_TYPES.get((sensor_type, sensor))) is None:
                         continue
-                    created.add(key)
+                    unique_id = f"{entry_id}--{description.key}"
+                    if unique_id in known_unique_ids:
+                        continue
+                    known_unique_ids.add(unique_id)
                     new_entities.append(GlancesSensor(coordinator, description))
         if new_entities:
             async_add_entities(new_entities)

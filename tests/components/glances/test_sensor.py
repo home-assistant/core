@@ -183,6 +183,44 @@ async def test_dynamic_sensor_auto_added(
     assert eth1_rx_state.state != STATE_UNAVAILABLE
 
 
+async def test_dynamic_sensor_recreated_after_removal(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_api: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A dynamic sensor reappears in the registry if its device comes back."""
+
+    freezer.move_to(MOCK_REFERENCE_DATE)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test-eth0-rx")
+
+    # eth0 disappears.
+    mock_data = copy.deepcopy(HA_SENSOR_DATA)
+    mock_data["network"].pop("eth0")
+    mock_api.return_value.get_ha_sensor_data = AsyncMock(return_value=mock_data)
+
+    freezer.tick(delta=timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test-eth0-rx") is None
+
+    # eth0 comes back on a later update.
+    mock_api.return_value.get_ha_sensor_data = AsyncMock(return_value=HA_SENSOR_DATA)
+
+    freezer.tick(delta=timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test-eth0-rx")
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test-eth0-tx")
+
+
 async def test_orphan_entities_cleaned_at_setup(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
