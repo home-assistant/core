@@ -465,19 +465,15 @@ async def test_restoring_state(
 ) -> None:
     """Test that the entity restores state from storage."""
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
-
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, Platform.DEVICE_TRACKER
-    )
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     mock_restore_cache_with_extra_data(
         hass,
         [(State("device_tracker.test_1_2", ""), {"data": restored_data})],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, [Platform.DEVICE_TRACKER]
-    )
+    # Reload the config entry
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.test_1_2")
@@ -497,9 +493,7 @@ async def test_restoring_state_legacy_fallback(
     """
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
 
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, Platform.DEVICE_TRACKER
-    )
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     mock_restore_cache(
         hass,
@@ -522,9 +516,8 @@ async def test_restoring_state_legacy_fallback(
         ],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, [Platform.DEVICE_TRACKER]
-    )
+    # Reload the config entry
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.test_1_2")
@@ -565,14 +558,12 @@ async def test_restoring_state_invalid_extra_data(
     """Test that invalid extra_data is rejected without falling back to state attrs.
 
     Invalid extra_data signals corrupt persisted data — discard it rather than
-    rehydrate from the (separately saved) state attributes, which could be stale
+    restore from the (separately saved) state attributes, which could be stale
     or inconsistent with the rejected payload.
     """
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
 
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, Platform.DEVICE_TRACKER
-    )
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     mock_restore_cache_with_extra_data(
         hass,
@@ -594,9 +585,8 @@ async def test_restoring_state_invalid_extra_data(
         ],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, [Platform.DEVICE_TRACKER]
-    )
+    # Reload the config entry
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert "Discarding invalid restored device tracker data" in caplog.text
