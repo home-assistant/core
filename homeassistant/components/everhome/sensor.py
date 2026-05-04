@@ -149,7 +149,7 @@ class EcoTrackerSensor(EcoTrackerEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.serial}_{description.key}"
 
     @property
     def native_value(self) -> StateType:

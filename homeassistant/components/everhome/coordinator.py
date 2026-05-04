@@ -23,8 +23,6 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
 
     config_entry: EcoTrackerConfigEntry
     client: EcoTracker
-    serial: str = ""
-    firmware: str = ""
 
     def __init__(
         self,
@@ -47,8 +45,5 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
     async def _async_update_data(self) -> EcoTrackerData:
         """Fetch data from the EcoTracker device."""
         if await self.client.async_update():
-            data = self.client.get_data()
-            self.serial = data.serial
-            self.firmware = data.firmware_version
-            return data
+            return self.client.get_data()
         raise UpdateFailed("Failed to update EcoTracker data")

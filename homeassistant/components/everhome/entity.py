@@ -17,11 +17,11 @@ class EcoTrackerEntity(CoordinatorEntity[EcoTrackerDataUpdateCoordinator]):
     def __init__(self, coordinator: EcoTrackerDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = coordinator.serial
+        self._attr_unique_id = coordinator.data.serial
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial)},
+            identifiers={(DOMAIN, coordinator.data.serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=ATTR_MODEL,
-            sw_version=coordinator.firmware,
-            serial_number=coordinator.serial,
+            sw_version=coordinator.data.firmware_version,
+            serial_number=coordinator.data.serial,
         )
