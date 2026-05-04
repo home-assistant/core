@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.myneomitis import climate as climate_platform
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -71,6 +72,15 @@ CLIMATE_NTD_COOL = {
 }
 
 
+class DummyPresetMap(dict[str, int]):
+    """Preset mapping with reverse lookup support."""
+
+    @property
+    def reverse(self) -> dict[int, str]:
+        """Return a reverse lookup map for preset codes."""
+        return {code: key for key, code in self.items()}
+
+
 async def test_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -117,6 +127,53 @@ async def test_set_temperature(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["temperature"] == 23.5
+
+
+async def test_preset_map_mapping_structure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Mapping preset structures should be supported for new library versions."""
+    mapping_with_reverse = DummyPresetMap(
+        {"comfort": 1, "eco": 2, "standby": 4, "setpoint": 8}
+    )
+    mapping_without_reverse = {
+        "comfort": 1,
+        "eco": 2,
+        "standby": 4,
+        "setpoint": 8,
+    }
+    monkeypatch.setitem(
+        climate_platform.PRESET_MODE_MODELS, "EV30", mapping_with_reverse
+    )
+    monkeypatch.setitem(
+        climate_platform.PRESET_MODE_MODELS, "ECTRL", mapping_without_reverse
+    )
+
+    ectrl_device = {
+        **CLIMATE_DEVICE,
+        "_id": "climate2",
+        "name": "ECTRL Device",
+        "model": "ECTRL",
+    }
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE, ectrl_device]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: "climate.climate_device", "preset_mode": "eco"},
+        blocking=True,
+    )
+    mock_pyaxenco_client.set_device_mode.assert_awaited_with("climate1", 2)
+
+    state = hass.states.get("climate.ectrl_device")
+    assert state is not None
+    assert state.attributes["preset_mode"] == "comfort"
 
 
 async def test_set_preset_mode(
