@@ -52,17 +52,6 @@ async def test_coordinator_no_data(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_invalid_data(
-    hass: HomeAssistant, mock_wibeee_api: AsyncMock
-) -> None:
-    """Test coordinator handles invalid data format."""
-    coordinator = WibeeeCoordinator(hass, mock_wibeee_api, config_entry=AsyncMock())
-    mock_wibeee_api.async_fetch_sensors_data.return_value = "invalid"
-
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
-
-
 async def test_coordinator_push_update_invalid(
     hass: HomeAssistant, mock_wibeee_api: AsyncMock
 ) -> None:

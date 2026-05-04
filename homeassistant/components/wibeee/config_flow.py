@@ -14,11 +14,13 @@ from pywibeee import WibeeeAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -47,11 +49,7 @@ DEFAULT_HA_PORT = 8123
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> tuple[str, str, dict[str, Any]]:
-    """Validate the user input allows us to connect.
-
-    Returns:
-        A tuple of (title, unique_id, data).
-    """
+    """Validate the user input allows us to connect."""
     session = async_get_clientsession(hass)
     api = WibeeeAPI(session, data[CONF_HOST])
 
@@ -60,6 +58,9 @@ async def validate_input(
     except (TimeoutError, aiohttp.ClientError) as exc:
         raise NoDeviceInfo(f"Cannot connect: {exc}") from exc
 
+    # The library returns ``None`` (instead of raising) when device info is
+    # incomplete, e.g. when the MAC cannot be determined; treat that as a
+    # connection failure for the user.
     if device is None:
         raise NoDeviceInfo("No device info received")
 
@@ -125,32 +126,34 @@ def _get_local_ip_sync() -> str:
 
 
 async def _get_local_ip(hass: HomeAssistant) -> str:
-    """Determine the local IP of the Home Assistant instance."""
-    try:
-        from homeassistant.components.network import (  # noqa: PLC0415
-            async_get_source_ip,
-        )
+    """Determine the local IP of the Home Assistant instance.
 
+    Uses the network integration first, then falls back to ``get_url`` (only
+    if it returns an IP literal), and finally to a socket-based detection.
+    Hostnames are skipped because the WiBeee push-source check requires an
+    IP literal.
+    """
+    try:
         ip = await async_get_source_ip(hass)
-        if ip is not None:
-            return ip
-    except ImportError, HomeAssistantError, OSError:
-        pass
+    except HomeAssistantError, OSError:
+        ip = None
+    if ip is not None:
+        return ip
 
     try:
-        from homeassistant.helpers.network import get_url  # noqa: PLC0415
-
         url = get_url(hass, prefer_external=False)
+    except HomeAssistantError:
+        url = None
+    if url is not None:
         host = urlparse(url).hostname
         if host is not None:
             try:
                 addr = ipaddress.ip_address(host)
-                if not addr.is_loopback:
-                    return host
             except ValueError:
                 pass
-    except ImportError, HomeAssistantError, OSError:
-        pass
+            else:
+                if not addr.is_loopback:
+                    return host
 
     return await hass.async_add_executor_job(_get_local_ip_sync)
 
@@ -158,15 +161,13 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
 def _get_ha_port(hass: HomeAssistant) -> int:
     """Get the port Home Assistant's HTTP server is listening on."""
     try:
-        from homeassistant.helpers.network import get_url  # noqa: PLC0415
-
         url = get_url(hass, prefer_external=False)
-        port = urlparse(url).port
-        if port is not None:
-            return port
-    except ImportError, HomeAssistantError, OSError:
-        pass
+    except HomeAssistantError:
+        return DEFAULT_HA_PORT
 
+    port = urlparse(url).port
+    if port is not None:
+        return port
     return DEFAULT_HA_PORT
 
 
