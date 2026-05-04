@@ -39,6 +39,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
+    STANDING_FAN = "standing_fan"
     K20_VACUUM = "k20_vacuum"
     S10_VACUUM = "s10_vacuum"
     K10_VACUUM = "k10_vacuum"
@@ -84,6 +85,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.STANDING_FAN: SupportedModels.STANDING_FAN,
     SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
     SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
     SwitchbotModel.S20_VACUUM: SupportedModels.S20_VACUUM,
