@@ -2,11 +2,7 @@
 
 from typing import Any
 
-from pyuptimerobot import (
-    UptimeRobotAuthenticationException,
-    UptimeRobotException,
-    UptimeRobotMonitor,
-)
+from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -14,13 +10,12 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, STATUS_DOWN, STATUS_UP
+from .const import STATUS_UP
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
-from .utils import new_device_listener
+from .utils import new_device_listener, uptimerobot_api_call
 
 # Limit the number of parallel updates to 1
 PARALLEL_UPDATES = 1
@@ -63,26 +58,14 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         """Return True if the entity is on."""
         return bool(self._monitor.status == STATUS_UP)
 
-    async def _async_edit_monitor(self, **kwargs: Any) -> None:
-        """Edit monitor status."""
-        try:
-            await self.api.async_edit_monitor(**kwargs)
-        except UptimeRobotAuthenticationException:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
-            return
-        except UptimeRobotException as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_exception",
-                translation_placeholders={"error": "Generic UptimeRobot exception"},
-            ) from exception
-
-        await self.coordinator.async_request_refresh()
-
+    @uptimerobot_api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self._async_edit_monitor(monitor_id=self._monitor.id, status=STATUS_DOWN)
+        await self.api.async_pause_monitor(monitor_id=self._monitor.id)
+        await self.coordinator.async_request_refresh()
 
+    @uptimerobot_api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self._async_edit_monitor(monitor_id=self._monitor.id, status=STATUS_UP)
+        await self.api.async_start_monitor(monitor_id=self._monitor.id)
+        await self.coordinator.async_request_refresh()
