@@ -186,9 +186,6 @@ CONFIG_SECTION_SCHEMA = vol.All(
                 binary_sensor_platform.BINARY_SENSOR_LEGACY_YAML_SCHEMA
             ),
             vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-                sensor_platform.SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
@@ -380,11 +377,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
         legacy_warn_printed = False
 
         for old_key, new_key, legacy_fields in (
-            (
-                CONF_SENSORS,
-                SENSOR_DOMAIN,
-                sensor_platform.LEGACY_FIELDS,
-            ),
             (
                 CONF_BINARY_SENSORS,
                 BINARY_SENSOR_DOMAIN,

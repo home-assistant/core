@@ -46,9 +46,6 @@ from homeassistant.components.template.number import (
 from homeassistant.components.template.select import (
     SCRIPT_FIELDS as SELECT_SCRIPT_FIELDS,
 )
-from homeassistant.components.template.sensor import (
-    LEGACY_FIELDS as SENSOR_LEGACY_FIELDS,
-)
 from homeassistant.components.template.switch import (
     LEGACY_FIELDS as SWITCH_LEGACY_FIELDS,
     SCRIPT_FIELDS as SWITCH_SCRIPT_FIELDS,
@@ -299,13 +296,6 @@ async def test_legacy_to_modern_config(
             "color_template",
             "hs",
             "{{ (255, 255) }}",
-        ),
-        (
-            "sensor",
-            SENSOR_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
         ),
         (
             "sensor",
@@ -867,7 +857,6 @@ async def test_config_entry_device_actions(
     ("domain", "legacy_fields"),
     [
         ("binary_sensor", BINARY_SENSOR_LEGACY_FIELDS),
-        ("sensor", SENSOR_LEGACY_FIELDS),
     ],
 )
 async def test_friendly_name_template_legacy_to_modern_configs(
@@ -922,21 +911,6 @@ async def test_platform_not_ready(
 @pytest.mark.parametrize(
     ("domain", "config", "breadcrumb"),
     [
-        (
-            "template",
-            {
-                "template": [
-                    {
-                        "sensors": {
-                            "undocumented_configuration": {
-                                "value_template": "{{ 'armed_away' }}",
-                            }
-                        }
-                    },
-                ]
-            },
-            "undocumented_configuration",
-        ),
         (
             "template",
             {
@@ -1039,21 +1013,6 @@ async def test_platform_not_ready(
                 },
             },
             "Template Entity",
-        ),
-        (
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "template",
-                    "sensors": {
-                        "test_template_sensor": {
-                            "value_template": "It {{ states.sensor.test_state.state }}.",
-                            "attribute_templates": {"something": "{{ 'bar' }}"},
-                        }
-                    },
-                },
-            },
-            "test_template_sensor",
         ),
         (
             "switch",
@@ -1359,23 +1318,6 @@ async def test_legacy_deprecation(
                 },
             },
             ["device_class: motion"],
-        ),
-        (
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "template",
-                    "sensors": {
-                        "some_sensor": {
-                            "friendly_name": "Sensor",
-                            "entity_id": "sensor.some_sensor",
-                            "device_class": "timestamp",
-                            "value_template": "{{ now().isoformat() }}",
-                        }
-                    },
-                },
-            },
-            ["device_class: timestamp", "entity_id: sensor.some_sensor"],
         ),
     ],
 )
