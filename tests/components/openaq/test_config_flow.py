@@ -6,10 +6,19 @@ from typing import cast
 from unittest.mock import AsyncMock, call
 
 from openaq import (
+    ApiKeyMissingError,
     BadGatewayError,
+    BadRequestError,
+    ForbiddenError,
     GatewayTimeoutError,
     HTTPRateLimitError,
     NotAuthorizedError,
+    NotFoundError,
+    RateLimitError,
+    ServerError,
+    ServiceUnavailableError,
+    TimeoutError as OpenAQTimeoutError,
+    ValidationError,
 )
 import pytest
 
@@ -459,8 +468,19 @@ async def test_location_subentry_invalid_map_location_id(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
+        (ApiKeyMissingError("Missing API key"), "invalid_auth"),
+        (ForbiddenError("Forbidden"), "invalid_auth"),
+        (NotAuthorizedError("Invalid API key"), "invalid_auth"),
         (HTTPRateLimitError("Rate limited"), "rate_limited"),
+        (RateLimitError("Rate limited"), "rate_limited"),
         (BadGatewayError("Bad gateway"), "cannot_connect"),
+        (BadRequestError("Bad request"), "cannot_connect"),
+        (GatewayTimeoutError("Timeout"), "cannot_connect"),
+        (NotFoundError("Not found"), "cannot_connect"),
+        (OpenAQTimeoutError("Timeout"), "cannot_connect"),
+        (ServerError("Server error"), "cannot_connect"),
+        (ServiceUnavailableError("Service unavailable"), "cannot_connect"),
+        (ValidationError("Validation error"), "cannot_connect"),
         (Exception("Unexpected"), "unknown"),
     ],
 )
