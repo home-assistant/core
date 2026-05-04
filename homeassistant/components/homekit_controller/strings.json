@@ -38,7 +38,7 @@
         "title": "Pair with a device via HomeKit Accessory Protocol"
       },
       "protocol_error": {
-        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing.",
+        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then try pairing again.",
         "title": "Error communicating with the accessory"
       },
       "user": {
