@@ -25,12 +25,12 @@
         "step": {
           "migrate": {
             "data": {},
-            "description": "The integration has been deprecated and your configuration for {title} will be migrated to a group sensor when you click submit on this repair.",
+            "description": "The Min/Max helper has been deprecated and {title} will be migrated to a group sensor when you click submit on this repair.",
             "title": "[%key:component::min_max::issues::migrate_to_group_sensor::title%]"
           }
         }
       },
-      "title": "Combine the state of several sensors has been deprecated"
+      "title": "Min/Max sensors has been deprecated"
     },
     "yaml_deprecated": {
       "description": "The min/max integration has been migrated to use group sensor.\n\nReplace your Min/MaxYAML configuration with this converted configuration:\n{yaml_config}\n\nTo use the new configuration and replace your sensor with a group sensor, restart your Home Assistant.\n\nGroup sensors have more configuration possibilities, refer to the documentation by clicking on learn more.",
