@@ -93,7 +93,7 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
 
     async def async_press(self, **kwargs: Any) -> None:
         """Button press command."""
-        await self._send_api_command(
+        await self._api.send_command(
             self._device_id,
             self.entity_description.command.value,
             self.entity_description.command_type,

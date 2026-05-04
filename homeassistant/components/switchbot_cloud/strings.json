@@ -93,10 +93,10 @@
   },
   "exceptions": {
     "connection_error": {
-      "message": "Error communicating with SwitchBot Cloud for \"{name}\": {error}"
+      "message": "Error communicating with SwitchBot Cloud: {error}"
     },
     "device_offline": {
-      "message": "SwitchBot Cloud device \"{name}\" is offline."
+      "message": "SwitchBot Cloud device is offline."
     }
   }
 }

@@ -54,31 +54,16 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         command_type: str = "command",
         parameters: dict | str | int = "default",
     ) -> None:
-        """Send command to device."""
-        await self._send_api_command(
-            self._attr_unique_id,
-            command,
-            command_type,
-            parameters,
-        )
+        """Send command to device.
 
-    async def _send_api_command(
-        self,
-        device_id: str | None,
-        command: Commands | str,
-        command_type: str = "command",
-        parameters: dict | str | int = "default",
-    ) -> None:
-        """Send command to device and translate SwitchBot errors.
-
-        Library exceptions inherit from Exception rather than
-        HomeAssistantError, so script-level flags such as ``continue_on_error``
-        cannot suppress them. Translating here makes them behave like other
-        integration errors at the script layer.
+        Translate SwitchBot library exceptions into ``HomeAssistantError`` so
+        device-communication failures follow the developer-docs guidance and
+        can be suppressed by script-level flags such as ``continue_on_error``,
+        which only catches ``HomeAssistantError`` subclasses.
         """
         try:
             await self._api.send_command(
-                device_id,
+                self._attr_unique_id,
                 command,
                 command_type,
                 parameters,
@@ -87,25 +72,13 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_offline",
-                translation_placeholders={"name": self._device_name_for_error()},
             ) from err
         except SwitchBotConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={
-                    "name": self._device_name_for_error(),
-                    "error": str(err),
-                },
+                translation_placeholders={"error": str(err)},
             ) from err
-
-    def _device_name_for_error(self) -> str:
-        """Return a human-friendly device name for error messages."""
-        if self._attr_device_info is not None:
-            name = self._attr_device_info.get("name")
-            if name:
-                return str(name)
-        return self._attr_unique_id or ""
 
     @callback
     def _handle_coordinator_update(self) -> None:

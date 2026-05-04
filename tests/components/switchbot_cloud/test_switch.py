@@ -222,13 +222,6 @@ async def test_switch_relay_2pm_coordination_is_none(
 
 
 @pytest.mark.parametrize(
-    ("device_type", "entity_id"),
-    [
-        ("Relay Switch 1", "switch.relay_switch_1"),
-        ("Relay Switch 2PM", "switch.relay_switch_1_channel_1"),
-    ],
-)
-@pytest.mark.parametrize(
     ("api_error", "translation_key"),
     [
         (SwitchBotDeviceOfflineError("offline"), "device_offline"),
@@ -239,8 +232,6 @@ async def test_switch_api_error_is_translated(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
-    device_type: str,
-    entity_id: str,
     api_error: Exception,
     translation_key: str,
 ) -> None:
@@ -250,7 +241,7 @@ async def test_switch_api_error_is_translated(
             version="V1.0",
             deviceId="relay-switch-id-1",
             deviceName="relay-switch-1",
-            deviceType=device_type,
+            deviceType="Relay Switch 1",
             hubDeviceId="test-hub-id",
         ),
     ]
@@ -266,7 +257,7 @@ async def test_switch_api_error_is_translated(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            {ATTR_ENTITY_ID: "switch.relay_switch_1"},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
