@@ -37,10 +37,6 @@ from .entity import AquariteEntity
 PARALLEL_UPDATES = 1
 
 
-def _convert_float(value: Any) -> float:
-    return float(value)
-
-
 def _convert_hundredths(value: Any) -> float:
     return float(value) / 100
 
@@ -53,16 +49,12 @@ def _convert_minutes_to_hours(value: Any) -> float:
     return float(value) / 60
 
 
-def _convert_int(value: Any) -> int:
-    return int(value)
-
-
 @dataclass(frozen=True, kw_only=True)
 class AquariteSensorEntityDescription(SensorEntityDescription):
     """Describes an Aquarite sensor entity."""
 
     value_path: str
-    value_fn: Callable[[Any], float | int] = _convert_float
+    value_fn: Callable[[Any], float | int] = float
     exists_path: str | None = None
 
 
@@ -104,7 +96,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="modules.rx.current",
-        value_fn=_convert_int,
+        value_fn=int,
         exists_path=PATH_HASRX,
     ),
     AquariteSensorEntityDescription(
@@ -133,7 +125,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path="main.RSSI",
-        value_fn=_convert_int,
+        value_fn=int,
     ),
 )
 
