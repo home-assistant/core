@@ -69,7 +69,6 @@ class AquariteSensorEntityDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
     AquariteSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -93,7 +92,6 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
     ),
     AquariteSensorEntityDescription(
         key="ph",
-        translation_key="ph",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="modules.ph.current",

@@ -40,17 +40,11 @@
       "hydrolysis": {
         "name": "Hydrolysis"
       },
-      "ph": {
-        "name": "pH"
-      },
       "rssi": {
         "name": "Wi-Fi signal strength"
       },
       "rx": {
         "name": "Rx"
-      },
-      "temperature": {
-        "name": "Temperature"
       },
       "uv": {
         "name": "UV"

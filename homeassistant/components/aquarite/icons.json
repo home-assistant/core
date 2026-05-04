@@ -16,17 +16,8 @@
       "hydrolysis": {
         "default": "mdi:flash"
       },
-      "ph": {
-        "default": "mdi:ph"
-      },
-      "rssi": {
-        "default": "mdi:wifi"
-      },
       "rx": {
         "default": "mdi:gauge"
-      },
-      "temperature": {
-        "default": "mdi:thermometer"
       },
       "uv": {
         "default": "mdi:weather-sunny-alert"
