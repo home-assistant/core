@@ -71,7 +71,7 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str:
 
     # From pyatmo v9.4.0, category is available as an attribute on the device object,
     # so we check it first to avoid iterating through raw data for every update
-    category: str | None = getattr(netatmo_device.device, "category", None)
+    category: str | None = getattr(netatmo_device.device, "doortag_category", None)
     if category is not None:
         return category
 
