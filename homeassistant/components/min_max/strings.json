@@ -14,7 +14,7 @@
         "data_description": {
           "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
         },
-        "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
+        "description": "Combine the state of several sensors has been deprecated, please use the group integration instead.",
         "title": "[%key:component::min_max::title%]"
       }
     }

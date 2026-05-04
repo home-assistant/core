@@ -11,6 +11,7 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -59,8 +60,7 @@ async def migrate_to_groups(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Abort flow as migrate to groups."""
-    handler.parent_handler.async_abort(reason="migrated_to_groups")
-    return user_input
+    raise AbortFlow("migrated_to_groups")
 
 
 CONFIG_FLOW = {
