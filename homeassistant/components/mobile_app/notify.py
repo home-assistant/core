@@ -21,7 +21,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -116,10 +116,11 @@ class MobileAppNotifyEntity(NotifyEntity):
                 translation_placeholders={"device_name": self._config_entry.title},
             )
 
+    @callback
     def _async_handle_notification(self, webhook_id: str) -> None:
         """Handle notifications triggered externally."""
         if webhook_id == self._config_entry.data[ATTR_WEBHOOK_ID]:
-            self._record_notification()
+            self._async_record_notification()
 
     async def async_added_to_hass(self) -> None:
         """Register callback."""
