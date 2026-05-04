@@ -374,7 +374,8 @@ def timedelta_as_string(delta: dt.timedelta, precision: int = 1) -> str:
 
     Negative timedeltas are treated as their absolute value.
     """
-    return _get_timestring(abs(delta.total_seconds()), precision)
+    rounded_delta = round(abs(delta.total_seconds()))
+    return _get_timestring(rounded_delta, precision)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:

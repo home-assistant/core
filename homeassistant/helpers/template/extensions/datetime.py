@@ -265,7 +265,9 @@ class DateTimeExtension(BaseTemplateExtension):
 
         If future is False, formats time since value (past datetime).
         If future is True, formats time until value (future datetime).
-        Returns value unmodified if it is not a datetime or points the wrong direction.
+        Returns non-datetime values unmodified. Datetime values that point the
+        wrong direction are returned as-is, except naive datetimes are first
+        converted to local time.
         """
         if (render_info := render_info_cv.get()) is not None:
             render_info.has_time = True

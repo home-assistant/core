@@ -814,7 +814,7 @@ async def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
     ],
 )
 def test_timedelta_string(
-    hass: HomeAssistant, template_str: str, expected: str
+    hass: HomeAssistant, template_str: str, expected: str | int
 ) -> None:
     """Test timedelta_string function and filter."""
     assert render(hass, template_str) == expected
