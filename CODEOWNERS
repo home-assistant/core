@@ -851,8 +851,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/input_select/ @home-assistant/core
 /homeassistant/components/input_text/ @home-assistant/core
 /tests/components/input_text/ @home-assistant/core
-/homeassistant/components/insteon/ @teharris1
-/tests/components/insteon/ @teharris1
+/homeassistant/components/insteon/ @teharris1 @ssyrell
+/tests/components/insteon/ @teharris1 @ssyrell
 /homeassistant/components/integration/ @dgomes
 /tests/components/integration/ @dgomes
 /homeassistant/components/intelliclima/ @dvdinth
