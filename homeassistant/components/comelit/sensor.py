@@ -10,13 +10,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform, UnitOfPower
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ObjectClassType
+from .const import DOMAIN, ObjectClassType
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 from .entity import ComelitBridgeBaseEntity
 from .utils import new_device_listener
@@ -98,9 +99,40 @@ async def async_setup_entry(
 
     # Alarm sensors (both via Bridge or VedoSystem)
     if coordinator.vedo_pin:
+        await _async_migrate_zone_sensor_unique_ids(hass, config_entry)
         config_entry.async_on_unload(
             new_device_listener(coordinator, _add_new_vedo_entities, ALARM_ZONE)
         )
+
+
+async def _async_migrate_zone_sensor_unique_ids(
+    hass: HomeAssistant, config_entry: ComelitConfigEntry
+) -> None:
+    """Migrate legacy VEDO zone sensor unique IDs to include sensor key."""
+    device_registry = dr.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        if entry.domain != Platform.SENSOR or entry.device_id is None:
+            return None
+
+        zone_index = entry.unique_id.removeprefix(f"{config_entry.entry_id}-")
+        if zone_index == entry.unique_id or not zone_index.isdigit():
+            return None
+
+        if not (device_entry := device_registry.async_get(entry.device_id)):
+            return None
+
+        if not any(
+            platform == DOMAIN
+            and identifier.startswith(f"{config_entry.entry_id}-zone-")
+            for platform, identifier in device_entry.identifiers
+        ):
+            return None
+
+        return {"new_unique_id": f"{config_entry.entry_id}-human_status-{zone_index}"}
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
 class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
@@ -151,7 +183,7 @@ class ComelitVedoSensorEntity(
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{zone.index}"
+        self._attr_unique_id = f"{config_entry_entry_id}-{description.key}-{zone.index}"
         self._attr_device_info = coordinator.platform_device_info(zone, "zone")
 
         self.entity_description = description

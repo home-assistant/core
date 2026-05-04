@@ -16,12 +16,13 @@ from aiocomelit.const import (
     AlarmZoneState,
 )
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.comelit.const import SCAN_INTERVAL
+from homeassistant.components.comelit.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -189,3 +190,72 @@ async def test_vedo_sensor_dynamic(
 
     assert hass.states.get(ENTITY_ID)
     assert hass.states.get(entity_id_2)
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_fixture",
+        "config_entry_fixture",
+        "device_type",
+        "expected_unique_id_suffix",
+        "old_unique_id_removed",
+    ),
+    [
+        (
+            "mock_vedo",
+            "mock_vedo_config_entry",
+            "zone",
+            "human_status-0",
+            True,
+        ),
+        (
+            "mock_serial_bridge",
+            "mock_serial_bridge_config_entry",
+            "other",
+            "0",
+            False,
+        ),
+    ],
+)
+async def test_migrate_sensor_unique_id(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    mock_fixture: str,
+    config_entry_fixture: str,
+    device_type: str,
+    expected_unique_id_suffix: str,
+    old_unique_id_removed: bool,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor unique ID migration."""
+    request.getfixturevalue(mock_fixture)
+    config_entry = request.getfixturevalue(config_entry_fixture)
+    config_entry.add_to_hass(hass)
+
+    old_unique_id = f"{config_entry.entry_id}-0"
+    new_unique_id = f"{config_entry.entry_id}-{expected_unique_id_suffix}"
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{config_entry.entry_id}-{device_type}-0")},
+    )
+
+    entity_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        old_unique_id,
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    await setup_integration(hass, config_entry)
+
+    migrated_entry = entity_registry.async_get(entity_entry.entity_id)
+    assert migrated_entry
+    assert migrated_entry.unique_id == new_unique_id
+    old_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, old_unique_id
+    )
+    assert (old_entity_id is None) is old_unique_id_removed
+    assert (old_entity_id == entity_entry.entity_id) is not old_unique_id_removed
