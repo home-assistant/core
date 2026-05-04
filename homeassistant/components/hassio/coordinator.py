@@ -249,8 +249,18 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
     )
     if addons_info is None:
         return None
+    # Converting these fields for compatibility as that is what was returned here.
+    # We'll leave it this way as long as these component APIs continue to return
+    # dictionaries. If/when we switch to using the aiohasupervisor models for everything
+    # internally and externally that will be dropped.
     return {
-        slug: info.to_dict() if info is not None else None
+        slug: dict(
+            hassio_api=info.supervisor_api,
+            hassio_role=info.supervisor_role,
+            **info.to_dict(),
+        )
+        if info is not None
+        else None
         for slug, info in addons_info.items()
     }
 
@@ -613,9 +623,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.hass.data[DATA_ADDONS_LIST] = installed_addons
 
         # Update addon info cache in hass.data
-        addon_info_cache: dict[str, InstalledAddonComplete | None] = (
-            self.hass.data.setdefault(DATA_ADDONS_INFO, {})
-        )
+        addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
         for slug in addon_info_cache.keys() - all_addons:
             del addon_info_cache[slug]
         addon_info_cache.update(addon_info_results)
@@ -730,17 +738,23 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         """Force refresh of addon info data for a specific addon."""
         try:
             slug, info = await self._update_addon_info(addon_slug)
-            if info is not None and self.data and slug in self.data.addons:
-                updated = AddonData(
-                    addon=_installed_addon_from_complete(info),
-                    auto_update=info.auto_update,
-                    repository=self.data.addons[slug].repository,
-                )
-                self.async_set_updated_data(
-                    HassioAddonData(addons={**self.data.addons, slug: updated})
-                )
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
+            return
+
+        if info is not None and self.data and slug in self.data.addons:
+            updated = AddonData(
+                addon=_installed_addon_from_complete(info),
+                auto_update=info.auto_update,
+                repository=self.data.addons[slug].repository,
+            )
+            self.async_set_updated_data(
+                HassioAddonData(addons={**self.data.addons, slug: updated})
+            )
+
+            # Update addon info cache in hass.data
+            addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
+            addon_info_cache[slug] = info
 
 
 class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):

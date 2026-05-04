@@ -1614,6 +1614,10 @@ async def test_get_addons_info(hass: HomeAssistant) -> None:
     assert isinstance(result["test"], dict)
     assert result["test"]["slug"] == "test"
     assert result["test"]["version"] == "1.0.0"
+    assert result["test"]["hassio_api"] is False
+    assert result["test"]["supervisor_api"] is False
+    assert result["test"]["hassio_role"] == "default"
+    assert result["test"]["supervisor_role"] == "default"
 
 
 @pytest.mark.usefixtures("mock_all")
