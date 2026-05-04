@@ -598,7 +598,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             await self.async_refresh()
 
-        return self.api.sph_read_ac_charge_times(settings_data=self.data)
+        return self.api.sph_read_ac_charge_times(
+            self.device_id, settings_data=self.data
+        )
 
     async def read_ac_discharge_times(self) -> dict:
         """Read AC discharge time settings from SPH device cache."""
@@ -611,4 +613,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             await self.async_refresh()
 
-        return self.api.sph_read_ac_discharge_times(settings_data=self.data)
+        return self.api.sph_read_ac_discharge_times(
+            self.device_id, settings_data=self.data
+        )
