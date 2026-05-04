@@ -3,12 +3,30 @@
 This module defines and sets up the select entities for the MyNeomitis integration.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
 
 import aiohttp
 from pyaxencoapi import PRESET_MODE_MODELS, PyAxencoAPI
+
+try:
+    from pyaxencoapi import (
+        PRESET_MODE_MAP,
+        PRESET_MODE_MAP_RELAIS,
+        PRESET_MODE_MAP_UFH,
+        PRESET_MODE_SELECT_EXTRAS,
+        REVERSE_PRESET_MODE_MAP_RELAIS,
+        REVERSE_PRESET_MODE_MAP_UFH,
+    )
+except ImportError:  # pragma: no cover - only needed for newer library versions
+    PRESET_MODE_MAP = {}
+    PRESET_MODE_MAP_RELAIS = {}
+    PRESET_MODE_MAP_UFH = {}
+    PRESET_MODE_SELECT_EXTRAS = {}
+    REVERSE_PRESET_MODE_MAP_RELAIS = {}
+    REVERSE_PRESET_MODE_MAP_UFH = {}
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
@@ -24,9 +42,75 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_MODELS: frozenset[str] = frozenset({"EWS"})
 SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"UFH"})
 
-PRESET_MODE_MAP_RELAIS = PRESET_MODE_MODELS["EWS_RELAIS"]
-PRESET_MODE_MAP_PILOTE = PRESET_MODE_MODELS["EWS_PILOTE"]
-PRESET_MODE_MAP_UFH = PRESET_MODE_MODELS["UFH"]
+
+def _resolve_select_maps(
+    model_key: str,
+    fallback_map: dict[str, int],
+    fallback_reverse: dict[int, str],
+    fallback_order: list[str] | None = None,
+) -> tuple[list[str], dict[str, int], dict[int, str]]:
+    """Resolve select maps for both old and new pyaxencoapi structures."""
+    preset_model = PRESET_MODE_MODELS.get(model_key)
+    if preset_model is not None:
+        if isinstance(preset_model, Mapping) or hasattr(preset_model, "items"):
+            preset_map = dict(preset_model)
+            reverse_map = (
+                preset_model.reverse
+                if hasattr(preset_model, "reverse")
+                else {code: key for key, code in preset_map.items()}
+            )
+            return list(preset_model), preset_map, reverse_map
+
+        options = list(preset_model)
+        preset_map = {
+            key: PRESET_MODE_MAP[key] for key in options if key in PRESET_MODE_MAP
+        }
+        reverse_map = {code: key for key, code in preset_map.items()}
+        return options, preset_map, reverse_map
+
+    if not fallback_map:
+        return [], {}, {}
+
+    options = fallback_order or list(fallback_map)
+    reverse_map = fallback_reverse or {code: key for key, code in fallback_map.items()}
+    return options, fallback_map, reverse_map
+
+
+PILOTE_FALLBACK_ORDER = [
+    "setpoint",
+    "boost",
+    "eco",
+    "eco_1",
+    "eco_2",
+    "comfort",
+    "comfort_plus",
+    "auto",
+    "antifrost",
+    "standby",
+]
+PILOTE_FALLBACK_MAP = {
+    key: PRESET_MODE_SELECT_EXTRAS.get(key, PRESET_MODE_MAP.get(key))
+    for key in PILOTE_FALLBACK_ORDER
+    if key in PRESET_MODE_SELECT_EXTRAS or key in PRESET_MODE_MAP
+}
+PILOTE_FALLBACK_REVERSE = {code: key for key, code in PILOTE_FALLBACK_MAP.items()}
+
+RELAIS_OPTIONS, RELAIS_PRESET_MAP, RELAIS_REVERSE = _resolve_select_maps(
+    "EWS_RELAIS",
+    PRESET_MODE_MAP_RELAIS,
+    REVERSE_PRESET_MODE_MAP_RELAIS,
+)
+PILOTE_OPTIONS, PILOTE_PRESET_MAP, PILOTE_REVERSE = _resolve_select_maps(
+    "EWS_PILOTE",
+    PILOTE_FALLBACK_MAP,
+    PILOTE_FALLBACK_REVERSE,
+    PILOTE_FALLBACK_ORDER,
+)
+UFH_OPTIONS, UFH_PRESET_MAP, UFH_REVERSE = _resolve_select_maps(
+    "UFH",
+    PRESET_MODE_MAP_UFH,
+    REVERSE_PRESET_MODE_MAP_UFH,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,25 +126,25 @@ SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
     "relais": MyNeoSelectEntityDescription(
         key="relais",
         translation_key="relais",
-        options=list(PRESET_MODE_MAP_RELAIS),
-        preset_mode_map=PRESET_MODE_MAP_RELAIS,
-        reverse_preset_mode_map=PRESET_MODE_MAP_RELAIS.reverse,
+        options=RELAIS_OPTIONS,
+        preset_mode_map=RELAIS_PRESET_MAP,
+        reverse_preset_mode_map=RELAIS_REVERSE,
         state_key="targetMode",
     ),
     "pilote": MyNeoSelectEntityDescription(
         key="pilote",
         translation_key="pilote",
-        options=list(PRESET_MODE_MAP_PILOTE),
-        preset_mode_map=PRESET_MODE_MAP_PILOTE,
-        reverse_preset_mode_map=PRESET_MODE_MAP_PILOTE.reverse,
+        options=PILOTE_OPTIONS,
+        preset_mode_map=PILOTE_PRESET_MAP,
+        reverse_preset_mode_map=PILOTE_REVERSE,
         state_key="targetMode",
     ),
     "ufh": MyNeoSelectEntityDescription(
         key="ufh",
         translation_key="ufh",
-        options=list(PRESET_MODE_MAP_UFH),
-        preset_mode_map=PRESET_MODE_MAP_UFH,
-        reverse_preset_mode_map=PRESET_MODE_MAP_UFH.reverse,
+        options=UFH_OPTIONS,
+        preset_mode_map=UFH_PRESET_MAP,
+        reverse_preset_mode_map=UFH_REVERSE,
         state_key="changeOverUser",
     ),
 }
