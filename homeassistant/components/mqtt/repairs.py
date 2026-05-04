@@ -6,12 +6,12 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.const import CONF_PROTOCOL
+from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .config_flow import try_connection
-from .const import DOMAIN, PROTOCOL_5
+from .const import DEFAULT_PORT, DOMAIN, PROTOCOL_5
 
 URL_MQTT_BROKER_CONFIGURATION = (
     "https://www.home-assistant.io/integrations/mqtt/#broker-configuration"
@@ -81,6 +81,8 @@ class MQTTProtocolV5Migration(RepairsFlow):
                 assert entry is not None
             new_entry_data = entry.data.copy()
             new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
+            if CONF_PORT not in new_entry_data:
+                new_entry_data[CONF_PORT] = DEFAULT_PORT
             # Try the connection with protocol version 5
             if await self.hass.async_add_executor_job(
                 try_connection,
