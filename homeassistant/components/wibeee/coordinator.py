@@ -26,16 +26,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
-# Type alias: phase_key -> sensor_key -> value
 WibeeeData = dict[str, dict[str, Any]] | None
 
 
 class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
     """Coordinator for Wibeee sensor data.
 
-    In polling mode, ``_async_update_data`` fetches from the device API.
-    In push mode, ``update_interval`` is None and data is injected
-    externally via :meth:`async_push_update`.
+    Operates in one of two mutually exclusive modes selected at setup:
+
+    - Polling: ``update_interval`` is set, ``_async_update_data`` fetches
+      from the device API on the standard DUC schedule.
+    - Push: ``update_interval`` is None (no polling). The coordinator acts
+      as a passive bus; data is injected via :meth:`async_push_update` from
+      the HTTP push receiver, and a watchdog marks the entity unavailable
+      if no push arrives within ``stale_after``.
     """
 
     config_entry: ConfigEntry
@@ -50,12 +54,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         update_interval: timedelta | None = None,
         stale_after: timedelta | None = None,
     ) -> None:
-        """Initialize the coordinator.
-
-        ``stale_after`` enables a watchdog (push mode only): if no push
-        data arrives within this interval, the coordinator is marked
-        as failed and entities become unavailable.
-        """
+        """Initialize the coordinator."""
         self.api = api
         self._stale_after = stale_after
         self._stale_unsub: CALLBACK_TYPE | None = None
@@ -73,7 +72,6 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         try:
             data = await self.api.async_fetch_sensors_data(retries=2)
         except (TimeoutError, aiohttp.ClientError, XMLParseError) as exc:
-            _LOGGER.debug("Error fetching data from %s: %s", self.api.host, exc)
             raise UpdateFailed(
                 f"Error fetching data from {self.api.host}: {exc}"
             ) from exc
@@ -81,20 +79,10 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         if data is None:
             raise UpdateFailed(f"No data received from Wibeee at {self.api.host}")
 
-        if not isinstance(data, dict):
-            raise UpdateFailed(
-                f"Invalid data format from {self.api.host}: expected dict"
-            )
-
         return data
 
     def async_push_update(self, data: WibeeeData) -> None:
-        """Receive push data and update coordinator.
-
-        This is the public API for push mode. The push receiver calls
-        this method instead of ``async_set_updated_data`` directly,
-        making the intent explicit and allowing future validation.
-        """
+        """Receive push data from the HTTP receiver and update entities."""
         if not isinstance(data, dict):
             _LOGGER.warning(
                 "Ignoring invalid push data for %s: expected dict, got %s",

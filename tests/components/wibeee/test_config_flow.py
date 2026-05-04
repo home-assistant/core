@@ -372,13 +372,11 @@ def test_get_local_ip_sync_oserror_fallback() -> None:
 
 async def test_get_local_ip_uses_async_get_source_ip(hass: HomeAssistant) -> None:
     """Test _get_local_ip returns the IP from network.async_get_source_ip."""
-    # Disable the autouse fixture by calling the real function directly.
     with patch(
-        "homeassistant.components.network.async_get_source_ip",
+        "homeassistant.components.wibeee.config_flow.async_get_source_ip",
         new_callable=AsyncMock,
         return_value="10.0.0.42",
     ):
-        # Call the real _get_local_ip, bypassing autouse mock
         result = (
             await _get_local_ip.__wrapped__(hass)
             if hasattr(_get_local_ip, "__wrapped__")
@@ -391,12 +389,12 @@ async def test_get_local_ip_falls_back_to_get_url(hass: HomeAssistant) -> None:
     """Test _get_local_ip falls back to get_url when async_get_source_ip fails."""
     with (
         patch(
-            "homeassistant.components.network.async_get_source_ip",
+            "homeassistant.components.wibeee.config_flow.async_get_source_ip",
             new_callable=AsyncMock,
             side_effect=HomeAssistantError("no network"),
         ),
         patch(
-            "homeassistant.helpers.network.get_url",
+            "homeassistant.components.wibeee.config_flow.get_url",
             return_value="http://192.168.1.77:8123",
         ),
     ):
@@ -413,12 +411,12 @@ async def test_get_local_ip_get_url_returns_hostname(hass: HomeAssistant) -> Non
     """
     with (
         patch(
-            "homeassistant.components.network.async_get_source_ip",
+            "homeassistant.components.wibeee.config_flow.async_get_source_ip",
             new_callable=AsyncMock,
             side_effect=HomeAssistantError("no network"),
         ),
         patch(
-            "homeassistant.helpers.network.get_url",
+            "homeassistant.components.wibeee.config_flow.get_url",
             return_value="http://homeassistant.local:8123",
         ),
         patch(
@@ -434,12 +432,12 @@ async def test_get_local_ip_uses_executor_fallback(hass: HomeAssistant) -> None:
     """Test _get_local_ip falls back to socket-based detection."""
     with (
         patch(
-            "homeassistant.components.network.async_get_source_ip",
+            "homeassistant.components.wibeee.config_flow.async_get_source_ip",
             new_callable=AsyncMock,
             side_effect=HomeAssistantError("no network"),
         ),
         patch(
-            "homeassistant.helpers.network.get_url",
+            "homeassistant.components.wibeee.config_flow.get_url",
             side_effect=HomeAssistantError("no url"),
         ),
         patch(
@@ -454,7 +452,7 @@ async def test_get_local_ip_uses_executor_fallback(hass: HomeAssistant) -> None:
 async def test_get_ha_port_from_url(hass: HomeAssistant) -> None:
     """Test _get_ha_port returns port from get_url."""
     with patch(
-        "homeassistant.helpers.network.get_url",
+        "homeassistant.components.wibeee.config_flow.get_url",
         return_value="http://192.168.1.10:9999",
     ):
         assert _get_ha_port(hass) == 9999
@@ -463,8 +461,17 @@ async def test_get_ha_port_from_url(hass: HomeAssistant) -> None:
 async def test_get_ha_port_default_on_error(hass: HomeAssistant) -> None:
     """Test _get_ha_port returns default on HomeAssistantError."""
     with patch(
-        "homeassistant.helpers.network.get_url",
+        "homeassistant.components.wibeee.config_flow.get_url",
         side_effect=HomeAssistantError("boom"),
+    ):
+        assert _get_ha_port(hass) == 8123
+
+
+async def test_get_ha_port_default_when_url_has_no_port(hass: HomeAssistant) -> None:
+    """Test _get_ha_port returns default when URL parses without a port."""
+    with patch(
+        "homeassistant.components.wibeee.config_flow.get_url",
+        return_value="http://homeassistant.local",
     ):
         assert _get_ha_port(hass) == 8123
 
