@@ -1,6 +1,6 @@
 """Test ViCare initialization and migration."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
 from PyViCare.PyViCareUtils import (
@@ -12,6 +12,10 @@ from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -185,6 +189,67 @@ async def test_setup_entry_token_invalid(
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         side_effect=KeyError("token"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_implementation_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed when OAuth2 implementation is missing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=ValueError("Implementation not available"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_token_refresh_transient(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryNotReady on transient token refresh error."""
+    mock_config_entry.add_to_hass(hass)
+
+    request_info = Mock()
+    request_info.real_url = "https://example.com"
+    transient = OAuth2TokenRequestTransientError(
+        domain=DOMAIN, request_info=request_info, status=503
+    )
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=transient,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_token_refresh_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed when token refresh requires re-auth."""
+    mock_config_entry.add_to_hass(hass)
+
+    request_info = Mock()
+    request_info.real_url = "https://example.com"
+    reauth = OAuth2TokenRequestReauthError(
+        domain=DOMAIN, request_info=request_info, status=401
+    )
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=reauth,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

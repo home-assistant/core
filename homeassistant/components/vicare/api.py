@@ -47,18 +47,18 @@ class _SyncSessionAdapter:
         """Perform sync GET via HA's async OAuth2Session."""
         timeout = kwargs.pop("timeout", 31)
         response = run_coroutine_threadsafe(
-            self._session.async_request("GET", url),
+            self._session.async_request("GET", url, **kwargs),
             self._hass.loop,
         ).result(timeout=timeout)
         return _SyncResponse(self._hass, response)
 
     def post(self, url: str, data: Any = None, **kwargs: Any) -> _SyncResponse:
         """Perform sync POST via HA's async OAuth2Session."""
-        headers = kwargs.pop("headers", {})
+        timeout = kwargs.pop("timeout", 31)
         response = run_coroutine_threadsafe(
-            self._session.async_request("POST", url, data=data, headers=headers),
+            self._session.async_request("POST", url, data=data, **kwargs),
             self._hass.loop,
-        ).result(timeout=31)
+        ).result(timeout=timeout)
         return _SyncResponse(self._hass, response)
 
 
