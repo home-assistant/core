@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,8 +24,6 @@ from .coordinator import (
     OpenAQDataUpdateCoordinator,
     OpenAQLocationData,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DISTANCE_FROM_HOME = "distance_from_home"
 
@@ -143,9 +140,6 @@ async def async_setup_entry(
             + [OpenAQSensor(coordinator, DISTANCE_SENSOR_DESCRIPTION)],
             config_subentry_id=subentry_id,
         )
-        for parameter in coordinator.data.measurements:
-            if parameter not in SENSOR_DESCRIPTIONS:
-                _LOGGER.debug("Ignoring unsupported OpenAQ parameter: %s", parameter)
 
 
 class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity):
