@@ -27,12 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
             hass, entry, subentry, client
         )
 
-    await asyncio.gather(
-        *(
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators.values()
+    try:
+        await asyncio.gather(
+            *(
+                coordinator.async_config_entry_first_refresh()
+                for coordinator in coordinators.values()
+            )
         )
-    )
+    except Exception:
+        await client.close()
+        raise
 
     entry.runtime_data = OpenAQRuntimeData(client=client, coordinators=coordinators)
     entry.async_on_unload(entry.add_update_listener(async_update_entry))

@@ -39,6 +39,7 @@ async def test_setup_retry_on_first_refresh_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_openaq_client.close.assert_awaited_once()
 
 
 async def test_unload_closes_client(

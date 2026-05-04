@@ -23,11 +23,12 @@
   "config_subentries": {
     "location": {
       "abort": {
-        "already_configured": "This service is already configured"
+        "already_configured": "This monitoring location is already configured"
       },
       "entry_type": "Monitoring location",
       "error": {
         "cannot_connect": "Failed to connect",
+        "invalid_location": "Invalid OpenAQ location ID",
         "no_locations_found": "No OpenAQ monitoring locations were found nearby.",
         "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
         "unknown": "Unexpected error"
