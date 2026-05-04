@@ -1,7 +1,7 @@
 """Light platform for V2C EVSE LEDs."""
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any
 
 from pytrydan import Trydan, TrydanData
@@ -64,19 +64,11 @@ async def async_setup_entry(
     async_add_entities(
         V2CLightEntity(
             coordinator,
-            replace(
-                description,
-                entity_registry_enabled_default=(
-                    description.key != "light_led"
-                    and (
-                        description.entity_registry_enabled_default
-                        or description.value_fn(data) is not None
-                    )
-                ),
-            ),
+            description,
             config_entry.entry_id,
         )
         for description in TRYDAN_LIGHTS
+        if description.value_fn(data) is not None
     )
 
 

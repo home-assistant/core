@@ -104,15 +104,38 @@ async def test_light_led_disabled_by_default(
     assert hass.states.get(entity_id) is None
 
 
-async def test_logo_led_enabled_when_missing(
+@pytest.mark.parametrize(
+    ("field", "entity_id"),
+    [
+        ("light_led", "light.evse_1_1_1_1_light_led"),
+        ("logo_led", "light.evse_1_1_1_1_logo_led"),
+    ],
+)
+async def test_led_not_created_when_missing(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_v2c_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    field: str,
+    entity_id: str,
+) -> None:
+    """Test missing LED entities are not created."""
+    setattr(mock_v2c_client.get_data.return_value, field, None)
+
+    with patch("homeassistant.components.v2c.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(entity_id) is None
+    assert hass.states.get(entity_id) is None
+
+
+async def test_logo_led_enabled_when_present(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_v2c_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test missing Logo LED entity is enabled."""
-    mock_v2c_client.get_data.return_value.logo_led = None
-
+    """Test Logo LED entity is enabled when supported."""
     with patch("homeassistant.components.v2c.PLATFORMS", [Platform.LIGHT]):
         await init_integration(hass, mock_config_entry)
 
