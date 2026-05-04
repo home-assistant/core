@@ -29,6 +29,18 @@ class OhmeNumberDescription(OhmeEntityDescription, NumberEntityDescription):
 
 NUMBER_DESCRIPTION = [
     OhmeNumberDescription(
+        key="state_of_charge_input",
+        translation_key="state_of_charge_input",
+        value_fn=lambda client: client.battery,
+        set_fn=lambda client, value: client.async_set_state_of_charge(int(value)),
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        available_fn=lambda client: client.status.value != "unplugged",
+    ),
+    OhmeNumberDescription(
         key="target_percentage",
         translation_key="target_percentage",
         value_fn=lambda client: client.target_soc,
