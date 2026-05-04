@@ -331,7 +331,8 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
     The age can be in second, minute, hour, day, month and year.
 
-    depth number of units will be returned, with the last unit rounded
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding)
 
     The date must be in the past or a ValueException will be raised.
     """
@@ -350,7 +351,8 @@ def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
 
     The age can be in second, minute, hour, day, month and year.
 
-    depth number of units will be returned, with the last unit rounded
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding)
 
     The date must be in the future or a ValueException will be raised.
     """
@@ -371,6 +373,7 @@ def timedelta_as_string(delta: dt.timedelta, precision: int = 1) -> str:
     The result can be in seconds, minutes, hours, days, months and years.
 
     precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding)
 
     Negative timedeltas are treated as their absolute value.
     """
