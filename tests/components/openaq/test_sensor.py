@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -110,3 +111,22 @@ async def test_entity_unavailable_on_update_failure(
 
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_entity_unknown_when_measurement_disappears(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors handle measurements disappearing after setup."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    mock_openaq_client.locations.latest.return_value = make_response(
+        [make_latest(1, 8.5)]
+    )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
+    assert state.state == STATE_UNKNOWN
