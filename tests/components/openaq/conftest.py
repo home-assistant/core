@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_API_KEY
 
 from tests.common import MockConfigEntry
 
@@ -30,13 +30,18 @@ def make_location(
     return SimpleNamespace(id=location_id, name=name, locality="Albuquerque")
 
 
-def make_parameter(name: str, units: str = "µg/m³") -> SimpleNamespace:
+def make_parameter(
+    name: str, units: str = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+) -> SimpleNamespace:
     """Return an OpenAQ parameter."""
     return SimpleNamespace(name=name, units=units)
 
 
 def make_sensor(
-    sensor_id: int, parameter: str, units: str = "µg/m³", value: float | None = None
+    sensor_id: int,
+    parameter: str,
+    units: str = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    value: float | None = None,
 ) -> SimpleNamespace:
     """Return an OpenAQ sensor."""
     latest = None if value is None else SimpleNamespace(value=value)
