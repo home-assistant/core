@@ -72,6 +72,22 @@ VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
 
 VICTRON_DC_DC_CONVERTER_TOKEN = "64ba49f1a8562e45197a8e1fe50d7658"
 
+# Orion XS
+
+VICTRON_ORION_XS_SERVICE_INFO = BluetoothServiceInfo(
+    name="Orion XS",
+    address="01:02:03:04:05:15",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1000f0a30f3412aa471c3ac637f436dd184693849c9c081a"),
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_ORION_XS_TOKEN = "aabbccdd11223344aabbccdd11223344"
+
 # DC energy meter
 
 VICTRON_DC_ENERGY_METER_SERVICE_INFO = BluetoothServiceInfo(
