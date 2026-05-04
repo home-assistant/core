@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aioaquarite import AuthenticationError
+from aioaquarite import AquariteError, AuthenticationError
 import pytest
 
 from homeassistant import config_entries
@@ -97,6 +97,25 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_cannot_connect(hass: HomeAssistant) -> None:
+    """Test connectivity error during auth surfaces as cannot_connect."""
+    with patch(PATCH_AUTH) as mock_auth_cls:
+        mock_auth = AsyncMock()
+        mock_auth.authenticate.side_effect = AquariteError("network down")
+        mock_auth_cls.return_value = mock_auth
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_unknown_exception(hass: HomeAssistant) -> None:

@@ -5,7 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioaquarite import AquariteAuth, AquariteClient, AuthenticationError
+from aioaquarite import (
+    AquariteAuth,
+    AquariteClient,
+    AquariteError,
+    AuthenticationError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -44,6 +49,8 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await auth.authenticate()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
+            except AquariteError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error during authentication")
                 errors["base"] = "unknown"
@@ -54,6 +61,8 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 api = AquariteClient(auth)
                 try:
                     pools = await api.get_pools()
+                except AquariteError:
+                    errors["base"] = "cannot_connect"
                 except Exception:
                     _LOGGER.exception("Unexpected error fetching pools")
                     errors["base"] = "unknown"
