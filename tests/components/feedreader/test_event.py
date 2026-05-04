@@ -47,10 +47,10 @@ async def test_event_entity(
 
         state = hass.states.get("event.mock_title")
         assert state
-        assert state.attributes[ATTR_TITLE] == "Title 2"
-        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/2"
-        assert state.attributes[ATTR_CONTENT] == "Content 2"
-        assert state.attributes[ATTR_DESCRIPTION] == "Description 2"
+        assert state.attributes[ATTR_TITLE] == "Title 1"
+        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
+        assert state.attributes[ATTR_CONTENT] == "Content 1"
+        assert state.attributes[ATTR_DESCRIPTION] == "Description 1"
 
         future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
         async_fire_time_changed(hass, future)
