@@ -28,7 +28,7 @@ def mock_everhome_client() -> Generator[AsyncMock]:
     """Mock a new everHome client."""
     with (
         patch(
-            "homeassistant.components.everhome.EcoTracker",
+            "homeassistant.components.everhome.coordinator.EcoTracker",
             autospec=True,
         ) as mock_client,
         patch(
