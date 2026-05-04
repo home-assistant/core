@@ -269,8 +269,51 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if response == ERROR_REQUIRES_ENCRYPTION_KEY:
             return await self.async_step_encryption_key()
         if response is not None:
+            if (
+                self.source == SOURCE_RECONFIGURE
+                and response in ("connection_error", "resolve_error")
+                and self._async_reconfigure_host_changed()
+            ):
+                return await self.async_step_reconfigure_confirm_unreachable()
             return await self._async_step_user_base(error=response)
         return await self._async_authenticate_or_add()
+
+    @callback
+    def _async_reconfigure_host_changed(self) -> bool:
+        """Return if the reconfigure flow has a new host or port."""
+        assert self._host is not None
+        assert self._port is not None
+        return self._host != self._reconfig_entry.data.get(
+            CONF_HOST
+        ) or self._port != self._reconfig_entry.data.get(CONF_PORT, DEFAULT_PORT)
+
+    async def async_step_reconfigure_confirm_unreachable(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm saving a reconfigured host when the device is unreachable."""
+        assert self._host is not None
+        assert self._port is not None
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                self._reconfig_entry,
+                data=self._reconfig_entry.data
+                | {
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm_unreachable",
+            description_placeholders={
+                "host": self._host,
+                "name": self._reconfig_entry.data.get(
+                    CONF_DEVICE_NAME, self._reconfig_entry.title
+                ),
+                "port": self._port,
+            },
+        )
 
     async def _async_authenticate_or_add(self) -> ConfigFlowResult:
         # Only show authentication step if device uses password

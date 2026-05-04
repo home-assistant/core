@@ -70,6 +70,10 @@
       "reauth_encryption_removed_confirm": {
         "description": "The ESPHome device `{name}` disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
       },
+      "reconfigure_confirm_unreachable": {
+        "description": "Home Assistant could not validate `{host}:{port}` for `{name}` because the device is currently unreachable.\n\nOnly continue if you are sure this is the correct new address. Home Assistant will keep the existing device identity and update only the host and port.",
+        "title": "Confirm unreachable ESPHome address"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
