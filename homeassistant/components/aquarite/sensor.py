@@ -45,10 +45,6 @@ def _convert_tenths(value: Any) -> float:
     return float(value) / 10
 
 
-def _convert_minutes_to_hours(value: Any) -> float:
-    return float(value) / 60
-
-
 @dataclass(frozen=True, kw_only=True)
 class AquariteSensorEntityDescription(SensorEntityDescription):
     """Describes an Aquarite sensor entity."""
@@ -111,10 +107,11 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         key="filtration_intel_time",
         translation_key="filtration_intel_time",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="filtration.intel.time",
-        value_fn=_convert_minutes_to_hours,
+        value_fn=int,
     ),
     AquariteSensorEntityDescription(
         key="rssi",
