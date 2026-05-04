@@ -144,10 +144,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         attr = state.attributes
         attributes: dict[str, Any] = {}
         if (update_timestamp := attr.get(ATTR_UPDATE_TIMESTAMP)) is not None:
-            if isinstance(update_timestamp, str):
-                update_timestamp = dt_util.parse_datetime(update_timestamp)
-            if update_timestamp is not None:
-                attributes[ATTR_UPDATE_TIMESTAMP] = update_timestamp
+            attributes[ATTR_UPDATE_TIMESTAMP] = dt_util.parse_datetime(update_timestamp)
 
         self._data = {
             "host_name": state.name,
