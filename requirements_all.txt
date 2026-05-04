@@ -697,7 +697,7 @@ boto3==1.37.1
 botocore==1.37.1
 
 # homeassistant.components.bring
-bring-api==1.1.1
+bring-api==1.1.2
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -1245,7 +1245,7 @@ hole==0.9.0
 holidays==0.95
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260429.1
+home-assistant-frontend==20260429.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1344,7 +1344,7 @@ infrared-protocols==2.0.0
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.1
+insteon-frontend-home-assistant==0.6.2
 
 # homeassistant.components.intellifire
 intellifire4py==4.4.0
@@ -1941,7 +1941,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.37.2
+pyTibber==0.37.3
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2736,10 +2736,10 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==0.8.0
+pytrydan==1.0.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==24.0.1
+pyuptimerobot==25.0.0
 
 # homeassistant.components.vera
 pyvera==0.3.16
@@ -2916,7 +2916,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.14.0
+sense-energy==0.14.1
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
