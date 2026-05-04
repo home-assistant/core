@@ -697,7 +697,7 @@ boto3==1.37.1
 botocore==1.37.1
 
 # homeassistant.components.bring
-bring-api==1.1.1
+bring-api==1.1.2
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -2213,7 +2213,7 @@ pyiskra==0.1.27
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.4.1
+pyisy==3.5.1
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
