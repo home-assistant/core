@@ -1,13 +1,17 @@
 """Test Home Assistant package util methods."""
 
 import asyncio
+from base64 import urlsafe_b64encode
 from collections.abc import Generator
+from hashlib import sha256
 from importlib.metadata import metadata
 import logging
 import os
+from pathlib import Path
 from subprocess import PIPE
 import sys
 from unittest.mock import MagicMock, Mock, call, patch
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
 
@@ -20,6 +24,10 @@ RESOURCE_DIR = os.path.abspath(
 TEST_NEW_REQ = "pyhelloworld3==1.0.0"
 
 TEST_ZIP_REQ = f"file://{RESOURCE_DIR}/pyhelloworld3.zip#{TEST_NEW_REQ}"
+
+MULTI_INDEX_REQ = "ha-unsafe-best-match-test==1.0.0"
+MULTI_INDEX_PACKAGE = "ha_unsafe_best_match_test"
+MULTI_INDEX_DIST_INFO = f"{MULTI_INDEX_PACKAGE}-1.0.0.dist-info"
 
 
 @pytest.fixture
@@ -84,6 +92,42 @@ def mock_async_subprocess() -> Generator[MagicMock]:
     return async_popen
 
 
+def _write_wheel(index: Path, tag: str, marker: str) -> None:
+    """Write a minimal wheel to a PEP 503 simple package index."""
+    package_index = index / "simple" / "ha-unsafe-best-match-test"
+    package_index.mkdir(parents=True)
+    wheel_name = f"{MULTI_INDEX_PACKAGE}-1.0.0-{tag}.whl"
+    wheel_path = package_index / wheel_name
+    wheel_files = {
+        f"{MULTI_INDEX_PACKAGE}/__init__.py": f"MARKER = {marker!r}\n",
+        f"{MULTI_INDEX_DIST_INFO}/METADATA": (
+            "Metadata-Version: 2.1\nName: ha-unsafe-best-match-test\nVersion: 1.0.0\n"
+        ),
+        f"{MULTI_INDEX_DIST_INFO}/WHEEL": (
+            "Wheel-Version: 1.0\n"
+            "Generator: home-assistant-tests\n"
+            "Root-Is-Purelib: true\n"
+            f"Tag: {tag}\n"
+        ),
+    }
+    records = []
+    for path, content in wheel_files.items():
+        encoded = content.encode()
+        digest = urlsafe_b64encode(sha256(encoded).digest()).rstrip(b"=").decode()
+        records.append(f"{path},sha256={digest},{len(encoded)}")
+
+    record_path = f"{MULTI_INDEX_DIST_INFO}/RECORD"
+    wheel_files[record_path] = "\n".join([*records, f"{record_path},,"]) + "\n"
+
+    with ZipFile(wheel_path, "w", ZIP_DEFLATED) as wheel:
+        for path, content in wheel_files.items():
+            wheel.writestr(path, content)
+
+    (package_index / "index.html").write_text(
+        f'<a href="{wheel_name}">{wheel_name}</a>\n', encoding="utf-8"
+    )
+
+
 @pytest.mark.usefixtures("mock_venv")
 def test_install(
     mock_popen: MagicMock, mock_env_copy: MagicMock, mock_sys: MagicMock
@@ -111,6 +155,35 @@ def test_install(
         close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_venv")
+def test_install_resolves_compatible_wheel_across_indexes(tmp_path: Path) -> None:
+    """Test install selects a compatible wheel from a secondary index."""
+    pytest.importorskip("uv")
+    primary_index = tmp_path / "primary"
+    secondary_index = tmp_path / "secondary"
+    target = tmp_path / "target"
+    cache = tmp_path / "cache"
+    _write_wheel(primary_index, "py2-none-any", "primary")
+    _write_wheel(secondary_index, "py3-none-any", "secondary")
+    env = os.environ.copy()
+    env.update(
+        {
+            "UV_CACHE_DIR": str(cache),
+            "UV_EXTRA_INDEX_URL": (secondary_index / "simple").as_uri(),
+            "UV_INDEX_URL": (primary_index / "simple").as_uri(),
+            "UV_NO_CONFIG": "1",
+            "UV_PYTHON_DOWNLOADS": "never",
+        }
+    )
+
+    with patch("homeassistant.util.package.os.environ.copy", return_value=env):
+        assert package.install_package(MULTI_INDEX_REQ, False, target=str(target))
+
+    assert (target / MULTI_INDEX_PACKAGE / "__init__.py").read_text(
+        encoding="utf-8"
+    ) == "MARKER = 'secondary'\n"
 
 
 @pytest.mark.usefixtures("mock_venv")
