@@ -2739,7 +2739,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==0.8.0
+pytrydan==1.0.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==25.0.0
