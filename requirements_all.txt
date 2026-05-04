@@ -1347,7 +1347,7 @@ infrared-protocols==2.0.0
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.1
+insteon-frontend-home-assistant==0.6.2
 
 # homeassistant.components.intellifire
 intellifire4py==4.4.0
@@ -1944,7 +1944,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.37.2
+pyTibber==0.37.3
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2919,7 +2919,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.14.0
+sense-energy==0.14.1
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
