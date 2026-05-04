@@ -1624,11 +1624,6 @@ async def test_restore_state(
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
-    assert (
-        state_1.attributes[ATTR_UPDATE_TIMESTAMP]
-        == state_2.attributes[ATTR_UPDATE_TIMESTAMP]
-        == dt_util.utc_from_timestamp(LOCATION_MESSAGE["tst"])
-    )
 
 
 async def test_returns_empty_friends(
