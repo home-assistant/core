@@ -8,7 +8,7 @@ rules:
     comment: Reports update every 30 minutes, matching AirNow's publish frequency.
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
