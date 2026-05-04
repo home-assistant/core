@@ -4,8 +4,6 @@ For data updates, Cloud Push is used in form of an SSE server that sends out eve
 For fast device switching Local Push is used in form of a USB dongle that hooks into a BLE mesh.
 """
 
-from __future__ import annotations
-
 from functools import partial
 from typing import TYPE_CHECKING, cast
 

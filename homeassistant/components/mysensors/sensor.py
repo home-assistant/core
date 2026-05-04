@@ -1,7 +1,5 @@
 """Support for MySensors sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from awesomeversion import AwesomeVersion

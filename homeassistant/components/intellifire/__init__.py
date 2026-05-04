@@ -1,7 +1,5 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from intellifire4py import UnifiedFireplace

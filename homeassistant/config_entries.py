@@ -1,7 +1,5 @@
 """Manage config entries in Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import UserDict, defaultdict
 from collections.abc import (

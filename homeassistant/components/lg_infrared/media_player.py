@@ -1,7 +1,5 @@
 """Media player platform for LG IR integration."""
 
-from __future__ import annotations
-
 from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.media_player import (

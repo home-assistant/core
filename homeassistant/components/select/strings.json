@@ -6,6 +6,9 @@
         "behavior": {
           "name": "Condition passes if"
         },
+        "for": {
+          "name": "For at least"
+        },
         "option": {
           "description": "The options to check for.",
           "name": "Option"

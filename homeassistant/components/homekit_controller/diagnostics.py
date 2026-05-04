@@ -1,7 +1,5 @@
 """Diagnostics support for HomeKit Controller."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomekit.model.characteristics.characteristic_types import CharacteristicsTypes

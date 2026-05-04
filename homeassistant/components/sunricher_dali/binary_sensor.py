@@ -1,7 +1,5 @@
 """Platform for Sunricher DALI binary sensor entities."""
 
-from __future__ import annotations
-
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_motion_sensor
 from PySrDaliGateway.types import MotionState, MotionStatus

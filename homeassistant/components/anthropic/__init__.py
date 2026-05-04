@@ -1,7 +1,5 @@
 """The Anthropic integration."""
 
-from __future__ import annotations
-
 from anthropic.resources.messages.messages import DEPRECATED_MODELS
 
 from homeassistant.config_entries import ConfigSubentry

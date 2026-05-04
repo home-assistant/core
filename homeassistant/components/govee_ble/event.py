@@ -1,7 +1,5 @@
 """Support for govee_ble event entities."""
 
-from __future__ import annotations
-
 from govee_ble import ModelInfo, SensorType
 
 from homeassistant.components.bluetooth import (

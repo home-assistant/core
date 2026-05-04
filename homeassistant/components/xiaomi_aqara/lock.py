@@ -1,7 +1,5 @@
 """Support for Xiaomi Aqara locks."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xiaomi_gateway import XiaomiGateway
