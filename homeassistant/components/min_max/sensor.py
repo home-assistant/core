@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -28,9 +29,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -78,6 +82,32 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize min/max/mean config entry."""
+    registry = er.async_get(hass)
+    entity_ids = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITY_IDS]
+    )
+    sensor_type = config_entry.options[CONF_TYPE]
+    round_digits = int(config_entry.options[CONF_ROUND_DIGITS])
+
+    async_add_entities(
+        [
+            MinMaxSensor(
+                entity_ids,
+                config_entry.title,
+                sensor_type,
+                round_digits,
+                config_entry.entry_id,
+            )
+        ]
+    )
 
 
 async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> None:
