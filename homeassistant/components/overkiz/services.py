@@ -17,6 +17,9 @@ from .const import DOMAIN
 
 SERVICE_SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
 
+POSITION_MIN = 0
+POSITION_MAX = 100
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -28,10 +31,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=COVER_DOMAIN,
         schema={
             vol.Required(ATTR_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+                vol.Coerce(int), vol.Range(min=POSITION_MIN, max=POSITION_MAX)
             ),
             vol.Required(ATTR_TILT_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+                vol.Coerce(int), vol.Range(min=POSITION_MIN, max=POSITION_MAX)
             ),
         },
         func="async_set_cover_position_and_tilt",

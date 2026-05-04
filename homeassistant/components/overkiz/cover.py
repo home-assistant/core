@@ -510,14 +510,13 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             await self.executor.async_execute_command(command, position)
 
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
-        """Move the cover and tilt to a specific position simultaneously.
+        """Move cover and tilt to a specific position simultaneously.
 
-        This is exposed as the ``overkiz.set_cover_position_and_tilt`` service
-        action and uses the Overkiz ``setClosureAndOrientation`` command, which
-        moves the slats and the closure in a single instruction. Calling the
-        regular ``set_cover_position`` and ``set_cover_tilt_position`` services
-        sequentially causes the motor on devices like the Somfy
-        DynamicExteriorVenetianBlind to stop between commands.
+        Exposed as the `overkiz.set_cover_position_and_tilt` service action. Uses the
+        setClosureAndOrientation command to move slats and closure in a single instruction.
+        Calling set_cover_position and set_cover_tilt_position sequentially will cause
+        the motor to stop between commands on some devices (e.g. Somfy
+        DynamicExteriorVenetianBlind).
         """
         if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
             raise ServiceValidationError(

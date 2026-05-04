@@ -187,7 +187,7 @@
   },
   "services": {
     "set_cover_position_and_tilt": {
-      "description": "Moves the cover to a target position and tilt at the same time using a single Overkiz command, avoiding the motor stop that occurs between two sequential commands.",
+      "description": "Moves the cover and tilt to the target position simultaneously, preventing the motor from stopping between movements.",
       "fields": {
         "position": {
           "description": "Target vertical position. 0 means closed, 100 means fully open.",

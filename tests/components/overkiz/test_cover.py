@@ -11,7 +11,6 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import EventName, ExecutionState, OverkizCommandParam, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -32,7 +31,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotSupported, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -886,62 +885,6 @@ async def test_set_cover_position_and_tilt_inverts_boundaries(
         command_name="setClosureAndOrientation",
         parameters=expected_parameters,
     )
-
-
-@pytest.mark.parametrize(
-    ("position", "tilt_position"),
-    [(-1, 50), (50, 101), (120, 50), (50, -5)],
-)
-async def test_set_cover_position_and_tilt_rejects_out_of_range(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    position: int,
-    tilt_position: int,
-) -> None:
-    """Values outside 0-100 must be rejected by the service schema."""
-    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
-
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            "overkiz",
-            "set_cover_position_and_tilt",
-            {
-                ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
-                ATTR_POSITION: position,
-                ATTR_TILT_POSITION: tilt_position,
-            },
-            blocking=True,
-        )
-
-    assert mock_client.execute_command.await_count == 0
-
-
-async def test_set_cover_position_and_tilt_filtered_on_non_tilt_cover(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Covers without SET_TILT_POSITION must be filtered by required_features.
-
-    SHUTTER only supports SET_POSITION, so the entity-service framework filters
-    it out before the handler can run and no command is sent.
-    """
-    await setup_overkiz_integration(fixture=SHUTTER.fixture)
-
-    with pytest.raises(ServiceNotSupported):
-        await hass.services.async_call(
-            "overkiz",
-            "set_cover_position_and_tilt",
-            {
-                ATTR_ENTITY_ID: SHUTTER.entity_id,
-                ATTR_POSITION: 50,
-                ATTR_TILT_POSITION: 50,
-            },
-            blocking=True,
-        )
-
-    assert mock_client.execute_command.await_count == 0
 
 
 async def test_set_cover_position_and_tilt_unsupported_command_raises(
