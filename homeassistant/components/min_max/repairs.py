@@ -1,4 +1,4 @@
-"""Repairs platform for the Workday integration."""
+"""Repairs platform for the Min/Max integration."""
 
 from __future__ import annotations
 
@@ -71,17 +71,18 @@ class MigrateToGroupSensorFlow(RepairsFlow):
                 version=1,
             )
 
-            await self.hass.config_entries.async_unload_platforms(
-                self.entry, [SENSOR_DOMAIN]
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.entry, SENSOR_DOMAIN
             )
+
             await self.hass.config_entries.async_unload(self.entry.entry_id)
             await self.hass.config_entries.async_add(new_config_entry)
-            if old_entity:
-                entity_reg.async_update_entity_platform(
-                    old_entity,
-                    GROUP_DOMAIN,
-                    new_config_entry_id=new_config_entry.entry_id,
-                )
+
+            entity_reg.async_update_entity_platform(
+                old_entity,
+                GROUP_DOMAIN,
+                new_config_entry_id=new_config_entry.entry_id,
+            )
             await self.hass.config_entries.async_remove(self.entry.entry_id)
 
             return self.async_create_entry(data={})
