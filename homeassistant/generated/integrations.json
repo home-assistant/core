@@ -4506,6 +4506,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "mypv": {
+      "name": "my-PV",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "mysensors": {
       "name": "MySensors",
       "integration_type": "hub",

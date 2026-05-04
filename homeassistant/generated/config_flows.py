@@ -468,6 +468,7 @@ FLOWS = {
         "music_assistant",
         "mutesync",
         "myneomitis",
+        "mypv",
         "mysensors",
         "mystrom",
         "myuplink",

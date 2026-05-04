@@ -451,6 +451,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "connector_*",
     },
     {
+        "domain": "mypv",
+        "registered_devices": True,
+    },
+    {
+        "domain": "mypv",
+        "macaddress": "986D35C*",
+    },
+    {
+        "domain": "mypv",
+        "macaddress": "6869C4*",
+    },
+    {
         "domain": "mystrom",
         "hostname": "mystrom-*",
     },
