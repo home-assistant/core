@@ -25,6 +25,9 @@
     'name': None,
     'object_id_base': 'Black carbon',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -80,6 +83,9 @@
     'name': None,
     'object_id_base': 'Carbon dioxide',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
@@ -136,6 +142,9 @@
     'name': None,
     'object_id_base': 'Carbon monoxide',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
@@ -166,6 +175,65 @@
     'state': '0.4',
   })
 # ---
+# name: test_sensor_snapshot[sensor.del_norte_distance_from_home_assistant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.del_norte_distance_from_home_assistant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Distance from Home Assistant',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance from Home Assistant',
+    'platform': 'openaq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_from_home',
+    'unique_id': '2178_distance_from_home',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.del_norte_distance_from_home_assistant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by OpenAQ',
+      'device_class': 'distance',
+      'friendly_name': 'Del Norte Distance from Home Assistant',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.del_norte_distance_from_home_assistant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1011.981016',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.del_norte_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -192,6 +260,9 @@
     'name': None,
     'object_id_base': 'Nitrogen dioxide',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
@@ -248,6 +319,9 @@
     'name': None,
     'object_id_base': 'Nitrogen monoxide',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.NITROGEN_MONOXIDE: 'nitrogen_monoxide'>,
     'original_icon': None,
@@ -304,6 +378,9 @@
     'name': None,
     'object_id_base': 'Nitrogen oxides',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -359,6 +436,9 @@
     'name': None,
     'object_id_base': 'Ozone',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.OZONE: 'ozone'>,
     'original_icon': None,
@@ -415,6 +495,9 @@
     'name': None,
     'object_id_base': 'PM1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
     'original_icon': None,
@@ -471,6 +554,9 @@
     'name': None,
     'object_id_base': 'PM10',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
@@ -527,6 +613,9 @@
     'name': None,
     'object_id_base': 'PM2.5',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
@@ -583,6 +672,9 @@
     'name': None,
     'object_id_base': 'Sulphur dioxide',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.SULPHUR_DIOXIDE: 'sulphur_dioxide'>,
     'original_icon': None,

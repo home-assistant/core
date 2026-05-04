@@ -4,6 +4,8 @@ from types import MappingProxyType, SimpleNamespace
 
 from homeassistant.components.openaq.coordinator import (
     OpenAQMeasurement,
+    create_openaq_client,
+    format_openaq_url,
     get_openaq_value,
     normalize_latest_measurements,
 )
@@ -15,12 +17,41 @@ from homeassistant.const import (
 from .conftest import make_latest, make_sensor
 
 
+async def test_create_openaq_client_uses_fresh_transport() -> None:
+    """Test OpenAQ clients do not share a closable transport."""
+    client = create_openaq_client("api-key")
+    other_client = create_openaq_client("api-key")
+
+    try:
+        assert client.transport is not other_client.transport
+        await client.close()
+        assert not other_client.transport.client.is_closed
+    finally:
+        await other_client.close()
+
+
 def test_get_openaq_value_dict() -> None:
     """Test getting OpenAQ values from dict data."""
     data = {"id": 123}
 
     assert get_openaq_value(data, "id") == 123
     assert get_openaq_value(data, "missing") is None
+
+
+def test_format_openaq_url() -> None:
+    """Test formatting OpenAQ API URLs for debug logging."""
+    assert format_openaq_url(
+        "/locations",
+        {
+            "page": 1,
+            "limit": 10,
+            "radius": 5000,
+            "coordinates": (35.1, -106.6),
+        },
+    ) == (
+        "https://api.openaq.org/v3/locations"
+        "?page=1&limit=10&radius=5000&coordinates=35.1%2C-106.6"
+    )
 
 
 def test_normalize_latest_measurements_ignores_invalid_data() -> None:
