@@ -5,7 +5,7 @@ rules:
     comment: Integration does not register any custom actions.
   appropriate-polling:
     status: done
-    comment: Reports update every 30 minutes, matching AirNow's publish frequency.
+    comment: Reports are polled every 30 minutes so newly published hourly AirNow reports are picked up promptly.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
