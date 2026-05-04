@@ -18,7 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_PASSWORD, MOCK_USER_ID, MOCK_USERNAME
 
 PATCH_AUTH = "homeassistant.components.aquarite.config_flow.AquariteAuth"
 PATCH_CLIENT = "homeassistant.components.aquarite.config_flow.AquariteClient"
@@ -54,7 +54,9 @@ async def test_user_step_creates_entry(
         patch(PATCH_AUTH) as mock_auth_cls,
         patch(PATCH_CLIENT) as mock_client_cls,
     ):
-        mock_auth_cls.return_value = AsyncMock()
+        mock_auth = AsyncMock()
+        mock_auth.user_id = MOCK_USER_ID
+        mock_auth_cls.return_value = mock_auth
         mock_client = AsyncMock()
         mock_client.get_pools = AsyncMock(return_value=MOCK_POOLS)
         mock_client_cls.return_value = mock_client
@@ -147,7 +149,9 @@ async def test_duplicate_account_aborts(
         patch(PATCH_AUTH) as mock_auth_cls,
         patch(PATCH_CLIENT) as mock_client_cls,
     ):
-        mock_auth_cls.return_value = AsyncMock()
+        mock_auth = AsyncMock()
+        mock_auth.user_id = MOCK_USER_ID
+        mock_auth_cls.return_value = mock_auth
         mock_client = AsyncMock()
         mock_client.get_pools = AsyncMock(return_value=MOCK_POOLS)
         mock_client_cls.return_value = mock_client

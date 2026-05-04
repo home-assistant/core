@@ -13,7 +13,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_PASSWORD, MOCK_POOL_ID, MOCK_POOL_NAME, MOCK_USERNAME
+from .conftest import (
+    MOCK_PASSWORD,
+    MOCK_POOL_ID,
+    MOCK_POOL_NAME,
+    MOCK_USER_ID,
+    MOCK_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +38,7 @@ def mock_entry() -> MockConfigEntry:
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
         },
-        unique_id=MOCK_USERNAME.lower(),
+        unique_id=MOCK_USER_ID,
     )
 
 

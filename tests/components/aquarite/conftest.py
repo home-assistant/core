@@ -8,6 +8,7 @@ import pytest
 
 MOCK_USERNAME = "testuser@example.com"
 MOCK_PASSWORD = "testpassword"
+MOCK_USER_ID = "firebase-uid-testuser"
 MOCK_POOL_ID = "ABCDEF1234567890"
 MOCK_POOL_NAME = "My Pool"
 
