@@ -29,17 +29,13 @@ from homeassistant.components.template.helpers import (
     async_setup_template_platform,
     create_legacy_template_issue,
     format_migration_config,
-    rewrite_legacy_to_modern_config,
     rewrite_legacy_to_modern_configs,
 )
 from homeassistant.components.template.light import (
     LEGACY_FIELDS as LIGHT_LEGACY_FIELDS,
     SCRIPT_FIELDS as LIGHT_SCRIPT_FIELDS,
 )
-from homeassistant.components.template.lock import (
-    LEGACY_FIELDS as LOCK_LEGACY_FIELDS,
-    SCRIPT_FIELDS as LOCK_SCRIPT_FIELDS,
-)
+from homeassistant.components.template.lock import SCRIPT_FIELDS as LOCK_SCRIPT_FIELDS
 from homeassistant.components.template.number import (
     SCRIPT_FIELDS as NUMBER_SCRIPT_FIELDS,
 )
@@ -82,51 +78,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, mock_platform
-
-
-@pytest.mark.parametrize(
-    ("legacy_fields", "old_attr", "new_attr", "attr_template"),
-    [
-        (
-            LOCK_LEGACY_FIELDS,
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            LOCK_LEGACY_FIELDS,
-            "code_format_template",
-            "code_format",
-            "{{ 'some format' }}",
-        ),
-    ],
-)
-async def test_legacy_to_modern_config(
-    hass: HomeAssistant,
-    legacy_fields,
-    old_attr: str,
-    new_attr: str,
-    attr_template: str,
-) -> None:
-    """Test the conversion of single legacy template to modern template."""
-    config = {
-        "friendly_name": "foo bar",
-        "unique_id": "foo-bar-entity",
-        "icon_template": "{{ 'mdi.abc' }}",
-        "entity_picture_template": "{{ 'mypicture.jpg' }}",
-        "availability_template": "{{ 1 == 1 }}",
-        old_attr: attr_template,
-    }
-    altered_configs = rewrite_legacy_to_modern_config(hass, config, legacy_fields)
-
-    assert {
-        "availability": Template("{{ 1 == 1 }}", hass),
-        "icon": Template("{{ 'mdi.abc' }}", hass),
-        "name": Template("foo bar", hass),
-        "picture": Template("{{ 'mypicture.jpg' }}", hass),
-        "unique_id": "foo-bar-entity",
-        new_attr: Template(attr_template, hass),
-    } == altered_configs
 
 
 @pytest.mark.parametrize(
@@ -1027,18 +978,6 @@ async def test_platform_not_ready(
                 },
             },
             "theater_lights",
-        ),
-        (
-            "lock",
-            {
-                "lock": {
-                    "platform": "template",
-                    "value_template": "{{ states('input_boolean.state') }}",
-                    "lock": {"action": "script.toggle"},
-                    "unlock": {"action": "script.toggle"},
-                },
-            },
-            "Template Entity",
         ),
         (
             "sensor",
