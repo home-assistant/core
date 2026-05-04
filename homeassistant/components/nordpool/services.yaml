@@ -12,6 +12,7 @@ get_prices_for_date:
     areas:
       selector:
         select:
+          multiple: true
           options:
             - "EE"
             - "LT"
@@ -62,6 +63,7 @@ get_price_indices_for_date:
     areas:
       selector:
         select:
+          multiple: true
           options:
             - "EE"
             - "LT"
