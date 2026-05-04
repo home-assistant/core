@@ -1,0 +1,28 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register any custom actions.
+  appropriate-polling:
+    status: done
+    comment: Reports update every 30 minutes, matching AirNow's publish frequency.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: todo
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register any custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not use entity event setup.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
