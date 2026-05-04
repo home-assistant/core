@@ -146,8 +146,8 @@ async def test_form(
             "connect_timeout",
         ),
         (
-            ResourceException("404", "status_message", "content"),
-            "no_nodes_found",
+            ResourceException("500", "status_message", "content"),
+            "api_error_no_details",
         ),
         (
             requests.exceptions.ConnectionError("Connection error"),
@@ -156,6 +156,71 @@ async def test_form(
     ],
 )
 async def test_form_exceptions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test we handle all exceptions."""
+    mock_proxmox_client._mock_api_cf.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_STEP,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_AUTH_STEP_PASSWORD,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": reason}
+
+    mock_proxmox_client._mock_api_cf.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (
+            AuthenticationError("Invalid credentials"),
+            "invalid_auth",
+        ),
+        (
+            SSLError("SSL handshake failed"),
+            "ssl_error",
+        ),
+        (
+            ConnectTimeout("Connection timed out"),
+            "connect_timeout",
+        ),
+        (
+            ResourceException("400", "status_message", "content"),
+            "no_nodes_found",
+        ),
+        (
+            requests.exceptions.ConnectionError("Connection error"),
+            "cannot_connect",
+        ),
+    ],
+)
+async def test_form_node_exceptions(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     exception: Exception,
@@ -200,7 +265,7 @@ async def test_form_exceptions(
     [
         (
             ResourceException("404", "status_message", "content"),
-            "no_nodes_found",
+            "no_vmlxc_found",
         ),
         (
             requests.exceptions.ConnectionError("Connection error"),
