@@ -155,6 +155,9 @@
     }
   },
   "options": {
+    "abort": {
+      "not_loaded": "The IntelliFire integration is not loaded."
+    },
     "error": {
       "cloud_unavailable": "Cloud connectivity is not available",
       "local_unavailable": "Local connectivity is not available"
