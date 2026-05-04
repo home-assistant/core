@@ -141,7 +141,8 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
+            await self.async_set_unique_id(DOMAIN)
+            self._abort_if_unique_id_configured()
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -297,11 +298,12 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 response = await client.locations.get(location_id)
             except HTTPRateLimitError, RateLimitError:
                 errors["base"] = "rate_limited"
+            except NotFoundError:
+                errors["base"] = "invalid_location"
             except (
                 BadGatewayError,
                 BadRequestError,
                 GatewayTimeoutError,
-                NotFoundError,
                 OpenAQTimeoutError,
                 ServerError,
                 ServiceUnavailableError,
