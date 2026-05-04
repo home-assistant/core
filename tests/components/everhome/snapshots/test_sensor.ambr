@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.everhome_abcdef123456_energy_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -22,13 +23,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy in',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy in',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_counter_in',
     'unique_id': 'abcdef123456_energy_counter_in',
@@ -53,8 +59,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_energy_in_t1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -74,13 +81,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy in T1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy in T1',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_counter_in_t1',
     'unique_id': 'abcdef123456_energy_counter_in_t1',
@@ -105,8 +117,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_energy_in_t2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -126,13 +139,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy in T2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy in T2',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_counter_in_t2',
     'unique_id': 'abcdef123456_energy_counter_in_t2',
@@ -157,8 +175,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_energy_out-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -178,13 +197,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy out',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy out',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_counter_out',
     'unique_id': 'abcdef123456_energy_counter_out',
@@ -209,8 +233,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -230,15 +255,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
+    'translation_key': None,
     'unique_id': 'abcdef123456_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -261,8 +291,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_power_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -282,13 +313,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power average',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power average',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_avg',
     'unique_id': 'abcdef123456_power_avg',
@@ -313,8 +349,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -334,15 +371,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power phase 1',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_phase1',
+    'translation_key': 'power_phase',
     'unique_id': 'abcdef123456_power_phase1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -365,8 +407,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -386,15 +429,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power phase 2',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_phase2',
+    'translation_key': 'power_phase',
     'unique_id': 'abcdef123456_power_phase2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -417,8 +465,9 @@
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -438,15 +487,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power phase 3',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_phase3',
+    'translation_key': 'power_phase',
     'unique_id': 'abcdef123456_power_phase3',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -467,10 +521,11 @@
     'state': '132.42',
   })
 # ---
-# name: test_sensors[sensor.everhome_abcdef123456_wifi_rssi-entry]
+# name: test_sensors[sensor.everhome_abcdef123456_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -482,7 +537,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.everhome_abcdef123456_wifi_rssi',
+    'entity_id': 'sensor.everhome_abcdef123456_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -490,29 +545,31 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'WIFI RSSI',
+    'original_name': 'Signal strength',
     'platform': 'everhome',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'rssi',
+    'translation_key': None,
     'unique_id': 'abcdef123456_rssi',
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensors[sensor.everhome_abcdef123456_wifi_rssi-state]
+# name: test_sensors[sensor.everhome_abcdef123456_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'everHome-abcdef123456 WIFI RSSI',
+      'friendly_name': 'everHome-abcdef123456 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.everhome_abcdef123456_wifi_rssi',
+    'entity_id': 'sensor.everhome_abcdef123456_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -3,12 +3,12 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from homeassistant.components import zeroconf
 from homeassistant.components.everhome.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info import zeroconf
 
 IP_ADDRESS = "192.168.178.104"
 DEVICE_ID = "abcdef123456"

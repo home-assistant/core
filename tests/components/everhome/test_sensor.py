@@ -62,7 +62,9 @@ async def test_sensor_state(
     assert (
         hass.states.get("sensor.everhome_abcdef123456_power_phase_3").state == "132.42"
     )
-    assert hass.states.get("sensor.everhome_abcdef123456_wifi_rssi").state == "-71"
+    assert (
+        hass.states.get("sensor.everhome_abcdef123456_signal_strength").state == "-71"
+    )
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -92,4 +94,6 @@ async def test_sensor_state(
     assert hass.states.get("sensor.everhome_abcdef123456_power_phase_1").state == "40.4"
     assert hass.states.get("sensor.everhome_abcdef123456_power_phase_2").state == "40"
     assert hass.states.get("sensor.everhome_abcdef123456_power_phase_3").state == "40"
-    assert hass.states.get("sensor.everhome_abcdef123456_wifi_rssi").state == "-22"
+    assert (
+        hass.states.get("sensor.everhome_abcdef123456_signal_strength").state == "-22"
+    )
