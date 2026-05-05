@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.tcp import common as tcp
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -269,5 +270,4 @@ async def test_update_socket_error_after_success(
     state = hass.states.get(TEST_ENTITY)
 
     assert state
-    # FIXME: state should remain the same, but how to assert the available flag?
-    assert state.state == "7.123"
+    assert state.state == STATE_UNAVAILABLE
