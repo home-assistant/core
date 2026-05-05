@@ -28,7 +28,7 @@ class PTDevicesBinarySensors(StrEnum):
 
 @dataclass(kw_only=True, frozen=True)
 class PTDevicesBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Description for PTDevices sensor entities."""
+    """Description for PTDevices binary sensor entities."""
 
     is_on_fn: Callable[[dict[str, str | int | float | None]], bool]
 
