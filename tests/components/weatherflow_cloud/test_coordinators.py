@@ -1,5 +1,7 @@
 """Tests for the WeatherFlow Cloud coordinators."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponseError

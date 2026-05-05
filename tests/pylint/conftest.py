@@ -224,3 +224,26 @@ def enforce_greek_micro_char_checker_fixture(
     )
     enforce_greek_micro_char_checker.module = "homeassistant.components.pylint_test"
     return enforce_greek_micro_char_checker
+
+
+@pytest.fixture(
+    name="hass_enforce_no_coordinator_instantiation_in_tests", scope="package"
+)
+def hass_enforce_no_coordinator_instantiation_in_tests_fixture() -> ModuleType:
+    """Fixture for the hass_enforce_no_coordinator_instantiation_in_tests check."""
+    return _load_plugin_from_file(
+        "hass_enforce_no_coordinator_instantiation_in_tests",
+        "pylint/plugins/hass_enforce_no_coordinator_instantiation_in_tests.py",
+    )
+
+
+@pytest.fixture(name="enforce_no_coordinator_instantiation_in_tests_checker")
+def enforce_no_coordinator_instantiation_in_tests_checker_fixture(
+    hass_enforce_no_coordinator_instantiation_in_tests, linter
+) -> BaseChecker:
+    """Fixture to provide a hass_enforce_no_coordinator_instantiation_in_tests checker."""
+    checker = hass_enforce_no_coordinator_instantiation_in_tests.HassEnforceNoCoordinatorInstantiationInTestsChecker(
+        linter
+    )
+    checker.module = "tests.components.pylint_test.test_pylint_test"
+    return checker

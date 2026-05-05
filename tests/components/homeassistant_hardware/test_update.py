@@ -1,5 +1,7 @@
 """Test Home Assistant Hardware firmware update entity."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 import dataclasses

@@ -1,5 +1,7 @@
 """Test trigger template entity."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 import asyncio
 from unittest.mock import patch
 

@@ -1,5 +1,7 @@
 """Test firmware update coordinator for Home Assistant Hardware."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from ha_silabs_firmware_client import FirmwareManifest, ManifestMissing

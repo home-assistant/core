@@ -1,5 +1,7 @@
 """Test the air-Q coordinator."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 import logging
 from unittest.mock import AsyncMock
 
