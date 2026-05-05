@@ -34,13 +34,12 @@ rules:
   entity-unavailable: todo
   integration-owner: todo
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
-  repair-issues: todo
   test-coverage: todo
   # Gold
   devices: todo
-  diagnostics: todo
+  diagnostics: done
   discovery: todo
   discovery-update-info: todo
   docs-data-update: todo
@@ -59,6 +58,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   stale-devices: todo
+  repair-issues: todo
   # Platinum
   async-dependency: todo
   inject-websession: todo
