@@ -49,15 +49,27 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we show an error when the API is unreachable."""
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ClientConnectionError(), "cannot_connect"),
+        (ClientResponseError(None, None, status=401), "invalid_auth"),
+        (ClientResponseError(None, None, status=500), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+    ids=["connection-error", "auth-401", "http-500", "unknown"],
+)
+async def test_form_error_recovers(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test we show an error on API failures and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        side_effect=ClientConnectionError(),
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -65,7 +77,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     # Recover
     with patch(
@@ -156,63 +168,3 @@ async def test_stop_subentry_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-# Error type differentiation tests
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we show invalid_auth on 401 response."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        side_effect=ClientResponseError(None, None, status=401),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "user", CONF_PASSWORD: "wrong"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we show unknown on unexpected exceptions."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        side_effect=RuntimeError("unexpected"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_form_http_error_non_auth(hass: HomeAssistant) -> None:
-    """Test we show cannot_connect on non-auth HTTP errors (e.g. 500)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        side_effect=ClientResponseError(None, None, status=500),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
