@@ -1,0 +1,107 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "player_not_found": "Player not found.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "initiate_flow": {
+      "user": "Add player"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "username": "The Chess.com username of the player to monitor."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "chess960_daily_draw": {
+        "name": "Total daily Chess960 games drawn",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess960_daily_lost": {
+        "name": "Total daily Chess960 games lost",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess960_daily_rating": {
+        "name": "Daily Chess960 rating"
+      },
+      "chess960_daily_won": {
+        "name": "Total daily Chess960 games won",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_blitz_draw": {
+        "name": "Total blitz chess games drawn",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_blitz_lost": {
+        "name": "Total blitz chess games lost",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_blitz_rating": {
+        "name": "Blitz chess rating"
+      },
+      "chess_blitz_won": {
+        "name": "Total blitz chess games won",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_bullet_draw": {
+        "name": "Total bullet chess games drawn",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_bullet_lost": {
+        "name": "Total bullet chess games lost",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_bullet_rating": {
+        "name": "Bullet chess rating"
+      },
+      "chess_bullet_won": {
+        "name": "Total bullet chess games won",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_daily_draw": {
+        "name": "Total daily chess games drawn",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_daily_lost": {
+        "name": "Total daily chess games lost",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_daily_rating": {
+        "name": "Daily chess rating"
+      },
+      "chess_daily_won": {
+        "name": "Total daily chess games won",
+        "unit_of_measurement": "games"
+      },
+      "chess_rapid_draw": {
+        "name": "Total rapid chess games drawn",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_rapid_lost": {
+        "name": "Total rapid chess games lost",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "chess_rapid_rating": {
+        "name": "Rapid chess rating"
+      },
+      "chess_rapid_won": {
+        "name": "Total rapid chess games won",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::chess_daily_won::unit_of_measurement%]"
+      },
+      "followers": {
+        "name": "Followers",
+        "unit_of_measurement": "followers"
+      }
+    }
+  }
+}

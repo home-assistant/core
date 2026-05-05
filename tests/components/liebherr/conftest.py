@@ -15,6 +15,7 @@ from pyliebherrhomeapi import (
     HydroBreezeMode,
     IceMakerControl,
     IceMakerMode,
+    PresentationLightControl,
     TemperatureControl,
     TemperatureUnit,
     ToggleControl,
@@ -115,6 +116,12 @@ MOCK_DEVICE_STATE = DeviceState(
                 BioFreshPlusMode.MINUS_TWO_ZERO,
             ],
         ),
+        PresentationLightControl(
+            name="presentationlight",
+            type="PresentationLightControl",
+            value=3,
+            max=5,
+        ),
     ],
 )
 
@@ -175,6 +182,7 @@ def mock_liebherr_client() -> Generator[MagicMock]:
         client.set_ice_maker = AsyncMock()
         client.set_hydro_breeze = AsyncMock()
         client.set_bio_fresh_plus = AsyncMock()
+        client.set_presentation_light = AsyncMock()
         yield client
 
 

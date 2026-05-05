@@ -1,7 +1,5 @@
 """Support for iammeter via local API."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from dataclasses import dataclass

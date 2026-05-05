@@ -1,7 +1,5 @@
 """Reolink parent entity class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -10,13 +8,11 @@ from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ReolinkData
 from .const import DOMAIN
+from .coordinator import ReolinkCoordinator
+from .util import ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,7 +45,7 @@ class ReolinkChimeEntityDescription(ReolinkEntityDescription):
     supported: Callable[[Chime], bool] = lambda chime: True
 
 
-class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
     """Parent class for entities that control the Reolink NVR itself, without a channel.
 
     A camera connected directly to HomeAssistant without using a NVR is in the reolink API
@@ -62,7 +58,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkHostCoordinatorEntity."""
         if coordinator is None:
@@ -161,7 +157,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
         super().__init__(reolink_data, coordinator)
@@ -250,7 +246,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         chime: Chime,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkHostChimeCoordinatorEntity for a chime."""
         super().__init__(reolink_data, coordinator)
@@ -287,7 +283,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         chime: Chime,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkChimeCoordinatorEntity for a chime."""
         assert chime.channel is not None

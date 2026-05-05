@@ -1,6 +1,7 @@
 """Test homee covers."""
 
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock, patch
 
 import pytest
 from websockets import frames
@@ -28,6 +29,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -36,6 +38,13 @@ from homeassistant.setup import async_setup_component
 from . import build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.COVER]):
+        yield
 
 
 async def test_open_close_stop_cover(

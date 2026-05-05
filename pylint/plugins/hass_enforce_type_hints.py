@@ -1,7 +1,5 @@
 """Plugin to enforce type hints on specific functions."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
 import re
@@ -698,6 +696,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_info",
         return_type=["DeviceInfo", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="device_class",
@@ -1192,14 +1191,17 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="current_humidity",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
                     return_type=["HVACMode", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="hvac_modes",
@@ -1209,26 +1211,32 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="hvac_action",
                     return_type=["HVACAction", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="current_temperature",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature_step",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature_high",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature_low",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_mode",
@@ -1238,26 +1246,32 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_modes",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_aux_heat",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="fan_mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="fan_modes",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="swing_mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="swing_modes",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_temperature",

@@ -1,7 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any, Literal
@@ -23,7 +21,6 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .agent_manager import (
     AgentInfo,
@@ -127,7 +124,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @callback
-@bind_hass
 def async_set_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -138,7 +134,6 @@ def async_set_agent(
 
 
 @callback
-@bind_hass
 def async_unset_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

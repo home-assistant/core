@@ -1,7 +1,5 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter

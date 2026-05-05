@@ -1,7 +1,5 @@
 """Support for MQTT message handling."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
@@ -45,7 +43,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
@@ -66,7 +63,6 @@ from .const import (
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
-    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
@@ -77,6 +73,7 @@ from .const import (
     MQTT_PROCESSED_SUBSCRIPTIONS,
     PROTOCOL_5,
     PROTOCOL_31,
+    PROTOCOL_311,
     TRANSPORT_WEBSOCKETS,
 )
 from .models import (
@@ -221,7 +218,6 @@ def async_on_subscribe_done(
     )
 
 
-@bind_hass
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -273,7 +269,6 @@ def async_subscribe_internal(
     return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
-@bind_hass
 def subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -336,7 +331,10 @@ class MqttClientSetup:
 
         config = self._config
         clean_session: bool | None = None
-        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
+        # If no protocol setting is set in the config entry data
+        # we assume the config was migrated from YAML, and the
+        # protocol version is defaulting to legacy version 3.1.1.
+        if (protocol := config.get(CONF_PROTOCOL, PROTOCOL_311)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
             clean_session = True
         elif protocol == PROTOCOL_5:
@@ -425,7 +423,10 @@ class MQTT:
         self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
-        self.is_mqttv5 = conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_5
+        # If no protocol setting is set in the config entry data
+        # we assume the config was migrated from YAML, and the
+        # protocol version is defaulting to legacy version 3.1.1.
+        self.is_mqttv5 = conf.get(CONF_PROTOCOL, PROTOCOL_311) == PROTOCOL_5
 
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set

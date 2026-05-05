@@ -1,7 +1,5 @@
 """The TRIGGERcmd component."""
 
-from __future__ import annotations
-
 from triggercmd import client, ha
 
 from homeassistant.config_entries import ConfigEntry

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_setup[binary_sensor.mock_title_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -31,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_connected',
-    'unique_id': '1C:ED:6F:12:34:11-is_connected',
+    'unique_id': '1CED6F123411-is_connected',
     'unit_of_measurement': None,
   })
 # ---
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor_setup[binary_sensor.mock_title_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -81,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_linked',
-    'unique_id': '1C:ED:6F:12:34:11-is_linked',
+    'unique_id': '1CED6F123411-is_linked',
     'unit_of_measurement': None,
   })
 # ---

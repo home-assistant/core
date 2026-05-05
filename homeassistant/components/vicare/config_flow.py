@@ -1,7 +1,5 @@
 """Config flow for ViCare integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -18,14 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_HEATING_TYPE,
-    DOMAIN,
-    VICARE_NAME,
-    VIESSMANN_DEVELOPER_PORTAL,
-    HeatingType,
-)
+from .const import DOMAIN, VICARE_NAME, VIESSMANN_DEVELOPER_PORTAL
 from .utils import login
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,9 +31,6 @@ REAUTH_SCHEMA = vol.Schema(
 USER_SCHEMA = REAUTH_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
-            [e.value for e in HeatingType]
-        ),
     }
 )
 
@@ -51,6 +39,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

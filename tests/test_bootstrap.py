@@ -4,13 +4,13 @@ import asyncio
 from collections.abc import Generator, Iterable
 import contextlib
 import glob
-import logging
 import os
 import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
@@ -274,13 +274,34 @@ async def test_core_failure_loads_recovery_mode(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setting_up_config(hass: HomeAssistant) -> None:
+async def test_setting_up_empty_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test default integrations are set up with empty config."""
+    await bootstrap._async_set_up_integrations(hass, {})
+
+    assert all(
+        domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
+    )
+    assert set(hass.config.components) == snapshot
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setting_up_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
         hass, {"group hello": {}, "homeassistant": {}}
     )
 
     assert "group" in hass.config.components
+    assert all(
+        domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
+    )
+    assert set(hass.config.components) == snapshot
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -895,6 +916,36 @@ async def test_setup_hass_recovery_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+@pytest.mark.parametrize("domain", ["cloud", "backup"])
+async def test_setup_hass_recovery_mode_with_failing_integration(
+    mock_enable_logging: AsyncMock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    domain: str,
+) -> None:
+    """Test recovery mode still starts if cloud or backup fails to set up."""
+    with patch(
+        f"homeassistant.components.{domain}.async_setup",
+        side_effect=Exception(f"{domain} setup failed"),
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=True,
+            ),
+        )
+
+    assert "recovery_mode" in hass.config.components
+    assert domain not in hass.config.components
+
+
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_safe_mode(
     mock_enable_logging: AsyncMock,
@@ -1228,14 +1279,14 @@ async def test_tasks_logged_that_block_stage_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 2 startup."""
-    done_future = hass.loop.create_future()
 
     def gen_domain_setup(domain):
         async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async def _not_marked_background_task():
-                await done_future
+                await asyncio.sleep(0.2)
 
             hass.async_create_task(_not_marked_background_task())
+            await asyncio.sleep(0.1)
             return True
 
         return async_setup
@@ -1249,36 +1300,16 @@ async def test_tasks_logged_that_block_stage_2(
         ),
     )
 
-    wanted_messages = {
-        "Setup timed out for stage 2 waiting on",
-        "waiting on",
-        "_not_marked_background_task",
-    }
-
-    def on_message_logged(log_record: logging.LogRecord, *args):
-        for message in list(wanted_messages):
-            if message in log_record.message:
-                wanted_messages.remove(message)
-        if not done_future.done() and not wanted_messages:
-            done_future.set_result(None)
-            return
-
     with (
         patch.object(bootstrap, "STAGE_2_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
-        patch.object(
-            caplog.handler,
-            "emit",
-            wraps=caplog.handler.emit,
-            side_effect=on_message_logged,
-        ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        async with asyncio.timeout(2):
-            await done_future
         await hass.async_block_till_done()
 
-    assert not wanted_messages
+    assert "Setup timed out for stage 2 waiting on" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
 
 
 @pytest.mark.parametrize("load_registries", [False])

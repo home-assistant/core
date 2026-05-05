@@ -1,7 +1,5 @@
 """Test the Matter integration init."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -258,10 +256,7 @@ async def test_listen_failure_config_entry_loaded(
 
 
 async def test_raise_addon_task_in_progress(
-    hass: HomeAssistant,
-    addon_not_installed: AsyncMock,
-    install_addon: AsyncMock,
-    start_addon: AsyncMock,
+    hass: HomeAssistant, install_addon: AsyncMock, start_addon: AsyncMock
 ) -> None:
     """Test raise ConfigEntryNotReady if an add-on task is in progress."""
     install_event = asyncio.Event()
@@ -337,7 +332,6 @@ async def test_start_addon(
 
 async def test_install_addon(
     hass: HomeAssistant,
-    addon_not_installed: AsyncMock,
     addon_store_info: AsyncMock,
     install_addon: AsyncMock,
     start_addon: AsyncMock,
@@ -357,7 +351,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert addon_store_info.call_count == 3
+    assert addon_store_info.call_count == 2
     assert install_addon.call_count == 1
     assert install_addon.call_args == call("core_matter_server")
     assert start_addon.call_count == 1

@@ -1,7 +1,5 @@
 """Event platform for Home Assistant Backup integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.components.event import EventEntity

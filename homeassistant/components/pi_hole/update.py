@@ -1,7 +1,5 @@
 """Support for update entities of a Pi-hole system."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -11,9 +9,8 @@ from homeassistant.components.update import UpdateEntity, UpdateEntityDescriptio
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry
+from .coordinator import PiHoleConfigEntry, PiHoleUpdateCoordinator
 from .entity import PiHoleEntity
 
 
@@ -92,7 +89,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: PiHoleUpdateCoordinator,
         name: str,
         server_unique_id: str,
         description: PiHoleUpdateEntityDescription,

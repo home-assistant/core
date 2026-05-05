@@ -1,7 +1,5 @@
 """Test the helper method for writing tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import (
     AsyncGenerator,
@@ -305,6 +303,8 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
+        dr.async_setup(hass)
+
         with (
             patch.object(StoreWithoutWriteLoad, "async_load", return_value=None),
             patch(

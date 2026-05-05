@@ -1,7 +1,5 @@
 """Coordinator for Tedee locks."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -9,14 +7,14 @@ import time
 from typing import Any
 
 from aiotedee import (
-    TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
+    TedeeLocalClient,
     TedeeLock,
     TedeeWebhookException,
 )
-from aiotedee.bridge import TedeeBridge
+from aiotedee.models import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -52,7 +50,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.tedee_client = TedeeClient(
+        self.tedee_client = TedeeLocalClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),

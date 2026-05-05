@@ -109,6 +109,7 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_GET_POSITION_TEMPLATE = "position_template"
 CONF_GET_POSITION_TOPIC = "position_topic"
 CONF_GREEN_TEMPLATE = "green_template"
+CONF_GROUP = "group"
 CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
@@ -346,14 +347,14 @@ REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
 PROTOCOL_5 = "5"
-SUPPORTED_PROTOCOLS = [PROTOCOL_31, PROTOCOL_311, PROTOCOL_5]
+SUPPORTED_PROTOCOLS = [PROTOCOL_5, PROTOCOL_311, PROTOCOL_31]
 
 TRANSPORT_TCP = "tcp"
 TRANSPORT_WEBSOCKETS = "websockets"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
-DEFAULT_PROTOCOL = PROTOCOL_311
+DEFAULT_PROTOCOL = PROTOCOL_5
 DEFAULT_TRANSPORT = TRANSPORT_TCP
 
 DEFAULT_BIRTH = {
@@ -400,6 +401,8 @@ ENTITY_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
@@ -416,6 +419,7 @@ ENTITY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -431,6 +435,8 @@ SUPPORTED_COMPONENTS = (
     "camera",
     "climate",
     "cover",
+    "date",
+    "datetime",
     "device_automation",
     "device_tracker",
     "event",
@@ -449,6 +455,7 @@ SUPPORTED_COMPONENTS = (
     "switch",
     "tag",
     "text",
+    "time",
     "update",
     "vacuum",
     "valve",
