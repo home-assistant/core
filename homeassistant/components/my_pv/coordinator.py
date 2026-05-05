@@ -81,7 +81,7 @@ class MyPVCoordinator(DataUpdateCoordinator):
             name=name,
             serial_number=device.serial_number,
             sw_version=device.firmware_version,
-            translation_key="mypv",
+            translation_key="my_pv",
             translation_placeholders={
                 "device_name": name,
             },

@@ -1594,7 +1594,7 @@ mutesync==0.0.1
 # homeassistant.components.mvglive
 mvg==1.4.0
 
-# homeassistant.components.mypv
+# homeassistant.components.my_pv
 my-PV==0.0.1.dev4
 
 # homeassistant.components.permobil

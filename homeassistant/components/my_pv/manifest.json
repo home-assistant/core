@@ -1,5 +1,5 @@
 {
-  "domain": "mypv",
+  "domain": "my_pv",
   "name": "my-PV",
   "codeowners": ["@my-pv", "@rrooggiieerr"],
   "config_flow": true,
@@ -14,10 +14,10 @@
       "macaddress": "6869C4*"
     }
   ],
-  "documentation": "https://www.home-assistant.io/integrations/mypv",
+  "documentation": "https://www.home-assistant.io/integrations/my_pv",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["mypv"],
+  "loggers": ["my_pv"],
   "quality_scale": "bronze",
   "requirements": ["my-PV==0.0.1.dev4"],
   "zeroconf": ["_mypv._tcp.local."]
