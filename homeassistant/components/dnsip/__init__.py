@@ -50,23 +50,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
     )
 
     hostname = entry.data[CONF_HOSTNAME]
+    queries: list = []
+    if entry.data[CONF_IPV4]:
+        queries.append(resolver_ipv4.query(hostname, "A"))
+    if entry.data[CONF_IPV6]:
+        queries.append(resolver_ipv6.query(hostname, "AAAA"))
+
     try:
         async with asyncio.timeout(10):
-            if entry.data[CONF_IPV4]:
-                await resolver_ipv4.query(hostname, "A")
-            elif entry.data[CONF_IPV6]:
-                await resolver_ipv6.query(hostname, "AAAA")
-    except (TimeoutError, DNSError) as err:
+            results = await asyncio.gather(*queries, return_exceptions=True)
+    except TimeoutError as err:
         await resolver_ipv4.close()
         await resolver_ipv6.close()
-        raise ConfigEntryNotReady(f"DNS lookup failed for {hostname}: {err}") from err
+        raise ConfigEntryNotReady(
+            f"DNS lookup timed out for {hostname}: {err}"
+        ) from err
+
+    errors = [
+        result for result in results if isinstance(result, (TimeoutError, DNSError))
+    ]
+    if errors and len(errors) == len(results):
+        await resolver_ipv4.close()
+        await resolver_ipv6.close()
+        raise ConfigEntryNotReady(
+            f"DNS lookup failed for {hostname}: {errors[0]}"
+        ) from errors[0]
 
     entry.runtime_data = DnsIPRuntimeData(
         resolver_ipv4=resolver_ipv4,
         resolver_ipv6=resolver_ipv6,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        await resolver_ipv4.close()
+        await resolver_ipv6.close()
+        raise
+
     return True
 
 
@@ -80,7 +101,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> bo
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: DnsIPConfigEntry
+) -> bool:
     """Migrate old entry to a newer version."""
 
     if config_entry.version > 1:

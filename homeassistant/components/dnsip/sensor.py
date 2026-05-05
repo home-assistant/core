@@ -10,7 +10,7 @@ import aiodns
 from aiodns.error import DNSError
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,6 +20,7 @@ from .const import (
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
+    CONF_PORT_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DOMAIN,
@@ -61,6 +62,7 @@ async def async_setup_entry(
                 hostname,
                 entry.options[CONF_RESOLVER],
                 False,
+                entry.options[CONF_PORT],
                 entry.runtime_data.resolver_ipv4,
             )
         )
@@ -71,6 +73,7 @@ async def async_setup_entry(
                 hostname,
                 entry.options[CONF_RESOLVER_IPV6],
                 True,
+                entry.options[CONF_PORT_IPV6],
                 entry.runtime_data.resolver_ipv6,
             )
         )
@@ -91,12 +94,15 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         nameserver: str,
         ipv6: bool,
+        port: int,
         resolver: aiodns.DNSResolver,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = "IPv6" if ipv6 else None
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
+        self.port = port
+        self.nameserver = nameserver
         self.resolver = resolver
         self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
@@ -112,16 +118,26 @@ class WanIpSensor(SensorEntity):
             name=name,
         )
 
+    def create_dns_resolver(self) -> None:
+        """Create the DNS resolver."""
+        self.resolver = aiodns.DNSResolver(
+            nameservers=[self.nameserver], tcp_port=self.port, udp_port=self.port
+        )
+
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
+        if self.resolver._closed:  # noqa: SLF001
+            self.create_dns_resolver()
         response = None
         try:
             async with asyncio.timeout(10):
                 response = await self.resolver.query(self.hostname, self.querytype)
         except TimeoutError as err:
             _LOGGER.debug("Timeout while resolving host: %s", err)
+            await self.resolver.close()
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
+            await self.resolver.close()
 
         if response:
             sorted_ips = sort_ips(

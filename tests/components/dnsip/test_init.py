@@ -236,3 +236,82 @@ async def test_setup_ipv6_only(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_dns_timeout(hass: HomeAssistant) -> None:
+    """Test setup raises ConfigEntryNotReady when DNS lookup times out."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: False,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.dnsip.aiodns.DNSResolver",
+            return_value=RetrieveDNS(),
+        ),
+        patch(
+            "homeassistant.components.dnsip.asyncio.timeout",
+            side_effect=TimeoutError(),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_forward_failure(hass: HomeAssistant) -> None:
+    """Test resolvers are closed when platform forwarding raises."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: False,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.dnsip.aiodns.DNSResolver",
+            return_value=RetrieveDNS(),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            side_effect=Exception("forward failed"),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR

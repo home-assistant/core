@@ -148,19 +148,23 @@ async def test_sensor_no_response(
     assert state.state == "1.1.1.1"
 
     dns_mock.error = DNSError()
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
-    async_fire_time_changed(hass)
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        return_value=dns_mock,
+    ):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.home_assistant_io")
-    assert state.state == "1.1.1.1"
-    assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
+        state = hass.states.get("sensor.home_assistant_io")
+        assert state.state == "1.1.1.1"
+        assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
 
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.home_assistant_io")
     assert state.state == STATE_UNAVAILABLE
@@ -202,9 +206,15 @@ async def test_sensor_timeout(
 
     assert state.state == "1.1.1.1"
 
-    with patch(
-        "homeassistant.components.dnsip.sensor.asyncio.timeout",
-        side_effect=TimeoutError(),
+    with (
+        patch(
+            "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+            return_value=dns_mock,
+        ),
+        patch(
+            "homeassistant.components.dnsip.sensor.asyncio.timeout",
+            side_effect=TimeoutError(),
+        ),
     ):
         freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
