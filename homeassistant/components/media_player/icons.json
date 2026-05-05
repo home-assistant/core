@@ -123,6 +123,9 @@
     }
   },
   "triggers": {
+    "muted": {
+      "trigger": "mdi:volume-mute"
+    },
     "paused_playing": {
       "trigger": "mdi:pause"
     },
@@ -137,6 +140,9 @@
     },
     "turned_on": {
       "trigger": "mdi:power"
+    },
+    "unmuted": {
+      "trigger": "mdi:volume-high"
     }
   }
 }
