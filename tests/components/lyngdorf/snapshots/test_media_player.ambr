@@ -1,0 +1,107 @@
+# serializer version: 1
+# name: test_entities[media_player.mock_lyngdorf_main_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.mock_lyngdorf_main_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Main zone',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': 'Main zone',
+    'platform': 'lyngdorf',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 69004>,
+    'translation_key': 'main_zone',
+    'unique_id': '0050c27c76b2_main_zone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.mock_lyngdorf_main_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'Mock Lyngdorf Main zone',
+      'supported_features': <MediaPlayerEntityFeature: 69004>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.mock_lyngdorf_main_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[media_player.mock_lyngdorf_zone_b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.mock_lyngdorf_zone_b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lyngdorf',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3468>,
+    'translation_key': None,
+    'unique_id': '0050c27c76b2_zone_b',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.mock_lyngdorf_zone_b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'Mock Lyngdorf Zone B',
+      'supported_features': <MediaPlayerEntityFeature: 3468>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.mock_lyngdorf_zone_b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

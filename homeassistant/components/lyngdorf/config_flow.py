@@ -87,6 +87,14 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by SSDP discovery."""
         await self._async_set_info_from_discovery(discovery_info)
 
+        assert self._host
+        try:
+            model = await async_find_receiver_model(self._host)
+        except (TimeoutError, OSError) as err:
+            raise AbortFlow("cannot_connect") from err
+        if not model:
+            raise AbortFlow("unsupported_model")
+
         display_name = (
             f"{self._device_model} ({self._name})"
             if self._device_model and self._device_model != self._name
@@ -100,18 +108,8 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
-            try:
-                await async_find_receiver_model(self._host)
-            except TimeoutError, OSError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
-
-            if not errors:
-                return await self._create_entry()
+            return await self._create_entry()
 
         display_name = (
             f"{self._device_model} ({self._name})"
@@ -122,7 +120,6 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={"name": display_name},
-            errors=errors,
         )
 
     async def _create_entry(self) -> ConfigFlowResult:

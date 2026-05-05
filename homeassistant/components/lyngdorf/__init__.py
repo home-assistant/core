@@ -7,10 +7,28 @@ from lyngdorf.device import async_create_receiver, lookup_receiver_model
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 from .models import LyngdorfConfigEntry, LyngdorfRuntimeData
+
+
+def _serial_as_mac(serial: str | None) -> str | None:
+    """Return a normalized MAC if the serial is one, otherwise None.
+
+    Lyngdorf reports the device MAC in the UPnP serialNumber field, but this is
+    not formally guaranteed — fall back gracefully if the value is not a MAC.
+    """
+    if not serial:
+        return None
+    cleaned = serial.replace(":", "").replace("-", "").replace(".", "")
+    if len(cleaned) != 12 or not all(c in "0123456789abcdefABCDEF" for c in cleaned):
+        return None
+    return format_mac(cleaned)
 
 
 async def async_setup_entry(
@@ -38,22 +56,27 @@ async def async_setup_entry(
         ) from err
 
     assert config_entry.unique_id
+    serial = config_entry.data.get(CONF_SERIAL_NUMBER)
+    mac = _serial_as_mac(serial)
+    connections = {(CONNECTION_NETWORK_MAC, mac)} if mac else set()
+    manufacturer = lyngdorf_model.manufacturer if lyngdorf_model else "Lyngdorf"
+    model = (
+        lyngdorf_model.model_name if lyngdorf_model else config_entry.data[CONF_MODEL]
+    )
+
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.unique_id)},
-        manufacturer=lyngdorf_model.manufacturer if lyngdorf_model else "Lyngdorf",
-        serial_number=config_entry.data.get(CONF_SERIAL_NUMBER),
-        model=lyngdorf_model.model_name
-        if lyngdorf_model
-        else config_entry.data[CONF_MODEL],
+        connections=connections,
+        manufacturer=manufacturer,
+        serial_number=serial,
+        model=model,
     )
 
     zone_b_device_info = DeviceInfo(
         identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
-        manufacturer=lyngdorf_model.manufacturer if lyngdorf_model else "Lyngdorf",
-        serial_number=config_entry.data.get(CONF_SERIAL_NUMBER),
-        model=lyngdorf_model.model_name
-        if lyngdorf_model
-        else config_entry.data[CONF_MODEL],
+        manufacturer=manufacturer,
+        serial_number=serial,
+        model=model,
         translation_key="zone_b",
         translation_placeholders={"device_name": config_entry.title},
         via_device=(DOMAIN, config_entry.unique_id),

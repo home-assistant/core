@@ -33,20 +33,17 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "127.0.0.1",
             CONF_MODEL: "MP-60",
-            CONF_SERIAL_NUMBER: "123456",
+            CONF_SERIAL_NUMBER: "0050c27c76b2",
         },
-        unique_id="123456",
+        unique_id="0050c27c76b2",
     )
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with (
-        patch("homeassistant.components.lyngdorf.async_setup_entry", return_value=True),
-        patch(
-            "homeassistant.components.lyngdorf.async_unload_entry", return_value=True
-        ),
+    with patch(
+        "homeassistant.components.lyngdorf.async_setup_entry", return_value=True
     ):
         yield
 
