@@ -253,9 +253,6 @@ class MatterFan(MatterEntity, FanEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = FanEntityFeature(0)
-        # PercentSetting is always a mandatory attribute of the FanControl cluster,
-        # so percentage-based speed control is always available.
-        self._attr_supported_features |= FanEntityFeature.SET_SPEED
         # Reset to default so a featuremap change from MultiSpeed -> non-MultiSpeed
         # does not leave a stale speed_count / percentage_step.
         self._attr_speed_count = 100
@@ -309,8 +306,12 @@ class MatterFan(MatterEntity, FanEntity):
         if feature_map & FanControlFeature.kAirflowDirection:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
 
+        # PercentSetting is always a mandatory attribute of the FanControl cluster,
+        # so percentage-based speed control is always available.
         self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
         )
 
 
