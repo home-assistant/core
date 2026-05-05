@@ -419,7 +419,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         translation_key="sprinkler_progress",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: (
