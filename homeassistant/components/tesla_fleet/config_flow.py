@@ -1,7 +1,5 @@
 """Config Flow for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re

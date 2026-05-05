@@ -168,6 +168,11 @@ class AbstractTemplateEntity(Entity):
             domain,
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop scripts when removing from Home Assistant."""
+        for action_script in self._action_scripts.values():
+            await action_script.async_stop()
+
     async def async_run_script(
         self,
         script: Script,

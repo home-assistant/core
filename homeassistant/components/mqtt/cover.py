@@ -1,7 +1,5 @@
 """Support for MQTT cover devices."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import Any
