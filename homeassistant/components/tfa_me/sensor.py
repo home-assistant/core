@@ -30,8 +30,6 @@ from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator, resolve_tfa_h
 
 PARALLEL_UPDATES = 1
 
-# _LOGGER = logging.getLogger(__name__)
-
 
 @dataclass(frozen=True, kw_only=True)
 class TFAmeSensorEntityDescription(SensorEntityDescription):
