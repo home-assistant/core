@@ -26,55 +26,59 @@ from .entity import PranaBaseEntity
 
 PARALLEL_UPDATES = 1
 
-# The Prana device API expects fan speed values in scaled units (tenths of a speed step)
-# rather than the raw step value used internally by this integration. This factor is
-# applied when sending speeds to the API to match its expected units.
+# The device API expects speeds in tenths of a step.
 PRANA_SPEED_MULTIPLIER = 10
+
+PRESET_AUTO = "auto"
+PRESET_AUTO_PLUS = "auto_plus"
+PRESET_NIGHT = "night"
+PRESET_BOOST = "boost"
+
+PRESET_MODES = [
+    PRESET_AUTO,
+    PRESET_AUTO_PLUS,
+    PRESET_NIGHT,
+    PRESET_BOOST,
+]
 
 
 class PranaFanType(StrEnum):
-    """Enumerates Prana fan types exposed by the device API."""
+    """Target fan on the Prana API."""
 
     SUPPLY = "supply"
     EXTRACT = "extract"
-    BOUNDED = "bounded"
+    VENTILATION = "bounded"
 
 
 @dataclass(frozen=True, kw_only=True)
 class PranaFanEntityDescription(FanEntityDescription):
     """Description of a Prana fan entity."""
 
-    key: PranaFanType
+    key: str
+    api_target: PranaFanType
     value_fn: Callable[[PranaCoordinator], FanState]
-    speed_range: Callable[[PranaCoordinator], tuple[int, int]]
 
 
-ENTITIES: tuple[PranaFanEntityDescription, ...] = (
+VENTILATION_DESCRIPTION = PranaFanEntityDescription(
+    key="ventilation",
+    translation_key="ventilation",
+    api_target=PranaFanType.VENTILATION,
+    name=None,
+    value_fn=lambda coord: coord.data.bounded,
+)
+
+SPLIT_DESCRIPTIONS: tuple[PranaFanEntityDescription, ...] = (
     PranaFanEntityDescription(
-        key=PranaFanType.SUPPLY,
+        key="supply",
         translation_key="supply",
-        value_fn=lambda coord: (
-            coord.data.supply if not coord.data.bound else coord.data.bounded
-        ),
-        speed_range=lambda coord: (
-            1,
-            coord.data.supply.max_speed
-            if not coord.data.bound
-            else coord.data.bounded.max_speed,
-        ),
+        api_target=PranaFanType.SUPPLY,
+        value_fn=lambda coord: coord.data.supply,
     ),
     PranaFanEntityDescription(
-        key=PranaFanType.EXTRACT,
+        key="extract",
         translation_key="extract",
-        value_fn=lambda coord: (
-            coord.data.extract if not coord.data.bound else coord.data.bounded
-        ),
-        speed_range=lambda coord: (
-            1,
-            coord.data.extract.max_speed
-            if not coord.data.bound
-            else coord.data.bounded.max_speed,
-        ),
+        api_target=PranaFanType.EXTRACT,
+        value_fn=lambda coord: coord.data.extract,
     ),
 )
 
@@ -85,9 +89,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Prana fan entities from a config entry."""
+    coordinator = entry.runtime_data
+    # Whether supply and extract fans are physically linked is a device
+    # capability reported in state: linked models expose one ventilation fan,
+    # split models expose independent supply and extract fans.
+    if coordinator.data.bound:
+        descriptions: tuple[PranaFanEntityDescription, ...] = (VENTILATION_DESCRIPTION,)
+    else:
+        descriptions = SPLIT_DESCRIPTIONS
     async_add_entities(
-        PranaFan(entry.runtime_data, entity_description)
-        for entity_description in ENTITIES
+        PranaFan(coordinator, description) for description in descriptions
     )
 
 
@@ -95,7 +106,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
     """Representation of a Prana fan entity."""
 
     entity_description: PranaFanEntityDescription
-    _attr_preset_modes = ["night", "boost"]
+    _attr_preset_modes = PRESET_MODES
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.TURN_ON
@@ -104,43 +115,29 @@ class PranaFan(PranaBaseEntity, FanEntity):
     )
 
     @property
-    def _api_target_key(self) -> str:
-        """Return the correct target key for API commands based on bounded state."""
-        # If the device is in bound mode, both supply and extract fans control the same bounded fan speeds.
-        if self.coordinator.data.bound:
-            return PranaFanType.BOUNDED
-        # Otherwise, return the specific fan type (supply or extract) for API commands.
-        return self.entity_description.key
+    def _speed_range(self) -> tuple[int, int]:
+        return (1, self.entity_description.value_fn(self.coordinator).max_speed)
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(
-            self.entity_description.speed_range(self.coordinator)
-        )
+        return int_states_in_range(self._speed_range)
 
     @property
     def percentage(self) -> int | None:
         """Return the current fan speed percentage."""
         current_speed = self.entity_description.value_fn(self.coordinator).speed
-        return ranged_value_to_percentage(
-            self.entity_description.speed_range(self.coordinator), current_speed
-        )
+        return ranged_value_to_percentage(self._speed_range, current_speed)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set fan speed (0-100%) by converting to device-specific speed steps."""
+        """Set fan speed (0-100%) by converting to device speed steps."""
         if percentage == 0:
             await self.async_turn_off()
             return
         await self.coordinator.api_client.set_speed(
-            math.ceil(
-                percentage_to_ranged_value(
-                    self.entity_description.speed_range(self.coordinator),
-                    percentage,
-                )
-            )
+            math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
             * PRANA_SPEED_MULTIPLIER,
-            self._api_target_key,
+            self.entity_description.api_target,
         )
         await self.coordinator.async_refresh()
 
@@ -160,7 +157,9 @@ class PranaFan(PranaBaseEntity, FanEntity):
             await self.async_turn_off()
             return
 
-        await self.coordinator.api_client.set_speed_is_on(True, self._api_target_key)
+        await self.coordinator.api_client.set_speed_is_on(
+            True, self.entity_description.api_target
+        )
         if percentage is not None:
             await self.async_set_percentage(percentage)
         if preset_mode is not None:
@@ -170,19 +169,25 @@ class PranaFan(PranaBaseEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self.coordinator.api_client.set_speed_is_on(False, self._api_target_key)
+        await self.coordinator.api_client.set_speed_is_on(
+            False, self.entity_description.api_target
+        )
         await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode (e.g., night or boost)."""
+        """Activate a preset mode on the device.
+
+        Prana operating modes (auto/auto_plus/night/boost/winter) are
+        mutually exclusive on the device: activating one clears the rest.
+        """
         await self.coordinator.api_client.set_switch(preset_mode, True)
         await self.coordinator.async_refresh()
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the current preset mode."""
-        if self.coordinator.data.night:
-            return "night"
-        if self.coordinator.data.boost:
-            return "boost"
+        """Return the current preset mode, if any."""
+        data = self.coordinator.data
+        for preset in PRESET_MODES:
+            if getattr(data, preset, False):
+                return preset
         return None
