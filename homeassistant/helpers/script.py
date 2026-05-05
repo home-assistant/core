@@ -1918,12 +1918,12 @@ class Script:
     async def async_unload(self) -> None:
         """Unload the script, stopping any in-flight runs first.
 
-        Blocks new runs immediately, drains any in-flight runs, then cleans
+        Blocks new runs immediately, stops any in-flight runs, then cleans
         up all resources.
         """
         if self._unloaded:
             return
-        # Set the flag before draining so async_run rejects new runs.
+        # Set the flag before stopping so async_run rejects new runs.
         self._unloaded = True
         await self.async_stop()
         self._async_unload()

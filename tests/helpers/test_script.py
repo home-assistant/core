@@ -7121,7 +7121,7 @@ async def test_script_del_skips_if_already_unloaded(hass: HomeAssistant) -> None
     unload_mock.assert_not_called()
 
 
-async def test_async_unload_drains_running_script(hass: HomeAssistant) -> None:
+async def test_async_unload_stops_running_script(hass: HomeAssistant) -> None:
     """Test that async_unload stops in-flight runs and unloads the script."""
     sequence = cv.SCRIPT_SCHEMA(
         [
@@ -7183,3 +7183,56 @@ async def test_async_run_raises_if_unloaded(hass: HomeAssistant) -> None:
         RuntimeError, match="Cannot run script.*after it has been unloaded"
     ):
         await script_obj.async_run(context=Context())
+
+
+async def test_async_unload_blocks_new_runs_during_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test that new runs are rejected once unload has started.
+
+    A run started after unload begins must be rejected immediately;
+    otherwise it would survive the stop and prevent cleanup.
+    """
+    sequence = cv.SCRIPT_SCHEMA([{"wait_template": "{{ false }}"}])
+    # Parallel mode so the script-mode check would not reject the second run;
+    # the only thing that should reject it is the _unloaded fence.
+    script_obj = script.Script(
+        hass, sequence, "Test Name", "test_domain", script_mode="parallel", max_runs=2
+    )
+    script_id = id(script_obj)
+
+    assert script_id in hass.data[script.DATA_SCRIPTS]
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.sleep(0)
+    assert script_obj.is_running
+
+    # Gate async_stop so the test can act while unload is parked mid-stop,
+    # i.e. after _unloaded=True but before runs are stopped.
+    stop_started = asyncio.Event()
+    stop_release = asyncio.Event()
+    original_async_stop = script_obj.async_stop
+
+    async def gated_async_stop(*args: Any, **kwargs: Any) -> None:
+        stop_started.set()
+        await stop_release.wait()
+        await original_async_stop(*args, **kwargs)
+
+    script_obj.async_stop = gated_async_stop
+
+    unload_task = hass.async_create_task(script_obj.async_unload())
+    await stop_started.wait()
+
+    assert script_obj._unloaded
+    assert script_obj.is_running
+
+    with pytest.raises(
+        RuntimeError, match="Cannot run script.*after it has been unloaded"
+    ):
+        await script_obj.async_run(context=Context())
+
+    stop_release.set()
+    await unload_task
+
+    assert not script_obj.is_running
+    assert script_id not in hass.data[script.DATA_SCRIPTS]
