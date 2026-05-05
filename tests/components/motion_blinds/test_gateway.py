@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.components.motion_blinds.gateway import ConnectMotionGateway
 from homeassistant.core import HomeAssistant
 
-
 MOCK_ADAPTERS_DUAL_NIC = [
     {
         "ipv4": [{"address": "192.168.1.10"}],
