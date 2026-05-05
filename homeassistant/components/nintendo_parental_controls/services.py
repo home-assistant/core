@@ -89,7 +89,7 @@ async def async_add_bonus_time(call: ServiceCall) -> None:
 
 async def async_update_pin_code(call: ServiceCall) -> None:
     """Update the PIN code for a device."""
-    config_entry: NintendoParentalControlsConfigEntry | None
+    config_entry: NintendoParentalControlsConfigEntry | None = None
     data = call.data
     device_id: str = data[ATTR_DEVICE_ID]
     new_pin: str = str(data[CONF_PIN])
