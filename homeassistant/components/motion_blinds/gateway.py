@@ -1,6 +1,5 @@
 """Code to handle a Motion Gateway."""
 
-import asyncio
 import contextlib
 import logging
 import socket
@@ -80,7 +79,7 @@ class ConnectMotionGateway:
         concrete_interfaces = []
         wildcard_interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
         default_interface = DEFAULT_INTERFACE
-    
+
         adapters = await network.async_get_adapters(self._hass)
         for adapter in adapters:
             if ipv4s := adapter["ipv4"]:
@@ -93,10 +92,10 @@ class ConnectMotionGateway:
                         concrete_interfaces.append(ip4)
                 else:
                     concrete_interfaces.append(ip4)
-    
+
         # All concrete addresses first, wildcards last
         interfaces = concrete_interfaces + wildcard_interfaces
-    
+
         # Stored interface gets highest priority
         if self._interface is not None:
             if self._interface in interfaces:
