@@ -207,15 +207,15 @@ async def async_get_credential_capabilities(
     node: Node,
 ) -> CredentialCapabilitiesResult:
     """Query access-control capabilities for the node."""
-    supported = await node.access_control.async_is_supported()
+    supported = await node.access_control.is_supported()
     if not supported:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
 
-    user_caps = await node.access_control.async_get_user_capabilities_cached()
-    cred_caps = await node.access_control.async_get_credential_capabilities_cached()
+    user_caps = await node.access_control.get_user_capabilities_cached()
+    cred_caps = await node.access_control.get_credential_capabilities_cached()
 
     supported_credential_types: dict[str, CredentialTypeCapability] = {}
     for cred_type, capability in cred_caps.supported_credential_types.items():
@@ -249,16 +249,16 @@ async def async_get_credential_capabilities(
 
 async def async_get_users(node: Node) -> UsersResult:
     """List all users with their credential references."""
-    supported = await node.access_control.async_is_supported()
+    supported = await node.access_control.is_supported()
     if not supported:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
 
-    user_caps = await node.access_control.async_get_user_capabilities_cached()
-    users = await node.access_control.async_get_users_cached()
-    all_credentials = await node.access_control.async_get_all_credentials_cached()
+    user_caps = await node.access_control.get_user_capabilities_cached()
+    users = await node.access_control.get_users_cached()
+    all_credentials = await node.access_control.get_all_credentials_cached()
 
     credentials_by_user: dict[int, list[Credential]] = {}
     for cred in all_credentials:
@@ -301,7 +301,7 @@ async def async_set_user(
     active: bool | None = None,
 ) -> SetUserReturn:
     """Create or update an access-control user. Returns the allocated user_id."""
-    supported = await node.access_control.async_is_supported()
+    supported = await node.access_control.is_supported()
     if not supported:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -310,8 +310,8 @@ async def async_set_user(
 
     # Auto-find first available user slot
     if user_id is None:
-        user_caps = await node.access_control.async_get_user_capabilities_cached()
-        users = await node.access_control.async_get_users_cached()
+        user_caps = await node.access_control.get_user_capabilities_cached()
+        users = await node.access_control.get_users_cached()
         used_ids = {u.user_id for u in users}
         user_id = next(
             (i for i in range(1, user_caps.max_users + 1) if i not in used_ids),
@@ -330,32 +330,32 @@ async def async_set_user(
         credential_rule=credential_rule,
     )
 
-    status = await node.access_control.async_set_user(user_id, options)
+    status = await node.access_control.set_user(user_id, options)
     _raise_on_set_user_error(status)
     return SetUserReturn(user_id=user_id)
 
 
 async def async_delete_user(node: Node, user_id: int) -> None:
     """Delete a single access-control user."""
-    if not await node.access_control.async_is_supported():
+    if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
 
-    status = await node.access_control.async_delete_user(user_id)
+    status = await node.access_control.delete_user(user_id)
     _raise_on_set_user_error(status)
 
 
 async def async_delete_all_users(node: Node) -> None:
     """Delete all access-control users."""
-    if not await node.access_control.async_is_supported():
+    if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
 
-    status = await node.access_control.async_delete_all_users()
+    status = await node.access_control.delete_all_users()
     _raise_on_set_user_error(status)
 
 
@@ -372,7 +372,7 @@ async def async_set_credential(
     async_set_user first, then pass the returned user_id here. This service
     does not create or modify users.
     """
-    supported = await node.access_control.async_is_supported()
+    supported = await node.access_control.is_supported()
     if not supported:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -380,7 +380,7 @@ async def async_set_credential(
         )
 
     cred_type_str = CREDENTIAL_TYPE_MAP.get(credential_type, str(credential_type))
-    cred_caps = await node.access_control.async_get_credential_capabilities_cached()
+    cred_caps = await node.access_control.get_credential_capabilities_cached()
     type_cap = cred_caps.supported_credential_types.get(credential_type)
     if type_cap is None:
         raise ServiceValidationError(
@@ -411,7 +411,7 @@ async def async_set_credential(
         )
 
     if credential_slot is None:
-        existing = await node.access_control.async_get_credentials_by_type_cached(
+        existing = await node.access_control.get_credentials_by_type_cached(
             credential_type
         )
         used_slots = {c.slot for c in existing}
@@ -439,7 +439,7 @@ async def async_set_credential(
             },
         )
 
-    status = await node.access_control.async_set_credential(
+    status = await node.access_control.set_credential(
         user_id, credential_type, credential_slot, credential_data
     )
     _raise_on_set_credential_error(status)
@@ -457,13 +457,13 @@ async def async_delete_credential(
     credential_slot: int,
 ) -> None:
     """Delete a single credential."""
-    if not await node.access_control.async_is_supported():
+    if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
 
-    status = await node.access_control.async_delete_credential(
+    status = await node.access_control.delete_credential(
         user_id, credential_type, credential_slot
     )
     _raise_on_set_credential_error(status)
@@ -471,15 +471,15 @@ async def async_delete_credential(
 
 async def async_delete_all_credentials(node: Node, user_id: int) -> None:
     """Delete all credentials for a user."""
-    if not await node.access_control.async_is_supported():
+    if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
 
-    credentials = await node.access_control.async_get_credentials_cached(user_id)
+    credentials = await node.access_control.get_credentials_cached(user_id)
     for cred in credentials:
-        status = await node.access_control.async_delete_credential(
+        status = await node.access_control.delete_credential(
             user_id, cred.type, cred.slot
         )
         _raise_on_set_credential_error(status)

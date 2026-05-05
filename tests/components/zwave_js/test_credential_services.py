@@ -27,14 +27,14 @@ from tests.common import MockConfigEntry
 def _mock_access_control(node: Node) -> MagicMock:
     """Inject a mock AccessControlAPI into the node's endpoint 0."""
     api = MagicMock()
-    api.async_is_supported = AsyncMock(return_value=True)
+    api.is_supported = AsyncMock(return_value=True)
 
     user_caps = MagicMock()
     user_caps.max_users = 20
     user_caps.supported_user_types = [UserCredentialUserType.GENERAL]
     user_caps.max_user_name_length = 20
     user_caps.supported_credential_rules = []
-    api.async_get_user_capabilities_cached = AsyncMock(return_value=user_caps)
+    api.get_user_capabilities_cached = AsyncMock(return_value=user_caps)
 
     pin_cap = MagicMock()
     pin_cap.number_of_credential_slots = 10
@@ -45,20 +45,20 @@ def _mock_access_control(node: Node) -> MagicMock:
     cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
     cred_caps.supports_admin_code = False
     cred_caps.supports_admin_code_deactivation = False
-    api.async_get_credential_capabilities_cached = AsyncMock(return_value=cred_caps)
+    api.get_credential_capabilities_cached = AsyncMock(return_value=cred_caps)
 
-    api.async_get_users_cached = AsyncMock(return_value=[])
-    api.async_get_user_cached = AsyncMock(return_value=None)
-    api.async_set_user = AsyncMock(return_value=SetUserResult.OK)
-    api.async_delete_user = AsyncMock(return_value=SetUserResult.OK)
-    api.async_delete_all_users = AsyncMock(return_value=SetUserResult.OK)
+    api.get_users_cached = AsyncMock(return_value=[])
+    api.get_user_cached = AsyncMock(return_value=None)
+    api.set_user = AsyncMock(return_value=SetUserResult.OK)
+    api.delete_user = AsyncMock(return_value=SetUserResult.OK)
+    api.delete_all_users = AsyncMock(return_value=SetUserResult.OK)
 
-    api.async_get_credentials_cached = AsyncMock(return_value=[])
-    api.async_get_credentials_by_type_cached = AsyncMock(return_value=[])
-    api.async_get_all_credentials_cached = AsyncMock(return_value=[])
-    api.async_get_credential_cached = AsyncMock(return_value=None)
-    api.async_set_credential = AsyncMock(return_value=SetCredentialResult.OK)
-    api.async_delete_credential = AsyncMock(return_value=SetCredentialResult.OK)
+    api.get_credentials_cached = AsyncMock(return_value=[])
+    api.get_credentials_by_type_cached = AsyncMock(return_value=[])
+    api.get_all_credentials_cached = AsyncMock(return_value=[])
+    api.get_credential_cached = AsyncMock(return_value=None)
+    api.set_credential = AsyncMock(return_value=SetCredentialResult.OK)
+    api.delete_credential = AsyncMock(return_value=SetCredentialResult.OK)
 
     # cached_property: override via instance __dict__
     node.endpoints[0].__dict__["access_control"] = api
@@ -117,8 +117,8 @@ async def test_set_user_auto_find(
         return_response=True,
     )
 
-    api.async_set_user.assert_called_once()
-    call_args = api.async_set_user.call_args
+    api.set_user.assert_called_once()
+    call_args = api.set_user.call_args
     assert call_args[0][0] == 1  # auto-found user_id
     assert result[entity_id]["user_id"] == 1
 
@@ -149,8 +149,8 @@ async def test_set_user_explicit_index(
         return_response=True,
     )
 
-    api.async_set_user.assert_called_once()
-    call_args = api.async_set_user.call_args
+    api.set_user.assert_called_once()
+    call_args = api.set_user.call_args
     assert call_args[0][0] == 5
     assert result[entity_id]["user_id"] == 5
 
@@ -166,13 +166,13 @@ async def test_set_user_no_slots(
     """Test set_user fails when no user slots available."""
     api = _mock_access_control(lock_schlage_be469)
 
-    user_caps = api.async_get_user_capabilities_cached.return_value
+    user_caps = api.get_user_capabilities_cached.return_value
     user_caps.max_users = 2
     user1 = MagicMock()
     user1.user_id = 1
     user2 = MagicMock()
     user2.user_id = 2
-    api.async_get_users_cached.return_value = [user1, user2]
+    api.get_users_cached.return_value = [user1, user2]
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -212,7 +212,7 @@ async def test_delete_user(
         blocking=True,
     )
 
-    api.async_delete_user.assert_called_once_with(3)
+    api.delete_user.assert_called_once_with(3)
 
 
 async def test_delete_all_users(
@@ -237,7 +237,7 @@ async def test_delete_all_users(
         blocking=True,
     )
 
-    api.async_delete_all_users.assert_called_once()
+    api.delete_all_users.assert_called_once()
 
 
 async def test_get_credential_capabilities(
@@ -277,7 +277,7 @@ async def test_get_credential_capabilities_not_supported(
 ) -> None:
     """Test get_credential_capabilities fails when not supported."""
     api = _mock_access_control(lock_schlage_be469)
-    api.async_is_supported.return_value = False
+    api.is_supported.return_value = False
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -310,8 +310,8 @@ async def test_get_users(
     user.active = True
     user.user_type = UserCredentialUserType.GENERAL
     user.credential_rule = None
-    api.async_get_users_cached.return_value = [user]
-    api.async_get_all_credentials_cached.return_value = []
+    api.get_users_cached.return_value = [user]
+    api.get_all_credentials_cached.return_value = []
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
     )
@@ -358,8 +358,8 @@ async def test_set_credential_auto_slot(
         return_response=True,
     )
 
-    api.async_set_user.assert_not_called()
-    api.async_set_credential.assert_called_once()
+    api.set_user.assert_not_called()
+    api.set_credential.assert_called_once()
     assert result[entity_id]["user_id"] == 2
     assert result[entity_id]["credential_slot"] == 1
 
@@ -392,8 +392,8 @@ async def test_set_credential_explicit_slot(
         return_response=True,
     )
 
-    api.async_set_user.assert_not_called()
-    api.async_set_credential.assert_called_once()
+    api.set_user.assert_not_called()
+    api.set_credential.assert_called_once()
     assert result[entity_id]["user_id"] == 3
     assert result[entity_id]["credential_slot"] == 2
 
@@ -430,8 +430,8 @@ async def test_set_credential_multi_target(
         return_response=True,
     )
 
-    api1.async_set_credential.assert_called_once()
-    api2.async_set_credential.assert_called_once()
+    api1.set_credential.assert_called_once()
+    api2.set_credential.assert_called_once()
     assert set(result.keys()) == {entity_1, entity_2}
     assert result[entity_1]["user_id"] == 1
     assert result[entity_2]["user_id"] == 1
@@ -447,7 +447,7 @@ async def test_set_credential_rejection_raises(
 ) -> None:
     """A device-reported rejection must surface as HomeAssistantError."""
     api = _mock_access_control(lock_schlage_be469)
-    api.async_set_credential = AsyncMock(
+    api.set_credential = AsyncMock(
         return_value=SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL
     )
 
@@ -479,7 +479,7 @@ async def test_set_user_rejection_raises(
 ) -> None:
     """A device-reported rejection on set_user must raise."""
     api = _mock_access_control(lock_schlage_be469)
-    api.async_set_user = AsyncMock(
+    api.set_user = AsyncMock(
         return_value=SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
     )
 
@@ -537,7 +537,7 @@ async def test_set_credential_type_not_supported(
     """Test set_credential fails when credential type is not supported (auto-slot)."""
     api = _mock_access_control(lock_schlage_be469)
     # Device reports no credential types supported
-    cred_caps = api.async_get_credential_capabilities_cached.return_value
+    cred_caps = api.get_credential_capabilities_cached.return_value
     cred_caps.supported_credential_types = {}
 
     with pytest.raises(HomeAssistantError):
@@ -568,7 +568,7 @@ async def test_set_credential_no_available_slots(
     """Test set_credential fails when no credential slots free (auto-slot)."""
     api = _mock_access_control(lock_schlage_be469)
 
-    cred_caps = api.async_get_credential_capabilities_cached.return_value
+    cred_caps = api.get_credential_capabilities_cached.return_value
     cred_caps.supported_credential_types[
         UserCredentialType.PIN_CODE
     ].number_of_credential_slots = 2
@@ -580,7 +580,7 @@ async def test_set_credential_no_available_slots(
     cred2 = MagicMock()
     cred2.type = UserCredentialType.PIN_CODE
     cred2.slot = 2
-    api.async_get_credentials_by_type_cached.return_value = [cred1, cred2]
+    api.get_credentials_by_type_cached.return_value = [cred1, cred2]
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -670,7 +670,7 @@ async def test_set_credential_slot_out_of_range(
 ) -> None:
     """Explicit credential_slot above device capacity fails fast."""
     api = _mock_access_control(lock_schlage_be469)
-    cred_caps = api.async_get_credential_capabilities_cached.return_value
+    cred_caps = api.get_credential_capabilities_cached.return_value
     cred_caps.supported_credential_types[
         UserCredentialType.PIN_CODE
     ].number_of_credential_slots = 5
@@ -692,7 +692,7 @@ async def test_set_credential_slot_out_of_range(
             return_response=True,
         )
     assert exc.value.translation_key == "credential_slot_out_of_range"
-    api.async_set_credential.assert_not_called()
+    api.set_credential.assert_not_called()
 
 
 async def test_delete_credential(
@@ -720,7 +720,7 @@ async def test_delete_credential(
         blocking=True,
     )
 
-    api.async_delete_credential.assert_called_once()
+    api.delete_credential.assert_called_once()
 
 
 async def test_delete_all_credentials(
@@ -740,7 +740,7 @@ async def test_delete_all_credentials(
     cred2 = MagicMock()
     cred2.type = MagicMock()
     cred2.slot = 2
-    api.async_get_credentials_cached.return_value = [cred1, cred2]
+    api.get_credentials_cached.return_value = [cred1, cred2]
 
     await hass.services.async_call(
         DOMAIN,
@@ -754,7 +754,7 @@ async def test_delete_all_credentials(
         blocking=True,
     )
 
-    assert api.async_delete_credential.call_count == 2
+    assert api.delete_credential.call_count == 2
 
 
 @pytest.mark.parametrize("field", ["user_id", "credential_slot"])
@@ -847,8 +847,8 @@ async def test_mutation_supports_multi_target(
         blocking=True,
     )
 
-    api1.async_delete_user.assert_called_once_with(3)
-    api2.async_delete_user.assert_called_once_with(3)
+    api1.delete_user.assert_called_once_with(3)
+    api2.delete_user.assert_called_once_with(3)
 
 
 async def test_get_users_supports_multi_target(
@@ -870,7 +870,7 @@ async def test_get_users_supports_multi_target(
     user_1.active = True
     user_1.user_type = UserCredentialUserType.GENERAL
     user_1.credential_rule = None
-    api1.async_get_users_cached.return_value = [user_1]
+    api1.get_users_cached.return_value = [user_1]
 
     user_2 = MagicMock()
     user_2.user_id = 2
@@ -878,7 +878,7 @@ async def test_get_users_supports_multi_target(
     user_2.active = True
     user_2.user_type = UserCredentialUserType.DISPOSABLE
     user_2.credential_rule = None
-    api2.async_get_users_cached.return_value = [user_2]
+    api2.get_users_cached.return_value = [user_2]
 
     entity_1 = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
