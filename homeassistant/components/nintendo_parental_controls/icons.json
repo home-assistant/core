@@ -2,6 +2,9 @@
   "services": {
     "add_bonus_time": {
       "service": "mdi:timer-plus-outline"
+    },
+    "update_pin_code": {
+      "service": "mdi:lock-open-outline"
     }
   }
 }

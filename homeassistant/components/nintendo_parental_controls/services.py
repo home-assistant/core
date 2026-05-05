@@ -5,7 +5,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -20,6 +20,7 @@ class NintendoParentalServices(StrEnum):
     """Store keys for Nintendo Parental services."""
 
     ADD_BONUS_TIME = "add_bonus_time"
+    UPDATE_PIN_CODE = "update_pin_code"
 
 
 @callback
@@ -35,6 +36,17 @@ def async_setup_services(
             {
                 vol.Required(ATTR_DEVICE_ID): cv.string,
                 vol.Required(ATTR_BONUS_TIME): vol.All(int, vol.Range(min=5, max=30)),
+            }
+        ),
+    )
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=NintendoParentalServices.UPDATE_PIN_CODE,
+        service_func=async_update_pin_code,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_DEVICE_ID): cv.string,
+                vol.Required(CONF_PIN): vol.All(int, vol.Range(min=1000, max=99999999)),
             }
         ),
     )
@@ -69,6 +81,33 @@ async def async_add_bonus_time(call: ServiceCall) -> None:
         return await config_entry.runtime_data.api.devices[
             nintendo_device_id
         ].add_extra_time(bonus_time)
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_device",
+    )
+
+
+async def async_update_pin_code(call: ServiceCall) -> None:
+    """Update the PIN code for a device."""
+    config_entry: NintendoParentalControlsConfigEntry | None
+    data = call.data
+    device_id: str = data[ATTR_DEVICE_ID]
+    new_pin: str = str(data[CONF_PIN])
+    device = dr.async_get(call.hass).async_get(device_id)
+    if device is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+        )
+    for entry_id in device.config_entries:
+        config_entry = call.hass.config_entries.async_get_entry(entry_id)
+        if config_entry is not None and config_entry.domain == DOMAIN:
+            break
+    nintendo_device_id = _get_nintendo_device_id(device)
+    if config_entry and nintendo_device_id:
+        return await config_entry.runtime_data.api.devices[
+            nintendo_device_id
+        ].set_new_pin(new_pin)
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="invalid_device",

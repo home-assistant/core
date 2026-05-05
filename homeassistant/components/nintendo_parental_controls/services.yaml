@@ -15,3 +15,18 @@ add_bonus_time:
       selector:
         device:
           integration: nintendo_parental_controls
+update_pin_code:
+  fields:
+    pin:
+      required: true
+      example: 1234
+      selector:
+        number:
+          min: 1000
+          max: 99999999
+    device_id:
+      required: true
+      example: 1234567890abcdef1234567890abcdef
+      selector:
+        device:
+          integration: nintendo_parental_controls

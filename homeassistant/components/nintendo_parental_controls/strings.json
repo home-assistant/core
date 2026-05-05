@@ -112,6 +112,21 @@
         }
       },
       "name": "Add Bonus Time"
+    },
+    "update_pin_code": {
+      "description": "Update the PIN code for the selected Nintendo Switch.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the device to update the PIN code for.",
+          "example": "1234567890abcdef",
+          "name": "Device"
+        },
+        "pin": {
+          "description": "The new PIN code.",
+          "name": "PIN"
+        }
+      },
+      "name": "Update PIN Code"
     }
   }
 }
