@@ -1,6 +1,5 @@
 """Code to handle a Motion Gateway."""
 
-import asyncio
 import contextlib
 import logging
 import socket
