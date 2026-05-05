@@ -170,11 +170,11 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="activate_timer_mode_error",
             ) from err
-            "Successfully activated timer mode: %s°%s for %d min on %s",
+
         _LOGGER.debug(
-            self.temperature_unit,
-            "Successfully activated timer mode: %s°C for %d min on %s",
+            "Successfully activated timer mode: %s°%s for %d min on %s",
             temperature,
+            self.temperature_unit,
             duration_minutes,
             self.device_id,
         )
