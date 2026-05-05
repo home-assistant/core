@@ -100,7 +100,6 @@ class ArcamSoloMediaPlayerEntity(MediaPlayerEntity, ArcamSoloEntity):
                 MediaPlayerEntityFeature.PLAY
                 | MediaPlayerEntityFeature.PAUSE
                 | MediaPlayerEntityFeature.STOP
-                | MediaPlayerEntityFeature.SEEK
                 | MediaPlayerEntityFeature.REPEAT_SET
                 | MediaPlayerEntityFeature.SHUFFLE_SET
             )
