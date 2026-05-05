@@ -5,6 +5,7 @@ import copy
 from enum import StrEnum
 import itertools
 import logging
+from pathlib import Path
 from typing import Any, TypedDict
 
 import pytest
@@ -44,6 +45,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, mock_device_registry
 
@@ -1279,6 +1281,35 @@ async def _validate_condition_options(
             await async_validate_condition_config(hass, config)
 
 
+def _get_yaml_fields(automation_key: str, yaml_type: str) -> dict[str, Any]:
+    """Load a conditions.yaml or triggers.yaml and return the fields for a key."""
+    domain, key = automation_key.split(".", 1)
+    yaml_path = (
+        Path(__file__).parents[2]
+        / "homeassistant"
+        / "components"
+        / domain
+        / f"{yaml_type}.yaml"
+    )
+    data = load_yaml_dict(str(yaml_path))
+    # YAML anchors (keys starting with '.') are included in the parsed dict;
+    # the actual entry uses the plain key name.
+    entry = data.get(key, {})
+    return entry.get("fields", {})
+
+
+def _assert_yaml_has_field(
+    yaml_file: str, automation_key: str, field: str, *, expected: bool
+) -> None:
+    """Assert that a field is present or absent in a yaml description."""
+    yaml_fields = _get_yaml_fields(automation_key, yaml_file)
+    has_field = field in yaml_fields
+    assert has_field == expected, (
+        f"{automation_key}: {yaml_file}.yaml {'has' if has_field else 'is missing'}"
+        f" '{field}', but expected {expected}"
+    )
+
+
 async def assert_condition_options_supported(
     hass: HomeAssistant,
     condition: str,
@@ -1294,7 +1325,14 @@ async def assert_condition_options_supported(
     - Accepts/rejects behavior depending on supports_behavior
     - Accepts/rejects duration depending on supports_duration
     - Rejects unknown options
+    - Condition yaml description matches supports_behavior / supports_duration
     """
+    # Verify that the yaml description matches the flags
+    _assert_yaml_has_field(
+        "conditions", condition, "behavior", expected=supports_behavior
+    )
+    _assert_yaml_has_field("conditions", condition, "for", expected=supports_duration)
+
     # Minimal config should always be valid
     # If there are no base options, also test that options can be omitted or be empty
     supports_empty = not bool(base_options)
@@ -1359,7 +1397,12 @@ async def assert_trigger_options_supported(
     - Accepts/rejects behavior depending on supports_behavior
     - Accepts/rejects duration depending on supports_duration
     - Rejects unknown options
+    - Trigger yaml description matches supports_behavior / supports_duration
     """
+    # Verify that the yaml description matches the flags
+    _assert_yaml_has_field("triggers", trigger, "behavior", expected=supports_behavior)
+    _assert_yaml_has_field("triggers", trigger, "for", expected=supports_duration)
+
     # Minimal config should always be valid
     supports_empty = not bool(base_options)
     await _validate_trigger_options(hass, trigger, None, valid=supports_empty)
