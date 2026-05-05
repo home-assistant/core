@@ -1,7 +1,5 @@
 """Immich as a media source."""
 
-from __future__ import annotations
-
 from logging import getLogger
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse

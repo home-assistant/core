@@ -1,7 +1,5 @@
 """Provides helpers for Z-Wave JS device automations."""
 
-from __future__ import annotations
-
 from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.config_entries import ConfigEntryState

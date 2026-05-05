@@ -1,7 +1,5 @@
 """Test the Elk-M1 Control config flow."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from unittest.mock import patch
 

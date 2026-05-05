@@ -1,7 +1,5 @@
 """Support for the Roku media player."""
 
-from __future__ import annotations
-
 import datetime as dt
 import logging
 import mimetypes

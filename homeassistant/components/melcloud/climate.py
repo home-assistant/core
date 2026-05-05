@@ -1,7 +1,5 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice

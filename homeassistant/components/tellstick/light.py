@@ -1,7 +1,5 @@
 """Support for Tellstick lights."""
 
-from __future__ import annotations
-
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

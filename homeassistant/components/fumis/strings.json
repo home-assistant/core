@@ -188,6 +188,14 @@
       "wifi_signal_strength": {
         "name": "Wi-Fi signal strength"
       }
+    },
+    "switch": {
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "timer": {
+        "name": "Timer"
+      }
     }
   },
   "exceptions": {

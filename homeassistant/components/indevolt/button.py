@@ -1,8 +1,6 @@
 """Button platform for Indevolt integration."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Final
 
 from indevolt_api import IndevoltRealtimeAction
@@ -22,7 +20,7 @@ PARALLEL_UPDATES = 0
 class IndevoltButtonEntityDescription(ButtonEntityDescription):
     """Custom entity description class for Indevolt button entities."""
 
-    generation: list[int] = field(default_factory=lambda: [1, 2])
+    generation: tuple[int, ...] = (1, 2)
 
 
 BUTTONS: Final = (
