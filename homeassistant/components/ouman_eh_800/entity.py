@@ -23,17 +23,16 @@ class OumanEh800Entity(CoordinatorEntity[OumanEh800Coordinator]):
         self._endpoint: OumanEndpoint = endpoint
 
         assert coordinator.config_entry is not None
-        unique_id = coordinator.config_entry.unique_id
-        assert unique_id is not None
+        entry_id = coordinator.config_entry.entry_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, entry_id)},
             name="Ouman EH-800",
             manufacturer="Ouman",
             model="EH-800",
             configuration_url=coordinator.config_entry.data[CONF_URL],
         )
-        self._attr_unique_id = f"{unique_id}_{endpoint.name}"
+        self._attr_unique_id = f"{entry_id}_{endpoint.name}"
         self._attr_translation_key = endpoint.name
         self._attr_entity_registry_enabled_default = (
             endpoint not in ENDPOINTS_DISABLED_BY_DEFAULT
