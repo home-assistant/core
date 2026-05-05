@@ -120,7 +120,7 @@ class LunatoneSensor(
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._config_entry_unique_id))},
+            identifiers={(DOMAIN, self._config_entry_unique_id)},
         )
         if (
             self._sensor
