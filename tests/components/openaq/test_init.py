@@ -1,5 +1,6 @@
 """Test OpenAQ initialization."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from openaq import ServerError
@@ -10,7 +11,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import API_KEY, make_response
+from .conftest import API_KEY, make_latest, make_location, make_response, make_sensor
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +55,64 @@ async def test_setup_retry_on_empty_location_response(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_openaq_client.close.assert_awaited_once()
+
+
+async def test_setup_fetches_location_data_concurrently(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator fetches independent OpenAQ location data concurrently."""
+    started: set[str] = set()
+    location_started = asyncio.Event()
+    latest_started = asyncio.Event()
+    sensors_started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def wait_for_release(
+        name: str, started_event: asyncio.Event, response: object
+    ) -> object:
+        """Return a response after all location data requests have started."""
+        started.add(name)
+        started_event.set()
+        await release
+        return response
+
+    async def get_location(_location_id: int) -> object:
+        """Return the location response."""
+        return await wait_for_release(
+            "location", location_started, make_response([make_location()])
+        )
+
+    async def get_latest(_location_id: int) -> object:
+        """Return the latest measurements response."""
+        return await wait_for_release(
+            "latest", latest_started, make_response([make_latest(1, 8.5)])
+        )
+
+    async def get_sensors(_location_id: int) -> object:
+        """Return the sensors response."""
+        return await wait_for_release(
+            "sensors", sensors_started, make_response([make_sensor(1, "pm25")])
+        )
+
+    mock_openaq_client.locations.get.side_effect = get_location
+    mock_openaq_client.locations.latest.side_effect = get_latest
+    mock_openaq_client.locations.sensors.side_effect = get_sensors
+
+    setup_task = asyncio.create_task(setup_integration(hass, mock_config_entry))
+    await asyncio.wait_for(
+        asyncio.gather(
+            location_started.wait(),
+            latest_started.wait(),
+            sensors_started.wait(),
+        ),
+        timeout=1,
+    )
+    assert started == {"location", "latest", "sensors"}
+    release.set()
+
+    await asyncio.wait_for(setup_task, timeout=1)
 
 
 async def test_unload_closes_client(

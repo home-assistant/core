@@ -1,5 +1,6 @@
 """Data coordinator for the OpenAQ integration."""
 
+import asyncio
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
@@ -129,7 +130,7 @@ def get_openaq_value(data: object, *names: str) -> Any:
     return None
 
 
-def _normalize_parameter(parameter: object) -> str | None:
+def normalize_parameter(parameter: object) -> str | None:
     """Normalize an OpenAQ parameter object to its canonical name."""
     name = get_openaq_value(parameter, "name")
     if isinstance(name, str):
@@ -191,7 +192,7 @@ def _sensor_metadata_by_id(
     for sensor in sensors:
         sensor_id = _normalize_sensor_id(get_openaq_value(sensor, "id"))
         parameter = get_openaq_value(sensor, "parameter")
-        parameter_name = _normalize_parameter(parameter)
+        parameter_name = normalize_parameter(parameter)
         if sensor_id is None or parameter_name is None:
             continue
         metadata[sensor_id] = (
@@ -222,7 +223,7 @@ def normalize_latest_measurements(
 
     for sensor in sensors:
         parameter = get_openaq_value(sensor, "parameter")
-        parameter_name = _normalize_parameter(parameter)
+        parameter_name = normalize_parameter(parameter)
         latest = get_openaq_value(sensor, "latest")
         value = (
             _as_float(get_openaq_value(latest, "value")) if latest is not None else None
@@ -265,9 +266,11 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
         try:
-            location_response = await self.client.locations.get(self.location_id)
-            latest_response = await self.client.locations.latest(self.location_id)
-            sensors_response = await self.client.locations.sensors(self.location_id)
+            location_response, latest_response, sensors_response = await asyncio.gather(
+                self.client.locations.get(self.location_id),
+                self.client.locations.latest(self.location_id),
+                self.client.locations.sensors(self.location_id),
+            )
         except (
             BadGatewayError,
             BadRequestError,
@@ -317,4 +320,5 @@ __all__ = [
     "create_openaq_client",
     "get_openaq_value",
     "normalize_latest_measurements",
+    "normalize_parameter",
 ]
