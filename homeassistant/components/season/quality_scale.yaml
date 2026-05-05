@@ -1,0 +1,78 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: todo
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: todo
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description:
+    status: exempt
+    comment: |
+      Is an internal integration, and does not interact with any external devices or services.
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure:
+    status: exempt
+    comment: |
+      Integration does not connect to an external device or service.
+  test-before-setup: todo
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not authenticate with any external devices or services.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Integration is not discoverable and has no discovery information.
+  discovery:
+    status: exempt
+    comment: |
+      Integration is not discoverable and has no discovery information.
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: Integration does not connect to any external devices or services.
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: todo
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: done
+  stale-devices: done
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: Integration does not make HTTP requests.
+  strict-typing: todo

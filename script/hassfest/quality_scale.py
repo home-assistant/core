@@ -827,7 +827,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "scrape",
     "screenlogic",
     "scsgate",
-    "season",
     "sendgrid",
     "sense",
     "sensirion_ble",
