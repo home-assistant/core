@@ -148,7 +148,7 @@ def get_endpoint_from_device_entry(
     if device_id_full is None:
         return None
 
-    device_id = device_id_full.lstrip(device_id_type_prefix)
+    device_id = device_id_full.removeprefix(device_id_type_prefix)
     server_info = matter_client.server_info
 
     if server_info is None:
