@@ -1261,7 +1261,7 @@ async def test_bad_certificate(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1334,7 +1334,7 @@ async def test_keepalive_validation(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1593,47 +1593,6 @@ async def test_option_flow_default_suggested_values(
 
 
 @pytest.mark.parametrize(
-    ("advanced_options", "flow_result"),
-    [(False, FlowResultType.ABORT), (True, FlowResultType.FORM)],
-)
-@pytest.mark.usefixtures("mock_reload_after_entry_update")
-async def test_skipping_advanced_options(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    mock_try_connection: MagicMock,
-    advanced_options: bool,
-    flow_result: FlowResultType,
-) -> None:
-    """Test advanced options option."""
-
-    test_input = {
-        mqtt.CONF_BROKER: "another-broker",
-        CONF_PORT: 2345,
-    }
-    if advanced_options:
-        test_input["advanced_options"] = True
-
-    mqtt_mock = await mqtt_mock_entry()
-    mock_try_connection.return_value = True
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    mqtt_mock.async_connect.reset_mock()
-
-    result = await config_entry.start_reconfigure_flow(
-        hass, show_advanced_options=advanced_options
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "broker"
-
-    assert ("advanced_options" in result["data_schema"].schema) == advanced_options
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=test_input,
-    )
-    assert result["type"] is flow_result
-
-
-@pytest.mark.parametrize(
     ("test_input", "user_input", "new_password"),
     [
         (
@@ -1886,7 +1845,7 @@ async def test_reconfigure_user_connection_fails(
             CONF_PORT: 1234,
         },
     )
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     mock_try_connection_time_out.reset_mock()
@@ -2032,7 +1991,7 @@ async def test_try_connection_with_advanced_parameters(
     )
 
     # Test default/suggested values from config
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     defaults = {
@@ -2146,7 +2105,7 @@ async def test_setup_with_advanced_settings(
 
     mock_try_connection.return_value = True
 
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]
@@ -2325,7 +2284,7 @@ async def test_setup_with_certificates(
 
     mock_try_connection.return_value = True
 
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]
@@ -2447,7 +2406,7 @@ async def test_change_websockets_transport_to_tcp(
 
     mock_try_connection.return_value = True
 
-    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["transport"]
@@ -2497,7 +2456,7 @@ async def test_reconfigure_flow_form(
     """Test reconfigure flow."""
     await mqtt_mock_entry()
     entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    result = await entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["errors"] == {}
@@ -2548,7 +2507,7 @@ async def test_reconfigure_no_changed_password(
     """Test reconfigure flow."""
     await mqtt_mock_entry()
     entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    result = await entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["errors"] == {}
