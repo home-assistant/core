@@ -339,13 +339,34 @@ def parametrize_condition_states_any(
     required_filter_attributes: dict | None = None,
     excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize states and expected condition evaluations.
+    """Parametrize states and expected evaluations for a condition under behavior=any.
 
-    The target_states and other_states iterables are either iterables of
-    states or iterables of (state, attributes) tuples.
+    Returns a list of `(condition, condition_options, states)` tuples, where
+    `states` is a list of ConditionStateDescription dicts. Each dict carries
+    the state to apply to the entity under test, the state to apply to
+    entities outside the target, the expected condition evaluation after the
+    entity under test alone has been set, and the expected evaluation after
+    every other targeted entity has been set to the same state.
 
-    Returns a list of tuples with (condition, condition options, list of states),
-    where states is a list of ConditionStateDescription dicts.
+    Args:
+        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition_options: Options dict passed to the condition (typically
+            includes the `threshold` block); merged into each generated tuple.
+        target_states: States the condition is expected to evaluate True
+            for. Entries are either bare state values or `(state, attributes)`
+            tuples.
+        other_states: States the condition is expected to evaluate False for.
+            Same accepted shapes as `target_states`. With behavior=any, an
+            entity in such a state does not satisfy the condition.
+        required_filter_attributes: Attributes that must be present on the
+            entity for the condition's domain filter to accept it. The
+            helper merges these into every generated state so the entity
+            satisfies the filter; entities outside the target receive the
+            same state value but *without* these attributes.
+        excluded_entities_from_other_domain: When True, the helper assumes
+            entities outside the target sit in another domain entirely;
+            their state value is preserved (rather than being replaced with
+            None) so the test verifies the condition ignores them by domain.
     """
 
     return _parametrize_condition_states(
@@ -368,13 +389,36 @@ def parametrize_condition_states_all(
     required_filter_attributes: dict | None = None,
     excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize states and expected condition evaluations.
+    """Parametrize states and expected evaluations for a condition under behavior=all.
 
-    The target_states and other_states iterables are either iterables of
-    states or iterables of (state, attributes) tuples.
+    Returns a list of `(condition, condition_options, states)` tuples, where
+    `states` is a list of ConditionStateDescription dicts. Each dict carries
+    the state to apply to the entity under test, the state to apply to
+    entities outside the target, the expected condition evaluation after the
+    entity under test alone has been set, and the expected evaluation after
+    every other targeted entity has been set to the same state.
 
-    Returns a list of tuples with (condition, condition options, list of states),
-    where states is a list of ConditionStateDescription dicts.
+    Args:
+        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition_options: Options dict passed to the condition (typically
+            includes the `threshold` block); merged into each generated tuple.
+        target_states: States the condition is expected to evaluate True for
+            (i.e. entities in any such state contribute a "match" to the
+            all-check). Entries are either bare state values or
+            `(state, attributes)` tuples.
+        other_states: States the condition is expected to evaluate False
+            for. Same accepted shapes as `target_states`. Under behavior=all,
+            an entity in such a state blocks the all-check (counts toward
+            the check but is not a match).
+        required_filter_attributes: Attributes that must be present on the
+            entity for the condition's domain filter to accept it. The
+            helper merges these into every generated state so the entity
+            satisfies the filter; entities outside the target receive the
+            same state value but *without* these attributes.
+        excluded_entities_from_other_domain: When True, the helper assumes
+            entities outside the target sit in another domain entirely;
+            their state value is preserved (rather than being replaced with
+            None) so the test verifies the condition ignores them by domain.
     """
 
     return _parametrize_condition_states(
@@ -1686,9 +1730,41 @@ def parametrize_numerical_condition_above_below_any(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for numerical conditions.
+    """Parametrize above/below/between threshold cases for state-value numerical conditions under behavior=any.
 
-    Returns a list of tuples with (condition, condition_options, states).
+    Generates state sequences for a condition that reads its tracked value
+    directly from `state.state` (e.g. a sensor with a temperature device
+    class). The condition is exercised across three threshold types in turn
+    — "above", "below", "between" — and for each, the helper invokes
+    `parametrize_condition_states_any` with target/other states populated
+    from a fixed set of numeric values straddling the thresholds.
+
+    Threshold values are fixed at 20 / 80 (interpreted in the condition's
+    threshold unit). The `device_class` filter is applied via
+    `required_filter_attributes={ATTR_DEVICE_CLASS: device_class}` so
+    entities outside that device class are ignored by the condition.
+
+    Returns a list of `(condition, condition_options, states)` tuples,
+    suitable for unpacking into a `pytest.mark.parametrize` over
+    `("condition", "condition_options", "states")`.
+
+    Args:
+        condition: Condition key, e.g. `"temperature.is"`.
+        device_class: Device class the condition filters on. Forwarded to
+            `parametrize_condition_states_any` as
+            `required_filter_attributes={ATTR_DEVICE_CLASS: device_class}`.
+        condition_options: Extra keys merged into the generated `options`
+            dict for each threshold-type variant (e.g. user-supplied
+            condition-specific keys; the threshold itself is set by the
+            helper).
+        threshold_unit: When set, the threshold values in
+            `condition_options` get this unit attached
+            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no unit
+            is added.
+        unit_attributes: Attributes (typically
+            `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
+            state, so the entity carries a unit alongside its tracked
+            value.
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
@@ -1776,9 +1852,35 @@ def parametrize_numerical_condition_above_below_all(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for numerical conditions with 'all' behavior.
+    """Parametrize above/below/between threshold cases for state-value numerical conditions under behavior=all.
 
-    Returns a list of tuples with (condition, condition_options, states).
+    See `parametrize_numerical_condition_above_below_any` for the structure
+    of the generated test cases; the only difference is that this helper
+    routes through `parametrize_condition_states_all`, so the condition is
+    expected to evaluate True only when *every* targeted entity matches the
+    threshold (vacuous-True when every entity is filtered out).
+
+    Returns a list of `(condition, condition_options, states)` tuples,
+    suitable for unpacking into a `pytest.mark.parametrize` over
+    `("condition", "condition_options", "states")`.
+
+    Args:
+        condition: Condition key, e.g. `"temperature.is"`.
+        device_class: Device class the condition filters on. Forwarded to
+            `parametrize_condition_states_all` as
+            `required_filter_attributes={ATTR_DEVICE_CLASS: device_class}`.
+        condition_options: Extra keys merged into the generated `options`
+            dict for each threshold-type variant (e.g. user-supplied
+            condition-specific keys; the threshold itself is set by the
+            helper).
+        threshold_unit: When set, the threshold values in
+            `condition_options` get this unit attached
+            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no unit
+            is added.
+        unit_attributes: Attributes (typically
+            `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
+            state, so the entity carries a unit alongside its tracked
+            value.
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
@@ -1868,9 +1970,44 @@ def parametrize_numerical_attribute_condition_above_below_any(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for attribute-based numerical conditions.
+    """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=any.
 
-    Returns a list of tuples with (condition, condition_options, states).
+    Generates state sequences for a condition that reads its tracked value
+    from a state attribute (e.g. `climate.target_humidity`). The condition
+    is exercised across three threshold types in turn — "above", "below",
+    "between" — and for each, the helper invokes
+    `parametrize_condition_states_any` with target/other states populated
+    from a fixed set of numeric attribute values straddling the
+    thresholds. Threshold values are fixed at 20 / 80 (interpreted in the
+    condition's threshold unit).
+
+    Returns a list of `(condition, condition_options, states)` tuples,
+    suitable for unpacking into a `pytest.mark.parametrize` over
+    `("condition", "condition_options", "states")`.
+
+    Args:
+        condition: Condition key, e.g. `"climate.target_humidity"`.
+        state: The `state.state` value to use for entities meant to match
+            the condition (the attribute lives on top of this state).
+        attribute: Name of the attribute the condition reads. The helper
+            generates target/other/excluded states by varying this
+            attribute.
+        condition_options: Extra keys merged into the generated `options`
+            dict for each threshold-type variant (the threshold itself is
+            set by the helper).
+        required_filter_attributes: Attributes that must be present on the
+            entity for the condition's domain filter to accept it. The
+            helper merges these into every generated state so the entity
+            satisfies the filter; entities outside the target receive the
+            same state value but *without* these attributes.
+        threshold_unit: When set, the threshold values in
+            `condition_options` get this unit attached
+            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no
+            unit is added.
+        unit_attributes: Attributes (typically
+            `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
+            state, so the entity carries a unit alongside its tracked
+            attribute.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
@@ -1957,9 +2094,42 @@ def parametrize_numerical_attribute_condition_above_below_all(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for attribute-based numerical conditions with 'all' behavior.
+    """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=all.
 
-    Returns a list of tuples with (condition, condition_options, states).
+    See `parametrize_numerical_attribute_condition_above_below_any` for the
+    structure of the generated test cases; the only difference is that this
+    helper routes through `parametrize_condition_states_all`, so the
+    condition is expected to evaluate True only when *every* targeted
+    entity matches the threshold (vacuous-True when every entity is
+    filtered out).
+
+    Returns a list of `(condition, condition_options, states)` tuples,
+    suitable for unpacking into a `pytest.mark.parametrize` over
+    `("condition", "condition_options", "states")`.
+
+    Args:
+        condition: Condition key, e.g. `"climate.target_humidity"`.
+        state: The `state.state` value to use for entities meant to match
+            the condition (the attribute lives on top of this state).
+        attribute: Name of the attribute the condition reads. The helper
+            generates target/other/excluded states by varying this
+            attribute.
+        condition_options: Extra keys merged into the generated `options`
+            dict for each threshold-type variant (the threshold itself is
+            set by the helper).
+        required_filter_attributes: Attributes that must be present on the
+            entity for the condition's domain filter to accept it. The
+            helper merges these into every generated state so the entity
+            satisfies the filter; entities outside the target receive the
+            same state value but *without* these attributes.
+        threshold_unit: When set, the threshold values in
+            `condition_options` get this unit attached
+            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no
+            unit is added.
+        unit_attributes: Attributes (typically
+            `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
+            state, so the entity carries a unit alongside its tracked
+            attribute.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
