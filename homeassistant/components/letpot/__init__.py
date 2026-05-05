@@ -3,7 +3,7 @@
 import asyncio
 
 from letpot.client import LetPotClient
-from letpot.converters import CONVERTERS
+from letpot.converters import GARDEN_CONVERTERS
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
 from letpot.models import AuthenticationInfo
@@ -19,7 +19,7 @@ from .const import (
     CONF_REFRESH_TOKEN_EXPIRES,
     CONF_USER_ID,
 )
-from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
+from .coordinator import LetPotConfigEntry, LetPotCoordinators, LetPotGardenCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -71,20 +71,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
 
     device_client = LetPotDeviceClient(auth)
 
-    coordinators: list[LetPotDeviceCoordinator] = [
-        LetPotDeviceCoordinator(hass, entry, device, device_client)
+    garden_coordinators: list[LetPotGardenCoordinator] = [
+        LetPotGardenCoordinator(hass, entry, device, device_client)
         for device in devices
-        if any(converter.supports_type(device.device_type) for converter in CONVERTERS)
+        if any(
+            converter.supports_type(device.device_type)
+            for converter in GARDEN_CONVERTERS
+        )
     ]
 
     await asyncio.gather(
         *[
             coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators
+            for coordinator in garden_coordinators
         ]
     )
 
-    entry.runtime_data = coordinators
+    entry.runtime_data = LetPotCoordinators(
+        gardens=garden_coordinators,
+        watering_systems=[],  # Not yet supported in the integration
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -94,7 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        for coordinator in entry.runtime_data:
+        coordinators = entry.runtime_data.gardens + entry.runtime_data.watering_systems
+        for coordinator in coordinators:
             await coordinator.device_client.unsubscribe(
                 coordinator.device.serial_number
             )

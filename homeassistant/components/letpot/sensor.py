@@ -3,7 +3,12 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from letpot.models import DeviceFeature, LetPotDeviceStatus, TemperatureUnit
+from letpot.models import (
+    DeviceFeature,
+    LetPotDeviceStatus,
+    LetPotGardenStatus,
+    TemperatureUnit,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,11 +35,13 @@ LETPOT_TEMPERATURE_UNIT_HA_UNIT = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotSensorEntityDescription(LetPotEntityDescription, SensorEntityDescription):
+class LetPotSensorEntityDescription[_DataT: LetPotDeviceStatus](
+    LetPotEntityDescription, SensorEntityDescription
+):
     """Describes a LetPot sensor entity."""
 
-    native_unit_of_measurement_fn: Callable[[LetPotDeviceStatus], str | None]
-    value_fn: Callable[[LetPotDeviceStatus], StateType]
+    native_unit_of_measurement_fn: Callable[[_DataT], str | None]
+    value_fn: Callable[[_DataT], StateType]
 
 
 SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
@@ -83,14 +90,16 @@ async def async_setup_entry(
     """Set up LetPot sensor entities based on a device features."""
     coordinators = entry.runtime_data
     async_add_entities(
-        LetPotSensorEntity(coordinator, description)
+        LetPotSensorEntity[LetPotGardenStatus](coordinator, description)
         for description in SENSORS
-        for coordinator in coordinators
+        for coordinator in coordinators.gardens
         if description.supported_fn(coordinator)
     )
 
 
-class LetPotSensorEntity(LetPotEntity, SensorEntity):
+class LetPotSensorEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], SensorEntity
+):
     """Defines a LetPot sensor entity."""
 
     entity_description: LetPotSensorEntityDescription
@@ -98,7 +107,7 @@ class LetPotSensorEntity(LetPotEntity, SensorEntity):
     def __init__(
         self,
         coordinator: LetPotDeviceCoordinator,
-        description: LetPotSensorEntityDescription,
+        description: LetPotSensorEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot sensor entity."""
         super().__init__(coordinator)

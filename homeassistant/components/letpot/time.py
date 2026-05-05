@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator, LetPotGardenStatus
 from .entity import LetPotEntity, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
@@ -22,10 +22,10 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotTimeEntityDescription(TimeEntityDescription):
+class LetPotTimeEntityDescription[_DataT: LetPotDeviceStatus](TimeEntityDescription):
     """Describes a LetPot time entity."""
 
-    value_fn: Callable[[LetPotDeviceStatus], time | None]
+    value_fn: Callable[[_DataT], time | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, time], Coroutine[Any, Any, None]]
 
 
@@ -63,21 +63,21 @@ async def async_setup_entry(
     """Set up LetPot time entities based on a config entry."""
     coordinators = entry.runtime_data
     async_add_entities(
-        LetPotTimeEntity(coordinator, description)
+        LetPotTimeEntity[LetPotGardenStatus](coordinator, description)
         for description in TIME_SENSORS
-        for coordinator in coordinators
+        for coordinator in coordinators.gardens
     )
 
 
-class LetPotTimeEntity(LetPotEntity, TimeEntity):
+class LetPotTimeEntity[_DataT: LetPotDeviceStatus](LetPotEntity[_DataT], TimeEntity):
     """Defines a LetPot time entity."""
 
-    entity_description: LetPotTimeEntityDescription
+    entity_description: LetPotTimeEntityDescription[_DataT]
 
     def __init__(
         self,
         coordinator: LetPotDeviceCoordinator,
-        description: LetPotTimeEntityDescription,
+        description: LetPotTimeEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot time entity."""
         super().__init__(coordinator)

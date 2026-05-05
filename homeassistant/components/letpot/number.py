@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import DeviceFeature
+from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -25,11 +25,13 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotNumberEntityDescription(LetPotEntityDescription, NumberEntityDescription):
+class LetPotNumberEntityDescription[_DataT: LetPotDeviceStatus](
+    LetPotEntityDescription, NumberEntityDescription
+):
     """Describes a LetPot number entity."""
 
-    max_value_fn: Callable[[LetPotDeviceCoordinator], float]
-    value_fn: Callable[[LetPotDeviceCoordinator], float | None]
+    max_value_fn: Callable[[LetPotDeviceCoordinator[_DataT]], float]
+    value_fn: Callable[[LetPotDeviceCoordinator[_DataT]], float | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, float], Coroutine[Any, Any, None]]
 
 
@@ -99,14 +101,16 @@ async def async_setup_entry(
     """Set up LetPot number entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
     async_add_entities(
-        LetPotNumberEntity(coordinator, description)
+        LetPotNumberEntity[LetPotGardenStatus](coordinator, description)
         for description in NUMBERS
-        for coordinator in coordinators
+        for coordinator in coordinators.gardens
         if description.supported_fn(coordinator)
     )
 
 
-class LetPotNumberEntity(LetPotEntity, NumberEntity):
+class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], NumberEntity
+):
     """Defines a LetPot number entity."""
 
     entity_description: LetPotNumberEntityDescription
@@ -114,7 +118,7 @@ class LetPotNumberEntity(LetPotEntity, NumberEntity):
     def __init__(
         self,
         coordinator: LetPotDeviceCoordinator,
-        description: LetPotNumberEntityDescription,
+        description: LetPotNumberEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot number entity."""
         super().__init__(coordinator)

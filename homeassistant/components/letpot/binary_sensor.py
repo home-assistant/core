@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator, LetPotGardenStatus
 from .entity import LetPotEntity, LetPotEntityDescription
 
 # Coordinator is used to centralize the data updates
@@ -22,12 +22,12 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotBinarySensorEntityDescription(
+class LetPotBinarySensorEntityDescription[_DataT: LetPotDeviceStatus](
     LetPotEntityDescription, BinarySensorEntityDescription
 ):
     """Describes a LetPot binary sensor entity."""
 
-    is_on_fn: Callable[[LetPotDeviceStatus], bool]
+    is_on_fn: Callable[[_DataT], bool]
 
 
 BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
@@ -98,14 +98,16 @@ async def async_setup_entry(
     """Set up LetPot binary sensor entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
     async_add_entities(
-        LetPotBinarySensorEntity(coordinator, description)
+        LetPotBinarySensorEntity[LetPotGardenStatus](coordinator, description)
         for description in BINARY_SENSORS
-        for coordinator in coordinators
+        for coordinator in coordinators.gardens
         if description.supported_fn(coordinator)
     )
 
 
-class LetPotBinarySensorEntity(LetPotEntity, BinarySensorEntity):
+class LetPotBinarySensorEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], BinarySensorEntity
+):
     """Defines a LetPot binary sensor entity."""
 
     entity_description: LetPotBinarySensorEntityDescription
@@ -113,7 +115,7 @@ class LetPotBinarySensorEntity(LetPotEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: LetPotDeviceCoordinator,
-        description: LetPotBinarySensorEntityDescription,
+        description: LetPotBinarySensorEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot binary sensor entity."""
         super().__init__(coordinator)

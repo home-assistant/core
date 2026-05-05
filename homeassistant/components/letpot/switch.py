@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import DeviceFeature, LetPotDeviceStatus
+from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -21,10 +21,12 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotSwitchEntityDescription(LetPotEntityDescription, SwitchEntityDescription):
+class LetPotSwitchEntityDescription[_DataT: LetPotDeviceStatus](
+    LetPotEntityDescription, SwitchEntityDescription
+):
     """Describes a LetPot switch entity."""
 
-    value_fn: Callable[[LetPotDeviceStatus], bool | None]
+    value_fn: Callable[[_DataT], bool | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, bool], Coroutine[Any, Any, None]]
 
 
@@ -87,15 +89,17 @@ async def async_setup_entry(
     """Set up LetPot switch entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
     entities: list[SwitchEntity] = [
-        LetPotSwitchEntity(coordinator, description)
+        LetPotSwitchEntity[LetPotGardenStatus](coordinator, description)
         for description in SWITCHES
-        for coordinator in coordinators
+        for coordinator in coordinators.gardens
         if description.supported_fn(coordinator)
     ]
     async_add_entities(entities)
 
 
-class LetPotSwitchEntity(LetPotEntity, SwitchEntity):
+class LetPotSwitchEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], SwitchEntity
+):
     """Defines a LetPot switch entity."""
 
     entity_description: LetPotSwitchEntityDescription
@@ -103,7 +107,7 @@ class LetPotSwitchEntity(LetPotEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: LetPotDeviceCoordinator,
-        description: LetPotSwitchEntityDescription,
+        description: LetPotSwitchEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot switch entity."""
         super().__init__(coordinator)
