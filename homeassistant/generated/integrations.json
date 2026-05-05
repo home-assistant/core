@@ -526,6 +526,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "arcam_solo": {
+      "name": "Arcam Solo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "arest": {
       "name": "aREST",
       "integration_type": "hub",

@@ -1986,6 +1986,9 @@ pyanglianwater==3.1.2
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
 
+# homeassistant.components.arcam_solo
+pyarcamsolo==1.0.1
+
 # homeassistant.components.atag
 pyatag==0.3.5.3
 

@@ -1,0 +1,11 @@
+{
+  "domain": "arcam_solo",
+  "name": "Arcam Solo",
+  "codeowners": ["@pantherale0"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/arcam_solo",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyarcamsolo==1.0.1"]
+}

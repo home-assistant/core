@@ -1,0 +1,30 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "Serial port",
+          "name": "Name"
+        },
+        "data_description": {
+          "device": "Serial device path used to connect to the receiver",
+          "name": "Name used for this Arcam Solo in Home Assistant"
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "media_player": {
+        "name": "Receiver"
+      }
+    }
+  }
+}

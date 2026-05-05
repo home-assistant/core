@@ -164,6 +164,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
+/homeassistant/components/arcam_solo/ @pantherale0
+/tests/components/arcam_solo/ @pantherale0
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/arve/ @ikalnyi
 /tests/components/arve/ @ikalnyi

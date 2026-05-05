@@ -74,6 +74,7 @@ FLOWS = {
         "aquacell",
         "aranet",
         "arcam_fmj",
+        "arcam_solo",
         "arve",
         "aseko_pool_live",
         "asuswrt",
