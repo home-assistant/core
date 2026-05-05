@@ -399,7 +399,6 @@ def parametrize_trigger_states(
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
-    trigger_from_excluded: bool = False,
     extra_invalid_states: list[str | None | tuple[str | None, dict]] | None = None,
     required_filter_attributes: dict | None = None,
     trigger_from_none: bool = True,
@@ -431,18 +430,6 @@ def parametrize_trigger_states(
     under test transitions to a target state — the trigger should fire even
     though the other entities never matched, because they are invisible to
     the all/count check.
-
-    Set `trigger_from_excluded` to True if the trigger is expected to fire
-    when the initial state is one of `extra_excluded_states` and transitions
-    directly to a target state. When True, the helper generates an
-    additional pattern that places the entity under test in each
-    `extra_excluded_states` value initially and verifies the trigger fires
-    on the transition to a target (count=1). Pass True only when the
-    trigger's `is_valid_transition` actually permits transitions out of the
-    extra-excluded state into a target — typically true for numerical
-    triggers (None -> numeric is a valid change/threshold cross), false for
-    state-based triggers like media_player.unmuted where moving from
-    no-attrs to muted=False is the same is_muted value.
 
     `extra_invalid_states` are *additional* states (on top of the always-
     included STATE_UNAVAILABLE and STATE_UNKNOWN) that should be treated as
@@ -734,40 +721,7 @@ def parametrize_trigger_states(
         )
     )
 
-    if trigger_from_excluded and extra_excluded_states:
-        # Pattern: the entity under test sits in an `extra_excluded_states`
-        # value alongside the other targeted entities, then transitions
-        # directly to a `target_state`. `is_valid_transition` is expected to
-        # accept that transition (caller opted in via
-        # `trigger_from_excluded=True`), so the trigger must fire.
-        # The other entities stay in the same extra-excluded state and are
-        # filtered out of the all/count check, so behavior=last/first/any
-        # all see exactly one matching entity and fire (count=1).
-        # Sequence per (excluded, target):
-        #   entity_id: excluded -> target   (1)
-        #   others:    excluded -> excluded (no-op, no fire)
-        tests.append(
-            (
-                trigger,
-                trigger_options,
-                list(
-                    itertools.chain.from_iterable(
-                        (
-                            state_with_attributes(excluded_state, 0),
-                            state_with_attributes(
-                                target_state, 1, others_state=excluded_state
-                            ),
-                        )
-                        for excluded_state in extra_excluded_states
-                        for target_state in target_states
-                    )
-                ),
-            )
-        )
-
-    # Drop patterns whose state list is empty (e.g. when other_states is empty
-    # because all "other" candidates are now in extra_excluded_states).
-    return [t for t in tests if t[2]]
+    return tests
 
 
 def _add_threshold_unit(
@@ -835,9 +789,20 @@ def parametrize_numerical_attribute_changed_trigger_states(
     """
     trigger_options = trigger_options or {}
     unit_attributes = unit_attributes or {}
-    none_state = (state, {attribute: None} | unit_attributes)
-    extra_excluded_states = [none_state] if attribute_required else None
-    other_none_states = [] if attribute_required else [none_state]
+    # When `attribute_required=True`, `(attr=None)` is filtered by the
+    # trigger's `_should_include` override, so it can no longer play the
+    # role of a "non-firing but counted" other state. Substitute a
+    # non-numeric string value: it fails `float(...)` (so is_valid_state is
+    # False) but is still `is not None` (so the override includes it in
+    # the all/count check), giving us a proper "other" state. Mirrors how
+    # `parametrize_numerical_state_value_changed_trigger_states` uses the
+    # literal string "none" as a non-numeric state value.
+    if attribute_required:
+        extra_excluded_states = [(state, {attribute: None} | unit_attributes)]
+        other_invalid_attr = (state, {attribute: "none"} | unit_attributes)
+    else:
+        extra_excluded_states = None
+        other_invalid_attr = (state, {attribute: None} | unit_attributes)
 
     return [
         *parametrize_trigger_states(
@@ -856,9 +821,8 @@ def parametrize_numerical_attribute_changed_trigger_states(
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
-            other_states=other_none_states,
+            other_states=[other_invalid_attr],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
@@ -879,11 +843,10 @@ def parametrize_numerical_attribute_changed_trigger_states(
                 (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                *other_none_states,
+                other_invalid_attr,
                 (state, {attribute: 0} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
@@ -904,11 +867,10 @@ def parametrize_numerical_attribute_changed_trigger_states(
                 (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                *other_none_states,
+                other_invalid_attr,
                 (state, {attribute: 100} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
@@ -967,9 +929,17 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     """
     trigger_options = trigger_options or {}
     unit_attributes = unit_attributes or {}
-    none_state = (state, {attribute: None} | unit_attributes)
-    extra_excluded_states = [none_state] if attribute_required else None
-    other_none_states = [] if attribute_required else [none_state]
+    # See `parametrize_numerical_attribute_changed_trigger_states` for the
+    # rationale of substituting a non-numeric string-attr for `(attr=None)`
+    # when `attribute_required=True`: the override would filter `None`
+    # out of the all/count check, so we use a value that fails
+    # `is_valid_state` but is still included.
+    if attribute_required:
+        extra_excluded_states = [(state, {attribute: None} | unit_attributes)]
+        other_invalid_attr = (state, {attribute: "none"} | unit_attributes)
+    else:
+        extra_excluded_states = None
+        other_invalid_attr = (state, {attribute: None} | unit_attributes)
 
     return [
         *parametrize_trigger_states(
@@ -990,12 +960,11 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 60} | unit_attributes),
             ],
             other_states=[
-                *other_none_states,
+                other_invalid_attr,
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
@@ -1016,12 +985,11 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                *other_none_states,
+                other_invalid_attr,
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 60} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
@@ -1041,11 +1009,10 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                *other_none_states,
+                other_invalid_attr,
                 (state, {attribute: 0} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
@@ -1065,11 +1032,10 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                *other_none_states,
+                other_invalid_attr,
                 (state, {attribute: 100} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
-            trigger_from_excluded=attribute_required,
             required_filter_attributes=required_filter_attributes,
         ),
     ]
