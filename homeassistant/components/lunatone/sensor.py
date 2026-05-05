@@ -116,6 +116,9 @@ class LunatoneSensor(
         self._sensor_id = sensor_id
         self._sensor = self.coordinator.data.get(self._sensor_id)
 
+        self._attr_name = (
+            self._sensor.name if self._sensor else f"Sensor {self._sensor_id}"
+        )
         self._attr_unique_id = (
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
@@ -143,11 +146,6 @@ class LunatoneSensor(
                 via_device=(DOMAIN, str(self._config_entry_unique_id)),
             )
         self._attr_device_info = device_info
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this sensor."""
-        return self._sensor.name if self._sensor else f"Sensor {self._sensor_id}"
 
     @property
     def native_value(self) -> float | None:
