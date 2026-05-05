@@ -479,6 +479,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     down_filled_items = 129
     cottons_eco = 133
     quick_power_wash = 146, 10031
+    quick_intense = 177
     eco_40_60 = 190, 10007
     bed_linen = 10047
     easy_care = 10016
