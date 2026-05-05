@@ -223,7 +223,7 @@ class TriggerStateDescription(BasicTriggerStateDescription):
     # State for the *other* targeted entities (the ones not under direct test).
     # Usually equal to `included_state`; differs when the test exercises a
     # scenario where targeted-but-not-under-test entities sit in a state that
-    # the trigger's `_should_include` override filters out of the all/count
+    # the trigger's `_should_include` method filters out of the all/count
     # checks.
     others_state: StateDescription
 
