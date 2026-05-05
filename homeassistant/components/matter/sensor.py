@@ -137,6 +137,27 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
     _rvc_err.kNavigationSensorObscured: ("navigation_sensor_obscured"),
 }
 
+WIFI_SECURITY_TYPE_MAP = {
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kUnspecified: None,
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kNone: "none",
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kWep: "wep",
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kWpa: "wpa",
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kWpa2: "wpa2",
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kWpa3: "wpa3",
+    clusters.WiFiNetworkDiagnostics.Enums.SecurityTypeEnum.kUnknownEnumValue: None,
+}
+
+WIFI_VERSION_MAP = {
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kA: "wifi_2",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kB: "wifi_1",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kG: "wifi_3",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kN: "wifi_4",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kAc: "wifi_5",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kAx: "wifi_6",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kAh: "wifi_ah",
+    clusters.WiFiNetworkDiagnostics.Enums.WiFiVersionEnum.kUnknownEnumValue: None,
+}
+
 BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
@@ -1572,5 +1593,45 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    # WiFiNetworkDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WiFiDiagnosticsChannelNumber",
+            translation_key="wifi_channel",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WiFiNetworkDiagnostics.Attributes.ChannelNumber,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WiFiDiagnosticsSecurityType",
+            translation_key="wifi_security_type",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=[sec for sec in WIFI_SECURITY_TYPE_MAP.values() if sec is not None],
+            device_to_ha=WIFI_SECURITY_TYPE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WiFiNetworkDiagnostics.Attributes.SecurityType,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WiFiDiagnosticsWiFiVersion",
+            translation_key="wifi_version",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=[ver for ver in WIFI_VERSION_MAP.values() if ver is not None],
+            device_to_ha=WIFI_VERSION_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WiFiNetworkDiagnostics.Attributes.WiFiVersion,),
     ),
 ]
