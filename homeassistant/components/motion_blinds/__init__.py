@@ -130,6 +130,7 @@ async def async_setup_entry(
 
     return True
 
+
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MotionBlindsConfigEntry
 ) -> bool:
