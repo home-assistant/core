@@ -39,7 +39,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
                 CONF_PASSWORD: "test-password",
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Data Grand Lyon"
@@ -79,7 +78,6 @@ async def test_form_cannot_connect(
             result["flow_id"],
             {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -98,7 +96,6 @@ async def test_form_already_configured(
         await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
         )
-        await hass.async_block_till_done()
 
     # Second flow shows the form but aborts on submit
     result = await hass.config_entries.flow.async_init(
