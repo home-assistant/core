@@ -40,7 +40,6 @@ rules:
   reauthentication-flow: todo
   repair-issues: todo
   stale-devices: todo
-  system-health: todo
   # Gold
   log-when-unavailable: todo
   parallel-updates: todo
