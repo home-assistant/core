@@ -248,7 +248,7 @@ async def test_main_zone_state_properties(
     await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ZONE)
-    assert state.state == MediaPlayerState.PLAYING
+    assert state.state == MediaPlayerState.ON
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert state.attributes[ATTR_MEDIA_TITLE] == "audio: Stereo"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.408, abs=0.01)

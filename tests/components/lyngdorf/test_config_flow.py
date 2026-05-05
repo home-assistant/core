@@ -248,7 +248,7 @@ async def test_ssdp_discovery_no_serial(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "cannot_determine_id"
 
 
 async def test_ssdp_discovery_unsupported_model(hass: HomeAssistant) -> None:

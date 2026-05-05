@@ -64,8 +64,8 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not serial:
                     errors["base"] = "cannot_determine_id"
                 else:
-                    self._device_serial_number = serial
-                    await self.async_set_unique_id(serial)
+                    self._device_serial_number = serial.lower()
+                    await self.async_set_unique_id(self._device_serial_number)
                     self._abort_if_unique_id_configured()
                     return await self._create_entry()
 
@@ -171,6 +171,6 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         if not self._device_serial_number:
-            raise AbortFlow("cannot_connect")
+            raise AbortFlow("cannot_determine_id")
         await self.async_set_unique_id(self._device_serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
