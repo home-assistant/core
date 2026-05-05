@@ -185,7 +185,7 @@
       "name": "Timer started"
     },
     "time_remaining": {
-      "description": "Triggers when a timer reaches a specific remaining time.",
+      "description": "Triggers when one or more timers reach a specific remaining time.",
       "fields": {
         "remaining": {
           "name": "Time remaining"

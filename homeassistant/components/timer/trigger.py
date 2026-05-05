@@ -5,12 +5,7 @@ from typing import cast, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_OPTIONS,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec, filter_by_domain_specs
@@ -90,9 +85,6 @@ class TimeRemainingTrigger(Trigger):
                 scheduled.pop(entity_id)()
 
             if not from_state or not to_state:
-                return
-
-            if to_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):  # Redundant check?
                 return
 
             # Only schedule when timer is active and has finishes_at
