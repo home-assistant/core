@@ -223,8 +223,8 @@ async def test_subentry_reconfigure_export_settings(
     ids=[
         "entry_without_protocol_without_port",
         "entry_without_protocol_with_port",
-        "entry_with_protocol_3.1",
         "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
     ],
 )
 async def test_mqtt_protocol_successful_migration_to_v5(
@@ -315,8 +315,8 @@ async def test_mqtt_protocol_successful_migration_to_v5(
     ids=[
         "entry_without_protocol_without_port",
         "entry_without_protocol_with_port",
-        "entry_with_protocol_3.1",
         "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
     ],
 )
 async def test_mqtt_protocol_failed_migration_to_v5(
