@@ -56,7 +56,9 @@ async def test_sph_sensor_unavailable_on_coordinator_error(
     assert state.state != STATE_UNAVAILABLE
 
     mock_growatt_v1_api.sph_detail.side_effect = growattServer.GrowattV1ApiError(
-        "Connection timeout"
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -175,7 +177,9 @@ async def test_sensor_unavailable_on_coordinator_error(
 
     # Cause coordinator update to fail
     mock_growatt_v1_api.min_detail.side_effect = growattServer.GrowattV1ApiError(
-        "Connection timeout"
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
 
     # Trigger coordinator refresh
