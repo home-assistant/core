@@ -30,8 +30,8 @@ class LetPotBinarySensorEntityDescription[_DataT: LetPotDeviceStatus](
     is_on_fn: Callable[[_DataT], bool]
 
 
-BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
-    LetPotBinarySensorEntityDescription(
+BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotBinarySensorEntityDescription[LetPotGardenStatus](
         key="low_nutrients",
         translation_key="low_nutrients",
         is_on_fn=lambda status: bool(status.errors.low_nutrients),
@@ -42,7 +42,7 @@ BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
             lambda coordinator: coordinator.data.errors.low_nutrients is not None
         ),
     ),
-    LetPotBinarySensorEntityDescription(
+    LetPotBinarySensorEntityDescription[LetPotGardenStatus](
         key="low_water",
         translation_key="low_water",
         is_on_fn=lambda status: bool(status.errors.low_water),
@@ -51,7 +51,7 @@ BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         supported_fn=lambda coordinator: coordinator.data.errors.low_water is not None,
     ),
-    LetPotBinarySensorEntityDescription(
+    LetPotBinarySensorEntityDescription[LetPotGardenStatus](
         key="pump",
         translation_key="pump",
         is_on_fn=lambda status: status.pump_status == 1,
@@ -65,7 +65,7 @@ BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
             )
         ),
     ),
-    LetPotBinarySensorEntityDescription(
+    LetPotBinarySensorEntityDescription[LetPotGardenStatus](
         key="pump_error",
         translation_key="pump_error",
         is_on_fn=lambda status: bool(status.errors.pump_malfunction),
@@ -76,7 +76,7 @@ BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
             lambda coordinator: coordinator.data.errors.pump_malfunction is not None
         ),
     ),
-    LetPotBinarySensorEntityDescription(
+    LetPotBinarySensorEntityDescription[LetPotGardenStatus](
         key="refill_error",
         translation_key="refill_error",
         is_on_fn=lambda status: bool(status.errors.refill_error),
@@ -114,7 +114,7 @@ class LetPotBinarySensorEntity[_DataT: LetPotDeviceStatus](
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
+        coordinator: LetPotDeviceCoordinator[_DataT],
         description: LetPotBinarySensorEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot binary sensor entity."""

@@ -44,8 +44,8 @@ class LetPotSensorEntityDescription[_DataT: LetPotDeviceStatus](
     value_fn: Callable[[_DataT], StateType]
 
 
-SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
-    LetPotSensorEntityDescription(
+SENSORS: tuple[LetPotSensorEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotSensorEntityDescription[LetPotGardenStatus](
         key="temperature",
         value_fn=lambda status: status.temperature_value,
         native_unit_of_measurement_fn=(
@@ -64,7 +64,7 @@ SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
             )
         ),
     ),
-    LetPotSensorEntityDescription(
+    LetPotSensorEntityDescription[LetPotGardenStatus](
         key="water_level",
         translation_key="water_level",
         value_fn=lambda status: status.water_level,
@@ -106,7 +106,7 @@ class LetPotSensorEntity[_DataT: LetPotDeviceStatus](
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
+        coordinator: LetPotDeviceCoordinator[_DataT],
         description: LetPotSensorEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot sensor entity."""

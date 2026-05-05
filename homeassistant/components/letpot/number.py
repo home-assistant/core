@@ -35,8 +35,8 @@ class LetPotNumberEntityDescription[_DataT: LetPotDeviceStatus](
     set_value_fn: Callable[[LetPotDeviceClient, str, float], Coroutine[Any, Any, None]]
 
 
-NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
-    LetPotNumberEntityDescription(
+NUMBERS: tuple[LetPotNumberEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotNumberEntityDescription[LetPotGardenStatus](
         key="light_brightness_levels",
         translation_key="light_brightness",
         value_fn=(
@@ -75,7 +75,7 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotNumberEntityDescription(
+    LetPotNumberEntityDescription[LetPotGardenStatus](
         key="plant_days",
         translation_key="plant_days",
         native_unit_of_measurement=UnitOfTime.DAYS,
@@ -117,7 +117,7 @@ class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
+        coordinator: LetPotDeviceCoordinator[_DataT],
         description: LetPotNumberEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot number entity."""

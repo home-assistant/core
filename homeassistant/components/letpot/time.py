@@ -29,8 +29,8 @@ class LetPotTimeEntityDescription[_DataT: LetPotDeviceStatus](TimeEntityDescript
     set_value_fn: Callable[[LetPotDeviceClient, str, time], Coroutine[Any, Any, None]]
 
 
-TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
-    LetPotTimeEntityDescription(
+TIME_SENSORS: tuple[LetPotTimeEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotTimeEntityDescription[LetPotGardenStatus](
         key="light_schedule_end",
         translation_key="light_schedule_end",
         value_fn=lambda status: None if status is None else status.light_schedule_end,
@@ -41,7 +41,7 @@ TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotTimeEntityDescription(
+    LetPotTimeEntityDescription[LetPotGardenStatus](
         key="light_schedule_start",
         translation_key="light_schedule_start",
         value_fn=lambda status: None if status is None else status.light_schedule_start,
@@ -76,7 +76,7 @@ class LetPotTimeEntity[_DataT: LetPotDeviceStatus](LetPotEntity[_DataT], TimeEnt
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
+        coordinator: LetPotDeviceCoordinator[_DataT],
         description: LetPotTimeEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot time entity."""

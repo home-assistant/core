@@ -67,8 +67,8 @@ class LetPotSelectEntityDescription[_DataT: LetPotDeviceStatus](
     set_value_fn: Callable[[LetPotDeviceClient, str, str], Coroutine[Any, Any, None]]
 
 
-SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
-    LetPotSelectEntityDescription(
+SELECTORS: tuple[LetPotSelectEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotSelectEntityDescription[LetPotGardenStatus](
         key="display_temperature_unit",
         translation_key="display_temperature_unit",
         options=[x.name.lower() for x in TemperatureUnit],
@@ -94,7 +94,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotSelectEntityDescription(
+    LetPotSelectEntityDescription[LetPotGardenStatus](
         key="light_brightness_low_high",
         translation_key="light_brightness",
         options=[
@@ -113,7 +113,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotSelectEntityDescription(
+    LetPotSelectEntityDescription[LetPotGardenStatus](
         key="light_mode",
         translation_key="light_mode",
         options=[x.name.lower() for x in LightMode],
@@ -158,7 +158,7 @@ class LetPotSelectEntity[_DataT: LetPotDeviceStatus](
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
+        coordinator: LetPotDeviceCoordinator[_DataT],
         description: LetPotSelectEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot select entity."""
