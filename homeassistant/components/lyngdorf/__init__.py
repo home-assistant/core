@@ -1,11 +1,11 @@
 """The Lyngdorf integration."""
 
-from __future__ import annotations
+import logging
 
 from lyngdorf.device import async_create_receiver, lookup_receiver_model
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -15,6 +15,8 @@ from homeassistant.helpers.device_registry import (
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 from .models import LyngdorfConfigEntry, LyngdorfRuntimeData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _serial_as_mac(serial: str | None) -> str | None:
@@ -86,6 +88,26 @@ async def async_setup_entry(
         receiver=receiver,
         device_info=device_info,
         zone_b_device_info=zone_b_device_info,
+    )
+
+    host = config_entry.data[CONF_HOST]
+    last_connected = receiver.connected
+
+    @callback
+    def _log_availability_change() -> None:
+        nonlocal last_connected
+        connected = receiver.connected
+        if connected == last_connected:
+            return
+        last_connected = connected
+        if connected:
+            _LOGGER.info("Lyngdorf %s is back online", host)
+        else:
+            _LOGGER.info("Lyngdorf %s is unavailable", host)
+
+    receiver.register_notification_callback(_log_availability_change)
+    config_entry.async_on_unload(
+        lambda: receiver.un_register_notification_callback(_log_availability_change)
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

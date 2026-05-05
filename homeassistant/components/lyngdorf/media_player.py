@@ -1,7 +1,5 @@
 """Media player platform for Lyngdorf integration."""
 
-from __future__ import annotations
-
 from lyngdorf.device import Receiver
 
 from homeassistant.components.media_player import (

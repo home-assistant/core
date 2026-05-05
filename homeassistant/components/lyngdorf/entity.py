@@ -1,16 +1,10 @@
 """Base entity for Lyngdorf integration."""
 
-from __future__ import annotations
-
-import logging
-
 from lyngdorf.device import Receiver
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class LyngdorfEntity(Entity):
@@ -24,7 +18,6 @@ class LyngdorfEntity(Entity):
         """Initialize the entity."""
         self._receiver = receiver
         self._attr_device_info = device_info
-        self._was_connected: bool = receiver.connected
 
     async def async_added_to_hass(self) -> None:
         """Register notification callback when added to hass."""
@@ -46,12 +39,4 @@ class LyngdorfEntity(Entity):
     @callback
     def _update_availability(self) -> None:
         """Update availability from receiver connection status."""
-        connected = self._receiver.connected
-        self._attr_available = connected
-
-        if connected != self._was_connected:
-            self._was_connected = connected
-            if connected:
-                _LOGGER.info("Device is back online: %s", self.name)
-            else:
-                _LOGGER.info("Device is unavailable: %s", self.name)
+        self._attr_available = self._receiver.connected
