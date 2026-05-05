@@ -1482,7 +1482,7 @@ async def test_subscribe_error(
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
-    mqtt_client_mock.subscribe.side_effect = lambda *args, **kwargs: (4, 0)
+    mqtt_client_mock.subscribe.side_effect = lambda *args, **kwargs: (4, None)
     await mqtt.async_subscribe(hass, "some-topic", record_calls)
     while mqtt_client_mock.subscribe.call_count == 0:
         await hass.async_block_till_done()
