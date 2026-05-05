@@ -145,6 +145,11 @@ class LunatoneSensor(
         self._attr_device_info = device_info
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._sensor_id in self.coordinator.data
+
+    @property
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self._sensor.data.value if self._sensor else None
