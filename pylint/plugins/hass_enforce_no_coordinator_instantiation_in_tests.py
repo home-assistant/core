@@ -19,11 +19,8 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-_COORDINATOR_BASE_QNAMES: frozenset[str] = frozenset(
-    {
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator",
-        "homeassistant.helpers.update_coordinator.TimestampDataUpdateCoordinator",
-    }
+_COORDINATOR_BASE_QNAME = (
+    "homeassistant.helpers.update_coordinator.DataUpdateCoordinator"
 )
 
 
@@ -88,13 +85,13 @@ def _safe_infer(node: nodes.NodeNG) -> nodes.NodeNG | None:
 
 def _inherits_from_coordinator(class_def: nodes.ClassDef) -> bool:
     """Return True if ``class_def`` inherits from a coordinator base."""
-    if class_def.qname() in _COORDINATOR_BASE_QNAMES:
+    if class_def.qname() == _COORDINATOR_BASE_QNAME:
         return True
     try:
         ancestors = class_def.ancestors()
     except astroid.MroError:
         return False
-    return any(ancestor.qname() in _COORDINATOR_BASE_QNAMES for ancestor in ancestors)
+    return any(ancestor.qname() == _COORDINATOR_BASE_QNAME for ancestor in ancestors)
 
 
 def register(linter: PyLinter) -> None:
