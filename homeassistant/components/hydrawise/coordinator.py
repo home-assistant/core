@@ -76,6 +76,7 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
             update_interval=MAIN_SCAN_INTERVAL,
         )
         self.api = api
+        self.water_use_coordinator: HydrawiseWaterUseDataUpdateCoordinator | None = None
         self.new_controllers_callbacks: list[
             Callable[[Iterable[Controller]], None]
         ] = []
@@ -108,6 +109,21 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
             # Despite what mypy thinks, this is still reachable. Without this check,
             # the test_connect_retry test in test_init.py fails.
             return  # type: ignore[unreachable]
+
+        # Sync the water_use coordinator's data references with the latest data
+        # so that callbacks below can construct entities that use the water_use
+        # coordinator and successfully resolve newly added zones.
+        if (water_use := self.water_use_coordinator) is not None and (
+            water_use.data is not None
+        ):
+            water_use.data = HydrawiseData(
+                user=self.data.user,
+                controllers=self.data.controllers,
+                zones=self.data.zones,
+                zone_id_to_controller=self.data.zone_id_to_controller,
+                sensors=self.data.sensors,
+                daily_water_summary=water_use.data.daily_water_summary,
+            )
 
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
@@ -197,6 +213,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         )
         self.api = api
         self._main_coordinator = main_coordinator
+        main_coordinator.water_use_coordinator = self
 
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
