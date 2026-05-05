@@ -1,7 +1,5 @@
 """Sensor platform for the Ouman EH-800 integration."""
 
-from typing import override
-
 from ouman_eh_800_api import NumberOumanEndpoint, OumanEndpoint, OumanUnit
 
 from homeassistant.components.sensor import (
@@ -59,7 +57,6 @@ class OumanEh800SensorEntity(OumanEh800Entity, SensorEntity):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
-    @override
     def native_value(self) -> float | str:
         """Return the current sensor value."""
         value = self.coordinator.data[self._endpoint]
