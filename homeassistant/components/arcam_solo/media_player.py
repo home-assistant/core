@@ -13,7 +13,6 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import ArcamSoloConfigEntry
 from .const import (
@@ -132,13 +131,6 @@ class ArcamSoloMediaPlayerEntity(MediaPlayerEntity, ArcamSoloEntity):
         """Position of media currently playing in seconds."""
         if self.source in PLAYABLE_SOURCES:
             return self.arcam_solo.zones.get(1, {}).get("current_track_position")
-        return None
-
-    @property
-    def media_position_updated_at(self):
-        """Return the time the media position was updated."""
-        if self.source in PLAYABLE_SOURCES:
-            return dt_util.utcnow()
         return None
 
     @property

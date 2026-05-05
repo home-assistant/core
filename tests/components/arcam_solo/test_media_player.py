@@ -200,7 +200,6 @@ def test_media_properties_for_cd(entity: ArcamSoloMediaPlayerEntity) -> None:
     entity.arcam_solo.zones[1]["lsb_total_track"] = 12
 
     assert entity.media_position == 42
-    assert entity.media_position_updated_at is not None
     assert entity.media_track == 3
     assert entity.media_total_tracks == 12
     assert entity.media_duration is None
@@ -212,7 +211,6 @@ def test_media_properties_non_playable_source(
     """Test media properties are none when source is not playable."""
     entity.arcam_solo.source = "AUX"
     assert entity.media_position is None
-    assert entity.media_position_updated_at is None
     assert entity.media_track is None
     assert entity.media_total_tracks is None
     assert entity.repeat is None
