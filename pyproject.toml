@@ -895,6 +895,7 @@ mark-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
+"__future__.annotations".msg = "It should not be needed in Python 3.14"
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
