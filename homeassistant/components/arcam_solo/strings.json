@@ -10,12 +10,10 @@
     "step": {
       "user": {
         "data": {
-          "device": "Serial port",
-          "name": "Name"
+          "device": "Serial port"
         },
         "data_description": {
-          "device": "Serial device path used to connect to the receiver",
-          "name": "Name used for this Arcam Solo in Home Assistant"
+          "device": "Serial device path used to connect to the receiver"
         }
       }
     }
