@@ -123,6 +123,9 @@
     }
   },
   "triggers": {
+    "muted": {
+      "trigger": "mdi:volume-mute"
+    },
     "paused_playing": {
       "trigger": "mdi:pause"
     },
