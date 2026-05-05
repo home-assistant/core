@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 # Main config flow tests
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form and can create an entry with credentials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
