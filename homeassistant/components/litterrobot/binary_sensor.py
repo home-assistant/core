@@ -66,7 +66,7 @@ BINARY_SENSOR_MAP: dict[
             device_class=BinarySensorDeviceClass.PLUG,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            is_on_fn=lambda robot: robot.power_status == "AC",
+            is_on_fn=lambda robot: robot.power_type == "AC",
         ),
     ),
 }
