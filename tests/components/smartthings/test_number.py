@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -88,21 +88,25 @@ async def test_state_update(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
+@pytest.mark.parametrize(
+    "health_status", [HealthStatus.OFFLINE, HealthStatus.UNHEALTHY]
+)
 async def test_availability(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    health_status: HealthStatus,
 ) -> None:
-    """Test availability."""
+    """Test that appliances retain their last state when powered off."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("number.washer_rinse_cycles").state == "2"
 
     await trigger_health_update(
-        hass, devices, "f984b91d-f250-9d42-3436-33f09a422a47", HealthStatus.OFFLINE
+        hass, devices, "f984b91d-f250-9d42-3436-33f09a422a47", health_status
     )
 
-    assert hass.states.get("number.washer_rinse_cycles").state == STATE_UNAVAILABLE
+    assert hass.states.get("number.washer_rinse_cycles").state == "2"
 
     await trigger_health_update(
         hass, devices, "f984b91d-f250-9d42-3436-33f09a422a47", HealthStatus.ONLINE
@@ -117,6 +121,6 @@ async def test_availability_at_start(
     unavailable_device: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unavailable at boot."""
+    """Test that appliances start with their last known state even when offline at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("number.washer_rinse_cycles").state == STATE_UNAVAILABLE
+    assert hass.states.get("number.washer_rinse_cycles").state == "2"
