@@ -1140,7 +1140,10 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # noqa: PLC0415
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config_entry_data = {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_PROTOCOL: "5",
+        }
     if mqtt_config_entry_options is None:
         mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 
