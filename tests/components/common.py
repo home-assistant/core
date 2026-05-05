@@ -364,7 +364,7 @@ def parametrize_condition_states_any(
         excluded_entities_from_other_domain: When True, the helper assumes
             entities outside the target sit in another domain entirely;
             their state value is preserved (rather than being replaced with
-            None) so the test verifies the trigger ignores them by domain.
+            None) so the test verifies the condition ignores them by domain.
     """
 
     return _parametrize_condition_states(
@@ -416,7 +416,7 @@ def parametrize_condition_states_all(
         excluded_entities_from_other_domain: When True, the helper assumes
             entities outside the target sit in another domain entirely;
             their state value is preserved (rather than being replaced with
-            None) so the test verifies the trigger ignores them by domain.
+            None) so the test verifies the condition ignores them by domain.
     """
 
     return _parametrize_condition_states(
