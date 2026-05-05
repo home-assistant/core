@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_forecasts[ConfigurationStyle.LEGACY-config0]
+# name: test_forecasts[config0-ConfigurationStyle.MODERN]
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -12,7 +12,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.LEGACY-config0].1
+# name: test_forecasts[config0-ConfigurationStyle.MODERN].1
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -25,7 +25,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.LEGACY-config0].2
+# name: test_forecasts[config0-ConfigurationStyle.MODERN].2
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -39,7 +39,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.LEGACY-config0].3
+# name: test_forecasts[config0-ConfigurationStyle.MODERN].3
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -52,7 +52,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config1]
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER]
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -65,7 +65,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config1].1
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER].1
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -78,7 +78,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config1].2
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER].2
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -92,7 +92,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config1].3
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER].3
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -105,7 +105,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config3]
+# name: test_forecasts[config1-ConfigurationStyle.MODERN]
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -118,7 +118,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config3].1
+# name: test_forecasts[config1-ConfigurationStyle.MODERN].1
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -131,7 +131,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config3].2
+# name: test_forecasts[config1-ConfigurationStyle.MODERN].2
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -145,7 +145,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.MODERN-config3].3
+# name: test_forecasts[config1-ConfigurationStyle.MODERN].3
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -158,7 +158,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config2]
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER]
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -171,7 +171,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config2].1
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER].1
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -184,7 +184,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config2].2
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER].2
   dict({
     'weather.template_weather': dict({
       'forecast': list([
@@ -198,60 +198,7 @@
     }),
   })
 # ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config2].3
-  dict({
-    'weather.template_weather': dict({
-      'forecast': list([
-        dict({
-          'condition': 'cloudy',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'temperature': 16.9,
-        }),
-      ]),
-    }),
-  })
-# ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config4]
-  dict({
-    'weather.template_weather': dict({
-      'forecast': list([
-        dict({
-          'condition': 'cloudy',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'temperature': 14.2,
-        }),
-      ]),
-    }),
-  })
-# ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config4].1
-  dict({
-    'weather.template_weather': dict({
-      'forecast': list([
-        dict({
-          'condition': 'cloudy',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'temperature': 14.2,
-        }),
-      ]),
-    }),
-  })
-# ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config4].2
-  dict({
-    'weather.template_weather': dict({
-      'forecast': list([
-        dict({
-          'condition': 'fog',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'is_daytime': True,
-          'temperature': 14.2,
-        }),
-      ]),
-    }),
-  })
-# ---
-# name: test_forecasts[ConfigurationStyle.TRIGGER-config4].3
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER].3
   dict({
     'weather.template_weather': dict({
       'forecast': list([
