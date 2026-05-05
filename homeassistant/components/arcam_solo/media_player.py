@@ -74,10 +74,10 @@ class ArcamSoloMediaPlayerEntity(MediaPlayerEntity, ArcamSoloEntity):
         return self.arcam_solo.source
 
     @property
-    def volume_level(self) -> float:
+    def volume_level(self) -> float | None:
         """Volume level between 0 and 1."""
         volume = self.arcam_solo.zones.get(1, {}).get("volume")
-        return volume / MAX_VOLUME if volume is not None else 0.0
+        return volume / MAX_VOLUME if volume is not None else None
 
     @property
     def is_volume_muted(self) -> bool:
