@@ -158,7 +158,9 @@ async def test_select_option_without_remote_control(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
-@pytest.mark.parametrize("health_status", [HealthStatus.OFFLINE, HealthStatus.UNHEALTHY])
+@pytest.mark.parametrize(
+    "health_status", [HealthStatus.OFFLINE, HealthStatus.UNHEALTHY]
+)
 async def test_availability(
     hass: HomeAssistant,
     devices: AsyncMock,
