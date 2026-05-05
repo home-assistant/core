@@ -51,7 +51,7 @@ async def test_battery_status_sensor_states(
 
     # Make sure the battery status is "normal"
     assert (state := hass.states.get("binary_sensor.home_battery_status"))
-    assert state.state != "normal"
+    assert state.state == "off"
 
     # Set the new battery status to low
     data: PTDevicesResponse = mock_ptdevices_level
