@@ -117,7 +117,12 @@ async def test_sensor_uptime_spike(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("side_effect", "return_values"),
-    [(RequestException("boom"), None), (None, [0, 0, 0]), (None, [])],
+    [
+        (RequestException("boom"), None),
+        (None, [0, 0, 0]),
+        (None, []),
+        (FritzConnectionException("boom"), None),
+    ],
 )
 async def test_sensor_cpu_temp_not_supported(
     hass: HomeAssistant,
