@@ -1,1 +1,222 @@
-{}
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reauth_successful": "Re-configuration was successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_cloud_api_token": "Invalid cloud API token",
+      "invalid_password": "Invalid password",
+      "invalid_serial_number": "Invalid serial number",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "Password"
+        },
+        "description": "Do you want to set up {name}?"
+      },
+      "local_auth": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "Password"
+        },
+        "description": "Password description goes here. Provide instructions with where to find the default password.",
+        "title": "my-PV Local Device"
+      },
+      "reauth_confirm_cloud": {
+        "description": "The my-PV integration needs to re-authenticate",
+        "title": "Authentication expired for my-PV Cloud"
+      },
+      "setup_cloud": {
+        "data": {
+          "serial_number": "Serial number",
+          "token": "Cloud API token"
+        },
+        "data_description": {
+          "serial_number": "Serial number",
+          "token": "Cloud API token"
+        },
+        "description": "setup_cloud description goes here. Provide instructions with where to find the serial number and how to obtain a Cloud API token.",
+        "title": "my-PV Cloud Device"
+      },
+      "setup_local": {
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "Host"
+        },
+        "title": "my-PV Local Device"
+      },
+      "user": {
+        "menu_options": {
+          "setup_cloud": "Cloud Device",
+          "setup_local": "Local Device"
+        },
+        "title": "my-PV Connection Method"
+      }
+    }
+  },
+  "device": {
+    "my_pv": {
+      "name": "{device_name}"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "blockactive": {
+        "name": "Block Status"
+      }
+    },
+    "button": {
+      "check_fwupd": {
+        "name": "Check Firmware Update"
+      },
+      "firmware_download": {
+        "name": "Download Firmware"
+      },
+      "p9s_fw": {
+        "name": "Firmware Update"
+      },
+      "ps_fw": {
+        "name": "Power Section Firmware Update"
+      },
+      "reboot_device": {
+        "name": "Reboot"
+      }
+    },
+    "number": {
+      "bsttemp": {
+        "name": "Boost Target Temperature"
+      },
+      "maxpwr": {
+        "name": "Maximum Power"
+      },
+      "ww1boost": {
+        "name": "Boost Target Temperature"
+      },
+      "ww_boost_h": {
+        "name": "Minimum Hysteresis"
+      },
+      "ww_targ_h": {
+        "name": "Maximum Hysteresis"
+      }
+    },
+    "select": {
+      "bstmode": {
+        "name": "Boost Mode",
+        "state": {
+          "0": "Off",
+          "1": "On",
+          "3": "Relais",
+          "4": "SELV-Relais",
+          "5": "AUX-Relais"
+        }
+      }
+    },
+    "sensor": {
+      "cur_eth_mode": {
+        "name": "Network Mode",
+        "state": {
+          "0": "LAN",
+          "1": "WLAN",
+          "2": "AP"
+        }
+      },
+      "curr_l1": {
+        "name": "Current phase L1"
+      },
+      "curr_l2": {
+        "name": "Current phase L2"
+      },
+      "curr_l3": {
+        "name": "Current phase L3"
+      },
+      "freq": {
+        "name": "Mains Frequency"
+      },
+      "screen_mode_flag": {
+        "name": "Device Status",
+        "state": {
+          "0": "Standby",
+          "1": "Heat",
+          "2": "Boost",
+          "3": "Heating finished",
+          "4": "No connection / Disabled",
+          "5": "Failure",
+          "6": "Block active"
+        }
+      },
+      "soc": {
+        "name": "Boiler State of Charge"
+      },
+      "temp1": {
+        "name": "Temperature 1"
+      },
+      "temp2": {
+        "name": "Temperature 2"
+      },
+      "temp3": {
+        "name": "Temperature 3"
+      },
+      "temp4": {
+        "name": "Temperature 4"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "volt_l1": {
+        "name": "Voltage phase L1"
+      },
+      "volt_l2": {
+        "name": "Voltage phase L2"
+      },
+      "volt_l3": {
+        "name": "Voltage phase L3"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi Signal Strength",
+        "state": {
+          "0": "Poor",
+          "1": "Low",
+          "2": "Average",
+          "3": "Good",
+          "4": "Strong"
+        }
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi Signal Strength"
+      }
+    },
+    "switch": {
+      "boostactive": {
+        "name": "Boost Active"
+      },
+      "bstmode": {
+        "name": "Boost Mode"
+      },
+      "bststrt": {
+        "name": "Manual Boost"
+      }
+    }
+  },
+  "exceptions": {
+    "config_type_not_supported": {
+      "message": "Configuration type {config_type} is not supported"
+    },
+    "could_not_connect": {
+      "message": "Could not connect to {uri}"
+    },
+    "device_unavailable": {
+      "message": "Device on {uri} is unavailable"
+    }
+  }
+}
