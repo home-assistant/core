@@ -12,15 +12,22 @@ from screenlogicpy.const.common import (
     ScreenLogicCommunicationError,
 )
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
+from screenlogicpy.requests import async_resolve_remote_gateway
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_CONNECTION_TYPE,
+    CONF_SYSTEM_NAME,
+    CONNECTION_TYPE_REMOTE,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +37,18 @@ HEATER_COOLDOWN_DELAY = 6
 
 async def async_get_connect_info(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, str | int]:
+) -> dict[str, str | int | bool]:
     """Construct connect_info from configuration entry and returns it to caller."""
+    if entry.data.get(CONF_CONNECTION_TYPE) == CONNECTION_TYPE_REMOTE:
+        remote = await async_resolve_remote_gateway(entry.data[CONF_SYSTEM_NAME])
+        return {
+            SL_GATEWAY_NAME: entry.data[CONF_SYSTEM_NAME],
+            SL_GATEWAY_IP: remote.ip_addr,
+            SL_GATEWAY_PORT: remote.port,
+            CONF_PASSWORD: entry.data[CONF_PASSWORD],
+            "remote": True,
+        }
+
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
     discovered_gateways = await async_discover_gateways_by_unique_id()

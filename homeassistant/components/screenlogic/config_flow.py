@@ -3,9 +3,9 @@
 import logging
 from typing import Any
 
-from screenlogicpy import ScreenLogicError, discovery
+from screenlogicpy import ScreenLogicError, ScreenLogicGateway, discovery
 from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
-from screenlogicpy.requests import login
+from screenlogicpy.requests import async_resolve_remote_gateway, login
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -14,13 +14,22 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
+from .const import (
+    CONF_ADAPTER_ID,
+    CONF_CONNECTION_TYPE,
+    CONF_SYSTEM_NAME,
+    CONNECTION_TYPE_LOCAL,
+    CONNECTION_TYPE_REMOTE,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +57,56 @@ async def async_discover_gateways_by_unique_id() -> dict[str, dict[str, Any]]:
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
 
+
+
+def normalize_adapter_id(adapter_id: str) -> str:
+    """Normalize a ScreenLogic adapter ID to XX-XX-XX."""
+    value = adapter_id.strip().upper()
+    value = value.replace("PENTAIR:", "").strip()
+    value = value.replace(":", "-")
+    value = "".join(char for char in value if char in "0123456789ABCDEF")
+
+    if len(value) != 6:
+        raise ValueError("adapter_id must contain exactly six hex characters")
+
+    return "-".join(value[i : i + 2] for i in range(0, 6, 2))
+
+
+def system_name_for_adapter_id(adapter_id: str) -> str:
+    """Return Pentair remote system name for adapter ID."""
+    return f"Pentair: {normalize_adapter_id(adapter_id)}"
+
+
+async def async_validate_remote_gateway(
+    adapter_id: str, password: str
+) -> dict[str, str]:
+    """Resolve and validate a remote ScreenLogic gateway."""
+    normalized_adapter_id = normalize_adapter_id(adapter_id)
+    system_name = system_name_for_adapter_id(normalized_adapter_id)
+
+    remote = await async_resolve_remote_gateway(system_name)
+    if not remote.gateway_found or not remote.license_ok or not remote.ip_addr:
+        raise ScreenLogicError("Remote ScreenLogic gateway was not found")
+
+    gateway = ScreenLogicGateway()
+    try:
+        if not await gateway.async_connect(
+            ip=remote.ip_addr,
+            port=remote.port,
+            name=system_name,
+            password=password,
+            remote=True,
+        ):
+            raise ScreenLogicError("Remote ScreenLogic login failed")
+
+        return {
+            CONF_ADAPTER_ID: normalized_adapter_id,
+            CONF_SYSTEM_NAME: system_name,
+            "unique_id": format_mac(gateway.mac),
+        }
+    finally:
+        if gateway.is_connected:
+            await gateway.async_disconnect(force=True)
 
 def _extract_mac_from_name(name: str) -> str:
     return format_mac(f"{PENTAIR_OUI}-{name.split(':')[1].strip()}")
@@ -85,8 +144,74 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
-        self.discovered_gateways = await async_discover_gateways_by_unique_id()
-        return await self.async_step_gateway_select()
+        if user_input is not None:
+            if user_input[CONF_CONNECTION_TYPE] == CONNECTION_TYPE_REMOTE:
+                return await self.async_step_remote_entry()
+
+            self.discovered_gateways = await async_discover_gateways_by_unique_id()
+            return await self.async_step_gateway_select()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CONNECTION_TYPE,
+                        default=CONNECTION_TYPE_LOCAL,
+                    ): vol.In(
+                        {
+                            CONNECTION_TYPE_LOCAL: "Local network",
+                            CONNECTION_TYPE_REMOTE: "Remote access",
+                        }
+                    )
+                }
+            ),
+            errors={},
+            description_placeholders={},
+        )
+
+    async def async_step_remote_entry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle remote ScreenLogic setup."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                validation = await async_validate_remote_gateway(
+                    user_input[CONF_ADAPTER_ID],
+                    user_input[CONF_PASSWORD],
+                )
+            except (ScreenLogicError, ValueError) as ex:
+                _LOGGER.debug("Remote ScreenLogic setup failed: %s", ex)
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(
+                    validation["unique_id"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=validation[CONF_SYSTEM_NAME],
+                    data={
+                        CONF_CONNECTION_TYPE: CONNECTION_TYPE_REMOTE,
+                        CONF_ADAPTER_ID: validation[CONF_ADAPTER_ID],
+                        CONF_SYSTEM_NAME: validation[CONF_SYSTEM_NAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="remote_entry",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADAPTER_ID): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={},
+        )
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -125,6 +250,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=name_for_mac(mac),
                 data={
+                    CONF_CONNECTION_TYPE: CONNECTION_TYPE_LOCAL,
                     CONF_IP_ADDRESS: selected_gateway[SL_GATEWAY_IP],
                     CONF_PORT: selected_gateway[SL_GATEWAY_PORT],
                 },
@@ -169,6 +295,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=name_for_mac(mac),
                     data={
+                        CONF_CONNECTION_TYPE: CONNECTION_TYPE_LOCAL,
                         CONF_IP_ADDRESS: ip_address,
                         CONF_PORT: port,
                     },
