@@ -236,5 +236,10 @@
       },
       "name": "Prune unused images"
     }
+  },
+  "system_health": {
+    "info": {
+      "can_reach_server": "Reach Portainer server"
+    }
   }
 }
