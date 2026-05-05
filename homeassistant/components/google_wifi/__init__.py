@@ -5,6 +5,9 @@ import requests
 from datetime import timedelta
 from homeassistant.util import Throttle
 import voluptuous as vol
+from dataclasses import dataclass 
+import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import SensorEntityDescription
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (DOMAIN, ENDPOINT, MIN_TIME_BETWEEN_UPDATES, ATTR_CURRENT_VERSION, ATTR_NEW_VERSION, ATTR_UPTIME,
-    ATTR_LAST_RESTART, ATTR_LOCAL_IP, ATTR_STATUS)
+    ATTR_LAST_RESTART, ATTR_LOCAL_IP, ATTR_STATUS, SENSOR_TYPES, GoogleWifiSensorEntityDescription)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +62,7 @@ class GoogleWifiAPI:
             self.raw_data = response.json()
             self.data_format()
             self.available = True
-        except ValueError, requests.exceptions.ConnectionError:
+        except (ValueError, requests.exceptions.ConnectionError):
             _LOGGER.warning("Unable to fetch data from Google Wifi")
             self.available = False
             self.raw_data = None
@@ -144,10 +147,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Tell Home Assistant to unload the platforms we set up earlier
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # If successful, remove the stored data from memory
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

@@ -5,6 +5,7 @@ import logging
 from typing import cast
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,59 +18,14 @@ from .const import (
     ATTR_STATUS,
     ATTR_UPTIME,
     DOMAIN,
-    CONF_IP_ADDRESS,
+    SENSOR_TYPES,
+    GoogleWifiSensorEntityDescription,
 )
-# Import the type alias from __init__
-from . import GoogleWifiConfigEntry, GoogleWifiSensorEntityDescription
+# Import the Config Entry from __init__
+from . import GoogleWifiConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-# SENSOR_TYPES remains the same as your original file
-SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_CURRENT_VERSION,
-        name="Software Version",
-        primary_key="software",
-        sensor_key="softwareVersion",
-        icon="mdi:checkbox-marked-circle-outline",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_NEW_VERSION,
-        name="New Version",
-        primary_key="software",
-        sensor_key="updateNewVersion",
-        icon="mdi:update",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_UPTIME,
-        name="Uptime",
-        primary_key="system",
-        sensor_key="uptime",
-        native_unit_of_measurement="d",
-        icon="mdi:timelapse",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_LAST_RESTART,
-        name="Last Restart",
-        primary_key="system",
-        sensor_key="uptime",
-        icon="mdi:restart",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_LOCAL_IP,
-        name="Local IP",
-        primary_key="wan",
-        sensor_key="localIpAddress",
-        icon="mdi:access-point-network",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_STATUS,
-        name="Status",
-        primary_key="wan",
-        sensor_key="online",
-        icon="mdi:google",
-    ),
-)
 
 async def async_setup_entry(
     hass: HomeAssistant,
