@@ -105,11 +105,11 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             dev_lora_info = device_state.get(ATTR_LORA_INFO)
             if dev_lora_info is not None:
                 self.dev_net_type = dev_lora_info.get("devNetType")
-            self._adjust_sprinkler_interval(device_state)
+            self.adjust_sprinkler_interval(device_state)
             return device_state
         return {}
 
-    def _adjust_sprinkler_interval(self, device_state: dict) -> None:
+    def adjust_sprinkler_interval(self, device_state: dict) -> None:
         """Speed up polling while SprinklerV2 valve is running."""
         if self.device.device_type != ATTR_DEVICE_SPRINKLER_V2:
             return

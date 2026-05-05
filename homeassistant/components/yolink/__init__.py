@@ -87,7 +87,14 @@ class YoLinkHomeMessageListener(MessageListener):
             if (state := msg_data.get("state")) is not None:
                 new_running = bool(state.get("running"))
             merged = {**device_coordinator.data, **msg_data}
-            device_coordinator._adjust_sprinkler_interval(merged)
+            if isinstance(device_coordinator.data.get("state"), dict) and isinstance(
+                msg_data.get("state"), dict
+            ):
+                merged["state"] = {
+                    **device_coordinator.data["state"],
+                    **msg_data["state"],
+                }
+            device_coordinator.adjust_sprinkler_interval(merged)
             device_coordinator.async_set_updated_data(merged)
             if new_running and not previous_running:
                 self._hass.async_create_task(
