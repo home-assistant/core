@@ -7,7 +7,7 @@ from pyarcamsolo import ArcamSolo
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
@@ -16,9 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.TextSelector(
-            selector.TextSelectorConfig(autocomplete="off")
-        ),
         vol.Required(CONF_DEVICE): selector.SerialPortSelector(),
     }
 )
@@ -46,9 +43,7 @@ class ArcamSoloConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await solo.disconnect()
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                return self.async_create_entry(title="Arcam Solo", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

@@ -1,6 +1,5 @@
 """Base entity class for Arcam Solo."""
 
-from homeassistant.const import CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -31,7 +30,6 @@ class ArcamSoloEntity(Entity):
             identifiers={(DOMAIN, self.entry.entry_id)},
             manufacturer="Arcam",
             model="Solo",
-            name=self.entry.data[CONF_NAME],
             sw_version=self.arcam_solo.zones.get(1, {}).get(
                 "software_version", "Unknown"
             ),

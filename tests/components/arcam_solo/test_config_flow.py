@@ -6,14 +6,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.arcam_solo.const import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 MOCK_USER_INPUT = {
-    CONF_NAME: "Living Room Arcam",
     CONF_DEVICE: "/dev/ttyUSB0",
 }
 
@@ -40,7 +39,7 @@ async def test_user_form_success(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_USER_INPUT[CONF_NAME]
+    assert result["title"] == "Arcam Solo"
     assert result["data"] == MOCK_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
     mock_solo.return_value.connect.assert_awaited_once()

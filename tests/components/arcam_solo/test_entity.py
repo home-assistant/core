@@ -5,14 +5,13 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from homeassistant.components.arcam_solo.entity import ArcamSoloEntity
-from homeassistant.const import CONF_NAME
 
 from tests.common import MockConfigEntry
 
 
 def test_entity_available_and_unique_id() -> None:
     """Test base entity availability and unique id."""
-    entry = MockConfigEntry(domain="arcam_solo", data={CONF_NAME: "Lounge"})
+    entry = MockConfigEntry(domain="arcam_solo", data={})
     entry.runtime_data = MagicMock()
     entry.runtime_data.available = True
     entry.runtime_data.zones = {}
@@ -25,7 +24,7 @@ def test_entity_available_and_unique_id() -> None:
 
 def test_entity_device_info_with_versions() -> None:
     """Test device info when versions are provided."""
-    entry = MockConfigEntry(domain="arcam_solo", data={CONF_NAME: "Lounge"})
+    entry = MockConfigEntry(domain="arcam_solo", data={})
     entry.runtime_data = MagicMock()
     entry.runtime_data.available = True
     entry.runtime_data.zones = {
@@ -37,14 +36,13 @@ def test_entity_device_info_with_versions() -> None:
 
     assert info["manufacturer"] == "Arcam"
     assert info["model"] == "Solo"
-    assert info["name"] == "Lounge"
     assert info["sw_version"] == "1.2.3"
     assert info["hw_version"] == "2.3.4"
 
 
 def test_entity_device_info_without_versions() -> None:
     """Test device info falls back to unknown versions."""
-    entry = MockConfigEntry(domain="arcam_solo", data={CONF_NAME: "Lounge"})
+    entry = MockConfigEntry(domain="arcam_solo", data={})
     entry.runtime_data = MagicMock()
     entry.runtime_data.available = False
     entry.runtime_data.zones = {}
