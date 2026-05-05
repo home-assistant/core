@@ -1,7 +1,5 @@
 """Climate entity for Mitsubishi Comfort integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection

@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Mitsubishi Comfort devices."""
 
-from __future__ import annotations
-
 import logging
 
 from mitsubishi_comfort import IndoorUnit, KumoStation
