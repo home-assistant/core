@@ -3,12 +3,13 @@
 from copy import copy
 from unittest.mock import call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.tcp import common as tcp
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -248,7 +249,7 @@ async def test_ssl_state_verify_off(
 
 
 async def test_update_socket_error_after_success(
-    hass: HomeAssistant, mock_socket
+    hass: HomeAssistant, mock_socket, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test state is updated with socket errors during update, when there is an old state."""
     assert await async_setup_component(hass, "sensor", TEST_CONFIG)
@@ -260,10 +261,9 @@ async def test_update_socket_error_after_success(
     assert state.state == "7.123"
 
     mock_socket.connect.side_effect = OSError("Boom")
-    # FIXME: where is the default scan interval for tcp sensor?
-    from datetime import timedelta
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
