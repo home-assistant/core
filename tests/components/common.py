@@ -1557,7 +1557,7 @@ def parametrize_numerical_condition_above_below_any(
     entities outside that device class are ignored by the condition.
 
     Returns a list of `(condition, condition_options, states)` tuples,
-    suitable for splatting into a `pytest.mark.parametrize` over
+    suitable for unpacking into a `pytest.mark.parametrize` over
     `("condition", "condition_options", "states")`.
 
     Args:
@@ -1673,7 +1673,7 @@ def parametrize_numerical_condition_above_below_all(
     threshold (vacuous-True when every entity is filtered out).
 
     Returns a list of `(condition, condition_options, states)` tuples,
-    suitable for splatting into a `pytest.mark.parametrize` over
+    suitable for unpacking into a `pytest.mark.parametrize` over
     `("condition", "condition_options", "states")`.
 
     Args:
@@ -1794,7 +1794,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     condition's threshold unit).
 
     Returns a list of `(condition, condition_options, states)` tuples,
-    suitable for splatting into a `pytest.mark.parametrize` over
+    suitable for unpacking into a `pytest.mark.parametrize` over
     `("condition", "condition_options", "states")`.
 
     Args:
@@ -1916,7 +1916,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     filtered out).
 
     Returns a list of `(condition, condition_options, states)` tuples,
-    suitable for splatting into a `pytest.mark.parametrize` over
+    suitable for unpacking into a `pytest.mark.parametrize` over
     `("condition", "condition_options", "states")`.
 
     Args:
