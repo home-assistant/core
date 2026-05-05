@@ -1,4 +1,5 @@
 """Tests for Motion Gateway interface detection."""
+
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, MagicMock, patch
 
