@@ -667,6 +667,17 @@
       "title": "Newer version of Matter Server needed"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sync_names": "Synchronise device names to Matter (one-way)"
+        },
+        "description": "When enabled, renaming a device in Home Assistant pushes the new name to the Matter device's NodeLabel. This is **one-way**: changing the name on the Matter side will not update Home Assistant. Names are truncated to 32 bytes to comply with the Matter spec.",
+        "title": "Matter options"
+      }
+    }
+  },
   "services": {
     "clear_lock_credential": {
       "description": "Removes a credential from a lock.",

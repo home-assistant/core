@@ -12,6 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
+    from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
     from matter_server.common.models import ServerInfoMessage
 
@@ -114,6 +115,48 @@ def get_node_from_device_entry(
     return next(
         (
             node
+            for node in matter_client.get_nodes()
+            for endpoint in node.endpoints.values()
+            if get_device_id(server_info, endpoint) == device_id
+        ),
+        None,
+    )
+
+
+@callback
+def get_endpoint_from_device_entry(
+    matter_client: MatterClient, device: dr.DeviceEntry
+) -> MatterEndpoint | None:
+    """Return the MatterEndpoint backing a device entry.
+
+    Takes the MatterClient directly so callers can resolve endpoints during
+    setup, before the entry is registered as loaded. Resolves to the specific
+    endpoint (not just the node) so callers can target bridged endpoints
+    (e.g. for BridgedDeviceBasicInformation writes).
+    """
+    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
+    device_id_full = next(
+        (
+            identifier[1]
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+            and identifier[1].startswith(device_id_type_prefix)
+        ),
+        None,
+    )
+
+    if device_id_full is None:
+        return None
+
+    device_id = device_id_full.lstrip(device_id_type_prefix)
+    server_info = matter_client.server_info
+
+    if server_info is None:
+        raise RuntimeError("Matter server information is not available")
+
+    return next(
+        (
+            endpoint
             for node in matter_client.get_nodes()
             for endpoint in node.endpoints.values()
             if get_device_id(server_info, endpoint) == device_id

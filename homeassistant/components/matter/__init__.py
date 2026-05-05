@@ -3,6 +3,7 @@
 import asyncio
 from functools import cache
 
+from chip.clusters import Objects as clusters
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -11,7 +12,9 @@ from matter_server.client.exceptions import (
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
+from matter_server.client.models.node import MatterEndpoint
 from matter_server.common.errors import MatterError, NodeNotExists
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntryState
@@ -20,6 +23,10 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -30,11 +37,19 @@ from homeassistant.helpers.typing import ConfigType
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
 from .api import async_register_api
-from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
+from .const import (
+    CONF_INTEGRATION_CREATED_ADDON,
+    CONF_SYNC_NAMES,
+    CONF_USE_ADDON,
+    DOMAIN,
+    LOGGER,
+    NODE_LABEL_MAX_BYTES,
+)
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
     MatterConfigEntry,
     MatterEntryData,
+    get_endpoint_from_device_entry,
     get_matter,
     get_node_from_device_entry,
     node_from_ha_device_id,
@@ -166,7 +181,122 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         finally:
             raise ConfigEntryNotReady(listen_error) from listen_error
 
+    _async_setup_name_sync(hass, entry)
+
     return True
+
+
+def _truncate_node_label(name: str) -> str:
+    """Truncate a label to fit Matter's 32 UTF-8 byte NodeLabel limit."""
+    encoded = name.encode("utf-8")
+    if len(encoded) <= NODE_LABEL_MAX_BYTES:
+        return name
+    # Decode back, dropping a partial trailing multi-byte sequence if any.
+    return encoded[:NODE_LABEL_MAX_BYTES].decode("utf-8", errors="ignore")
+
+
+async def _async_write_node_label(
+    matter_client: MatterClient,
+    endpoint: MatterEndpoint,
+    label: str,
+) -> None:
+    """Push a label to the right NodeLabel attribute for an endpoint."""
+    if endpoint.is_bridged_device:
+        attribute = clusters.BridgedDeviceBasicInformation.Attributes.NodeLabel
+        target_endpoint_id = endpoint.endpoint_id
+    else:
+        # BasicInformation lives on the root endpoint of the node.
+        attribute = clusters.BasicInformation.Attributes.NodeLabel
+        target_endpoint_id = 0
+    try:
+        await matter_client.write_attribute(
+            node_id=endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                target_endpoint_id, attribute
+            ),
+            value=_truncate_node_label(label),
+        )
+    except MatterError as err:
+        LOGGER.debug(
+            "Failed to sync NodeLabel for node %s endpoint %s: %s",
+            endpoint.node.node_id,
+            endpoint.endpoint_id,
+            err,
+        )
+
+
+def _resolve_label(device: dr.DeviceEntry) -> str | None:
+    """Pick the label to push: user override, else inferred name."""
+    return device.name_by_user or device.name or None
+
+
+@callback
+def _async_setup_name_sync(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+    """Wire HA-device-rename → Matter NodeLabel sync (one-way)."""
+    matter_client = entry.runtime_data.adapter.matter_client
+
+    @callback
+    def _handle_device_update(
+        event: Event[EventDeviceRegistryUpdatedData],
+    ) -> None:
+        if not entry.options.get(CONF_SYNC_NAMES):
+            return
+        if event.data["action"] != "update":
+            return
+        if "name_by_user" not in event.data.get("changes", {}):
+            return
+        device = dr.async_get(hass).async_get(event.data["device_id"])
+        if device is None or entry.entry_id not in device.config_entries:
+            return
+        endpoint = get_endpoint_from_device_entry(matter_client, device)
+        if endpoint is None:
+            return
+        label = _resolve_label(device)
+        if label is None:
+            return
+        entry.async_create_background_task(
+            hass,
+            _async_write_node_label(matter_client, endpoint, label),
+            "matter_sync_node_label",
+        )
+
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _handle_device_update)
+    )
+
+    async def _async_options_updated(
+        hass: HomeAssistant, entry: MatterConfigEntry
+    ) -> None:
+        """Backfill labels whenever options are saved with sync enabled."""
+        if not entry.options.get(CONF_SYNC_NAMES):
+            return
+        await _async_backfill_node_labels(hass, entry)
+
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+
+    if entry.options.get(CONF_SYNC_NAMES):
+        # Sync enabled across a reload: backfill from the current registry.
+        entry.async_create_background_task(
+            hass,
+            _async_backfill_node_labels(hass, entry),
+            "matter_sync_node_label_backfill",
+        )
+
+
+async def _async_backfill_node_labels(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
+    """Push current HA names to every Matter device for this entry."""
+    matter_client = entry.runtime_data.adapter.matter_client
+    devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
+    for device in devices:
+        endpoint = get_endpoint_from_device_entry(matter_client, device)
+        if endpoint is None:
+            continue
+        label = _resolve_label(device)
+        if label is None:
+            continue
+        await _async_write_node_label(matter_client, endpoint, label)
 
 
 async def _client_listen(
