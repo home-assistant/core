@@ -51,61 +51,63 @@ async def test_media_player_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
-def parametrize_muted_trigger_states() -> list[
-    tuple[str, list[TriggerStateDescription]]
-]:
-    """Parametrize states and expected service call counts.
+# is_muted=True states (mute attr True OR volume_level == 0)
+_IS_MUTED_STATES = [
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: True},
+    ),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: False},
+    ),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: True},
+    ),
+]
 
-    States without volume attributes are passed as `extra_excluded_states`
-    because `_MediaPlayerMutedStateTriggerBase._should_include` filters them
-    out of the all/count checks.
+# is_muted=False states (mute attr False/missing AND volume_level != 0)
+_IS_NOT_MUTED_STATES = [
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
+    ),
+]
 
-    Returns a list of tuples with (trigger, list of states),
-    where states is a list of TriggerStateDescription dicts.
+
+def parametrize_muted_trigger_states(
+    trigger: str, target_muted: bool
+) -> list[tuple[str, list[TriggerStateDescription]]]:
+    """Parametrize states and expected service call counts for muted/unmuted.
+
+    `target_muted` selects which side fires: True for `media_player.muted`,
+    False for `media_player.unmuted`. The helper swaps target / other state
+    sets accordingly.
+
+    States without any volume attributes are passed as
+    `extra_excluded_states` because
+    `_MediaPlayerMutedStateTriggerBase._should_include` filters them out of
+    the all/count checks. Transitioning from a no-attrs state into a target
+    state fires only for the muted trigger (no-attrs has is_muted=False, so
+    the transition into muted=True flips is_muted, but a transition into
+    muted=False does not).
+
+    Returns a list of tuples with (trigger, trigger_options, list of states).
     """
-    trigger = "media_player.muted"
     return parametrize_trigger_states(
         trigger=trigger,
-        target_states=[
-            # States with muted attribute
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
-            # States with volume attribute
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
-            # States with muted and volume attribute
-            (
-                MediaPlayerState.PLAYING,
-                {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: True},
-            ),
-            (
-                MediaPlayerState.PLAYING,
-                {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: False},
-            ),
-            (
-                MediaPlayerState.PLAYING,
-                {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: True},
-            ),
-        ],
-        other_states=[
-            # States with muted attribute (not muted)
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
-            # States with volume attribute (not muted)
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
-            # States with muted and volume attribute (not muted)
-            (
-                MediaPlayerState.PLAYING,
-                {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
-            ),
-        ],
+        target_states=_IS_MUTED_STATES if target_muted else _IS_NOT_MUTED_STATES,
+        other_states=_IS_NOT_MUTED_STATES if target_muted else _IS_MUTED_STATES,
         extra_excluded_states=[
             # State without any volume attributes — filtered by _should_include
             MediaPlayerState.PLAYING,
         ],
-        # Transitioning from a no-volume-attrs state to muted=True is a valid
-        # transition (is_muted goes False -> True) and should fire. Only set
-        # for "muted"; "unmuted" is not routed through this helper and would
-        # not satisfy the recovery contract (no-attrs -> muted=False keeps
-        # is_muted at False).
-        trigger_from_excluded=True,
+        trigger_from_excluded=target_muted,
     )
 
 
@@ -147,7 +149,8 @@ async def test_media_player_trigger_options_validation(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_muted_trigger_states(),
+        *parametrize_muted_trigger_states("media_player.muted", target_muted=True),
+        *parametrize_muted_trigger_states("media_player.unmuted", target_muted=False),
         *parametrize_trigger_states(
             trigger="media_player.paused_playing",
             target_states=[
@@ -243,7 +246,8 @@ async def test_media_player_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_muted_trigger_states(),
+        *parametrize_muted_trigger_states("media_player.muted", target_muted=True),
+        *parametrize_muted_trigger_states("media_player.unmuted", target_muted=False),
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
             target_states=[
@@ -290,7 +294,8 @@ async def test_media_player_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_muted_trigger_states(),
+        *parametrize_muted_trigger_states("media_player.muted", target_muted=True),
+        *parametrize_muted_trigger_states("media_player.unmuted", target_muted=False),
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
             target_states=[
