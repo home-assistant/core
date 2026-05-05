@@ -1,7 +1,5 @@
 """Repairs implementation for the esphome integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol

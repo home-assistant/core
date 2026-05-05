@@ -1,7 +1,5 @@
 """Base entity for Neato."""
 
-from __future__ import annotations
-
 from pybotvac import Robot
 
 from homeassistant.helpers.device_registry import DeviceInfo

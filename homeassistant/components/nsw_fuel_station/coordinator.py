@@ -1,7 +1,5 @@
 """Coordinator for the NSW Fuel Station integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime
 import logging

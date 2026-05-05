@@ -1,7 +1,5 @@
 """Support for MQTT discovery."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from dataclasses import dataclass

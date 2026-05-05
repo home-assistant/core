@@ -1,7 +1,5 @@
 """Tests for the Trafikverket Train integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.trafikverket_train.const import (
     CONF_FILTER_PRODUCT,
     CONF_FROM,

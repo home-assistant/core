@@ -1,7 +1,5 @@
 """Tests for the Overkiz cover platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -31,6 +29,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -77,7 +76,7 @@ TILTED_WINDOW = FixtureDevice(
 DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
     "io://1234-5678-6508/4877511",
-    "cover.dining_room_blinds",
+    "cover.office_blinds",
 )
 # Device with ClosureState=124
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
@@ -802,3 +801,120 @@ async def test_low_speed_cover_open_close(
         command_name="setClosureAndLinearSpeed",
         parameters=[100, OverkizCommandParam.LOWSPEED],
     )
+
+
+async def test_set_cover_position_and_tilt_service_is_registered(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """The overkiz.set_cover_position_and_tilt service must be registered."""
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    assert hass.services.has_service("overkiz", "set_cover_position_and_tilt")
+
+
+async def test_set_cover_position_and_tilt_executes_single_command(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Position+tilt must be sent as one atomic setClosureAndOrientation call.
+
+    Replaces two sequential set_cover_position + set_cover_tilt_position calls,
+    which cause Somfy motors to stop mid-movement between commands.
+    """
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    await hass.services.async_call(
+        "overkiz",
+        "set_cover_position_and_tilt",
+        {
+            ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+            ATTR_POSITION: 30,
+            ATTR_TILT_POSITION: 80,
+        },
+        blocking=True,
+    )
+
+    # Home Assistant position 30 -> Overkiz closure 70 (inverted),
+    # tilt 80 -> orientation 20 (inverted).
+    assert_command_call(
+        mock_client,
+        device_url=DYNAMIC_EXTERIOR_VENETIAN_BLIND.device_url,
+        command_name="setClosureAndOrientation",
+        parameters=[70, 20],
+    )
+
+
+@pytest.mark.parametrize(
+    ("position", "tilt_position", "expected_parameters"),
+    [
+        (0, 100, [100, 0]),
+        (100, 0, [0, 100]),
+        (50, 50, [50, 50]),
+    ],
+    ids=["closed-tilt-open", "open-tilt-closed", "midpoint"],
+)
+async def test_set_cover_position_and_tilt_inverts_boundaries(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    position: int,
+    tilt_position: int,
+    expected_parameters: list[int],
+) -> None:
+    """Boundary and midpoint values must invert consistently."""
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    await hass.services.async_call(
+        "overkiz",
+        "set_cover_position_and_tilt",
+        {
+            ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+            ATTR_POSITION: position,
+            ATTR_TILT_POSITION: tilt_position,
+        },
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=DYNAMIC_EXTERIOR_VENETIAN_BLIND.device_url,
+        command_name="setClosureAndOrientation",
+        parameters=expected_parameters,
+    )
+
+
+async def test_set_cover_position_and_tilt_unsupported_command_raises(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """ServiceValidationError must be raised when SET_CLOSURE_AND_ORIENTATION is missing.
+
+    Defence-in-depth: even when a cover advertises both SET_POSITION and
+    SET_TILT_POSITION (so it passes the ``required_features`` filter), the
+    handler still checks the atomic command and aborts cleanly if it is
+    missing.
+    """
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    with (
+        patch(
+            "homeassistant.components.overkiz.executor.OverkizExecutor.has_command",
+            return_value=False,
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            "overkiz",
+            "set_cover_position_and_tilt",
+            {
+                ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+                ATTR_POSITION: 50,
+                ATTR_TILT_POSITION: 50,
+            },
+            blocking=True,
+        )
+
+    assert mock_client.execute_command.await_count == 0

@@ -1,7 +1,5 @@
 """The touchline component."""
 
-from __future__ import annotations
-
 import logging
 
 from pytouchline_extended import PyTouchline

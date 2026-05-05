@@ -1,7 +1,5 @@
 """The Nibe Heat Pump binary sensors."""
 
-from __future__ import annotations
-
 from nibe.coil import Coil, CoilData
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity

@@ -1,7 +1,5 @@
 """The Aprilaire climate component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyaprilaire.const import Attribute

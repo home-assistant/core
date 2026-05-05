@@ -1,7 +1,5 @@
 """Common fixtures for the IDrive e2 tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
