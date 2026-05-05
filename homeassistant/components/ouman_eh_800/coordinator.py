@@ -31,7 +31,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OumanEh800ConfigEntry,
         client: OumanEh800Client,
         update_interval: timedelta,
     ) -> None:
