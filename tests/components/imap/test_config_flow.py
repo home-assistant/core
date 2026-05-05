@@ -30,6 +30,8 @@ MOCK_CONFIG = {
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
     "event_message_data": ["text", "headers"],
+    "ssl_cipher_list": "python_default",
+    "verify_ssl": True,
 }
 
 MOCK_OPTIONS = {
@@ -420,7 +422,7 @@ async def test_advanced_options_form(
 
     result = await hass.config_entries.options.async_init(
         entry.entry_id,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -462,7 +464,7 @@ async def test_config_flow_with_cipherlist_and_ssl_verify(
     config["verify_ssl"] = verify_ssl
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -526,7 +528,7 @@ async def test_config_flow_from_with_advanced_settings(
     config["verify_ssl"] = True
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
