@@ -105,13 +105,15 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             and user_input is not None
             and not self._password_needed
         ):
-            return self.async_create_entry(
-                title=f"my-PV {self._discovered_device.model}",
-                data={
-                    CONF_TYPE: CONF_TYPE_LOCAL,
-                    CONF_HOST: self._host,
-                },
-            )
+            await self.async_set_unique_id(self._discovered_device.serial_number)
+            self._abort_if_unique_id_configured()
+
+            title = f"my-PV {self._discovered_device.model}"
+            data = {
+                CONF_TYPE: CONF_TYPE_LOCAL,
+                CONF_HOST: self._host,
+            }
+            return self.async_create_entry(title=title, data=data)
 
         errors: dict[str, str] = {}
 
@@ -143,15 +145,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._discovered_device = device
             self._password_needed = password_needed
-        elif self._discovered_device and len(errors) == 0:
-            return self.async_create_entry(
-                title=f"my-PV {self._discovered_device.model}",
-                data={
-                    CONF_TYPE: CONF_TYPE_LOCAL,
-                    CONF_HOST: self._host,
-                    CONF_PASSWORD: password,
-                },
-            )
 
         self.context.update(
             {
@@ -160,8 +153,10 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             }
         )
+
         if password_needed:
             return await self.async_step_local_auth()
+
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
