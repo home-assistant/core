@@ -100,6 +100,12 @@ def parametrize_muted_trigger_states() -> list[
             # State without any volume attributes — filtered by _should_include
             MediaPlayerState.PLAYING,
         ],
+        # Transitioning from a no-volume-attrs state to muted=True is a valid
+        # transition (is_muted goes False -> True) and should fire. Only set
+        # for "muted"; "unmuted" is not routed through this helper and would
+        # not satisfy the recovery contract (no-attrs -> muted=False keeps
+        # is_muted at False).
+        trigger_from_excluded=True,
     )
 
 
@@ -355,34 +361,6 @@ async def test_muted_trigger_ignores_entities_without_volume_attributes(
     assert len(calls) == 0
 
     # Transition to muted — should fire
-    hass.states.async_set(
-        entity_id, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}
-    )
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-async def test_muted_trigger_fires_when_entity_gains_volume_attributes(
-    hass: HomeAssistant,
-) -> None:
-    """Test that the trigger fires when an entity gains volume attributes and becomes muted."""
-    entity_id = "media_player.gains_volume"
-    calls: list[str] = []
-
-    # Start without volume attributes
-    hass.states.async_set(entity_id, MediaPlayerState.PLAYING, {})
-    await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass,
-        "media_player.muted",
-        None,
-        {CONF_ENTITY_ID: [entity_id]},
-        calls,
-    )
-
-    # Gain volume attributes and become muted in one transition
     hass.states.async_set(
         entity_id, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}
     )
