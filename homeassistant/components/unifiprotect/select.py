@@ -1,7 +1,5 @@
 """Component providing select entities for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum

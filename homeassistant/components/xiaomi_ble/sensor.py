@@ -1,7 +1,5 @@
 """Support for xiaomi ble sensors."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
@@ -145,10 +143,9 @@ SENSOR_DESCRIPTIONS = {
         key=str(ExtendedSensorDeviceClass.SCORE),
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Counting during brushing
-    (ExtendedSensorDeviceClass.COUNTER, Units.TIME_SECONDS): SensorEntityDescription(
+    # Counter of brushing
+    (ExtendedSensorDeviceClass.COUNTER, None): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.COUNTER),
-        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Key id for locks and fingerprint readers

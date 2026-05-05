@@ -1,7 +1,5 @@
 """Demo camera platform that has a fake camera."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from homeassistant.components.camera import Camera, CameraEntityFeature

@@ -1,7 +1,5 @@
 """Connection session."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Literal

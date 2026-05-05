@@ -1,7 +1,5 @@
 """Support for Victron GX device tracker."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from victron_mqtt import (

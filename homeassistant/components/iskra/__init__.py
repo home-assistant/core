@@ -1,7 +1,5 @@
 """The iskra integration."""
 
-from __future__ import annotations
-
 from pyiskra.adapters import Modbus, RestAPI
 from pyiskra.devices import Device
 from pyiskra.exceptions import DeviceConnectionError, DeviceNotSupported, NotAuthorised
