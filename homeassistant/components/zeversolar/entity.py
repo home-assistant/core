@@ -1,4 +1,4 @@
-"""Base Entity for Zeversolar sensors."""
+"""Base Entity for Zeversolar."""
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -7,23 +7,20 @@ from .const import DOMAIN
 from .coordinator import ZeversolarCoordinator
 
 
-class ZeversolarEntity(
-    CoordinatorEntity[ZeversolarCoordinator],
-):
+class ZeversolarEntity(CoordinatorEntity[ZeversolarCoordinator]):
     """Defines a base Zeversolar entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        *,
-        coordinator: ZeversolarCoordinator,
-    ) -> None:
+    def __init__(self, *, coordinator: ZeversolarCoordinator) -> None:
         """Initialize the Zeversolar entity."""
         super().__init__(coordinator=coordinator)
+        inverter = coordinator.data["inverter_data"]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
-            name="Zeversolar Sensor",
+            identifiers={(DOMAIN, inverter.serial_number)},
+            name="Zeversolar Inverter",
             manufacturer="Zeversolar",
-            serial_number=coordinator.data.serial_number,
+            model=inverter.hardware_version,
+            sw_version=inverter.software_version,
+            serial_number=inverter.serial_number,
         )

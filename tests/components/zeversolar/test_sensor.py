@@ -1,4 +1,4 @@
-"""Test the sensor classes."""
+"""Test the Zeversolar sensor platform."""
 
 from unittest.mock import patch
 
@@ -14,14 +14,15 @@ from tests.common import snapshot_platform
 
 
 async def test_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test sensors."""
-
+    """Test sensors match snapshot."""
     with patch(
         "homeassistant.components.zeversolar.PLATFORMS",
         [Platform.SENSOR],
     ):
         entry = await init_integration(hass)
 
-        await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

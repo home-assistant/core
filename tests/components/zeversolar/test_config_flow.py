@@ -32,28 +32,16 @@ async def test_form(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "errors"),
     [
-        (
-            ZeverSolarHTTPNotFound,
-            {"base": "invalid_host"},
-        ),
-        (
-            ZeverSolarHTTPError,
-            {"base": "cannot_connect"},
-        ),
-        (
-            ZeverSolarTimeout,
-            {"base": "timeout_connect"},
-        ),
-        (
-            RuntimeError,
-            {"base": "unknown"},
-        ),
+        (ZeverSolarHTTPNotFound, {"base": "invalid_host"}),
+        (ZeverSolarHTTPError, {"base": "cannot_connect"}),
+        (ZeverSolarTimeout, {"base": "timeout_connect"}),
+        (RuntimeError, {"base": "unknown"}),
     ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
-    side_effect: Exception,
-    errors: dict,
+    side_effect: type[Exception],
+    errors: dict[str, str],
 ) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
@@ -66,9 +54,7 @@ async def test_form_errors(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
-            user_input={
-                CONF_HOST: "test_ip",
-            },
+            user_input={CONF_HOST: "test_ip"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -104,9 +90,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
-            user_input={
-                CONF_HOST: "test_ip",
-            },
+            user_input={CONF_HOST: "test_ip"},
         )
         await hass.async_block_till_done()
 
@@ -116,7 +100,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
 
 
 async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
-    """Reusable successful setup of Zeversolar sensor."""
+    """Reusable successful setup of Zeversolar."""
     mock_data = MagicMock()
     mock_data.serial_number = "test_serial"
     with (
@@ -128,15 +112,11 @@ async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
-            user_input={
-                CONF_HOST: "test_ip",
-            },
+            user_input={CONF_HOST: "test_ip"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Zeversolar"
-    assert result2["data"] == {
-        CONF_HOST: "test_ip",
-    }
+    assert result2["data"] == {CONF_HOST: "test_ip"}
     assert len(mock_setup_entry.mock_calls) == 1

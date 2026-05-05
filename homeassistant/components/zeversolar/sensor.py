@@ -1,9 +1,7 @@
 """Support for the Zeversolar platform."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
-
-import zeversolar
+from dataclasses import dataclass, field
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,11 +9,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ZeversolarConfigEntry, ZeversolarCoordinator
+from .coordinator import (
+    ZeversolarConfigEntry,
+    ZeversolarCoordinator,
+    ZeversolarCoordinatorData,
+)
 from .entity import ZeversolarEntity
 
 
@@ -23,7 +25,10 @@ from .entity import ZeversolarEntity
 class ZeversolarEntityDescription(SensorEntityDescription):
     """Describes Zeversolar sensor entity."""
 
-    value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
+    value_fn: Callable[[ZeversolarCoordinatorData], int | float]
+    available_fn: Callable[[ZeversolarCoordinator], bool] = field(
+        default_factory=lambda: lambda _: True
+    )
 
 
 SENSOR_TYPES = (
@@ -34,7 +39,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
-        value_fn=lambda data: data.pac,
+        value_fn=lambda data: data["inverter_data"].pac,
     ),
     ZeversolarEntityDescription(
         key="energy_today",
@@ -42,7 +47,16 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: data.energy_today,
+        value_fn=lambda data: data["inverter_data"].energy_today,
+    ),
+    ZeversolarEntityDescription(
+        key="power_limit",
+        translation_key="power_limit",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data["power_limit"],
+        available_fn=lambda coordinator: coordinator.power_limit_supported,
     ),
 )
 
@@ -77,7 +91,16 @@ class ZeversolarSensor(ZeversolarEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator=coordinator)
-        self._attr_unique_id = f"{coordinator.data.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.data['inverter_data'].serial_number}_{description.key}"
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return False if this sensor requires an unsupported API."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator
+        )
 
     @property
     def native_value(self) -> int | float:

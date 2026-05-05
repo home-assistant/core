@@ -1,5 +1,59 @@
 # serializer version: 1
-# name: test_sensors[sensor.zeversolar_sensor_energy_today-entry]
+# name: test_sensors[sensor.zeversolar_inverter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zeversolar_inverter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'zeversolar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_limit',
+    'unique_id': '123456778_power_limit',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.zeversolar_inverter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Zeversolar Inverter',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zeversolar_inverter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[sensor.zeversolar_inverter_energy_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +69,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.zeversolar_sensor_energy_today',
+    'entity_id': 'sensor.zeversolar_inverter_energy_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,23 +95,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.zeversolar_sensor_energy_today-state]
+# name: test_sensors[sensor.zeversolar_inverter_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Zeversolar Sensor Energy today',
+      'friendly_name': 'Zeversolar Inverter Energy today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zeversolar_sensor_energy_today',
+    'entity_id': 'sensor.zeversolar_inverter_energy_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123.4',
   })
 # ---
-# name: test_sensors[sensor.zeversolar_sensor_power-entry]
+# name: test_sensors[sensor.zeversolar_inverter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +127,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zeversolar_sensor_power',
+    'entity_id': 'sensor.zeversolar_inverter_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,16 +153,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.zeversolar_sensor_power-state]
+# name: test_sensors[sensor.zeversolar_inverter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Zeversolar Sensor Power',
+      'friendly_name': 'Zeversolar Inverter Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zeversolar_sensor_power',
+    'entity_id': 'sensor.zeversolar_inverter_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

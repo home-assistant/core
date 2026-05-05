@@ -21,10 +21,32 @@
     }
   },
   "entity": {
+    "number": {
+      "power_limit": {
+        "name": "Output power limit"
+      }
+    },
     "sensor": {
       "energy_today": {
         "name": "Energy today"
+      },
+      "pac": {
+        "name": "Power"
+      },
+      "power_limit": {
+        "name": "Power limit"
       }
+    },
+    "switch": {
+      "output_enabled": {
+        "name": "Output"
+      }
+    }
+  },
+  "issues": {
+    "power_limit_api_unavailable": {
+      "description": "The power limit API (`adv.cgi`) on your Zeversolar inverter could not be reached or returned an unexpected response. Output controls (switch and power limit slider) are disabled.\n\nPossible causes:\n- The inverter was temporarily offline when Home Assistant started — reload the integration to retry.\n- Power limiting is disabled in the inverter's own settings — enable it in the inverter web interface, then reload.\n- Your inverter firmware does not support power limiting.",
+      "title": "Power limit API unavailable"
     }
   }
 }

@@ -15,7 +15,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    data: ZeverSolarData = config_entry.runtime_data.data
+    data: ZeverSolarData = config_entry.runtime_data.data["inverter_data"]
 
     payload: dict[str, Any] = {
         "wifi_enabled": data.wifi_enabled,
@@ -42,7 +42,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device entry."""
     coordinator = entry.runtime_data
 
-    updateInterval = (
+    update_interval = (
         None
         if coordinator.update_interval is None
         else coordinator.update_interval.total_seconds()
@@ -52,5 +52,5 @@ async def async_get_device_diagnostics(
         "name": coordinator.name,
         "always_update": coordinator.always_update,
         "last_update_success": coordinator.last_update_success,
-        "update_interval": updateInterval,
+        "update_interval": update_interval,
     }
