@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Final
 
 from pyisy.constants import (
+    ATTR_ACTION,
     CMD_FADE_DOWN,
     CMD_FADE_STOP,
     CMD_FADE_UP,
@@ -18,9 +19,11 @@ from pyisy.constants import (
     CMD_OFF_FAST,
     CMD_ON,
     CMD_ON_FAST,
+    NC_NODE_ENABLED,
+    TAG_ADDRESS,
 )
 from pyisy.helpers import NodeProperty
-from pyisy.nodes import Node
+from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -106,6 +109,32 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             # Disabled by default — a typical KeypadLinc exposes 6-8 of
             # these and most users only automate a few.
             self._attr_entity_registry_enabled_default = False
+
+    # pylint: disable-next=hass-missing-super-call
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to control events and node enabled/disabled changes only.
+
+        Skipping the base class's status_events subscription avoids a state
+        write on every value update; availability still tracks the node's
+        enabled flag via a filtered subscription.
+        """
+        if hasattr(self._node, "control_events"):
+            self._control_handler = self._node.control_events.subscribe(
+                self.async_on_control
+            )
+        self._change_handler = self._node.isy.nodes.status_events.subscribe(
+            self._async_on_availability_change,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: NC_NODE_ENABLED,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def _async_on_availability_change(self, event: NodeChangedEvent, key: str) -> None:
+        """Refresh state when the node is enabled or disabled."""
+        self.async_write_ha_state()
 
     @callback
     def async_on_control(self, event: NodeProperty) -> None:
