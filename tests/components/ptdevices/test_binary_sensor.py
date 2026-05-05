@@ -44,7 +44,7 @@ async def test_battery_status_sensor_states(
     mock_ptdevices_level: PTDevicesResponse,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test state recognition of the ."""
+    """Test battery status binary sensor state recognition."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await setup_integration(hass, mock_ptdevices_config_entry)
