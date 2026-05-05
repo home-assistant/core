@@ -125,7 +125,7 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     _attr_device_class = BinarySensorDeviceClass.SAFETY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
-    _attr_translation_key = "cover_removed"
+    _attr_translation_key = "cover"
 
     _endpoint_name = "cover"
 
