@@ -57,7 +57,11 @@ from .const import (
     MAX_RADIUS,
     SUBENTRY_TYPE_LOCATION,
 )
-from .coordinator import async_create_openaq_client, get_openaq_value
+from .coordinator import (
+    async_create_openaq_client,
+    get_openaq_value,
+    normalize_parameter,
+)
 from .sensor import SENSOR_DESCRIPTIONS
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,14 +163,6 @@ def _search_radii(max_radius: int) -> tuple[int, ...]:
     return tuple(radii)
 
 
-def _normalize_parameter(parameter: object) -> str | None:
-    """Normalize an OpenAQ parameter object to its canonical name."""
-    name = get_openaq_value(parameter, "name")
-    if isinstance(name, str):
-        return name.lower().replace(".", "").replace("_", "")
-    return None
-
-
 def _supported_parameters(location: object) -> tuple[str, ...]:
     """Return supported sensor parameters for an OpenAQ location."""
     sensors = get_openaq_value(location, "sensors")
@@ -175,7 +171,7 @@ def _supported_parameters(location: object) -> tuple[str, ...]:
 
     parameters: set[str] = set()
     for sensor in sensors:
-        parameter_name = _normalize_parameter(get_openaq_value(sensor, "parameter"))
+        parameter_name = normalize_parameter(get_openaq_value(sensor, "parameter"))
         if parameter_name in SENSOR_DESCRIPTIONS:
             parameters.add(parameter_name)
     return tuple(sorted(parameters))
