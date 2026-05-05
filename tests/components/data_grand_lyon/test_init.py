@@ -24,8 +24,8 @@ async def test_subentry_added_reloads(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.c3_stop_100_next_passage_1") is not None
-    assert hass.states.get("sensor.t1_stop_200_next_passage_1") is None
+    assert hass.states.get("sensor.c3_stop_100_next_departure_1") is not None
+    assert hass.states.get("sensor.t1_stop_200_next_departure_1") is None
 
     initial_call_count = mock_tcl_client.get_tcl_passages.call_count
 
@@ -41,4 +41,4 @@ async def test_subentry_added_reloads(
     await hass.async_block_till_done()
 
     assert mock_tcl_client.get_tcl_passages.call_count > initial_call_count
-    assert hass.states.get("sensor.t1_stop_200_next_passage_1") is not None
+    assert hass.states.get("sensor.t1_stop_200_next_departure_1") is not None

@@ -42,43 +42,43 @@
   },
   "entity": {
     "sensor": {
-      "next_passage_1": {
-        "name": "Next passage 1"
+      "next_departure_1": {
+        "name": "Next departure 1"
       },
-      "next_passage_1_direction": {
-        "name": "Next passage 1 direction"
+      "next_departure_1_direction": {
+        "name": "Next departure 1 direction"
       },
-      "next_passage_1_type": {
-        "name": "Next passage 1 type",
+      "next_departure_1_type": {
+        "name": "Next departure 1 type",
         "state": {
           "estimated": "Estimated",
           "theoretical": "Theoretical"
         }
       },
-      "next_passage_2": {
-        "name": "Next passage 2"
+      "next_departure_2": {
+        "name": "Next departure 2"
       },
-      "next_passage_2_direction": {
-        "name": "Next passage 2 direction"
+      "next_departure_2_direction": {
+        "name": "Next departure 2 direction"
       },
-      "next_passage_2_type": {
-        "name": "Next passage 2 type",
+      "next_departure_2_type": {
+        "name": "Next departure 2 type",
         "state": {
-          "estimated": "[%key:component::data_grand_lyon::entity::sensor::next_passage_1_type::state::estimated%]",
-          "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_passage_1_type::state::theoretical%]"
+          "estimated": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::estimated%]",
+          "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::theoretical%]"
         }
       },
-      "next_passage_3": {
-        "name": "Next passage 3"
+      "next_departure_3": {
+        "name": "Next departure 3"
       },
-      "next_passage_3_direction": {
-        "name": "Next passage 3 direction"
+      "next_departure_3_direction": {
+        "name": "Next departure 3 direction"
       },
-      "next_passage_3_type": {
-        "name": "Next passage 3 type",
+      "next_departure_3_type": {
+        "name": "Next departure 3 type",
         "state": {
-          "estimated": "[%key:component::data_grand_lyon::entity::sensor::next_passage_1_type::state::estimated%]",
-          "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_passage_1_type::state::theoretical%]"
+          "estimated": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::estimated%]",
+          "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::theoretical%]"
         }
       }
     }

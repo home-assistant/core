@@ -19,7 +19,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_PASSAGES
+from .conftest import MOCK_DEPARTURES
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -46,31 +46,31 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_stop_sensor_secondary_passage_disabled_by_default(
+async def test_stop_sensor_secondary_departure_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test that direction/type sensors past the first passage are disabled by default."""
+    """Test that direction/type sensors past the first departure are disabled by default."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     for entity_id in (
-        "sensor.c3_stop_100_next_passage_2_direction",
-        "sensor.c3_stop_100_next_passage_2_type",
-        "sensor.c3_stop_100_next_passage_3_direction",
-        "sensor.c3_stop_100_next_passage_3_type",
+        "sensor.c3_stop_100_next_departure_2_direction",
+        "sensor.c3_stop_100_next_departure_2_type",
+        "sensor.c3_stop_100_next_departure_3_direction",
+        "sensor.c3_stop_100_next_departure_3_type",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None, entity_id
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-    # First passage's direction and type stay enabled by default
+    # First departure's direction and type stay enabled by default
     for entity_id in (
-        "sensor.c3_stop_100_next_passage_1_direction",
-        "sensor.c3_stop_100_next_passage_1_type",
+        "sensor.c3_stop_100_next_departure_1_direction",
+        "sensor.c3_stop_100_next_departure_1_type",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None, entity_id
@@ -82,13 +82,13 @@ async def test_stop_sensor_no_data(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test that sensors with no passage data return unknown."""
+    """Test that sensors with no departure data return unknown."""
     mock_tcl_client.get_tcl_passages.return_value = []
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.c3_stop_100_next_passage_1")
+    state = hass.states.get("sensor.c3_stop_100_next_departure_1")
     assert state is not None
     assert state.state == "unknown"
 
@@ -99,7 +99,7 @@ async def test_stop_sensor_aware_datetime_passthrough(
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that already timezone-aware datetimes are passed through unchanged."""
-    aware_passage = TclPassage(
+    aware_departure = TclPassage(
         id=100,
         ligne="C3",
         direction="Gare Part-Dieu",
@@ -109,12 +109,12 @@ async def test_stop_sensor_aware_datetime_passthrough(
         id_tarret_destination=0,
         course_theorique="A",
     )
-    mock_tcl_client.get_tcl_passages.return_value = [aware_passage]
+    mock_tcl_client.get_tcl_passages.return_value = [aware_departure]
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.c3_stop_100_next_passage_1")
+    state = hass.states.get("sensor.c3_stop_100_next_departure_1")
     assert state is not None
     # Already aware at CEST (UTC+2), stored as UTC 12:03
     assert state.state == datetime(2026, 4, 10, 12, 3, tzinfo=UTC).isoformat()
@@ -135,7 +135,7 @@ async def test_coordinator_stop_fetch_error(
     await hass.async_block_till_done()
 
     # Single subentry fails → UpdateFailed → entry not loaded, sensors unavailable
-    state = hass.states.get("sensor.c3_stop_100_next_passage_1")
+    state = hass.states.get("sensor.c3_stop_100_next_departure_1")
     assert state is None
 
 
@@ -168,7 +168,7 @@ async def test_coordinator_partial_failure(
     # First stop fails, second succeeds
     mock_tcl_client.get_tcl_passages.side_effect = [
         ConnectionError("API down"),
-        MOCK_PASSAGES,
+        MOCK_DEPARTURES,
     ]
 
     entry.add_to_hass(hass)
@@ -176,6 +176,6 @@ async def test_coordinator_partial_failure(
     await hass.async_block_till_done()
 
     # stop_2 sensors should work
-    state = hass.states.get("sensor.t1_stop_200_next_passage_1")
+    state = hass.states.get("sensor.t1_stop_200_next_departure_1")
     assert state is not None
     assert state.state != "unavailable"

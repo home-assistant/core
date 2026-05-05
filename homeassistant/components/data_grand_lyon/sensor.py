@@ -26,101 +26,101 @@ PARALLEL_UPDATES = 0
 
 _TZ_PARIS = ZoneInfo("Europe/Paris")
 
-_PASSAGE_TYPE_OPTIONS = [t.name.lower() for t in TclPassageType]
+_DEPARTURE_TYPE_OPTIONS = [t.name.lower() for t in TclPassageType]
 
 
-def _passage_time(passage: TclPassage) -> datetime:
-    """Return the passage time, localized to Europe/Paris if naive."""
-    dt = passage.heure_passage
+def _departure_time(departure: TclPassage) -> datetime:
+    """Return the departure time, localized to Europe/Paris if naive."""
+    dt = departure.heure_passage
     if dt.tzinfo is None:
         return dt.replace(tzinfo=_TZ_PARIS)
     return dt
 
 
-def _passage_icon(passage: TclPassage) -> str:
-    """Return icon based on passage type."""
-    if passage.type == TclPassageType.ESTIMATED:
+def _departure_icon(departure: TclPassage) -> str:
+    """Return icon based on departure type."""
+    if departure.type == TclPassageType.ESTIMATED:
         return "mdi:clock-check-outline"
     return "mdi:clock-outline"
 
 
 @dataclass(frozen=True, kw_only=True)
 class DataGrandLyonStopSensorEntityDescription(SensorEntityDescription):
-    """Describes a Data Grand Lyon stop passage sensor entity."""
+    """Describes a Data Grand Lyon stop departure sensor entity."""
 
-    passage_index: int
+    departure_index: int
     value_fn: Callable[[TclPassage], StateType | datetime]
     icon_fn: Callable[[TclPassage], str] | None = None
 
 
 STOP_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonStopSensorEntityDescription, ...] = (
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_1",
-        translation_key="next_passage_1",
+        key="next_departure_1",
+        translation_key="next_departure_1",
         device_class=SensorDeviceClass.TIMESTAMP,
-        passage_index=0,
-        value_fn=_passage_time,
-        icon_fn=_passage_icon,
+        departure_index=0,
+        value_fn=_departure_time,
+        icon_fn=_departure_icon,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_1_direction",
-        translation_key="next_passage_1_direction",
-        passage_index=0,
+        key="next_departure_1_direction",
+        translation_key="next_departure_1_direction",
+        departure_index=0,
         value_fn=lambda p: p.direction,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_1_type",
-        translation_key="next_passage_1_type",
+        key="next_departure_1_type",
+        translation_key="next_departure_1_type",
         device_class=SensorDeviceClass.ENUM,
-        options=_PASSAGE_TYPE_OPTIONS,
-        passage_index=0,
+        options=_DEPARTURE_TYPE_OPTIONS,
+        departure_index=0,
         value_fn=lambda p: p.type.name.lower(),
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_2",
-        translation_key="next_passage_2",
+        key="next_departure_2",
+        translation_key="next_departure_2",
         device_class=SensorDeviceClass.TIMESTAMP,
-        passage_index=1,
-        value_fn=_passage_time,
-        icon_fn=_passage_icon,
+        departure_index=1,
+        value_fn=_departure_time,
+        icon_fn=_departure_icon,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_2_direction",
-        translation_key="next_passage_2_direction",
-        passage_index=1,
+        key="next_departure_2_direction",
+        translation_key="next_departure_2_direction",
+        departure_index=1,
         value_fn=lambda p: p.direction,
         entity_registry_enabled_default=False,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_2_type",
-        translation_key="next_passage_2_type",
+        key="next_departure_2_type",
+        translation_key="next_departure_2_type",
         device_class=SensorDeviceClass.ENUM,
-        options=_PASSAGE_TYPE_OPTIONS,
-        passage_index=1,
+        options=_DEPARTURE_TYPE_OPTIONS,
+        departure_index=1,
         value_fn=lambda p: p.type.name.lower(),
         entity_registry_enabled_default=False,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_3",
-        translation_key="next_passage_3",
+        key="next_departure_3",
+        translation_key="next_departure_3",
         device_class=SensorDeviceClass.TIMESTAMP,
-        passage_index=2,
-        value_fn=_passage_time,
-        icon_fn=_passage_icon,
+        departure_index=2,
+        value_fn=_departure_time,
+        icon_fn=_departure_icon,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_3_direction",
-        translation_key="next_passage_3_direction",
-        passage_index=2,
+        key="next_departure_3_direction",
+        translation_key="next_departure_3_direction",
+        departure_index=2,
         value_fn=lambda p: p.direction,
         entity_registry_enabled_default=False,
     ),
     DataGrandLyonStopSensorEntityDescription(
-        key="next_passage_3_type",
-        translation_key="next_passage_3_type",
+        key="next_departure_3_type",
+        translation_key="next_departure_3_type",
         device_class=SensorDeviceClass.ENUM,
-        options=_PASSAGE_TYPE_OPTIONS,
-        passage_index=2,
+        options=_DEPARTURE_TYPE_OPTIONS,
+        departure_index=2,
         value_fn=lambda p: p.type.name.lower(),
         entity_registry_enabled_default=False,
     ),
@@ -148,7 +148,7 @@ async def async_setup_entry(
 class DataGrandLyonStopSensor(
     CoordinatorEntity[DataGrandLyonCoordinator], SensorEntity
 ):
-    """Sensor for Data Grand Lyon stop passages."""
+    """Sensor for Data Grand Lyon stop departures."""
 
     _attr_has_entity_name = True
     entity_description: DataGrandLyonStopSensorEntityDescription
@@ -174,28 +174,28 @@ class DataGrandLyonStopSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
-    def _get_passage(self) -> TclPassage | None:
-        """Return the passage for this sensor's index, or None."""
-        passages = self.coordinator.data.get(self._subentry_id, [])
-        index = self.entity_description.passage_index
-        if index >= len(passages):
+    def _get_departure(self) -> TclPassage | None:
+        """Return the departure for this sensor's index, or None."""
+        departures = self.coordinator.data.get(self._subentry_id, [])
+        index = self.entity_description.departure_index
+        if index >= len(departures):
             return None
-        return passages[index]
+        return departures[index]
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
-        passage = self._get_passage()
-        if passage is None:
+        departure = self._get_departure()
+        if departure is None:
             return None
-        return self.entity_description.value_fn(passage)
+        return self.entity_description.value_fn(departure)
 
     @property
     def icon(self) -> str | None:
         """Return a dynamic icon when the description provides one."""
         if self.entity_description.icon_fn is None:
             return None
-        passage = self._get_passage()
-        if passage is None:
+        departure = self._get_departure()
+        if departure is None:
             return None
-        return self.entity_description.icon_fn(passage)
+        return self.entity_description.icon_fn(departure)

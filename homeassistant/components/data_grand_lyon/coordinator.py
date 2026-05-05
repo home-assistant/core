@@ -58,7 +58,7 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[dict[str, list[TclPassage]]
             result = stop_results[i]
             if isinstance(result, BaseException):
                 LOGGER.warning(
-                    "Error fetching passages for stop %s: %s",
+                    "Error fetching departures for stop %s: %s",
                     subentry.subentry_id,
                     result,
                 )

@@ -18,7 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
-MOCK_PASSAGES = [
+MOCK_DEPARTURES = [
     TclPassage(
         id=100,
         ligne="C3",
@@ -85,5 +85,5 @@ def mock_tcl_client() -> Generator[AsyncMock]:
         "homeassistant.components.data_grand_lyon.DataGrandLyonClient", autospec=True
     ) as mock_cls:
         client = mock_cls.return_value
-        client.get_tcl_passages.return_value = MOCK_PASSAGES
+        client.get_tcl_passages.return_value = MOCK_DEPARTURES
         yield client
