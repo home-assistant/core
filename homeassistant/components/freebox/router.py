@@ -125,6 +125,7 @@ class FreeboxRouter:
         self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
+        self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
@@ -185,7 +186,11 @@ class FreeboxRouter:
         # temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor.get("value")
+            sensor_id = sensor["id"]
+            self.sensors_temperature[sensor_id] = sensor.get("value")
+            # Names are static per-device; only populate once.
+            if sensor_id not in self.sensors_temperature_names:
+                self.sensors_temperature_names[sensor_id] = sensor["name"]
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()

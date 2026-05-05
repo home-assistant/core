@@ -1,18 +1,60 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 from datetime import timedelta
+import logging
 
 from freebox_api.exceptions import HttpRequestError
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .router import FreeboxConfigEntry, FreeboxRouter, get_api
 
+_LOGGER = logging.getLogger(__name__)
+
 SCAN_INTERVAL = timedelta(seconds=30)
+
+# Old entity name suffixes that need rewriting to the entity description key.
+# Format: (platform, old name suffix, new key)
+_STATIC_UNIQUE_ID_MIGRATIONS: tuple[tuple[Platform, str, str], ...] = (
+    (Platform.SENSOR, "Freebox download speed", "rate_down"),
+    (Platform.SENSOR, "Freebox upload speed", "rate_up"),
+    (Platform.SENSOR, "Freebox missed calls", "missed"),
+    (Platform.BUTTON, "Reboot Freebox", "reboot"),
+    (Platform.BUTTON, "Mark calls as read", "mark_calls_as_read"),
+    (Platform.SWITCH, "Freebox WiFi", "wifi"),
+)
+
+
+@callback
+def _migrate_unique_ids(hass: HomeAssistant, router: FreeboxRouter) -> None:
+    """Migrate name-based unique ids to key-based ones."""
+    entity_registry = er.async_get(hass)
+    mac = router.mac
+
+    for platform, old_suffix, new_key in _STATIC_UNIQUE_ID_MIGRATIONS:
+        old_uid = f"{mac} {old_suffix}"
+        new_uid = f"{mac} {new_key}"
+        if entity_id := entity_registry.async_get_entity_id(platform, DOMAIN, old_uid):
+            _LOGGER.debug(
+                "Migrating %s unique_id from %s to %s", entity_id, old_uid, new_uid
+            )
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+
+    for sensor_id, sensor_name in router.sensors_temperature_names.items():
+        old_uid = f"{mac} Freebox {sensor_name}"
+        new_uid = f"{mac} {sensor_id}"
+        if entity_id := entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, old_uid
+        ):
+            _LOGGER.debug(
+                "Migrating %s unique_id from %s to %s", entity_id, old_uid, new_uid
+            )
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
@@ -30,6 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
     entry.async_on_unload(
         async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
     )
+
+    _migrate_unique_ids(hass, router)
 
     entry.runtime_data = router
 

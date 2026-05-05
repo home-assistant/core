@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 class FreeboxHomeEntity(Entity):
     """Representation of a Freebox base entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         router: FreeboxRouter,
@@ -27,12 +29,9 @@ class FreeboxHomeEntity(Entity):
         self._node = node
         self._sub_node = sub_node
         self._id = node["id"]
-        self._attr_name = node["label"].strip()
-        self._device_name = self._attr_name
         self._attr_unique_id = f"{self._router.mac}-node_{self._id}"
 
         if sub_node is not None:
-            self._attr_name += " " + sub_node["label"].strip()
             self._attr_unique_id += "-" + sub_node["name"].strip()
 
         self._available = True
@@ -52,7 +51,7 @@ class FreeboxHomeEntity(Entity):
             identifiers={(DOMAIN, self._id)},
             manufacturer=self._manufacturer,
             model=self._model,
-            name=self._device_name,
+            name=node["label"].strip(),
             sw_version=self._firmware,
             via_device=(DOMAIN, router.mac),
         )
@@ -60,13 +59,6 @@ class FreeboxHomeEntity(Entity):
     async def async_update_signal(self) -> None:
         """Update signal."""
         self._node = self._router.home_devices[self._id]
-        # Update name
-        if self._sub_node is None:
-            self._attr_name = self._node["label"].strip()
-        else:
-            self._attr_name = (
-                self._node["label"].strip() + " " + self._sub_node["label"].strip()
-            )
         self.async_write_ha_state()
 
     async def set_home_endpoint_value(

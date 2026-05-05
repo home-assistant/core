@@ -66,6 +66,8 @@ def add_entities(
 class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     """Representation of a Freebox camera."""
 
+    _attr_name = None
+
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
@@ -89,6 +91,16 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         self._attr_extra_state_attributes = {}
         self.update_node(node)
 
+    @property
+    def name(self) -> str | None:  # type: ignore[override]
+        """Return None so the device name is used as entity name.
+
+        FFmpegCamera defines its own `name` property that takes precedence
+        over the base Entity class's name resolution (which would use
+        `_attr_name`). Override here to honor `_attr_name = None`.
+        """
+        return self._attr_name
+
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         if await self.set_home_endpoint_value(self._command_motion_detection, True):
@@ -106,8 +118,6 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
 
     def update_node(self, node: dict[str, Any]) -> None:
         """Update params."""
-        self._name = node["label"].strip()
-
         # Get status
         if self._node["status"] == "active":
             self._attr_is_streaming = True
