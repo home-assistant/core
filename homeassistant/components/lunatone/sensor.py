@@ -82,16 +82,13 @@ async def async_setup_entry(
 
     assert config_entry.unique_id is not None
 
-    entities = []
-    for sensor_id, sensor_data in coordinator_sensors.data.items():
-        if description := SENSOR_TYPES.get(sensor_data.data.type, None):
-            entities.append(
-                LunatoneSensor(
-                    coordinator_sensors, description, sensor_id, config_entry.unique_id
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        LunatoneSensor(
+            coordinator_sensors, description, sensor_id, config_entry.unique_id
+        )
+        for sensor_id, sensor_data in coordinator_sensors.data.items()
+        if (description := SENSOR_TYPES.get(sensor_data.data.type))
+    )
 
 
 class LunatoneSensor(
