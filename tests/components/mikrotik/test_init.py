@@ -97,7 +97,9 @@ def test_login_method_with_fallback_uses_token_for_legacy_auth() -> None:
                 "cannot log in"
             ),
         ) as mock_plain,
-        patch("homeassistant.components.mikrotik.coordinator.login_token") as mock_token,
+        patch(
+            "homeassistant.components.mikrotik.coordinator.login_token"
+        ) as mock_token,
     ):
         mikrotik.coordinator._login_method_with_fallback(api, "user", "pass")
 
