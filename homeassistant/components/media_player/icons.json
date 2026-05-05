@@ -140,6 +140,9 @@
     },
     "turned_on": {
       "trigger": "mdi:power"
+    },
+    "unmuted": {
+      "trigger": "mdi:volume-high"
     }
   }
 }
