@@ -73,7 +73,6 @@ class TimeRemainingTrigger(Trigger):
         @callback
         def schedule_for_state(
             entity_id: str,
-            from_state: State | None,
             to_state: State | None,
             context: Context | None,
         ) -> None:
@@ -102,7 +101,6 @@ class TimeRemainingTrigger(Trigger):
                 run_action(
                     {
                         ATTR_ENTITY_ID: entity_id,
-                        "from_state": from_state,
                         "to_state": to_state,
                         "remaining": self._remaining,
                     },
@@ -121,14 +119,13 @@ class TimeRemainingTrigger(Trigger):
             """Listen for state changes and schedule trigger."""
             event = target_state_change_data.state_change_event
             entity_id: str = event.data["entity_id"]
-            from_state = event.data["old_state"]
             to_state = event.data["new_state"]
 
             # Cancel any previously scheduled callback for this entity
             if entity_id in scheduled:
                 scheduled.pop(entity_id)()
 
-            schedule_for_state(entity_id, from_state, to_state, event.context)
+            schedule_for_state(entity_id, to_state, event.context)
 
         @callback
         def on_entities_update(added: set[str], removed: set[str]) -> None:
@@ -138,9 +135,7 @@ class TimeRemainingTrigger(Trigger):
                     scheduled.pop(entity_id)()
             for entity_id in added:
                 state = self._hass.states.get(entity_id)
-                schedule_for_state(
-                    entity_id, state, state, state.context if state else None
-                )
+                schedule_for_state(entity_id, state, state.context if state else None)
 
         unsub = async_track_target_selector_state_change_event(
             self._hass,
