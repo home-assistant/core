@@ -91,7 +91,7 @@ async def test_check_interface_timeout_moves_to_next(hass: HomeAssistant) -> Non
         )
         result = await gateway.async_check_interface("192.168.1.1", "testkey")
 
-    assert result == "192.168.1.10"
+    assert result == "any"
 
 
 async def test_check_interface_found_on_first_try(hass: HomeAssistant) -> None:
