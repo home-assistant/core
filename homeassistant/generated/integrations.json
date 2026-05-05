@@ -1249,7 +1249,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "data_grandlyon": {
+    "data_grand_lyon": {
       "name": "Data Grand Lyon",
       "integration_type": "service",
       "config_flow": true,

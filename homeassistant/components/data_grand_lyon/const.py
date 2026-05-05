@@ -2,7 +2,7 @@
 
 import logging
 
-DOMAIN = "data_grandlyon"
+DOMAIN = "data_grand_lyon"
 LOGGER = logging.getLogger(__package__)
 
 SUBENTRY_TYPE_STOP = "stop"

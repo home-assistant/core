@@ -3,7 +3,7 @@
 from types import MappingProxyType
 from unittest.mock import AsyncMock
 
-from homeassistant.components.data_grandlyon.const import (
+from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
     CONF_STOP_ID,
     SUBENTRY_TYPE_STOP,

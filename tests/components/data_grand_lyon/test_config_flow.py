@@ -6,7 +6,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.data_grandlyon.const import (
+from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
     CONF_STOP_ID,
     DOMAIN,
@@ -29,7 +29,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -68,7 +68,7 @@ async def test_form_error_recovers(
     )
 
     with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -81,7 +81,7 @@ async def test_form_error_recovers(
 
     # Recover
     with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -105,7 +105,7 @@ async def test_form_already_configured(
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(

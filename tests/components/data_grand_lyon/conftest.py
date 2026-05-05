@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 from data_grand_lyon_ha import TclPassage, TclPassageType
 import pytest
 
-from homeassistant.components.data_grandlyon.const import (
+from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
     CONF_STOP_ID,
     DOMAIN,
@@ -46,7 +46,7 @@ MOCK_PASSAGES = [
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.data_grandlyon.async_setup_entry", return_value=True
+        "homeassistant.components.data_grand_lyon.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -82,7 +82,7 @@ def mock_config_entry(
 def mock_tcl_client() -> Generator[AsyncMock]:
     """Mock DataGrandLyonClient for coordinator."""
     with patch(
-        "homeassistant.components.data_grandlyon.DataGrandLyonClient", autospec=True
+        "homeassistant.components.data_grand_lyon.DataGrandLyonClient", autospec=True
     ) as mock_cls:
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_PASSAGES

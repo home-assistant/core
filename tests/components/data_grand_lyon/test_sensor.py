@@ -8,7 +8,7 @@ from data_grand_lyon_ha import TclPassage, TclPassageType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.data_grandlyon.const import (
+from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
     CONF_STOP_ID,
     DOMAIN,
@@ -38,7 +38,7 @@ async def test_all_entities(
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test all sensor entities (state, attributes, registry)."""
-    with patch("homeassistant.components.data_grandlyon.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.data_grand_lyon.PLATFORMS", [Platform.SENSOR]):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
