@@ -47,15 +47,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "active_hardware_faults": {
-        "name": "Hardware faults"
-      },
-      "active_network_faults": {
-        "name": "Network faults"
-      },
-      "active_radio_faults": {
-        "name": "Radio faults"
-      },
       "actuator": {
         "name": "Actuator"
       },
@@ -417,17 +408,6 @@
       "battery_voltage": {
         "name": "Battery voltage"
       },
-      "boot_reason": {
-        "name": "Boot reason",
-        "state": {
-          "brown_out_reset": "Brownout reset",
-          "hardware_watchdog_reset": "Hardware watchdog reset",
-          "power_on_reboot": "Power-on reboot",
-          "software_reset": "Software reset",
-          "software_update_completed": "Software update completed",
-          "software_watchdog_reset": "Software watchdog reset"
-        }
-      },
       "contamination_state": {
         "name": "Contamination state",
         "state": {
@@ -596,9 +576,6 @@
       "reactive_current": {
         "name": "Reactive current"
       },
-      "reboot_count": {
-        "name": "Reboot count"
-      },
       "rms_current": {
         "name": "Effective current"
       },
@@ -640,42 +617,14 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "valve_position": {
         "name": "Valve position"
       },
       "voltage": {
         "name": "Voltage"
       },
-      "wifi_channel": {
-        "name": "Wi-Fi channel"
-      },
       "wifi_rssi": {
         "name": "Wi-Fi signal strength"
-      },
-      "wifi_security_type": {
-        "name": "Wi-Fi security type",
-        "state": {
-          "none": "None",
-          "wep": "WEP",
-          "wpa": "WPA",
-          "wpa2": "WPA2",
-          "wpa3": "WPA3"
-        }
-      },
-      "wifi_version": {
-        "name": "Wi-Fi version",
-        "state": {
-          "wifi_1": "Wi-Fi 1 (802.11b)",
-          "wifi_2": "Wi-Fi 2 (802.11a)",
-          "wifi_3": "Wi-Fi 3 (802.11g)",
-          "wifi_4": "Wi-Fi 4 (802.11n)",
-          "wifi_5": "Wi-Fi 5 (802.11ac)",
-          "wifi_6": "Wi-Fi 6 (802.11ax)",
-          "wifi_ah": "Wi-Fi HaLow (802.11ah)"
-        }
       },
       "window_covering_target_position": {
         "name": "Target opening position"

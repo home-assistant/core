@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -731,51 +731,5 @@ async def test_co_detector(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
-    assert state
-    assert state.state == "off"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
-async def test_general_diagnostics_fault_sensors(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test GeneralDiagnostics active fault binary sensors."""
-    # ActiveHardwareFaults (cluster 51, attr 5) = [] (no faults)
-    entity_id = "binary_sensor.m5stamp_lighting_app_hardware_faults"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "off"
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    # Simulate hardware fault
-    set_node_attribute(matter_node, 0, 51, 5, [1])
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "on"
-
-    # Clear faults
-    set_node_attribute(matter_node, 0, 51, 5, [])
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "off"
-
-    # ActiveRadioFaults (cluster 51, attr 6) = [] (no faults)
-    state = hass.states.get("binary_sensor.m5stamp_lighting_app_radio_faults")
-    assert state
-    assert state.state == "off"
-
-    # ActiveNetworkFaults (cluster 51, attr 7) = [] (no faults)
-    state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
     assert state
     assert state.state == "off"

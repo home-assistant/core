@@ -569,48 +569,4 @@ DISCOVERY_SCHEMAS = [
         featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kOccupancy,
         allow_multi=True,
     ),
-    # GeneralDiagnostics active fault sensors
-    MatterDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        entity_description=MatterBinarySensorEntityDescription(
-            key="GeneralDiagnosticsActiveHardwareFaults",
-            translation_key="active_hardware_faults",
-            device_class=BinarySensorDeviceClass.PROBLEM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            device_to_ha=bool,
-        ),
-        entity_class=MatterBinarySensor,
-        required_attributes=(
-            clusters.GeneralDiagnostics.Attributes.ActiveHardwareFaults,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        entity_description=MatterBinarySensorEntityDescription(
-            key="GeneralDiagnosticsActiveRadioFaults",
-            translation_key="active_radio_faults",
-            device_class=BinarySensorDeviceClass.PROBLEM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            device_to_ha=bool,
-        ),
-        entity_class=MatterBinarySensor,
-        required_attributes=(clusters.GeneralDiagnostics.Attributes.ActiveRadioFaults,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        entity_description=MatterBinarySensorEntityDescription(
-            key="GeneralDiagnosticsActiveNetworkFaults",
-            translation_key="active_network_faults",
-            device_class=BinarySensorDeviceClass.PROBLEM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            device_to_ha=bool,
-        ),
-        entity_class=MatterBinarySensor,
-        required_attributes=(
-            clusters.GeneralDiagnostics.Attributes.ActiveNetworkFaults,
-        ),
-    ),
 ]
