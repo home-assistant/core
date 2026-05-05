@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Data Grand Lyon integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 

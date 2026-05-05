@@ -1,7 +1,5 @@
 """The Data Grand Lyon integration."""
 
-from __future__ import annotations
-
 from data_grand_lyon_ha import DataGrandLyonClient
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
