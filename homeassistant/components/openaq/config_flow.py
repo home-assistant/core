@@ -1,7 +1,5 @@
 """Config flow for the OpenAQ integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from math import inf
