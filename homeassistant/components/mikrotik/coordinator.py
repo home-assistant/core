@@ -319,7 +319,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
         if "login_methods" in inspect.signature(librouteros.connect).parameters
         else "login_method"
     )
-    login_arg = login_methods if login_key == "login_methods" else login_plain
+    login_arg = login_methods if login_key == "login_methods" else _login_method_with_fallback
     kwargs = {login_key: login_arg, "port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
@@ -348,3 +348,16 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
 
     _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
     return api
+
+
+def _login_method_with_fallback(
+    api: librouteros.Api, username: str, password: str
+) -> None:
+    """Try plain auth first, then fall back to token auth for older routers."""
+    try:
+        login_plain(api, username, password)
+    except librouteros.exceptions.FatalError as err:
+        message = str(err).lower()
+        if "cannot log in" not in message and "invalid user name or password" not in message:
+            raise
+        login_token(api, username, password)
