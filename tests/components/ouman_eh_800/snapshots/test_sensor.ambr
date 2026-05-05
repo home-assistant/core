@@ -1,55 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_circuit_name-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_circuit_name',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'H1 circuit name',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'H1 circuit name',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'l1_circuit_name',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_circuit_name',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_circuit_name-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 H1 circuit name',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_circuit_name',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Patterilämmitys',
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_curve_supply_water_temperature-entry]
+# name: test_entities[sensor][sensor.h1_curve_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -65,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,7 +23,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 curve supply water temperature',
+    'object_id_base': 'Curve supply water temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -81,33 +31,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 curve supply water temperature',
+    'original_name': 'Curve supply water temperature',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_curve_supply_water_temperature',
+    'translation_key': 'curve_supply_water_temperature',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_curve_supply_water_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_curve_supply_water_temperature-state]
+# name: test_entities[sensor][sensor.h1_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 curve supply water temperature',
+      'friendly_name': 'H1 Curve supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.0',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_delayed_room_temperature-entry]
+# name: test_entities[sensor][sensor.h1_delayed_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -123,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_delayed_room_temperature',
+    'entity_id': 'sensor.h1_delayed_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -131,7 +81,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 delayed room temperature',
+    'object_id_base': 'Delayed room temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -139,33 +89,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 delayed room temperature',
+    'original_name': 'Delayed room temperature',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_delayed_room_temperature',
+    'translation_key': 'delayed_room_temperature',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_delayed_room_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_delayed_room_temperature-state]
+# name: test_entities[sensor][sensor.h1_delayed_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 delayed room temperature',
+      'friendly_name': 'H1 Delayed room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_delayed_room_temperature',
+    'entity_id': 'sensor.h1_delayed_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.4',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_fine_adjustment_effect-entry]
+# name: test_entities[sensor][sensor.h1_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -181,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -189,7 +139,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 fine adjustment effect',
+    'object_id_base': 'Fine adjustment effect',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -197,83 +147,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 fine adjustment effect',
+    'original_name': 'Fine adjustment effect',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_fine_adjustment_effect',
+    'translation_key': 'fine_adjustment_effect',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_fine_adjustment_effect',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_fine_adjustment_effect-state]
+# name: test_entities[sensor][sensor.h1_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 fine adjustment effect',
+      'friendly_name': 'H1 Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_sensor_installed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_sensor_installed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'H1 room sensor installed',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'H1 room sensor installed',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'l1_room_sensor_installed',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_room_sensor_installed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_sensor_installed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 H1 room sensor installed',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_sensor_installed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_sensor_potentiometer-entry]
+# name: test_entities[sensor][sensor.h1_room_sensor_potentiometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -289,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_sensor_potentiometer',
+    'entity_id': 'sensor.h1_room_sensor_potentiometer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -297,7 +197,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 room sensor potentiometer',
+    'object_id_base': 'Room sensor potentiometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -305,33 +205,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 room sensor potentiometer',
+    'original_name': 'Room sensor potentiometer',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_room_sensor_potentiometer',
+    'translation_key': 'room_sensor_potentiometer',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_room_sensor_potentiometer',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_sensor_potentiometer-state]
+# name: test_entities[sensor][sensor.h1_room_sensor_potentiometer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 room sensor potentiometer',
+      'friendly_name': 'H1 Room sensor potentiometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_sensor_potentiometer',
+    'entity_id': 'sensor.h1_room_sensor_potentiometer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_temperature-entry]
+# name: test_entities[sensor][sensor.h1_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -347,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_temperature',
+    'entity_id': 'sensor.h1_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -355,7 +255,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 room temperature',
+    'object_id_base': 'Room temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -363,33 +263,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 room temperature',
+    'original_name': 'Room temperature',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_room_temperature',
+    'translation_key': 'room_temperature',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_room_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_temperature-state]
+# name: test_entities[sensor][sensor.h1_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 room temperature',
+      'friendly_name': 'H1 Room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_temperature',
+    'entity_id': 'sensor.h1_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.5',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_temperature_setpoint-entry]
+# name: test_entities[sensor][sensor.h1_room_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -404,8 +304,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_temperature_setpoint',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.h1_room_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -413,7 +313,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 room temperature setpoint',
+    'object_id_base': 'Room temperature setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -421,33 +321,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 room temperature setpoint',
+    'original_name': 'Room temperature setpoint',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_room_temperature_setpoint',
+    'translation_key': 'room_temperature_setpoint',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_room_temperature_setpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_room_temperature_setpoint-state]
+# name: test_entities[sensor][sensor.h1_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 room temperature setpoint',
+      'friendly_name': 'H1 Room temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_room_temperature_setpoint',
+    'entity_id': 'sensor.h1_room_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_supply_water_temperature-entry]
+# name: test_entities[sensor][sensor.h1_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -463,7 +363,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ouman_eh_800_h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -471,7 +371,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 supply water temperature',
+    'object_id_base': 'Supply water temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -479,33 +379,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 supply water temperature',
+    'original_name': 'Supply water temperature',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_supply_water_temperature',
+    'translation_key': 'supply_water_temperature',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_supply_water_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_supply_water_temperature-state]
+# name: test_entities[sensor][sensor.h1_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 supply water temperature',
+      'friendly_name': 'H1 Supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.3',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor][sensor.h1_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -521,7 +421,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -529,7 +429,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 supply water temperature setpoint',
+    'object_id_base': 'Supply water temperature setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -537,83 +437,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'H1 supply water temperature setpoint',
+    'original_name': 'Supply water temperature setpoint',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_supply_water_temperature_setpoint',
+    'translation_key': 'supply_water_temperature_setpoint',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_supply_water_temperature_setpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor][sensor.h1_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 H1 supply water temperature setpoint',
+      'friendly_name': 'H1 Supply water temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.0',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_temperature_level_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h1_temperature_level_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'H1 temperature level status',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'H1 temperature level status',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'l1_temperature_level_status_text',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_temperature_level_status_text',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_temperature_level_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 H1 temperature level status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_temperature_level_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'L1 Normaalilämpö',
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_valve_position-entry]
+# name: test_entities[sensor][sensor.h1_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -629,7 +479,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ouman_eh_800_h1_valve_position',
+    'entity_id': 'sensor.h1_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -637,7 +487,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'H1 valve position',
+    'object_id_base': 'Valve position',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -645,79 +495,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'H1 valve position',
+    'original_name': 'Valve position',
     'platform': 'ouman_eh_800',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'l1_valve_position',
+    'translation_key': 'valve_position',
     'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_valve_position',
-    'unit_of_measurement': <OumanUnit.PERCENT: '%'>,
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h1_valve_position-state]
+# name: test_entities[sensor][sensor.h1_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 H1 valve position',
+      'friendly_name': 'H1 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <OumanUnit.PERCENT: '%'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h1_valve_position',
+    'entity_id': 'sensor.h1_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h2_installed_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_h2_installed_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'H2 installed status',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'H2 installed status',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'l2_installed_status',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_installed_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_h2_installed_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 H2 installed status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_h2_installed_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_entities[sensor][sensor.ouman_eh_800_outside_temperature-entry]
@@ -758,7 +558,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_outside_temperature',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -776,105 +576,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-5.2',
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_relay_configuration_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_relay_configuration_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Relay configuration type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Relay configuration type',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'relay_configuration_type',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_relay_configuration_type',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_relay_configuration_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay configuration type',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_relay_configuration_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '',
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_relay_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ouman_eh_800_relay_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Relay status',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Relay status',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'relay_status_text',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_relay_status_text',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.ouman_eh_800_relay_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ouman_eh_800_relay_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Rele ei käytössä',
   })
 # ---

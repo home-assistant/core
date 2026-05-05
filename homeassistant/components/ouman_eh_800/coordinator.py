@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from ouman_eh_800_api import (
-    ControllableEndpoint,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
     OumanEh800Client,
@@ -18,9 +17,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL_SECONDS
+from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, OumanDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,27 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             address=config_entry.data[CONF_URL],
         )
 
-        self.sensor_endpoints: list[OumanEndpoint] = []
+        entry_id = config_entry.entry_id
+        main_device_identifier = (DOMAIN, entry_id)
+        self.device_info: dict[OumanDevice, DeviceInfo] = {
+            OumanDevice.MAIN: DeviceInfo(
+                identifiers={main_device_identifier},
+                name="Ouman EH-800",
+                manufacturer="Ouman",
+                model="EH-800",
+                configuration_url=config_entry.data[CONF_URL],
+            ),
+            OumanDevice.L1: DeviceInfo(
+                identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L1}")},
+                translation_key=OumanDevice.L1,
+                via_device=main_device_identifier,
+            ),
+            OumanDevice.L2: DeviceInfo(
+                identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L2}")},
+                translation_key=OumanDevice.L2,
+                via_device=main_device_identifier,
+            ),
+        }
 
     async def _async_setup(self) -> None:
         try:
@@ -65,11 +85,6 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             raise ConfigEntryError("Invalid credentials") from err
         except OumanClientCommunicationError as err:
             raise ConfigEntryNotReady("Error communicating with API") from err
-
-        # Categorize the endpoints for platforms
-        for endpoint in self._registry_set.endpoints:
-            if not isinstance(endpoint, ControllableEndpoint):
-                self.sensor_endpoints.append(endpoint)
 
     async def _async_update_data(self) -> dict[OumanEndpoint, OumanValues]:
         """Fetch registry values from the device."""

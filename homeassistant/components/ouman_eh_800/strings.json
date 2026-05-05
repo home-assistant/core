@@ -24,55 +24,29 @@
       }
     }
   },
+  "device": {
+    "l1": { "name": "H1" },
+    "l2": { "name": "H2" }
+  },
   "entity": {
     "sensor": {
-      "l1_circuit_name": { "name": "H1 circuit name" },
-      "l1_curve_supply_water_temperature": {
-        "name": "H1 curve supply water temperature"
+      "curve_supply_water_temperature": {
+        "name": "Curve supply water temperature"
       },
-      "l1_delayed_room_temperature": { "name": "H1 delayed room temperature" },
-      "l1_fine_adjustment_effect": { "name": "H1 fine adjustment effect" },
-      "l1_room_sensor_installed": { "name": "H1 room sensor installed" },
-      "l1_room_sensor_potentiometer": {
-        "name": "H1 room sensor potentiometer"
+      "delayed_outdoor_temperature_effect": {
+        "name": "Delayed outdoor temperature effect"
       },
-      "l1_room_temperature": { "name": "H1 room temperature" },
-      "l1_room_temperature_setpoint": {
-        "name": "H1 room temperature setpoint"
-      },
-      "l1_supply_water_temperature": { "name": "H1 supply water temperature" },
-      "l1_supply_water_temperature_setpoint": {
-        "name": "H1 supply water temperature setpoint"
-      },
-      "l1_temperature_level_status_text": {
-        "name": "H1 temperature level status"
-      },
-      "l1_valve_position": { "name": "H1 valve position" },
-      "l2_circuit_name": { "name": "H2 circuit name" },
-      "l2_curve_supply_water_temperature": {
-        "name": "H2 curve supply water temperature"
-      },
-      "l2_delayed_outdoor_temperature_effect": {
-        "name": "H2 delayed outdoor temperature effect"
-      },
-      "l2_delayed_room_temperature": { "name": "H2 delayed room temperature" },
-      "l2_installed_status": { "name": "H2 installed status" },
-      "l2_room_sensor_installed": { "name": "H2 room sensor installed" },
-      "l2_room_temperature": { "name": "H2 room temperature" },
-      "l2_room_temperature_setpoint": {
-        "name": "H2 room temperature setpoint"
-      },
-      "l2_supply_water_temperature": { "name": "H2 supply water temperature" },
-      "l2_supply_water_temperature_setpoint": {
-        "name": "H2 supply water temperature setpoint"
-      },
-      "l2_temperature_level_status_text": {
-        "name": "H2 temperature level status"
-      },
-      "l2_valve_position": { "name": "H2 valve position" },
+      "delayed_room_temperature": { "name": "Delayed room temperature" },
+      "fine_adjustment_effect": { "name": "Fine adjustment effect" },
       "outside_temperature": { "name": "Outside temperature" },
-      "relay_configuration_type": { "name": "Relay configuration type" },
-      "relay_status_text": { "name": "Relay status" }
+      "room_sensor_potentiometer": { "name": "Room sensor potentiometer" },
+      "room_temperature": { "name": "Room temperature" },
+      "room_temperature_setpoint": { "name": "Room temperature setpoint" },
+      "supply_water_temperature": { "name": "Supply water temperature" },
+      "supply_water_temperature_setpoint": {
+        "name": "Supply water temperature setpoint"
+      },
+      "valve_position": { "name": "Valve position" }
     }
   }
 }

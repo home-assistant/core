@@ -1,10 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "l1_valve_position": {
-        "default": "mdi:pipe-valve"
-      },
-      "l2_valve_position": {
+      "valve_position": {
         "default": "mdi:pipe-valve"
       }
     }
