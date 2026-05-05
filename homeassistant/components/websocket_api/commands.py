@@ -1077,7 +1077,7 @@ async def handle_execute_script(
         )
         return
     finally:
-        script_obj.async_unload()
+        await script_obj.async_unload()
     connection.send_result(
         msg["id"],
         {
