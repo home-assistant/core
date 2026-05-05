@@ -16,7 +16,7 @@ from ouman_eh_800_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             await self.client.login()
             self._registry_set = await self.client.get_active_registries()
         except OumanClientAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Invalid credentials") from err
+            raise ConfigEntryError("Invalid credentials") from err
         except OumanClientCommunicationError as err:
             raise ConfigEntryNotReady("Error communicating with API") from err
 
