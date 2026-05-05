@@ -1,6 +1,5 @@
 """Tests for the Data Grand Lyon sensor platform."""
 
-from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
@@ -20,44 +19,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MOCK_PASSAGES
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 TZ_PARIS = ZoneInfo("Europe/Paris")
-
-
-MOCK_PASSAGES = [
-    TclPassage(
-        id=100,
-        ligne="C3",
-        direction="Gare Part-Dieu",
-        delai_passage="3 min",
-        type=TclPassageType.ESTIMATED,
-        heure_passage=datetime(2026, 4, 10, 14, 3),
-        id_tarret_destination=0,
-        course_theorique="A",
-    ),
-    TclPassage(
-        id=100,
-        ligne="C3",
-        direction="Gare St-Paul",
-        delai_passage="8 min",
-        type=TclPassageType.THEORETICAL,
-        heure_passage=datetime(2026, 4, 10, 14, 8),
-        id_tarret_destination=0,
-        course_theorique="B",
-    ),
-]
-
-
-@pytest.fixture
-def mock_tcl_client() -> Generator[AsyncMock]:
-    """Mock DataGrandLyonClient for coordinator."""
-    with patch(
-        "homeassistant.components.data_grandlyon.DataGrandLyonClient", autospec=True
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.get_tcl_passages.return_value = MOCK_PASSAGES
-        yield client
 
 
 # Stop sensor tests
@@ -213,27 +179,3 @@ async def test_coordinator_partial_failure(
     state = hass.states.get("sensor.t1_stop_200_next_passage_1")
     assert state is not None
     assert state.state != "unavailable"
-
-
-# Init update listener test
-
-
-async def test_update_entry_reloads(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_tcl_client: AsyncMock,
-) -> None:
-    """Test that the update listener triggers a reload."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_reload:
-        hass.config_entries.async_update_entry(
-            mock_config_entry, title="Updated Data Grand Lyon"
-        )
-        await hass.async_block_till_done()
-
-    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
