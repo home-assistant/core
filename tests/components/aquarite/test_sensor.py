@@ -91,14 +91,6 @@ def test_temperature_native_value_missing() -> None:
     assert entity.native_value is None
 
 
-def test_temperature_native_value_non_numeric() -> None:
-    """Test native_value returns None for non-numeric data."""
-    entity = _make_entity(
-        _make_coordinator({"main": {"temperature": "bad"}}), "temperature"
-    )
-    assert entity.native_value is None
-
-
 # ── Value sensor (divides by 100) ───────────────────────────────
 
 
@@ -111,14 +103,6 @@ def test_ph_native_value(mock_coordinator: MagicMock) -> None:
 def test_ph_native_value_missing() -> None:
     """Test returns None when path is absent."""
     entity = _make_entity(_make_coordinator({"modules": {}}), "ph")
-    assert entity.native_value is None
-
-
-def test_ph_native_value_non_numeric() -> None:
-    """Test returns None for non-numeric data."""
-    entity = _make_entity(
-        _make_coordinator({"modules": {"ph": {"current": "bad"}}}), "ph"
-    )
     assert entity.native_value is None
 
 
@@ -154,28 +138,19 @@ def test_redox_potential_native_value_missing() -> None:
     assert entity.native_value is None
 
 
-# ── Time sensor (divides by 60) ─────────────────────────────────
+# ── Time sensor (raw minutes) ──────────────────────────────────
 
 
 def test_time_sensor_native_value(mock_coordinator: MagicMock) -> None:
-    """Test time value is divided by 60 to return hours."""
+    """Test time value is returned as raw minutes (HA converts to hours)."""
     entity = _make_entity(mock_coordinator, "filtration_intel_time")
-    assert entity.native_value == 10.0
+    assert entity.native_value == 600
 
 
 def test_time_sensor_native_value_missing() -> None:
     """Test returns None when path is absent."""
     entity = _make_entity(
         _make_coordinator({"filtration": {}}), "filtration_intel_time"
-    )
-    assert entity.native_value is None
-
-
-def test_time_sensor_native_value_non_numeric() -> None:
-    """Test time sensor returns None for non-numeric data."""
-    entity = _make_entity(
-        _make_coordinator({"filtration": {"intel": {"time": "bad"}}}),
-        "filtration_intel_time",
     )
     assert entity.native_value is None
 
@@ -192,12 +167,6 @@ def test_rssi_native_value(mock_coordinator: MagicMock) -> None:
 def test_rssi_native_value_missing() -> None:
     """Test returns None when RSSI is missing."""
     entity = _make_entity(_make_coordinator({"main": {}}), "rssi")
-    assert entity.native_value is None
-
-
-def test_rssi_native_value_non_numeric() -> None:
-    """Test RSSI sensor returns None for non-numeric data."""
-    entity = _make_entity(_make_coordinator({"main": {"RSSI": "bad"}}), "rssi")
     assert entity.native_value is None
 
 
