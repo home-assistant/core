@@ -222,6 +222,12 @@ class TriggerStateDescription(BasicTriggerStateDescription):
     """Test state and expected service call count for both included and excluded entities."""
 
     excluded_state: StateDescription  # State for entities not meant to be targeted
+    # State for the *other* targeted entities (the ones not under direct test).
+    # Usually equal to `included_state`; differs when the test exercises a
+    # scenario where targeted-but-not-under-test entities sit in a state that
+    # the trigger's `_should_include` method filters out of the all/count
+    # checks.
+    others_state: StateDescription
 
 
 class ConditionStateDescription(TypedDict):
@@ -438,6 +444,7 @@ def parametrize_trigger_states(
     trigger_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
     extra_invalid_states: list[str | None | tuple[str | None, dict]] | None = None,
     required_filter_attributes: dict | None = None,
     trigger_from_none: bool = True,
@@ -449,7 +456,7 @@ def parametrize_trigger_states(
     `states` is a list of TriggerStateDescription dicts describing the state
     sequence to drive the trigger through.
 
-    The target_states, other_states, and extra_invalid_states
+    The target_states, other_states, excluded_states, and extra_invalid_states
     iterables are either iterables of states or iterables of (state, attributes)
     tuples.
 
@@ -458,6 +465,17 @@ def parametrize_trigger_states(
     `other_states` are states that should NOT fire the trigger and that DO
     count toward the all/count check (i.e. an entity in such a state blocks
     behavior=last).
+
+    `extra_excluded_states` are *additional* states (on top of the always-
+    included missing/unavailable/unknown that the base `_should_include`
+    filters out) that the trigger's `_should_include` override is expected
+    to filter out of the all/count check. The helper iterates over the full
+    filtered set (`[None, STATE_UNAVAILABLE, STATE_UNKNOWN,
+    *extra_excluded_states]`) and generates an additional pattern that sets
+    the *other* targeted entities into each filtered state while the entity
+    under test transitions to a target state — the trigger should fire even
+    though the other entities never matched, because they are invisible to
+    the all/count check.
 
     `extra_invalid_states` are *additional* states (on top of the always-
     included STATE_UNAVAILABLE and STATE_UNKNOWN) that should be treated as
@@ -479,6 +497,17 @@ def parametrize_trigger_states(
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
         *(extra_invalid_states or []),
+    ]
+    extra_excluded_states = list(extra_excluded_states or [])
+    # The excluded_states pattern iterates over every state the base
+    # _should_include impl filters out (a missing state object, unavailable,
+    # unknown), plus any caller-supplied additions filtered by a
+    # `_should_include` override.
+    excluded_states = [
+        None,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+        *extra_excluded_states,
     ]
     required_filter_attributes = required_filter_attributes or {}
     trigger_options = trigger_options or {}
@@ -520,11 +549,19 @@ def parametrize_trigger_states(
     def state_with_attributes(
         state: str | None | tuple[str | None, dict],
         count: int,
+        *,
+        others_state: str | None | tuple[str | None, dict] | UndefinedType = UNDEFINED,
     ) -> TriggerStateDescription:
         """Return TriggerStateDescription dict."""
+        included = _included_state_desc(state)
         return {
-            "included_state": _included_state_desc(state),
+            "included_state": included,
             "excluded_state": _excluded_state_desc(state),
+            "others_state": (
+                included
+                if isinstance(others_state, UndefinedType)
+                else _included_state_desc(others_state)
+            ),
             "count": count,
         }
 
@@ -696,6 +733,40 @@ def parametrize_trigger_states(
             ),
         )
 
+    # Pattern: the OTHER targeted entities sit in a state filtered by the
+    # trigger's `_should_include` (default impl filters
+    # missing/unavailable/unknown; overrides may add more, supplied by the
+    # caller via `extra_excluded_states`). They are invisible to the
+    # all/count checks, so even though they never enter `target_state` the
+    # trigger should still fire when the entity under test alone transitions
+    # other -> target.
+    # Sequence per (target, other, excluded):
+    #   entity_id: other        -> target (1)
+    #   others:    other        -> excluded
+    # i.e. step 0 sets all entities to `other`; step 1 transitions the
+    # entity under test to `target` while the others go to `excluded` (via
+    # `others_state`). The all/count check filters the others out, so a
+    # single matching entity is enough to fire `behavior=last`.
+    tests.append(
+        (
+            trigger,
+            trigger_options,
+            list(
+                itertools.chain.from_iterable(
+                    (
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(
+                            target_state, 1, others_state=excluded_state
+                        ),
+                    )
+                    for target_state in target_states
+                    for other_state in other_states
+                    for excluded_state in excluded_states
+                )
+            ),
+        )
+    )
+
     return tests
 
 
@@ -723,6 +794,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
+    attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical-changed triggers.
 
@@ -755,9 +827,28 @@ def parametrize_numerical_attribute_changed_trigger_states(
         unit_attributes: Attributes (typically `{ATTR_UNIT_OF_MEASUREMENT: ...}`)
             merged into every generated state, so the entity carries a unit
             alongside its tracked attribute.
+        attribute_required: When True, `(state, {attribute: None})` is
+            classified as an *excluded* state (filtered out of the all/count
+            check by the trigger's `_should_include` override) instead of an
+            "other" state. Set this for triggers that override
+            `_should_include` to skip entities lacking the attribute.
     """
     trigger_options = trigger_options or {}
     unit_attributes = unit_attributes or {}
+    # When `attribute_required=True`, `(attr=None)` is filtered by the
+    # trigger's `_should_include` override, so it can no longer play the
+    # role of a "non-firing but counted" other state. Substitute a
+    # non-numeric string value: it fails `float(...)` (so is_valid_state is
+    # False) but is still `is not None` (so the override includes it in
+    # the all/count check), giving us a proper "other" state. Mirrors how
+    # `parametrize_numerical_state_value_changed_trigger_states` uses the
+    # literal string "none" as a non-numeric state value.
+    if attribute_required:
+        extra_excluded_states = [(state, {attribute: None} | unit_attributes)]
+        other_invalid_attr = (state, {attribute: "none"} | unit_attributes)
+    else:
+        extra_excluded_states = None
+        other_invalid_attr = (state, {attribute: None} | unit_attributes)
 
     return [
         *parametrize_trigger_states(
@@ -776,7 +867,8 @@ def parametrize_numerical_attribute_changed_trigger_states(
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
-            other_states=[(state, {attribute: None} | unit_attributes)],
+            other_states=[other_invalid_attr],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
@@ -797,9 +889,10 @@ def parametrize_numerical_attribute_changed_trigger_states(
                 (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None} | unit_attributes),
+                other_invalid_attr,
                 (state, {attribute: 0} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
@@ -820,9 +913,10 @@ def parametrize_numerical_attribute_changed_trigger_states(
                 (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None} | unit_attributes),
+                other_invalid_attr,
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
@@ -838,6 +932,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
+    attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical crossed-threshold triggers.
 
@@ -872,9 +967,25 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         unit_attributes: Attributes (typically `{ATTR_UNIT_OF_MEASUREMENT: ...}`)
             merged into every generated state, so the entity carries a unit
             alongside its tracked attribute.
+        attribute_required: When True, `(state, {attribute: None})` is
+            classified as an *excluded* state (filtered out of the all/count
+            check by the trigger's `_should_include` override) instead of an
+            "other" state. Set this for triggers that override
+            `_should_include` to skip entities lacking the attribute.
     """
     trigger_options = trigger_options or {}
     unit_attributes = unit_attributes or {}
+    # See `parametrize_numerical_attribute_changed_trigger_states` for the
+    # rationale of substituting a non-numeric string-attr for `(attr=None)`
+    # when `attribute_required=True`: the override would filter `None`
+    # out of the all/count check, so we use a value that fails
+    # `is_valid_state` but is still included.
+    if attribute_required:
+        extra_excluded_states = [(state, {attribute: None} | unit_attributes)]
+        other_invalid_attr = (state, {attribute: "none"} | unit_attributes)
+    else:
+        extra_excluded_states = None
+        other_invalid_attr = (state, {attribute: None} | unit_attributes)
 
     return [
         *parametrize_trigger_states(
@@ -895,10 +1006,11 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 60} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None} | unit_attributes),
+                other_invalid_attr,
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
@@ -919,10 +1031,11 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None} | unit_attributes),
+                other_invalid_attr,
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 60} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
@@ -942,9 +1055,10 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None} | unit_attributes),
+                other_invalid_attr,
                 (state, {attribute: 0} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
@@ -964,9 +1078,10 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None} | unit_attributes),
+                other_invalid_attr,
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
     ]
@@ -1603,6 +1718,7 @@ async def assert_trigger_behavior_any(
     for state in states[1:]:
         excluded_state = state["excluded_state"]
         included_state = state["included_state"]
+        others_state = state["others_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(calls) == state["count"]
@@ -1611,12 +1727,20 @@ async def assert_trigger_behavior_any(
         calls.clear()
 
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
+            set_or_remove_state(hass, other_entity_id, others_state)
             await hass.async_block_till_done()
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(calls) == (entities_in_target - 1) * state["count"]
+        # When others_state differs from included_state, the post-others count
+        # is 0: others are placed in a state filtered or rejected by the
+        # trigger, so they don't fire individually.
+        expected_others_count = (
+            (entities_in_target - 1) * state["count"]
+            if others_state == included_state
+            else 0
+        )
+        assert len(calls) == expected_others_count
         calls.clear()
 
 
@@ -1654,6 +1778,7 @@ async def assert_trigger_behavior_first(
     for state in states[1:]:
         excluded_state = state["excluded_state"]
         included_state = state["included_state"]
+        others_state = state["others_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(calls) == state["count"]
@@ -1662,7 +1787,7 @@ async def assert_trigger_behavior_first(
         calls.clear()
 
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
+            set_or_remove_state(hass, other_entity_id, others_state)
             await hass.async_block_till_done()
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
@@ -1704,8 +1829,9 @@ async def assert_trigger_behavior_last(
     for state in states[1:]:
         excluded_state = state["excluded_state"]
         included_state = state["included_state"]
+        others_state = state["others_state"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
+            set_or_remove_state(hass, other_entity_id, others_state)
             await hass.async_block_till_done()
         assert len(calls) == 0
 
