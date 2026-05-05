@@ -81,12 +81,10 @@ class MQTTProtocolV5Migration(RepairsFlow):
                 assert entry is not None
             new_entry_data = entry.data.copy()
             new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
-            if CONF_PORT not in new_entry_data:
-                new_entry_data[CONF_PORT] = DEFAULT_PORT
             # Try the connection with protocol version 5
             if await self.hass.async_add_executor_job(
                 try_connection,
-                new_entry_data,
+                {CONF_PORT: DEFAULT_PORT} | new_entry_data,
             ):
                 self.hass.config_entries.async_update_entry(entry, data=new_entry_data)
                 return self.async_create_entry(data={})
