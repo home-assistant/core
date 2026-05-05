@@ -16,8 +16,15 @@ from homeassistant.components.timer import (
     STATUS_IDLE,
     STATUS_PAUSED,
 )
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET
+from homeassistant.const import (
+    ATTR_LABEL_ID,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_PLATFORM,
+    CONF_TARGET,
+)
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, label_registry as lr
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -274,6 +281,8 @@ async def _arm_time_remaining_trigger(
     entity_id: str,
     remaining: dict[str, int],
     calls: list[dict[str, Any]],
+    *,
+    target: dict[str, Any] | None = None,
 ) -> None:
     """Arm the time_remaining trigger."""
     trigger_config = await async_validate_trigger_config(
@@ -281,7 +290,7 @@ async def _arm_time_remaining_trigger(
         [
             {
                 CONF_PLATFORM: "timer.time_remaining",
-                CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+                CONF_TARGET: target or {CONF_ENTITY_ID: entity_id},
                 CONF_OPTIONS: {"remaining": remaining},
             }
         ],
@@ -531,3 +540,186 @@ async def test_time_remaining_trigger_short_timer(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_time_remaining_trigger_already_active_at_attach(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trigger schedules for timers already active when the trigger attaches."""
+    now = dt_util.utcnow()
+    calls: list[dict[str, Any]] = []
+
+    # Timer is already active before the trigger is armed
+    finishes_at = now + timedelta(seconds=60)
+    hass.states.async_set(
+        "timer.test",
+        STATUS_ACTIVE,
+        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+    )
+    await hass.async_block_till_done()
+
+    await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
+
+    # No fire yet
+    assert len(calls) == 0
+
+    # Before fire_at (finishes_at - 30s = now + 30s) — should not fire
+    freezer.move_to(now + timedelta(seconds=25))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # At fire_at — should fire even though no state change occurred
+    freezer.move_to(now + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == "timer.test"
+    assert calls[0]["remaining"] == timedelta(seconds=30)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_time_remaining_trigger_already_active_past_threshold_at_attach(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trigger does not schedule for timers already past the fire point at attach."""
+    now = dt_util.utcnow()
+    calls: list[dict[str, Any]] = []
+
+    # Timer is active but only 20 seconds remain — past the 30s threshold already
+    finishes_at = now + timedelta(seconds=20)
+    hass.states.async_set(
+        "timer.test",
+        STATUS_ACTIVE,
+        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+    )
+    await hass.async_block_till_done()
+
+    await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
+
+    # Advance past the timer's finishing time — should never fire
+    freezer.move_to(now + timedelta(seconds=25))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_time_remaining_trigger_idle_at_attach(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trigger does not schedule for non-active timers at attach time."""
+    now = dt_util.utcnow()
+    calls: list[dict[str, Any]] = []
+
+    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    await hass.async_block_till_done()
+
+    await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
+
+    # Even far in the future, no fire because timer never started
+    freezer.move_to(now + timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_time_remaining_trigger_entity_removed_from_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test trigger cancels scheduled fire when entity is removed from the target."""
+    now = dt_util.utcnow()
+    calls: list[dict[str, Any]] = []
+
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Test Time Remaining")
+
+    entry = entity_registry.async_get_or_create(
+        domain=DOMAIN, platform="test", unique_id="time_remaining_remove"
+    )
+    entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+
+    hass.states.async_set(entry.entity_id, STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    await hass.async_block_till_done()
+
+    await _arm_time_remaining_trigger(
+        hass,
+        entry.entity_id,
+        {"seconds": 30},
+        calls,
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    # Start the timer — this schedules a fire via the state-change path
+    finishes_at = now + timedelta(seconds=60)
+    hass.states.async_set(
+        entry.entity_id,
+        STATUS_ACTIVE,
+        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+    )
+    await hass.async_block_till_done()
+
+    # Remove the entity from the target by stripping its label
+    freezer.move_to(now + timedelta(seconds=10))
+    entity_registry.async_update_entity(entry.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    # Advance past the original fire time — should not fire since cancelled
+    freezer.move_to(now + timedelta(seconds=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_time_remaining_trigger_entity_added_to_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test trigger schedules a fire for an active timer added to the target later."""
+    now = dt_util.utcnow()
+    calls: list[dict[str, Any]] = []
+
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Test Time Remaining Add")
+
+    entry = entity_registry.async_get_or_create(
+        domain=DOMAIN, platform="test", unique_id="time_remaining_add"
+    )
+
+    # Timer is active, but not in the target yet
+    finishes_at = now + timedelta(seconds=60)
+    hass.states.async_set(
+        entry.entity_id,
+        STATUS_ACTIVE,
+        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+    )
+    await hass.async_block_till_done()
+
+    await _arm_time_remaining_trigger(
+        hass,
+        entry.entity_id,
+        {"seconds": 30},
+        calls,
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    # Now label the entity so it joins the target
+    entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    # Advance to the fire time — should fire even though no state change occurred
+    freezer.move_to(now + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entry.entity_id
+    assert calls[0]["remaining"] == timedelta(seconds=30)

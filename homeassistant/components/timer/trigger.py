@@ -6,7 +6,7 @@ from typing import cast, override
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec, filter_by_domain_specs
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -71,23 +71,15 @@ class TimeRemainingTrigger(Trigger):
         scheduled: dict[str, CALLBACK_TYPE] = {}
 
         @callback
-        def state_change_listener(
-            target_state_change_data: TargetStateChangedData,
+        def schedule_for_state(
+            entity_id: str,
+            from_state: State | None,
+            to_state: State | None,
+            context: Context | None,
         ) -> None:
-            """Listen for state changes and schedule trigger."""
-            event = target_state_change_data.state_change_event
-            entity_id: str = event.data["entity_id"]
-            from_state = event.data["old_state"]
-            to_state = event.data["new_state"]
-
-            # Cancel any previously scheduled callback for this entity
-            if entity_id in scheduled:
-                scheduled.pop(entity_id)()
-
-            if not from_state or not to_state:
+            """Schedule a fire for an active timer state, if applicable."""
+            if from_state is None or to_state is None:
                 return
-
-            # Only schedule when timer is active and has finishes_at
             if to_state.state != STATUS_ACTIVE:
                 return
 
@@ -115,18 +107,47 @@ class TimeRemainingTrigger(Trigger):
                         "remaining": self._remaining,
                     },
                     f"time remaining of {entity_id}",
-                    event.context,
+                    context,
                 )
 
             scheduled[entity_id] = async_track_point_in_utc_time(
                 self._hass, fire_trigger, fire_at
             )
 
+        @callback
+        def state_change_listener(
+            target_state_change_data: TargetStateChangedData,
+        ) -> None:
+            """Listen for state changes and schedule trigger."""
+            event = target_state_change_data.state_change_event
+            entity_id: str = event.data["entity_id"]
+            from_state = event.data["old_state"]
+            to_state = event.data["new_state"]
+
+            # Cancel any previously scheduled callback for this entity
+            if entity_id in scheduled:
+                scheduled.pop(entity_id)()
+
+            schedule_for_state(entity_id, from_state, to_state, event.context)
+
+        @callback
+        def on_entities_update(added: set[str], removed: set[str]) -> None:
+            """Handle changes to the tracked entity set."""
+            for entity_id in removed:
+                if entity_id in scheduled:
+                    scheduled.pop(entity_id)()
+            for entity_id in added:
+                state = self._hass.states.get(entity_id)
+                schedule_for_state(
+                    entity_id, state, state, state.context if state else None
+                )
+
         unsub = async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,
             self.entity_filter,
+            on_entities_update,
         )
 
         @callback
