@@ -1,7 +1,5 @@
 """Support for Slide switch."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from goslideapi.goslideapi import (

@@ -65,3 +65,8 @@ async def test_energy_solar_forecast_filters_midnight_utc_zeros(
             "2021-06-27T15:00:00+00:00": 292,
         }
     }
+
+
+async def test_energy_solar_forecast_invalid_id(hass: HomeAssistant) -> None:
+    """Test the Forecast.Solar energy platform with invalid config entry ID."""
+    assert await energy.async_get_solar_forecast(hass, "invalid_id") is None

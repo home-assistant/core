@@ -53,6 +53,9 @@
     }
   },
   "triggers": {
+    "operation_mode_changed": {
+      "trigger": "mdi:water-boiler"
+    },
     "target_temperature_changed": {
       "trigger": "mdi:thermometer"
     },

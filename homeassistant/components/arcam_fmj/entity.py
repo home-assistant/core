@@ -1,7 +1,5 @@
 """Base entity for Arcam FMJ integration."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,3 +24,8 @@ class ArcamFmjEntity(CoordinatorEntity[ArcamFmjCoordinator]):
         if description is not None:
             self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
             self.entity_description = description
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.client.connected

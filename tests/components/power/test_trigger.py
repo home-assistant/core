@@ -4,10 +4,9 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -15,20 +14,14 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
     target_entities,
 )
 
-_POWER_TRIGGER_OPTIONS = {"unit": UnitOfPower.WATT}
 _POWER_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
-
-
-@pytest.fixture
-async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple number entities associated with different targets."""
-    return await target_entities(hass, "number")
 
 
 @pytest.fixture
@@ -51,6 +44,41 @@ async def test_power_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+
+_WATT_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 50, "unit_of_measurement": "W"},
+    }
+}
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("power.changed", _CHANGED_THRESHOLD, False, False),
+        ("power.crossed_threshold", _WATT_CROSSED_THRESHOLD, True, True),
+    ],
+)
+async def test_power_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that power triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
@@ -62,20 +90,19 @@ async def test_power_triggers_gated_by_labs_flag(
         *parametrize_numerical_state_value_changed_trigger_states(
             "power.changed",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -87,7 +114,6 @@ async def test_power_trigger_sensor_behavior_any(
     """Test power trigger fires for sensor entities with device_class power."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -109,14 +135,13 @@ async def test_power_trigger_sensor_behavior_any(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -128,7 +153,6 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_first(
     """Test power crossed_threshold trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -150,14 +174,13 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_sensor_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -169,140 +192,7 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_last(
     """Test power crossed_threshold trigger fires when the last sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-# --- Number entity tests ---
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_changed_trigger_states(
-            "power.changed",
-            device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
-            unit_attributes=_POWER_UNIT_ATTRIBUTES,
-        ),
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "power.crossed_threshold",
-            device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
-            unit_attributes=_POWER_UNIT_ATTRIBUTES,
-        ),
-    ],
-)
-async def test_power_trigger_number_behavior_any(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test power trigger fires for number entities with device_class power."""
-    await assert_trigger_behavior_any(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "power.crossed_threshold",
-            device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
-            unit_attributes=_POWER_UNIT_ATTRIBUTES,
-        ),
-    ],
-)
-async def test_power_trigger_number_crossed_threshold_behavior_first(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test power crossed_threshold trigger fires on the first number state change."""
-    await assert_trigger_behavior_first(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "power.crossed_threshold",
-            device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
-            unit_attributes=_POWER_UNIT_ATTRIBUTES,
-        ),
-    ],
-)
-async def test_power_trigger_number_crossed_threshold_behavior_last(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test power crossed_threshold trigger fires when the last number changes state."""
-    await assert_trigger_behavior_last(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,

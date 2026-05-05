@@ -5,16 +5,16 @@
 # Copilot code review instructions
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
-- Do not add comments about code style, formatting or linting issues.
+- Do not comment on code style, formatting or linting issues.
+- A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
 
 # GitHub Copilot & Claude Code Instructions
 
 This repository contains the core of Home Assistant, a Python 3 based home automation application.
 
-## Code Review Guidelines
+## Git Commit Guidelines
 
-**Git commit practices during review:**
-- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
+- **Do NOT amend, squash, or rebase commits that have already been pushed to the PR branch after the PR is opened** - Reviewers need to follow the commit history, as well as see what changed since their last review
 
 ## Development Commands
 
@@ -22,23 +22,20 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Python Syntax Notes
 
-- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses.
+- Home Assistant officially supports Python 3.14 as its minimum version. Do not flag syntax or features that require Python 3.14 as issues, and do not suggest workarounds for older Python versions.
+- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses. Never flag this as an issue.
+- Python 3.14 evaluates annotations lazily (PEP 649). Forward references in annotations do not need to be quoted — annotations can reference names defined later in the module without quoting them or using `from __future__ import annotations`. Do not flag unquoted forward references in annotations as issues.
 
 ## Testing
 
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
-- Add tests when they do not already exist so new behavior is covered and later changes are less likely to regress it.
-- Prefer `.ambr` snapshots, mocks, and fixtures so tests are easier to extend.
-- Use `patch.object(...)` instead of `patch(...)` when the object is already in test scope and/or already imported so patches stay tied to the object under test and are easier to follow.
-- If an integration grows a `setup_integration` helper, add it to `tests/components/<integration>/__init__.py` so tests can share one setup path and future contributors can extend them without duplicating setup code.
-- Keep tests DRY with `pytest.mark.parametrize` where it fits so new cases can be added without copying the full test body.
+- Avoid using conditions/branching in tests. Instead, either split tests or adjust the test parametrization to cover all cases without branching.
+- If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body.
 
 ## Good practices
 
-Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
-
-
-# Skills
-
-- Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
+- Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
+- When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
+- When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.
+- Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why — non-obvious constraints, surprising behavior, or workarounds — never what.

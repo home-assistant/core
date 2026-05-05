@@ -7,15 +7,22 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import aiohttp
-from opendisplay import BLEConnectionError
+from opendisplay import (
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
+    BLEConnectionError,
+)
 from PIL import Image as PILImage
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.opendisplay.const import DOMAIN
+from homeassistant import config_entries
+from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
+
+from . import ENCRYPTION_KEY
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -288,3 +295,102 @@ async def test_upload_image_cancels_previous_task(
     await hass.async_block_till_done()
 
     assert prev_task.cancelled()
+
+
+async def test_upload_image_with_encryption_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device_class: MagicMock,
+    mock_resolve_media: MagicMock,
+) -> None:
+    """Test that upload_image passes the encryption key to OpenDisplayDevice."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
+    )
+
+    device_id = _device_id(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
+            },
+        },
+        blocking=True,
+    )
+
+    assert mock_opendisplay_device_class.call_args.kwargs[
+        "encryption_key"
+    ] == bytes.fromhex(ENCRYPTION_KEY)
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        AuthenticationFailedError("wrong key"),
+        AuthenticationRequiredError("auth required"),
+    ],
+)
+async def test_upload_image_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+    mock_resolve_media: MagicMock,
+    exception: Exception,
+) -> None:
+    """Test that auth errors during upload trigger a reauth flow."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    mock_opendisplay_device.__aenter__.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert any(f["context"]["source"] == config_entries.SOURCE_REAUTH for f in flows)
+
+
+async def test_upload_image_invalid_encryption_key_format(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_resolve_media: MagicMock,
+) -> None:
+    """Test that a malformed stored encryption key triggers reauth and raises an error."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: "not-valid-hex!"},
+    )
+    device_id = _device_id(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert any(f["context"]["source"] == config_entries.SOURCE_REAUTH for f in flows)

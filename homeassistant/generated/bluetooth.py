@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
@@ -132,6 +130,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "eufylife_ble",
         "local_name": "eufy T9149",
+    },
+    {
+        "connectable": True,
+        "domain": "eurotronic_cometblue",
+        "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67",
     },
     {
         "connectable": False,

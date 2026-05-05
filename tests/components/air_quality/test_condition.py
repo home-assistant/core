@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_ABOVE,
-    CONF_BELOW,
     STATE_OFF,
     STATE_ON,
 )
@@ -23,6 +21,7 @@ from tests.components.common import (
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -32,11 +31,9 @@ from tests.components.common import (
     target_entities,
 )
 
-_UGM3_CONDITION_OPTIONS = {"unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}
 _UGM3_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 }
-_PPB_CONDITION_OPTIONS = {"unit": CONCENTRATION_PARTS_PER_BILLION}
 _PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION}
 _PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION}
 
@@ -82,6 +79,73 @@ async def test_air_quality_conditions_gated_by_labs_flag(
 ) -> None:
     """Test the air quality conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+
+
+_PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+_PPB_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {
+            "number": 50,
+            "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
+        },
+    }
+}
+_UGM3_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {
+            "number": 50,
+            "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        },
+    }
+}
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        # State-based conditions
+        ("air_quality.is_gas_detected", {}, True, True),
+        ("air_quality.is_gas_cleared", {}, True, True),
+        ("air_quality.is_co_detected", {}, True, True),
+        ("air_quality.is_co_cleared", {}, True, True),
+        ("air_quality.is_smoke_detected", {}, True, True),
+        ("air_quality.is_smoke_cleared", {}, True, True),
+        # Numerical conditions with unit conversion (μg/m³ base)
+        ("air_quality.is_co_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_ozone_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_voc_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_no_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_no2_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_so2_value", _UGM3_THRESHOLD, True, True),
+        # Numerical conditions with unit conversion (ppb base)
+        ("air_quality.is_voc_ratio_value", _PPB_THRESHOLD, True, True),
+        # Numerical conditions without unit conversion
+        ("air_quality.is_co2_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm1_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm25_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm4_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm10_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_n2o_value", _PLAIN_THRESHOLD, True, True),
+    ],
+)
+async def test_air_quality_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that air_quality conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -241,43 +305,43 @@ async def test_air_quality_binary_condition_behavior_all(
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_co_value",
             device_class="carbon_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_ozone_value",
             device_class="ozone",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_voc_value",
             device_class="volatile_organic_compounds",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_voc_ratio_value",
             device_class="volatile_organic_compounds_parts",
-            condition_options=_PPB_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_no_value",
             device_class="nitrogen_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_no2_value",
             device_class="nitrogen_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_so2_value",
             device_class="sulphur_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
     ],
@@ -316,43 +380,43 @@ async def test_air_quality_numerical_with_unit_condition_behavior_any(
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_co_value",
             device_class="carbon_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_ozone_value",
             device_class="ozone",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_voc_value",
             device_class="volatile_organic_compounds",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_voc_ratio_value",
             device_class="volatile_organic_compounds_parts",
-            condition_options=_PPB_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_no_value",
             device_class="nitrogen_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_no2_value",
             device_class="nitrogen_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_so2_value",
             device_class="sulphur_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
     ],
@@ -539,19 +603,38 @@ async def test_air_quality_condition_unit_conversion_co(
         ],
         numerical_condition_options=[
             {
-                CONF_ABOVE: 0.2,
-                CONF_BELOW: 0.8,
-                "unit": CONCENTRATION_PARTS_PER_MILLION,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 0.2,
+                        "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+                    },
+                    "value_max": {
+                        "number": 0.8,
+                        "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+                    },
+                }
             },
             {
-                CONF_ABOVE: 200,
-                CONF_BELOW: 800,
-                "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 200,
+                        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                    },
+                    "value_max": {
+                        "number": 800,
+                        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                    },
+                }
             },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[

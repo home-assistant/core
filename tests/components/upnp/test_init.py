@@ -1,7 +1,5 @@
 """Test UPnP/IGD setup process."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import copy
 from typing import Any

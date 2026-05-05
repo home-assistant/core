@@ -1,7 +1,5 @@
 """Validate integration quality scale files."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 import voluptuous as vol
@@ -11,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration, ScaledQualityScaleTiers
+from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
     action_setup,
@@ -212,6 +210,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -474,7 +473,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -985,7 +983,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -1183,6 +1180,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -1293,7 +1291,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "eliqonline",
     "elkm1",
     "elmax",
-    "elgato",
     "elv",
     "elvia",
     "emby",
@@ -1456,7 +1453,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -1920,7 +1916,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tapsaff",
@@ -1985,7 +1980,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -2102,6 +2096,7 @@ NO_QUALITY_SCALE = [
     "device_tracker",
     "diagnostics",
     "door",
+    "doorbell",
     "ffmpeg",
     "file_upload",
     "frontend",
@@ -2149,6 +2144,7 @@ NO_QUALITY_SCALE = [
     "search",
     "system_health",
     "system_log",
+    "unifi_discovery",
     "tag",
     "temperature",
     "timer",
@@ -2170,7 +2166,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(
@@ -2200,7 +2196,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         if (
             integration.domain not in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE
             and integration.domain not in NO_QUALITY_SCALE
-            and integration.integration_type != "virtual"
+            and integration.integration_type != IntegrationType.VIRTUAL
         ):
             integration.add_error(
                 "quality_scale",
@@ -2218,7 +2214,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             )
             return
         return
-    if integration.integration_type == "virtual":
+    if integration.integration_type == IntegrationType.VIRTUAL:
         integration.add_error(
             "quality_scale",
             "Virtual integrations are not allowed to have a quality scale file.",

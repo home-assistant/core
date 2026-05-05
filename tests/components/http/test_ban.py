@@ -246,7 +246,19 @@ async def test_ip_ban_manager_never_started(
     ),
 )
 @pytest.mark.usefixtures(
-    "hassio_env", "resolution_info", "os_info", "store_info", "supervisor_info"
+    "hassio_env",
+    "resolution_info",
+    "os_info",
+    "store_info",
+    "supervisor_info",
+    "homeassistant_info",
+    "host_info",
+    "network_info",
+    "addons_list",
+    "addon_info",
+    "homeassistant_stats",
+    "supervisor_stats",
+    "ingress_panels",
 )
 async def test_access_from_supervisor_ip(
     remote_addr,

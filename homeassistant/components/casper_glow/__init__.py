@@ -1,7 +1,5 @@
 """The Casper Glow integration."""
 
-from __future__ import annotations
-
 from pycasperglow import CasperGlow
 
 from homeassistant.components import bluetooth
@@ -11,7 +9,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import CasperGlowConfigEntry, CasperGlowCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> bool:

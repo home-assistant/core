@@ -6,10 +6,12 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "api_error_no_details": "An error occurred while communicating with the Proxmox VE instance.",
       "cannot_connect": "Cannot connect to Proxmox VE server",
       "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_nodes_found": "No active nodes found",
+      "no_nodes_found": "No active nodes were found on the Proxmox VE server.",
+      "no_vmlxc_found": "No LXC or VM were found on the Proxmox VE server.",
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {
@@ -140,8 +142,11 @@
       "reset": {
         "name": "Reset"
       },
+      "resume_all": {
+        "name": "Resume"
+      },
       "shutdown": {
-        "name": "Shutdown"
+        "name": "Shut down"
       },
       "snapshot_create": {
         "name": "Create snapshot"
@@ -313,10 +318,16 @@
       "message": "No active nodes were found on the Proxmox VE server."
     },
     "no_permission_node_power": {
-      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'Sys.PowerMgmt' permission and try again."
+    },
+    "no_permission_snapshot": {
+      "message": "The configured Proxmox VE user does not have permission to create snapshots of VMs and containers. Please grant the user the 'VM.Snapshot' permission and try again."
     },
     "no_permission_vm_lxc_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "no_vmlxc_found": {
+      "message": "No LXC or VM were found on the Proxmox VE server."
     },
     "permissions_error": {
       "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."

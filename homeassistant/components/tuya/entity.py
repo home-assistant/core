@@ -1,7 +1,5 @@
 """Tuya Home Assistant Base Device Model."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.device_wrapper import DeviceWrapper
@@ -24,17 +22,15 @@ class TuyaEntity(Entity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EntityDescription | None = None,
+        description: EntityDescription,
     ) -> None:
-        """Init TuyaHaEntity."""
-        self._attr_unique_id = f"tuya.{device.id}"
+        """Init TuyaEntity."""
+        self._attr_unique_id = f"tuya.{device.id}{description.key}"
+        self.entity_description = description
         # TuyaEntity initialize mq can subscribe
         device.set_up = True
         self.device = device
         self.device_manager = device_manager
-        if description:
-            self._attr_unique_id = f"tuya.{device.id}{description.key}"
-            self.entity_description = description
 
     @property
     def device_info(self) -> DeviceInfo:

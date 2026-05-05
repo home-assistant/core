@@ -1,0 +1,31 @@
+set_keyboard_text:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: apple_tv
+    text:
+      required: true
+      selector:
+        text:
+
+append_keyboard_text:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: apple_tv
+    text:
+      required: true
+      selector:
+        text:
+
+clear_keyboard_text:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: apple_tv

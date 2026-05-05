@@ -1,7 +1,5 @@
 """Interfaces with TotalConnect alarm control panels."""
 
-from __future__ import annotations
-
 from total_connect_client import ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 from total_connect_client.location import TotalConnectLocation

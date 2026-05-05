@@ -1,15 +1,17 @@
 {
   "common": {
-    "condition_behavior_description": "The behavior of the targeted texts to check.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_equal_to": {
       "description": "Tests if one or more texts are equal to a specified value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::text::common::condition_behavior_description%]",
           "name": "[%key:component::text::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::text::common::condition_for_name%]"
         },
         "value": {
           "description": "The value to compare the text to.",
@@ -50,24 +52,16 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    }
-  },
   "services": {
     "set_value": {
-      "description": "Sets the value.",
+      "description": "Sets the value of a text entity.",
       "fields": {
         "value": {
           "description": "Enter your text.",
           "name": "Value"
         }
       },
-      "name": "Set value"
+      "name": "Set text value"
     }
   },
   "title": "Text",

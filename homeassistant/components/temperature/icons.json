@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "is_value": {
+      "condition": "mdi:thermometer"
+    }
+  },
   "triggers": {
     "changed": {
       "trigger": "mdi:thermometer"

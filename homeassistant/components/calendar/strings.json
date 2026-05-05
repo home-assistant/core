@@ -1,4 +1,22 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
+  },
+  "conditions": {
+    "is_event_active": {
+      "description": "Tests if one or more calendars have an active event.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::calendar::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::calendar::common::condition_for_name%]"
+        }
+      },
+      "name": "Calendar event is active"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::calendar::title%]",

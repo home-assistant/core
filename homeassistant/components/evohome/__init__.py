@@ -6,8 +6,6 @@ others.
 Note that the API used by this integration's client does not support cooling.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Final
@@ -103,6 +101,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    )
+    hass.async_create_task(
+        async_load_platform(hass, Platform.BUTTON, DOMAIN, {}, config)
     )
     if coordinator.tcs.hotwater:
         hass.async_create_task(

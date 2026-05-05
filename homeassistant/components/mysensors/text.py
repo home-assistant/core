@@ -1,7 +1,5 @@
 """Provide a text platform for MySensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.text import TextEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

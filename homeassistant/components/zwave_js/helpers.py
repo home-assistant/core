@@ -1,7 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
@@ -572,12 +570,12 @@ def get_value_state_schema(
             return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            return vol.In({int(k): v for k, v in value.metadata.states.items()})
+            return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
         return None
 
     if value.metadata.states:
-        return vol.In({int(k): v for k, v in value.metadata.states.items()})
+        return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
     return vol.All(
         vol.Coerce(int),

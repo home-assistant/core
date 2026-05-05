@@ -1,7 +1,5 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 

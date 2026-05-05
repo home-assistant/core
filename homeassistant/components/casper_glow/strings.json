@@ -39,6 +39,16 @@
       "resume": {
         "name": "Resume dimming"
       }
+    },
+    "select": {
+      "dimming_time": {
+        "name": "Dimming time"
+      }
+    },
+    "sensor": {
+      "dimming_end_time": {
+        "name": "Dimming end time"
+      }
     }
   },
   "exceptions": {

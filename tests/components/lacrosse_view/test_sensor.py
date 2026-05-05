@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-from lacrosse_view import Sensor
+from lacrosse_view import HTTPError, Sensor
 import pytest
 
 from homeassistant.components.lacrosse_view.const import DOMAIN
@@ -228,6 +228,54 @@ async def test_no_readings(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature").state == "unavailable"
+
+
+async def test_mixed_readings(hass: HomeAssistant) -> None:
+    """Test a device without readings does not fail setup for the whole entry."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    working_sensor = TEST_SENSOR.model_copy(
+        update={"name": "Working", "sensor_id": "working", "device_id": "working"}
+    )
+    no_readings_sensor = TEST_NO_READINGS_SENSOR.model_copy(
+        update={
+            "name": "No readings",
+            "sensor_id": "no_readings",
+            "device_id": "no_readings",
+        }
+    )
+    working_status = working_sensor.data
+    no_readings_status = no_readings_sensor.data
+    working_sensor.data = None
+    no_readings_sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[working_sensor, no_readings_sensor],
+        ),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensor_status",
+            side_effect=[
+                working_status,
+                HTTPError(
+                    "Failed to get sensor status, status code: 404",
+                    no_readings_status,
+                ),
+            ],
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.working_temperature").state == "2"
+    assert hass.states.get("sensor.no_readings_temperature").state == "unavailable"
 
 
 async def test_other_error(hass: HomeAssistant) -> None:

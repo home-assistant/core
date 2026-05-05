@@ -1,7 +1,5 @@
 """The tests for the climate component."""
 
-from __future__ import annotations
-
 from enum import Enum
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -705,7 +703,7 @@ async def test_target_temp_high_higher_than_low(
 
     with pytest.raises(
         ServiceValidationError,
-        match="'Lower target temperature' can not be higher than 'Upper target temperature'",
+        match="'Lower target temperature' cannot be higher than 'Upper target temperature'",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -719,6 +717,6 @@ async def test_target_temp_high_higher_than_low(
         )
     assert (
         str(exc.value)
-        == "'Lower target temperature' can not be higher than 'Upper target temperature'"
+        == "'Lower target temperature' cannot be higher than 'Upper target temperature'"
     )
     assert exc.value.translation_key == "low_temp_higher_than_high_temp"

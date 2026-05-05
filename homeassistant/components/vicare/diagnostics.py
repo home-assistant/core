@@ -1,7 +1,5 @@
 """Diagnostics support for ViCare."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
@@ -23,7 +21,7 @@ async def async_get_config_entry_diagnostics(
         """Dump devices."""
         return [
             json.loads(device.dump_secure())
-            for device in entry.runtime_data.client.devices
+            for device in entry.runtime_data.client.all_devices
         ]
 
     return {

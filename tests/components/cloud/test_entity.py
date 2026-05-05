@@ -1,7 +1,5 @@
 """Tests for helpers in the Home Assistant Cloud conversation entity."""
 
-from __future__ import annotations
-
 import base64
 import datetime
 from pathlib import Path

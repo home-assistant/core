@@ -1,7 +1,5 @@
 """Support for exposing a templated binary sensor."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -280,6 +278,9 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
     """Sensor entity based on trigger data."""
 
     domain = BINARY_SENSOR_DOMAIN
+
+    # delay on and delay off are validated when the state is validated.
+    skip_rendered_result = (CONF_DELAY_ON, CONF_DELAY_OFF)
 
     def __init__(
         self,
