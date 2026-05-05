@@ -157,7 +157,9 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
                 },
             )
 
-        duration_minutes = int(duration.total_seconds() / 60)
+        duration_minutes, remainder = divmod(duration, timedelta(minutes=1))
+        if remainder:
+            duration_minutes += 1
 
         try:
             await self.coordinator.client.activate_thermostat_timer(

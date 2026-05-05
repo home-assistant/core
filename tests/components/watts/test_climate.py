@@ -193,10 +193,19 @@ async def test_set_hvac_mode_off(
     )
 
 
+@pytest.mark.parametrize(
+    ("duration", "expected_minutes"),
+    [
+        (timedelta(minutes=90), 90),
+        (timedelta(minutes=1, seconds=30), 2),
+    ],
+)
 async def test_activate_timer_mode(
     hass: HomeAssistant,
     mock_watts_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    duration: timedelta,
+    expected_minutes: int,
 ) -> None:
     """Test activating timer mode with temperature and duration."""
     await setup_integration(hass, mock_config_entry)
@@ -207,13 +216,13 @@ async def test_activate_timer_mode(
         {
             ATTR_ENTITY_ID: "climate.living_room_thermostat",
             ATTR_TEMPERATURE: 20.5,
-            ATTR_DURATION: timedelta(minutes=90),
+            ATTR_DURATION: duration,
         },
         blocking=True,
     )
 
     mock_watts_client.activate_thermostat_timer.assert_called_once_with(
-        "thermostat_123", 20.5, 90
+        "thermostat_123", 20.5, expected_minutes
     )
 
 
