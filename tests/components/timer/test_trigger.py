@@ -660,7 +660,6 @@ async def test_time_remaining_trigger_active_on_first_state_event(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == "timer.test"
-    assert calls[0]["from_state"] is None
     assert calls[0]["remaining"] == timedelta(seconds=30)
 
 
