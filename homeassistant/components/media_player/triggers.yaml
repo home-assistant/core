@@ -16,6 +16,7 @@
         duration:
 
 muted: *trigger_common
+unmuted: *trigger_common
 paused_playing: *trigger_common
 started_playing: *trigger_common
 stopped_playing: *trigger_common
