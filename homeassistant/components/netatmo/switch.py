@@ -58,6 +58,9 @@ class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
                 },
             ]
         )
+        # The stringified DeviceType members in pyatmo versions 9.2.3 and earlier
+        # were rendered as 'DeviceType.<name>', do that manually to avoid breaking
+        # unique IDs for existing installations
         self._attr_unique_id = f"{self.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}"
         self._attr_is_on = self.device.on
 

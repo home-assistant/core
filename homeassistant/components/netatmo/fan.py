@@ -62,6 +62,9 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
             ]
         )
 
+        # The stringified DeviceType members in pyatmo versions 9.2.3 and earlier
+        # were rendered as 'DeviceType.<name>', do that manually to avoid breaking
+        # unique IDs for existing installations
         self._attr_unique_id = f"{self.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}"
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
