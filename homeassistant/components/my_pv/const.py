@@ -7,7 +7,7 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 
-DOMAIN: Final = "mypv"
+DOMAIN: Final = "my_pv"
 
 CONF_TYPE_LOCAL: Final = "local"
 CONF_TYPE_CLOUD: Final = "cloud"

@@ -816,7 +816,7 @@ ZEROCONF = {
     ],
     "_mypv._tcp.local.": [
         {
-            "domain": "mypv",
+            "domain": "my_pv",
         },
     ],
     "_nanoleafapi._tcp.local.": [
