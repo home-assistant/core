@@ -3301,7 +3301,7 @@ async def test_entity_trigger_first_requires_exactly_one(
 async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
+    """Test behavior last: unavailable/unknown entities are excluded from the all-match check.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     not fire because C is still off, so the available entities do not all
@@ -3565,6 +3565,51 @@ async def test_entity_trigger_duration_last_requires_all(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last with for: timer is cancelled when every targeted entity is filtered out.
+
+    With behavior=last + `for:`, an "all match" check that becomes vacuously
+    True (every targeted entity filtered by `_should_include` — here all
+    entities go unavailable) must not keep the timer alive; otherwise the
+    action would fire after the duration even though no entity still
+    matches.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on — combined state "all on", timer starts
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # After 2 seconds, every targeted entity goes unavailable. Both are
+    # filtered out of the all-check by `_should_include`, leaving the
+    # check vacuously True. The timer must still be cancelled.
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_UNAVAILABLE)
+    hass.states.async_set(entity_b, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
 
     unsub()
 

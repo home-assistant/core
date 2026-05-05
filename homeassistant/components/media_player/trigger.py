@@ -33,27 +33,7 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
         excluded from the check - otherwise an "all" check would never
         pass when there are media players without volume support.
         """
-        return state.state not in self._excluded_states and self._has_volume_attributes(
-            state
-        )
-
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all mutable entity states match."""
-        return all(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(state)
-        )
-
-    def count_matches(self, entity_ids: set[str]) -> int:
-        """Count matching mutable entities."""
-        return sum(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(state)
-        )
+        return super()._should_include(state) and self._has_volume_attributes(state)
 
     def is_muted(self, state: State) -> bool:
         """Check if the media player is muted."""
