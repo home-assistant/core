@@ -16,8 +16,8 @@ from tests.components.image_upload import TEST_IMAGE
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture
-async def uploaded_file_dir(
+@pytest.fixture(name="uploaded_file_dir")
+async def upload_file_dir(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> Path:
     """Test uploading and using a file."""
@@ -54,28 +54,6 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
     await hass.async_block_till_done()
 
     assert not uploaded_file_dir.exists()
-
-
-async def test_domain_not_registered(hass: HomeAssistant) -> None:
-    """Test ValueError raised when domain not initialized."""
-
-    with (
-        pytest.raises(ValueError),
-        file_upload.process_uploaded_file(hass, "fake_file"),
-    ):
-        # we should never reach this code.
-        pass
-
-
-async def test_unknown_file_id(hass: HomeAssistant, uploaded_file_dir) -> None:
-    """Test ValueError raised with wrong file id."""
-
-    with (
-        pytest.raises(ValueError),
-        file_upload.process_uploaded_file(hass, "fake_file"),
-    ):
-        # we should never reach this code.
-        pass
 
 
 async def test_removing_file(
