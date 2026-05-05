@@ -167,8 +167,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
         if response_format in ("ogg", "oga"):
             codec: Literal["mp3", "opus", "aac", "flac", "wav", "pcm"] = "opus"
         elif response_format == "raw":
-            response_format = "pcm"
-            codec = response_format
+            response_format = codec = "pcm"
         elif response_format not in self._supported_formats:
             response_format = self.default_options[ATTR_PREFERRED_FORMAT]
             codec = response_format
