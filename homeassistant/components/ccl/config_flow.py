@@ -6,50 +6,20 @@ import asyncio
 import logging
 from typing import Any
 
-from aioccl import CCLDevice, CCLServer
+from aioccl import CCLDevice
 from aioccl.exception import CCLDeviceRegistrationException
 from aioccl.server import register
-from aiohttp import web
-from aiohttp.hdrs import METH_POST
 from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from . import devices
-from .const import DOMAIN, NAME
+from . import devices, register_webhook
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def register_webhook(hass, webhook_id) -> str:
-    """Register webhook for the device."""
-
-    async def handle_webhook(
-        hass: HomeAssistant, webhook_id: str, request: web.Request
-    ) -> Any:
-        """Handle incoming requests from CCL devices."""
-        return CCLServer.handler(request, devices)
-
-    webhook_url = webhook.async_generate_url(
-        hass,
-        webhook_id,
-        allow_ip=True,
-    )
-
-    webhook.async_register(
-        hass,
-        DOMAIN,
-        f"{NAME}-{webhook_id}",
-        webhook_id,
-        handle_webhook,
-        allowed_methods=[METH_POST],
-    )
-
-    return webhook_url
 
 
 class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
