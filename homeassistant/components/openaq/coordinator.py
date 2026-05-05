@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
+import httpx
 from openaq import (
     ApiKeyMissingError,
     AsyncOpenAQ,
@@ -24,7 +25,7 @@ from openaq import (
     TimeoutError as OpenAQTimeoutError,
     ValidationError,
 )
-from openaq._async.transport import AsyncTransport
+from openaq.shared.transport import check_response
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
@@ -32,6 +33,7 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import location as location_util
 
@@ -79,14 +81,44 @@ class OpenAQRuntimeData:
 type OpenAQConfigEntry = ConfigEntry[OpenAQRuntimeData]
 
 
-def create_openaq_client(api_key: str) -> AsyncOpenAQ:
-    """Create an OpenAQ client with an independent transport."""
-    return AsyncOpenAQ(api_key=api_key, transport=AsyncTransport())
+class HomeAssistantOpenAQTransport:
+    """OpenAQ transport using Home Assistant's shared httpx client."""
+
+    def __init__(self, client: httpx.AsyncClient) -> None:
+        """Initialize the transport."""
+        self.client = client
+
+    async def send_request(
+        self,
+        method: str,
+        url: str,
+        params: httpx.QueryParams | Mapping[str, str | int | float | bool] | None,
+        headers: httpx.Headers | Mapping[str, str],
+    ) -> httpx.Response:
+        """Send a request through Home Assistant's shared httpx client."""
+        response = await self.client.request(
+            method=method,
+            url=url,
+            params=params,
+            headers=headers,
+        )
+        return check_response(response)
+
+    async def close(self) -> None:
+        """Keep the shared Home Assistant httpx client open."""
+
+
+def create_openaq_client(api_key: str, httpx_client: httpx.AsyncClient) -> AsyncOpenAQ:
+    """Create an OpenAQ client with a Home Assistant managed transport."""
+    return AsyncOpenAQ(
+        api_key=api_key,
+        transport=cast(Any, HomeAssistantOpenAQTransport(httpx_client)),
+    )
 
 
 async def async_create_openaq_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:
-    """Create an OpenAQ client without blocking the event loop."""
-    return await hass.async_add_executor_job(create_openaq_client, api_key)
+    """Create an OpenAQ client."""
+    return create_openaq_client(api_key, get_async_client(hass))
 
 
 def get_openaq_value(data: object, *names: str) -> Any:
@@ -277,6 +309,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
 
 
 __all__ = [
+    "HomeAssistantOpenAQTransport",
     "OpenAQConfigEntry",
     "OpenAQDataUpdateCoordinator",
     "OpenAQLocationData",
