@@ -1,7 +1,5 @@
 """Support for HomeWizard select platform."""
 
-from __future__ import annotations
-
 from homewizard_energy.models import Batteries
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription

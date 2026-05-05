@@ -1,7 +1,5 @@
 """The NASweb integration."""
 
-from __future__ import annotations
-
 import logging
 
 from webio_api import WebioAPI

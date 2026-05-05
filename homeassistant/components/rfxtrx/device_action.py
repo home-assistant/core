@@ -1,7 +1,5 @@
 """Provides device automations for RFXCOM RFXtrx."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 import voluptuous as vol

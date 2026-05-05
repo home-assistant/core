@@ -1,7 +1,5 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from typing import Any, NotRequired, TypedDict
 

@@ -1,7 +1,5 @@
 """Minio component."""
 
-from __future__ import annotations
-
 import logging
 import os
 from queue import Queue

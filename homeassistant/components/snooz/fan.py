@@ -1,7 +1,5 @@
 """Fan representation of a Snooz device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any

@@ -10,7 +10,7 @@
       selector:
         automation_behavior:
           mode: condition
-    for:
+    for: &condition_for
       required: true
       default: 00:00:00
       selector:
@@ -41,6 +41,7 @@ is_value:
         device_class: moisture
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

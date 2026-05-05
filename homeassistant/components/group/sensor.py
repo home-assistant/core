@@ -1,7 +1,5 @@
 """Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import logging

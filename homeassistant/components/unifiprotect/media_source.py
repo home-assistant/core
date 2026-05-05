@@ -1,7 +1,5 @@
 """UniFi Protect media sources."""
 
-from __future__ import annotations
-
 import asyncio
 from calendar import monthrange
 from datetime import date, datetime, timedelta

@@ -1,7 +1,5 @@
 """Manage the Silicon Labs Multiprotocol add-on."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 import dataclasses

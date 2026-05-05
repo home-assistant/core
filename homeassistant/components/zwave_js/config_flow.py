@@ -1,7 +1,5 @@
 """Config flow for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 from contextlib import suppress
