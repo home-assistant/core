@@ -54,7 +54,7 @@ async def test_migrate_entry_v1_1_to_v2_1(
     config_entry.add_to_hass(hass)
 
     with patch(
-        f"{MODULE}._obtain_token_via_basic_auth_pkce",
+        f"{MODULE}.obtain_token_via_basic_auth_pkce",
         return_value=mock_token,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -95,7 +95,7 @@ async def test_migrate_entry_v1_2_to_v2_1(
     config_entry.add_to_hass(hass)
 
     with patch(
-        f"{MODULE}._obtain_token_via_basic_auth_pkce",
+        f"{MODULE}.obtain_token_via_basic_auth_pkce",
         return_value=mock_token,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -129,7 +129,7 @@ async def test_migrate_entry_token_failure(
     config_entry.add_to_hass(hass)
 
     with patch(
-        f"{MODULE}._obtain_token_via_basic_auth_pkce",
+        f"{MODULE}.obtain_token_via_basic_auth_pkce",
         return_value={},
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -163,7 +163,7 @@ async def test_migrate_entry_creates_repair_issue(
     config_entry.add_to_hass(hass)
 
     with patch(
-        f"{MODULE}._obtain_token_via_basic_auth_pkce",
+        f"{MODULE}.obtain_token_via_basic_auth_pkce",
         return_value={
             "access_token": "a",
             "refresh_token": "r",

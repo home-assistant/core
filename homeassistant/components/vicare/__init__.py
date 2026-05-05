@@ -5,25 +5,15 @@ from __future__ import annotations
 from contextlib import suppress
 import logging
 import os
-from typing import Any
 
 from aiohttp import ClientError
-from authlib.common.security import generate_token as generate_code_verifier
-from authlib.integrations.requests_client import OAuth2Session
 from PyViCare.PyViCare import PyViCare
-from PyViCare.PyViCareAbstractOAuthManager import (
-    AUTHORIZE_URL,
-    SCOPE_IOT,
-    SCOPE_OFFLINE_ACCESS,
-    TOKEN_URL,
-)
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareOAuthManager import REDIRECT_URI
+from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
 )
-import requests
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -93,7 +83,7 @@ async def async_migrate_entry(
         _LOGGER.debug("Imported configured client_id as application credential")
 
         token = await hass.async_add_executor_job(
-            _obtain_token_via_basic_auth_pkce, client_id, username, password
+            obtain_token_via_basic_auth_pkce, client_id, username, password
         )
 
         data.pop(CONF_USERNAME)
@@ -190,58 +180,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-def _obtain_token_via_basic_auth_pkce(
-    client_id: str, username: str, password: str
-) -> dict[str, Any]:
-    """Obtain an OAuth2 token via PKCE auth-code flow with HTTP Basic auth.
-
-    Viessmann's authorization endpoint accepts HTTP Basic auth and returns
-    the auth code in the redirect Location header (no browser involved).
-    Used during migration to silently obtain a refresh token from existing
-    username/password credentials, so users don't need to re-authenticate.
-    """
-    oauth = OAuth2Session(
-        client_id,
-        redirect_uri=REDIRECT_URI,
-        scope=[SCOPE_IOT, SCOPE_OFFLINE_ACCESS],
-        code_challenge_method="S256",
-    )
-    code_verifier = generate_code_verifier(48)
-    auth_url, _ = oauth.create_authorization_url(
-        AUTHORIZE_URL, code_verifier=code_verifier
-    )
-
-    try:
-        response = requests.post(
-            auth_url,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            auth=(username, password),
-            allow_redirects=False,
-            timeout=15,
-        )
-    except requests.RequestException:
-        _LOGGER.warning("Failed to reach Viessmann auth server during migration")
-        return {}
-
-    if response.status_code != 302 or "Location" not in response.headers:
-        _LOGGER.warning("Basic-auth authorization failed during migration")
-        return {}
-
-    try:
-        oauth.fetch_token(
-            TOKEN_URL,
-            authorization_response=response.headers["Location"],
-            code_verifier=code_verifier,
-        )
-    except requests.RequestException, KeyError, ValueError:
-        _LOGGER.warning("Token exchange failed during migration")
-        return {}
-
-    token = dict(oauth.token)
-    _LOGGER.debug("Obtained OAuth2 token via PKCE auth-code with Basic auth")
-    return token
 
 
 def _remove_token_file(token_path: str) -> None:
