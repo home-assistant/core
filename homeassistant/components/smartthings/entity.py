@@ -75,9 +75,9 @@ class SmartThingsEntity(Entity):
         return get_main_component_category(self.device) in APPLIANCE_CATEGORIES
 
     def _availability_handler(self, event: DeviceHealthEvent) -> None:
-        available = event.status == HealthStatus.ONLINE
-        if not available and self._is_appliance():
+        if self._is_appliance() and event.status != HealthStatus.ONLINE:
             return
+        available = event.status != HealthStatus.OFFLINE
         if available == self._attr_available:
             return
         self._attr_available = available
