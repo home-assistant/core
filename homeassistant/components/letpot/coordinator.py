@@ -36,7 +36,9 @@ class LetPotCoordinators:
     watering_systems: list[LetPotWateringSystemCoordinator]
 
 
-class LetPotDeviceCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+class LetPotDeviceCoordinator[_DataT: LetPotDeviceStatus](
+    DataUpdateCoordinator[_DataT]
+):
     """Class to handle data updates for a specific device."""
 
     config_entry: LetPotConfigEntry
