@@ -66,7 +66,6 @@ from .const import (
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
-    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
@@ -702,9 +701,7 @@ class MQTT:
         if message_expiry_interval is not None:
             import paho.mqtt.client as mqtt  # noqa: PLC0415
 
-            if (
-                protocol := self.conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
-            ) != PROTOCOL_5:
+            if (protocol := self.conf.get(CONF_PROTOCOL, PROTOCOL_311)) != PROTOCOL_5:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="mqtt_message_expiry_interval_not_supported",
