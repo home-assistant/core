@@ -2,7 +2,12 @@
 
 from visionpluspython.models import SwitchDevice, ThermostatDevice, ThermostatMode
 
-from homeassistant.components.climate import HVACAction, HVACMode
+from homeassistant.components.climate import (
+    PRESET_COMFORT,
+    PRESET_ECO,
+    HVACAction,
+    HVACMode,
+)
 
 DOMAIN = "watts"
 
@@ -21,13 +26,13 @@ FAST_POLLING_INTERVAL_SECONDS = 5
 DISCOVERY_INTERVAL_MINUTES = 15
 
 # Mapping from Watts Vision+ modes to Home Assistant HVAC modes
-THERMOSTAT_MODE_TO_HVAC: dict[str, HVACMode] = {
-    "Program": HVACMode.AUTO,
-    "Eco": HVACMode.HEAT,
-    "Comfort": HVACMode.HEAT,
-    "Defrost": HVACMode.HEAT,
-    "Timer": HVACMode.HEAT,
-    "Off": HVACMode.OFF,
+THERMOSTAT_MODE_TO_HVAC: dict[ThermostatMode, HVACMode] = {
+    ThermostatMode.PROGRAM: HVACMode.AUTO,
+    ThermostatMode.ECO: HVACMode.HEAT,
+    ThermostatMode.COMFORT: HVACMode.HEAT,
+    ThermostatMode.DEFROST: HVACMode.HEAT,
+    ThermostatMode.TIMER: HVACMode.HEAT,
+    ThermostatMode.OFF: HVACMode.OFF,
 }
 
 # Mapping from Home Assistant HVAC modes to Watts Vision+ modes
@@ -38,22 +43,19 @@ HVAC_MODE_TO_THERMOSTAT: dict[HVACMode, ThermostatMode] = {
 }
 
 # Preset modes available on all Watts Vision+ thermostats.
-PRESET_MODES: list[str] = ["comfort", "eco", "defrost", "timer"]
+PRESET_MODES: list[str] = [PRESET_COMFORT, PRESET_ECO, "defrost", "timer"]
 
-# Mapping from Watts Vision+ mode name to HA preset mode string
-THERMOSTAT_MODE_TO_PRESET: dict[str, str] = {
-    "Comfort": "comfort",
-    "Eco": "eco",
-    "Defrost": "defrost",
-    "Timer": "timer",
+# Mapping from Watts Vision+ mode to HA preset mode string
+THERMOSTAT_MODE_TO_PRESET: dict[ThermostatMode, str] = {
+    ThermostatMode.COMFORT: PRESET_COMFORT,
+    ThermostatMode.ECO: PRESET_ECO,
+    ThermostatMode.DEFROST: "defrost",
+    ThermostatMode.TIMER: "timer",
 }
 
 # Mapping from HA preset mode string to Watts Vision+ ThermostatMode
 PRESET_MODE_TO_THERMOSTAT: dict[str, ThermostatMode] = {
-    "comfort": ThermostatMode.COMFORT,
-    "eco": ThermostatMode.ECO,
-    "defrost": ThermostatMode.DEFROST,
-    "timer": ThermostatMode.TIMER,
+    v: k for k, v in THERMOSTAT_MODE_TO_PRESET.items()
 }
 
 # Mapping from Watts Vision+ HVAC actions to Home Assistant HVACAction
@@ -69,5 +71,3 @@ SUPPORTED_DEVICE_TYPES = (ThermostatDevice, SwitchDevice)
 # Timer service
 SERVICE_ACTIVATE_TIMER_MODE = "activate_timer_mode"
 ATTR_DURATION = "duration"
-TIMER_MIN_DURATION_MINUTES = 1
-TIMER_MAX_DURATION_MINUTES = 1440

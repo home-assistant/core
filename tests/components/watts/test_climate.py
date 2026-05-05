@@ -321,7 +321,7 @@ async def test_activate_timer_mode(
         {
             ATTR_ENTITY_ID: "climate.living_room_thermostat",
             ATTR_TEMPERATURE: 20.5,
-            ATTR_DURATION: 90,
+            ATTR_DURATION: timedelta(minutes=90),
         },
         blocking=True,
     )

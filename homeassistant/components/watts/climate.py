@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
 from visionpluspython.exceptions import WattsVisionError
-from visionpluspython.models import ThermostatDevice
-import voluptuous as vol
+from visionpluspython.models import ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -19,24 +19,17 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
 from .const import (
-    ATTR_DURATION,
     DOMAIN,
     HVAC_ACTION_TO_HA,
     HVAC_MODE_TO_THERMOSTAT,
     PRESET_MODE_TO_THERMOSTAT,
     PRESET_MODES,
-    SERVICE_ACTIVATE_TIMER_MODE,
     THERMOSTAT_MODE_TO_HVAC,
     THERMOSTAT_MODE_TO_PRESET,
-    TIMER_MAX_DURATION_MINUTES,
-    TIMER_MIN_DURATION_MINUTES,
 )
 from .coordinator import WattsVisionDeviceCoordinator
 from .entity import WattsVisionEntity
@@ -44,6 +37,10 @@ from .entity import WattsVisionEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+
+def _parse_thermostat_mode(mode: str) -> ThermostatMode:
+    return ThermostatMode[mode.upper()]
 
 
 async def async_setup_entry(
@@ -95,26 +92,6 @@ async def async_setup_entry(
         )
     )
 
-    _register_climate_services()
-
-
-def _register_climate_services() -> None:
-    """Register entity services for the climate platform."""
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ACTIVATE_TIMER_MODE,
-        {
-            vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
-            vol.Required(ATTR_DURATION): vol.All(
-                vol.Coerce(int),
-                vol.Range(
-                    min=TIMER_MIN_DURATION_MINUTES, max=TIMER_MAX_DURATION_MINUTES
-                ),
-            ),
-        },
-        "async_activate_timer_mode",
-    )
-
 
 class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     """Representation of a Watts Vision heater as a climate entity."""
@@ -156,7 +133,9 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
+        return THERMOSTAT_MODE_TO_HVAC.get(
+            _parse_thermostat_mode(self.device.thermostat_mode)
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -166,7 +145,9 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return THERMOSTAT_MODE_TO_PRESET.get(self.device.thermostat_mode)
+        return THERMOSTAT_MODE_TO_PRESET.get(
+            _parse_thermostat_mode(self.device.thermostat_mode)
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -218,7 +199,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         await self.coordinator.async_refresh()
 
     async def async_activate_timer_mode(
-        self, temperature: float, duration: int
+        self, temperature: float, duration: timedelta
     ) -> None:
         """Activate timer mode with a target temperature and duration."""
         if not self._attr_min_temp <= temperature <= self._attr_max_temp:
@@ -232,9 +213,11 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
                 },
             )
 
+        duration_minutes = int(duration.total_seconds() / 60)
+
         try:
             await self.coordinator.client.activate_thermostat_timer(
-                self.device_id, temperature, duration
+                self.device_id, temperature, duration_minutes
             )
         except (WattsVisionError, ValueError, RuntimeError) as err:
             raise HomeAssistantError(
@@ -245,7 +228,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         _LOGGER.debug(
             "Successfully activated timer mode: %s°C for %d min on %s",
             temperature,
-            duration,
+            duration_minutes,
             self.device_id,
         )
 

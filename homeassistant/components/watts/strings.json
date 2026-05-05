@@ -36,9 +36,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "comfort": "Comfort",
               "defrost": "Defrost",
-              "eco": "Eco",
               "timer": "Timer"
             }
           }

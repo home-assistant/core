@@ -15,9 +15,5 @@ activate_timer_mode:
     duration:
       required: true
       selector:
-        number:
-          min: 1
-          max: 1440
-          step: 1
-          unit_of_measurement: "min"
-          mode: box
+        duration:
+          enable_second: false
