@@ -1,6 +1,7 @@
 """The Mikrotik router class."""
 
 from datetime import timedelta
+import inspect
 import logging
 import ssl
 from typing import Any
@@ -312,8 +313,14 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
     """Connect to Mikrotik hub."""
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
-    _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
+    login_methods = (login_plain, login_token)
+    login_key = (
+        "login_methods"
+        if "login_methods" in inspect.signature(librouteros.connect).parameters
+        else "login_method"
+    )
+    login_arg = login_methods if login_key == "login_methods" else login_plain
+    kwargs = {login_key: login_arg, "port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
