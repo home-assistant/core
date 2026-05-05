@@ -417,24 +417,30 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="sprinkler_progress",
         translation_key="sprinkler_progress",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: (
-            running.get("progress")
+            round(running.get("progress", 0) / attrs.get("meterStepFactor", 10), 2)
             if (running := data.get("running")) is not None
+            and (attrs := data.get("attributes")) is not None
             else None
         ),
     ),
     YoLinkSensorEntityDescription(
         key="sprinkler_target",
         translation_key="sprinkler_target",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: (
-            total.get("value")
+            round(total.get("value", 0) / attrs.get("meterStepFactor", 10), 2)
             if (running := data.get("running")) is not None
             and (total := running.get("total")) is not None
+            and (attrs := data.get("attributes")) is not None
             else None
         ),
     ),
