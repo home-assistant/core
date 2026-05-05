@@ -24,6 +24,8 @@ update_pin_code:
         number:
           min: 1000
           max: 99999999
+          mode: box
+          step: 1
     device_id:
       required: true
       example: 1234567890abcdef1234567890abcdef
