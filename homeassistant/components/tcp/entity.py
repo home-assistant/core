@@ -66,8 +66,8 @@ class TcpEntity(Entity):
 
     def update(self) -> None:
         """Get the latest value for this sensor."""
+        # Keep initial failures as unknown, but mark later failures as unavailable.
         if self._state is not None:
-            # Do not set it as unavailable if still unknown.
             self.available = False
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
