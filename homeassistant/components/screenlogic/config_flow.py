@@ -14,7 +14,12 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -56,7 +61,6 @@ async def async_discover_gateways_by_unique_id() -> dict[str, dict[str, Any]]:
 
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
-
 
 
 def normalize_adapter_id(adapter_id: str) -> str:
@@ -107,6 +111,7 @@ async def async_validate_remote_gateway(
     finally:
         if gateway.is_connected:
             await gateway.async_disconnect(force=True)
+
 
 def _extract_mac_from_name(name: str) -> str:
     return format_mac(f"{PENTAIR_OUI}-{name.split(':')[1].strip()}")

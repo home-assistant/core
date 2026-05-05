@@ -31,13 +31,6 @@
         "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
         "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]"
       },
-      "user": {
-        "data": {
-          "connection_type": "Connection type"
-        },
-        "description": "Choose how Home Assistant should connect to your ScreenLogic gateway.",
-        "title": "ScreenLogic"
-      },
       "remote_entry": {
         "data": {
           "adapter_id": "Adapter ID",
@@ -45,6 +38,13 @@
         },
         "description": "Enter the six-character ScreenLogic adapter ID, for example 12-AB-34, and the ScreenLogic remote password.",
         "title": "ScreenLogic remote access"
+      },
+      "user": {
+        "data": {
+          "connection_type": "Connection type"
+        },
+        "description": "Choose how Home Assistant should connect to your ScreenLogic gateway.",
+        "title": "ScreenLogic"
       }
     }
   },
