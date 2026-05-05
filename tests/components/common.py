@@ -5,6 +5,7 @@ import copy
 from enum import StrEnum
 import itertools
 import logging
+from pathlib import Path
 from typing import Any, TypedDict
 
 import pytest
@@ -44,6 +45,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, mock_device_registry
 
@@ -397,10 +399,28 @@ def parametrize_trigger_states(
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts.
+    """Parametrize sequences of states and expected service call counts.
 
-    The target_states, other_states, and extra_invalid_states iterables are
-    either iterables of states or iterables of (state, attributes) tuples.
+    Returns a list of `(trigger, trigger_options, states)` tuples, where
+    `states` is a list of TriggerStateDescription dicts describing the state
+    sequence to drive the trigger through.
+
+    The target_states, other_states, and extra_invalid_states
+    iterables are either iterables of states or iterables of (state, attributes)
+    tuples.
+
+    `target_states` are states that should fire the trigger.
+
+    `other_states` are states that should NOT fire the trigger and that DO
+    count toward the all/count check (i.e. an entity in such a state blocks
+    behavior=last).
+
+    `extra_invalid_states` are *additional* states (on top of the always-
+    included STATE_UNAVAILABLE and STATE_UNKNOWN) that should be treated as
+    invalid by the trigger (i.e. `is_valid_transition` rejects transitions
+    out of them). They drive the "transition from other state to invalid"
+    and "initial state invalid" patterns alongside the built-in
+    unavailable/unknown states.
 
     Set `trigger_from_none` to False if the trigger is not expected to fire
     when the initial state is None, this is relevant for triggers that limit
@@ -409,46 +429,71 @@ def parametrize_trigger_states(
 
     Set `retrigger_on_target_state` to True if the trigger is expected to fire
     when the state changes to another target state.
-
-    Returns a list of tuples with (trigger, list of states),
-    where states is a list of TriggerStateDescription dicts.
     """
 
-    extra_invalid_states = extra_invalid_states or []
-    invalid_states = [STATE_UNAVAILABLE, STATE_UNKNOWN, *extra_invalid_states]
+    invalid_states = [
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+        *(extra_invalid_states or []),
+    ]
     required_filter_attributes = required_filter_attributes or {}
     trigger_options = trigger_options or {}
 
-    def state_with_attributes(
-        state: str | None | tuple[str | None, dict], count: int
-    ) -> TriggerStateDescription:
-        """Return TriggerStateDescription dict."""
+    def _included_state_desc(
+        state: str | None | tuple[str | None, dict],
+    ) -> StateDescription:
+        """Build a state for entities meant to match the trigger's target.
+
+        The required_filter_attributes are merged in so the state passes the
+        trigger's filter.
+        """
+        if isinstance(state, str) or state is None:
+            return {"state": state, "attributes": required_filter_attributes}
+        return {
+            "state": state[0],
+            "attributes": state[1] | required_filter_attributes,
+        }
+
+    def _excluded_state_desc(
+        state: str | None | tuple[str | None, dict],
+    ) -> StateDescription:
+        """Build a state for entities outside the trigger's target.
+
+        The required_filter_attributes are intentionally NOT merged in so the
+        state fails the trigger's filter. When the trigger has no filter, the
+        excluded entity is fully irrelevant: its state value is set to None.
+        """
         if isinstance(state, str) or state is None:
             return {
-                "included_state": {
-                    "state": state,
-                    "attributes": required_filter_attributes,
-                },
-                "excluded_state": {
-                    "state": state if required_filter_attributes else None,
-                    "attributes": {},
-                },
-                "count": count,
+                "state": state if required_filter_attributes else None,
+                "attributes": {},
             }
         return {
-            "included_state": {
-                "state": state[0],
-                "attributes": state[1] | required_filter_attributes,
-            },
-            "excluded_state": {
-                "state": state[0] if required_filter_attributes else None,
-                "attributes": state[1],
-            },
+            "state": state[0] if required_filter_attributes else None,
+            "attributes": state[1],
+        }
+
+    def state_with_attributes(
+        state: str | None | tuple[str | None, dict],
+        count: int,
+    ) -> TriggerStateDescription:
+        """Return TriggerStateDescription dict."""
+        return {
+            "included_state": _included_state_desc(state),
+            "excluded_state": _excluded_state_desc(state),
             "count": count,
         }
 
     tests = [
-        # Initial state None
+        # Pattern: entities start unset (state=None / removed) and approach
+        # a target state via an "other" intermediate.
+        # Sequence per (target, other) pair:
+        #   None -> target (0) -> other (0) -> target (1 or 0).
+        # The first (target, 0) verifies that arming-from-None does not fire
+        # on its own. The transition to `other` lets the trigger relax. The
+        # final transition to `target` should fire — count is 1 by default,
+        # but 0 when the trigger cannot fire from a None initial state (see
+        # `trigger_from_none`).
         (
             trigger,
             trigger_options,
@@ -467,7 +512,12 @@ def parametrize_trigger_states(
                 )
             ),
         ),
-        # Initial state different from target state
+        # Pattern: entities start in a non-target "other" state and toggle
+        # back and forth to a target state.
+        # Sequence per (target, other) pair:
+        #   other -> target (1) -> other (0) -> target (1).
+        # Verifies the trigger fires on each fresh other -> target
+        # transition and does not fire on the reverse target -> other.
         (
             trigger,
             trigger_options,
@@ -484,7 +534,15 @@ def parametrize_trigger_states(
                 )
             ),
         ),
-        # Initial state same as target state
+        # Pattern: entities start *already* in the target state — the
+        # trigger should not fire just because we arm against an already-
+        # matching state — and we then exercise re-entry.
+        # Sequence per (target, other) pair:
+        #   target -> target (0, no-op)
+        #          -> other  (0)
+        #          -> target (1, fires on fresh other -> target)
+        #          -> target (0, repeated target should not retrigger)
+        #          -> unavailable (0).
         (
             trigger,
             trigger_options,
@@ -504,7 +562,12 @@ def parametrize_trigger_states(
                 )
             ),
         ),
-        # Transition from other state to unavailable / unknown
+        # Pattern: an "other" -> "invalid" -> "other" round-trip should not
+        # arm the trigger; only the subsequent other -> target transition
+        # fires. Iterates `invalid_states` so unavailable/unknown plus any
+        # caller-supplied extra invalids are all covered.
+        # Sequence per (invalid, target, other):
+        #   other -> invalid (0) -> other (0) -> target (1).
         (
             trigger,
             trigger_options,
@@ -522,7 +585,14 @@ def parametrize_trigger_states(
                 )
             ),
         ),
-        # Initial state unavailable / unknown + extra invalid states
+        # Pattern: entities start in an invalid state and recover. Mirrors
+        # the previous pattern but with the invalid state as the *initial*
+        # condition (so no transition out of it has occurred yet at arm
+        # time). Iterates `invalid_states`.
+        # Sequence per (invalid, target, other):
+        #   invalid -> target (0) -> other (0) -> target (1).
+        # The first target hop is 0 because the trigger doesn't fire when
+        # arming-from-invalid is the very first transition.
         (
             trigger,
             trigger_options,
@@ -543,7 +613,20 @@ def parametrize_trigger_states(
     ]
 
     if len(target_states) > 1:
-        # If more than one target state, test state change between target states
+        # Pattern: transitions *between* distinct target states. For each
+        # adjacent pair `(prev_target, target)` we verify that:
+        # - prev_target -> target either retriggers or not, depending on
+        #   `retrigger_on_target_state`,
+        # - target -> other -> prev_target retriggers,
+        # - prev_target -> target again obeys the retrigger flag,
+        # - and a trailing target -> unavailable does not fire.
+        # Sequence per (prev_target, target, other):
+        #   prev_target
+        #     -> target      (1 if retrigger_on_target_state else 0)
+        #     -> other       (0)
+        #     -> prev_target (1)
+        #     -> target      (1 if retrigger_on_target_state else 0)
+        #     -> unavailable (0).
         tests.append(
             (
                 trigger,
@@ -597,7 +680,38 @@ def parametrize_numerical_attribute_changed_trigger_states(
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical changed triggers."""
+    """Parametrize states and expected service call counts for numerical-changed triggers.
+
+    Generates state sequences for a trigger that fires whenever an attribute
+    crosses or matches a "changed" threshold (modes "any" / "above" / "below").
+    The trigger is exercised across three threshold types in turn; for each,
+    the helper invokes `parametrize_trigger_states` with target/other/excluded
+    states populated from the supplied `attribute` values. Threshold values
+    are fixed at 10 and 90 (interpreted in the trigger's threshold unit).
+
+    Returns a list of `(trigger, trigger_options, states)` tuples — the same
+    shape as `parametrize_trigger_states`, suitable for splatting into a
+    `pytest.mark.parametrize` over `("trigger", "trigger_options", "states")`.
+
+    Args:
+        trigger: Trigger key, e.g. `"climate.target_humidity_changed"`.
+        state: The `state.state` value to use for entities meant to match the
+            trigger (the attribute lives on top of this state).
+        attribute: Name of the attribute the trigger reads. The helper
+            generates target/other/excluded states by varying this attribute.
+        threshold_unit: When set, the threshold values in `trigger_options`
+            get this unit attached (`unit_of_measurement`). Defaults to
+            UNDEFINED, meaning no unit is added.
+        trigger_options: Extra keys merged into the generated `options` dict
+            for each threshold-type variant.
+        required_filter_attributes: Attributes that must be present on the
+            entity for the trigger's domain filter to accept it (forwarded to
+            `parametrize_trigger_states`). Use this for triggers gated by
+            `device_class` or similar.
+        unit_attributes: Attributes (typically `{ATTR_UNIT_OF_MEASUREMENT: ...}`)
+            merged into every generated state, so the entity carries a unit
+            alongside its tracked attribute.
+    """
     trigger_options = trigger_options or {}
     unit_attributes = unit_attributes or {}
 
@@ -681,7 +795,40 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    """Parametrize states and expected service call counts for numerical crossed-threshold triggers.
+
+    Generates state sequences for a trigger that fires when an attribute
+    crosses a threshold boundary. The trigger is exercised across four
+    threshold types in turn — "between", "outside", "above", and "below" —
+    and for each, the helper invokes `parametrize_trigger_states` with
+    target/other/excluded states populated from the supplied `attribute`
+    values. Threshold values are fixed at 10 and 90 (or the pair (10, 90) for
+    range modes), interpreted in the trigger's threshold unit.
+
+    Returns a list of `(trigger, trigger_options, states)` tuples — the same
+    shape as `parametrize_trigger_states`, suitable for splatting into a
+    `pytest.mark.parametrize` over `("trigger", "trigger_options", "states")`.
+
+    Args:
+        trigger: Trigger key, e.g.
+            `"climate.target_humidity_crossed_threshold"`.
+        state: The `state.state` value to use for entities meant to match the
+            trigger (the attribute lives on top of this state).
+        attribute: Name of the attribute the trigger reads. The helper
+            generates target/other/excluded states by varying this attribute.
+        threshold_unit: When set, the threshold values in `trigger_options`
+            get this unit attached (`unit_of_measurement`). Defaults to
+            UNDEFINED, meaning no unit is added.
+        trigger_options: Extra keys merged into the generated `options` dict
+            for each threshold-type variant.
+        required_filter_attributes: Attributes that must be present on the
+            entity for the trigger's domain filter to accept it (forwarded to
+            `parametrize_trigger_states`). Use this for triggers gated by
+            `device_class` or similar.
+        unit_attributes: Attributes (typically `{ATTR_UNIT_OF_MEASUREMENT: ...}`)
+            merged into every generated state, so the entity carries a unit
+            alongside its tracked attribute.
+    """
     trigger_options = trigger_options or {}
     unit_attributes = unit_attributes or {}
 
@@ -1134,6 +1281,35 @@ async def _validate_condition_options(
             await async_validate_condition_config(hass, config)
 
 
+def _get_yaml_fields(automation_key: str, yaml_type: str) -> dict[str, Any]:
+    """Load a conditions.yaml or triggers.yaml and return the fields for a key."""
+    domain, key = automation_key.split(".", 1)
+    yaml_path = (
+        Path(__file__).parents[2]
+        / "homeassistant"
+        / "components"
+        / domain
+        / f"{yaml_type}.yaml"
+    )
+    data = load_yaml_dict(str(yaml_path))
+    # YAML anchors (keys starting with '.') are included in the parsed dict;
+    # the actual entry uses the plain key name.
+    entry = data.get(key, {})
+    return entry.get("fields", {})
+
+
+def _assert_yaml_has_field(
+    yaml_file: str, automation_key: str, field: str, *, expected: bool
+) -> None:
+    """Assert that a field is present or absent in a yaml description."""
+    yaml_fields = _get_yaml_fields(automation_key, yaml_file)
+    has_field = field in yaml_fields
+    assert has_field == expected, (
+        f"{automation_key}: {yaml_file}.yaml {'has' if has_field else 'is missing'}"
+        f" '{field}', but expected {expected}"
+    )
+
+
 async def assert_condition_options_supported(
     hass: HomeAssistant,
     condition: str,
@@ -1149,7 +1325,14 @@ async def assert_condition_options_supported(
     - Accepts/rejects behavior depending on supports_behavior
     - Accepts/rejects duration depending on supports_duration
     - Rejects unknown options
+    - Condition yaml description matches supports_behavior / supports_duration
     """
+    # Verify that the yaml description matches the flags
+    _assert_yaml_has_field(
+        "conditions", condition, "behavior", expected=supports_behavior
+    )
+    _assert_yaml_has_field("conditions", condition, "for", expected=supports_duration)
+
     # Minimal config should always be valid
     # If there are no base options, also test that options can be omitted or be empty
     supports_empty = not bool(base_options)
@@ -1214,7 +1397,12 @@ async def assert_trigger_options_supported(
     - Accepts/rejects behavior depending on supports_behavior
     - Accepts/rejects duration depending on supports_duration
     - Rejects unknown options
+    - Trigger yaml description matches supports_behavior / supports_duration
     """
+    # Verify that the yaml description matches the flags
+    _assert_yaml_has_field("triggers", trigger, "behavior", expected=supports_behavior)
+    _assert_yaml_has_field("triggers", trigger, "for", expected=supports_duration)
+
     # Minimal config should always be valid
     supports_empty = not bool(base_options)
     await _validate_trigger_options(hass, trigger, None, valid=supports_empty)
