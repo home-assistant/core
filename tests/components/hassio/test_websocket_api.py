@@ -27,7 +27,6 @@ from homeassistant.components.hassio.const import (
     WS_TYPE_API,
     WS_TYPE_SUBSCRIBE,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -987,31 +986,3 @@ async def test_read_update_config(
 
     await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
     assert await websocket_client.receive_json() == snapshot
-
-
-async def test_update_config_not_loaded(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    supervisor_client: AsyncMock,
-) -> None:
-    """Test update config commands return not_loaded when entry is in SETUP_RETRY."""
-    supervisor_client.supervisor.ping.side_effect = SupervisorError
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        await async_setup_component(hass, "hassio", {})
-
-    entry = hass.config_entries.async_entries("hassio")[0]
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-    websocket_client = await hass_ws_client(hass)
-
-    await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
-    result = await websocket_client.receive_json()
-    assert not result["success"]
-    assert result["error"]["code"] == "not_loaded"
-
-    await websocket_client.send_json_auto_id(
-        {"type": "hassio/update/config/update", "add_on_backup_before_update": True}
-    )
-    result = await websocket_client.receive_json()
-    assert not result["success"]
-    assert result["error"]["code"] == "not_loaded"

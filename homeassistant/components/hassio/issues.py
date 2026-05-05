@@ -353,7 +353,7 @@ class SupervisorIssues:
 
     async def setup(self) -> None:
         """Create supervisor events listener."""
-        await self._update()
+        await self.async_update()
 
         self._disconnect = async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
@@ -368,8 +368,15 @@ class SupervisorIssues:
             self._cancel_update_retry()
             self._cancel_update_retry = None
 
-    async def _update(self, _: datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Update issues from Supervisor resolution center."""
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        await self._update()
+
+    async def _update(self, _: datetime | None = None) -> None:
+        """Update issues from Supervisor resolution center with retry on failure."""
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
@@ -404,7 +411,7 @@ class SupervisorIssues:
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
             and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
-            self._hass.async_create_task(self._update())
+            self._hass.async_create_task(self.async_update())
 
         elif event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             self.unhealthy_reasons = (

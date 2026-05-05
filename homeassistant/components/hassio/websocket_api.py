@@ -31,7 +31,6 @@ from .const import (
     ATTR_WS_EVENT,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
-    DOMAIN,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -210,13 +209,9 @@ def websocket_update_config_info(
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    if (
-        not hass.config_entries.async_loaded_entries(DOMAIN)
-        or (config_store := hass.data.get(DATA_CONFIG_STORE)) is None
-    ):
-        connection.send_error(msg["id"], "not_loaded", "Supervisor not loaded")
-        return
-    connection.send_result(msg["id"], config_store.data.update_config.to_dict())
+    connection.send_result(
+        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
+    )
 
 
 @callback
@@ -235,14 +230,10 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
-    if (
-        not hass.config_entries.async_loaded_entries(DOMAIN)
-        or (config_store := hass.data.get(DATA_CONFIG_STORE)) is None
-    ):
-        connection.send_error(msg["id"], "not_loaded", "Supervisor not loaded")
-        return
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    config_store.update(update_config=cast(HassioUpdateParametersDict, changes))
+    hass.data[DATA_CONFIG_STORE].update(
+        update_config=cast(HassioUpdateParametersDict, changes)
+    )
     connection.send_result(msg["id"])

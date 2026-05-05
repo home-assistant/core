@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aiohasupervisor.models import IngressPanel
 import pytest
 
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -40,6 +41,14 @@ async def test_hassio_addon_panel_startup(
             await async_setup_component(hass, "hassio", {})
             await hass.async_block_till_done()
 
+        ingress_panels.assert_not_called()
+        mock_panel.assert_not_called()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
         ingress_panels.assert_called_once()
         assert mock_panel.called
         mock_panel.assert_called_with(
@@ -61,12 +70,17 @@ async def test_hassio_addon_panel_api(
         ),
     }
 
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
-        with patch.dict(os.environ, MOCK_ENVIRON):
-            await async_setup_component(hass, "hassio", {})
-            await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
         ingress_panels.assert_called_once()
         assert mock_panel.called
@@ -104,12 +118,17 @@ async def test_hassio_addon_panel_api_non_admin(
         "test1": IngressPanel(enable=True, title="Test", icon="mdi:test", admin=False),
     }
 
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
-        with patch.dict(os.environ, MOCK_ENVIRON):
-            await async_setup_component(hass, "hassio", {})
-            await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
         ingress_panels.assert_called_once()
         mock_panel.assert_called_once()
@@ -140,12 +159,17 @@ async def test_hassio_addon_panel_registration(
         ),
     }
 
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
     with patch(
         "homeassistant.components.hassio.addon_panel.frontend.async_register_built_in_panel"
     ) as mock_register:
-        with patch.dict(os.environ, MOCK_ENVIRON):
-            await async_setup_component(hass, "hassio", {})
-            await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
         # Verify that async_register_built_in_panel was called with correct arguments
         # for our test addon

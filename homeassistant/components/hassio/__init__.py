@@ -17,7 +17,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.auth.models import RefreshToken
+from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.homeassistant.const import DATA_STOP_HANDLER
@@ -250,12 +250,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_HASSIO_HOST] = host
     hass.data[DATA_HASSIO_HTTP_CONFIG] = config.get("http", {})
 
+    # Load the store
+    config_store = HassioConfig(hass)
+    await config_store.load()
+    hass.data[DATA_CONFIG_STORE] = config_store
+
+    # Cache the Supervisor user. Create one if necessary
+    user: User | None = None
+    if (hassio_user := config_store.data.hassio_user) is not None:
+        user = await hass.auth.async_get_user(hassio_user)
+        if user:
+            # Migrate old Hass.io users to be admin.
+            if not user.is_admin:
+                await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
+
+            # Migrate old name
+            if user.name == "Hass.io":
+                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
+
+    if user is None:
+        user = await hass.auth.async_create_system_user(
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+        )
+        config_store.update(hassio_user=user.id)
+
+    assert user is not None
+    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
+
     async_load_websocket_api(hass)
     hass.http.register_view(HassIOView(host, websession))
     async_setup_services(hass)
     async_setup_discovery_view(hass)
     async_setup_auth_view(hass)
     async_setup_ingress_view(hass)
+    async_setup_addon_panel(hass)
     frontend.async_register_built_in_panel(hass, "app")
 
     discovery_flow.async_create_flow(
@@ -276,34 +304,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="supervisor_not_connected",
         ) from err
 
-    # Load the store
-    config_store = HassioConfig(hass)
-    await config_store.load()
-    hass.data[DATA_CONFIG_STORE] = config_store
-
-    refresh_token = None
-    if (hassio_user := config_store.data.hassio_user) is not None:
-        user = await hass.auth.async_get_user(hassio_user)
-        if user and user.refresh_tokens:
-            refresh_token = list(user.refresh_tokens.values())[0]
-
-            # Migrate old Hass.io users to be admin.
-            if not user.is_admin:
-                await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
-
-            # Migrate old name
-            if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
-
-    if refresh_token is None:
-        user = await hass.auth.async_create_system_user(
-            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
-        )
+    # Get or create a refresh token for the Supervisor user
+    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    if user.refresh_tokens:
+        refresh_token = list(user.refresh_tokens.values())[0]
+    else:
         refresh_token = await hass.auth.async_create_refresh_token(user)
-        config_store.update(hassio_user=user.id)
-
-    assert user is not None
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
 
     # Set up coordinators — these can raise ConfigEntryNotReady.
     # Register listeners only after all refreshes succeed to avoid accumulation
@@ -328,6 +334,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # install the stop handler now so they are never left in a partial state
     # if a coordinator refresh raises ConfigEntryNotReady.
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass)
+
+    def _unload_supervisor_issues() -> None:
+        if (
+            supervisor_issues := hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+        ) is not None:
+            supervisor_issues.unload()
+
+    entry.async_on_unload(_unload_supervisor_issues)
 
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
@@ -396,11 +410,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Failed to update Home Assistant options in Supervisor: %s", err
             )
 
+    # Push initial config to Supervisor and start issues listener
     await asyncio.gather(
-        update_hass_api(refresh_token),
-        push_config(None),
-        issues.setup(),
-        async_setup_addon_panel(hass),
+        update_hass_api(refresh_token), push_config(None), issues.setup()
     )
 
     # Setup hardware integration for the detected board type
@@ -444,20 +456,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Unload coordinator
-    coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
-    coordinator.unload()
-
     # Pop coordinators and entry-level data
     hass.data.pop(MAIN_COORDINATOR, None)
     hass.data.pop(ADDONS_COORDINATOR, None)
     hass.data.pop(STATS_COORDINATOR, None)
-    hass.data.pop(DATA_CONFIG_STORE, None)
-    hass.data.pop(DATA_HASSIO_SUPERVISOR_USER, None)
-
-    if (
-        supervisor_issues := hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
-    ) is not None:
-        supervisor_issues.unload()
 
     return unload_ok
