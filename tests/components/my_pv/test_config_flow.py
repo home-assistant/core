@@ -6,23 +6,31 @@ from unittest.mock import patch
 from my_pv.exceptions import MyPVAuthenticationError
 
 from homeassistant import config_entries
-from homeassistant.components.my_pv.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.components.my_pv.const import (
+    CONF_SERIAL_NUMBER,
+    CONF_TYPE_CLOUD,
+    CONF_TYPE_LOCAL,
+    DOMAIN,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-MOCK_CONFIG_LOCAL = {
-    CONF_HOST: "127.0.0.1",
-}
+from tests.common import MockConfigEntry
 
 MOCK_CONFIG_LOCAL_AUTH = {
     CONF_PASSWORD: "test-password",
 }
 
 MOCK_CONFIG_CLOUD = {
+    CONF_TYPE: CONF_TYPE_CLOUD,
     CONF_SERIAL_NUMBER: "1601500000000000",
+    CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
+}
+
+MOCK_CONFIG_CLOUD_REAUTH = {
     CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
 }
 
@@ -31,6 +39,7 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     macaddress="986d35cabcdef",
     hostname="",
 )
+
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
@@ -47,23 +56,11 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-async def test_step_user(hass: HomeAssistant) -> None:
-    """Test we get the menu."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "user"
-
-
 async def test_step_setup_local(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test if we get the local setup form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
@@ -72,7 +69,6 @@ async def test_step_setup_local(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "setup_local"}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_local"
@@ -83,20 +79,29 @@ async def test_step_setup_local(hass: HomeAssistant) -> None:
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             return_value=True,
         ),
-        # patch(
-        #     "homeassistant.components.my_pv.MyPVLocalDevice._connection.fetch_setup",
-        #     {}
-        # )
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.model",
+            "AC ELWA 2",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONFIG_LOCAL
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+            },
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "my-PV None"
-        # assert result["result"].unique_id == "01:23:45:67:89:AB"
-        # assert result["data"] == MOCK_CONFIG_LOCAL
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_LOCAL,
+        CONF_HOST: "127.0.0.1",
+    }
+    assert result["result"].unique_id == "1601500000000000"
 
 
 async def test_step_local_auth(hass: HomeAssistant) -> None:
@@ -104,7 +109,6 @@ async def test_step_local_auth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
@@ -113,7 +117,6 @@ async def test_step_local_auth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "setup_local"}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_local"
@@ -126,25 +129,44 @@ async def test_step_local_auth(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONFIG_LOCAL
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+            },
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "local_auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_auth"
 
     with (
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.model",
+            "AC ELWA 2",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONFIG_LOCAL_AUTH
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "test-password",
+            },
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_LOCAL,
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == "1601500000000000"
 
 
 async def test_step_setup_cloud(hass: HomeAssistant) -> None:
@@ -152,7 +174,6 @@ async def test_step_setup_cloud(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
@@ -161,7 +182,6 @@ async def test_step_setup_cloud(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "setup_cloud"}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_cloud"
@@ -172,19 +192,23 @@ async def test_step_setup_cloud(hass: HomeAssistant) -> None:
             "homeassistant.components.my_pv.MyPVCloudDevice.connect",
             return_value=True,
         ),
-        # patch(
-        #     "homeassistant.components.my_pv.MyPVLocalDevice._connection.fetch_setup",
-        #     {}
-        # )
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONFIG_CLOUD
+            result["flow_id"],
+            {
+                CONF_SERIAL_NUMBER: "1601500000000000",
+                CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
+            },
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "my-PV AC ELWA 2"
-        # assert result["result"].unique_id == "01:23:45:67:89:AB"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_CLOUD,
+        CONF_SERIAL_NUMBER: "1601500000000000",
+        CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
+    }
+    assert result["result"].unique_id == "1601500000000000"
 
 
 async def test_step_dhcp(hass: HomeAssistant) -> None:
@@ -203,21 +227,33 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
             },
             data=DHCP_DISCOVERY,
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "discovery_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
 
     with (
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.model",
+            "AC ELWA 2",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], [])
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_LOCAL,
+        CONF_HOST: "127.0.0.1",
+    }
+    assert result["result"].unique_id == "1601500000000000"
 
 
 async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
@@ -236,23 +272,36 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
             },
             data=DHCP_DISCOVERY,
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "local_auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_auth"
 
     with (
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.model",
+            "AC ELWA 2",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONFIG_LOCAL_AUTH
+            result["flow_id"], {CONF_PASSWORD: "test-password"}
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_LOCAL,
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == "1601500000000000"
 
 
 async def test_step_zeroconf(hass: HomeAssistant) -> None:
@@ -271,10 +320,62 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
             },
             data=ZEROCONF_DISCOVERY,
         )
-        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "local_auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_auth"
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.model",
+            "AC ELWA 2",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "test-password"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_LOCAL,
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == "1601500000000000"
+
+
+async def test_step_local_reauth(
+    hass: HomeAssistant,
+    mock_local_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth of local devices."""
+    mock_local_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_local_config_entry.entry_id,
+            },
+            data=mock_local_config_entry.data,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_auth"
 
     with (
         patch(
@@ -283,8 +384,67 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONFIG_LOCAL_AUTH
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "new-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(
+        mock_local_config_entry.entry_id
+    )
+    assert updated_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_step_cloud_reauth(
+    hass: HomeAssistant,
+    mock_cloud_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth of local devices."""
+    mock_cloud_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVCloudDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_cloud_config_entry.entry_id,
+            },
+            data=mock_cloud_config_entry.data,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVCloudDevice.connect",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_TOKEN: "my0000000000000000000000000000000000000000000001PV",
+            },
         )
         await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(
+        mock_cloud_config_entry.entry_id
+    )
+    assert (
+        updated_entry.data[CONF_TOKEN]
+        == "my0000000000000000000000000000000000000000000001PV"
+    )
