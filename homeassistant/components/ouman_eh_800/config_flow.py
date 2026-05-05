@@ -47,6 +47,7 @@ class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             client = OumanEh800Client(
                 session=async_get_clientsession(self.hass),
                 username=user_input[CONF_USERNAME],
@@ -63,7 +64,6 @@ class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_create_entry(title="Ouman EH-800", data=user_input)
 
         return self.async_show_form(
