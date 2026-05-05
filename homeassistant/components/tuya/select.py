@@ -1,7 +1,5 @@
 """Support for Tuya select."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.select import (
     SelectDefinition,
     get_default_definition,

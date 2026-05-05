@@ -1,7 +1,5 @@
 """Support for Devialet speakers."""
 
-from __future__ import annotations
-
 from devialet.const import NORMAL_INPUTS
 
 from homeassistant.components.media_player import (

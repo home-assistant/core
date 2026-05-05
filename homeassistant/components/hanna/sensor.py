@@ -5,8 +5,6 @@ including pH, ORP, temperature, and chemical sensors. It uses the Hanna API
 to fetch readings and updates them periodically.
 """
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.sensor import (
