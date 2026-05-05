@@ -8,7 +8,11 @@ from chip.clusters import Objects as clusters
 ADDON_SLUG = "core_matter_server"
 
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
+CONF_SYNC_NAMES = "sync_names"
 CONF_USE_ADDON = "use_addon"
+
+# Matter spec caps NodeLabel at 32 UTF-8 bytes.
+NODE_LABEL_MAX_BYTES = 32
 
 DOMAIN = "matter"
 LOGGER = logging.getLogger(__package__)

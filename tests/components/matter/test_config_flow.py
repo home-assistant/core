@@ -11,7 +11,7 @@ from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
+from homeassistant.components.matter.const import ADDON_SLUG, CONF_SYNC_NAMES, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -1649,3 +1649,36 @@ async def test_addon_not_installed_already_configured(
     assert entry.data["url"] == "ws://host1:5581/ws"
     assert entry.title == "Matter"
     assert setup_entry.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("initial_options", "submitted"),
+    [
+        ({}, {CONF_SYNC_NAMES: True}),
+        ({CONF_SYNC_NAMES: True}, {CONF_SYNC_NAMES: False}),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    initial_options: dict[str, bool],
+    submitted: dict[str, bool],
+) -> None:
+    """Options flow shows the form and persists the submitted value."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://localhost:5580/ws"},
+        options=initial_options,
+        title="Matter",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=submitted
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == submitted
+    assert entry.options == submitted
