@@ -117,6 +117,7 @@ async def test_turn_on_off(
         ("channel_up", "CH_UP"),
         ("enter", "OK"),
         ("volume_down", "VOL_DOWN"),
+        ("VoLuMe_DoWn", "VOL_DOWN"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
