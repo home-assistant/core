@@ -1138,6 +1138,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
 /homeassistant/components/my_pv/ @my-pv @rrooggiieerr
+/tests/components/my_pv/ @my-pv @rrooggiieerr
 /homeassistant/components/myneomitis/ @l-pr
 /tests/components/myneomitis/ @l-pr
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
