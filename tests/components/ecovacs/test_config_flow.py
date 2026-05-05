@@ -40,7 +40,7 @@ class _TestFnUserInput:
     user: dict[str, Any] = field(default_factory=dict)
 
 
-async def _test_user_flow_show_advanced_options(
+async def _test_user_flow(
     hass: HomeAssistant,
     user_input: _TestFnUserInput,
 ) -> dict[str, Any]:
@@ -81,7 +81,7 @@ async def _test_user_flow_show_advanced_options(
             VALID_ENTRY_DATA_SELF_HOSTED,
         ),
     ],
-    ids=["advanced_cloud", "advanced_self_hosted"],
+    ids=["cloud", "self_hosted"],
 )
 async def test_user_flow(
     hass: HomeAssistant,
@@ -92,7 +92,7 @@ async def test_user_flow(
     entry_data: dict[str, Any],
 ) -> None:
     """Test the user config flow."""
-    result = await _test_user_flow_show_advanced_options(hass, test_fn_user_input)
+    result = await _test_user_flow(hass, test_fn_user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
     assert result["data"] == entry_data
@@ -139,7 +139,7 @@ def _cannot_connect_error(user_input: dict[str, Any]) -> str:
             VALID_ENTRY_DATA_SELF_HOSTED_WITH_VALIDATE_CERT,
         ),
     ],
-    ids=["advanced_cloud", "advanced_self_hosted"],
+    ids=["cloud", "self_hosted"],
 )
 async def test_user_flow_raise_error(
     hass: HomeAssistant,
@@ -158,7 +158,7 @@ async def test_user_flow_raise_error(
 
     # Authenticator raises error
     mock_authenticator_authenticate.side_effect = side_effect_rest
-    result = await _test_user_flow_show_advanced_options(hass, test_fn_user_input)
+    result = await _test_user_flow(hass, test_fn_user_input)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == {"base": reason_rest}
@@ -204,7 +204,7 @@ async def test_user_flow_self_hosted_error(
 ) -> None:
     """Test handling selfhosted errors and custom ssl context."""
 
-    result = await _test_user_flow_show_advanced_options(
+    result = await _test_user_flow(
         hass,
         _TestFnUserInput(
             VALID_ENTRY_DATA_SELF_HOSTED
@@ -258,7 +258,7 @@ async def test_user_flow_self_hosted_error(
         _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
         _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
     ],
-    ids=["advanced_cloud", "advanced_self_hosted"],
+    ids=["cloud", "self_hosted"],
 )
 async def test_already_exists(
     hass: HomeAssistant,
@@ -267,7 +267,7 @@ async def test_already_exists(
     """Test we don't allow duplicated config entries."""
     MockConfigEntry(domain=DOMAIN, data=test_fn_user_input.auth).add_to_hass(hass)
 
-    result = await _test_user_flow_show_advanced_options(
+    result = await _test_user_flow(
         hass,
         test_fn_user_input,
     )
