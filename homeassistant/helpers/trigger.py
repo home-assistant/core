@@ -382,13 +382,6 @@ class EntityTriggerBase(Trigger):
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
-    def _get_tracked_value(self, state: State) -> Any:
-        """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[state.domain]
-        if domain_spec.value_source is None:
-            return state.state
-        return state.attributes.get(domain_spec.value_source)
-
     @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -560,7 +553,21 @@ class EntityTriggerBase(Trigger):
         return async_remove
 
 
-class EntityTargetStateTriggerBase(EntityTriggerBase):
+class StringEntityTriggerBase(EntityTriggerBase):
+    """Trigger for string based entity state changes."""
+
+    def _get_tracked_value(self, state: State) -> bool | str | None:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[state.domain]
+        if domain_spec.value_source is None:
+            return state.state
+        value = state.attributes.get(domain_spec.value_source)
+        if not isinstance(value, (bool, str)):
+            return None
+        return value
+
+
+class EntityTargetStateTriggerBase(StringEntityTriggerBase):
     """Trigger for entity state changes to a specific state.
 
     Uses _get_tracked_value to extract the value, so it works for both
@@ -585,7 +592,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
         return self._get_tracked_value(state) in self._to_states
 
 
-class EntityTransitionTriggerBase(EntityTriggerBase):
+class EntityTransitionTriggerBase(StringEntityTriggerBase):
     """Trigger for entity state changes between specific states."""
 
     _from_states: set[str | bool]
@@ -607,7 +614,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
         return self._get_tracked_value(state) in self._to_states
 
 
-class EntityOriginStateTriggerBase(EntityTriggerBase):
+class EntityOriginStateTriggerBase(StringEntityTriggerBase):
     """Trigger for entity state changes from a specific state."""
 
     _from_state: str
