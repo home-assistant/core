@@ -892,7 +892,7 @@ elgato==5.1.2
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.13
+elkm1-lib==2.2.15
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4
@@ -1251,7 +1251,7 @@ holidays==0.95
 home-assistant-frontend==20260429.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.3.24
+home-assistant-intents==2026.5.5
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
