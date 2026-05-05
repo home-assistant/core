@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
-from visionpluspython.exceptions import WattsVisionError
 from visionpluspython.models import ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import (
@@ -17,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -191,44 +189,6 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         _LOGGER.debug(
             "Successfully set temperature to %s for %s",
             temperature,
-            self.device_id,
-        )
-
-        self.coordinator.trigger_fast_polling()
-
-        await self.coordinator.async_refresh()
-
-    async def async_activate_timer_mode(
-        self, temperature: float, duration: timedelta
-    ) -> None:
-        """Activate timer mode with a target temperature and duration."""
-        if not self._attr_min_temp <= temperature <= self._attr_max_temp:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="timer_temperature_out_of_range",
-                translation_placeholders={
-                    "temperature": str(temperature),
-                    "min_temp": str(self._attr_min_temp),
-                    "max_temp": str(self._attr_max_temp),
-                },
-            )
-
-        duration_minutes = int(duration.total_seconds() / 60)
-
-        try:
-            await self.coordinator.client.activate_thermostat_timer(
-                self.device_id, temperature, duration_minutes
-            )
-        except (WattsVisionError, ValueError, RuntimeError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="activate_timer_mode_error",
-            ) from err
-
-        _LOGGER.debug(
-            "Successfully activated timer mode: %s°C for %d min on %s",
-            temperature,
-            duration_minutes,
             self.device_id,
         )
 

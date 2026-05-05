@@ -20,14 +20,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.watts.const import (
-    ATTR_DURATION,
-    DOMAIN,
-    SERVICE_ACTIVATE_TIMER_MODE,
-)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -302,80 +297,6 @@ async def test_set_preset_mode_error(
             {
                 ATTR_ENTITY_ID: "climate.living_room_thermostat",
                 ATTR_PRESET_MODE: "defrost",
-            },
-            blocking=True,
-        )
-
-
-async def test_activate_timer_mode(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test activating timer mode with temperature and duration."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ACTIVATE_TIMER_MODE,
-        {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
-            ATTR_TEMPERATURE: 20.5,
-            ATTR_DURATION: timedelta(minutes=90),
-        },
-        blocking=True,
-    )
-
-    mock_watts_client.activate_thermostat_timer.assert_called_once_with(
-        "thermostat_123", 20.5, 90
-    )
-
-
-@pytest.mark.parametrize("temperature", [4.5, 30.5])
-async def test_activate_timer_mode_temperature_out_of_range(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    temperature: float,
-) -> None:
-    """Test that out-of-range timer temperatures are rejected."""
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError, match="out of range"):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ACTIVATE_TIMER_MODE,
-            {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
-                ATTR_TEMPERATURE: temperature,
-                ATTR_DURATION: 90,
-            },
-            blocking=True,
-        )
-
-    mock_watts_client.activate_thermostat_timer.assert_not_called()
-
-
-async def test_activate_timer_mode_error(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test error handling when activating timer mode fails."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_watts_client.activate_thermostat_timer.side_effect = RuntimeError("API Error")
-
-    with pytest.raises(
-        HomeAssistantError, match="An error occurred while activating timer mode"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ACTIVATE_TIMER_MODE,
-            {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
-                ATTR_TEMPERATURE: 20.5,
-                ATTR_DURATION: 90,
             },
             blocking=True,
         )

@@ -14,10 +14,5 @@
         }
       }
     }
-  },
-  "services": {
-    "activate_timer_mode": {
-      "service": "mdi:timer"
-    }
   }
 }

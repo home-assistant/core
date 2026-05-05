@@ -67,7 +67,3 @@ HVAC_ACTION_TO_HA: dict[str, HVACAction] = {
 }
 
 SUPPORTED_DEVICE_TYPES = (ThermostatDevice, SwitchDevice)
-
-# Timer service
-SERVICE_ACTIVATE_TIMER_MODE = "activate_timer_mode"
-ATTR_DURATION = "duration"
