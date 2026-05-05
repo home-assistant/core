@@ -5,9 +5,10 @@ from __future__ import annotations
 from _collections_abc import dict_items
 from datetime import timedelta
 import logging
+from typing import Any
 
-from mypv import MyPVDevice
-from mypv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv import MyPVDevice
+from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -108,11 +109,11 @@ class MyPVCoordinator(DataUpdateCoordinator):
             self._setup_configurations = self._device.get_setup_configurations().items()
         return self._setup_configurations
 
-    def get_setup_configuration(self, key: str) -> dict:
+    def get_setup_configuration(self, key: str) -> dict | None:
         """Get setup configuration for given key."""
         return self._device.get_setup_configuration(key)
 
-    def supports_data(self, key: str) -> dict:
+    def supports_data(self, key: str) -> bool:
         """Test if data for the given key is supported."""
         return self._device.supports_data(key)
 
@@ -123,11 +124,11 @@ class MyPVCoordinator(DataUpdateCoordinator):
             self._data_configurations = self._device.get_data_configurations().items()
         return self._data_configurations
 
-    def get_data_configuration(self, key: str) -> dict:
+    def get_data_configuration(self, key: str) -> dict | None:
         """Get data configuration for given key."""
         return self._device.get_data_configuration(key)
 
-    def supports_command(self, command: str) -> dict:
+    def supports_command(self, command: str) -> bool:
         """Test if the given command is supported."""
         return self._device.supports_command(command)
 
@@ -155,8 +156,7 @@ class MyPVCoordinator(DataUpdateCoordinator):
     async def _async_setup(self):
         """Set up the coordinator."""
 
-    # async def _async_update_data(self) -> bool:
-    async def async_request_refresh(self) -> None:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         if not self._device.connected and not await self._device.connect():
             raise UpdateFailed(
@@ -175,6 +175,8 @@ class MyPVCoordinator(DataUpdateCoordinator):
                 translation_key="device_unavailable",
                 translation_placeholders={"uri": self._device.uri},
             ) from exc
+
+        return {}
 
     def get_setup_value(self, key: str) -> bool | float | int | str | None:
         """Get the setup value for the given key."""

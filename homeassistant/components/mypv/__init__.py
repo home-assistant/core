@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from mypv import MyPVCloudDevice, MyPVLocalDevice
-from mypv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv import MyPVCloudDevice, MyPVLocalDevice
+from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
