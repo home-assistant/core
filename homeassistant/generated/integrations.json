@@ -6146,6 +6146,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sensereo": {
+      "name": "Sensereo",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "sensibo": {
       "name": "Sensibo",
       "integration_type": "hub",
