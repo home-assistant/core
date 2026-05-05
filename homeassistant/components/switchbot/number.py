@@ -61,9 +61,7 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
     async def async_set_native_value(self, value: float) -> None:
         """Set the time offset."""
         _LOGGER.debug("Setting time offset to %s minutes for %s", value, self._address)
-        if not value.is_integer():
-            raise ValueError("Time offset must be a whole number of minutes")
-        offset_minutes = int(value)
+        offset_minutes = round(value)
         offset_seconds = offset_minutes * _SECONDS_IN_MINUTE
         await self._device.set_time_offset(offset_seconds)
         self._attr_native_value = offset_minutes
