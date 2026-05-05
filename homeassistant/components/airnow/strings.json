@@ -10,7 +10,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-     "user": {
+      "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
