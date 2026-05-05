@@ -49,7 +49,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -92,7 +92,7 @@ async def test_legacy_sensor(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -135,10 +135,11 @@ async def test_sensor_no_response(
     )
     entry.add_to_hass(hass)
 
-    dns_mock = RetrieveDNS()
+    dns_mock_ipv4 = RetrieveDNS()
+    dns_mock_ipv6 = RetrieveDNS()
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=dns_mock,
+        side_effect=[dns_mock_ipv4, dns_mock_ipv6],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -147,10 +148,10 @@ async def test_sensor_no_response(
 
     assert state.state == "1.1.1.1"
 
-    dns_mock.error = DNSError()
+    dns_mock_ipv4.error = DNSError()
     with patch(
         "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=dns_mock,
+        return_value=dns_mock_ipv4,
     ):
         freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
@@ -194,10 +195,11 @@ async def test_sensor_timeout(
     )
     entry.add_to_hass(hass)
 
-    dns_mock = RetrieveDNS()
+    dns_mock_ipv4 = RetrieveDNS()
+    dns_mock_ipv6 = RetrieveDNS()
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=dns_mock,
+        side_effect=[dns_mock_ipv4, dns_mock_ipv6],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -209,7 +211,7 @@ async def test_sensor_timeout(
     with (
         patch(
             "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-            return_value=dns_mock,
+            return_value=dns_mock_ipv4,
         ),
         patch(
             "homeassistant.components.dnsip.sensor.asyncio.timeout",

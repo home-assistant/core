@@ -47,7 +47,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -85,7 +85,7 @@ async def test_port_migration(
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -126,7 +126,7 @@ async def test_remove_unique_id_migration(
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -163,7 +163,7 @@ async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -197,7 +197,7 @@ async def test_setup_dns_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(error=DNSError()),
+        side_effect=[RetrieveDNS(error=DNSError()), RetrieveDNS(error=DNSError())],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -230,7 +230,7 @@ async def test_setup_ipv6_only(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
