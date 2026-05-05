@@ -1,7 +1,7 @@
 """Select platform for V2C settings."""
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any
 
 from pytrydan import Trydan, TrydanData
@@ -37,7 +37,6 @@ TRYDAN_SELECTS = (
         key="charge_mode",
         translation_key="charge_mode",
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
         options=CHARGE_MODE_OPTIONS,
         current_option_fn=lambda evse_data: (
             charge_mode_value(evse_data.charge_mode)
@@ -62,14 +61,11 @@ async def async_setup_entry(
     async_add_entities(
         V2CSelectEntity(
             coordinator,
-            replace(
-                description,
-                entity_registry_enabled_default=description.current_option_fn(data)
-                is not None,
-            ),
+            description,
             config_entry.entry_id,
         )
         for description in TRYDAN_SELECTS
+        if description.current_option_fn(data) is not None
     )
 
 

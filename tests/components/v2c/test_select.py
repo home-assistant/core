@@ -55,20 +55,18 @@ async def test_select_option(
     mock_v2c_client.charge_mode.assert_awaited_once_with(ChargeMode.MIXED)
 
 
-async def test_select_disabled_when_missing(
+async def test_select_not_created_when_missing(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_v2c_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test missing charge mode entity is disabled."""
+    """Test missing charge mode entity is not created."""
     mock_v2c_client.get_data.return_value.charge_mode = None
 
     with patch("homeassistant.components.v2c.PLATFORMS", [Platform.SELECT]):
         await init_integration(hass, mock_config_entry)
 
     entity_id = "select.evse_1_1_1_1_charge_mode"
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entity_registry.async_get(entity_id) is None
     assert hass.states.get(entity_id) is None
