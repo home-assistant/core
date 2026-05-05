@@ -1,7 +1,5 @@
 """Support for ISY sensors."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyisy.constants import (

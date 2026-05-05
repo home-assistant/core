@@ -1,7 +1,5 @@
 """Support for Tuya binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.binary_sensor import (

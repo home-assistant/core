@@ -9,6 +9,11 @@
       selector:
         automation_behavior:
           mode: condition
+    for: &condition_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .temperature_units: &temperature_units
   - "°C"
@@ -22,22 +27,14 @@
   - domain: number
     device_class: temperature
 
-is_off:
-  target: *condition_water_heater_target
-  fields:
-    behavior: *condition_behavior
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
-
+is_off: *condition_common
 is_on: *condition_common
 
 is_operation_mode:
   target: *condition_water_heater_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     operation_mode:
       context:
         filter_target: target
@@ -54,6 +51,7 @@ is_target_temperature:
   target: *condition_water_heater_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

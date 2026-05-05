@@ -74,7 +74,7 @@ _CELSIUS_THRESHOLD = {
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("temperature.is_value", _CELSIUS_THRESHOLD, True, False),
+        ("temperature.is_value", _CELSIUS_THRESHOLD, True, True),
     ],
 )
 async def test_temperature_condition_options_validation(

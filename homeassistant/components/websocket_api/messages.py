@@ -1,7 +1,5 @@
 """Message templates for websocket commands."""
 
-from __future__ import annotations
-
 from functools import lru_cache
 import logging
 from typing import Any, Final

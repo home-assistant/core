@@ -1,7 +1,5 @@
 """Helper to deal with YAML + storage."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable

@@ -1,7 +1,5 @@
 """The Schlage integration."""
 
-from __future__ import annotations
-
 from pycognito.exceptions import WarrantException
 import pyschlage
 import voluptuous as vol

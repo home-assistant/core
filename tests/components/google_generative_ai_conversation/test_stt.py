@@ -1,7 +1,5 @@
 """Tests for the Google Generative AI Conversation STT entity."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable, Generator
 from unittest.mock import AsyncMock, Mock, patch
 

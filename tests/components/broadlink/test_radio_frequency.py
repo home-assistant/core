@@ -1,7 +1,5 @@
 """Tests for the Broadlink radio_frequency platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
