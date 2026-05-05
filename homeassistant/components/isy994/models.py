@@ -16,7 +16,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
     CONF_NETWORK,
-    EVENT_BUTTON_UNIQUE_ID_SUFFIX,
     NODE_AUX_PROP_PLATFORMS,
     NODE_PARALLEL_PLATFORMS,
     NODE_PLATFORMS,
@@ -24,6 +23,7 @@ from .const import (
     ROOT_NODE_PLATFORMS,
     VARIABLE_PLATFORMS,
 )
+from .event import EVENT_BUTTON_UNIQUE_ID_SUFFIX
 
 type IsyConfigEntry = ConfigEntry[IsyData]
 

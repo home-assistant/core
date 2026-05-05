@@ -83,7 +83,6 @@ KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
 EVENT_ISY994_CONTROL = "isy994_control"
-EVENT_BUTTON_UNIQUE_ID_SUFFIX = "_button"
 
 NODE_PLATFORMS = [
     Platform.BINARY_SENSOR,

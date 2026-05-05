@@ -36,17 +36,16 @@
   "entity": {
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
-              "fade_down": "Fade Down",
-              "fade_stop": "Fade Stop",
-              "fade_up": "Fade Up",
-              "fast_off": "Fast Off",
-              "fast_on": "Fast On",
-              "off": "Off",
-              "on": "On"
+              "fade_down": "Fade down",
+              "fade_stop": "Fade stop",
+              "fade_up": "Fade up",
+              "fast_off": "Fast off",
+              "fast_on": "Fast on",
+              "off": "[%key:common::state::off%]",
+              "on": "[%key:common::state::on%]"
             }
           }
         }

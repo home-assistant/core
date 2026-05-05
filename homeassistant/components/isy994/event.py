@@ -8,7 +8,7 @@ registering large numbers of unused entities for users who don't need them.
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -35,9 +35,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import EVENT_BUTTON_UNIQUE_ID_SUFFIX
 from .entity import ISYNodeEntity
-from .models import IsyConfigEntry
+
+if TYPE_CHECKING:
+    from .models import IsyConfigEntry
+
+EVENT_BUTTON_UNIQUE_ID_SUFFIX = "_button"
 
 CONTROL_TO_EVENT_TYPE: Final[dict[str, str]] = {
     CMD_ON: "on",
