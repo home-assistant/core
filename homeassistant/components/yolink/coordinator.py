@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from yolink.client_request import ClientRequest
+from yolink.const import ATTR_DEVICE_SPRINKLER_V2
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -20,6 +21,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIME
 
 _LOGGER = logging.getLogger(__name__)
+
+SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=30)
+SPRINKLER_IDLE_INTERVAL = timedelta(minutes=30)
 
 
 @dataclass
@@ -101,8 +105,29 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             dev_lora_info = device_state.get(ATTR_LORA_INFO)
             if dev_lora_info is not None:
                 self.dev_net_type = dev_lora_info.get("devNetType")
+            self._adjust_sprinkler_interval(device_state)
             return device_state
         return {}
+
+    def _adjust_sprinkler_interval(self, device_state: dict) -> None:
+        """Speed up polling while SprinklerV2 valve is running."""
+        if self.device.device_type != ATTR_DEVICE_SPRINKLER_V2:
+            return
+        is_running = (
+            state.get("running")
+            if (state := device_state.get("state")) is not None
+            else False
+        )
+        new_interval = (
+            SPRINKLER_ACTIVE_INTERVAL if is_running else SPRINKLER_IDLE_INTERVAL
+        )
+        if self.update_interval != new_interval:
+            self.update_interval = new_interval
+            _LOGGER.debug(
+                "SprinklerV2 %s poll interval -> %s",
+                self.device.device_id,
+                new_interval,
+            )
 
     async def call_device(self, request: ClientRequest) -> dict[str, Any]:
         """Call device api."""
