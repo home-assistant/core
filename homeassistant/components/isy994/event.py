@@ -107,17 +107,13 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             # these and most users only automate a few.
             self._attr_entity_registry_enabled_default = False
 
-    # pylint: disable-next=hass-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """Subscribe only to control events; status updates aren't relevant."""
-        if hasattr(self._node, "control_events"):
-            self._control_handler = self._node.control_events.subscribe(
-                self.async_on_control
-            )
-
     @callback
     def async_on_control(self, event: NodeProperty) -> None:
-        """Trigger the entity, bypassing the base class's bus.fire."""
+        """Trigger the entity, bypassing the base class's bus.fire.
+
+        The load entity for the same node still fires `isy994_control` via
+        the base class, so we don't fire it here to avoid double-emission.
+        """
         event_type = CONTROL_TO_EVENT_TYPE.get(event.control)
         if event_type is None:
             return
