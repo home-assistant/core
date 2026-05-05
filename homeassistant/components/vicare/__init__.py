@@ -93,7 +93,7 @@ async def async_migrate_entry(
         _LOGGER.debug("Imported configured client_id as application credential")
 
         token = await hass.async_add_executor_job(
-            _obtain_token_via_password_grant, client_id, username, password
+            _obtain_token_via_basic_auth_pkce, client_id, username, password
         )
 
         data.pop(CONF_USERNAME)
@@ -192,13 +192,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     return True
 
 
-def _obtain_token_via_password_grant(
+def _obtain_token_via_basic_auth_pkce(
     client_id: str, username: str, password: str
 ) -> dict[str, Any]:
-    """Obtain an OAuth2 token with refresh_token using password-grant flow.
+    """Obtain an OAuth2 token via PKCE auth-code flow with HTTP Basic auth.
 
-    Uses the existing credentials to silently obtain a refresh token
-    during migration, so users don't need to re-authenticate.
+    Viessmann's authorization endpoint accepts HTTP Basic auth and returns
+    the auth code in the redirect Location header (no browser involved).
+    Used during migration to silently obtain a refresh token from existing
+    username/password credentials, so users don't need to re-authenticate.
     """
     oauth = OAuth2Session(
         client_id,
@@ -224,7 +226,7 @@ def _obtain_token_via_password_grant(
         return {}
 
     if response.status_code != 302 or "Location" not in response.headers:
-        _LOGGER.warning("Password-grant authentication failed during migration")
+        _LOGGER.warning("Basic-auth authorization failed during migration")
         return {}
 
     try:
@@ -238,7 +240,7 @@ def _obtain_token_via_password_grant(
         return {}
 
     token = dict(oauth.token)
-    _LOGGER.debug("Obtained OAuth2 token with refresh_token via password grant")
+    _LOGGER.debug("Obtained OAuth2 token via PKCE auth-code with Basic auth")
     return token
 
 
