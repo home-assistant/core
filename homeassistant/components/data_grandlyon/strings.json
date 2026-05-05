@@ -43,36 +43,42 @@
   "entity": {
     "sensor": {
       "next_passage_1": {
-        "name": "Next passage 1",
-        "state_attributes": {
-          "type": {
-            "state": {
-              "estimated": "Estimated",
-              "theoretical": "Theoretical"
-            }
-          }
+        "name": "Next passage 1"
+      },
+      "next_passage_1_direction": {
+        "name": "Next passage 1 direction"
+      },
+      "next_passage_1_type": {
+        "name": "Next passage 1 type",
+        "state": {
+          "estimated": "Estimated",
+          "theoretical": "Theoretical"
         }
       },
       "next_passage_2": {
-        "name": "Next passage 2",
-        "state_attributes": {
-          "type": {
-            "state": {
-              "estimated": "Estimated",
-              "theoretical": "Theoretical"
-            }
-          }
+        "name": "Next passage 2"
+      },
+      "next_passage_2_direction": {
+        "name": "Next passage 2 direction"
+      },
+      "next_passage_2_type": {
+        "name": "Next passage 2 type",
+        "state": {
+          "estimated": "[%key:component::data_grandlyon::entity::sensor::next_passage_1_type::state::estimated%]",
+          "theoretical": "[%key:component::data_grandlyon::entity::sensor::next_passage_1_type::state::theoretical%]"
         }
       },
       "next_passage_3": {
-        "name": "Next passage 3",
-        "state_attributes": {
-          "type": {
-            "state": {
-              "estimated": "Estimated",
-              "theoretical": "Theoretical"
-            }
-          }
+        "name": "Next passage 3"
+      },
+      "next_passage_3_direction": {
+        "name": "Next passage 3 direction"
+      },
+      "next_passage_3_type": {
+        "name": "Next passage 3 type",
+        "state": {
+          "estimated": "[%key:component::data_grandlyon::entity::sensor::next_passage_1_type::state::estimated%]",
+          "theoretical": "[%key:component::data_grandlyon::entity::sensor::next_passage_1_type::state::theoretical%]"
         }
       }
     }
