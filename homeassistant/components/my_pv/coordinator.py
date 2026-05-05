@@ -1,7 +1,5 @@
 """The my-PV integration for Home Assistant."""
 
-from __future__ import annotations
-
 from _collections_abc import dict_items
 from datetime import timedelta
 import logging
