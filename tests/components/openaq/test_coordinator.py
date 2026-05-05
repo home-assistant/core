@@ -2,6 +2,8 @@
 
 from types import MappingProxyType, SimpleNamespace
 
+import httpx
+
 from homeassistant.components.openaq.coordinator import (
     OpenAQMeasurement,
     create_openaq_client,
@@ -16,17 +18,17 @@ from homeassistant.const import (
 from .conftest import make_latest, make_sensor
 
 
-async def test_create_openaq_client_uses_fresh_transport() -> None:
-    """Test OpenAQ clients do not share a closable transport."""
-    client = create_openaq_client("api-key")
-    other_client = create_openaq_client("api-key")
+async def test_create_openaq_client_keeps_shared_httpx_client_open() -> None:
+    """Test closing the OpenAQ client does not close the shared httpx client."""
+    httpx_client = httpx.AsyncClient()
+    client = create_openaq_client("api-key", httpx_client)
 
     try:
-        assert client.transport is not other_client.transport
+        assert client.transport.client is httpx_client
         await client.close()
-        assert not other_client.transport.client.is_closed
+        assert not httpx_client.is_closed
     finally:
-        await other_client.close()
+        await httpx_client.aclose()
 
 
 def test_get_openaq_value_dict() -> None:
