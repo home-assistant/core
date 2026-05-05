@@ -61,6 +61,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize OPNsense config flow."""
         self.available_interfaces: list[str] | None = None
         self._step_user_input: dict[str, Any] | None = None
+        self._unique_id: str | None = None
 
     async def _show_setup_form(
         self,
@@ -127,7 +128,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await self._async_check_connection(client)
+            await client.validate()
             interfaces_resp = await client.get_interfaces()
             known_interfaces = [
                 name
@@ -135,6 +136,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (name := ifinfo.get("name"))
             ]
             self.available_interfaces = list(known_interfaces)
+            self._unique_id = client.get_device_unique_id()
         except OPNsenseInvalidAuth:
             errors["base"] = "invalid_auth"
         except OPNsensePrivilegeMissing:
@@ -174,6 +176,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         entry_data: dict[str, Any] = dict(step_user_input)
         if user_input.get(CONF_TRACKER_INTERFACES):
             entry_data[CONF_TRACKER_INTERFACES] = user_input[CONF_TRACKER_INTERFACES]
+
+        if self._unique_id:
+            await self.async_set_unique_id(self._unique_id)
+
         return self.async_create_entry(title=entry_data[CONF_URL], data=entry_data)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -256,6 +262,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
 
+        unique_id = client.get_device_unique_id()
+        if unique_id:
+            await self.async_set_unique_id(unique_id)
+
         # Clear any previous import issues if interfaces are now valid
         async_delete_issue(
             self.hass,
@@ -263,7 +273,3 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             f"import_failed_missing_interfaces_{data[CONF_URL]}",
         )
         return self.async_create_entry(title=import_data[CONF_URL], data=data)
-
-    async def _async_check_connection(self, client: OPNsenseClient) -> None:
-        """Check connection to OPNsense."""
-        await client.validate()
