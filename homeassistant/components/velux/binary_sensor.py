@@ -1,8 +1,8 @@
 """Support for rain sensors built into some Velux windows."""
 
-from datetime import timedelta
+from __future__ import annotations
 
-from pyvlx import OpeningDevice, Position, PyVLXException, Window
+from pyvlx import Window
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -10,13 +10,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import VeluxConfigEntry
-from .const import LOGGER
-from .entity import VeluxEntity
+from .coordinator import VeluxLimitationCoordinator
+from .entity import velux_device_info, velux_unique_id
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(minutes=5)  # Use standard polling
 
 
 async def async_setup_entry(
@@ -25,54 +25,49 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up rain sensor(s) for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
+    limitation_coordinators = config_entry.runtime_data.limitation_coordinators
 
     async_add_entities(
-        VeluxRainSensor(node, config_entry.entry_id)
+        VeluxRainSensor(limitation_coordinators[node.node_id], config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, Window) and node.rain_sensor
     )
 
 
-class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
+class VeluxRainSensor(
+    CoordinatorEntity[VeluxLimitationCoordinator], BinarySensorEntity
+):
     """Representation of a Velux rain sensor."""
 
-    node: Window
-    _attr_should_poll = True  # the rain sensor / opening limitations needs polling unlike the rest of the Velux devices
     _attr_entity_registry_enabled_default = False
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
     _attr_translation_key = "rain_sensor"
-    _unavailable_logged = False
+    _attr_has_entity_name = True
 
-    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
+    def __init__(
+        self, coordinator: VeluxLimitationCoordinator, config_entry_id: str
+    ) -> None:
         """Initialize VeluxRainSensor."""
-        super().__init__(node, config_entry_id)
-        self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
+        super().__init__(coordinator)
+        node = coordinator.node
+        unique_id = velux_unique_id(node, config_entry_id)
+        self._attr_unique_id = f"{unique_id}_rain_sensor"
+        self._attr_device_info = velux_device_info(node, config_entry_id)
 
-    async def async_update(self) -> None:
-        """Fetch the latest state from the device."""
-        try:
-            limitation: Position = await self.node.get_limitation_min()
-        except (OSError, PyVLXException) as err:
-            if not self._unavailable_logged:
-                LOGGER.warning(
-                    "Rain sensor %s is unavailable: %s",
-                    self.entity_id,
-                    err,
-                )
-                self._unavailable_logged = True
-            self._attr_available = False
-            return
+    async def async_added_to_hass(self) -> None:
+        """Called when the entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        # Get initial state as we didn't do it on coordinator initialization to avoid doing it for disabled entities
+        await self.coordinator.async_request_refresh()
 
-        # Log when entity comes back online after being unavailable
-        if self._unavailable_logged:
-            LOGGER.info("Rain sensor %s is back online", self.entity_id)
-            self._unavailable_logged = False
-
-        self._attr_available = True
-
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if rain is detected."""
         # Velux windows with rain sensors report an opening limitation when rain is detected.
         # So far we've seen 89, 91, 93 (most cases) or 100 (Velux GPU). It probably makes sense to
         # assume that any large enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
-        self._attr_is_on = limitation.position_percent >= 89
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.limitation_min.position_percent >= 89

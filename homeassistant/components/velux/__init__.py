@@ -1,6 +1,10 @@
 """Support for VELUX KLF 200 devices."""
 
-from pyvlx import PyVLX, PyVLXException
+from __future__ import annotations
+
+import dataclasses
+
+from pyvlx import PyVLX, PyVLXException, Window
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -24,8 +28,18 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS
+from .coordinator import VeluxLimitationCoordinator
 
-type VeluxConfigEntry = ConfigEntry[PyVLX]
+
+@dataclasses.dataclass
+class VeluxData:
+    """Runtime data for a Velux config entry."""
+
+    pyvlx: PyVLX
+    limitation_coordinators: dict[int, VeluxLimitationCoordinator]
+
+
+type VeluxConfigEntry = ConfigEntry[VeluxData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -52,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.state is ConfigEntryState.LOADED:
                 try:
-                    await entry.runtime_data.reboot_gateway()
+                    await entry.runtime_data.pyvlx.reboot_gateway()
                 except (OSError, PyVLXException) as err:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
@@ -103,7 +117,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         ) from ex
 
     LOGGER.debug("Velux connection to %s successful", host)
-    entry.runtime_data = pyvlx
+
+    limitation_coordinators: dict[int, VeluxLimitationCoordinator] = {}
+    for node in pyvlx.nodes:
+        if isinstance(node, Window) and node.rain_sensor:
+            coordinator = VeluxLimitationCoordinator(hass, entry, node)
+            # do not await coordinator.async_config_entry_first_refresh() here to avoid doing
+            # it for disabled entities, the entities will call it when they are added to hass
+            limitation_coordinators[node.node_id] = coordinator
+
+    entry.runtime_data = VeluxData(
+        pyvlx=pyvlx, limitation_coordinators=limitation_coordinators
+    )
 
     connections = None
     if (mac := entry.data.get(CONF_MAC)) is not None:
@@ -145,5 +170,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bo
         # Disconnect from gateway only after platforms are successfully unloaded.
         # Disconnecting will reboot the gateway in the pyvlx library, which is needed to allow new
         # connections to be made later.
-        await entry.runtime_data.disconnect()
+        await entry.runtime_data.pyvlx.disconnect()
     return unload_ok
