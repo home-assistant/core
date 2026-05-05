@@ -219,7 +219,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.device_type is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = f"{self.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}"
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""

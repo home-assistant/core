@@ -102,7 +102,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         Camera.__init__(self)
         super().__init__(netatmo_device)
 
-        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}"
         self._light_state = None
 
         self._publishers.extend(

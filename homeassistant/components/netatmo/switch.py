@@ -58,7 +58,7 @@ class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
                 },
             ]
         )
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = f"{self.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}"
         self._attr_is_on = self.device.on
 
     @callback

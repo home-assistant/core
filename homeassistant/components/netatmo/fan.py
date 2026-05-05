@@ -62,7 +62,7 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
             ]
         )
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = f"{self.device.entity_id}-{type(self.device_type).__name__}.{self.device_type}"
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
