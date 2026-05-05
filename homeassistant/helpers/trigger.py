@@ -397,13 +397,23 @@ class EntityTriggerBase(Trigger):
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
 
+    def _should_include(self, state: State) -> bool:
+        """Check if an entity should participate in all/count checks.
+
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the trigger relies on (e.g. a missing volume_level attribute).
+        """
+        return state.state not in self._excluded_states
+
     def check_all_match(self, entity_ids: set[str]) -> bool:
         """Check if all entity states match."""
         return all(
             self.is_valid_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
-            and state.state not in self._excluded_states
+            and self._should_include(state)
         )
 
     def count_matches(self, entity_ids: set[str]) -> int:
@@ -412,7 +422,7 @@ class EntityTriggerBase(Trigger):
             self.is_valid_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
-            and state.state not in self._excluded_states
+            and self._should_include(state)
         )
 
     @override

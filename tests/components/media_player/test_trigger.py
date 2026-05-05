@@ -56,9 +56,9 @@ def parametrize_muted_trigger_states() -> list[
 ]:
     """Parametrize states and expected service call counts.
 
-    Only states with volume attributes are used as other_states, because
-    entities without volume attributes are excluded from all/last checks
-    and would cause those tests to fire prematurely.
+    States without volume attributes are passed as `extra_excluded_states`
+    because `_MediaPlayerMutedStateTriggerBase._should_include` filters them
+    out of the all/count checks.
 
     Returns a list of tuples with (trigger, list of states),
     where states is a list of TriggerStateDescription dicts.
@@ -95,6 +95,10 @@ def parametrize_muted_trigger_states() -> list[
                 MediaPlayerState.PLAYING,
                 {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
             ),
+        ],
+        extra_excluded_states=[
+            # State without any volume attributes — filtered by _should_include
+            MediaPlayerState.PLAYING,
         ],
     )
 
