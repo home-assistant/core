@@ -118,6 +118,54 @@ async def test_tts(
     )
 
 
+@pytest.mark.parametrize(
+    ("preferred_format", "expected_response_format"),
+    [
+        ("ogg", "opus"),
+        ("oga", "opus"),
+        ("raw", "pcm"),
+        ("mp3", "mp3"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_preferred_format(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_create_speech: MagicMock,
+    calls: list[ServiceCall],
+    preferred_format: str,
+    expected_response_format: str,
+) -> None:
+    """Test text to speech preferred format handling."""
+    mock_create_speech.return_value = [b"mock audio data"]
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: "tts.openai_tts",
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            tts.ATTR_OPTIONS: {tts.ATTR_PREFERRED_FORMAT: preferred_format},
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    mock_create_speech.assert_called_once_with(
+        model="gpt-4o-mini-tts",
+        voice="marin",
+        input="There is a person at the front door.",
+        instructions="",
+        speed=1.0,
+        response_format=expected_response_format,
+    )
+
+
 @pytest.mark.usefixtures("mock_init_component")
 async def test_tts_error(
     hass: HomeAssistant,
