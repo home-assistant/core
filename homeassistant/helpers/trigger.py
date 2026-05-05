@@ -407,23 +407,26 @@ class EntityTriggerBase(Trigger):
         """
         return state.state not in self._excluded_states
 
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all entity states match."""
-        return all(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(state)
-        )
+    def count_matches(self, entity_ids: set[str]) -> tuple[int, int]:
+        """Return (matches, included) for the entity set.
 
-    def count_matches(self, entity_ids: set[str]) -> int:
-        """Count the number of entity states that match."""
-        return sum(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(state)
-        )
+        `matches` is the number of entities that pass `_should_include` AND
+        `is_valid_state`. `included` is the number that pass
+        `_should_include` (i.e. are visible to the all/count check at all).
+        Callers can use the pair to distinguish vacuous truth
+        (`included == 0`) from a genuine all-match
+        (`matches == included > 0`).
+        """
+        matches = 0
+        included = 0
+        for entity_id in entity_ids:
+            state = self._hass.states.get(entity_id)
+            if state is None or not self._should_include(state):
+                continue
+            included += 1
+            if self.is_valid_state(state):
+                matches += 1
+        return matches, included
 
     @override
     async def async_attach_runner(
@@ -455,14 +458,20 @@ class EntityTriggerBase(Trigger):
                 For behavior first/last, checks the combined state.
                 """
                 if behavior == BEHAVIOR_LAST:
-                    return self.check_all_match(
+                    matches, included = self.count_matches(
                         target_state_change_data.targeted_entity_ids
                     )
+                    # Require at least one included entity to avoid keeping
+                    # the timer alive when every targeted entity has been
+                    # filtered out since it started — a vacuous all-match
+                    # (`included == 0`) would otherwise let the action fire
+                    # after `for:` even though no entity still matches.
+                    return included > 0 and matches == included
                 if behavior == BEHAVIOR_FIRST:
-                    return (
-                        self.count_matches(target_state_change_data.targeted_entity_ids)
-                        >= 1
+                    matches, _included = self.count_matches(
+                        target_state_change_data.targeted_entity_ids
                     )
+                    return matches >= 1
                 # Behavior any: check the individual entity's state
                 if not to_state:
                     return False
@@ -480,18 +489,19 @@ class EntityTriggerBase(Trigger):
                 return
 
             if behavior == BEHAVIOR_LAST:
-                if not self.check_all_match(
+                matches, included = self.count_matches(
                     target_state_change_data.targeted_entity_ids
-                ):
+                )
+                if matches != included:
                     return
             elif behavior == BEHAVIOR_FIRST:
                 # Note: It's enough to test for exactly 1 match here because if there
                 # were previously 2 matches the transition would not be valid and we
                 # would have returned already.
-                if (
-                    self.count_matches(target_state_change_data.targeted_entity_ids)
-                    != 1
-                ):
+                matches, _ = self.count_matches(
+                    target_state_change_data.targeted_entity_ids
+                )
+                if matches != 1:
                     return
 
             @callback
