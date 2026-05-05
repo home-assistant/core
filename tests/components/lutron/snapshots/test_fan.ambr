@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Fan',
       'percentage': 0,
-      'percentage_step': 33.333333333333336,
+      'percentage_step': 25.0,
       'preset_mode': None,
       'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
