@@ -17,6 +17,8 @@
   "MinIntensity": 6,
   "MaxIntensity": 16,
   "PauseDynamic": 0,
+  "LightLED": 25,
+  "LogoLED": 75,
   "FirmwareVersion": "2.1.7",
   "DynamicPowerMode": 2,
   "ContractedPower": 4600
