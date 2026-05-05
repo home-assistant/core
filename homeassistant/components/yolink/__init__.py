@@ -81,8 +81,8 @@ class YoLinkHomeMessageListener(MessageListener):
             and device_coordinator.data
         ):
             merged = {**device_coordinator.data, **msg_data}
-            device_coordinator.async_set_updated_data(merged)
             device_coordinator._adjust_sprinkler_interval(merged)
+            device_coordinator.async_set_updated_data(merged)
             if (state := msg_data.get("state")) is not None and state.get(
                 "running"
             ):
