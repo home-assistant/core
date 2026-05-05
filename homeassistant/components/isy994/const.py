@@ -82,6 +82,9 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
+EVENT_ISY994_CONTROL = "isy994_control"
+BUTTON_UNIQUE_ID_SUFFIX = "_button"
+
 NODE_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
@@ -108,10 +111,15 @@ PROGRAM_PLATFORMS = [
 ROOT_NODE_PLATFORMS = [Platform.BUTTON]
 VARIABLE_PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 
+# Platforms that classify in parallel with NODE_PLATFORMS — a node placed in
+# one of these still falls through to its primary platform classification.
+NODE_PARALLEL_PLATFORMS = [Platform.EVENT]
+
 # Set of all platforms used by integration
 PLATFORMS = {
     *NODE_PLATFORMS,
     *NODE_AUX_PROP_PLATFORMS,
+    *NODE_PARALLEL_PLATFORMS,
     *PROGRAM_PLATFORMS,
     *ROOT_NODE_PLATFORMS,
     *VARIABLE_PLATFORMS,
@@ -316,6 +324,52 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
         FILTER_ZWAVE_CAT: ["140"],
+    },
+    # Parallel classification: nodes that emit Insteon press / fast / fade
+    # control events. A matching node still gets primary classification as a
+    # switch, light, etc. FILTER_UOM and FILTER_STATES are unused for the
+    # parallel pass and kept empty for structural consistency with the other
+    # NODE_FILTERS entries. FILTER_ZWAVE_CAT is left for future expansion
+    # once Z-Wave button-emitter categories are verified.
+    Platform.EVENT: {
+        FILTER_UOM: [],
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: [
+            "BallastRelayLampSwitch",
+            "BallastRelayLampSwitch_ADV",
+            "DimmerLampSwitch",
+            "DimmerLampSwitch_ADV",
+            "DimmerSwitchOnly",
+            "DimmerSwitchOnly_ADV",
+            "KeypadButton",
+            "KeypadButton_ADV",
+            "KeypadDimmer",
+            "KeypadDimmer_ADV",
+            "KeypadRelay",
+            "KeypadRelay_ADV",
+            "RelayLampOnly",
+            "RelayLampOnly_ADV",
+            "RelayLampSwitch",
+            "RelayLampSwitch_ADV",
+            "RelaySwitchOnlyPlusQuery",
+            "RelaySwitchOnlyPlusQuery_ADV",
+        ],
+        # Type prefixes derived from observed eisy node families
+        # (SwitchLinc / KeypadLinc / InLineLinc / BallastLinc) — catches
+        # legacy non-_ADV firmware variants of the same hardware.
+        FILTER_INSTEON_TYPE: [
+            "1.14.",
+            "1.32.",
+            "1.45.",
+            "1.65.",
+            "1.66.",
+            "2.42.",
+            "2.44.",
+            "2.55.",
+            "2.57.",
+            "3.32.",
+        ],
+        FILTER_ZWAVE_CAT: [],
     },
 }
 NODE_AUX_FILTERS: dict[str, Platform] = {

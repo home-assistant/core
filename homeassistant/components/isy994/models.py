@@ -15,8 +15,10 @@ from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
+    BUTTON_UNIQUE_ID_SUFFIX,
     CONF_NETWORK,
     NODE_AUX_PROP_PLATFORMS,
+    NODE_PARALLEL_PLATFORMS,
     NODE_PLATFORMS,
     PROGRAM_PLATFORMS,
     ROOT_NODE_PLATFORMS,
@@ -41,7 +43,7 @@ class IsyData:
 
     def __init__(self) -> None:
         """Initialize an empty ISY data class."""
-        self.nodes = {p: [] for p in NODE_PLATFORMS}
+        self.nodes = {p: [] for p in (*NODE_PLATFORMS, *NODE_PARALLEL_PLATFORMS)}
         self.root_nodes = {p: [] for p in ROOT_NODE_PLATFORMS}
         self.aux_properties = {p: [] for p in NODE_AUX_PROP_PLATFORMS}
         self.programs = {p: [] for p in PROGRAM_PLATFORMS}
@@ -94,5 +96,13 @@ class IsyData:
 
         for node in self.net_resources:
             current_unique_ids.add((Platform.BUTTON, self.uid_base(node)))
+
+        # EVENT-specific unique-id format. If more NODE_PARALLEL_PLATFORMS
+        # are added with their own suffixes, generalize this loop to dispatch
+        # by platform.
+        for node in self.nodes[Platform.EVENT]:
+            current_unique_ids.add(
+                (Platform.EVENT, f"{self.uid_base(node)}{BUTTON_UNIQUE_ID_SUFFIX}")
+            )
 
         return current_unique_ids

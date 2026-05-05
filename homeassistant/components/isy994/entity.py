@@ -25,7 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import DOMAIN
+from .const import DOMAIN, EVENT_ISY994_CONTROL
 
 
 class ISYEntity(Entity):
@@ -81,7 +81,7 @@ class ISYEntity(Entity):
             # New state attributes may be available, update the state.
             self.async_write_ha_state()
 
-        self.hass.bus.async_fire("isy994_control", event_data)
+        self.hass.bus.async_fire(EVENT_ISY994_CONTROL, event_data)
 
 
 class ISYNodeEntity(ISYEntity):

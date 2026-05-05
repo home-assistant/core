@@ -33,6 +33,26 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "button": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "fade_down": "Fade Down",
+              "fade_stop": "Fade Stop",
+              "fade_up": "Fade Up",
+              "fast_off": "Fast Off",
+              "fast_on": "Fast On",
+              "off": "Off",
+              "on": "On"
+            }
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

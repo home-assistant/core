@@ -1,0 +1,285 @@
+# serializer version: 1
+# name: test_event_entity_snapshot[event.garage_relay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.garage_relay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'isy994',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00:00:00:00:00:00_22 22 22 1_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity_snapshot[event.garage_relay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+      'friendly_name': 'Garage Relay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.garage_relay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity_snapshot[event.hallway_keypad-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.hallway_keypad',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'isy994',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00:00:00:00:00:00_33 33 33 1_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity_snapshot[event.hallway_keypad-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+      'friendly_name': 'Hallway Keypad',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.hallway_keypad',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity_snapshot[event.hallway_keypad_b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.hallway_keypad_b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'B',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'B',
+    'platform': 'isy994',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00:00:00:00:00:00_33 33 33 2_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity_snapshot[event.hallway_keypad_b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+      'friendly_name': 'Hallway Keypad B',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.hallway_keypad_b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity_snapshot[event.living_room_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.living_room_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'isy994',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00:00:00:00:00:00_11 11 11 1_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity_snapshot[event.living_room_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'on',
+        'off',
+        'fast_on',
+        'fast_off',
+        'fade_up',
+        'fade_down',
+        'fade_stop',
+      ]),
+      'friendly_name': 'Living Room Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.living_room_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
