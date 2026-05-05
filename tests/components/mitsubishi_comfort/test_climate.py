@@ -1,7 +1,5 @@
 """Tests for the Mitsubishi Comfort climate entity."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
