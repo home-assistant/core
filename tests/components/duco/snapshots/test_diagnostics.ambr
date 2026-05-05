@@ -1,15 +1,19 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'api_info': dict({
+      'public_api_version': '2.5',
+      'reported_api_version': '2.5.1',
+    }),
     'board_info': dict({
       'box_name': 'SILENT_CONNECT',
       'box_sub_type_name': 'Eu',
-      'public_api_version': None,
+      'public_api_version': '2.5',
       'serial_board_box': '**REDACTED**',
       'serial_board_comm': '**REDACTED**',
       'serial_duco_box': '**REDACTED**',
       'serial_duco_comm': '**REDACTED**',
-      'software_version': None,
+      'software_version': '1.2.3',
     }),
     'duco_diagnostics': list([
       dict({
