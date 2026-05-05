@@ -134,3 +134,63 @@ def test_get_api_uses_login_method_kwarg_when_supported() -> None:
         mock_connect.call_args.kwargs["login_method"]
         is mikrotik.coordinator._login_method_with_fallback
     )
+
+
+def test_get_api_uses_login_methods_kwarg_when_supported() -> None:
+    """Test get_api uses login_methods for older librouteros signatures."""
+    entry = dict(MOCK_DATA)
+    mock_connect = MagicMock(return_value=MagicMock())
+    mock_connect.__signature__ = inspect.Signature(
+        parameters=[
+            inspect.Parameter("host", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+            inspect.Parameter("username", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+            inspect.Parameter("password", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+            inspect.Parameter(
+                "login_methods", inspect.Parameter.KEYWORD_ONLY, default=None
+            ),
+        ]
+    )
+
+    with patch(
+        "homeassistant.components.mikrotik.coordinator.librouteros.connect",
+        mock_connect,
+    ):
+        mikrotik.coordinator.get_api(entry)
+
+    assert "login_methods" in mock_connect.call_args.kwargs
+    assert "login_method" not in mock_connect.call_args.kwargs
+    assert mock_connect.call_args.kwargs["login_methods"] == (
+        mikrotik.coordinator.login_plain,
+        mikrotik.coordinator.login_token,
+    )
+
+
+def test_get_api_retries_alternate_login_kwarg_when_signature_fails() -> None:
+    """Test get_api retries with the alternate login keyword after kwarg mismatch."""
+    entry = dict(MOCK_DATA)
+    api = MagicMock()
+    mock_connect = MagicMock(
+        side_effect=[
+            TypeError("connect() got an unexpected keyword argument 'login_methods'"),
+            api,
+        ]
+    )
+
+    with (
+        patch(
+            "homeassistant.components.mikrotik.coordinator.inspect.signature",
+            side_effect=TypeError,
+        ),
+        patch(
+            "homeassistant.components.mikrotik.coordinator.librouteros.connect",
+            mock_connect,
+        ),
+    ):
+        assert mikrotik.coordinator.get_api(entry) is api
+
+    first_call = mock_connect.call_args_list[0].kwargs
+    second_call = mock_connect.call_args_list[1].kwargs
+    assert "login_methods" in first_call
+    assert "login_method" not in first_call
+    assert "login_method" in second_call
+    assert "login_methods" not in second_call

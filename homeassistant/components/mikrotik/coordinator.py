@@ -314,15 +314,8 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
     login_methods = (login_plain, login_token)
-    login_key = (
-        "login_methods"
-        if "login_methods" in inspect.signature(librouteros.connect).parameters
-        else "login_method"
-    )
-    login_arg = (
-        login_methods if login_key == "login_methods" else _login_method_with_fallback
-    )
-    kwargs = {login_key: login_arg, "port": entry["port"], "encoding": "utf8"}
+    login_key = _get_login_key()
+    kwargs = _get_login_kwargs(login_key, login_methods, entry["port"])
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
@@ -332,6 +325,18 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
         kwargs["ssl_wrapper"] = _ssl_wrapper
 
     try:
+        api = librouteros.connect(
+            entry[CONF_HOST],
+            entry[CONF_USERNAME],
+            entry[CONF_PASSWORD],
+            **kwargs,
+        )
+    except TypeError as api_error:
+        if not _is_login_kwarg_error(api_error):
+            raise
+
+        login_key = "login_method" if login_key == "login_methods" else "login_methods"
+        kwargs = _get_login_kwargs(login_key, login_methods, entry["port"])
         api = librouteros.connect(
             entry[CONF_HOST],
             entry[CONF_USERNAME],
@@ -350,6 +355,37 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
 
     _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
     return api
+
+
+def _get_login_key() -> str:
+    """Determine which login keyword the installed librouteros exposes."""
+    try:
+        parameters = inspect.signature(librouteros.connect).parameters
+    except (TypeError, ValueError):
+        return "login_methods"
+
+    return "login_methods" if "login_methods" in parameters else "login_method"
+
+
+def _get_login_kwargs(
+    login_key: str,
+    login_methods: tuple[Any, Any],
+    port: int,
+) -> dict[str, Any]:
+    """Build login kwargs for the detected librouteros API."""
+    login_arg = (
+        login_methods if login_key == "login_methods" else _login_method_with_fallback
+    )
+    return {login_key: login_arg, "port": port, "encoding": "utf8"}
+
+
+def _is_login_kwarg_error(err: TypeError) -> bool:
+    """Check whether TypeError came from a login keyword mismatch."""
+    message = str(err)
+    return (
+        "unexpected keyword argument 'login_method'" in message
+        or "unexpected keyword argument 'login_methods'" in message
+    )
 
 
 def _login_method_with_fallback(
