@@ -34,7 +34,7 @@ class PTDevicesBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] = (
-    # Batter Status
+    # Battery status
     PTDevicesBinarySensorEntityDescription(
         key=PTDevicesBinarySensors.DEVICE_BATTERY_STATUS,
         translation_key=PTDevicesBinarySensors.DEVICE_BATTERY_STATUS,
