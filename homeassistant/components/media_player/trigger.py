@@ -13,10 +13,11 @@ from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, MediaPlayerState
 from .const import DOMAIN
 
 
-class MediaPlayerMutedTrigger(EntityTriggerBase):
-    """Class for media player muted triggers."""
+class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
+    """Base class for media player muted/unmuted triggers."""
 
     _domain_specs = {DOMAIN: DomainSpec()}
+    _target_muted: bool
 
     def _has_volume_attributes(self, state: State) -> bool:
         """Check if the state has volume muted or volume level attributes."""
@@ -75,11 +76,24 @@ class MediaPlayerMutedTrigger(EntityTriggerBase):
         """Check if the new state matches the expected state."""
         if not self._has_volume_attributes(state):
             return False
-        return self.is_muted(state)
+        return self.is_muted(state) is self._target_muted
+
+
+class MediaPlayerMutedTrigger(_MediaPlayerMutedStateTriggerBase):
+    """Class for media player muted triggers."""
+
+    _target_muted = True
+
+
+class MediaPlayerUnmutedTrigger(_MediaPlayerMutedStateTriggerBase):
+    """Class for media player unmuted triggers."""
+
+    _target_muted = False
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "muted": MediaPlayerMutedTrigger,
+    "unmuted": MediaPlayerUnmutedTrigger,
     "paused_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={
