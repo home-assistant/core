@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry
 
 TZ_PARIS = ZoneInfo("Europe/Paris")
 
+
 MOCK_PASSAGES = [
     TclPassage(
         id=100,
@@ -48,25 +49,6 @@ MOCK_PASSAGES = [
 
 
 @pytest.fixture
-def mock_config_entry_with_stop() -> MockConfigEntry:
-    """Create a config entry with a stop subentry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Data Grand Lyon",
-        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_LINE: "C3", CONF_STOP_ID: 100},
-                subentry_id="stop_1",
-                subentry_type=SUBENTRY_TYPE_STOP,
-                title="C3 - Stop 100",
-                unique_id="C3_100",
-            )
-        ],
-    )
-
-
-@pytest.fixture
 def mock_tcl_client() -> Generator[AsyncMock]:
     """Mock DataGrandLyonClient for coordinator."""
     with patch(
@@ -82,12 +64,12 @@ def mock_tcl_client() -> Generator[AsyncMock]:
 
 async def test_stop_sensor_native_value_timezone(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that naive datetimes are localized to Europe/Paris."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.c3_stop_100_next_passage_1")
@@ -98,12 +80,12 @@ async def test_stop_sensor_native_value_timezone(
 
 async def test_stop_sensor_icon_estimated(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that estimated passages get the check-outline icon."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # First passage is ESTIMATED
@@ -114,12 +96,12 @@ async def test_stop_sensor_icon_estimated(
 
 async def test_stop_sensor_icon_theoretical(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that theoretical passages get the plain clock icon."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Second passage is THEORETICAL
@@ -130,12 +112,12 @@ async def test_stop_sensor_icon_theoretical(
 
 async def test_stop_sensor_direction_and_type_entities(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that direction and type are exposed as separate entities."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     direction = hass.states.get("sensor.c3_stop_100_next_passage_1_direction")
@@ -150,12 +132,12 @@ async def test_stop_sensor_direction_and_type_entities(
 async def test_stop_sensor_secondary_passage_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that direction/type sensors past the first passage are disabled by default."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     for entity_id in (
@@ -180,13 +162,13 @@ async def test_stop_sensor_secondary_passage_disabled_by_default(
 
 async def test_stop_sensor_no_data(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that sensors with no passage data return unknown."""
     mock_tcl_client.get_tcl_passages.return_value = []
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.c3_stop_100_next_passage_1")
@@ -196,12 +178,12 @@ async def test_stop_sensor_no_data(
 
 async def test_stop_sensor_third_passage_missing(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that the third passage sensor is unknown when only 2 passages exist."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Only 2 mock passages, third should be unknown
@@ -212,7 +194,7 @@ async def test_stop_sensor_third_passage_missing(
 
 async def test_stop_sensor_aware_datetime_passthrough(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that already timezone-aware datetimes are passed through unchanged."""
@@ -227,8 +209,8 @@ async def test_stop_sensor_aware_datetime_passthrough(
         course_theorique="A",
     )
     mock_tcl_client.get_tcl_passages.return_value = [aware_passage]
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.c3_stop_100_next_passage_1")
@@ -242,13 +224,13 @@ async def test_stop_sensor_aware_datetime_passthrough(
 
 async def test_coordinator_stop_fetch_error(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test coordinator handles stop fetch errors gracefully."""
     mock_tcl_client.get_tcl_passages.side_effect = ConnectionError("API down")
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Single subentry fails → UpdateFailed → entry not loaded, sensors unavailable
@@ -303,20 +285,20 @@ async def test_coordinator_partial_failure(
 
 async def test_update_entry_reloads(
     hass: HomeAssistant,
-    mock_config_entry_with_stop: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that the update listener triggers a reload."""
-    mock_config_entry_with_stop.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as mock_reload:
         hass.config_entries.async_update_entry(
-            mock_config_entry_with_stop, title="Updated Data Grand Lyon"
+            mock_config_entry, title="Updated Data Grand Lyon"
         )
         await hass.async_block_till_done()
 
-    mock_reload.assert_called_once_with(mock_config_entry_with_stop.entry_id)
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)

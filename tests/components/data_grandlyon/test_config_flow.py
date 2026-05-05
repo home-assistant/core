@@ -18,46 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Create a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Data Grand Lyon",
-        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-    )
-
-
-@pytest.fixture
-def mock_config_entry_no_auth() -> MockConfigEntry:
-    """Create a mock config entry without credentials."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Data Grand Lyon",
-        data={},
-    )
-
-
-@pytest.fixture
-def mock_config_entry_with_stop_subentry() -> MockConfigEntry:
-    """Create a mock config entry with a stop subentry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Data Grand Lyon",
-        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        subentries_data=[
-            config_entries.ConfigSubentryData(
-                data={CONF_LINE: "C3", CONF_STOP_ID: 123},
-                subentry_id="stop_1",
-                subentry_type=SUBENTRY_TYPE_STOP,
-                title="C3 - Stop 123",
-                unique_id="C3_123",
-            )
-        ],
-    )
-
-
 # Main config flow tests
 
 
@@ -161,6 +121,7 @@ async def test_form_already_configured(
 # Stop subentry tests
 
 
+@pytest.mark.parametrize("mock_subentries", [[]])
 async def test_stop_subentry_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -190,22 +151,22 @@ async def test_stop_subentry_flow(
 
 async def test_stop_subentry_already_configured(
     hass: HomeAssistant,
-    mock_config_entry_with_stop_subentry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test stop subentry aborts if same line+stop already exists."""
-    mock_config_entry_with_stop_subentry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_stop_subentry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry_with_stop_subentry.entry_id, SUBENTRY_TYPE_STOP),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
         context={"source": config_entries.SOURCE_USER},
     )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_LINE: "C3", CONF_STOP_ID: 123},
+        {CONF_LINE: "C3", CONF_STOP_ID: 100},
     )
 
     assert result["type"] is FlowResultType.ABORT
