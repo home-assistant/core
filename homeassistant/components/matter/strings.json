@@ -47,6 +47,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "active_hardware_faults": {
+        "name": "Hardware faults"
+      },
+      "active_network_faults": {
+        "name": "Network faults"
+      },
+      "active_radio_faults": {
+        "name": "Radio faults"
+      },
       "actuator": {
         "name": "Actuator"
       },
@@ -408,6 +417,17 @@
       "battery_voltage": {
         "name": "Battery voltage"
       },
+      "boot_reason": {
+        "name": "Boot reason",
+        "state": {
+          "brown_out_reset": "Brownout reset",
+          "hardware_watchdog_reset": "Hardware watchdog reset",
+          "power_on_reboot": "Power-on reboot",
+          "software_reset": "Software reset",
+          "software_update_completed": "Software update completed",
+          "software_watchdog_reset": "Software watchdog reset"
+        }
+      },
       "contamination_state": {
         "name": "Contamination state",
         "state": {
@@ -576,6 +596,9 @@
       "reactive_current": {
         "name": "Reactive current"
       },
+      "reboot_count": {
+        "name": "Reboot count"
+      },
       "rms_current": {
         "name": "Effective current"
       },
@@ -590,6 +613,9 @@
       },
       "tank_volume": {
         "name": "Tank volume"
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "tvoc_level": {
         "name": "TVOC level",

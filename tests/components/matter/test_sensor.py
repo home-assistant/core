@@ -885,3 +885,53 @@ async def test_bridged_device_reachable_updates_availability(
         state = hass.states.get(entity_id)
         assert state
         assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics cluster sensors."""
+    # RebootCount (cluster 51, attr 1) = 3
+    state = hass.states.get("sensor.m5stamp_lighting_app_reboot_count")
+    assert state
+    assert state.state == "3"
+
+    set_node_attribute(matter_node, 0, 51, 1, 5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_reboot_count")
+    assert state
+    assert state.state == "5"
+
+    entry = entity_registry.async_get("sensor.m5stamp_lighting_app_reboot_count")
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    # UpTime (cluster 51, attr 2) = 213 seconds
+    state = hass.states.get("sensor.m5stamp_lighting_app_uptime")
+    assert state
+    assert state.state == "213"
+
+    set_node_attribute(matter_node, 0, 51, 2, 3600)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_uptime")
+    assert state
+    assert state.state == "3600"
+
+    # BootReason (cluster 51, attr 4) = 1 (PowerOnReboot)
+    state = hass.states.get("sensor.m5stamp_lighting_app_boot_reason")
+    assert state
+    assert state.state == "power_on_reboot"
+
+    set_node_attribute(matter_node, 0, 51, 4, 6)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_boot_reason")
+    assert state
+    assert state.state == "software_reset"
