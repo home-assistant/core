@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import socket
 
 from motionblinds import AsyncMotionMulticast
 
@@ -40,21 +41,39 @@ async def async_setup_entry(
     # Create multicast Listener
     async with setup_lock:
         if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-            # Only re-check interface if we don't have a stored one yet
-            if multicast_interface in (DEFAULT_INTERFACE, None):
+            if multicast_interface not in (DEFAULT_INTERFACE, None):
+                # Validate stored interface is still usable
+                test_multicast = AsyncMotionMulticast(interface=multicast_interface)
+                try:
+                    await test_multicast.Start_listen()
+                    test_multicast.Stop_listen()
+                    working_interface = multicast_interface
+                    _LOGGER.debug(
+                        "Stored Motionblinds interface '%s' validated for host %s",
+                        multicast_interface,
+                        host,
+                    )
+                except OSError:
+                    # Stored interface no longer works, do full probe
+                    _LOGGER.debug(
+                        "Stored Motionblinds interface '%s' unavailable, reprobing for host %s",
+                        multicast_interface,
+                        host,
+                    )
+                    check_multicast_class = ConnectMotionGateway(
+                        hass, interface=multicast_interface
+                    )
+                    working_interface = (
+                        await check_multicast_class.async_check_interface(host, key)
+                    )
+            else:
                 check_multicast_class = ConnectMotionGateway(
                     hass, interface=multicast_interface
                 )
                 working_interface = await check_multicast_class.async_check_interface(
                     host, key
                 )
-            else:
-                working_interface = multicast_interface
-                _LOGGER.debug(
-                    "Using stored Motionblinds interface '%s' for host %s",
-                    working_interface,
-                    host,
-                )
+
             if working_interface != multicast_interface:
                 data = {**entry.data, CONF_INTERFACE: working_interface}
                 hass.config_entries.async_update_entry(entry, data=data)
@@ -69,10 +88,8 @@ async def async_setup_entry(
 
             multicast = AsyncMotionMulticast(interface=working_interface)
             hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
-            # start listening for local pushes (only once)
             await multicast.Start_listen()
 
-            # register stop callback to shutdown listening for local pushes
             def stop_motion_multicast(event):
                 """Stop multicast thread."""
                 _LOGGER.debug("Shutting down Motion Listener")
@@ -112,7 +129,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MotionBlindsConfigEntry
