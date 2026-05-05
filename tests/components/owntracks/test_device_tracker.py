@@ -13,7 +13,14 @@ import pytest
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
-from homeassistant.components.owntracks.const import ATTR_UPDATE_TIMESTAMP
+from homeassistant.components.owntracks.const import (
+    ATTR_ADDRESS,
+    ATTR_BATTERY_STATUS,
+    ATTR_COURSE,
+    ATTR_TID,
+    ATTR_UPDATE_TIMESTAMP,
+    ATTR_VELOCITY,
+)
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -141,6 +148,14 @@ DEFAULT_BEACON_TRANSITION_MESSAGE = {
 
 # Location messages
 LOCATION_MESSAGE = DEFAULT_LOCATION_MESSAGE
+
+LOCATION_MESSAGE_WITH_CUSTOM_ATTRIBUTES = build_message(
+    {
+        "addr": "123 Main Street",
+        "bs": 3,
+    },
+    LOCATION_MESSAGE,
+)
 
 LOCATION_MESSAGE_INACCURATE = build_message(
     {
@@ -1601,7 +1616,7 @@ async def test_restore_state(
     client = await hass_client()
     resp = await client.post(
         "/api/webhook/owntracks_test",
-        json=LOCATION_MESSAGE,
+        json=LOCATION_MESSAGE_WITH_CUSTOM_ATTRIBUTES,
         headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
     )
     assert resp.status == 200
@@ -1624,6 +1639,18 @@ async def test_restore_state(
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+    assert state_1.attributes[ATTR_TID] == state_2.attributes[ATTR_TID]
+    assert state_1.attributes[ATTR_VELOCITY] == state_2.attributes[ATTR_VELOCITY]
+    assert state_1.attributes[ATTR_COURSE] == state_2.attributes[ATTR_COURSE]
+    assert state_1.attributes[ATTR_ADDRESS] == state_2.attributes[ATTR_ADDRESS]
+    assert (
+        state_1.attributes[ATTR_UPDATE_TIMESTAMP]
+        == state_2.attributes[ATTR_UPDATE_TIMESTAMP]
+    )
+    assert (
+        state_1.attributes[ATTR_BATTERY_STATUS]
+        == state_2.attributes[ATTR_BATTERY_STATUS]
+    )
 
 
 async def test_returns_empty_friends(
