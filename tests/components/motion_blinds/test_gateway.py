@@ -2,7 +2,6 @@
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.motion_blinds.const import DEFAULT_INTERFACE
 from homeassistant.components.motion_blinds.gateway import ConnectMotionGateway
 from homeassistant.core import HomeAssistant
 
@@ -87,9 +86,7 @@ async def test_check_interface_timeout_moves_to_next(hass: HomeAssistant) -> Non
         stack.enter_context(
             patch("homeassistant.components.motion_blinds.gateway.MotionGateway")
         )
-        stack.enter_context(
-            patch.object(gateway, "check_interface", side_effect=check_side_effect)
-        )
+        stack.enter_context(patch.object(gateway, "check_interface", side_effect=check_side_effect))
         result = await gateway.async_check_interface("192.168.1.1", "testkey")
 
     assert result == "192.168.1.10"
@@ -118,9 +115,7 @@ async def test_check_interface_found_on_first_try(hass: HomeAssistant) -> None:
         stack.enter_context(
             patch("homeassistant.components.motion_blinds.gateway.MotionGateway")
         )
-        stack.enter_context(
-            patch.object(gateway, "check_interface", return_value=True)
-        )
+        stack.enter_context(patch.object(gateway, "check_interface", return_value=True))
         result = await gateway.async_check_interface("192.168.1.1", "testkey")
 
     assert result == "192.168.1.10"
@@ -149,9 +144,7 @@ async def test_check_interface_none_working_falls_back(hass: HomeAssistant) -> N
         stack.enter_context(
             patch("homeassistant.components.motion_blinds.gateway.MotionGateway")
         )
-        stack.enter_context(
-            patch.object(gateway, "check_interface", return_value=False)
-        )
+        stack.enter_context(patch.object(gateway, "check_interface", return_value=False)        )
         result = await gateway.async_check_interface("192.168.1.1", "testkey")
 
     assert result == "0.0.0.0"
