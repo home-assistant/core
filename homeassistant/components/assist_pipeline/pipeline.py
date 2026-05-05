@@ -932,6 +932,7 @@ class PipelineRun:
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
+                    "audio_processing": asdict(self.stt_provider.audio_processing),
                 },
             )
         )

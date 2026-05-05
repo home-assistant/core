@@ -146,6 +146,8 @@ class EsphomeAssistSatellite(
         )
 
         self._active_pipeline_index = 0
+        self._active_audio_channel = 0
+        self._has_multi_channel_audio = False
 
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
@@ -291,6 +293,9 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
             )
 
+        if feature_flags & VoiceAssistantFeature.MULTI_CHANNEL_AUDIO:
+            self._has_multi_channel_audio = True
+
         # Update wake word select when config is updated
         self.async_on_remove(
             self._entry_data.async_register_assist_satellite_set_wake_words_callback(
@@ -315,6 +320,18 @@ class EsphomeAssistSatellite(
 
         data_to_send: dict[str, Any] = {}
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
+            if (
+                self._has_multi_channel_audio
+                and event.data
+                and (audio_processing := event.data.get("audio_processing"))
+            ):
+                # Settings come from stt SpeechAudioProcessing
+                if (audio_processing.get("prefers_auto_gain_enabled") is False) and (
+                    audio_processing.get("prefers_noise_reduction_enabled") is False
+                ):
+                    # Use non-enhanced audio
+                    self._active_audio_channel = 1
+
             self._entry_data.async_set_assist_pipeline_state(True)
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
@@ -533,6 +550,10 @@ class EsphomeAssistSatellite(
             # Try next wake word select
             maybe_pipeline_index += 1
 
+        # Default to audio channel 0 (enhanced)
+        # May be changed when STT_START event arrives.
+        self._active_audio_channel = 0
+
         _LOGGER.debug(
             "Running pipeline %s from %s to %s",
             self._active_pipeline_index + 1,
@@ -555,9 +576,20 @@ class EsphomeAssistSatellite(
 
         return port
 
-    async def handle_audio(self, data: bytes) -> None:
+    async def handle_audio(self, data: bytes, data2: bytes | None = None) -> None:
         """Handle incoming audio chunk from API."""
-        self._audio_queue.put_nowait(data)
+        # Default to enhanced audio (channel 0)
+        active_data = data
+
+        if (
+            self._has_multi_channel_audio
+            and (data2 is not None)
+            and (self._active_audio_channel == 1)
+        ):
+            # Non-enhanced audio (channel 1)
+            active_data = data2
+
+        self._audio_queue.put_nowait(active_data)
 
     async def handle_pipeline_stop(self, abort: bool) -> None:
         """Handle request for pipeline to stop."""
