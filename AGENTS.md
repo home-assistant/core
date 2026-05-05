@@ -21,7 +21,9 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
 - Avoid using conditions/branching in tests. Instead, either split tests or adjust the test parametrization to cover all cases without branching.
-- If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body.
+- If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body. Use `pytest.param` with an `id` parameter to name the test cases clearly.
+- We use Syrupy for snapshot testing. Leverage `.ambr` snapshots instead of repetitive and exhaustive generation of test data within Python code itself.
+- `patch()` vs `patch.object()` - if the test already imports an object under test, and you want to mock a method on that object, then `patch.object` is more concise, and more resilient to refactors (if the module path changes then `patch.object` remains the same but `patch` doesn't).
 
 ## Good practices
 
