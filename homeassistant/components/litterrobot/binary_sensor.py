@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from pylitterbot import LitterRobot, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,8 +30,11 @@ class RobotBinarySensorEntityDescription(
     is_on_fn: Callable[[_WhiskerEntityT], bool]
 
 
-BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, ...]] = {
-    LitterRobot: (  # type: ignore[type-abstract]  # only used for isinstance check
+BINARY_SENSOR_MAP: dict[
+    type[Robot] | tuple[type[Robot], ...],
+    tuple[RobotBinarySensorEntityDescription, ...],
+] = {
+    LitterRobot: (
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleeping",
             translation_key="sleeping",
@@ -56,8 +59,8 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
             is_on_fn=lambda robot: not robot.is_hopper_removed,
         ),
     ),
-    Robot: (  # type: ignore[type-abstract]  # only used for isinstance check
-        RobotBinarySensorEntityDescription[Robot](
+    (FeederRobot, LitterRobot3, LitterRobot4): (
+        RobotBinarySensorEntityDescription[FeederRobot | LitterRobot3 | LitterRobot4](
             key="power_status",
             translation_key="power_status",
             device_class=BinarySensorDeviceClass.PLUG,

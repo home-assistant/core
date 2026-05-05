@@ -9,8 +9,9 @@ from nacl.secret import SecretBox
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
-from homeassistant.util import decorator, slugify
+from homeassistant.util import decorator, dt as dt_util, slugify
 
+from .const import ATTR_UPDATE_TIMESTAMP
 from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +86,10 @@ def _parse_see_args(message, subscribe_topic):
             kwargs["source_type"] = SourceType.GPS
         if message["t"] == "b":
             kwargs["source_type"] = SourceType.BLUETOOTH_LE
+    if "tst" in message:
+        kwargs["attributes"][ATTR_UPDATE_TIMESTAMP] = dt_util.utc_from_timestamp(
+            message["tst"]
+        )
 
     return dev_id, kwargs
 
