@@ -272,6 +272,11 @@
         }
       }
     },
+    "number": {
+      "display_time_offset": {
+        "name": "Display time offset"
+      }
+    },
     "select": {
       "time_format": {
         "name": "Time format",
