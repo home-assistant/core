@@ -67,7 +67,7 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ViCareConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 1:
+    if config_entry.version > 2:
         return False
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
@@ -78,52 +78,45 @@ async def async_migrate_entry(
         _LOGGER.debug("Migration to version 1.2 successful")
 
     if config_entry.version == 1 and config_entry.minor_version < 3:
-        _LOGGER.debug("Migrating ViCare config entry from version 1.2 to 1.3")
+        _LOGGER.debug("Migrating ViCare config entry from version 1.2 to 2.1")
         data = {**config_entry.data}
 
-        # Import configured client_id as application credential
-        if client_id := data.get(CONF_CLIENT_ID):
-            await async_import_client_credential(
-                hass,
-                DOMAIN,
-                ClientCredential(client_id, "", data.get(CONF_USERNAME)),
-            )
-            _LOGGER.debug("Imported configured client_id as application credential")
+        client_id = data[CONF_CLIENT_ID]
+        username = data[CONF_USERNAME]
+        password = data[CONF_PASSWORD]
 
-        # Obtain OAuth2 token with refresh_token using existing credentials
-        token: dict[str, Any] = {}
-        if (
-            client_id
-            and (username := data.get(CONF_USERNAME))
-            and (password := data.get(CONF_PASSWORD))
-        ):
-            token = await hass.async_add_executor_job(
-                _obtain_token_via_password_grant, client_id, username, password
-            )
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(client_id, "", username),
+        )
+        _LOGGER.debug("Imported configured client_id as application credential")
 
-        # Remove legacy auth fields
-        data.pop(CONF_USERNAME, None)
-        data.pop(CONF_PASSWORD, None)
-        data.pop(CONF_CLIENT_ID, None)
+        token = await hass.async_add_executor_job(
+            _obtain_token_via_password_grant, client_id, username, password
+        )
 
-        # Set OAuth2 auth implementation
+        data.pop(CONF_USERNAME)
+        data.pop(CONF_PASSWORD)
+        data.pop(CONF_CLIENT_ID)
+
         data["auth_implementation"] = DOMAIN
         data[CONF_TOKEN] = token
 
-        # Remove legacy token file
         token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
         await hass.async_add_executor_job(_remove_token_file, token_path)
 
-        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=3)
+        hass.config_entries.async_update_entry(
+            config_entry, data=data, version=2, minor_version=1
+        )
         if token:
-            _LOGGER.debug("Migration to version 1.3 successful (token obtained)")
+            _LOGGER.debug("Migration to version 2.1 successful (token obtained)")
         else:
             _LOGGER.warning(
-                "Migration to version 1.3 complete but token could not be "
+                "Migration to version 2.1 complete but token could not be "
                 "obtained — re-authentication will be required"
             )
 
-        # Inform user to update redirect URI for future re-authentication
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -136,6 +129,11 @@ async def async_migrate_entry(
                 "redirect_url": MY_AUTH_CALLBACK_PATH,
             },
         )
+
+    if config_entry.version == 1 and config_entry.minor_version == 3:
+        # Pre-merge testers were on transient v1.3; promote to v2.1 without re-running.
+        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
+        _LOGGER.debug("Promoted pre-merge ViCare config entry from 1.3 to 2.1")
 
     return True
 

@@ -20,8 +20,8 @@ class ViCareFlowHandler(
     """Handle a config flow for ViCare using OAuth2."""
 
     DOMAIN = DOMAIN
-    VERSION = 1
-    MINOR_VERSION = 3
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @property
     def logger(self) -> logging.Logger:

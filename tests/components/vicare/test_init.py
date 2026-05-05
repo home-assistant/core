@@ -28,11 +28,11 @@ from .conftest import Fixture, MockPyViCare
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_entry_v1_1_to_v1_3(
+async def test_migrate_entry_v1_1_to_v2_1(
     hass: HomeAssistant,
     mock_setup_entry: None,
 ) -> None:
-    """Test migration of config entry from v1.1 through to v1.3."""
+    """Test migration of config entry from v1.1 through to v2.1."""
     mock_token = {
         "access_token": "mock-access-token",
         "refresh_token": "mock-refresh-token",
@@ -60,8 +60,8 @@ async def test_migrate_entry_v1_1_to_v1_3(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.version == 1
-    assert config_entry.minor_version == 3
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
     assert "heating_type" not in config_entry.data
     assert "username" not in config_entry.data
     assert "password" not in config_entry.data
@@ -70,11 +70,11 @@ async def test_migrate_entry_v1_1_to_v1_3(
     assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
-async def test_migrate_entry_v1_2_to_v1_3(
+async def test_migrate_entry_v1_2_to_v2_1(
     hass: HomeAssistant,
     mock_setup_entry: None,
 ) -> None:
-    """Test migration of config entry from v1.2 to v1.3."""
+    """Test migration of config entry from v1.2 to v2.1."""
     mock_token = {
         "access_token": "mock-access-token",
         "refresh_token": "mock-refresh-token",
@@ -101,8 +101,8 @@ async def test_migrate_entry_v1_2_to_v1_3(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.version == 1
-    assert config_entry.minor_version == 3
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
     assert "username" not in config_entry.data
     assert "password" not in config_entry.data
     assert "client_id" not in config_entry.data
@@ -135,8 +135,8 @@ async def test_migrate_entry_token_failure(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.version == 1
-    assert config_entry.minor_version == 3
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
     assert "username" not in config_entry.data
     assert "password" not in config_entry.data
     assert "client_id" not in config_entry.data
@@ -177,6 +177,35 @@ async def test_migrate_entry_creates_repair_issue(
     issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_migrate_entry_v1_3_stamp_bump(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+) -> None:
+    """Test pre-merge v1.3 entries are promoted to v2.1 without re-running migration."""
+    token = {
+        "access_token": "a",
+        "refresh_token": "r",
+        "expires_at": 9999999999.0,
+        "token_type": "Bearer",
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ViCare",
+        data={"auth_implementation": DOMAIN, "token": token},
+        version=1,
+        minor_version=3,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
+    assert config_entry.data["auth_implementation"] == DOMAIN
+    assert config_entry.data["token"] == token
 
 
 async def test_setup_entry_token_invalid(

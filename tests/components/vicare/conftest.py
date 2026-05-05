@@ -102,8 +102,8 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="ViCare",
         entry_id="1234",
-        version=1,
-        minor_version=3,
+        version=2,
+        minor_version=1,
         data={
             "auth_implementation": DOMAIN,
             "token": {
