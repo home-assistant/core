@@ -94,6 +94,7 @@ def _update_devices_and_issues(
             f"stale_device_{entry_id}_{device_address}",
             is_fixable=False,
             is_persistent=True,
+            is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="stale_device",
             translation_placeholders={
