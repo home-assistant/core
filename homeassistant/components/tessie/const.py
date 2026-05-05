@@ -1,7 +1,5 @@
 """Constants used by Tessie integration."""
 
-from __future__ import annotations
-
 from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"
@@ -30,14 +28,6 @@ class TessieState(StrEnum):
 
     ASLEEP = "asleep"
     ONLINE = "online"
-
-
-class TessieStatus(StrEnum):
-    """Tessie status."""
-
-    ASLEEP = "asleep"
-    AWAKE = "awake"
-    WAITING = "waiting_for_sleep"
 
 
 class TessieSeatHeaterOptions(StrEnum):
@@ -98,6 +88,12 @@ TessieChargeStates = {
     "Complete": "complete",
     "Disconnected": "disconnected",
     "NoPower": "no_power",
+}
+
+TessieChargePortLatchStates = {
+    "Engaged": "engaged",
+    "Disengaged": "disengaged",
+    "Blocking": "blocking",
 }
 
 

@@ -3,8 +3,6 @@
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any
@@ -223,7 +221,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 

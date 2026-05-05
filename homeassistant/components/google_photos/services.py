@@ -1,7 +1,5 @@
 """Google Photos services."""
 
-from __future__ import annotations
-
 import asyncio
 import mimetypes
 from pathlib import Path

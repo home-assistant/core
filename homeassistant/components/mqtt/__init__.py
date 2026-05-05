@@ -1,7 +1,5 @@
 """Support for MQTT message handling."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
@@ -13,7 +11,12 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.const import (
+    CONF_DISCOVERY,
+    CONF_PLATFORM,
+    CONF_PROTOCOL,
+    SERVICE_RELOAD,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -29,6 +32,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -75,12 +79,14 @@ from .const import (
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
+    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
     ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
+    PROTOCOL_311,
     TEMPLATE_ERRORS,
     Platform,
 )
@@ -311,6 +317,19 @@ def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Plat
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions and websocket API for the MQTT component."""
 
+    if config.get(DOMAIN) and not mqtt_config_entry_enabled(hass):
+        issue_registry = ir.async_get(hass)
+        issue_registry.async_get_or_create(
+            DOMAIN,
+            "yaml_setup_without_active_setup",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/integrations/mqtt/"
+            "#configuration",
+            translation_key="yaml_setup_without_active_setup",
+        )
+
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
 
@@ -412,6 +431,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data: MqttData
+
+    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != DEFAULT_PROTOCOL:
+        broker: str = entry.data[CONF_BROKER]
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "protocol_5_migration",
+            issue_domain=DOMAIN,
+            is_fixable=True,
+            breaks_in_ha_version="2027.1.0",
+            severity=IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/integrations/mqtt/#mqtt-protocol",
+            data={
+                "entry_id": entry.entry_id,
+                "broker": broker,
+                "protocol": protocol,
+            },
+            translation_placeholders={"broker": broker, "protocol": protocol},
+            translation_key="protocol_5_migration",
+        )
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""

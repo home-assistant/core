@@ -1,6 +1,4 @@
-"""Test the dnsip config flow."""
-
-from __future__ import annotations
+"""Test the DNS IP config flow."""
 
 from unittest.mock import patch
 

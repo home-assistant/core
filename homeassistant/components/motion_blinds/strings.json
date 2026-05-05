@@ -72,7 +72,7 @@
   },
   "services": {
     "set_absolute_position": {
-      "description": "Sets the absolute position of the cover.",
+      "description": "Sets the absolute position of a cover.",
       "fields": {
         "absolute_position": {
           "description": "Absolute position to move to.",

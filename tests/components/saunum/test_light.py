@@ -1,7 +1,5 @@
 """Test the Saunum light platform."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from pysaunum import SaunumException

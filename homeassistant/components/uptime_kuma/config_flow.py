@@ -1,7 +1,5 @@
 """Config flow for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -10,6 +8,7 @@ from pythonkuma import (
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
+    UptimeKumaParseException,
 )
 import voluptuous as vol
 from yarl import URL
@@ -60,6 +59,8 @@ async def validate_connection(
         await uptime_kuma.metrics()
     except UptimeKumaAuthenticationException:
         errors["base"] = "invalid_auth"
+    except UptimeKumaParseException:
+        errors["base"] = "invalid_data"
     except UptimeKumaException:
         errors["base"] = "cannot_connect"
     except Exception:

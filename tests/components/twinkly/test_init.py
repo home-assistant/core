@@ -59,7 +59,7 @@ async def test_mac_migration(
         unique_id="unique_id",
         data={
             CONF_HOST: "192.168.0.123",
-            CONF_ID: id,
+            CONF_ID: "00000000-0000-0000-0000-000000000000",
             CONF_NAME: "Tree 1",
             CONF_MODEL: TEST_MODEL,
         },

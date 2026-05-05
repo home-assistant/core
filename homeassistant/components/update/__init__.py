@@ -1,7 +1,5 @@
 """Component to allow for providing device or service updates."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
@@ -290,9 +288,7 @@ class UpdateEntity(
         Update entities return the brand icon based on the integration
         domain by default.
         """
-        return (
-            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
-        )
+        return f"/api/brands/integration/{self.platform.platform_name}/icon.png"
 
     @cached_property
     def in_progress(self) -> bool | None:
@@ -533,7 +529,13 @@ async def websocket_release_notes(
             "Entity does not support release notes",
         )
         return
-
+    if entity.available is False:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_HOME_ASSISTANT_ERROR,
+            "Entity is not available",
+        )
+        return
     connection.send_result(
         msg["id"],
         await entity.async_release_notes(),

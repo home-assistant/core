@@ -1,7 +1,5 @@
 """The OpenAI Conversation integration."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from types import MappingProxyType
 
@@ -46,10 +44,13 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
+    DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
@@ -57,6 +58,9 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_STORE_RESPONSES,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
@@ -66,7 +70,7 @@ from .entity import async_prepare_files_for_prompt
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
 
-PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION, Platform.TTS)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION, Platform.STT, Platform.TTS)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
@@ -206,7 +210,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
             ),
             "user": call.context.user_id,
-            "store": False,
+            "store": conversation_subentry.data.get(
+                CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
+            ),
         }
 
         if model.startswith("o"):
@@ -480,6 +486,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
         _add_tts_subentry(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=5)
 
+    if entry.version == 2 and entry.minor_version == 5:
+        _add_stt_subentry(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=6)
+
+    if entry.version == 2 and entry.minor_version == 6:
+        for subentry in entry.subentries.values():
+            if subentry.subentry_type in ("conversation", "ai_task_data"):
+                data = dict(subentry.data)
+                updated = False
+                if data.get(CONF_REASONING_SUMMARY) == "short":
+                    data[CONF_REASONING_SUMMARY] = "concise"
+                    updated = True
+                if data.get(CONF_REASONING_SUMMARY) == "concise" and not data.get(
+                    CONF_CHAT_MODEL, ""
+                ).startswith("gpt-5"):
+                    data[CONF_REASONING_SUMMARY] = RECOMMENDED_REASONING_SUMMARY
+                    updated = True
+                if updated:
+                    hass.config_entries.async_update_subentry(
+                        entry, subentry, data=data
+                    )
+        hass.config_entries.async_update_entry(entry, minor_version=7)
+
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
@@ -495,6 +524,19 @@ def _add_ai_task_subentry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None
             data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
             subentry_type="ai_task_data",
             title=DEFAULT_AI_TASK_NAME,
+            unique_id=None,
+        ),
+    )
+
+
+def _add_stt_subentry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
+    """Add STT subentry to the config entry."""
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_STT_OPTIONS),
+            subentry_type="stt",
+            title=DEFAULT_STT_NAME,
             unique_id=None,
         ),
     )

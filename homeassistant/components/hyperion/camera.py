@@ -1,6 +1,4 @@
-"""Switch platform for Hyperion."""
-
-from __future__ import annotations
+"""Camera platform for Hyperion."""
 
 import asyncio
 import base64

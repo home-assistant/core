@@ -1,7 +1,5 @@
 """Matter sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast
@@ -23,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -48,8 +45,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 AIR_QUALITY_MAP = {
@@ -224,11 +222,11 @@ def matter_epoch_microseconds_to_utc(x: int | None) -> datetime | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
@@ -525,7 +523,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -553,7 +550,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -747,6 +743,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="RadonSensor",
+            native_unit_of_measurement=CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="radon_concentration",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="HepaFilterCondition",
             native_unit_of_measurement=PERCENTAGE,
             device_class=None,
@@ -775,7 +784,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ThirdRealityEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -792,7 +800,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ThirdRealityEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -809,7 +816,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="NeoEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -824,7 +830,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="NeoEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=1,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -882,7 +887,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ElectricalPowerMeasurementWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.MILLIWATT,
             suggested_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
@@ -908,6 +912,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentPower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -924,6 +929,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactivePower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -939,6 +945,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -956,6 +963,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSVoltage,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -973,6 +981,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -990,6 +999,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1007,6 +1017,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1024,13 +1035,13 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="ElectricalEnergyMeasurementCumulativeEnergyImported",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
@@ -1039,6 +1050,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
         ),
@@ -1049,7 +1061,6 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalEnergyMeasurementCumulativeEnergyExported",
             translation_key="energy_exported",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
@@ -1058,6 +1069,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
         ),
@@ -1067,7 +1079,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ElectricalMeasurementActivePower",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,

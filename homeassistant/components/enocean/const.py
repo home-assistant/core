@@ -6,6 +6,8 @@ from homeassistant.const import Platform
 
 DOMAIN = "enocean"
 
+MANUFACTURER = "EnOcean"
+
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
 
 SIGNAL_RECEIVE_MESSAGE = "enocean.receive_message"

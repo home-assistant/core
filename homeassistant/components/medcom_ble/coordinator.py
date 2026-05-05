@@ -1,7 +1,5 @@
 """The Medcom BLE integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -18,13 +16,17 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type MedcomBleConfigEntry = ConfigEntry[MedcomBleUpdateCoordinator]
+
 
 class MedcomBleUpdateCoordinator(DataUpdateCoordinator[MedcomBleDevice]):
     """Coordinator for Medcom BLE radiation monitor data."""
 
-    config_entry: ConfigEntry
+    config_entry: MedcomBleConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, address: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: MedcomBleConfigEntry, address: str
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,

@@ -1,7 +1,5 @@
 """HTTP endpoints for conversation integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
@@ -48,6 +46,8 @@ def async_setup(hass: HomeAssistant) -> None:
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("language"): str,
         vol.Optional("agent_id"): agent_id_validator,
+        vol.Optional("device_id"): vol.Any(str, None),
+        vol.Optional("satellite_id"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -64,6 +64,8 @@ async def websocket_process(
         context=connection.context(msg),
         language=msg.get("language"),
         agent_id=msg.get("agent_id"),
+        device_id=msg.get("device_id"),
+        satellite_id=msg.get("satellite_id"),
     )
     connection.send_result(msg["id"], result.as_dict())
 
@@ -248,6 +250,8 @@ class ConversationProcessView(http.HomeAssistantView):
                 vol.Optional("conversation_id"): str,
                 vol.Optional("language"): str,
                 vol.Optional("agent_id"): agent_id_validator,
+                vol.Optional("device_id"): vol.Any(str, None),
+                vol.Optional("satellite_id"): vol.Any(str, None),
             }
         )
     )
@@ -262,6 +266,8 @@ class ConversationProcessView(http.HomeAssistantView):
             context=self.context(request),
             language=data.get("language"),
             agent_id=data.get("agent_id"),
+            device_id=data.get("device_id"),
+            satellite_id=data.get("satellite_id"),
         )
 
         return self.json(result.as_dict())

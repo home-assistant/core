@@ -4,6 +4,7 @@ from datetime import datetime
 import pathlib
 import textwrap
 
+from freezegun.api import FrozenDateTimeFactory
 from httpx import Response
 import pytest
 import respx
@@ -21,7 +22,7 @@ from .conftest import (
     event_fields,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test data files with known calendars from various sources. You can add a new file
 # in the testdata directory and add it will be parsed and tested.
@@ -422,3 +423,110 @@ async def test_calendar_examples(
     await setup_integration(hass, config_entry)
     events = await get_events("1997-07-14T00:00:00", "2025-07-01T00:00:00")
     assert events == snapshot
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-01-01 09:59:00+00:00")
+async def test_event_lifecycle(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the lifecycle of an event from upcoming to active to finished."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Test Event
+            DTSTART:20230101T100000Z
+            DTEND:20230101T110000Z
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+
+    await setup_integration(hass, config_entry)
+
+    # An upcoming event is off
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("message") == "Test Event"
+
+    # Advance time to the start of the event
+    freezer.move_to(datetime.fromisoformat("2023-01-01T10:00:00+00:00"))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The event is active
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("message") == "Test Event"
+
+    # Advance time to the end of the event
+    freezer.move_to(datetime.fromisoformat("2023-01-01T11:00:00+00:00"))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The event is finished
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-01-01 09:59:00+00:00")
+async def test_event_edge_during_refresh_interval(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the lifecycle of multiple sequential events."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Event One
+            DTSTART:20230101T100000Z
+            DTEND:20230101T110000Z
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:Event Two
+            DTSTART:20230102T190000Z
+            DTEND:20230102T200000Z
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+
+    await setup_integration(hass, config_entry)
+
+    # Event One is upcoming
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("message") == "Event One"
+
+    # Advance time to after the end of the first event
+    freezer.move_to(datetime.fromisoformat("2023-01-01T11:01:00+00:00"))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Event Two is upcoming
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("message") == "Event Two"

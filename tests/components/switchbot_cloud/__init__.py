@@ -33,13 +33,30 @@ AIR_PURIFIER_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
-CIRCULATOR_FAN_INFO = Device(
+BATTERY_CIRCULATOR_FAN_INFO = Device(
     version="V1.0",
     deviceId="battery-fan-id-1",
     deviceName="battery-fan-1",
     deviceType="Battery Circulator Fan",
     hubDeviceId="test-hub-id",
 )
+
+CIRCULATOR_FAN_INFO = Device(
+    version="V1.0",
+    deviceId="fan-id-1",
+    deviceName="fan-1",
+    deviceType="Circulator Fan",
+    hubDeviceId="test-hub-id",
+)
+
+STANDING_FAN_INFO = Device(
+    version="V1.0",
+    deviceId="standing-fan-id-1",
+    deviceName="standing-fan-1",
+    deviceType="Standing Fan",
+    hubDeviceId="test-hub-id",
+)
+
 
 METER_INFO = Device(
     version="V1.0",
@@ -94,5 +111,13 @@ HUMIDIFIER2_INFO = Device(
     deviceId="humidifier2-id-1",
     deviceName="humidifier2-1",
     deviceType="Humidifier2",
+    hubDeviceId="test-hub-id",
+)
+
+LOCK_ULTRA_INFO = Device(
+    version="V1.0",
+    deviceId="lock-id-1",
+    deviceName="Lock Ultra",
+    deviceType="Smart Lock Ultra",
     hubDeviceId="test-hub-id",
 )

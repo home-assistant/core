@@ -13,19 +13,23 @@ from lunatone_rest_api_client.models import (
 )
 from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
+from yarl import URL
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BASE_URL: Final = "http://10.0.0.131"
+BASE_IP: Final = "10.0.0.131"
+BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]
+MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
 PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345
+UUID: Final = "be37ca9c-47c2-4498-a38b-c62c7c711840"
 VERSION: Final = "v1.14.1/1.4.3"
 
 
 DEVICE_INFO_DATA: Final[DeviceInfoData] = DeviceInfoData(
-    serial=SERIAL_NUMBER,
+    serial=12345,
     gtin=192837465,
     pcb="2a",
     articleNumber=87654321,
@@ -35,6 +39,38 @@ DEVICE_INFO_DATA: Final[DeviceInfoData] = DeviceInfoData(
 INFO_DATA: Final[InfoData] = InfoData(
     name="Test",
     version=VERSION,
+    uid=UUID,
+    device=DEVICE_INFO_DATA,
+    lines={
+        "0": DALIBusData(
+            sendBlockedInitialize=False,
+            sendBlockedQuiescent=False,
+            sendBlockedMacroRunning=False,
+            sendBufferFull=False,
+            lineStatus=LineStatus.OK,
+            device=DEVICE_INFO_DATA,
+        ),
+        "1": DALIBusData(
+            sendBlockedInitialize=False,
+            sendBlockedQuiescent=False,
+            sendBlockedMacroRunning=False,
+            sendBufferFull=False,
+            lineStatus=LineStatus.OK,
+            device=DeviceInfoData(
+                serial=54321,
+                gtin=101010101,
+                pcb="1a",
+                articleNumber=12345678,
+                productionYear=22,
+                productionWeek=10,
+            ),
+        ),
+    },
+)
+LEGACY_INFO_DATA: Final[InfoData] = InfoData(
+    name="Test",
+    version=VERSION,
+    uid=None,
     device=DEVICE_INFO_DATA,
     lines={
         "0": DALIBusData(
@@ -77,13 +113,7 @@ def build_device_data_list() -> list[DeviceData]:
             name="Device 1",
             available=True,
             status=DeviceStatus(),
-            features=FeaturesStatus(
-                switchable=Status[bool](status=False),
-                dimmable=Status[float](status=0.0),
-                colorKelvin=Status[int](status=1000),
-                colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
-                colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
-            ),
+            features=FeaturesStatus(switchable=Status[bool](status=False)),
             address=0,
             line=0,
         ),
@@ -95,20 +125,55 @@ def build_device_data_list() -> list[DeviceData]:
             features=FeaturesStatus(
                 switchable=Status[bool](status=False),
                 dimmable=Status[float](status=0.0),
+            ),
+            address=1,
+            line=0,
+        ),
+        DeviceData(
+            id=3,
+            name="Device 3",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
                 colorKelvin=Status[int](status=1000),
+            ),
+            address=2,
+            line=0,
+        ),
+        DeviceData(
+            id=4,
+            name="Device 4",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
+                colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
+            ),
+            address=3,
+            line=0,
+        ),
+        DeviceData(
+            id=5,
+            name="Device 5",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
                 colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
                 colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
             ),
-            address=1,
+            address=4,
             line=0,
         ),
     ]
 
 
-async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the Lunatone integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

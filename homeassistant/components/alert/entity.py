@@ -3,8 +3,6 @@
 DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
@@ -13,7 +11,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
-    DOMAIN as DOMAIN_NOTIFY,
+    DOMAIN as NOTIFY_DOMAIN,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
@@ -185,7 +183,7 @@ class AlertEntity(Entity):
         for target in self._notifiers:
             try:
                 await self.hass.services.async_call(
-                    DOMAIN_NOTIFY, target, msg_payload, context=self._context
+                    NOTIFY_DOMAIN, target, msg_payload, context=self._context
                 )
             except ServiceNotFound:
                 LOGGER.error(

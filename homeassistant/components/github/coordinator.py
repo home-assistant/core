@@ -1,7 +1,5 @@
 """Custom data update coordinator for the GitHub integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiogithubapi import (
@@ -77,6 +75,12 @@ query ($owner: String!, $repository: String!) {
         url
         number
       }
+    }
+    merged_pull_request: pullRequests(
+      first:1
+      states: MERGED
+    ) {
+      total: totalCount
     }
     release: latestRelease {
       name

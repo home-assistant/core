@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[camera.burocam-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -56,8 +57,9 @@
 # ---
 # name: test_platform_setup_and_discovery[camera.c9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -111,8 +113,9 @@
 # ---
 # name: test_platform_setup_and_discovery[camera.cam_garage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -166,8 +169,9 @@
 # ---
 # name: test_platform_setup_and_discovery[camera.cam_porch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -218,10 +222,65 @@
     'state': 'idle',
   })
 # ---
+# name: test_platform_setup_and_discovery[camera.dolni_vchod_zapad-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.dolni_vchod_zapad',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.o4hpbl5uarjfbzheps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.dolni_vchod_zapad-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.dolni_vchod_zapad?token=1',
+      'friendly_name': 'Dolní vchod - západ',
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.dolni_vchod_zapad',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
 # name: test_platform_setup_and_discovery[camera.garage_camera-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -274,8 +333,9 @@
 # ---
 # name: test_platform_setup_and_discovery[camera.intercom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -328,8 +388,9 @@
 # ---
 # name: test_platform_setup_and_discovery[camera.mirilla_puerta-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

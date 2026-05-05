@@ -1,7 +1,5 @@
 """Plugwise platform for Home Assistant Core."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import Platform

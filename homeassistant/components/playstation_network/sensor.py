@@ -1,7 +1,5 @@
 """Sensor platform for PlayStation Network integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -11,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
@@ -61,6 +60,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
         value_fn=(
             lambda psn: psn.trophy_summary.trophy_level if psn.trophy_summary else None
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.TROPHY_LEVEL_PROGRESS,
@@ -69,6 +69,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             lambda psn: psn.trophy_summary.progress if psn.trophy_summary else None
         ),
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_PLATINUM,
@@ -80,6 +81,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
                 else None
             )
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -89,6 +91,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
                 psn.trophy_summary.earned_trophies.gold if psn.trophy_summary else None
             )
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -100,6 +103,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
                 else None
             )
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -111,6 +115,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
                 else None
             )
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_ID,
