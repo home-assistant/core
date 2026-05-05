@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any, override
-import uuid
 
 from ouman_eh_800_api import (
     OumanClientAuthenticationError,
@@ -65,9 +64,6 @@ class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-                # The device exposes no usable identifier so we have to generate
-                # the unique_id.
-                _ = await self.async_set_unique_id(uuid.uuid4().hex)
                 return self.async_create_entry(title="Ouman EH-800", data=user_input)
 
         return self.async_show_form(
