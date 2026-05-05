@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import Any
 
 from fluss_api import (
@@ -23,7 +24,17 @@ from .const import LOGGER, UPDATE_INTERVAL
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
 
-class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+@dataclass(frozen=True)
+class FlussDevice:
+    """A Fluss+ device with merged list and status data."""
+
+    device_id: str
+    device_name: str | None
+    internet_connected: bool
+    open_close_status: str | bool | None = None
+
+
+class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
     """Manages fetching Fluss device data on a schedule."""
 
     def __init__(
@@ -39,16 +50,16 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_get_connectivity(self, device_id: str) -> bool:
-        """Return connectivity for a device; False if the status call fails."""
+    async def _async_get_status(self, device_id: str) -> dict[str, Any]:
+        """Return per-device status; defaults to offline on API error."""
         try:
-            status = await self.api.async_get_device_status(device_id)
+            response = await self.api.async_get_device_status(device_id)
         except FlussApiClientError:
-            return False
-        return status["status"]["internetConnected"]
+            return {"internetConnected": False}
+        return response["status"]
 
-    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
-        """Fetch Fluss+ devices and merge per-device connectivity status."""
+    async def _async_update_data(self) -> dict[str, FlussDevice]:
+        """Fetch Fluss+ devices and merge per-device status."""
         try:
             devices = await self.api.async_get_devices()
         except FlussApiClientAuthenticationError as err:
@@ -61,10 +72,15 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             for device in devices["devices"]
             if device["userPermissions"]["canUseWiFi"]
         ]
-        connectivity = await asyncio.gather(
-            *(self._async_get_connectivity(d["deviceId"]) for d in device_list)
+        statuses = await asyncio.gather(
+            *(self._async_get_status(d["deviceId"]) for d in device_list)
         )
         return {
-            device["deviceId"]: {**device, "internetConnected": connected}
-            for device, connected in zip(device_list, connectivity, strict=False)
+            device["deviceId"]: FlussDevice(
+                device_id=device["deviceId"],
+                device_name=device.get("deviceName"),
+                internet_connected=status.get("internetConnected", False),
+                open_close_status=status.get("openCloseStatus"),
+            )
+            for device, status in zip(device_list, statuses, strict=False)
         }

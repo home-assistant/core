@@ -19,5 +19,13 @@
         "description": "Your Fluss API key, available in the profile page of the Fluss+ app"
       }
     }
+  },
+  "exceptions": {
+    "open_failed": {
+      "message": "Failed to open device: {error}"
+    },
+    "close_failed": {
+      "message": "Failed to close device: {error}"
+    }
   }
 }

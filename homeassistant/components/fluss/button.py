@@ -6,7 +6,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FlussApiClientError, FlussConfigEntry
-from .entity import FlussEntity
+from .entity import FlussEntity, has_open_close_sensor
 
 
 async def async_setup_entry(
@@ -16,11 +16,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fluss Devices, filtering out any invalid payloads."""
     coordinator = entry.runtime_data
-    devices = coordinator.data
 
     async_add_entities(
-        FlussButton(coordinator, device_id, device)
-        for device_id, device in devices.items()
+        FlussButton(coordinator, device)
+        for device in coordinator.data.values()
+        if not has_open_close_sensor(device)
     )
 
 
@@ -32,7 +32,7 @@ class FlussButton(FlussEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return True only when the device is online."""
-        return super().available and self.device["internetConnected"]
+        return super().available and self.device.internet_connected
 
     async def async_press(self) -> None:
         """Handle the button press."""

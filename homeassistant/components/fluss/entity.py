@@ -3,7 +3,12 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import FlussDataUpdateCoordinator
+from .coordinator import FlussDataUpdateCoordinator, FlussDevice
+
+
+def has_open_close_sensor(device: FlussDevice) -> bool:
+    """Return whether a device reports an open/close position sensor."""
+    return device.open_close_status is not None
 
 
 class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
@@ -14,16 +19,15 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: FlussDataUpdateCoordinator,
-        device_id: str,
-        device: dict,
+        device: FlussDevice,
     ) -> None:
-        """Initialize the entity with a device ID and device data."""
+        """Initialize the entity."""
         super().__init__(coordinator)
-        self.device_id = device_id
-        self._attr_unique_id = device_id
+        self.device_id = device.device_id
+        self._attr_unique_id = device.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={("fluss", device_id)},
-            name=device.get("deviceName"),
+            identifiers={("fluss", device.device_id)},
+            name=device.device_name,
             manufacturer="Fluss",
             model="Fluss+ Device",
         )
@@ -34,6 +38,6 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         return super().available and self.device_id in self.coordinator.data
 
     @property
-    def device(self) -> dict:
+    def device(self) -> FlussDevice:
         """Return the stored device data."""
         return self.coordinator.data[self.device_id]
