@@ -11,6 +11,7 @@ from ouman_eh_800_api import (
     OumanEh800Client,
 )
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -30,8 +31,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 def _normalize_url(url: str) -> str:
-    """Normalize URL by stripping whitespace, trailing slashes, and /eh800.html."""
-    return url.strip().removesuffix("/").removesuffix("/eh800.html").removesuffix("/")
+    """Reduce URL to scheme://host[:port], discarding any path, query, or fragment."""
+    return str(URL(url.strip()).origin())
 
 
 class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,25 +47,31 @@ class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-            client = OumanEh800Client(
-                session=async_get_clientsession(self.hass),
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                address=user_input[CONF_URL],
-            )
             try:
-                await client.login()
-            except OumanClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except OumanClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
+            except ValueError:
+                errors[CONF_URL] = "invalid_url"
             else:
-                return self.async_create_entry(title="Ouman EH-800", data=user_input)
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+                client = OumanEh800Client(
+                    session=async_get_clientsession(self.hass),
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                    address=user_input[CONF_URL],
+                )
+                try:
+                    await client.login()
+                except OumanClientCommunicationError:
+                    errors["base"] = "cannot_connect"
+                except OumanClientAuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(
+                        title="Ouman EH-800", data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

@@ -110,6 +110,35 @@ async def test_user_flow_errors_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_invalid_url_recovers(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ouman_client: AsyncMock,
+) -> None:
+    """Test that an unparsable URL surfaces an error and the flow can recover."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "not a url",
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: "invalid_url"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
