@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from mypv import MyPVCloudDevice, MyPVDevice, MyPVLocalDevice
-from mypv.exceptions import MyPVAuthenticationError
+from my_pv import MyPVCloudDevice, MyPVDevice, MyPVLocalDevice
+from my_pv.exceptions import MyPVAuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -39,7 +39,7 @@ _VALIDATE_CLOUD_API_TOKEN = cv.matches_regex(r"^my.{46}PV$")
 class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for my-PV."""
 
-    _host: str | None = None
+    _host: str
     _discovered_device: MyPVDevice | None = None
     _password_needed: bool = False
 
@@ -193,7 +193,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
-        host = user_input.get(CONF_HOST)
+        host = user_input[CONF_HOST]
 
         # Check if we can connect to the device
         device = await MyPVLocalDevice(host)
@@ -307,7 +307,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._reauth_entry:
             serial_number = self._reauth_entry.data[CONF_SERIAL_NUMBER]
         else:
-            serial_number = user_input.get(CONF_SERIAL_NUMBER)
+            serial_number = user_input[CONF_SERIAL_NUMBER]
 
             # Validate serial number.
             try:
@@ -315,7 +315,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             except vol.Invalid:
                 errors[CONF_SERIAL_NUMBER] = "invalid_serial_number"
 
-        api_token = user_input.get(CONF_TOKEN)
+        api_token = user_input[CONF_TOKEN]
 
         # Validate API token.
         try:
