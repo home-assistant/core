@@ -13,7 +13,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import TeltonikaDataUpdateCoordinator
@@ -51,13 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
 
     assert coordinator.device_info is not None
-
-    # Register the device explicitly so MAC connections are present even
-    # when no sensor entities have been created yet.
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id,
-        **coordinator.device_info,
-    )
 
     # Store runtime data
     entry.runtime_data = coordinator

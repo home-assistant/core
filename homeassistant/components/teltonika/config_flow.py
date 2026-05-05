@@ -230,24 +230,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             # Older firmware (API v1.0) does not expose the serial without
             # authentication, so we fall back to the DHCP MAC as the flow
-            # unique_id (suppresses parallel discovery flows for the same
-            # device) and look the device up in the registry by MAC.
-            mac = dr.format_mac(discovery_info.macaddress)
-            await self.async_set_unique_id(mac)
+            # unique_id to suppress parallel discovery and ignored entries.
+            # Already-configured entries (which use the serial as unique_id)
+            # are caught later in async_step_dhcp_confirm.
+            await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-            existing = dr.async_get(self.hass).async_get_device(
-                connections={(dr.CONNECTION_NETWORK_MAC, mac)}
-            )
-            if existing is not None:
-                for entry_id in existing.config_entries:
-                    entry = self.hass.config_entries.async_get_entry(entry_id)
-                    if entry is not None and entry.domain == DOMAIN:
-                        return self.async_update_reload_and_abort(
-                            entry,
-                            data_updates={CONF_HOST: host},
-                            reason="already_configured",
-                            reload_even_if_entry_is_unchanged=False,
-                        )
 
         # Store discovery info for the user step
         self.context["title_placeholders"] = {
