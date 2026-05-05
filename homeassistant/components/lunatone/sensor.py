@@ -2,6 +2,7 @@
 
 from typing import Final
 
+from lunatone_rest_api_client import Sensor
 from lunatone_rest_api_client.models import SensorAddressType, SensorType
 
 from homeassistant.components.sensor import (
@@ -18,7 +19,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -111,11 +112,8 @@ class LunatoneSensor(
 
         self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
-        self._sensor = self.coordinator.data.get(self._sensor_id)
 
-        self._attr_name = (
-            self._sensor.name if self._sensor else f"Sensor {self._sensor_id}"
-        )
+        self._attr_name = self.sensor.name
         self._attr_unique_id = (
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
@@ -123,26 +121,30 @@ class LunatoneSensor(
             identifiers={(DOMAIN, self._config_entry_unique_id)},
         )
         if (
-            self._sensor
-            and self._sensor.data.address_type == SensorAddressType.DALI
-            and self._sensor.data.dali_sensor_address
+            self.sensor.data.address_type == SensorAddressType.DALI
+            and self.sensor.data.dali_sensor_address
         ):
             device_info = DeviceInfo(
                 identifiers={
                     (
                         DOMAIN,
                         f"{self._config_entry_unique_id}"
-                        f"-line{self._sensor.data.dali_sensor_address.line}"
-                        f"-d24-address{self._sensor.data.dali_sensor_address.address}",
+                        f"-line{self.sensor.data.dali_sensor_address.line}"
+                        f"-d24-address{self.sensor.data.dali_sensor_address.address}",
                     )
                 },
                 name=(
-                    f"DALI Line {self._sensor.data.dali_sensor_address.line}"
-                    f" - A{self._sensor.data.dali_sensor_address.address}\u00b2"
+                    f"DALI Line {self.sensor.data.dali_sensor_address.line}"
+                    f" - A{self.sensor.data.dali_sensor_address.address}\u00b2"
                 ),
                 via_device=(DOMAIN, str(self._config_entry_unique_id)),
             )
         self._attr_device_info = device_info
+
+    @property
+    def sensor(self) -> Sensor:
+        """Return the sensor data."""
+        return self.coordinator.data[self._sensor_id]
 
     @property
     def available(self) -> bool:
@@ -152,10 +154,4 @@ class LunatoneSensor(
     @property
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
-        return self._sensor.data.value if self._sensor else None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._sensor = self.coordinator.data[self._sensor_id]
-        self.async_write_ha_state()
+        return self.sensor.data.value
