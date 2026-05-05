@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_UNIQUE_ID_SUFFIX
+from .const import EVENT_BUTTON_UNIQUE_ID_SUFFIX
 from .entity import ISYNodeEntity
 from .models import IsyConfigEntry
 
@@ -96,7 +96,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         """Initialize the ISY button event entity."""
         super().__init__(node, device_info=device_info)
         self._attr_unique_id = (
-            f"{node.isy.uuid}_{node.address}{BUTTON_UNIQUE_ID_SUFFIX}"
+            f"{node.isy.uuid}_{node.address}{EVENT_BUTTON_UNIQUE_ID_SUFFIX}"
         )
         if node.parent_node is None:
             self._attr_name = None

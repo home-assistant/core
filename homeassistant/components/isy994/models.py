@@ -15,8 +15,8 @@ from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
-    BUTTON_UNIQUE_ID_SUFFIX,
     CONF_NETWORK,
+    EVENT_BUTTON_UNIQUE_ID_SUFFIX,
     NODE_AUX_PROP_PLATFORMS,
     NODE_PARALLEL_PLATFORMS,
     NODE_PLATFORMS,
@@ -102,7 +102,10 @@ class IsyData:
         # by platform.
         for node in self.nodes[Platform.EVENT]:
             current_unique_ids.add(
-                (Platform.EVENT, f"{self.uid_base(node)}{BUTTON_UNIQUE_ID_SUFFIX}")
+                (
+                    Platform.EVENT,
+                    f"{self.uid_base(node)}{EVENT_BUTTON_UNIQUE_ID_SUFFIX}",
+                )
             )
 
         return current_unique_ids
