@@ -403,7 +403,7 @@ def parametrize_trigger_states(
     `states` is a list of TriggerStateDescription dicts describing the state
     sequence to drive the trigger through.
 
-    The target_states, excluded_states, and extra_invalid_states
+    The target_states, other_states, and extra_invalid_states
     iterables are either iterables of states or iterables of (state, attributes)
     tuples.
 
@@ -474,13 +474,10 @@ def parametrize_trigger_states(
     def state_with_attributes(
         state: str | None | tuple[str | None, dict],
         count: int,
-        *,
-        others_state: str | None | tuple[str | None, dict] | UndefinedType = UNDEFINED,
     ) -> TriggerStateDescription:
         """Return TriggerStateDescription dict."""
-        included = _included_state_desc(state)
         return {
-            "included_state": included,
+            "included_state": _included_state_desc(state),
             "excluded_state": _excluded_state_desc(state),
             "count": count,
         }
