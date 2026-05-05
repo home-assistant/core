@@ -121,6 +121,8 @@ class AppleTvMediaPlayer(
         self._playing: Playing | None = None
         self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
+        self._stream_file_supported: bool = False
+        self._play_url_supported: bool = False
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
@@ -141,6 +143,16 @@ class AppleTvMediaPlayer(
             feature_info = all_features.get(feature_name)
             if feature_info and feature_info.state != FeatureState.Unsupported:
                 self._attr_supported_features |= support_flag
+
+        stream_info = all_features.get(FeatureName.StreamFile)
+        self._stream_file_supported = (
+            stream_info is not None and stream_info.state != FeatureState.Unsupported
+        )
+        play_url_info = all_features.get(FeatureName.PlayUrl)
+        self._play_url_supported = (
+            play_url_info is not None
+            and play_url_info.state != FeatureState.Unsupported
+        )
 
         # No need to schedule state update here as that will happen when the first
         # metadata update arrives (sometime very soon after this callback returns)
@@ -178,6 +190,8 @@ class AppleTvMediaPlayer(
     def async_device_disconnected(self) -> None:
         """Handle when connection was lost to device."""
         self._attr_supported_features = SUPPORT_APPLE_TV
+        self._stream_file_supported = False
+        self._play_url_supported = False
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -348,16 +362,23 @@ class AppleTvMediaPlayer(
             media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
-        if self._is_feature_available(FeatureName.StreamFile) and (
-            media_type == MediaType.MUSIC or await is_streamable(media_id)
-        ):
-            _LOGGER.debug("Streaming %s via RAOP", media_id)
-            await self.atv.stream.stream_file(media_id)
-        elif self._is_feature_available(FeatureName.PlayUrl):
-            _LOGGER.debug("Playing %s via AirPlay", media_id)
-            await self.atv.stream.play_url(media_id)
-        else:
-            _LOGGER.error("Media streaming is not possible with current configuration")
+        try:
+            if self._stream_file_supported and (
+                media_type == MediaType.MUSIC or await is_streamable(media_id)
+            ):
+                _LOGGER.debug("Streaming %s via RAOP", media_id)
+                await self.atv.stream.stream_file(media_id)
+            elif self._play_url_supported:
+                _LOGGER.debug("Playing %s via AirPlay", media_id)
+                await self.atv.stream.play_url(media_id)
+            else:
+                _LOGGER.error(
+                    "Media streaming is not possible with current configuration"
+                )
+        except exceptions.NotSupportedError:
+            _LOGGER.error("Streaming not supported for %s", media_id)
+        except (exceptions.ConnectionLostError, exceptions.ProtocolError) as ex:
+            _LOGGER.error("Failed to stream media: %s", ex)
 
     @property
     def media_image_hash(self) -> str | None:
