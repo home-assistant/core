@@ -70,14 +70,9 @@ class ConnectMotionGateway:
 
     def check_interface(self, timeout=5):
         """Check if the current interface supports multicast."""
-        old_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(timeout)
-        try:
-            with contextlib.suppress(socket.timeout):
-                return self.gateway_device.Check_gateway_multicast()
-            return False
-        finally:
-            socket.setdefaulttimeout(old_timeout)
+        with contextlib.suppress(socket.timeout):
+            return self.gateway_device.Check_gateway_multicast()
+        return False
 
     async def async_get_interfaces(self):
         """Get list of interface to use."""
