@@ -1,7 +1,5 @@
 """Provides conditions for temperature."""
 
-from __future__ import annotations
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,

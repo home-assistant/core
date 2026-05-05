@@ -1,7 +1,5 @@
 """Support for Ecowitt Weather Stations."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import datetime
 import logging

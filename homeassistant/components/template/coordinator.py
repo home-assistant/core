@@ -59,15 +59,20 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Return unique ID for the entity."""
         return self.config.get("unique_id")
 
-    @callback
-    def async_remove(self) -> None:
-        """Signal that the entities need to remove themselves."""
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator and clean up resources."""
+        await super().async_shutdown()
         if self._unsub_start:
             self._unsub_start()
             self._unsub_start = None
         if self._unsub_trigger:
             self._unsub_trigger()
             self._unsub_trigger = None
+        if self._script is not None:
+            await self._script.async_stop()
+            self._script.async_unload()
+        if self._cond_func is not None:
+            self._cond_func.async_unload()
 
     async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
@@ -155,16 +160,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if not self._check_condition(run_variables):
             return
         self._execute_update(run_variables, context)
-
-    async def async_shutdown(self) -> None:
-        """Shut down the coordinator and clean up resources."""
-        await super().async_shutdown()
-        self.async_remove()
-        if self._script is not None:
-            await self._script.async_stop()
-            self._script.async_unload()
-        if self._cond_func is not None:
-            self._cond_func.async_unload()
 
     def _check_condition(self, run_variables: TemplateVarsType) -> bool:
         if not self._cond_func:

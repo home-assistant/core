@@ -4,10 +4,12 @@
     'board_info': dict({
       'box_name': 'SILENT_CONNECT',
       'box_sub_type_name': 'Eu',
+      'public_api_version': None,
       'serial_board_box': '**REDACTED**',
       'serial_board_comm': '**REDACTED**',
       'serial_duco_box': '**REDACTED**',
       'serial_duco_comm': '**REDACTED**',
+      'software_version': None,
     }),
     'duco_diagnostics': list([
       dict({

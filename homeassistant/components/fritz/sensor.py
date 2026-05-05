@@ -1,12 +1,11 @@
 """AVM FRITZ!Box binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
+from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 
@@ -145,7 +144,7 @@ def _is_suitable_cpu_temperature(status: FritzStatus) -> bool:
     """Return whether the CPU temperature sensor is suitable."""
     try:
         cpu_temp = status.get_cpu_temperatures()[0]
-    except RequestException, IndexError:
+    except RequestException, IndexError, FritzConnectionException:
         _LOGGER.debug("CPU temperature not supported by the device")
         return False
     if cpu_temp == 0:
@@ -294,7 +293,6 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
 DEVICE_SENSOR_TYPES: tuple[FritzDeviceSensorEntityDescription, ...] = (
     FritzDeviceSensorEntityDescription(
         key="device_uptime",
-        translation_key="device_uptime",
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,

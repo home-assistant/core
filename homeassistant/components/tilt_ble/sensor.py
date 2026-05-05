@@ -1,7 +1,5 @@
 """Support for Tilt Hydrometers."""
 
-from __future__ import annotations
-
 from tilt_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (

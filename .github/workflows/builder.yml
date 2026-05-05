@@ -14,7 +14,7 @@ env:
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
-  BASE_IMAGE_VERSION: "2026.01.0"
+  BASE_IMAGE_VERSION: "2026.04.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
 
 permissions: {}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@8305c0f1062bb0d184d09ef4493ecb9288447732 # v20
+        uses: dawidd6/action-download-artifact@b6e2e70617bc3265edd6dab6c906732b2f1ae151 # v21
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -119,7 +119,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@8305c0f1062bb0d184d09ef4493ecb9288447732 # v20
+        uses: dawidd6/action-download-artifact@b6e2e70617bc3265edd6dab6c906732b2f1ae151 # v21
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: OHF-Voice/intents-package

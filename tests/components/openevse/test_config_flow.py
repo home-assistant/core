@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
+import pytest
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
@@ -486,3 +487,80 @@ async def test_zeroconf_already_configured_host(
     # Should abort because the host matches an existing entry
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"][CONF_HOST] == "192.168.1.100"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "newuser", CONF_PASSWORD: "newpassword"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.1.100",
+        CONF_USERNAME: "newuser",
+        CONF_PASSWORD: "newpassword",
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_base"),
+    [
+        (AuthenticationError, "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error_base: str,
+) -> None:
+    """Test reauthentication flow recovers from errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_charger.test_and_get.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "newuser", CONF_PASSWORD: "wrongpassword"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error_base}
+
+    mock_charger.test_and_get.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "newuser", CONF_PASSWORD: "newpassword"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.1.100",
+        CONF_USERNAME: "newuser",
+        CONF_PASSWORD: "newpassword",
+    }

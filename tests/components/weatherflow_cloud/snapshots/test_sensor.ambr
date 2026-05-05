@@ -595,7 +595,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Nearcast precipitation today',
     'platform': 'weatherflow_cloud',
@@ -604,16 +604,17 @@
     'supported_features': 0,
     'translation_key': 'precip_accum_local_day_final',
     'unique_id': '24432_precip_accum_local_day_final',
-    'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'precipitation',
       'friendly_name': 'My Home Station Nearcast precipitation today',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_nearcast_precipitation_today',
@@ -653,7 +654,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Nearcast precipitation yesterday',
     'platform': 'weatherflow_cloud',
@@ -662,16 +663,17 @@
     'supported_features': 0,
     'translation_key': 'precip_accum_local_yesterday_final',
     'unique_id': '24432_precip_accum_local_yesterday_final',
-    'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'precipitation',
       'friendly_name': 'My Home Station Nearcast precipitation yesterday',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_nearcast_precipitation_yesterday',
@@ -827,7 +829,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation today',
     'platform': 'weatherflow_cloud',
@@ -836,16 +838,17 @@
     'supported_features': 0,
     'translation_key': 'precip_accum_local_day',
     'unique_id': '24432_precip_accum_local_day',
-    'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'precipitation',
       'friendly_name': 'My Home Station Precipitation today',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_precipitation_today',
@@ -955,7 +958,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation yesterday',
     'platform': 'weatherflow_cloud',
@@ -964,16 +967,17 @@
     'supported_features': 0,
     'translation_key': 'precip_accum_local_yesterday',
     'unique_id': '24432_precip_accum_local_yesterday',
-    'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'precipitation',
       'friendly_name': 'My Home Station Precipitation yesterday',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_precipitation_yesterday',
@@ -1137,7 +1141,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Rain last hour',
     'platform': 'weatherflow_cloud',
@@ -1146,16 +1150,17 @@
     'supported_features': 0,
     'translation_key': 'precip_accum_last_1hr',
     'unique_id': '24432_precip_accum_last_1hr',
-    'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_rain_last_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'precipitation',
       'friendly_name': 'My Home Station Rain last hour',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_rain_last_hour',

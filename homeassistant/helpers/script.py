@@ -1,7 +1,5 @@
 """Helpers to execute scripts."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
@@ -137,7 +135,7 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 
-DATA_SCRIPTS: HassKey[list[ScriptData]] = HassKey("helpers.script")
+DATA_SCRIPTS: HassKey[dict[int, ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
     "helpers.script_breakpoints"
 )
@@ -514,6 +512,7 @@ class _ScriptRun:
                             enabled = enabled.async_render(limited=True)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
+                                trace_element,
                                 ex,
                                 continue_on_error,
                                 self._log_exceptions or log_exceptions,
@@ -531,7 +530,10 @@ class _ScriptRun:
                     await getattr(self, handler)()
                 except Exception as ex:  # noqa: BLE001
                     self._handle_exception(
-                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                        trace_element,
+                        ex,
+                        continue_on_error,
+                        self._log_exceptions or log_exceptions,
                     )
                 finally:
                     trace_element.update_variables(self._variables.non_parallel_scope)
@@ -554,7 +556,11 @@ class _ScriptRun:
             await self._stopped.wait()
 
     def _handle_exception(
-        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+        self,
+        trace_element: TraceElement,
+        exception: Exception,
+        continue_on_error: bool,
+        log_exceptions: bool,
     ) -> None:
         if not isinstance(exception, _HaltScript) and log_exceptions:
             self._log_exception(exception)
@@ -584,6 +590,9 @@ class _ScriptRun:
         # Only Home Assistant errors can be ignored.
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
+
+        # Mark the step as having an error, but continue running the script.
+        trace_element.set_error(exception)
 
     def _log_exception(self, exception: Exception) -> None:
         action_type = cv.determine_script_action(self._action)
@@ -1356,7 +1365,9 @@ async def _async_stop_scripts_after_shutdown(
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
-        script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
+        script
+        for script in hass.data[DATA_SCRIPTS].values()
+        if script["instance"].is_running
     ]
     if running_scripts:
         names = ", ".join([script["instance"].name for script in running_scripts])
@@ -1375,7 +1386,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
 
     running_scripts = [
         script
-        for script in hass.data[DATA_SCRIPTS]
+        for script in hass.data[DATA_SCRIPTS].values()
         if script["instance"].is_running and script["started_before_shutdown"]
     ]
     if running_scripts:
@@ -1456,16 +1467,17 @@ class Script:
 
         enabled attribute is only used for non-top-level scripts.
         """
-        if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
-            all_scripts = hass.data[DATA_SCRIPTS] = []
+        if (all_scripts := hass.data.get(DATA_SCRIPTS)) is None:
+            all_scripts = hass.data[DATA_SCRIPTS] = {}
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
         self.top_level = top_level
         if top_level:
-            all_scripts.append(
-                {"instance": self, "started_before_shutdown": not hass.is_stopping}
-            )
+            all_scripts[id(self)] = {
+                "instance": self,
+                "started_before_shutdown": not hass.is_stopping,
+            }
         if DATA_SCRIPT_BREAKPOINTS not in hass.data:
             hass.data[DATA_SCRIPT_BREAKPOINTS] = {}
 
@@ -1775,6 +1787,12 @@ class Script:
         started_action: Callable[..., Any] | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
+        # Prevent running an unloaded script
+        if self._unloaded:
+            raise RuntimeError(
+                f"Cannot run script '{self.name}' after it has been unloaded"
+            )
+
         if context is None:
             self._log(
                 "Running script requires passing in a context", level=logging.WARNING
@@ -1907,6 +1925,10 @@ class Script:
                 f"Cannot unload script '{self.name}' while it is running"
             )
         self._unloaded = True
+
+        # Remove from global script registry
+        if self.top_level:
+            del self._hass.data[DATA_SCRIPTS][id(self)]
 
         for cond in self._condition_cache.values():
             cond.async_unload()
