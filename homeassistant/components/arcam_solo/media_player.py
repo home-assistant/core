@@ -119,11 +119,9 @@ class ArcamSoloMediaPlayerEntity(MediaPlayerEntity, ArcamSoloEntity):
         """Title of current playing media."""
         zone_state = self.arcam_solo.zones.get(1, {})
         if self.source == "DAB":
-            return zone_state.get("radio_station")
-        if self.source in PLAYABLE_SOURCES:
-            if zone_state.get("cd_playback_state") in ("Playing", "Paused"):
-                return f"Track {self.media_track} / {self.media_total_tracks}"
-            return zone_state.get("cd_playback_state", self.source)
+            return zone_state.get(
+                "radio_station", self.source
+            )  # Default to source if unknown
         return self.source
 
     @property

@@ -183,10 +183,10 @@ def test_media_title_branches(entity: ArcamSoloMediaPlayerEntity) -> None:
     entity.arcam_solo.zones[1]["cd_playback_state"] = "Paused"
     entity.arcam_solo.zones[1]["lsb_current_track"] = 2
     entity.arcam_solo.zones[1]["lsb_total_track"] = 10
-    assert entity.media_title == "Track 2 / 10"
+    assert entity.media_title == "CD"
 
     entity.arcam_solo.zones[1]["cd_playback_state"] = "Tray Open / Empty"
-    assert entity.media_title == "Tray Open / Empty"
+    assert entity.media_title == "CD"
 
     entity.arcam_solo.source = "AUX"
     assert entity.media_title == "AUX"
