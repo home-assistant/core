@@ -26,7 +26,7 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
-# Silver
+  # Silver
   action-exceptions: todo
   config-entry-unloading: todo
   devices: todo
@@ -49,3 +49,4 @@ rules:
   async-dependency: todo
   inject-websession: todo
   strict-typing: todo
+  
