@@ -6,18 +6,10 @@ from typing import Any
 from tfa_me_ha_local.validators import TFAmeValidator
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.core import callback
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN, RAIN_KEYS
-from .coordinator import TFAmeUpdateCoordinator
+from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN
 from .data import TFAmeException, TFAmeUniqueID
 
 DATA_SCHEMA = vol.Schema(
@@ -115,76 +107,3 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler()
-
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Discover TFA.me stations via mDNS (zeroconf) service '_tfa_me._tcp'."""
-        props = discovery_info.properties or {}
-        unique_id = (props.get("id") or "").strip()
-        host = (discovery_info.host or "").rstrip(".")
-
-        # Add "Discovered" info
-        self.context["configuration_url"] = f"http://{host}/ha_menu"
-        self._discovered_host_or_id = host or None
-        if unique_id:
-            formatted_station_id = f"{unique_id[:3].upper()}-{unique_id[3:6].upper()}-{unique_id[6:].upper()}"
-            title = f"{DEFAULT_STATION_NAME} {formatted_station_id}"  # e.g. "TFA.me Station XXX-XXX-XXX"
-            self.context["title_placeholders"] = {
-                "name": title,
-                "id": unique_id,
-            }
-            self._discovered_host_or_id = f"{host or None} or {formatted_station_id}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-
-        # Show "Discovered" -> user must confirm (ADD)
-        return await self.async_step_user()
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Options flow handler for TFA.me integration."""
-
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
-        """Handle options menu flow."""
-
-        if user_input is not None:
-            if user_input.get("action_rain"):
-                coordinator = self.config_entry.runtime_data
-
-                # Store in options
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    options={**self.config_entry.options, "action_rain": True},
-                )
-
-                # Set rain reset marker and update all entities on dashboard
-                cordy: TFAmeUpdateCoordinator = coordinator
-                for entity in cordy.sensor_entity_list:
-                    if any(k in entity for k in RAIN_KEYS):
-                        coordinator.data.entities[entity]["reset_rain"] = True
-                        msg_reset = f"{entity} rain reset"
-                        _LOGGER.info(msg_reset)
-
-                coordinator.async_set_updated_data(coordinator.data)
-
-            # Options flow must always finish with create_entry
-            return self.async_create_entry(title="", data=self.config_entry.options)
-
-        schema = vol.Schema(
-            {
-                vol.Optional(
-                    "action_rain",
-                    default=False,
-                    description="Reset all rain sensors",
-                ): bool
-            }
-        )
-
-        return self.async_show_form(step_id="init", data_schema=schema)

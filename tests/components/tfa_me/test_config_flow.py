@@ -14,10 +14,8 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.components.tfa_me.data import TFAmeException
-from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 @pytest.mark.asyncio
@@ -173,37 +171,3 @@ def _get_default_from_schema(schema: vol.Schema, key: str) -> Any:
 
             return default
     raise AssertionError(f"Key {key} not found in schema")
-
-
-async def test_zeroconf_prefills_user_form_with_host(hass: HomeAssistant) -> None:
-    """Zeroconf discovery should jump to user step and prefill host field."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
-        port=80,
-        hostname="tfa-me-99f-fff-f9d.local.",
-        type="_tfa_me._tcp.local.",
-        name="tfa_mdns_instance._tfa_me._tcp.local.",
-        properties={
-            "api": "local",
-            "fw": "6.1128",
-            "manufacturer": "TFA/Dostmann",
-            "model": "TFA.me station type 99",
-            "id": "99FFFFF9D",
-        },
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert "data_schema" in result
-
-    schema: vol.Schema = result["data_schema"]
-
-    default_host = _get_default_from_schema(schema, CONF_IP_ADDRESS)
-    assert default_host == "192.168.1.50 or 99F-FFF-F9D"
