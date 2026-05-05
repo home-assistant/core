@@ -144,6 +144,7 @@ async def test_stop_subentry_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "C3 - Stop 456"
     assert result["data"] == {CONF_LINE: "C3", CONF_STOP_ID: 456}
+    assert result["unique_id"] == "C3_456"
 
 
 async def test_stop_subentry_already_configured(
