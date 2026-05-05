@@ -49,9 +49,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we show an error when the API is unreachable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -83,21 +81,12 @@ async def test_form_cannot_connect(
 
 
 async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch(
-        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-        )
+    mock_config_entry.add_to_hass(hass)
 
-    # Second flow shows the form but aborts on submit
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -122,7 +111,6 @@ async def test_form_already_configured(
 async def test_stop_subentry_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test adding a stop subentry."""
     mock_config_entry.add_to_hass(hass)
@@ -150,7 +138,6 @@ async def test_stop_subentry_flow(
 async def test_stop_subentry_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test stop subentry aborts if same line+stop already exists."""
     mock_config_entry.add_to_hass(hass)
@@ -174,9 +161,7 @@ async def test_stop_subentry_already_configured(
 # Error type differentiation tests
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we show invalid_auth on 401 response."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -195,9 +180,7 @@ async def test_form_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we show unknown on unexpected exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -216,9 +199,7 @@ async def test_form_unknown_error(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_form_http_error_non_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_form_http_error_non_auth(hass: HomeAssistant) -> None:
     """Test we show cannot_connect on non-auth HTTP errors (e.g. 500)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
