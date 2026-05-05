@@ -2,8 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
+
 from homeassistant.components.zeversolar.const import MINIMUM_LIMIT
-from homeassistant.components.zeversolar.ramp import async_ramp
+from homeassistant.components.zeversolar.ramp import _async_write_limit, async_ramp
 from homeassistant.core import HomeAssistant
 
 
@@ -147,3 +149,101 @@ async def test_ramp_aborts_on_read_failure(hass: HomeAssistant) -> None:
         await async_ramp(hass, "192.168.1.1", 50)
 
     mock_write.assert_not_called()
+
+
+async def test_async_write_limit_treats_server_disconnect_as_success(
+    hass: HomeAssistant,
+) -> None:
+    """_async_write_limit succeeds silently when the inverter closes the connection."""
+    mock_resp = AsyncMock()
+    mock_resp.read.side_effect = aiohttp.ServerDisconnectedError()
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__.return_value = mock_resp
+
+    mock_session = MagicMock()
+    mock_session.post.return_value = mock_cm
+
+    with patch(
+        "homeassistant.components.zeversolar.ramp.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        await _async_write_limit(hass, "192.168.1.1", 50)
+
+    mock_session.post.assert_called_once()
+
+
+async def test_async_write_limit_with_normal_response(hass: HomeAssistant) -> None:
+    """_async_write_limit completes normally when the inverter sends a response."""
+    mock_resp = AsyncMock()
+    mock_resp.read.return_value = b""
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__.return_value = mock_resp
+
+    mock_session = MagicMock()
+    mock_session.post.return_value = mock_cm
+
+    with patch(
+        "homeassistant.components.zeversolar.ramp.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        await _async_write_limit(hass, "192.168.1.1", 80)
+
+    mock_session.post.assert_called_once()
+
+
+async def test_ramp_aborts_on_short_adv_cgi_response(hass: HomeAssistant) -> None:
+    """Ramp aborts without writing when adv.cgi returns fewer than 12 lines."""
+    short_response = "\n".join(["0"] * 5)
+
+    with (
+        patch(
+            "homeassistant.components.zeversolar.ramp.async_get_clientsession",
+            return_value=_make_session_mock(short_response),
+        ),
+        patch(
+            "homeassistant.components.zeversolar.ramp._async_write_limit",
+            new_callable=AsyncMock,
+        ) as mock_write,
+    ):
+        await async_ramp(hass, "192.168.1.1", 50)
+
+    mock_write.assert_not_called()
+
+
+async def test_ramp_aborts_on_parse_error(hass: HomeAssistant) -> None:
+    """Ramp aborts without writing when line 11 of adv.cgi cannot be parsed."""
+    lines = ["0"] * 15
+    lines[11] = "not_a_number"
+    bad_response = "\n".join(lines)
+
+    with (
+        patch(
+            "homeassistant.components.zeversolar.ramp.async_get_clientsession",
+            return_value=_make_session_mock(bad_response),
+        ),
+        patch(
+            "homeassistant.components.zeversolar.ramp._async_write_limit",
+            new_callable=AsyncMock,
+        ) as mock_write,
+    ):
+        await async_ramp(hass, "192.168.1.1", 50)
+
+    mock_write.assert_not_called()
+
+
+async def test_ramp_aborts_on_write_failure(hass: HomeAssistant) -> None:
+    """Ramp stops at the failed step when a write raises an exception."""
+    with (
+        patch(
+            "homeassistant.components.zeversolar.ramp.async_get_clientsession",
+            return_value=_make_session_mock(_adv_cgi_response(100)),
+        ),
+        patch(
+            "homeassistant.components.zeversolar.ramp._async_write_limit",
+            side_effect=Exception("write failed"),
+        ),
+        patch("asyncio.sleep", new_callable=AsyncMock),
+    ):
+        await async_ramp(hass, "192.168.1.1", 50)

@@ -1,6 +1,6 @@
 """Test the Zeversolar number platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -95,3 +95,49 @@ async def test_number_set_value_ramps_to_target(
 
     mock_ramp.assert_called_once()
     assert mock_ramp.call_args.args[2] == target
+
+
+async def test_number_on_step_updates_coordinator_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The on_step callback fired by async_ramp updates coordinator data in real time."""
+    adv_response_lines = ["0"] * 15
+    adv_response_lines[11] = "100.0"
+    adv_response = "\n".join(adv_response_lines)
+
+    mock_resp = AsyncMock()
+    mock_resp.text.return_value = adv_response
+    mock_get_cm = AsyncMock()
+    mock_get_cm.__aenter__.return_value = mock_resp
+
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_get_cm
+
+    with (
+        patch(
+            "zeversolar.ZeverSolarClient.get_data",
+            return_value=MOCK_ZEVERSOLAR_DATA,
+        ),
+        patch(
+            "homeassistant.components.zeversolar.coordinator.ZeversolarCoordinator._fetch_power_limit",
+            return_value=100,
+        ),
+        patch(
+            "homeassistant.components.zeversolar.ramp.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        patch(
+            "homeassistant.components.zeversolar.ramp._async_write_limit",
+            new_callable=AsyncMock,
+        ),
+        patch("asyncio.sleep", new_callable=AsyncMock),
+    ):
+        await init_integration(hass)
+        entity_id = _get_number_entity_id(entity_registry)
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": entity_id, "value": 50},
+            blocking=True,
+        )
