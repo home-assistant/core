@@ -18,6 +18,8 @@ from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 USER_INPUT = {
     CONF_URL: TEST_URL,
     CONF_USERNAME: TEST_USERNAME,
@@ -25,10 +27,10 @@ USER_INPUT = {
 }
 
 
+@pytest.mark.usefixtures("mock_ouman_client")
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_ouman_client: AsyncMock,
 ) -> None:
     """Test successful user config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -49,11 +51,8 @@ async def test_user_flow_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_normalizes_url(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_ouman_client: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_ouman_client")
+async def test_user_flow_normalizes_url(hass: HomeAssistant) -> None:
     """Test that URL is normalized (trailing slashes and eh800.html removed)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -83,7 +82,6 @@ async def test_user_flow_normalizes_url(
 )
 async def test_user_flow_errors_recover(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_ouman_client: AsyncMock,
     error: Exception,
     expected_error: str,
@@ -110,11 +108,8 @@ async def test_user_flow_errors_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_invalid_url_recovers(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_ouman_client: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_ouman_client")
+async def test_user_flow_invalid_url_recovers(hass: HomeAssistant) -> None:
     """Test that an unparsable URL surfaces an error and the flow can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -139,10 +134,10 @@ async def test_user_flow_invalid_url_recovers(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_ouman_client")
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_ouman_client: AsyncMock,
 ) -> None:
     """Test aborting when device is already configured."""
     mock_config_entry.add_to_hass(hass)

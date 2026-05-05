@@ -14,10 +14,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_ouman_client")
 async def test_setup_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_ouman_client: AsyncMock,
 ) -> None:
     """Test config entry setup and unload."""
     mock_config_entry.add_to_hass(hass)
