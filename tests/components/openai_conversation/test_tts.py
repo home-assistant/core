@@ -123,7 +123,6 @@ async def test_tts(
     [
         ("ogg", "opus"),
         ("oga", "opus"),
-        ("raw", "pcm"),
         ("mp3", "mp3"),
     ],
 )
@@ -163,6 +162,32 @@ async def test_tts_preferred_format(
         instructions="",
         speed=1.0,
         response_format=expected_response_format,
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_raw_preferred_format_returns_pcm(
+    hass: HomeAssistant,
+    mock_create_speech: MagicMock,
+) -> None:
+    """Test raw preferred format is returned as pcm."""
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.openai_tts")
+    mock_create_speech.return_value = [b"mock audio data"]
+
+    result = await tts_entity.async_get_tts_audio(
+        "There is a person at the front door.",
+        "en-US",
+        {tts.ATTR_PREFERRED_FORMAT: "raw", tts.ATTR_VOICE: "marin"},
+    )
+
+    assert result == ("pcm", b"mock audio data")
+    mock_create_speech.assert_called_once_with(
+        model="gpt-4o-mini-tts",
+        voice="marin",
+        input="There is a person at the front door.",
+        instructions="",
+        speed=1.0,
+        response_format="pcm",
     )
 
 
