@@ -36,6 +36,7 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     "trigger_key",
     [
         "media_player.muted",
+        "media_player.unmuted",
         "media_player.paused_playing",
         "media_player.started_playing",
         "media_player.stopped_playing",
@@ -103,6 +104,7 @@ def parametrize_muted_trigger_states() -> list[
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("media_player.muted", {}, True, True),
+        ("media_player.unmuted", {}, True, True),
         ("media_player.paused_playing", {}, True, True),
         ("media_player.started_playing", {}, True, True),
         ("media_player.stopped_playing", {}, True, True),
@@ -385,47 +387,56 @@ async def test_muted_trigger_fires_when_entity_gains_volume_attributes(
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "initial_muted", "target_muted"),
+    [
+        ("media_player.muted", False, True),
+        ("media_player.unmuted", True, False),
+    ],
+)
 async def test_muted_trigger_last_skips_entities_without_volume_attributes(
     hass: HomeAssistant,
+    trigger: str,
+    initial_muted: bool,
+    target_muted: bool,
 ) -> None:
     """Test that 'last' behavior skips entities without volume attributes.
 
     With entities a (has volume), b (has volume), c (no volume):
-    The trigger should fire when both a and b are muted, regardless of c.
+    The trigger should fire when both a and b transition, regardless of c.
     """
     entity_a = "media_player.with_volume_a"
     entity_b = "media_player.with_volume_b"
     entity_c = "media_player.no_volume"
     calls: list[str] = []
 
-    # Set initial states
     hass.states.async_set(
-        entity_a, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}
+        entity_a, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: initial_muted}
     )
     hass.states.async_set(
-        entity_b, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}
+        entity_b, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: initial_muted}
     )
     hass.states.async_set(entity_c, MediaPlayerState.PLAYING, {})
     await hass.async_block_till_done()
 
     await arm_trigger(
         hass,
-        "media_player.muted",
+        trigger,
         {"behavior": "last"},
         {CONF_ENTITY_ID: [entity_a, entity_b, entity_c]},
         calls,
     )
 
-    # Mute entity a — not all mutable entities muted yet
+    # Transition entity a — not all mutable entities transitioned yet
     hass.states.async_set(
-        entity_a, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}
+        entity_a, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: target_muted}
     )
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    # Mute entity b — now all mutable entities are muted, trigger fires
+    # Transition entity b — now all mutable entities have transitioned, fires
     hass.states.async_set(
-        entity_b, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}
+        entity_b, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: target_muted}
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -456,5 +467,59 @@ async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
     # Lose volume attributes — should not fire (transition to no-attributes
     # is not a valid transition because to_state has no volume attributes)
     hass.states.async_set(entity_id, MediaPlayerState.PLAYING, {})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "initial_muted", "target_muted"),
+    [
+        ("media_player.muted", False, True),
+        ("media_player.unmuted", True, False),
+    ],
+)
+async def test_muted_trigger_first_skips_entities_without_volume_attributes(
+    hass: HomeAssistant,
+    trigger: str,
+    initial_muted: bool,
+    target_muted: bool,
+) -> None:
+    """Test that 'first' behavior skips entities without volume attributes."""
+    entity_a = "media_player.with_volume_a"
+    entity_b = "media_player.with_volume_b"
+    entity_c = "media_player.no_volume"
+    calls: list[str] = []
+
+    hass.states.async_set(
+        entity_a, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: initial_muted}
+    )
+    hass.states.async_set(
+        entity_b, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: initial_muted}
+    )
+    hass.states.async_set(entity_c, MediaPlayerState.PLAYING, {})
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        trigger,
+        {"behavior": "first"},
+        {CONF_ENTITY_ID: [entity_a, entity_b, entity_c]},
+        calls,
+    )
+
+    # Transition entity a — first mutable entity transitions, fires
+    hass.states.async_set(
+        entity_a, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: target_muted}
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0] == entity_a
+    calls.clear()
+
+    # Transition entity b — first behavior already armed, does not fire again
+    hass.states.async_set(
+        entity_b, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: target_muted}
+    )
     await hass.async_block_till_done()
     assert len(calls) == 0
