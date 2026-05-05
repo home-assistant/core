@@ -497,17 +497,51 @@ async def test_adb_command(hass: HomeAssistant) -> None:
         with patch(
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
         ) as patch_shell:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_shell.assert_called_with(command)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] == response
+            assert service_response == {entity_id: {"adb_response": response}}
+
+
+async def test_adb_command_empty_response(hass: HomeAssistant) -> None:
+    """Test sending a command via the `androidtv.adb_command` service that returns an empty response."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    command = "test command"
+    response = "  "
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
+        ) as patch_shell:
+            service_response = await hass.services.async_call(
+                DOMAIN,
+                "adb_command",
+                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                blocking=True,
+                return_response=True,
+            )
+
+            patch_shell.assert_called_with(command)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
@@ -528,16 +562,18 @@ async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
             side_effect=UnicodeDecodeError("utf-8", response, 0, len(response), "TEST"),
         ):
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_key(hass: HomeAssistant) -> None:
@@ -557,17 +593,19 @@ async def test_adb_command_key(hass: HomeAssistant) -> None:
         with patch(
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
         ) as patch_shell:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_shell.assert_called_with(f"input keyevent {KEYS[command]}")
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
@@ -588,17 +626,19 @@ async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
             "androidtv.androidtv.androidtv_async.AndroidTVAsync.get_properties_dict",
             return_value=response,
         ) as patch_get_props:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_get_props.assert_called()
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] == str(response)
+            assert service_response == {entity_id: {"adb_response": str(response)}}
 
 
 async def test_learn_sendevent(hass: HomeAssistant) -> None:
