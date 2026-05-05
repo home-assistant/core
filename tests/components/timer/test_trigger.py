@@ -629,6 +629,42 @@ async def test_time_remaining_trigger_idle_at_attach(
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_time_remaining_trigger_active_on_first_state_event(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trigger schedules when first observed state event has no from_state.
+
+    This simulates a timer entity that is created/restored after the trigger
+    is attached and appears directly in active state (e.g., RestoreEntity on
+    restart), where the initial state-change event has from_state=None.
+    """
+    now = dt_util.utcnow()
+    calls: list[dict[str, Any]] = []
+
+    await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
+
+    # First state event for the entity has no old_state
+    finishes_at = now + timedelta(seconds=60)
+    hass.states.async_set(
+        "timer.test",
+        STATUS_ACTIVE,
+        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Advance to fire time — should still fire even though from_state was None
+    freezer.move_to(now + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == "timer.test"
+    assert calls[0]["from_state"] is None
+    assert calls[0]["remaining"] == timedelta(seconds=30)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_time_remaining_trigger_entity_removed_from_target(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

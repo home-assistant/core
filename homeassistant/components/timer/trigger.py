@@ -78,7 +78,7 @@ class TimeRemainingTrigger(Trigger):
             context: Context | None,
         ) -> None:
             """Schedule a fire for an active timer state, if applicable."""
-            if from_state is None or to_state is None:
+            if to_state is None:
                 return
             if to_state.state != STATUS_ACTIVE:
                 return
