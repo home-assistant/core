@@ -122,7 +122,7 @@
           "name": "Device"
         },
         "pin": {
-          "description": "The new PIN code.",
+          "description": "The new PIN code. Accepted range: 1000-99999999.",
           "name": "PIN"
         }
       },
