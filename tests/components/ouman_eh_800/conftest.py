@@ -47,7 +47,7 @@ def mock_ouman_client() -> Generator[AsyncMock]:
     client.get_values.return_value = {}
     with (
         patch(
-            "homeassistant.components.ouman_eh_800.OumanEh800Client",
+            "homeassistant.components.ouman_eh_800.coordinator.OumanEh800Client",
             return_value=client,
         ),
         patch(

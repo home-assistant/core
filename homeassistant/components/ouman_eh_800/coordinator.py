@@ -14,9 +14,13 @@ from ouman_eh_800_api import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DEFAULT_SCAN_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +36,6 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         self,
         hass: HomeAssistant,
         config_entry: OumanEh800ConfigEntry,
-        client: OumanEh800Client,
-        update_interval: timedelta,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -41,10 +43,15 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             _LOGGER,
             name="Ouman EH-800",
             config_entry=config_entry,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS),
             always_update=False,
         )
-        self.client: OumanEh800Client = client
+        self.client: OumanEh800Client = OumanEh800Client(
+            session=async_get_clientsession(hass),
+            username=config_entry.data[CONF_USERNAME],
+            password=config_entry.data[CONF_PASSWORD],
+            address=config_entry.data[CONF_URL],
+        )
 
         self.sensor_endpoints: list[OumanEndpoint] = []
 
