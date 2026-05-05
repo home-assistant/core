@@ -1132,7 +1132,7 @@
           }
         }
       },
-      "title": "Deprecated protocol MQTT {protocol} in use"
+      "title": "Deprecated MQTT protocol {protocol} in use"
     },
     "subentry_migration_discovery": {
       "fix_flow": {
