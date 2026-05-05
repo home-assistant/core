@@ -1,7 +1,5 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from smarttub import Spa

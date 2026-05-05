@@ -1,7 +1,5 @@
 """The Hardware websocket API."""
 
-from __future__ import annotations
-
 import contextlib
 from dataclasses import asdict
 from datetime import datetime, timedelta

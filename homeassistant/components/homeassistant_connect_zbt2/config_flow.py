@@ -1,7 +1,5 @@
 """Config flow for the Home Assistant Connect ZBT-2 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 

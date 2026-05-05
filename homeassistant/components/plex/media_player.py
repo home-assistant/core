@@ -1,7 +1,5 @@
 """Support to interface with the Plex API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import wraps
 import logging

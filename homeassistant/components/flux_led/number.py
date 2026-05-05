@@ -1,7 +1,5 @@
 """Support for LED numbers."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Coroutine
 import logging

@@ -45,8 +45,8 @@ async def test_valve_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("valve.is_open", {}, True, False),
-        ("valve.is_closed", {}, True, False),
+        ("valve.is_open", {}, True, True),
+        ("valve.is_closed", {}, True, True),
     ],
 )
 async def test_valve_condition_options_validation(

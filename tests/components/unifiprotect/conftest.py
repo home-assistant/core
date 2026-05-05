@@ -1,7 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial

@@ -1,7 +1,5 @@
 """Support for EnOcean switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram

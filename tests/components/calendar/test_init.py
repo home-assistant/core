@@ -1,7 +1,5 @@
 """The tests for the calendar component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus

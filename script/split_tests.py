@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to split test into n buckets."""
 
-from __future__ import annotations
-
 import argparse
 from dataclasses import dataclass, field
 from math import ceil

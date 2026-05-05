@@ -424,9 +424,6 @@
       "lamp_life": {
         "name": "Lamp life"
       },
-      "last_restart": {
-        "name": "Last restart"
-      },
       "left_slot_level": {
         "name": "Left slot level"
       },
