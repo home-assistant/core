@@ -67,8 +67,6 @@ class FlussCover(FlussEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._attr_is_opening = True
-        self.async_write_ha_state()
         try:
             await self.coordinator.api.async_open_device(self.device_id)
         except FlussApiClientError as err:
@@ -77,15 +75,10 @@ class FlussCover(FlussEntity, CoverEntity):
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        finally:
-            self._attr_is_opening = False
-            self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self._attr_is_closing = True
-        self.async_write_ha_state()
         try:
             await self.coordinator.api.async_close_device(self.device_id)
         except FlussApiClientError as err:
@@ -94,7 +87,4 @@ class FlussCover(FlussEntity, CoverEntity):
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        finally:
-            self._attr_is_closing = False
-            self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
