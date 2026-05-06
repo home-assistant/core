@@ -98,5 +98,4 @@ class SenseRealtimeCoordinator(SenseCoordinator):
         except SENSE_WEBSOCKET_EXCEPTIONS as ex:
             _LOGGER.error("Failed to update data: %s", ex)
         except SenseAPIException as ex:
-            _LOGGER.error("API error retrieving realtime data: %s", ex)
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(f"API error retrieving realtime data: {ex}") from ex
