@@ -6,11 +6,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import FlussDataUpdateCoordinator, FlussDevice
 
 
-def has_open_close_sensor(device: FlussDevice) -> bool:
-    """Return whether a device reports an open/close position sensor."""
-    return device.open_close_status is not None
-
-
 class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
     """Base class for Fluss entities."""
 
@@ -34,10 +29,14 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
 
     @property
     def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
+        """Return whether the device is reachable."""
+        return (
+            super().available
+            and self.device_id in self.coordinator.data
+            and self.coordinator.data[self.device_id].internet_connected
+        )
 
     @property
     def device(self) -> FlussDevice:
-        """Return the stored device data."""
+        """Return the latest device data from the coordinator."""
         return self.coordinator.data[self.device_id]
