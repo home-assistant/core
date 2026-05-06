@@ -107,6 +107,7 @@
           "external": "External",
           "manual": "Manual",
           "none": "-",
+          "schedule": "Schedule",
           "setup": "Setup"
         }
       },
