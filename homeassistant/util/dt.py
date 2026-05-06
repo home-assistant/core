@@ -346,9 +346,9 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
 
 def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
-    """Take a datetime and return its "age" as a string.
+    """Take a datetime and return its "time remaining" as a string.
 
-    The age can be in second, minute, hour, day, month and year.
+    The time remaining can be in second, minute, hour, day, month and year.
 
     depth number of units will be returned, with the last unit rounded
 
