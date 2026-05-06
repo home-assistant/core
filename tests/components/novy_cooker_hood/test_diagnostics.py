@@ -1,7 +1,5 @@
 """Tests for the diagnostics provided by the Novy Cooker Hood integration."""
 
-from __future__ import annotations
-
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
