@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "local_push",
   "loggers": ["jsonrpc_async", "jsonrpc_base", "jsonrpc_websocket", "pykodi"],
-  "requirements": ["pykodi==0.2.7"],
+  "requirements": ["pykodi==0.2.7", "rapidfuzz==3.14.3"],
   "zeroconf": ["_xbmc-jsonrpc-h._tcp.local."]
 }
