@@ -1,5 +1,7 @@
 """The tests for the hassio component."""
 
+from collections.abc import Callable
+from contextlib import AbstractContextManager, ExitStack as DefaultContext
 from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, patch
 
@@ -7,6 +9,7 @@ from aiohttp.test_utils import TestClient
 from aiohttp.web_exceptions import HTTPUnauthorized
 import pytest
 
+from homeassistant.auth.models import User
 from homeassistant.auth.providers.homeassistant import InvalidAuth
 from homeassistant.components.hassio.auth import HassIOBaseAuth
 from homeassistant.components.hassio.const import DATA_CONFIG_STORE
@@ -168,10 +171,36 @@ async def test_password_fails_no_auth(hassio_noauth_client: TestClient) -> None:
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def _supervisor_user_request(
-    hass: HomeAssistant, peername: str | tuple[str, int] | None
-) -> tuple[HassIOBaseAuth, MagicMock]:
-    """Build a HassIOBaseAuth view and a mock request for the Supervisor user."""
+@pytest.mark.parametrize(
+    ("peername", "unix_socket", "request_getitem", "expectation"),
+    [
+        # Unix socket transports report an empty string for peername. Before
+        # the fix this raised IndexError on `peername[0]`.
+        (
+            "",
+            True,
+            lambda user, key: user if key is KEY_HASS_USER else None,
+            DefaultContext(),
+        ),
+        # Defensive: a TCP transport with no peername at all should be
+        # rejected, not crash.
+        (
+            None,
+            False,
+            lambda user, key: user if key is KEY_HASS_USER else None,
+            pytest.raises(HTTPUnauthorized),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_check_access_unix_socket_or_missing_peername(
+    hass: HomeAssistant,
+    peername: str | None,
+    unix_socket: bool,
+    request_getitem: Callable[[User, str], User | None],
+    expectation: AbstractContextManager,
+) -> None:
+    """Test _check_access handles Unix socket requests and missing peername."""
     hassio_user_id = hass.data[DATA_CONFIG_STORE].data.hassio_user
     assert hassio_user_id is not None
     user = await hass.auth.async_get_user(hassio_user_id)
@@ -180,37 +209,14 @@ async def _supervisor_user_request(
     auth_view = HassIOBaseAuth(hass, user)
     request = MagicMock()
     request.transport.get_extra_info.return_value = peername
-    request.__getitem__.side_effect = lambda key: user if key is KEY_HASS_USER else None
-    return auth_view, request
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_check_access_unix_socket_request(hass: HomeAssistant) -> None:
-    """Test _check_access bypasses the IP check for Unix socket requests.
-
-    Unix socket transports report an empty string for peername; before the
-    fix this raised IndexError on `peername[0]`.
-    """
-    auth_view, request = await _supervisor_user_request(hass, peername="")
-
-    with patch(
-        "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
-        return_value=True,
-    ):
-        auth_view._check_access(request)
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_check_access_rejects_missing_peername(hass: HomeAssistant) -> None:
-    """Test _check_access rejects TCP requests with no peername instead of crashing."""
-    auth_view, request = await _supervisor_user_request(hass, peername=None)
+    request.__getitem__.side_effect = lambda key: request_getitem(user, key)
 
     with (
         patch(
             "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
-            return_value=False,
+            return_value=unix_socket,
         ),
-        pytest.raises(HTTPUnauthorized),
+        expectation,
     ):
         auth_view._check_access(request)
 
