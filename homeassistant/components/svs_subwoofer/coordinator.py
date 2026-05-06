@@ -1,8 +1,7 @@
 """DataUpdateCoordinator for SVS Subwoofer."""
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import logging
 from typing import Any
 
@@ -10,6 +9,7 @@ from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError, establish_connection
+
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
@@ -285,10 +285,8 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Disconnect from the device."""
         async with self._disconnect_lock:
             if self._client and self._client.is_connected:
-                try:
+                with contextlib.suppress(BleakError):
                     await self._client.disconnect()
-                except BleakError:
-                    pass
             self._connected = False
             self._client = None
 

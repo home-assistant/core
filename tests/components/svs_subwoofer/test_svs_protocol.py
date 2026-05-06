@@ -4,8 +4,6 @@ Pure-Python tests for `svs_encode`, `svs_decode`, and `FrameAssembler`.
 No HA fixtures required.
 """
 
-from __future__ import annotations
-
 from binascii import crc_hqx
 
 from homeassistant.components.svs_subwoofer.svs_protocol import (
@@ -14,7 +12,6 @@ from homeassistant.components.svs_subwoofer.svs_protocol import (
     svs_decode,
     svs_encode,
 )
-
 
 def _read_resp_frame(param_id: int, mem_start: int, payload_data: bytes) -> bytes:
     """Build a synthetic READ_RESP frame around the given payload data.
@@ -34,7 +31,6 @@ def _read_resp_frame(param_id: int, mem_start: int, payload_data: bytes) -> byte
     length = (1 + 2 + 2 + len(body) + 2).to_bytes(2, "little")
     head = FRAME_PREAMBLE + frame_type + length + body
     return head + crc_hqx(head, 0).to_bytes(2, "little")
-
 
 class TestSvsEncode:
     """Encoding tests for svs_encode."""
@@ -105,7 +101,6 @@ class TestSvsEncode:
             assert frame.startswith(FRAME_PREAMBLE)
             assert int.from_bytes(frame[3:5], "little") == len(frame)
 
-
 class TestSvsDecode:
     """Decoding tests for svs_decode."""
 
@@ -152,7 +147,6 @@ class TestSvsDecode:
         frame = _read_resp_frame(param_id=4, mem_start=0x2E, payload_data=encoded_value)
         result = svs_decode(frame)
         assert result["VALIDATED_VALUES"].get("PHASE") == 90
-
 
 class TestFrameAssembler:
     """Reassembly tests for FrameAssembler."""

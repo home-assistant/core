@@ -1,13 +1,10 @@
 """Tests for the SVS Subwoofer config flow."""
 
-from __future__ import annotations
-
 from homeassistant.components.svs_subwoofer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from tests.common import MockConfigEntry
 
 from . import (
     SVS_ADDRESS,
@@ -17,6 +14,7 @@ from . import (
     patch_async_setup_entry,
 )
 
+from tests.common import MockConfigEntry
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     """A discovered SVS device walks through bluetooth_confirm to entry creation."""
@@ -37,7 +35,6 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["title"] == "Right Sub"
     assert result["data"] == {CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: "Right Sub"}
 
-
 async def test_bluetooth_already_configured(hass: HomeAssistant) -> None:
     """A second discovery for the same device aborts."""
     MockConfigEntry(
@@ -53,7 +50,6 @@ async def test_bluetooth_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
 
 async def test_user_picks_discovered(hass: HomeAssistant) -> None:
     """User flow: user picks an SVS device from the discovered list."""
@@ -74,7 +70,6 @@ async def test_user_picks_discovered(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_ADDRESS] == SVS_ADDRESS
 
-
 async def test_user_manual_entry(hass: HomeAssistant) -> None:
     """User flow with no discoveries falls through to manual MAC entry."""
     with patch_async_discovered_service_info([]):
@@ -94,7 +89,6 @@ async def test_user_manual_entry(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual Sub"
 
-
 async def test_user_manual_invalid_mac(hass: HomeAssistant) -> None:
     """Invalid MAC formats surface an error on the manual step."""
     with patch_async_discovered_service_info([]):
@@ -109,7 +103,6 @@ async def test_user_manual_invalid_mac(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {CONF_ADDRESS: "invalid_mac"}
-
 
 async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Adding an already-configured device via the user flow aborts."""

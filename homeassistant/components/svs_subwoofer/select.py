@@ -1,14 +1,12 @@
 """Select platform for SVS Subwoofer."""
 
-from __future__ import annotations
-
-import logging
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SVSConfigEntry
@@ -44,7 +42,6 @@ ROOM_GAIN_FREQ_MAP = {f"{v} Hz": v for v in ROOM_GAIN_FREQUENCIES}
 
 ROOM_GAIN_SLOPE_OPTIONS = [f"{v} dB" for v in ROOM_GAIN_SLOPES]
 ROOM_GAIN_SLOPE_MAP = {f"{v} dB": v for v in ROOM_GAIN_SLOPES}
-
 
 SELECT_DESCRIPTIONS: tuple[SVSSelectEntityDescription, ...] = (
     SVSSelectEntityDescription(
@@ -98,7 +95,7 @@ SELECT_DESCRIPTIONS: tuple[SVSSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SVSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SVS select entities."""
     coordinator = entry.runtime_data
@@ -124,7 +121,7 @@ class SVSSelectEntity(CoordinatorEntity[SVSSubwooferCoordinator], SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.address}_{description.key}"
         self._attr_device_info = coordinator.device_info
-        self._base_options = list(description.options)
+        self._base_options = list(description.options or [])
 
         # Build reverse map for value -> option lookup
         self._reverse_map = {v: k for k, v in description.value_map.items()}

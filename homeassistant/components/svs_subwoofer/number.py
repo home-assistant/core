@@ -1,7 +1,5 @@
 """Number platform for SVS Subwoofer."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.number import (
@@ -11,7 +9,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SVSConfigEntry
@@ -194,7 +192,7 @@ NUMBER_DESCRIPTIONS: tuple[SVSNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SVSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SVS number entities."""
     coordinator = entry.runtime_data

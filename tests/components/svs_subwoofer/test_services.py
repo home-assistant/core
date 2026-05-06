@@ -1,10 +1,9 @@
 """Tests for the SVS Subwoofer services."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest
+
 from homeassistant.components.svs_subwoofer.const import (
     DOMAIN,
     SERVICE_LOAD_PRESET,
@@ -15,18 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from . import (
-    SVS_ADDRESS,
-    async_init_integration,
-)
-
+from . import SVS_ADDRESS, async_init_integration
 
 async def _device_id_for(hass: HomeAssistant, address: str) -> str:
     """Return the device registry ID for a configured subwoofer."""
     device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, address)})
     assert device is not None
     return device.id
-
 
 async def test_set_volume(hass: HomeAssistant, mock_bleak_client: MagicMock) -> None:
     """`set_volume` writes a single VOLUME frame to the target subwoofer."""
@@ -42,7 +36,6 @@ async def test_set_volume(hass: HomeAssistant, mock_bleak_client: MagicMock) -> 
     )
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
 
-
 async def test_set_volume_unknown_device(
     hass: HomeAssistant, mock_bleak_client: MagicMock
 ) -> None:
@@ -56,7 +49,6 @@ async def test_set_volume_unknown_device(
             {"device_ids": ["does-not-exist"], "volume": -25},
             blocking=True,
         )
-
 
 async def test_load_preset_string(
     hass: HomeAssistant, mock_bleak_client: MagicMock
@@ -75,7 +67,6 @@ async def test_load_preset_string(
     # Preset load frame + 4 follow-up MEMREAD frames
     assert mock_bleak_client.write_gatt_char.await_count >= pre + 5
 
-
 async def test_sync_from_unknown_source(
     hass: HomeAssistant, mock_bleak_client: MagicMock
 ) -> None:
@@ -90,7 +81,6 @@ async def test_sync_from_unknown_source(
             {"source_device_id": "missing", "target_device_ids": [target_id]},
             blocking=True,
         )
-
 
 async def test_sync_from_skips_none_values(
     hass: HomeAssistant, mock_bleak_client: MagicMock

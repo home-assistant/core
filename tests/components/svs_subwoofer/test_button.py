@@ -1,7 +1,5 @@
 """Tests for the SVS Subwoofer button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -9,7 +7,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
-
 
 async def test_save_preset_button(
     hass: HomeAssistant, mock_bleak_client: MagicMock
@@ -27,7 +24,6 @@ async def test_save_preset_button(
         blocking=True,
     )
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
-
 
 async def test_reconnect_button(
     hass: HomeAssistant, mock_bleak_client: MagicMock

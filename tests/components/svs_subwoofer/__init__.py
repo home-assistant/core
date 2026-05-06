@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
@@ -15,7 +16,6 @@ SVS_SERVICE_UUID = "1fee6acf-a826-4e37-9635-4d8a01642c5d"
 
 SVS_ADDRESS = "08:EB:ED:11:22:33"
 SVS_NAME = "RIGHTSUB"
-
 
 def _service_info(
     address: str = SVS_ADDRESS, name: str = SVS_NAME
@@ -39,9 +39,7 @@ def _service_info(
         tx_power=0,
     )
 
-
 SVS_SERVICE_INFO = _service_info()
-
 
 def patch_async_setup_entry(return_value: bool = True):
     """Patch async_setup_entry."""
@@ -49,7 +47,6 @@ def patch_async_setup_entry(return_value: bool = True):
         "homeassistant.components.svs_subwoofer.async_setup_entry",
         return_value=return_value,
     )
-
 
 def patch_async_discovered_service_info(
     return_value: list[BluetoothServiceInfoBleak] | None = None,
@@ -60,7 +57,6 @@ def patch_async_discovered_service_info(
         "async_discovered_service_info",
         return_value=return_value or [],
     )
-
 
 async def async_init_integration(
     hass: HomeAssistant,
@@ -88,10 +84,7 @@ async def async_init_integration(
 
     return entry
 
-
-def entity_id(
-    hass: HomeAssistant, platform: str, address: str, key: str
-) -> str:
+def entity_id(hass: HomeAssistant, platform: str, address: str, key: str) -> str:
     """Resolve a configured entity's entity_id by its unique_id.
 
     Uses the entity registry instead of guessing slugs, which keeps tests

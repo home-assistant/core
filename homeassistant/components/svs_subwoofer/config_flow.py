@@ -1,11 +1,10 @@
 """Config flow for SVS Subwoofer integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -108,9 +107,7 @@ class SVSSubwooferConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # Use device name if user didn't provide a custom name
                 user_name = user_input.get(CONF_NAME, "")
-                final_name = (
-                    user_name if user_name else (device.name or "SVS Subwoofer")
-                )
+                final_name = user_name or (device.name or "SVS Subwoofer")
 
                 return self.async_create_entry(
                     title=final_name,
@@ -119,29 +116,28 @@ class SVSSubwooferConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_NAME: final_name,
                     },
                 )
-            elif address == "manual":
+            if address == "manual":
                 # User wants manual entry
                 return await self.async_step_manual()
+            # Validate manual MAC address format
+            address = address.upper().replace("-", ":")
+            mac_clean = address.replace(":", "")
+            if len(mac_clean) != 12 or not all(
+                c in "0123456789ABCDEF" for c in mac_clean
+            ):
+                errors[CONF_ADDRESS] = "invalid_mac"
             else:
-                # Validate manual MAC address format
-                address = address.upper().replace("-", ":")
-                mac_clean = address.replace(":", "")
-                if len(mac_clean) != 12 or not all(
-                    c in "0123456789ABCDEF" for c in mac_clean
-                ):
-                    errors[CONF_ADDRESS] = "invalid_mac"
-                else:
-                    formatted_mac = format_mac(address)
-                    await self.async_set_unique_id(formatted_mac)
-                    self._abort_if_unique_id_configured()
+                formatted_mac = format_mac(address)
+                await self.async_set_unique_id(formatted_mac)
+                self._abort_if_unique_id_configured()
 
-                    return self.async_create_entry(
-                        title=user_input.get(CONF_NAME, "SVS Subwoofer"),
-                        data={
-                            CONF_ADDRESS: address,
-                            CONF_NAME: user_input.get(CONF_NAME, "SVS Subwoofer"),
-                        },
-                    )
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME, "SVS Subwoofer"),
+                    data={
+                        CONF_ADDRESS: address,
+                        CONF_NAME: user_input.get(CONF_NAME, "SVS Subwoofer"),
+                    },
+                )
 
         # Discover Bluetooth devices - show all devices with names
         # Prioritize SVS devices (by MAC prefix or service UUID)

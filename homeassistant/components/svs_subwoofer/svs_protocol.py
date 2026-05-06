@@ -4,11 +4,9 @@ Extracted and refactored from pySVS.py by Logon84.
 https://github.com/logon84/pySVS
 """
 
-from __future__ import annotations
-
-import logging
 from binascii import crc_hqx, hexlify
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
@@ -290,6 +288,71 @@ def svs_encode(ftype: str, param: str, data: Any = "") -> tuple[bytes, str]:
     return (frame, meta)
 
 
+def _decode_numeric_value(raw_bytes: bytes, param_info: SVSParameter) -> Any:
+    """Decode a numeric parameter value from raw bytes.
+
+    Returns the decoded value if it falls within the parameter's declared
+    limits, or ``None`` if validation fails.
+    """
+    raw_int = int.from_bytes(raw_bytes, "little")
+    mask = 0 if raw_int < NEGATIVE_VALUE_THRESHOLD else 0xFFFF
+    value: float = ((-1) ** (mask % 2)) * ((raw_int - (mask % 2)) ^ mask) / 10
+
+    if param_info.limits_type == 1:
+        if value not in param_info.limits:
+            return None
+    elif param_info.limits_type == 0:
+        if not (min(param_info.limits) <= value <= max(param_info.limits)):
+            return None
+
+    if value == int(value):
+        return int(value)
+    return value
+
+
+def _decode_memory_payload(
+    payload: bytes, frame_type: str, result: dict[str, Any]
+) -> None:
+    """Decode the parameter/value pairs out of a MEMWRITE/MEMREAD/READ_RESP body."""
+    if len(payload) < 8:
+        return
+
+    param_id = int.from_bytes(payload[:4], "little")
+    mem_start = int.from_bytes(payload[4:6], "little")
+    mem_size = int.from_bytes(payload[6:8], "little")
+    data_payload = payload[8:]
+
+    for offset in range(0, mem_size or 2, 2):
+        for param_name, param_info in SVS_PARAMS.items():
+            if param_info.limits_type == "group":
+                continue
+            if param_info.id != param_id:
+                continue
+            if (mem_start + offset) != param_info.offset:
+                continue
+
+            result["ATTRIBUTES"].append(param_name)
+
+            if (
+                frame_type not in ("READ_RESP", "MEMWRITE")
+                or len(data_payload) < param_info.n_bytes
+            ):
+                break
+
+            raw_bytes = data_payload[: param_info.n_bytes]
+            value: Any
+            if param_info.limits_type == 2:
+                value = raw_bytes.decode("utf-8").rstrip("\x00")
+            else:
+                value = _decode_numeric_value(raw_bytes, param_info)
+                if value is None:
+                    break
+
+            result["VALIDATED_VALUES"][param_name] = value
+            data_payload = data_payload[param_info.n_bytes :]
+            break
+
+
 def svs_decode(frame: bytes) -> dict[str, Any]:
     """Decode a response frame from the SVS subwoofer.
 
@@ -303,103 +366,29 @@ def svs_decode(frame: bytes) -> dict[str, Any]:
 
     if len(frame) < 7:
         return result
-
-    # Check preamble
     if frame[0] != int.from_bytes(FRAME_PREAMBLE, "little"):
         return result
-
-    # Check frame length
-    frame_length = int.from_bytes(frame[3:5], "little")
-    if frame_length != len(frame):
+    if int.from_bytes(frame[3:5], "little") != len(frame):
         return result
-
-    # Check CRC
-    expected_crc = crc_hqx(frame[:-2], 0).to_bytes(2, "little")
-    if frame[-2:] != expected_crc:
+    if frame[-2:] != crc_hqx(frame[:-2], 0).to_bytes(2, "little"):
         _LOGGER.debug("CRC mismatch in frame")
         return result
 
     result["FRAME_RECOGNIZED"] = True
 
-    # Identify frame type
     frame_type = "UNKNOWN"
     for key, value in SVS_FRAME_TYPES.items():
         if value == frame[1:3]:
             frame_type = key
             break
-
     result["FRAME_TYPE"] = frame_type
 
-    # Strip preamble, type, length, and CRC for parsing
     payload = frame[5:-2]
-
-    # Handle response frames with padding
     if "RESP" in frame_type and len(payload) >= 4:
-        # Skip 4-byte padding
         payload = payload[4:]
 
-    # Parse based on frame type
-    if frame_type in ["MEMWRITE", "MEMREAD", "READ_RESP", "PRESETLOADSAVE"]:
-        if len(payload) < 8:
-            return result
-
-        param_id = int.from_bytes(payload[:4], "little")
-        mem_start = int.from_bytes(payload[4:6], "little")
-        mem_size = int.from_bytes(payload[6:8], "little")
-        data_payload = payload[8:]
-
-        # Find matching parameters and decode values
-        for offset in range(0, mem_size or 2, 2):
-            for param_name, param_info in SVS_PARAMS.items():
-                if param_info.limits_type == "group":
-                    continue
-                if param_info.id != param_id:
-                    continue
-                if (mem_start + offset) != param_info.offset:
-                    continue
-
-                # Found matching parameter
-                result["ATTRIBUTES"].append(param_name)
-
-                if (
-                    frame_type in ["READ_RESP", "MEMWRITE"]
-                    and len(data_payload) >= param_info.n_bytes
-                ):
-                    # Decode the value
-                    raw_bytes = data_payload[: param_info.n_bytes]
-
-                    if param_info.limits_type == 2:
-                        # String value
-                        value = raw_bytes.decode("utf-8").rstrip("\x00")
-                    else:
-                        # Numeric value
-                        raw_int = int.from_bytes(raw_bytes, "little")
-                        mask = 0 if raw_int < NEGATIVE_VALUE_THRESHOLD else 0xFFFF
-                        value = (
-                            ((-1) ** (mask % 2)) * ((raw_int - (mask % 2)) ^ mask) / 10
-                        )
-
-                        # Validate value
-                        if param_info.limits_type == 1:
-                            if value not in param_info.limits:
-                                continue
-                        elif param_info.limits_type == 0:
-                            if not (
-                                min(param_info.limits)
-                                <= value
-                                <= max(param_info.limits)
-                            ):
-                                continue
-
-                        # Convert to int if it's a whole number
-                        if isinstance(value, float) and value == int(value):
-                            value = int(value)
-
-                    result["VALIDATED_VALUES"][param_name] = value
-                    data_payload = data_payload[param_info.n_bytes :]
-
-                break
-
+    if frame_type in ("MEMWRITE", "MEMREAD", "READ_RESP", "PRESETLOADSAVE"):
+        _decode_memory_payload(payload, frame_type, result)
     elif frame_type == "SUB_INFO2_RESP" and len(payload) > 1:
         sw_ver_len = payload[0]
         if len(payload) >= 1 + sw_ver_len:

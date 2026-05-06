@@ -1,14 +1,11 @@
 """Tests for the SVS Subwoofer binary sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
-
 
 async def test_connected_sensor(
     hass: HomeAssistant, mock_bleak_client: MagicMock
@@ -19,12 +16,9 @@ async def test_connected_sensor(
     ):
         await async_init_integration(hass)
 
-    state = hass.states.get(
-        entity_id(hass, "binary_sensor", SVS_ADDRESS, "connected")
-    )
+    state = hass.states.get(entity_id(hass, "binary_sensor", SVS_ADDRESS, "connected"))
     assert state is not None
     assert state.state == "on"
-
 
 async def test_disconnect_flips_sensor(
     hass: HomeAssistant, mock_bleak_client: MagicMock
@@ -39,7 +33,5 @@ async def test_disconnect_flips_sensor(
     coordinator._on_disconnect(mock_bleak_client)
     await hass.async_block_till_done()
 
-    state = hass.states.get(
-        entity_id(hass, "binary_sensor", SVS_ADDRESS, "connected")
-    )
+    state = hass.states.get(entity_id(hass, "binary_sensor", SVS_ADDRESS, "connected"))
     assert state.state == "off"

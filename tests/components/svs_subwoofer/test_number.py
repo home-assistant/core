@@ -1,7 +1,5 @@
 """Tests for the SVS Subwoofer number platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.number import (
@@ -13,7 +11,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
-
 
 async def test_volume_set(hass: HomeAssistant, mock_bleak_client: MagicMock) -> None:
     """Setting the volume slider writes through to the coordinator."""
@@ -36,7 +33,6 @@ async def test_volume_set(hass: HomeAssistant, mock_bleak_client: MagicMock) -> 
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
     state = hass.states.get(eid)
     assert state.state in ("-25.0", "-25")
-
 
 async def test_peq_q_factor_step(
     hass: HomeAssistant, mock_bleak_client: MagicMock

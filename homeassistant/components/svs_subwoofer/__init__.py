@@ -5,8 +5,6 @@ official SVS app.  Based on pySVS by Logon84:
 https://github.com/logon84/pySVS
 """
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant

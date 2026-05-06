@@ -1,13 +1,11 @@
 """Binary sensor platform for SVS Subwoofer."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SVSConfigEntry
@@ -17,7 +15,7 @@ from .coordinator import SVSSubwooferCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SVSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SVS binary sensor entities."""
     coordinator = entry.runtime_data
