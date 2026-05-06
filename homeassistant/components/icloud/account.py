@@ -1,6 +1,6 @@
 """iCloud account."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 import operator
 from typing import Any
@@ -42,8 +42,10 @@ from .const import (
     DEVICE_ID,
     DEVICE_LOCATION,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+    DEVICE_LOCATION_IS_OLD,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
+    DEVICE_LOCATION_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
@@ -412,12 +414,59 @@ class IcloudDevice:
 
             if (
                 self._status[DEVICE_LOCATION]
-                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
+                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
+                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LONGITUDE] is not None
             ):
                 location = self._status[DEVICE_LOCATION]
-                if self._location is None:
-                    dispatcher_send(self._account.hass, self._account.signal_device_new)
-                self._location = location
+                _loc_ts = location.get(DEVICE_LOCATION_TIMESTAMP)
+                _loc_acquired_at = (
+                    datetime.fromtimestamp(_loc_ts / 1000, tz=UTC)
+                    if _loc_ts is not None
+                    else None
+                )
+                _loc_acquired_at_iso = (
+                    _loc_acquired_at.isoformat()
+                    if _loc_acquired_at is not None
+                    else "unknown"
+                )
+                _age_seconds = (
+                    (utcnow() - _loc_acquired_at).total_seconds()
+                    if _loc_acquired_at is not None
+                    else None
+                )
+                _is_old = location.get(DEVICE_LOCATION_IS_OLD, False)
+                _stale_threshold = self._account.fetch_interval * 60 * 1.5
+                _LOGGER.debug(
+                    "Location updated for %s (fix acquired: %s, isOld: %s)",
+                    self._name,
+                    _loc_acquired_at_iso,
+                    _is_old,
+                )
+                if (
+                    _is_old
+                    and _age_seconds is not None
+                    and _age_seconds > _stale_threshold
+                ):
+                    if self._location is not None:
+                        _LOGGER.warning(
+                            "Stale location for %s — fix acquired %ds ago with isOld=True "
+                            "(threshold: %ds). Clearing location; device will show as unknown",
+                            self._name,
+                            int(_age_seconds),
+                            int(_stale_threshold),
+                        )
+                    self._location = None
+                else:
+                    if self._location is None:
+                        dispatcher_send(
+                            self._account.hass, self._account.signal_device_new
+                        )
+                    self._location = location
+            else:
+                _LOGGER.debug(
+                    "No location data available for %s (missing or invalid location fields)",
+                    self._name,
+                )
 
     def play_sound(self) -> None:
         """Play sound on the device."""

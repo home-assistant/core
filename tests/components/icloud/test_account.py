@@ -1,10 +1,11 @@
 """Tests for the iCloud account."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.icloud.account import IcloudAccount
+from homeassistant.components.icloud.account import IcloudAccount, IcloudDevice
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
@@ -15,6 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
+from homeassistant.util.dt import utcnow
 
 from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
 
@@ -165,3 +167,86 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+
+
+# ---------------------------------------------------------------------------
+# IcloudDevice.update() — stale location detection
+# ---------------------------------------------------------------------------
+
+_FETCH_INTERVAL_MIN = 30  # minutes — threshold = 30 * 60 * 1.5 = 2700 s
+
+
+def _make_device(
+    hass: HomeAssistant, age_seconds: float | None, is_old: bool
+) -> IcloudDevice:
+    """Create an IcloudDevice with a location of the given age and isOld flag."""
+    mock_account = MagicMock()
+    mock_account.hass = hass
+    mock_account.signal_device_new = "icloud-test-device-new"
+    mock_account.fetch_interval = _FETCH_INTERVAL_MIN
+    mock_account.owner_fullname = "Test User"
+    mock_account.family_members_fullname = {}
+
+    ts_ms = (
+        int((utcnow() - timedelta(seconds=age_seconds)).timestamp() * 1000)
+        if age_seconds is not None
+        else None
+    )
+    location = {
+        "latitude": 60.1699,
+        "longitude": 24.9384,
+        "horizontalAccuracy": 10.0,
+        "timeStamp": ts_ms,
+        "isOld": is_old,
+    }
+    status = {**DEVICE, "location": location}
+    device = IcloudDevice(mock_account, MagicMock(), dict(DEVICE))
+    with patch("homeassistant.components.icloud.account.dispatcher_send"):
+        device.update(status)
+    return device
+
+
+def test_icloud_device_clears_stale_location(hass: HomeAssistant) -> None:
+    """Test that isOld=True with a timestamp older than 1.5x fetch_interval clears location.
+
+    This is the core stale-location feature: Apple occasionally returns isOld=True
+    to indicate a cached GPS fix. If that fix is older than the polling threshold,
+    it is discarded so the device appears as 'unknown' rather than showing an
+    outdated position.
+    """
+    device = _make_device(
+        hass, age_seconds=3600, is_old=True
+    )  # 3600s >> 2700s threshold
+    assert device.location is None
+
+
+def test_icloud_device_keeps_recent_location_when_is_old(hass: HomeAssistant) -> None:
+    """Test that isOld=True with a recent timestamp keeps the location.
+
+    If Apple sets isOld=True but the fix is only a minute old, it is still within
+    the staleness threshold and should be accepted.
+    """
+    device = _make_device(hass, age_seconds=60, is_old=True)  # 60s << 2700s threshold
+    assert device.location is not None
+
+
+def test_icloud_device_keeps_location_when_not_is_old(hass: HomeAssistant) -> None:
+    """Test that isOld=False keeps the location regardless of timestamp age.
+
+    Only locations explicitly marked isOld=True are subject to staleness clearing.
+    An old-looking timestamp alone is not sufficient to discard the fix.
+    """
+    device = _make_device(hass, age_seconds=3600, is_old=False)  # old but not flagged
+    assert device.location is not None
+
+
+def test_icloud_device_keeps_location_when_timestamp_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test that isOld=True without a timestamp does not clear the location.
+
+    Without a timestamp we cannot compute age_seconds, so the stale threshold
+    check is skipped and the location is kept.
+    """
+    device = _make_device(hass, age_seconds=None, is_old=True)
+    assert device.location is not None
