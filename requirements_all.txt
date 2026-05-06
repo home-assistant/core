@@ -1600,9 +1600,6 @@ mutesync==0.0.1
 # homeassistant.components.mvglive
 mvg==1.4.0
 
-# homeassistant.components.permobil
-mypermobil==0.1.8
-
 # homeassistant.components.myuplink
 myuplink==0.7.0
 
