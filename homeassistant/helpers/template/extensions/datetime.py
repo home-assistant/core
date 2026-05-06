@@ -335,6 +335,7 @@ class DateTimeExtension(BaseTemplateExtension):
         The result can be in seconds, minutes, hours, days, months and years.
 
         precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
 
         Negative timedeltas are formatted using their absolute value.
 
