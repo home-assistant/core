@@ -21,11 +21,8 @@ update_pin_code:
       required: true
       example: 1234
       selector:
-        number:
-          min: 1000
-          max: 99999999
-          mode: box
-          step: 1
+        text:
+          type: password
     device_id:
       required: true
       example: 1234567890abcdef1234567890abcdef

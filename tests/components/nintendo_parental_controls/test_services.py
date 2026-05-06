@@ -55,8 +55,18 @@ async def test_add_bonus_time(
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
-            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: 1234},
+            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "1234"},
             "device_not_found",
+        ),
+        (
+            NintendoParentalServices.UPDATE_PIN_CODE,
+            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123"},
+            "invalid_pin_length",
+        ),
+        (
+            NintendoParentalServices.UPDATE_PIN_CODE,
+            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123456789"},
+            "invalid_pin_length",
         ),
     ],
 )
@@ -138,7 +148,7 @@ async def test_update_pin_code(
         NintendoParentalServices.UPDATE_PIN_CODE,
         {
             ATTR_DEVICE_ID: device_entry.id,
-            CONF_PIN: 1234,
+            CONF_PIN: "1234",
         },
         blocking=True,
     )

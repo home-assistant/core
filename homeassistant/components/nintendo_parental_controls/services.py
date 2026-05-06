@@ -46,7 +46,7 @@ def async_setup_services(
         schema=vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(CONF_PIN): vol.All(int, vol.Range(min=1000, max=99999999)),
+                vol.Required(CONF_PIN): cv.string,
             }
         ),
     )
@@ -92,7 +92,12 @@ async def async_update_pin_code(call: ServiceCall) -> None:
     config_entry: NintendoParentalControlsConfigEntry | None = None
     data = call.data
     device_id: str = data[ATTR_DEVICE_ID]
-    new_pin: str = str(data[CONF_PIN])
+    new_pin: str = data[CONF_PIN]
+    if len(new_pin) < 4 or len(new_pin) > 8:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_pin_length",
+        )
     device = dr.async_get(call.hass).async_get(device_id)
     if device is None:
         raise ServiceValidationError(
@@ -100,8 +105,9 @@ async def async_update_pin_code(call: ServiceCall) -> None:
             translation_key="device_not_found",
         )
     for entry_id in device.config_entries:
-        config_entry = call.hass.config_entries.async_get_entry(entry_id)
-        if config_entry is not None and config_entry.domain == DOMAIN:
+        entry = call.hass.config_entries.async_get_entry(entry_id)
+        if entry is not None and entry.domain == DOMAIN:
+            config_entry = entry
             break
     nintendo_device_id = _get_nintendo_device_id(device)
     if config_entry and nintendo_device_id:

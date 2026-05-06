@@ -90,6 +90,9 @@
     "invalid_device": {
       "message": "The specified device is not a Nintendo device."
     },
+    "invalid_pin_length": {
+      "message": "The PIN code must be between 4 and 8 characters long."
+    },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
     },
