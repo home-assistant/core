@@ -653,7 +653,7 @@ async def test_fix_issue_next_flow(
     data = await resp.json()
 
     if test == "invalid_flow_type":
-        assert resp.status == HTTPStatus.BAD_REQUEST
+        assert resp.status == HTTPStatus.NOT_FOUND
         assert data == {"message": "Invalid next_flow type"}
         return
 

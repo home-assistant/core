@@ -48,7 +48,7 @@ async def test_async_init(
         flow = await rfm.async_init("fake_integration", data={"issue_id": "fake_issue"})
         assert len(caplog.record_tuples) == 1
         _, _, msg = caplog.record_tuples[0]
-        assert 'data={"issue_id": issue_id} instead of context' in msg
+        assert 'data={"issue_id": <issue_id>} instead of context' in msg
         rfm.async_abort(flow["flow_id"])
         caplog.clear()
         flow = await rfm.async_init(
