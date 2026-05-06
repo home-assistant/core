@@ -380,11 +380,11 @@ def parametrize_condition_states_any(
             Same accepted shapes as `target_states`. With behavior=any, an
             entity in such a state does not satisfy the condition.
         extra_excluded_states: *Additional* states (on top of the always-
-            included missing/unavailable/unknown) that the condition's
-            `_should_include` override is expected to filter out. Under
-            behavior=any, every targeted entity sitting in a filtered state
-            yields `any([]) → False`, so these share the built-in invalid
-            states' expectation. Set this for conditions whose
+            excluded missing/unavailable/unknown states) that the
+            condition's `_should_include` override is expected to filter out.
+            Under behavior=any, every targeted entity sitting in a filtered
+            state yields `any([]) → False`, so these share the built-in
+            invalid states' expectation. Set this for conditions whose
             `_should_include` skips entities lacking the tracked attribute.
         required_filter_attributes: Attributes that must be present on the
             entity for the condition's domain filter to accept it. The
@@ -441,12 +441,13 @@ def parametrize_condition_states_all(
             an entity in such a state blocks the all-check (counts toward
             the check but is not a match).
         extra_excluded_states: *Additional* states (on top of the always-
-            included missing/unavailable/unknown) that the condition's
-            `_should_include` override is expected to filter out. Under
-            behavior=all, every targeted entity sitting in a filtered state
-            yields `all([]) → True` (vacuous), so these share the built-in
-            invalid states' expectation. Set this for conditions whose
-            `_should_include` skips entities lacking the tracked attribute.
+            excluded/filtered-out missing/unavailable/unknown states) that
+            the condition's `_should_include` override is expected to filter
+            out. Under behavior=all, every targeted entity sitting in a
+            filtered state yields `all([]) → True` (vacuous), so these share
+            the built-in invalid states' expectation. Set this for
+            conditions whose `_should_include` skips entities lacking the
+            tracked attribute.
         required_filter_attributes: Attributes that must be present on the
             entity for the condition's domain filter to accept it. The
             helper merges these into every generated state so the entity
