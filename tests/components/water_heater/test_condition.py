@@ -228,7 +228,6 @@ async def test_water_heater_state_condition_behavior_all(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
-            attribute_required=True,
         ),
     ],
 )
@@ -268,7 +267,6 @@ async def test_water_heater_numerical_condition_behavior_any(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
-            attribute_required=True,
         ),
     ],
 )
