@@ -246,6 +246,7 @@ def _parametrize_condition_states(
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
     required_filter_attributes: dict | None,
     condition_true_if_invalid: bool,
     excluded_entities_from_other_domain: bool,
@@ -261,6 +262,7 @@ def _parametrize_condition_states(
 
     required_filter_attributes = required_filter_attributes or {}
     condition_options = condition_options or {}
+    extra_excluded_states = extra_excluded_states or []
     add_excluded_state = excluded_entities_from_other_domain or bool(
         required_filter_attributes
     )
@@ -314,6 +316,18 @@ def _parametrize_condition_states(
                             STATE_UNKNOWN, condition_true_if_invalid, True
                         ),
                     ),
+                    # `extra_excluded_states` are filtered by the condition's
+                    # `_should_include` override exactly like
+                    # missing/unavailable/unknown, so they share the
+                    # `condition_true_if_invalid` expectation: vacuous True
+                    # under behavior=all (every entity filtered → all-check
+                    # vacuous), vacuous False under behavior=any.
+                    (
+                        state_with_attributes(
+                            extra_excluded_state, condition_true_if_invalid, True
+                        )
+                        for extra_excluded_state in extra_excluded_states
+                    ),
                     (
                         state_with_attributes(other_state, False, False)
                         for other_state in other_states
@@ -342,6 +356,7 @@ def parametrize_condition_states_any(
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
     required_filter_attributes: dict | None = None,
     excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
@@ -364,6 +379,13 @@ def parametrize_condition_states_any(
         other_states: States the condition is expected to evaluate False for.
             Same accepted shapes as `target_states`. With behavior=any, an
             entity in such a state does not satisfy the condition.
+        extra_excluded_states: *Additional* states (on top of the always-
+            excluded missing/unavailable/unknown states) that the
+            condition's `_should_include` override is expected to filter out.
+            Under behavior=any, every targeted entity sitting in a filtered
+            state yields `any([]) → False`, so these share the built-in
+            invalid states' expectation. Set this for conditions whose
+            `_should_include` skips entities lacking the tracked attribute.
         required_filter_attributes: Attributes that must be present on the
             entity for the condition's domain filter to accept it. The
             helper merges these into every generated state so the entity
@@ -380,6 +402,7 @@ def parametrize_condition_states_any(
         condition_options=condition_options,
         target_states=target_states,
         other_states=other_states,
+        extra_excluded_states=extra_excluded_states,
         required_filter_attributes=required_filter_attributes,
         condition_true_if_invalid=False,
         excluded_entities_from_other_domain=excluded_entities_from_other_domain,
@@ -392,6 +415,7 @@ def parametrize_condition_states_all(
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
     required_filter_attributes: dict | None = None,
     excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
@@ -416,6 +440,14 @@ def parametrize_condition_states_all(
             for. Same accepted shapes as `target_states`. Under behavior=all,
             an entity in such a state blocks the all-check (counts toward
             the check but is not a match).
+        extra_excluded_states: *Additional* states (on top of the always-
+            excluded/filtered-out missing/unavailable/unknown states) that
+            the condition's `_should_include` override is expected to filter
+            out. Under behavior=all, every targeted entity sitting in a
+            filtered state yields `all([]) → True` (vacuous), so these share
+            the built-in invalid states' expectation. Set this for
+            conditions whose `_should_include` skips entities lacking the
+            tracked attribute.
         required_filter_attributes: Attributes that must be present on the
             entity for the condition's domain filter to accept it. The
             helper merges these into every generated state so the entity
@@ -432,6 +464,7 @@ def parametrize_condition_states_all(
         condition_options=condition_options,
         target_states=target_states,
         other_states=other_states,
+        extra_excluded_states=extra_excluded_states,
         required_filter_attributes=required_filter_attributes,
         condition_true_if_invalid=True,
         excluded_entities_from_other_domain=excluded_entities_from_other_domain,
@@ -2101,6 +2134,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     required_filter_attributes: dict | None = None,
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
+    attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=any.
 
@@ -2140,9 +2174,18 @@ def parametrize_numerical_attribute_condition_above_below_any(
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
             state, so the entity carries a unit alongside its tracked
             attribute.
+        attribute_required: When True, `(state, {attribute: None})` is
+            classified as an *excluded* state (filtered out of the all/any
+            check by the condition's `_should_include` override) rather
+            than treated as just-missing. Set this for conditions whose
+            `_should_include` skips entities lacking the tracked
+            attribute.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
+    extra_excluded_states = (
+        [(state, {attribute: None} | unit_attributes)] if attribute_required else None
+    )
 
     return [
         *parametrize_condition_states_any(
@@ -2164,6 +2207,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 (state, {attribute: 10} | unit_attributes),
                 (state, {attribute: 20} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_condition_states_any(
@@ -2185,6 +2229,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 (state, {attribute: 90} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_condition_states_any(
@@ -2211,6 +2256,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 (state, {attribute: 80} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
     ]
@@ -2225,6 +2271,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     required_filter_attributes: dict | None = None,
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
+    attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=all.
 
@@ -2262,9 +2309,18 @@ def parametrize_numerical_attribute_condition_above_below_all(
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
             state, so the entity carries a unit alongside its tracked
             attribute.
+        attribute_required: When True, `(state, {attribute: None})` is
+            classified as an *excluded* state (filtered out of the all/any
+            check by the condition's `_should_include` override) rather
+            than treated as just-missing. Set this for conditions whose
+            `_should_include` skips entities lacking the tracked
+            attribute.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
+    extra_excluded_states = (
+        [(state, {attribute: None} | unit_attributes)] if attribute_required else None
+    )
 
     return [
         *parametrize_condition_states_all(
@@ -2286,6 +2342,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 (state, {attribute: 10} | unit_attributes),
                 (state, {attribute: 20} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_condition_states_all(
@@ -2307,6 +2364,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 (state, {attribute: 90} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_condition_states_all(
@@ -2333,6 +2391,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 (state, {attribute: 80} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
             ],
+            extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
         ),
     ]

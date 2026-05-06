@@ -439,6 +439,9 @@ class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
@@ -503,7 +506,7 @@ class EntityConditionBase(Condition):
         """
         if (
             _state is not None
-            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            and self._should_include(_state)
             and self.is_valid_state(_state)
         ):
             # Only record the time if not already tracked, to avoid
@@ -568,6 +571,16 @@ class EntityConditionBase(Condition):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    def _should_include(self, _state: State) -> bool:
+        """Check if an entity should participate in any/all checks.
+
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the condition relies on.
+        """
+        return _state.state not in self._excluded_states
+
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
@@ -624,7 +637,7 @@ class EntityConditionBase(Condition):
             _state
             for entity_id in filtered_entity_ids
             if (_state := self._hass.states.get(entity_id))
-            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            and self._should_include(_state)
         ]
         return self._matcher(entity_states)
 
