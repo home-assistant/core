@@ -37,7 +37,7 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
 
 def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
     """Get device info."""
-    manufacturer = "Tuya / Whitelabel"
+    manufacturer = "Tuya"
     model: str | None = device.product_name
     model_id: str | None = device.product_id
 
