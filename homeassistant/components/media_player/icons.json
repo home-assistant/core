@@ -1,5 +1,8 @@
 {
   "conditions": {
+    "is_muted": {
+      "condition": "mdi:volume-mute"
+    },
     "is_not_playing": {
       "condition": "mdi:stop"
     },
@@ -14,6 +17,9 @@
     },
     "is_playing": {
       "condition": "mdi:play"
+    },
+    "is_unmuted": {
+      "condition": "mdi:volume-high"
     }
   },
   "entity_component": {
