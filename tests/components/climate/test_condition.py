@@ -339,6 +339,7 @@ async def test_climate_attribute_condition_behavior_all(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -384,6 +385,7 @@ async def test_climate_numerical_condition_behavior_any(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
