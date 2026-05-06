@@ -9,6 +9,7 @@ from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import CatGenieConfigEntry, CatGenieCoordinator, CatGenieRuntimeData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -27,13 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: CatGenieConfigEntry) -> 
     except CatGenieAuthenticationError as err:
         await auth.async_close()
         raise ConfigEntryAuthFailed(
-            translation_domain="catgenie",
+            translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from err
     except (CatGenieException, ConnectionError) as err:
         await auth.async_close()
         raise ConfigEntryNotReady(
-            translation_domain="catgenie",
+            translation_domain=DOMAIN,
             translation_key="communication_error",
             translation_placeholders={"error": str(err)},
         ) from err
