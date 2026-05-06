@@ -2951,7 +2951,7 @@ sentry-sdk==2.48.0
 # homeassistant.components.acer_projector
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.7.0
+serialx==1.7.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
