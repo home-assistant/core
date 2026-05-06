@@ -33,6 +33,41 @@ from . import CONFIG_DATA, CONFIG_DATA_IMPORT
 from tests.common import MockConfigEntry
 
 
+async def test_interfaces_step_with_tracker_interfaces(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test interfaces step with tracker_interfaces in user_input (covering the missing branch)."""
+    # Patch the client to return interfaces
+    mock_opnsense_client.return_value.get_device_unique_id.return_value = (
+        "unique_id_789"
+    )
+    mock_opnsense_client.return_value.get_interfaces.return_value = {
+        "LAN": {"name": "LAN"},
+        "WAN": {"name": "WAN"},
+    }
+
+    # Go through user step
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "url": "http://router.lan/api",
+            "api_key": "key",
+            "api_secret": "secret",
+            "verify_ssl": True,
+        },
+    )
+    # Now submit interfaces step with tracker_interfaces
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"tracker_interfaces": ["LAN", "WAN"]},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"]["tracker_interfaces"] == ["LAN", "WAN"]
+
+
 async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
     """Test import step."""
     mock_opnsense_client.return_value.get_device_unique_id.return_value = (
