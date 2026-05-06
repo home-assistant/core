@@ -123,7 +123,7 @@ class KNXModule:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.project.load_project(self.xknx)
         await self.config_store.load_data()
-        self.hass.async_create_task(self.telegrams.load_history())
+        await self.telegrams.load_history()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:

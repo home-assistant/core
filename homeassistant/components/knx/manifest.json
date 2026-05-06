@@ -14,7 +14,7 @@
     "xknx==3.15.0",
     "xknxproject==3.8.2",
     "knx-frontend==2026.4.30.60856",
-    "knx-telegram-store==0.1.0"
+    "knx-telegram-store==0.1.2"
   ],
   "single_config_entry": true
 }

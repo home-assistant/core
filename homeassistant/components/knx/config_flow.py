@@ -17,6 +17,7 @@ from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -935,19 +936,14 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         if new_data.get(CONF_KNX_TELEGRAM_BACKEND) != self.initial_data.get(
             CONF_KNX_TELEGRAM_BACKEND
         ):
-            self.hass.async_create_task(
-                self.hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "title": "KNX Telegram Storage",
-                        "message": (
-                            "The telegram storage backend has been changed. "
-                            "Home Assistant will reload the KNX integration to apply the changes."
-                        ),
-                        "notification_id": "knx_telegram_backend_changed",
-                    },
-                )
+            persistent_notification.async_create(
+                self.hass,
+                title="KNX Telegram Storage",
+                message=(
+                    "The telegram storage backend has been changed. "
+                    "Home Assistant will reload the KNX integration to apply the changes."
+                ),
+                notification_id="knx_telegram_backend_changed",
             )
 
         self.hass.config_entries.async_update_entry(
@@ -1084,26 +1080,38 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage SQLite telegram store settings."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.finish_flow(
-                KNXConfigEntryData(
-                    telegram_retention_days=user_input[
-                        CONF_KNX_TELEGRAM_RETENTION_DAYS
-                    ],
-                    telegram_db_path=user_input[CONF_KNX_TELEGRAM_DB_PATH],
+            db_path = user_input[CONF_KNX_TELEGRAM_DB_PATH]
+            full_path = Path(self.hass.config.path(STORAGE_DIR, str(db_path)))
+            if not self.hass.config.is_allowed_path(str(full_path)):
+                errors[CONF_KNX_TELEGRAM_DB_PATH] = "invalid_path"
+            else:
+                return self.finish_flow(
+                    KNXConfigEntryData(
+                        telegram_retention_days=user_input[
+                            CONF_KNX_TELEGRAM_RETENTION_DAYS
+                        ],
+                        telegram_db_path=db_path,
+                    )
                 )
-            )
 
-        db_path = self.initial_data.get(
-            CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT
+        db_path = (
+            user_input.get(CONF_KNX_TELEGRAM_DB_PATH)
+            if user_input
+            else self.initial_data.get(
+                CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT
+            )
         )
-        full_path = Path(self.hass.config.path(STORAGE_DIR, db_path))
+        full_path = Path(self.hass.config.path(STORAGE_DIR, str(db_path)))
         db_exists_info = "File exists" if full_path.exists() else "File does not exist"
 
         data_schema = {
             vol.Required(
                 CONF_KNX_TELEGRAM_RETENTION_DAYS,
-                default=self.initial_data.get(
+                default=user_input.get(CONF_KNX_TELEGRAM_RETENTION_DAYS)
+                if user_input
+                else self.initial_data.get(
                     CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
                 ),
             ): vol.All(
@@ -1124,6 +1132,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="telegram_store_sqlite",
             data_schema=vol.Schema(data_schema),
+            errors=errors,
             last_step=True,
             description_placeholders={
                 "db_exists_info": db_exists_info,
@@ -1191,7 +1200,11 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             ): selector.BooleanSelector(),
         }
 
-        dsn_preview = self._build_dsn(parsed) if current_dsn else "No DSN configured"
+        dsn_preview = (
+            self._build_dsn(parsed, mask_password=True)
+            if current_dsn
+            else "No DSN configured"
+        )
 
         return self.async_show_form(
             step_id="telegram_store_postgres",
@@ -1202,10 +1215,12 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             },
         )
 
-    def _build_dsn(self, params: dict[str, Any]) -> str:
+    def _build_dsn(self, params: dict[str, Any], mask_password: bool = False) -> str:
         """Build DSN from params."""
         user = params.get("user", "")
         password = params.get("password", "")
+        if mask_password and password:
+            password = "********"
         host = params.get("host", "localhost")
         port = int(params.get("port", 5432))
         database = params.get("database", "knx_telegrams")

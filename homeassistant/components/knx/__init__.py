@@ -197,9 +197,13 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             (storage_dir / "knx/telegrams_history.json").unlink()
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / "knx/telegrams.db").unlink()
+
         if db_path is not None:
-            with contextlib.suppress(FileNotFoundError):
-                (storage_dir / db_path).unlink()
+            full_db_path = storage_dir / db_path
+            if full_db_path.resolve().is_relative_to(storage_dir.resolve()):
+                with contextlib.suppress(FileNotFoundError):
+                    full_db_path.unlink()
+
         with contextlib.suppress(FileNotFoundError, OSError):
             (storage_dir / DOMAIN).rmdir()
 

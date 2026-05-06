@@ -21,6 +21,7 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
+from homeassistant.components import persistent_notification
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -106,7 +107,7 @@ class Telegrams:
             retention = config.get(
                 CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
             )
-            self.store = PostgresStore(dsn, retention_days=retention)
+            self.store = PostgresStore(dsn, retention_days=retention)  # type: ignore[call-arg]
         elif backend == TELEGRAM_BACKEND_SQLITE:
             db_path = str(
                 config.get(CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT)
@@ -119,7 +120,7 @@ class Telegrams:
             retention = config.get(
                 CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
             )
-            self.store = SqliteStore(full_path, retention_days=retention)
+            self.store = SqliteStore(full_path, retention_days=retention)  # type: ignore[call-arg]
         else:  # Memory
             log_size = config.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT)
             self.store = MemoryStore(max_telegrams=log_size)
@@ -140,6 +141,7 @@ class Telegrams:
         )
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
         self._async_remove_listener: Callable[[], None] | None = None
+        self._pending_tasks: set[asyncio.Task[Any]] = set()
 
     async def load_history(self) -> None:
         """Load history from store."""
@@ -170,22 +172,17 @@ class Telegrams:
                 translation_key="telegram_storage_error",
             )
             # Detailed persistent notification for immediate feedback
-            self.hass.async_create_task(
-                self.hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "title": "KNX Telegram Storage Error",
-                        "message": (
-                            f"The configured KNX telegram storage backend '{backend}' failed to initialize. "
-                            "Home Assistant has fallen back to memory-only storage. "
-                            "Telegram history will be lost on restart until the issue is resolved.\n\n"
-                            f"**Configuration**: `{info}`\n"
-                            f"**Error**: {err}"
-                        ),
-                        "notification_id": "knx_telegram_backend_error",
-                    },
-                )
+            persistent_notification.async_create(
+                self.hass,
+                title="KNX Telegram Storage Error",
+                message=(
+                    f"The configured KNX telegram storage backend '{backend}' failed to initialize. "
+                    "Home Assistant has fallen back to memory-only storage. "
+                    "Telegram history will be lost on restart until the issue is resolved.\n\n"
+                    f"**Configuration**: `{info}`\n"
+                    f"**Error**: {err!r}"
+                ),
+                notification_id="knx_telegram_backend_error",
             )
             # Fallback to MemoryStore to allow integration to start
             if not isinstance(self.store, MemoryStore):
@@ -196,7 +193,7 @@ class Telegrams:
                 await self.store.initialize()
 
         # Initial eviction for SQL backends
-        await self.store.evict_expired()
+        await self.store.evict_expired()  # type: ignore[attr-defined]
 
         # Schedule nightly eviction at 3:00 AM
         self._async_remove_listener = async_track_utc_time_change(
@@ -207,12 +204,14 @@ class Telegrams:
         """Stop history store."""
         if self._async_remove_listener:
             self._async_remove_listener()
+        if self._pending_tasks:
+            await asyncio.gather(*self._pending_tasks, return_exceptions=True)
         await self.store.close()
 
     async def _async_evict_telegrams(self, _now: datetime) -> None:
         """Evict expired telegrams from store."""
         _LOGGER.debug("Starting nightly KNX telegram eviction")
-        count = await self.store.evict_expired()
+        count = await self.store.evict_expired()  # type: ignore[attr-defined]
         if count > 0:
             _LOGGER.info("Evicted %d expired KNX telegrams", count)
 
@@ -226,9 +225,11 @@ class Telegrams:
 
         # Store in history store asynchronously
         if self.recent_telegrams.maxlen != 0:
-            self.hass.async_create_task(
+            task = self.hass.async_create_task(
                 self.store.store(self.dict_to_model(telegram_dict))
             )
+            self._pending_tasks.add(task)
+            task.add_done_callback(self._pending_tasks.discard)
 
         async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
 
@@ -239,9 +240,11 @@ class Telegrams:
 
         # Store in history store asynchronously
         if self.recent_telegrams.maxlen != 0:
-            self.hass.async_create_task(
+            task = self.hass.async_create_task(
                 self.store.store(self.dict_to_model(telegram_dict))
             )
+            self._pending_tasks.add(task)
+            task.add_done_callback(self._pending_tasks.discard)
 
         async_dispatcher_send(
             self.hass, SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM, telegram, telegram_dict
