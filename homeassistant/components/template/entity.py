@@ -175,7 +175,7 @@ class AbstractTemplateEntity(Entity):
         if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
             # Entity ID not changed, unload scripts as they will not be reused.
             for action_script in self._action_scripts.values():
-                action_script.async_unload()
+                await action_script.async_unload()
 
     async def async_run_script(
         self,
