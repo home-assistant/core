@@ -1,7 +1,5 @@
 """The Mastodon integration."""
 
-from __future__ import annotations
-
 from mastodon.Mastodon import (
     Account,
     Instance,

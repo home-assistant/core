@@ -1,7 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
@@ -193,7 +191,7 @@ def validate_datetime(
     """Converts the template result into a datetime or date."""
 
     def convert(result: Any) -> datetime | date | None:
-        if resolve_as == SensorDeviceClass.TIMESTAMP:
+        if resolve_as in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             if isinstance(result, datetime):
                 return result
 
@@ -265,6 +263,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             return result
 

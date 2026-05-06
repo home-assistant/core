@@ -1,7 +1,5 @@
 """Config flow for Yeelight integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self
 from urllib.parse import urlparse

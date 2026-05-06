@@ -77,7 +77,7 @@ async def test_water_heater_conditions_gated_by_labs_flag(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("water_heater.is_off", {}, True, True),
-        ("water_heater.is_on", {}, True, False),
+        ("water_heater.is_on", {}, True, True),
     ],
 )
 async def test_water_heater_condition_options_validation(
@@ -228,6 +228,7 @@ async def test_water_heater_state_condition_behavior_all(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -267,6 +268,7 @@ async def test_water_heater_numerical_condition_behavior_any(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )

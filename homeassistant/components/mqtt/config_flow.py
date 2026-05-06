@@ -1,7 +1,5 @@
 """Config flow for MQTT."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
@@ -4075,6 +4073,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             config: dict[str, Any] = {
                 CONF_BROKER: addon_discovery_config[CONF_HOST],
                 CONF_PORT: addon_discovery_config[CONF_PORT],
+                CONF_PROTOCOL: DEFAULT_PROTOCOL,
                 CONF_USERNAME: addon_discovery_config.get(CONF_USERNAME),
                 CONF_PASSWORD: addon_discovery_config.get(CONF_PASSWORD),
                 CONF_DISCOVERY: DEFAULT_DISCOVERY,
@@ -4303,6 +4302,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data: dict[str, Any] = self._hassio_discovery.copy()
             data[CONF_BROKER] = data.pop(CONF_HOST)
+            data[CONF_PROTOCOL] = DEFAULT_PROTOCOL
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
                 data,
@@ -4314,6 +4314,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_BROKER: data[CONF_BROKER],
                         CONF_PORT: data[CONF_PORT],
+                        CONF_PROTOCOL: DEFAULT_PROTOCOL,
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
@@ -5180,6 +5181,8 @@ async def async_get_broker_settings(  # noqa: C901
     ) -> bool:
         """Additional validation on broker settings for better error messages."""
 
+        if CONF_PROTOCOL not in validated_user_input:
+            validated_user_input[CONF_PROTOCOL] = DEFAULT_PROTOCOL
         # Get current certificate settings from config entry
         certificate: str | None = (
             "auto"
@@ -5368,12 +5371,9 @@ async def async_get_broker_settings(  # noqa: C901
             description={"suggested_value": current_pass},
         )
     ] = PASSWORD_SELECTOR
-    # show advanced options checkbox if requested and
-    # advanced options are enabled
-    # or when the defaults of advanced options are overridden
+    # show advanced options checkbox if no defaults
+    # of the advanced options are overridden
     if not advanced_broker_options:
-        if not flow.show_advanced_options:
-            return False
         fields[
             vol.Optional(
                 ADVANCED_OPTIONS,
