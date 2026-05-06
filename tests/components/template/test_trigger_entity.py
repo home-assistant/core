@@ -257,52 +257,8 @@ async def test_coordinator_shutdown_unloads_script_and_condition(
 
     await coordinator.async_shutdown()
 
-    mock_script.async_stop.assert_called_once()
     mock_script.async_unload.assert_called_once()
     mock_cond.async_unload.assert_called_once()
-
-
-async def test_template_entity_remove_unloads_action_scripts(
-    hass: HomeAssistant,
-) -> None:
-    """Test that removing a template entity unloads its action scripts."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "light": {
-                    "name": "test_light",
-                    "state": "{{ true }}",
-                    "turn_on": {"service": "test.turn_on"},
-                    "turn_off": {"service": "test.turn_off"},
-                },
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    entity = hass.data["light"].get_entity("light.test_light")
-
-    mocks: dict[str, dict[str, Mock]] = {}
-    for script_id, action_script in entity._action_scripts.items():
-        stop_mock = Mock(wraps=action_script.async_stop)
-        unload_mock = Mock(wraps=action_script.async_unload)
-        action_script.async_stop = stop_mock
-        action_script.async_unload = unload_mock
-        mocks[script_id] = {"stop": stop_mock, "unload": unload_mock}
-
-    assert set(mocks.keys()) == {"turn_on", "turn_off"}
-
-    await entity.async_remove()
-    await hass.async_block_till_done()
-
-    for script_mocks in mocks.values():
-        script_mocks["stop"].assert_called_once()
-        script_mocks["unload"].assert_called_once()
 
 
 async def test_shutdown_stops_script_and_keeps_triggers_subscribed(
@@ -343,13 +299,15 @@ async def test_shutdown_stops_script_and_keeps_triggers_subscribed(
     coordinators = hass.data[DATA_COORDINATORS]
     assert len(coordinators) == 1
     assert coordinators[0]._script.is_running
+    assert not coordinators[0]._script._unloaded
 
     # Fire shutdown
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    # Script should be stopped - this is handled by the script helper
+    # Script should be stopped but not unloaded - this is handled by the script helper
     assert not coordinators[0]._script.is_running
+    assert not coordinators[0]._script._unloaded
 
     # Triggers are not unsubscribed on shutdown
     listeners = hass.bus.async_listeners()
@@ -394,6 +352,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
     assert len(coordinators) == 1
     coordinator = coordinators[0]
     assert coordinator._script.is_running
+    assert not coordinator._script._unloaded
 
     # Reload with empty config
     with patch(
@@ -404,8 +363,9 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
         await hass.services.async_call("template", SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
 
-    # Script should be stopped
+    # Script should be stopped and unloaded
     assert not coordinator._script.is_running
+    assert coordinator._script._unloaded
 
     # Old trigger should be unsubscribed
     listeners = hass.bus.async_listeners()

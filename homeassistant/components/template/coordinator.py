@@ -110,9 +110,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                 self.hass, self.config[CONF_CONDITIONS], _LOGGER, "template entity"
             )
 
-        if self._script or self._cond_func:
-            await self.async_register_shutdown()
-
         if start_event is not None:
             self._unsub_start = None
 
