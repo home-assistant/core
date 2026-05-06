@@ -1,7 +1,6 @@
 """Test HomematicIP Cloud accesspoint."""
 
 import asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
@@ -601,111 +600,47 @@ async def test_websocket_diagnostic_context_falls_back_when_all_unknown() -> Non
     assert hap._websocket_diagnostic_context() == "no diagnostics available"
 
 
-async def test_ws_disconnected_handler_rearms_staleness_flags() -> None:
-    """A websocket disconnect re-arms log-once flags for the next stuck period."""
+async def test_on_websocket_stale_logs_warning_then_error() -> None:
+    """Library callback maps severity to log level (warning vs error)."""
     hap = HomematicipHAP(MagicMock(), MagicMock())
     hap.home = MagicMock()
     _set_diagnostic_defaults(hap.home)
-    hap._stale_warning_logged = True
-    hap._stale_error_logged = True
 
-    await hap.ws_disconnected_handler()
-
-    assert hap._stale_warning_logged is False
-    assert hap._stale_error_logged is False
-    assert hap._ws_connection_closed.is_set()
-
-
-async def test_staleness_check_warns_then_errors() -> None:
-    """Staleness check logs warning at first threshold, error at second."""
-    hap = HomematicipHAP(MagicMock(), MagicMock())
-    hap.home = MagicMock()
-    hap.home.websocket_is_connected = Mock(return_value=True)
-    _set_diagnostic_defaults(hap.home)
-
-    now = datetime(2026, 4, 30, tzinfo=None)
-
-    # Below warning threshold: nothing logged
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=60)
     with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as logger:
-        hap._async_check_websocket_staleness(now)
-    logger.warning.assert_not_called()
+        await hap._on_websocket_stale("warning", 400)
+    logger.warning.assert_called_once()
     logger.error.assert_not_called()
 
-    # Above warning, below error: warning once
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=400)
     with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as logger:
-        hap._async_check_websocket_staleness(now)
-        hap._async_check_websocket_staleness(now)
-    assert logger.warning.call_count == 1
-    logger.error.assert_not_called()
-
-    # Crosses error threshold: error once
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=900)
-    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as logger:
-        hap._async_check_websocket_staleness(now)
-        hap._async_check_websocket_staleness(now)
-    assert logger.error.call_count == 1
-
-
-async def test_staleness_check_resets_after_recovery() -> None:
-    """Once messages flow again, the staleness check re-arms its log-once flags."""
-    hap = HomematicipHAP(MagicMock(), MagicMock())
-    hap.home = MagicMock()
-    hap.home.websocket_is_connected = Mock(return_value=True)
-    _set_diagnostic_defaults(hap.home)
-    now = datetime(2026, 4, 30, tzinfo=None)
-
-    # Trigger error
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=900)
-    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER"):
-        hap._async_check_websocket_staleness(now)
-    assert hap._stale_error_logged is True
-
-    # Recovery resets flag
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=10)
-    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER"):
-        hap._async_check_websocket_staleness(now)
-    assert hap._stale_error_logged is False
-    assert hap._stale_warning_logged is False
-
-    # Stuck again -> error logs again
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=900)
-    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as logger:
-        hap._async_check_websocket_staleness(now)
+        await hap._on_websocket_stale("error", 1900)
     logger.error.assert_called_once()
+    logger.warning.assert_not_called()
 
 
-async def test_staleness_check_skips_when_websocket_disconnected() -> None:
-    """No staleness logging while the websocket reports disconnected."""
+async def test_async_connect_registers_stale_handler() -> None:
+    """async_connect registers the library websocket-stale callback."""
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+    home = MagicMock()
+    home.enable_events = AsyncMock()
+    home.set_on_websocket_stale_handler = MagicMock()
+
+    await hap.async_connect(home)
+
+    home.set_on_websocket_stale_handler.assert_called_once_with(hap._on_websocket_stale)
+
+
+async def test_on_websocket_stale_log_format(caplog: pytest.LogCaptureFixture) -> None:
+    """Log message includes seconds_since (rounded) and the diagnostic context."""
     hap = HomematicipHAP(MagicMock(), MagicMock())
     hap.home = MagicMock()
-    hap.home.websocket_is_connected = Mock(return_value=False)
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=99999)
     _set_diagnostic_defaults(hap.home)
-    now = datetime(2026, 4, 30, tzinfo=None)
+    hap.home.websocket_message_count = Mock(return_value=42)
 
-    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as logger:
-        hap._async_check_websocket_staleness(now)
+    with caplog.at_level("WARNING"):
+        await hap._on_websocket_stale("warning", 423.7)
 
-    logger.warning.assert_not_called()
-    logger.error.assert_not_called()
-
-
-async def test_staleness_check_skips_when_diagnostic_unavailable() -> None:
-    """Library returning None for seconds-since means we cannot decide; skip."""
-    hap = HomematicipHAP(MagicMock(), MagicMock())
-    hap.home = MagicMock()
-    hap.home.websocket_is_connected = Mock(return_value=True)
-    hap.home.websocket_seconds_since_last_message = Mock(return_value=None)
-    _set_diagnostic_defaults(hap.home)
-    now = datetime(2026, 4, 30, tzinfo=None)
-
-    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as logger:
-        hap._async_check_websocket_staleness(now)
-
-    logger.warning.assert_not_called()
-    logger.error.assert_not_called()
+    assert "424" in caplog.text  # %.0f rounds
+    assert "message_count=42" in caplog.text
 
 
 async def test_get_state_clears_unreach_on_unchanged_devices() -> None:
@@ -726,25 +661,3 @@ async def test_get_state_clears_unreach_on_unchanged_devices() -> None:
 
     assert device_changed.unreach is False
     assert device_unchanged.unreach is False
-
-
-async def test_async_reset_unsubscribes_staleness_check(
-    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
-) -> None:
-    """async_reset must unsubscribe the periodic staleness check."""
-    hass.config.components.add(DOMAIN)
-    hmip_config_entry.add_to_hass(hass)
-    hap = HomematicipHAP(hass, hmip_config_entry)
-    hap.home = MagicMock(spec=AsyncHome)
-    hap.home.disable_events_async = AsyncMock()
-
-    unsub = MagicMock()
-    hap._stale_check_unsub = unsub
-
-    with patch.object(
-        hass.config_entries, "async_unload_platforms", AsyncMock(return_value=True)
-    ):
-        await hap.async_reset()
-
-    unsub.assert_called_once()
-    assert hap._stale_check_unsub is None
