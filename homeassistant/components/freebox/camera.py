@@ -93,12 +93,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
 
     @property
     def name(self) -> str | None:  # type: ignore[override]
-        """Return None so the device name is used as entity name.
-
-        FFmpegCamera defines its own `name` property that takes precedence
-        over the base Entity class's name resolution (which would use
-        `_attr_name`). Override here to honor `_attr_name = None`.
-        """
+        """Return None so the device name is used as entity name."""
         return self._attr_name
 
     async def async_enable_motion_detection(self) -> None:
