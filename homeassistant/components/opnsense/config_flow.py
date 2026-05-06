@@ -307,7 +307,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             DOMAIN,
             f"import_failed_{reason}_{url}",
             is_fixable=False,
-            severity=IssueSeverity.CRITICAL,
+            severity=IssueSeverity.ERROR,
             translation_key=f"import_failed_{reason}",
             translation_placeholders={"url": url, "integration_title": "OPNsense"},
         )
