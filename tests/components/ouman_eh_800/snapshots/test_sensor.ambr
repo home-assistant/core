@@ -87,7 +87,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Fine adjustment effect',
     'platform': 'ouman_eh_800',
@@ -102,7 +102,7 @@
 # name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'H1 Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -434,7 +434,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Fine adjustment effect',
     'platform': 'ouman_eh_800',
@@ -449,7 +449,7 @@
 # name: test_entities[sensor-no_room_sensors][sensor.h1_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'H1 Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -723,7 +723,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Delayed outdoor temperature effect',
     'platform': 'ouman_eh_800',
@@ -738,7 +738,7 @@
 # name: test_entities[sensor-no_room_sensors][sensor.h2_delayed_outdoor_temperature_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'H2 Delayed outdoor temperature effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -1360,7 +1360,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Fine adjustment effect',
     'platform': 'ouman_eh_800',
@@ -1375,7 +1375,7 @@
 # name: test_entities[sensor-room_sensors][sensor.h1_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'H1 Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -1418,7 +1418,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Room sensor potentiometer',
     'platform': 'ouman_eh_800',
@@ -1433,7 +1433,7 @@
 # name: test_entities[sensor-room_sensors][sensor.h1_room_sensor_potentiometer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'H1 Room sensor potentiometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -1823,7 +1823,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Delayed outdoor temperature effect',
     'platform': 'ouman_eh_800',
@@ -1838,7 +1838,7 @@
 # name: test_entities[sensor-room_sensors][sensor.h2_delayed_outdoor_temperature_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'H2 Delayed outdoor temperature effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,

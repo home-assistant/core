@@ -37,6 +37,7 @@ def _temperature_sensor(
     *,
     device: OumanDevice,
     key: str,
+    device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE,
     entity_category: EntityCategory | None = None,
     enabled_by_default: bool = True,
 ) -> OumanEh800SensorDescription:
@@ -44,7 +45,7 @@ def _temperature_sensor(
         device=device,
         key=key,
         translation_key=key,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=device_class,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
@@ -92,6 +93,7 @@ SENSOR_DESCRIPTIONS: dict[OumanEndpoint, OumanEh800SensorDescription] = {
     L1BaseEndpoints.FINE_ADJUSTMENT_EFFECT: _temperature_sensor(
         device=OumanDevice.L1,
         key="fine_adjustment_effect",
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
@@ -112,6 +114,7 @@ SENSOR_DESCRIPTIONS: dict[OumanEndpoint, OumanEh800SensorDescription] = {
     L1RoomSensor.ROOM_SENSOR_POTENTIOMETER: _temperature_sensor(
         device=OumanDevice.L1,
         key="room_sensor_potentiometer",
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
@@ -135,6 +138,7 @@ SENSOR_DESCRIPTIONS: dict[OumanEndpoint, OumanEh800SensorDescription] = {
     L2BaseEndpoints.DELAYED_OUTDOOR_TEMPERATURE_EFFECT: _temperature_sensor(
         device=OumanDevice.L2,
         key="delayed_outdoor_temperature_effect",
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
