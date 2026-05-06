@@ -287,7 +287,7 @@ async def test_setup_forward_failure(hass: HomeAssistant) -> None:
             CONF_HOSTNAME: "home-assistant.io",
             CONF_NAME: "home-assistant.io",
             CONF_IPV4: True,
-            CONF_IPV6: False,
+            CONF_IPV6: True,
         },
         options={
             CONF_RESOLVER: "208.67.222.222",

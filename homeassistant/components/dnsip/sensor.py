@@ -105,11 +105,13 @@ class WanIpSensor(SensorEntity):
         self.hostname = hostname
         self.port = port
         self.nameserver = nameserver
-        self.resolver = (
+        resolver = (
             entry.runtime_data.resolver_ipv6
             if ipv6
             else entry.runtime_data.resolver_ipv4
         )
+        assert resolver is not None
+        self.resolver = resolver
         self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
