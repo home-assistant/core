@@ -20,9 +20,16 @@ from tests.components.common import (
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
     parametrize_target_entities,
     target_entities,
 )
+
+# Volume is stored as 0.0–1.0 but the threshold is in percent.
+_VOLUME_VALUE_SCALE = 0.01
+
+_IS_VOLUME_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 # is_muted=True states (mute attr True OR volume_level == 0)
 _IS_MUTED_STATES = [
@@ -99,6 +106,7 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
         "media_player.is_paused",
         "media_player.is_playing",
         "media_player.is_unmuted",
+        "media_player.is_volume",
     ],
 )
 async def test_media_player_conditions_gated_by_labs_flag(
@@ -119,6 +127,7 @@ async def test_media_player_conditions_gated_by_labs_flag(
         ("media_player.is_paused", {}, True, True),
         ("media_player.is_playing", {}, True, True),
         ("media_player.is_unmuted", {}, True, True),
+        ("media_player.is_volume", _IS_VOLUME_THRESHOLD, True, True),
     ],
 )
 async def test_media_player_condition_options_validation(
@@ -188,6 +197,13 @@ async def test_media_player_condition_options_validation(
         ),
         *parametrize_muted_condition_states_any(
             "media_player.is_unmuted", target_muted=False
+        ),
+        *parametrize_numerical_attribute_condition_above_below_any(
+            "media_player.is_volume",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_required=True,
+            attribute_value_scale=_VOLUME_VALUE_SCALE,
         ),
     ],
 )
@@ -264,6 +280,13 @@ async def test_media_player_state_condition_behavior_any(
         ),
         *parametrize_muted_condition_states_all(
             "media_player.is_unmuted", target_muted=False
+        ),
+        *parametrize_numerical_attribute_condition_above_below_all(
+            "media_player.is_volume",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_required=True,
+            attribute_value_scale=_VOLUME_VALUE_SCALE,
         ),
     ],
 )
