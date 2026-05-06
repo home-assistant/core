@@ -13,12 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
-from .entity import (
-    ElkAttachedEntity,
-    ElkEntity,
-    create_elk_entities,
-    generate_unique_id,
-)
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,9 +56,6 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
-        self._unique_id = generate_unique_id(
-            element, elk_data.prefix, elk_data.mac or "number"
-        )
         if element.value_format == SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
             self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
