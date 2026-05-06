@@ -302,6 +302,7 @@ async def test_humidifier_attribute_condition_behavior_all(
         "humidifier.is_target_humidity",
         STATE_ON,
         ATTR_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidifier_numerical_condition_behavior_any(
@@ -338,6 +339,7 @@ async def test_humidifier_numerical_condition_behavior_any(
         "humidifier.is_target_humidity",
         STATE_ON,
         ATTR_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidifier_numerical_condition_behavior_all(
