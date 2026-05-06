@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 from .entity import PTDevicesEntity
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
@@ -34,7 +33,6 @@ class PTDevicesBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] = (
-    # Battery status
     PTDevicesBinarySensorEntityDescription(
         key=PTDevicesBinarySensors.DEVICE_BATTERY_STATUS,
         translation_key=PTDevicesBinarySensors.DEVICE_BATTERY_STATUS,
