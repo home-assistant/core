@@ -143,24 +143,6 @@ class RepairsFlow(
             result["next_flow"] = next_flow
 
 
-def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
-    """Get the repairs flow manager."""
-    if (domain_data := hass.data.get(DOMAIN)) is None:
-        return None
-    flow_manager: RepairsFlowManager | None = domain_data.get("flow_manager")
-    return flow_manager
-
-
-def async_get(hass: HomeAssistant) -> RepairsFlowManager:
-    """Get the repairs flow manager.
-
-    Preferred over repairs_flow_manager.
-    """
-    if (flow_manager := repairs_flow_manager(hass)) is None:
-        raise PlatformNotReady("Repairs platform not loaded")
-    return flow_manager
-
-
 class ConfirmRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow without any side effects."""
 
@@ -272,6 +254,26 @@ class RepairsFlowManager(
         if result.get("type") != data_entry_flow.FlowResultType.ABORT:
             ir.async_delete_issue(self.hass, flow.handler, flow.context["issue_id"])
         return result
+
+
+@callback
+def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
+    """Get the repairs flow manager."""
+    if (domain_data := hass.data.get(DOMAIN)) is None:
+        return None
+    flow_manager: RepairsFlowManager | None = domain_data.get("flow_manager")
+    return flow_manager
+
+
+@callback
+def async_get(hass: HomeAssistant) -> RepairsFlowManager:
+    """Get the repairs flow manager.
+
+    Preferred over repairs_flow_manager.
+    """
+    if (flow_manager := repairs_flow_manager(hass)) is None:
+        raise PlatformNotReady("Repairs platform not loaded")
+    return flow_manager
 
 
 @callback
