@@ -13,7 +13,6 @@
       'elevation': 1.0,
       'latitude': '**REDACTED**',
       'longitude': '**REDACTED**',
-      'name': 'test',
     }),
   })
 # ---

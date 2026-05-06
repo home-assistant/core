@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.met.const import CONF_TRACK_HOME, DOMAIN
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -14,7 +14,6 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Met integration in Home Assistant."""
     entry_data = {
-        CONF_NAME: "test",
         CONF_LATITUDE: 0,
         CONF_LONGITUDE: 1.0,
         CONF_ELEVATION: 1.0,

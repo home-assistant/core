@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -32,6 +31,15 @@ from .const import (
     DOMAIN,
     HOME_LOCATION_NAME,
 )
+
+
+def _location_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return config entry data for a fixed location."""
+    return {
+        CONF_LATITUDE: user_input[CONF_LATITUDE],
+        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+        CONF_ELEVATION: user_input[CONF_ELEVATION],
+    }
 
 
 @callback
@@ -56,7 +64,6 @@ def _get_data_schema(
     if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
         return vol.Schema(
             {
-                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
                 vol.Required(CONF_LATITUDE, default=hass.config.latitude): cv.latitude,
                 vol.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
@@ -74,7 +81,6 @@ def _get_data_schema(
     # Not tracking home, default values come from config entry
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=config_entry.data.get(CONF_NAME)): str,
             vol.Required(
                 CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
             ): cv.latitude,
@@ -105,14 +111,13 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            data = _location_data(user_input)
             if (
-                f"{user_input.get(CONF_LATITUDE)}-{user_input.get(CONF_LONGITUDE)}"
+                f"{data[CONF_LATITUDE]}-{data[CONF_LONGITUDE]}"
                 not in configured_instances(self.hass)
             ):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
-            errors[CONF_NAME] = "already_configured"
+                return self.async_create_entry(title="", data=data)
+            errors["base"] = "already_configured"
 
         return self.async_show_form(
             step_id="user",
@@ -154,13 +159,10 @@ class MetOptionsFlowHandler(OptionsFlowWithReload):
         """Configure options for Met."""
 
         if user_input is not None:
+            data = _location_data(user_input)
             # Update config entry with data from user input
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=user_input
-            )
-            return self.async_create_entry(
-                title=self.config_entry.title, data=user_input
-            )
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+            return self.async_create_entry(title="", data=data)
 
         return self.async_show_form(
             step_id="init",
