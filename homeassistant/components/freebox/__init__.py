@@ -31,46 +31,62 @@ _STATIC_UNIQUE_ID_MIGRATIONS: tuple[tuple[Platform, str, str], ...] = (
 
 
 @callback
-def _migrate_unique_ids(hass: HomeAssistant, router: FreeboxRouter) -> None:
-    """Migrate name-based unique ids to key-based ones."""
-    entity_registry = er.async_get(hass)
-    mac = router.mac
+def _rewrite_unique_id(
+    entity_registry: er.EntityRegistry,
+    platform: Platform,
+    old_uid: str,
+    new_uid: str,
+) -> None:
+    """Rewrite a single entity unique_id, swallowing collisions."""
+    entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, old_uid)
+    if entity_id is None:
+        return
+    try:
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+    except ValueError:
+        _LOGGER.warning(
+            "Unable to migrate unique_id from %s to %s: target already exists",
+            old_uid,
+            new_uid,
+        )
+        return
+    _LOGGER.debug("Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid)
 
-    for platform, old_suffix, new_key in _STATIC_UNIQUE_ID_MIGRATIONS:
-        old_uid = f"{mac} {old_suffix}"
-        new_uid = f"{mac} {new_key}"
-        if entity_id := entity_registry.async_get_entity_id(platform, DOMAIN, old_uid):
-            try:
-                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
-            except ValueError:
-                _LOGGER.warning(
-                    "Unable to migrate unique_id from %s to %s: target already exists",
-                    old_uid,
-                    new_uid,
-                )
-                continue
-            _LOGGER.debug(
-                "Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid
+
+async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version < 2:
+        api = await get_api(hass, entry.data[CONF_HOST])
+        try:
+            await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
+            freebox_config = await api.system.get_config()
+        except HttpRequestError:
+            _LOGGER.warning(
+                "Unable to migrate Freebox entry to version 2: cannot reach the router"
+            )
+            return False
+        finally:
+            await api.close()
+
+        mac: str = freebox_config["mac"]
+        entity_registry = er.async_get(hass)
+
+        for platform, old_suffix, new_key in _STATIC_UNIQUE_ID_MIGRATIONS:
+            _rewrite_unique_id(
+                entity_registry, platform, f"{mac} {old_suffix}", f"{mac} {new_key}"
             )
 
-    for sensor_id, sensor_name in router.sensors_temperature_names.items():
-        old_uid = f"{mac} Freebox {sensor_name}"
-        new_uid = f"{mac} {sensor_id}"
-        if entity_id := entity_registry.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, old_uid
-        ):
-            try:
-                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
-            except ValueError:
-                _LOGGER.warning(
-                    "Unable to migrate unique_id from %s to %s: target already exists",
-                    old_uid,
-                    new_uid,
-                )
-                continue
-            _LOGGER.debug(
-                "Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid
+        for sensor in freebox_config.get("sensors", []):
+            _rewrite_unique_id(
+                entity_registry,
+                Platform.SENSOR,
+                f"{mac} Freebox {sensor['name']}",
+                f"{mac} {sensor['id']}",
             )
+
+        hass.config_entries.async_update_entry(entry, version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
@@ -88,8 +104,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
     entry.async_on_unload(
         async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
     )
-
-    _migrate_unique_ids(hass, router)
 
     entry.runtime_data = router
 

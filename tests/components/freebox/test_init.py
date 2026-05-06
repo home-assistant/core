@@ -34,6 +34,7 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
         domain=DOMAIN,
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
         unique_id=MOCK_HOST,
+        version=2,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
@@ -51,6 +52,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
         domain=DOMAIN,
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
         unique_id=MOCK_HOST,
+        version=2,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(
@@ -72,6 +74,7 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        version=2,
     )
     entry.add_to_hass(hass)
 
