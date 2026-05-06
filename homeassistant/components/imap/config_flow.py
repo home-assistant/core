@@ -76,14 +76,12 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
         # The default for new entries is to not include text and headers
         vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): EVENT_MESSAGE_DATA_SELECTOR,
+        vol.Optional(
+            CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
+        ): CIPHER_SELECTOR,
+        vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
     }
 )
-CONFIG_SCHEMA_ADVANCED = {
-    vol.Optional(
-        CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
-    ): CIPHER_SELECTOR,
-    vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
-}
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -93,17 +91,14 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_EVENT_MESSAGE_DATA, default=MESSAGE_DATA_OPTIONS
         ): EVENT_MESSAGE_DATA_SELECTOR,
+        vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
+        vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
+            cv.positive_int,
+            vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
+        ),
+        vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
     }
 )
-
-OPTIONS_SCHEMA_ADVANCED = {
-    vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
-    vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
-        cv.positive_int,
-        vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
-    ),
-    vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
-}
 
 
 async def validate_input(
@@ -151,8 +146,6 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         schema = CONFIG_SCHEMA
-        if self.show_advanced_options:
-            schema = schema.extend(CONFIG_SCHEMA_ADVANCED)
 
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=schema)
@@ -250,8 +243,6 @@ class ImapOptionsFlow(OptionsFlow):
                     return self.async_create_entry(data={})
 
         schema = OPTIONS_SCHEMA
-        if self.show_advanced_options:
-            schema = schema.extend(OPTIONS_SCHEMA_ADVANCED)
         schema = self.add_suggested_values_to_schema(schema, entry_data)
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
