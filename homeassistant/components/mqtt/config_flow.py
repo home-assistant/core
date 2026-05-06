@@ -5371,12 +5371,9 @@ async def async_get_broker_settings(  # noqa: C901
             description={"suggested_value": current_pass},
         )
     ] = PASSWORD_SELECTOR
-    # show advanced options checkbox if requested and
-    # advanced options are enabled
-    # or when the defaults of advanced options are overridden
+    # show advanced options checkbox if no defaults
+    # of the advanced options are overridden
     if not advanced_broker_options:
-        if not flow.show_advanced_options:
-            return False
         fields[
             vol.Optional(
                 ADVANCED_OPTIONS,
