@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, cast, override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_TARGET
+from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -25,6 +25,7 @@ from .const import DATA_COMPONENT, DOMAIN, TodoItemStatus
 ITEM_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
