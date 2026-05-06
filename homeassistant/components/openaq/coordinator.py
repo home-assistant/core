@@ -262,15 +262,37 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         self.client = client
         self.subentry = subentry
         self.location_id: int = subentry.data[CONF_LOCATION_ID]
+        self._location: object | None = None
+        self._sensors: Sequence[object] | None = None
 
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
+        location: object
+        sensors: Sequence[object]
         try:
-            location_response, latest_response, sensors_response = await asyncio.gather(
-                self.client.locations.get(self.location_id),
-                self.client.locations.latest(self.location_id),
-                self.client.locations.sensors(self.location_id),
-            )
+            if self._location is None or self._sensors is None:
+                (
+                    location_response,
+                    latest_response,
+                    sensors_response,
+                ) = await asyncio.gather(
+                    self.client.locations.get(self.location_id),
+                    self.client.locations.latest(self.location_id),
+                    self.client.locations.sensors(self.location_id),
+                )
+                if not location_response.results:
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="unable_to_fetch",
+                    )
+                location = location_response.results[0]
+                sensors = sensors_response.results
+                self._location = location
+                self._sensors = sensors
+            else:
+                location = self._location
+                sensors = self._sensors
+                latest_response = await self.client.locations.latest(self.location_id)
         except (
             BadGatewayError,
             BadRequestError,
@@ -291,16 +313,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 translation_key="unable_to_fetch",
             ) from err
 
-        if not location_response.results:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="unable_to_fetch",
-            )
-
-        location = location_response.results[0]
-        measurements = normalize_latest_measurements(
-            latest_response.results, sensors_response.results
-        )
+        measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(
             location_id=self.location_id,
             name=str(get_openaq_value(location, "name")),
