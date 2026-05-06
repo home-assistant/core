@@ -3,6 +3,7 @@
 from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, DPCode
 
@@ -31,3 +32,22 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
                 "available": str(sorted(device.function.keys())),
             },
         )
+
+
+def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
+    """Get device info."""
+    model = device.product_name
+
+    if initial:
+        # Note: the model is overridden via entity.device_info property
+        # when the entity is created. If no entities are generated, it will
+        # stay as unsupported
+        model = f"{device.product_name} (unsupported)"
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        manufacturer="Tuya",
+        name=device.name,
+        model=model,
+        model_id=device.product_id,
+    )
