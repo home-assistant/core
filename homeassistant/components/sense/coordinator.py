@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -96,3 +97,5 @@ class SenseRealtimeCoordinator(SenseCoordinator):
             _LOGGER.error("Timeout retrieving data: %s", ex)
         except SENSE_WEBSOCKET_EXCEPTIONS as ex:
             _LOGGER.error("Failed to update data: %s", ex)
+        except SenseAPIException as ex:
+            _LOGGER.error("API error retrieving realtime data: %s", ex)
