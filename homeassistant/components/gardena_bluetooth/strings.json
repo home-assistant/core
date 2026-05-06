@@ -102,7 +102,13 @@
     },
     "sensor": {
       "activation_reason": {
-        "name": "Activation reason"
+        "name": "Activation reason",
+        "state": {
+          "external": "External",
+          "manual": "Manual",
+          "none": "-",
+          "setup": "Setup"
+        }
       },
       "aqua_contour_error": {
         "name": "Error",
@@ -145,6 +151,30 @@
       },
       "sensor_type": {
         "name": "Sensor type"
+      },
+      "skipped_reason": {
+        "name": "Skipped reason",
+        "state": {
+          "battery_empty": "Battery empty",
+          "charging_cable_plugged": "Charging cable plugged",
+          "contour_data_invalid": "Contour data invalid",
+          "contour_not_active": "Contour not active",
+          "contour_not_enabled_for_position": "Contour not enabled for position",
+          "humidity_sensor": "Humidity sensor",
+          "irrigation_control_changed": "Irrigation control changed",
+          "manual_mode": "Manual mode",
+          "no_water": "No water",
+          "none": "-",
+          "operational_mode_changed": "Operational mode changed",
+          "other_schedule_with_same_start_time": "Other schedule with same start time",
+          "position_changed": "Position changed",
+          "rain_pause": "Rain pause",
+          "rain_sensor": "Rain sensor",
+          "rotation_sensor_error": "Rotation sensor error",
+          "sprinkler_motor_error": "Sprinkler motor error",
+          "valve_motor_error": "Valve motor error",
+          "watering_already_active": "Watering already active"
+        }
       },
       "spray_current_distance": {
         "name": "Current distance"
