@@ -333,7 +333,7 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
     depth number of units will be returned, with the last unit rounded
 
-    The date must be in the past or a ValueException will be raised.
+    The date must be in the past or a ValueError will be raised.
     """
 
     delta = (now() - date).total_seconds()
@@ -352,7 +352,7 @@ def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
 
     depth number of units will be returned, with the last unit rounded
 
-    The date must be in the future or a ValueException will be raised.
+    The date must be in the future or a ValueError will be raised.
     """
 
     delta = (date - now()).total_seconds()
