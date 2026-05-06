@@ -1,7 +1,5 @@
 """Support for Overkiz (virtual) numbers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -143,7 +141,7 @@ def _overkiz_value_fn_away_mode_duration(device: Device) -> float | None:
     if duration.value == OverkizCommandParam.ALWAYS:
         return 99.0
     try:
-        return float(duration.value)
+        return float(str(duration.value))
     except (ValueError, TypeError):
         return None
 

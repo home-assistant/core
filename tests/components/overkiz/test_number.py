@@ -188,12 +188,7 @@ async def test_number_unavailability(
     )
 
 
-# ---------------------------------------------------------------------------
-# Unit tests for away mode duration helpers
-# ---------------------------------------------------------------------------
-
-
-def _make_device(op_mode_value=None, duration_value=None):
+def _make_device(op_mode_value=None, duration_value=None) -> MagicMock:
     """Build a minimal mock Device with the relevant states."""
     device = MagicMock()
 
@@ -216,7 +211,7 @@ def _make_device(op_mode_value=None, duration_value=None):
     return device
 
 
-def test_value_fn_absence_off_returns_zero():
+def test_value_fn_absence_off_returns_zero() -> None:
     """When core:OperatingModeState has absence=off, return 0 regardless of duration."""
     device = _make_device(
         op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF},
@@ -225,7 +220,7 @@ def test_value_fn_absence_off_returns_zero():
     assert _overkiz_value_fn_away_mode_duration(device) == 0.0
 
 
-def test_value_fn_absence_on_duration_always_returns_99():
+def test_value_fn_absence_on_duration_always_returns_99() -> None:
     """When absence is on and duration is 'always', return 99."""
     device = _make_device(
         op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.ON},
@@ -234,28 +229,38 @@ def test_value_fn_absence_on_duration_always_returns_99():
     assert _overkiz_value_fn_away_mode_duration(device) == 99.0
 
 
-def test_value_fn_absence_on_timed_duration():
+def test_value_fn_absence_on_timed_duration() -> None:
     """When absence is on and duration is a number, return the float value."""
-    device = _make_device(
-        op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.ON},
-        duration_value="52",
-    )
+    device = MagicMock()
+
+    def states_get(key):
+        if key == OverkizState.CORE_OPERATING_MODE:
+            state = MagicMock()
+            state.value = {OverkizCommandParam.ABSENCE: OverkizCommandParam.ON}
+            return state
+        if key == OverkizState.IO_AWAY_MODE_DURATION:
+            state = MagicMock()
+            state.value = "52"
+            return state
+        return None
+
+    device.states.get.side_effect = states_get
     assert _overkiz_value_fn_away_mode_duration(device) == 52.0
 
 
-def test_value_fn_no_op_mode_state_duration_always():
+def test_value_fn_no_op_mode_state_duration_always() -> None:
     """When core:OperatingModeState is absent, fall back to duration state."""
     device = _make_device(op_mode_value=None, duration_value=OverkizCommandParam.ALWAYS)
     assert _overkiz_value_fn_away_mode_duration(device) == 99.0
 
 
-def test_value_fn_no_op_mode_state_timed_duration():
+def test_value_fn_no_op_mode_state_timed_duration() -> None:
     """When core:OperatingModeState is absent, return numeric duration."""
     device = _make_device(op_mode_value=None, duration_value="14")
     assert _overkiz_value_fn_away_mode_duration(device) == 14.0
 
 
-def test_value_fn_no_duration_state_returns_none():
+def test_value_fn_no_duration_state_returns_none() -> None:
     """When io:AwayModeDurationState is absent, return None."""
     device = _make_device(
         op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.ON},
@@ -264,7 +269,7 @@ def test_value_fn_no_duration_state_returns_none():
     assert _overkiz_value_fn_away_mode_duration(device) is None
 
 
-def test_value_fn_op_mode_not_dict_falls_through():
+def test_value_fn_op_mode_not_dict_falls_through() -> None:
     """When core:OperatingModeState value is not a dict, fall through to duration."""
     device = _make_device(op_mode_value="unexpected_string", duration_value="7")
     assert _overkiz_value_fn_away_mode_duration(device) == 7.0
