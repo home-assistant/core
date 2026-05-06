@@ -67,7 +67,7 @@ async def test_user_flow_select_port(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "ports"
 
     with patch(COMPORTS_PATH, return_value=[port]):
         result = await hass.config_entries.flow.async_configure(
@@ -117,21 +117,42 @@ async def test_user_flow_multiple_ports(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "ports"
 
 
-async def test_user_flow_already_configured(
+async def test_user_flow_existing_gateway_not_loaded_aborts(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test user flow aborts when integration is already configured."""
+    """Test user flow aborts with device_not_connected when gateway exists but is not loaded."""
     mock_config_entry.add_to_hass(hass)
+    # Entry is not loaded → no runtime_data → coordinator is None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "device_not_connected"
+
+
+async def test_user_flow_existing_gateway_shows_device_menu(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test user flow shows device menu when an RX11 gateway is already configured."""
+    mock_config_entry.add_to_hass(hass)
+    # Inject a connected coordinator so the device menu is reachable
+    mock_coordinator = MagicMock()
+    mock_coordinator.transceiver.is_connected = True
+    runtime_data = MagicMock()
+    runtime_data.coordinator = mock_coordinator
+    mock_config_entry.runtime_data = runtime_data
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
 
 
 async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
@@ -145,7 +166,7 @@ async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "ports"
 
     # On re-scan the selected port is gone
     port3 = _make_port(device="/dev/ttyACM2", serial_number="99999")
@@ -156,7 +177,7 @@ async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "ports"
     assert result["errors"] == {"base": "device_no_longer_available"}
 
 
@@ -212,7 +233,7 @@ async def test_usb_discovery_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_confirm_unique_id_from_vid_pid(hass: HomeAssistant) -> None:

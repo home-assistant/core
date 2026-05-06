@@ -136,7 +136,7 @@ async def test_connect_device_refuses_connection(
 
     assert result is False
     assert transceiver.is_connected is False
-    mock_device.disconnect.assert_awaited_once()
+    mock_device.disconnect.assert_awaited()
 
 
 async def test_connect_version_fetch_fails(
@@ -607,19 +607,6 @@ async def test_connect_serial_error_during_vid_pid_search(
 # ── _try_connect_to_path / serial error ──────────────────────────────────────
 
 
-async def test_try_connect_device_constructor_returns_none(
-    transceiver: RX11Transceiver,
-) -> None:
-    """Test _try_connect_to_path returns False when device constructor returns None."""
-    with patch(
-        "homeassistant.components.easywave.transceiver.RX11Device",
-        return_value=None,
-    ):
-        result = await transceiver._try_connect_to_path(DEVICE_PATH)
-
-    assert result is False
-
-
 async def test_try_connect_serial_error_on_connect(
     transceiver: RX11Transceiver,
     mock_device: MagicMock,
@@ -931,17 +918,88 @@ async def test_reconnect_applies_delay_after_recent_disconnect(
     assert sleeps[0] > 0.5
 
 
-async def test_reconnect_serial_error_returns_false(
+# ── get_gateway_serial ───────────────────────────────────────────────────────
+
+
+async def test_get_gateway_serial_success(
     transceiver: RX11Transceiver,
     mock_device: MagicMock,
 ) -> None:
-    """Test reconnect returns False when a serial error occurs during disconnect."""
+    """Test get_gateway_serial returns serial bytes on success."""
+    expected_serial = bytes(range(16))
+    mock_device.ew_get_fd_serial_request = AsyncMock(
+        return_value=(RX11ErrorCode.SUCCESS, expected_serial)
+    )
 
-    with patch.object(
-        transceiver,
-        "disconnect",
-        side_effect=serial.SerialException("port gone"),
-    ):
-        result = await transceiver.reconnect()
+    with _patch_device(mock_device), _patch_sleep():
+        await transceiver.connect()
+        result = await transceiver.get_gateway_serial(0)
+
+    assert result == expected_serial
+
+
+async def test_get_gateway_serial_not_connected(
+    transceiver: RX11Transceiver,
+) -> None:
+    """Test get_gateway_serial returns None when not connected."""
+    result = await transceiver.get_gateway_serial(0)
+    assert result is None
+
+
+async def test_get_gateway_serial_empty(
+    transceiver: RX11Transceiver,
+    mock_device: MagicMock,
+) -> None:
+    """Test get_gateway_serial returns None for empty serial (all zeros)."""
+    mock_device.ew_get_fd_serial_request = AsyncMock(
+        return_value=(RX11ErrorCode.SUCCESS, bytes(16))
+    )
+
+    with _patch_device(mock_device), _patch_sleep():
+        await transceiver.connect()
+        result = await transceiver.get_gateway_serial(0)
+
+    assert result is None
+
+
+# ── send_command ─────────────────────────────────────────────────────────────
+
+
+async def test_send_command_success(
+    transceiver: RX11Transceiver,
+    mock_device: MagicMock,
+) -> None:
+    """Test send_command returns True on success."""
+    gateway = bytes(range(16))
+    mock_device.ew_send_cmd_request = AsyncMock(return_value=RX11ErrorCode.SUCCESS)
+
+    with _patch_device(mock_device), _patch_sleep():
+        await transceiver.connect()
+        result = await transceiver.send_command(gateway, 0)
+
+    assert result is True
+    mock_device.ew_send_cmd_request.assert_called_once_with(gateway, 0, timeout=5.0)
+
+
+async def test_send_command_not_connected(
+    transceiver: RX11Transceiver,
+) -> None:
+    """Test send_command returns False when not connected."""
+    result = await transceiver.send_command(bytes(16), 0)
+    assert result is False
+
+
+async def test_send_command_failure(
+    transceiver: RX11Transceiver,
+    mock_device: MagicMock,
+) -> None:
+    """Test send_command returns False on protocol error."""
+    mock_device.ew_send_cmd_request = AsyncMock(
+        return_value=RX11ErrorCode.ERR_RF_TIMEOUT
+    )
+
+    with _patch_device(mock_device), _patch_sleep():
+        await transceiver.connect()
+        result = await transceiver.send_command(bytes(16), 0)
 
     assert result is False

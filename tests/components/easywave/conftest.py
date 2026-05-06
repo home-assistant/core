@@ -8,13 +8,27 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.easywave.const import (
+    CONF_BUTTON_COUNT,
     CONF_DEVICE_PATH,
+    CONF_ENTRY_TYPE,
+    CONF_GATEWAY_INDEX,
+    CONF_GATEWAY_SERIAL,
+    CONF_OPERATING_TYPE,
+    CONF_RECEIVER_KIND,
+    CONF_SENSOR_SERIAL,
+    CONF_SENSOR_TYPES,
+    CONF_TRANSMITTER_SERIAL,
     CONF_USB_MANUFACTURER,
     CONF_USB_PID,
     CONF_USB_PRODUCT,
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
+    ENTRY_TYPE_RECEIVER,
+    ENTRY_TYPE_SENSOR,
+    ENTRY_TYPE_TRANSMITTER,
+    RECEIVER_KIND_SWITCH,
+    SENSOR_KIND_TEMPERATURE,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
@@ -29,10 +43,14 @@ MOCK_ENTRY_DATA = {
     CONF_USB_PRODUCT: "RX11 USB Transceiver",
 }
 
+MOCK_GATEWAY_SERIAL = "00" * 14 + "abcd"
+MOCK_TRANSMITTER_SERIAL = "aa" * 16
+MOCK_SENSOR_SERIAL = "aabbccdd" * 2
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock ConfigEntry."""
+    """Return a mock gateway ConfigEntry."""
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -40,6 +58,96 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
+    )
+
+
+MOCK_RECEIVER_SUBENTRY_ID = "receiver_subentry_01"
+MOCK_TRANSMITTER_SUBENTRY_ID = "transmitter_subentry_01"
+
+
+@pytest.fixture
+def mock_config_entry_with_receiver() -> MockConfigEntry:
+    """Return a gateway ConfigEntry with a receiver device in options."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Easywave Gateway",
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options={
+            "devices": [
+                {
+                    "id": MOCK_RECEIVER_SUBENTRY_ID,
+                    "title": "Test Receiver",
+                    "unique_id": f"receiver_{MOCK_GATEWAY_SERIAL}_0",
+                    "data": {
+                        CONF_ENTRY_TYPE: ENTRY_TYPE_RECEIVER,
+                        CONF_GATEWAY_INDEX: 0,
+                        CONF_GATEWAY_SERIAL: MOCK_GATEWAY_SERIAL,
+                        CONF_RECEIVER_KIND: RECEIVER_KIND_SWITCH,
+                    },
+                }
+            ]
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_transmitter() -> MockConfigEntry:
+    """Return a gateway ConfigEntry with a transmitter device in options."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Easywave Gateway",
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options={
+            "devices": [
+                {
+                    "id": MOCK_TRANSMITTER_SUBENTRY_ID,
+                    "title": "Test Transmitter",
+                    "unique_id": f"transmitter_{MOCK_TRANSMITTER_SERIAL}",
+                    "data": {
+                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
+                        CONF_OPERATING_TYPE: "1",
+                        CONF_BUTTON_COUNT: 4,
+                    },
+                }
+            ]
+        },
+    )
+
+
+MOCK_SENSOR_SUBENTRY_ID = "sensor_subentry_01"
+
+
+@pytest.fixture
+def mock_config_entry_with_sensor() -> MockConfigEntry:
+    """Return a gateway ConfigEntry with a sensor device in options."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Easywave Gateway",
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options={
+            "devices": [
+                {
+                    "id": MOCK_SENSOR_SUBENTRY_ID,
+                    "title": "Test Sensor",
+                    "unique_id": f"sensor_{MOCK_SENSOR_SERIAL}",
+                    "data": {
+                        CONF_ENTRY_TYPE: ENTRY_TYPE_SENSOR,
+                        CONF_SENSOR_SERIAL: MOCK_SENSOR_SERIAL,
+                        CONF_SENSOR_TYPES: [SENSOR_KIND_TEMPERATURE],
+                    },
+                }
+            ]
+        },
     )
 
 

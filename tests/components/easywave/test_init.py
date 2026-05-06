@@ -2,17 +2,28 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.easywave import async_setup_entry, async_unload_entry
+from homeassistant.components.easywave import (
+    async_remove_config_entry_device,
+    async_setup_entry,
+    async_unload_entry,
+)
 from homeassistant.components.easywave.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+
+from .conftest import (
+    MOCK_ENTRY_DATA,
+    MOCK_RECEIVER_SUBENTRY_ID,
+    MOCK_TRANSMITTER_SUBENTRY_ID,
+)
 
 from tests.common import MockConfigEntry
 
 
-def _patch_transceiver_and_coordinator() -> tuple:
+def _patch_transceiver_and_coordinator() -> tuple[Any, Any, Any, Any]:
     """Return context managers patching RX11Transceiver and EasywaveCoordinator."""
     mock_transceiver = MagicMock()
     mock_coordinator = AsyncMock()
@@ -143,3 +154,60 @@ async def test_unload_entry(
 
     assert result is True
     assert mock_coord.async_shutdown.called
+
+
+async def test_remove_config_entry_device_rejects_gateway(
+    hass: HomeAssistant,
+) -> None:
+    """Removing the RX11 gateway device must be denied."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_gw",
+        options={"devices": []},
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    gateway_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
+
+    result = await async_remove_config_entry_device(hass, entry, gateway_device)
+    assert result is False
+    # Device list unchanged
+    assert entry.options["devices"] == []
+
+
+async def test_remove_config_entry_device_removes_child(
+    hass: HomeAssistant,
+) -> None:
+    """Removing a child device via the three-dot menu should succeed and update options."""
+    devices = [
+        {"id": MOCK_RECEIVER_SUBENTRY_ID, "title": "Receiver", "data": {}},
+        {"id": MOCK_TRANSMITTER_SUBENTRY_ID, "title": "Transmitter", "data": {}},
+    ]
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_gw",
+        options={"devices": devices},
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_RECEIVER_SUBENTRY_ID)},
+        name="Receiver",
+    )
+
+    result = await async_remove_config_entry_device(hass, entry, child_device)
+    assert result is True
+    remaining = entry.options["devices"]
+    assert len(remaining) == 1
+    assert remaining[0]["id"] == MOCK_TRANSMITTER_SUBENTRY_ID

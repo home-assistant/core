@@ -1,18 +1,117 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
+      "code_send_failed": "Could not send the learning command to the receiver. Please try again.",
+      "device_added": "The device was successfully added to the gateway.",
+      "device_not_connected": "The RX11 transceiver is not connected. Please ensure it is plugged in.",
+      "learning_cancelled": "Learning mode was cancelled.",
+      "no_available_receivers": "All 99 receiver slots on the RX11 are already in use.",
+      "no_device_learned": "No transmitter was detected.",
+      "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system."
     },
     "error": {
+      "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
       "device_no_longer_available": "The selected device is no longer available. Please try again."
     },
+    "progress": {
+      "waiting_for_sensor": "Waiting for a sensor learn telegram...",
+      "waiting_for_transmitter": "Waiting for a transmitter telegram..."
+    },
     "step": {
+      "add_receiver": {
+        "description": "Which operating mode would you like to use?",
+        "menu_option_descriptions": {
+          "mode_heating": "The relay output of the receiver is switched specifically ON or OFF. The last state is resent every 4 hours.",
+          "mode_impulse": "A short switching impulse of 1 s is triggered.",
+          "mode_on_off": "The relay output of the receiver is switched specifically ON or OFF.",
+          "mode_universal": "Switching impulses can be triggered for all 4 usable transmit codes.",
+          "mode_up_down": "The relay output of the receiver is switched specifically UP or DOWN.",
+          "mode_up_stop_down": "Specific commands for moving or stopping tubular motors are sent."
+        },
+        "menu_options": {
+          "mode_heating": "ON/OFF (Heating)",
+          "mode_impulse": "PULSE (1-Button)",
+          "mode_on_off": "ON/OFF (2-Button)",
+          "mode_universal": "UNIVERSAL (4-Button)",
+          "mode_up_down": "UP/DOWN (2-Button)",
+          "mode_up_stop_down": "UP/STOP/DOWN (3-Button)"
+        },
+        "title": "Operating Mode"
+      },
+      "add_sensor": {
+        "description": "Easywave neo sensors broadcast measurement data wirelessly. Press the learn button on the sensor — the RX11 will capture its serial number and detect which measurement types (temperature, humidity) it provides.",
+        "title": "Add Easywave Neo Sensor"
+      },
+      "add_transmitter": {
+        "description": "Which operating mode would you like to use?",
+        "menu_option_descriptions": {
+          "type_1button": "Each button on a transmitter can trigger a function. Each button of a channel is assigned a separate object or state.",
+          "type_2button": "Two adjacent buttons of a channel are assigned a function (ON/OFF or UP/DOWN). A separate object is created for each function.",
+          "type_3button": "All 3 or 4 buttons of a channel are automatically assigned to a single object in '3-button operation' mode. This object has 3 states: UP/STOP/DOWN."
+        },
+        "menu_options": {
+          "type_1button": "1-Button operation",
+          "type_2button": "2-Button operation",
+          "type_3button": "3-Button operation"
+        },
+        "title": "Operating Mode"
+      },
+      "button_count_select": {
+        "description": "Please specify the number of available buttons.",
+        "menu_option_descriptions": {
+          "buttons_1": "The transmitter/channel has only 1 button with any button code.",
+          "buttons_2": "The transmitter/channel has 2 buttons with button codes A and B.",
+          "buttons_3": "The transmitter/channel has 3 buttons with button codes A, B and C.",
+          "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
+        },
+        "menu_options": {
+          "buttons_1": "1 button",
+          "buttons_2": "2 buttons",
+          "buttons_3": "3 buttons",
+          "buttons_4": "4 buttons"
+        },
+        "title": "Button Count"
+      },
+      "channel_count_select": {
+        "description": "Please specify the number of available buttons.",
+        "menu_option_descriptions": {
+          "channels_1": "The transmitter/channel has 2 buttons with button codes A and B.",
+          "channels_2": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
+        },
+        "menu_options": {
+          "channels_1": "2 buttons",
+          "channels_2": "4 buttons"
+        },
+        "title": "Button Count"
+      },
       "confirm": {
         "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
         "title": "Set up RX11 USB Transceiver"
       },
-      "user": {
+      "init": {
+        "description": "Which device would you like to add?",
+        "menu_options": {
+          "add_receiver": "Easywave receiver",
+          "add_sensor": "Easywave neo sensor",
+          "add_transmitter": "Easywave transmitter"
+        },
+        "title": "Device Selection"
+      },
+      "learn": {
+        "description": "Press a button on the Easywave transmitter now. The RX11 is listening for signals...",
+        "title": "Learning transmitter"
+      },
+      "learn_timeout": {
+        "description": "No transmitter signal was received within the timeout period.",
+        "menu_options": {
+          "abort_learn": "Cancel",
+          "learn": "Try again"
+        },
+        "title": "No Signal Received"
+      },
+      "ports": {
         "data": {
           "device_path": "[%key:common::config_flow::data::usb_path%]"
         },
@@ -21,16 +120,254 @@
         },
         "description": "Select the serial port of the RX11 USB Transceiver.",
         "title": "Select Easywave device"
+      },
+      "receiver_confirm_learning": {
+        "description": "Did the LED on the receiver light up steadily for ~4 seconds, or otherwise acknowledge the learning process (refer to the receiver manual)? If not, you can repeat sending the learning telegram.",
+        "menu_options": {
+          "receiver_learn_start": "No, repeat sending the learning command",
+          "receiver_name": "Yes, the receiver acknowledged learning"
+        },
+        "title": "Confirm learning"
+      },
+      "receiver_name": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "The name for the receiver device."
+        },
+        "description": "The receiver was successfully programmed. Make sure the receiver has left programming mode (the LED must no longer blink). Enter a name for the new device.",
+        "title": "Name receiver"
+      },
+      "receiver_prepare": {
+        "description": "Put your Easywave receiver into programming mode now by pressing the program button on the receiver. Refer to the receiver's manual for the correct programming mode for this operating mode.\n\nClick OK once the receiver is in programming mode and the LED is blinking. The integration will then send a learning telegram so the receiver can pair with this gateway.",
+        "title": "Prepare receiver"
+      },
+      "sensor_confirm": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "The name for this Easywave neo sensor."
+        },
+        "description": "An Easywave neo sensor was detected (measurement types: {sensor_types}). Give it a name.",
+        "title": "Easywave Neo Sensor Detected"
+      },
+      "sensor_learn": {
+        "description": "Waiting for an Easywave neo sensor learn telegram...",
+        "title": "Detecting Easywave neo sensor"
+      },
+      "sensor_learn_timeout": {
+        "description": "No Easywave neo sensor learn telegram was received within the timeout period.",
+        "menu_options": {
+          "abort_sensor_learn": "Cancel",
+          "sensor_learn": "Try again"
+        },
+        "title": "No Sensor Signal Received"
+      },
+      "transmitter_confirm": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "The name for this transmitter device."
+        },
+        "description": "An Easywave transmitter was detected. Give it a name.",
+        "title": "Transmitter Detected"
+      },
+      "transmitter_grouping": {
+        "description": "Should the buttons be created as individual entities or grouped as states in one entity?",
+        "menu_option_descriptions": {
+          "grouping_group": "One object is created for all buttons of the selected channel. Each of the up to 4 available button codes (A, B, C, D) represents a state of this object.",
+          "grouping_single": "A separate object is created for each button of the selected channel. Each object represents one of the up to 4 available button codes (A, B, C, D)."
+        },
+        "menu_options": {
+          "grouping_group": "Switch as group",
+          "grouping_single": "Switch individually"
+        },
+        "title": "Control Mode"
+      },
+      "transmitter_switch_mode": {
+        "description": "Should the switch state be reset after activation or remain permanent?",
+        "menu_option_descriptions": {
+          "switch_mode_impulse": "The switch state of an object is reset 1 second after releasing the respective transmitter button.",
+          "switch_mode_permanent": "The switch state of individual objects toggles with each press of the respective transmitter button."
+        },
+        "menu_options": {
+          "switch_mode_impulse": "Impulse",
+          "switch_mode_permanent": "Permanent"
+        },
+        "title": "Behavior"
+      },
+      "transmitter_usage": {
+        "description": "Which states should the transmitter have in Home Assistant?",
+        "menu_option_descriptions": {
+          "usage_cover": "The object states are UP/DOWN.",
+          "usage_switch": "The object states are ON/OFF."
+        },
+        "menu_options": {
+          "usage_cover": "UP/DOWN",
+          "usage_switch": "ON/OFF"
+        },
+        "title": "States"
       }
     }
   },
+  "device_automation": {
+    "trigger_type": {
+      "battery_low": "Battery low",
+      "battery_normal": "Battery OK",
+      "button_a_pressed": "Button A pressed",
+      "button_b_pressed": "Button B pressed",
+      "button_c_pressed": "Button C pressed",
+      "button_d_pressed": "Button D pressed",
+      "button_released": "Button released",
+      "closed": "Changed to Closed",
+      "opened": "Changed to Open",
+      "state_a": "Changed to state 'Button A'",
+      "state_b": "Changed to state 'Button B'",
+      "state_c": "Changed to state 'Button C'",
+      "state_d": "Changed to state 'Button D'",
+      "state_released": "Changed to state 'Not pressed'",
+      "stopped": "Changed to Stop"
+    }
+  },
   "entity": {
+    "binary_sensor": {
+      "transmitter_switch": {
+        "name": "State"
+      },
+      "transmitter_switch_ab": {
+        "name": "State A/B"
+      },
+      "transmitter_switch_cd": {
+        "name": "State C/D"
+      }
+    },
+    "button": {
+      "impulse": {
+        "name": "Toggle"
+      },
+      "universal_a": {
+        "name": "Button A"
+      },
+      "universal_b": {
+        "name": "Button B"
+      },
+      "universal_c": {
+        "name": "Button C"
+      },
+      "universal_d": {
+        "name": "Button D"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "Cover",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "motor": {
+        "name": "Motor",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      }
+    },
+    "event": {
+      "transmitter": {
+        "name": "Button"
+      },
+      "transmitter_button_a": {
+        "name": "Button A"
+      },
+      "transmitter_button_b": {
+        "name": "Button B"
+      },
+      "transmitter_button_c": {
+        "name": "Button C"
+      },
+      "transmitter_button_d": {
+        "name": "Button D"
+      }
+    },
     "sensor": {
+      "battery_warning": {
+        "name": "Battery",
+        "state": {
+          "low": "Low",
+          "ok": "OK"
+        }
+      },
+      "ewneo_humidity": {
+        "name": "Humidity"
+      },
+      "ewneo_temperature": {
+        "name": "Temperature"
+      },
       "gateway_status": {
         "name": "Connection Status",
         "state": {
           "connected": "Connected",
           "disconnected": "Not Connected"
+        }
+      },
+      "transmitter_channel_state": {
+        "name": "State",
+        "state": {
+          "closed": "Closed",
+          "opened": "Open"
+        }
+      },
+      "transmitter_channel_state_ab": {
+        "name": "State A/B",
+        "state": {
+          "closed": "Closed",
+          "opened": "Open"
+        }
+      },
+      "transmitter_channel_state_cd": {
+        "name": "State C/D",
+        "state": {
+          "closed": "Closed",
+          "opened": "Open"
+        }
+      },
+      "transmitter_last_button": {
+        "name": "State",
+        "state": {
+          "a": "Button A",
+          "b": "Button B",
+          "c": "Button C",
+          "d": "Button D",
+          "released": "Not pressed"
+        }
+      },
+      "transmitter_motor_state": {
+        "name": "State",
+        "state": {
+          "closed": "Closed",
+          "opened": "Open",
+          "stopped": "Stop"
+        }
+      }
+    },
+    "switch": {
+      "heating": {
+        "name": "Heating",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "receiver": {
+        "name": "Switch",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       }
     }

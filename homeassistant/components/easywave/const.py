@@ -119,7 +119,70 @@ def get_frequency_for_pid(pid: int | None) -> str | None:
     return None
 
 
-# ── Gateway Events ──────────────────────────────────────────────────────────
-EVENT_GATEWAY_CONNECTED: Final = f"{DOMAIN}_gateway_connected"
-EVENT_GATEWAY_DISCONNECTED: Final = f"{DOMAIN}_gateway_disconnected"
-EVENT_GATEWAY_STATUS_CHANGED: Final = f"{DOMAIN}_gateway_status_changed"
+# Event fired for transmitter button presses (consumed by device_trigger).
+EVENT_EASYWAVE: Final = f"{DOMAIN}_event"
+
+# ── Config Entry / Subentry Types ────────────────────────────────────────────
+CONF_ENTRY_TYPE: Final = "entry_type"
+
+ENTRY_TYPE_RECEIVER: Final = "receiver"
+ENTRY_TYPE_TRANSMITTER: Final = "transmitter"
+ENTRY_TYPE_SENSOR: Final = "sensor"
+
+
+# ── Receiver Configuration Keys ──────────────────────────────────────────────
+CONF_GATEWAY_INDEX: Final = "gateway_index"
+CONF_GATEWAY_SERIAL: Final = "gateway_serial"
+CONF_RECEIVER_KIND: Final = "receiver_kind"
+
+# Receiver kinds (operating modes)
+RECEIVER_KIND_IMPULSE: Final = "impulse"
+RECEIVER_KIND_SWITCH: Final = "switch_2button"
+RECEIVER_KIND_COVER: Final = "cover_2button"
+RECEIVER_KIND_MOTOR: Final = "motor_3button"
+RECEIVER_KIND_HEATING: Final = "heating_cooling"
+RECEIVER_KIND_UNIVERSAL: Final = "universal_4button"
+
+# ── Transmitter Configuration Keys ───────────────────────────────────────────
+CONF_TRANSMITTER_SERIAL: Final = "transmitter_serial"
+CONF_OPERATING_TYPE: Final = "operating_type"
+CONF_BUTTON_COUNT: Final = "button_count"
+CONF_DETECTED_BUTTON: Final = "detected_button"
+CONF_USAGE_TYPE: Final = "usage_type"
+CONF_GROUPING_MODE: Final = "grouping_mode"
+CONF_SWITCH_MODE: Final = "switch_mode"
+
+# Usage types for 2-button transmitters
+TRANSMITTER_USAGE_SWITCH: Final = "switch"
+TRANSMITTER_USAGE_COVER: Final = "cover"
+
+# Grouping modes for 1-button transmitters (operating_type "1")
+TRANSMITTER_GROUPING_SINGLE: Final = "single"  # one entity per button
+TRANSMITTER_GROUPING_GROUP: Final = "group"  # one shared "last button" entity
+
+# Switch modes for 1-button transmitters (operating_type "1")
+TRANSMITTER_SWITCH_IMPULSE: Final = (
+    "impulse"  # state resets to "released" on button release
+)
+TRANSMITTER_SWITCH_PERMANENT: Final = "permanent"  # state persists until next press
+
+# ── Button Constants ─────────────────────────────────────────────────────────
+BUTTON_A: Final = 0
+BUTTON_B: Final = 1
+BUTTON_C: Final = 2
+BUTTON_D: Final = 3
+
+# ── Learning Mode ────────────────────────────────────────────────────────────
+LEARNING_TIMEOUT: Final = 30  # seconds
+
+# ── EWneo Sensor Configuration Keys ─────────────────────────────────────────
+CONF_SENSOR_SERIAL: Final = "sensor_serial"
+CONF_SENSOR_TYPES: Final = "sensor_types"
+
+# EWneo sensor types (subset detected during learning)
+SENSOR_KIND_TEMPERATURE: Final = "temperature"
+SENSOR_KIND_HUMIDITY: Final = "humidity"
+
+# EWneo sensor telegram byte 2, bits 7-2 (sensor_type_code = byte2 >> 2 & 0x3F)
+NEO_SENSOR_TYPE_TEMPERATURE: Final = 4  # sensor_type_code value for temperature
+NEO_SENSOR_TYPE_HUMIDITY: Final = 5  # sensor_type_code value for humidity

@@ -67,8 +67,12 @@ class RX11Transceiver:
         # Lock for async operations
         self._lock = asyncio.Lock()
 
+        # Lock to serialise cancel_all_io_requests() vs ping_request() so that
+        # a timed-out EWB_RCV flush cannot cancel an in-flight health-check ping.
+        self._io_cancel_lock = asyncio.Lock()
+
         # Health check task
-        self._health_check_task: asyncio.Task | None = None
+        self._health_check_task: asyncio.Task[None] | None = None
         self._health_check_stopping = False
 
         # Disposed flag
@@ -109,6 +113,7 @@ class RX11Transceiver:
                 if self.device_path:
                     if await self._try_connect_to_path(self.device_path):
                         await self._refresh_usb_identity()
+                        self._reconnect_attempts = 0
                         return True
 
                 # Configured path failed or not set — search by VID/PID
@@ -159,17 +164,13 @@ class RX11Transceiver:
             # Create RX11Device instance directly
             self._device = RX11Device(port=device_path)
 
-            if not self._device:
-                return False
-
             # Connect to the device - this opens the serial connection and starts the handler thread
             connect_ok = await self._device.connect()
             if not connect_ok:
                 _LOGGER.warning("Failed to connect RX11Device at %s", device_path)
-                if self._device:
-                    with contextlib.suppress(*_SERIAL_ERRORS, OSError):
-                        await self._device.disconnect()
-                    self._device = None
+                with contextlib.suppress(*_SERIAL_ERRORS, OSError):
+                    await self._device.disconnect()
+                self._device = None
                 return False
 
             self.is_connected = True
@@ -186,10 +187,9 @@ class RX11Transceiver:
                     "Failed to query RX11 versions at %s; disconnecting",
                     device_path,
                 )
-                if self._device:
-                    with contextlib.suppress(*_SERIAL_ERRORS, OSError):
-                        await self._device.disconnect()
-                    self._device = None
+                with contextlib.suppress(*_SERIAL_ERRORS, OSError):
+                    await self._device.disconnect()
+                self._device = None
                 self.is_connected = False
                 self.device_path = None
                 return False
@@ -290,9 +290,12 @@ class RX11Transceiver:
         if self._health_check_task:
             task = self._health_check_task
             self._health_check_task = None
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
+            # Avoid cancelling the task from within itself (e.g. when a
+            # health-check failure triggers disconnect → _stop_health_check).
+            if task is not asyncio.current_task():
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
 
     async def _health_check_loop(self) -> None:
         """Monitor device connection health using periodic ping requests."""
@@ -309,10 +312,15 @@ class RX11Transceiver:
                         consecutive_failures = 0
                         continue
 
-                    # Health check: Ping device to verify connection is active
+                    # Health check: Ping device to verify connection is active.
+                    # Hold _io_cancel_lock so that a concurrent receive_telegram()
+                    # timeout cannot call cancel_all_io_requests() while the ping
+                    # request is queued — that would cancel the ping and cause a
+                    # spurious ERR_CANCELED counted as a false failure.
                     connected = False
-                    with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
-                        connected = await device.ping_request()
+                    async with self._io_cancel_lock:
+                        with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
+                            connected = await device.ping_request()
 
                     if connected:
                         consecutive_failures = 0
@@ -506,29 +514,123 @@ class RX11Transceiver:
         if self._disposed:
             return False
 
+        # Add delay if recently disconnected to allow device to reset
+        if self._last_disconnect_time:
+            time_since_disconnect = time.time() - self._last_disconnect_time
+            if time_since_disconnect < 1.0:  # Less than 1 second
+                delay = 1.0 - time_since_disconnect
+                _LOGGER.debug("Waiting %.2fs for RX11 device to reset", delay)
+                await asyncio.sleep(delay)
+
+        await self.disconnect()
+        self._reconnect_attempts += 1
+
+        if await self.connect():
+            self._reconnect_attempts = 0
+            return True
+        if self._reconnect_attempts == 1:
+            _LOGGER.debug(
+                "RX11 reconnect failed, retrying every %ds",
+                int(self.HEALTH_CHECK_INTERVAL),
+            )
+        return False
+
+    # ── Easywave Device Operations ──────────────────────────────────────────
+
+    async def get_gateway_serial(self, index: int) -> bytes | None:
+        """Get gateway serial number at the given index.
+
+        Each RX11 has pre-assigned gateway serials used for controlling receivers.
+
+        Returns:
+            16-byte serial number, or None on failure.
+        """
+        if not self._device or not self.is_connected:
+            return None
+
         try:
-            # Add delay if recently disconnected to allow device to reset
-            if self._last_disconnect_time:
-                time_since_disconnect = time.time() - self._last_disconnect_time
-                if time_since_disconnect < 1.0:  # Less than 1 second
-                    delay = 1.0 - time_since_disconnect
-                    _LOGGER.debug("Waiting %.2fs for RX11 device to reset", delay)
-                    await asyncio.sleep(delay)
+            result, serial_bytes = await self._device.ew_get_fd_serial_request(
+                index, timeout=5.0
+            )
+            if result == RX11ErrorCode.SUCCESS and serial_bytes != bytes(16):
+                return serial_bytes
+        except _SERIAL_OR_OS_ERRORS as err:
+            _LOGGER.debug("Error getting gateway serial at index %d: %s", index, err)
+        return None
 
-            await self.disconnect()
-            self._reconnect_attempts += 1
+    async def send_command(self, gateway: bytes, button: int) -> bool:
+        """Send an Easywave command to a receiver.
 
-            if await self.connect():
-                self._reconnect_attempts = 0
-                return True
-            if self._reconnect_attempts == 1:
-                _LOGGER.debug(
-                    "RX11 reconnect failed, retrying every %ds",
-                    int(self.HEALTH_CHECK_INTERVAL),
-                )
+        Args:
+            gateway: 16-byte gateway serial number.
+            button: Button index (0=A, 1=B, 2=C, 3=D).
 
-        except _SERIAL_ERRORS as err:
-            _LOGGER.debug("Error during reconnect: %s", err)
+        Returns:
+            True if command was sent successfully.
+        """
+        if not self._device or not self.is_connected:
             return False
-        else:
+
+        try:
+            result = await self._device.ew_send_cmd_request(
+                gateway, button, timeout=5.0
+            )
+        except _SERIAL_OR_OS_ERRORS as err:
+            _LOGGER.debug("Error sending command: %s", err)
             return False
+        return result == RX11ErrorCode.SUCCESS
+
+    async def receive_telegram(self, timeout: float = 30.0) -> dict | None:
+        """Wait for any EW/EWneo telegram (transmitter or sensor).
+
+        Uses ewb_rcv_request (EWB_RCV) which catches all telegram types:
+        - info_type 0x01 (TM_IT_EASW_PUSH): EW transmitter button
+        - info_type 0x02 (TM_IT_SENSOR_DATA): EWneo sensor data (8 bytes)
+
+        Returns:
+            Dict with keys: info_type, serial, button, info_data; or None.
+        """
+        if not self._device or not self.is_connected:
+            return None
+
+        try:
+            (
+                result,
+                info_type,
+                serial_bytes,
+                info_data,
+            ) = await self._device.ewb_rcv_request(timeout=timeout)
+            if result == RX11ErrorCode.SUCCESS:
+                button = info_data[0] & 0x03 if info_data else 0
+                return {
+                    "info_type": info_type,
+                    "serial": serial_bytes,
+                    "button": button,
+                    "info_data": info_data,
+                }
+        except _SERIAL_OR_OS_ERRORS as err:
+            _LOGGER.debug("Error receiving telegram: %s", err)
+        except TimeoutError:
+            _LOGGER.debug("Receive telegram timed out")
+
+        # ewb_rcv_request uses req.wait() directly without removing the request
+        # on timeout.  Flush any orphaned requests so retries start clean.
+        # Acquire _io_cancel_lock so we do not flush while a health-check ping
+        # is in flight (that would cancel the ping and cause a false failure).
+        async with self._io_cancel_lock:
+            with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
+                if hasattr(self._device, "_startup_tolerance_until"):
+                    self._device._startup_tolerance_until = time.time() + 3.0  # noqa: SLF001
+                await self._device.cancel_all_io_requests()
+        return None
+
+    async def cancel_pending_receives(self) -> None:
+        """Cancel all pending EWB_RCV requests on the hardware.
+
+        Called before starting exclusive learning so any in-flight
+        EWB_RCV from the coordinator listener is flushed first.
+        """
+        if not self._device or not self.is_connected:
+            return
+        with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
+            await self._device.cancel_all_io_requests()

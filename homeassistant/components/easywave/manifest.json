@@ -6,11 +6,10 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/easywave",
   "integration_type": "device",
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "loggers": ["serial"],
   "quality_scale": "bronze",
   "requirements": ["pyserial==3.5", "easywave-home-control==0.1.1"],
-  "single_config_entry": true,
   "usb": [
     {
       "description": "*rx11*",

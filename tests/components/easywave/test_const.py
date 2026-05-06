@@ -5,9 +5,6 @@ from __future__ import annotations
 from homeassistant.components.easywave.const import (
     ALLOWED_COUNTRIES_868MHZ,
     DOMAIN,
-    EVENT_GATEWAY_CONNECTED,
-    EVENT_GATEWAY_DISCONNECTED,
-    EVENT_GATEWAY_STATUS_CHANGED,
     FREQUENCY_868MHZ,
     FREQUENCY_ALLOWED_COUNTRIES,
     SUPPORTED_USB_IDS,
@@ -101,18 +98,3 @@ def test_get_frequency_for_pid_unknown() -> None:
     """Test get_frequency_for_pid with unknown PID."""
     assert get_frequency_for_pid(0x9999) is None
     assert get_frequency_for_pid(None) is None
-
-
-def test_event_gateway_connected() -> None:
-    """Test EVENT_GATEWAY_CONNECTED constant."""
-    assert EVENT_GATEWAY_CONNECTED == "easywave_gateway_connected"
-
-
-def test_event_gateway_disconnected() -> None:
-    """Test EVENT_GATEWAY_DISCONNECTED constant."""
-    assert EVENT_GATEWAY_DISCONNECTED == "easywave_gateway_disconnected"
-
-
-def test_event_gateway_status_changed() -> None:
-    """Test EVENT_GATEWAY_STATUS_CHANGED constant."""
-    assert EVENT_GATEWAY_STATUS_CHANGED == "easywave_gateway_status_changed"

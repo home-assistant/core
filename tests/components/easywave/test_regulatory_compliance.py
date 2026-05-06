@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.easywave import async_setup_entry
@@ -18,7 +19,7 @@ from homeassistant.helpers import issue_registry as ir
 from tests.common import MockConfigEntry
 
 
-def _patch_for_successful_setup() -> tuple:
+def _patch_for_successful_setup() -> tuple[Any, Any, Any]:
     """Return context managers for a successful setup."""
     mock_coordinator = AsyncMock()
     mock_coordinator.async_setup = AsyncMock(return_value=True)
