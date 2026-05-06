@@ -99,3 +99,4 @@ class SenseRealtimeCoordinator(SenseCoordinator):
             _LOGGER.error("Failed to update data: %s", ex)
         except SenseAPIException as ex:
             _LOGGER.error("API error retrieving realtime data: %s", ex)
+            raise UpdateFailed(ex) from ex
