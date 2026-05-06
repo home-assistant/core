@@ -1,5 +1,13 @@
 {
   "entity": {
+    "light": {
+      "light_led": {
+        "default": "mdi:led-on"
+      },
+      "logo_led": {
+        "default": "mdi:led-on"
+      }
+    },
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
