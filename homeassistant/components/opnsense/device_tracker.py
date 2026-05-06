@@ -64,19 +64,13 @@ class OPNsenseDeviceTrackerEntity(
     ) -> None:
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
-        self._mac_address = mac_address
-        self._entry_id = coordinator.entry_id
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this device tracker entity."""
-        return f"{self._entry_id}_{self._mac_address}"
+        self._attr_mac_address = mac_address
 
     @property
     def device_data(self) -> DeviceDetails | None:
         """Return device data for current device."""
-        if self.coordinator.data and self._mac_address in self.coordinator.data:
-            return self.coordinator.data[self._mac_address]
+        if self.coordinator.data and self.mac_address in self.coordinator.data:
+            return self.coordinator.data[self.mac_address]
         return None
 
     @property
@@ -84,7 +78,7 @@ class OPNsenseDeviceTrackerEntity(
         """Return true if the device is connected to the network."""
         return (
             self.coordinator.data is not None
-            and self._mac_address in self.coordinator.data
+            and self.mac_address in self.coordinator.data
         )
 
     @property
@@ -93,12 +87,7 @@ class OPNsenseDeviceTrackerEntity(
         device_data = self.device_data
         if device_data and device_data.get("hostname"):
             return str(device_data["hostname"])
-        return f"OPNsense Device {self._mac_address}"
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return self._mac_address
+        return f"OPNsense Device {self.mac_address}"
 
     @property
     def ip_address(self) -> str | None:
