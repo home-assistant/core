@@ -3,9 +3,11 @@
 from pytrydan import Trydan
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 
+from .const import DOMAIN, INSTALLATION_VOLTAGE_KEY
 from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -30,6 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
     if coordinator.data.ID and entry.unique_id != coordinator.data.ID:
         hass.config_entries.async_update_entry(entry, unique_id=coordinator.data.ID)
 
+    _async_remove_installation_voltage_sensor_entity(hass, entry)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -38,3 +42,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+@callback
+def _async_remove_installation_voltage_sensor_entity(
+    hass: HomeAssistant, entry: V2CConfigEntry
+) -> None:
+    """Remove old installation voltage sensor entity."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"{entry.entry_id}_{INSTALLATION_VOLTAGE_KEY}"
+    if old_entity_id := entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, unique_id
+    ):
+        entity_registry.async_remove(old_entity_id)

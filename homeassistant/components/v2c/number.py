@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import INSTALLATION_VOLTAGE_KEY
 from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -70,7 +71,7 @@ TRYDAN_NUMBER_SETTINGS = (
         update_fn=lambda evse, value: evse.max_intensity(value),
     ),
     V2CSettingsNumberEntityDescription(
-        key="voltage_installation",
+        key=INSTALLATION_VOLTAGE_KEY,
         translation_key="voltage_installation",
         device_class=NumberDeviceClass.VOLTAGE,
         entity_category=EntityCategory.CONFIG,
