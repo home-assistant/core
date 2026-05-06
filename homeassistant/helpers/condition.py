@@ -560,13 +560,6 @@ class EntityConditionBase(Condition):
             cb()
         self._on_unload.clear()
 
-    def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[entity_state.domain]
-        if domain_spec.value_source is None:
-            return entity_state.state
-        return entity_state.attributes.get(domain_spec.value_source)
-
     def _should_include(self, _state: State) -> bool:
         """Check if an entity should participate in any/all checks.
 
@@ -651,6 +644,13 @@ class EntityStateConditionBase(EntityConditionBase):
         return any(
             spec.value_source is not None for spec in self._domain_specs.values()
         )
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
