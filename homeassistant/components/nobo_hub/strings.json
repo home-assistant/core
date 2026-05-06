@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect - check serial number",
+      "cannot_connect_ip": "Failed to connect - check IP address",
       "invalid_ip": "Invalid IP address",
       "invalid_serial": "Invalid serial number",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -58,14 +59,8 @@
     }
   },
   "exceptions": {
-    "cannot_connect_manual": {
-      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}. If the hub has moved to a new IP address, remove and re-add the integration."
-    },
-    "cannot_connect_rediscovered": {
-      "message": "Unable to connect to Nobø Ecohub at rediscovered IP {ip}; will retry."
-    },
-    "hub_not_found": {
-      "message": "Nobø Ecohub with serial {serial} not found on the network. The hub may be offline or on a different subnet; will retry."
+    "cannot_connect": {
+      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, remove and re-add the integration."
     }
   },
   "options": {
@@ -75,9 +70,17 @@
           "override_type": "Override type"
         },
         "data_description": {
-          "override_type": "Select \"Now\" to end a global override on the next week profile change, or \"Constant\" to keep it until manually cleared."
+          "override_type": "Select \"Now\" to end the override on the next week profile change, or \"Constant\" to keep it until manually cleared."
         },
-        "description": "Select \"Now\" to end a global override on the next week profile change, or \"Constant\" to keep it until manually cleared."
+        "description": "Configure how overrides are ended."
+      }
+    }
+  },
+  "selector": {
+    "override_type": {
+      "options": {
+        "constant": "Constant",
+        "now": "Now"
       }
     }
   }

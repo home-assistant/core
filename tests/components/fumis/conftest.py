@@ -1,11 +1,11 @@
 """Fixtures for the Fumis integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
+from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
 from fumis import FumisInfo
+import orjson
 import pytest
 
 from homeassistant.components.fumis.const import DOMAIN
@@ -13,6 +13,12 @@ from homeassistant.const import CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture
+def device_fixture() -> str:
+    """Return the device fixture to use."""
+    return "info"
 
 
 @pytest.fixture
@@ -37,7 +43,7 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_fumis() -> Generator[MagicMock]:
+def mock_fumis(device_fixture: str) -> Generator[MagicMock]:
     """Return a mocked Fumis client."""
     with (
         patch(
@@ -50,9 +56,9 @@ def mock_fumis() -> Generator[MagicMock]:
         ),
     ):
         fumis = fumis_mock.return_value
-        fumis.update_info.return_value = FumisInfo.from_json(
-            load_fixture("info.json", DOMAIN)
-        )
+        fixture = load_fixture(f"{device_fixture}.json", DOMAIN)
+        fumis.update_info.return_value = FumisInfo.from_json(fixture)
+        fumis.raw_status.return_value = orjson.loads(fixture)
         yield fumis
 
 
@@ -61,9 +67,17 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_fumis: MagicMock,
+    request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Set up the Fumis integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+
+    context = nullcontext()
+    if platform := getattr(request, "param", None):
+        context = patch("homeassistant.components.fumis.PLATFORMS", [platform])
+
+    with context:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     return mock_config_entry

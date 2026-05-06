@@ -1,7 +1,5 @@
 """Support for lights through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from typing import Any, cast

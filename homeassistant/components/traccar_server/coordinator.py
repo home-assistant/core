@@ -1,7 +1,5 @@
 """Data update coordinator for Traccar Server."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 from logging import DEBUG as LOG_LEVEL_DEBUG

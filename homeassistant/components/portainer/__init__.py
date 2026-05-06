@@ -1,7 +1,5 @@
 """The Portainer integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pyportainer import Portainer

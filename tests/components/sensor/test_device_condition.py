@@ -101,6 +101,7 @@ async def test_get_conditions(
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     }
     expected_conditions = [
         {
@@ -202,6 +203,7 @@ async def test_get_conditions_no_state(
         SensorDeviceClass.DATE,  # No condition
         SensorDeviceClass.ENUM,  # No condition
         SensorDeviceClass.TIMESTAMP,  # No condition
+        SensorDeviceClass.UPTIME,  # No condition
         SensorDeviceClass.AQI,  # No unit of measurement
         SensorDeviceClass.PH,  # No unit of measurement
         SensorDeviceClass.MONETARY,  # No unit of measurement

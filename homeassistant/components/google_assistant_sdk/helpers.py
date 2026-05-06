@@ -1,7 +1,5 @@
 """Helper classes for Google Assistant SDK integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging

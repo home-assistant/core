@@ -329,7 +329,7 @@ async def test_default_entity_and_device_name(
 
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "mock-broker"},
+        data={mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_PROTOCOL: "5"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )

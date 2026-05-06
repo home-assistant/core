@@ -1,7 +1,5 @@
 """Component to interface with various media players."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Callable
