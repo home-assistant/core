@@ -1,7 +1,5 @@
 """The Aquarite integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from dataclasses import dataclass, field

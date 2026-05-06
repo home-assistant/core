@@ -287,7 +287,9 @@ async def test_token_refresh_loop_refreshes_on_expiry(hass: HomeAssistant) -> No
         raise asyncio.CancelledError
 
     with (
-        patch("homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep),
+        patch(
+            "homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep
+        ),
         pytest.raises(asyncio.CancelledError),
     ):
         await _token_refresh_loop(hass, data)
@@ -308,7 +310,9 @@ async def test_token_refresh_loop_logs_and_retries(
         raise asyncio.CancelledError
 
     with (
-        patch("homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep),
+        patch(
+            "homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep
+        ),
         pytest.raises(asyncio.CancelledError),
     ):
         await _token_refresh_loop(hass, data)
@@ -334,7 +338,9 @@ async def test_periodic_health_check_resubscribes_on_error(
             raise asyncio.CancelledError
 
     with (
-        patch("homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep),
+        patch(
+            "homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep
+        ),
         pytest.raises(asyncio.CancelledError),
     ):
         await _periodic_health_check(hass, data)

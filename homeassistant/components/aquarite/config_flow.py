@@ -1,7 +1,5 @@
 """Config Flow for the Aquarite integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
