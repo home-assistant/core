@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,9 +32,7 @@ def _get_entity_id(
 ) -> str:
     """Look up entity_id by key and config entry."""
     unique_id = f"{entry.entry_id}-{key}"
-    entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, "hr_energy_qube", unique_id
-    )
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     return entity_id
 
