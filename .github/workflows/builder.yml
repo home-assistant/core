@@ -323,7 +323,7 @@ jobs:
           exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
   publish_container:
-    name: Publish meta container for ${{ matrix.registry }}
+    name: Publish to ${{ matrix.registry }}
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
