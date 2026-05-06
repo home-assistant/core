@@ -51,3 +51,4 @@ def setup_mock_opnsense_client(mock_opnsense_client: AsyncMock) -> None:
     mock_instance.validate.return_value = None
     mock_instance.get_arp_table.return_value = ARP
     mock_instance.get_interfaces.return_value = INTERFACES
+    mock_instance.get_device_unique_id.return_value = "mocked_unique_id"
