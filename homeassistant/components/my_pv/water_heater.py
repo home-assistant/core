@@ -26,7 +26,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the my-PV sensor."""
+    """Set up the my-PV water heater."""
     coordinator: MyPVCoordinator = config_entry.runtime_data
     entities = []
 
@@ -41,7 +41,6 @@ async def async_setup_entry(
     ):
         entity_description = MyPVWaterHeaterEntityDescription(
             key="boiler",
-            translation_key="boiler",
             temperature_unit=target_temperature_config["unit"],
             current_temperature_key="temp1",
             target_temperature_key="ww1target",
