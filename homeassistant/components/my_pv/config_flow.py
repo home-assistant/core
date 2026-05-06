@@ -116,16 +116,21 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 password_valid = True
         except MyPVAuthenticationError:
             if password_needed:
-                password_valid = False
                 errors[CONF_PASSWORD] = "invalid_password"
             password_needed = True
+            password_valid = False
         await device.disconnect()
 
-        if password_needed and password_valid:
-            await self.async_set_unique_id(device.serial_number)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(device.serial_number)
+        # Update host ip address when device is already configured and abort.
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-            title = f"my-PV {device.model}"
+        if user_input is None:
+            _LOGGER.debug("my-PV on %s is not yet configured", self._host)
+
+        title = f"my-PV {device.model}"
+
+        if password_needed and password_valid:
             data = {
                 CONF_TYPE: CONF_TYPE_LOCAL,
                 CONF_HOST: self._host,
@@ -133,17 +138,17 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             return self.async_create_entry(title=title, data=data)
 
-        if user_input is None:
-            await self.async_set_unique_id(device.serial_number)
-            # Update host ip address when device is already configured and abort.
-            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
-
-            _LOGGER.debug("my-PV on %s is not yet configured", self._host)
+        if user_input is not None and not password_needed:
+            data = {
+                CONF_TYPE: CONF_TYPE_LOCAL,
+                CONF_HOST: self._host,
+            }
+            return self.async_create_entry(title=title, data=data)
 
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": f"my-PV {device.model}",
+                    "name": title,
                 }
             }
         )
@@ -235,7 +240,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._reauth_entry:
             name = self._reauth_entry.title
             step_id = "reauth_local"
-        elif self._device_model:
+        else:
             name = f"my-PV {self._device_model}"
 
         self.context.update(
@@ -271,16 +276,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await device.disconnect()
 
-        # If reauthenticating only the existing configuration needs to be updated with the
-        # new password.
-        if self._reauth_entry is not None:
-            return self.async_update_reload_and_abort(
-                self._reauth_entry,
-                data_updates={
-                    CONF_PASSWORD: password,
-                },
-            )
-
         if errors:
             # Combine user input with schema.
             data_schema = self.add_suggested_values_to_schema(
@@ -290,6 +285,16 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=step_id,
                 data_schema=data_schema,
                 errors=errors,
+            )
+
+        # If reauthenticating only the existing configuration needs to be updated with the
+        # new password.
+        if self._reauth_entry:
+            return self.async_update_reload_and_abort(
+                self._reauth_entry,
+                data_updates={
+                    CONF_PASSWORD: password,
+                },
             )
 
         await self.async_set_unique_id(device.serial_number)
@@ -364,7 +369,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If reauthenticating only the existing configuration needs to be updated with the
         # new API token.
-        if self._reauth_entry is not None:
+        if self._reauth_entry:
             return self.async_update_reload_and_abort(
                 self._reauth_entry,
                 data_updates={
