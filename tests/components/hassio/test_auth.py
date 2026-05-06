@@ -168,44 +168,51 @@ async def test_password_fails_no_auth(hassio_noauth_client: TestClient) -> None:
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-@pytest.mark.parametrize(
-    ("peername", "unix_socket"),
-    [
-        # Unix socket transports report an empty string for peername. Before
-        # the fix this raised IndexError on `peername[0]`.
-        ("", True),
-        # Defensive: a TCP transport with no peername at all should be
-        # rejected, not crash.
-        (None, False),
-    ],
-)
-async def test_check_access_unix_socket_or_missing_peername(
-    hass: HomeAssistant,
-    hassio_stubs: None,
-    peername: str | None,
-    unix_socket: bool,
-) -> None:
-    """Test _check_access handles Unix socket requests and missing peername."""
+async def _supervisor_user_request(
+    hass: HomeAssistant, peername: str | tuple[str, int] | None
+) -> tuple[HassIOBaseAuth, MagicMock]:
+    """Build a HassIOBaseAuth view and a mock request for the Supervisor user."""
     hassio_user_id = hass.data[DATA_CONFIG_STORE].data.hassio_user
     assert hassio_user_id is not None
     user = await hass.auth.async_get_user(hassio_user_id)
     assert user is not None
 
     auth_view = HassIOBaseAuth(hass, user)
-
     request = MagicMock()
     request.transport.get_extra_info.return_value = peername
     request.__getitem__.side_effect = lambda key: user if key is KEY_HASS_USER else None
+    return auth_view, request
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_check_access_unix_socket_request(hass: HomeAssistant) -> None:
+    """Test _check_access bypasses the IP check for Unix socket requests.
+
+    Unix socket transports report an empty string for peername; before the
+    fix this raised IndexError on `peername[0]`.
+    """
+    auth_view, request = await _supervisor_user_request(hass, peername="")
 
     with patch(
         "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
-        return_value=unix_socket,
+        return_value=True,
     ):
-        if unix_socket:
-            auth_view._check_access(request)
-        else:
-            with pytest.raises(HTTPUnauthorized):
-                auth_view._check_access(request)
+        auth_view._check_access(request)
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_check_access_rejects_missing_peername(hass: HomeAssistant) -> None:
+    """Test _check_access rejects TCP requests with no peername instead of crashing."""
+    auth_view, request = await _supervisor_user_request(hass, peername=None)
+
+    with (
+        patch(
+            "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
+            return_value=False,
+        ),
+        pytest.raises(HTTPUnauthorized),
+    ):
+        auth_view._check_access(request)
 
 
 async def test_password_no_user(hassio_client_supervisor: TestClient) -> None:
