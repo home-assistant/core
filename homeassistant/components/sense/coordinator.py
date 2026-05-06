@@ -94,8 +94,8 @@ class SenseRealtimeCoordinator(SenseCoordinator):
         try:
             await self._gateway.update_realtime()
         except SENSE_TIMEOUT_EXCEPTIONS as ex:
-            _LOGGER.error("Timeout retrieving data: %s", ex)
+            raise UpdateFailed(f"Timeout retrieving realtime data: {ex}") from ex
         except SENSE_WEBSOCKET_EXCEPTIONS as ex:
-            _LOGGER.error("Failed to update data: %s", ex)
+            raise UpdateFailed(f"Failed to update realtime data: {ex}") from ex
         except SenseAPIException as ex:
             raise UpdateFailed(f"API error retrieving realtime data: {ex}") from ex

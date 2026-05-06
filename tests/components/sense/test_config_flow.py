@@ -246,7 +246,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
 
 async def test_realtime_exception(hass: HomeAssistant) -> None:
-    """Test we retry setup when realtime update fails during coordinator refresh."""
+    """Test we retry setup when realtime update fails during initial async_setup_entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
@@ -254,16 +254,19 @@ async def test_realtime_exception(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "sense_energy.ASyncSenseable.authenticate",
-            new=AsyncMock(return_value=True),
-        ),
-        patch(
-            "sense_energy.ASyncSenseable.update_realtime",
-            side_effect=SenseAPIException,
-        ),
-    ):
+    with patch("homeassistant.components.sense.ASyncSenseable") as mock_sense:
+        mock_sense.return_value.authenticate = AsyncMock(return_value=True)
+        mock_sense.return_value.get_monitor_data = AsyncMock(return_value={})
+        mock_sense.return_value.fetch_devices = AsyncMock(return_value=[])
+        mock_sense.return_value.update_realtime = AsyncMock(
+            side_effect=SenseAPIException
+        )
+        mock_sense.return_value.sense_access_token = MOCK_CONFIG["access_token"]
+        mock_sense.return_value.sense_user_id = MOCK_CONFIG["user_id"]
+        mock_sense.return_value.sense_monitor_id = MOCK_CONFIG["monitor_id"]
+        mock_sense.return_value.device_id = MOCK_CONFIG["device_id"]
+        mock_sense.return_value.refresh_token = MOCK_CONFIG["refresh_token"]
+
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
