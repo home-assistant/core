@@ -1,5 +1,7 @@
 """Provides conditions for media players."""
 
+from datetime import datetime
+
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
@@ -17,6 +19,14 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
 
     _domain_specs = {DOMAIN: DomainSpec()}
     _target_muted: bool
+
+    def _state_valid_since(self, state: State) -> datetime:
+        """Anchor `for:` durations to `last_updated` for the muted attribute.
+
+        Needed because the domain spec does not reflect that the condition
+        reads from the muted and volume attributes.
+        """
+        return state.last_updated
 
     def _has_volume_attributes(self, state: State) -> bool:
         """Check if the state has volume muted or volume level attributes."""
