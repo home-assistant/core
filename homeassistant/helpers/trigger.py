@@ -626,6 +626,30 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
         )
 
 
+class StatelessEntityTriggerBase(EntityTriggerBase):
+    """Trigger for entities that don't carry meaningful state.
+
+    Used for stateless entities (buttons, scenes, doorbells, events)
+    whose `state.state` is just a timestamp of the last activation.
+    """
+
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is available and the state has changed.
+
+        STATE_UNKNOWN is allowed as the origin state so the first
+        activation fires.
+        """
+        if from_state.state == STATE_UNAVAILABLE:
+            return False
+        return from_state.state != to_state.state
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check that the entity has been activated at least once."""
+        return state.state not in self._excluded_states
+
+
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): vol.All(
