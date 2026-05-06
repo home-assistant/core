@@ -897,19 +897,17 @@ async def test_wifi_rssi_sensor(
 ) -> None:
     """Test WiFiNetworkDiagnostics RSSI sensor."""
     # RSSI (cluster 54, attr 4) = -56
-    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_signal_strength")
+    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_rssi")
     assert state
     assert state.state == "-56"
 
     set_node_attribute(matter_node, 0, 54, 4, -72)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_signal_strength")
+    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_rssi")
     assert state
     assert state.state == "-72"
 
-    entry = entity_registry.async_get(
-        "sensor.m5stamp_lighting_app_wi_fi_signal_strength"
-    )
+    entry = entity_registry.async_get("sensor.m5stamp_lighting_app_wi_fi_rssi")
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
