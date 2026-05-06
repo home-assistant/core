@@ -1,6 +1,5 @@
 """The tests for the hassio component."""
 
-from collections.abc import Callable
 from contextlib import AbstractContextManager, ExitStack as DefaultContext
 from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, patch
@@ -9,11 +8,9 @@ from aiohttp.test_utils import TestClient
 from aiohttp.web_exceptions import HTTPUnauthorized
 import pytest
 
-from homeassistant.auth.models import User
 from homeassistant.auth.providers.homeassistant import InvalidAuth
 from homeassistant.components.hassio.auth import HassIOBaseAuth
 from homeassistant.components.hassio.const import DATA_CONFIG_STORE
-from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.core import HomeAssistant
 
 
@@ -172,24 +169,14 @@ async def test_password_fails_no_auth(hassio_noauth_client: TestClient) -> None:
 
 
 @pytest.mark.parametrize(
-    ("peername", "unix_socket", "request_getitem", "expectation"),
+    ("peername", "unix_socket", "expectation"),
     [
         # Unix socket transports report an empty string for peername. Before
         # the fix this raised IndexError on `peername[0]`.
-        (
-            "",
-            True,
-            lambda user, key: user if key == KEY_HASS_USER else None,
-            DefaultContext(),
-        ),
+        ("", True, DefaultContext()),
         # Defensive: a TCP transport with no peername at all should be
         # rejected, not crash.
-        (
-            None,
-            False,
-            lambda user, key: user if key == KEY_HASS_USER else None,
-            pytest.raises(HTTPUnauthorized),
-        ),
+        (None, False, pytest.raises(HTTPUnauthorized)),
     ],
 )
 @pytest.mark.usefixtures("hassio_stubs")
@@ -197,7 +184,6 @@ async def test_check_access_unix_socket_or_missing_peername(
     hass: HomeAssistant,
     peername: str | None,
     unix_socket: bool,
-    request_getitem: Callable[[User, str], User | None],
     expectation: AbstractContextManager,
 ) -> None:
     """Test _check_access handles Unix socket requests and missing peername."""
@@ -209,7 +195,7 @@ async def test_check_access_unix_socket_or_missing_peername(
     auth_view = HassIOBaseAuth(hass, user)
     request = MagicMock()
     request.transport.get_extra_info.return_value = peername
-    request.__getitem__.side_effect = lambda key: request_getitem(user, key)
+    request.__getitem__.return_value = user
 
     with (
         patch(
