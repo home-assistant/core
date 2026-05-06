@@ -18,6 +18,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import (
@@ -201,28 +202,36 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.validate()
             interfaces_resp = await client.get_interfaces()
         except OPNsenseInvalidURL:
-            return self.async_abort(reason="invalid_url")
+            return self._abort_import(reason="invalid_url", url=import_data[CONF_URL])
         except OPNsenseInvalidAuth:
-            return self.async_abort(reason="invalid_auth")
+            return self._abort_import(reason="invalid_auth", url=import_data[CONF_URL])
         except OPNsensePrivilegeMissing:
-            return self.async_abort(reason="privilege_missing")
+            return self._abort_import(
+                reason="privilege_missing", url=import_data[CONF_URL]
+            )
         except OPNsenseSSLError:
-            return self.async_abort(reason="ssl_error")
+            return self._abort_import(reason="ssl_error", url=import_data[CONF_URL])
         except OPNsenseConnectionError, OPNsenseTimeoutError:
-            return self.async_abort(reason="cannot_connect")
+            return self._abort_import(
+                reason="cannot_connect", url=import_data[CONF_URL]
+            )
         except OPNsenseUnknownFirmware:
-            return self.async_abort(reason="invalid_version")
+            return self._abort_import(
+                reason="invalid_version", url=import_data[CONF_URL]
+            )
         except OPNsenseBelowMinFirmware:
-            return self.async_abort(reason="invalid_version")
+            return self._abort_import(
+                reason="invalid_version", url=import_data[CONF_URL]
+            )
         except Exception:  # Allowed in config flows
             _LOGGER.exception("Unexpected exception during import")
-            return self.async_abort(reason="unknown")
+            return self._abort_import(reason="unknown", url=import_data[CONF_URL])
 
         # Validate CONF_TRACKER_INTERFACES if present and not empty
-        data = dict(import_data)
-        if CONF_TRACKER_INTERFACES in data:
-            if not data[CONF_TRACKER_INTERFACES]:
-                data.pop(CONF_TRACKER_INTERFACES)
+        verified_data = dict(import_data)
+        if CONF_TRACKER_INTERFACES in verified_data:
+            if not verified_data[CONF_TRACKER_INTERFACES]:
+                verified_data.pop(CONF_TRACKER_INTERFACES)
             else:
                 known_interfaces = [
                     name
@@ -233,7 +242,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Abort import if any specified tracker interface is not found
                 missing = [
                     intf_description
-                    for intf_description in data[CONF_TRACKER_INTERFACES]
+                    for intf_description in verified_data[CONF_TRACKER_INTERFACES]
                     if intf_description not in known_interfaces
                 ]
                 if missing:
@@ -241,12 +250,12 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     async_create_issue(
                         self.hass,
                         DOMAIN,
-                        f"import_failed_missing_interfaces_{data[CONF_URL]}",
+                        f"import_failed_missing_interfaces_{verified_data[CONF_URL]}",
                         is_fixable=False,
                         severity=IssueSeverity.CRITICAL,
                         translation_key="import_failed_missing_interfaces",
                         translation_placeholders={
-                            "url": data[CONF_URL],
+                            "url": verified_data[CONF_URL],
                             "missing": ", ".join(missing),
                             "found": ", ".join(known_interfaces),
                             "integration_title": "OPNsense",
@@ -255,7 +264,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(
                         reason="import_failed_missing_interfaces",
                         description_placeholders={
-                            "url": data[CONF_URL],
+                            "url": verified_data[CONF_URL],
                             "missing": ", ".join(missing),
                             "found": ", ".join(known_interfaces),
                             "integration_title": "OPNsense",
@@ -270,6 +279,36 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         async_delete_issue(
             self.hass,
             DOMAIN,
-            f"import_failed_missing_interfaces_{data[CONF_URL]}",
+            f"import_failed_missing_interfaces_{verified_data[CONF_URL]}",
         )
-        return self.async_create_entry(title=import_data[CONF_URL], data=data)
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2026.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "OPNsense",
+            },
+        )
+        return self.async_create_entry(
+            title=verified_data[CONF_URL], data=verified_data
+        )
+
+    def _abort_import(self, reason: str, url: str) -> ConfigFlowResult:
+        """Create an issue for import errors and abort the import."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"import_failed_{reason}_{url}",
+            is_fixable=False,
+            severity=IssueSeverity.CRITICAL,
+            translation_key=f"import_failed_{reason}",
+            translation_placeholders={"url": url, "integration_title": "OPNsense"},
+        )
+        return self.async_abort(reason=reason, description_placeholders={"url": url})
