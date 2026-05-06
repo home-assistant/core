@@ -2,6 +2,7 @@
 
 from ipaddress import ip_address
 import json
+from typing import Any
 from unittest.mock import Mock, patch
 
 import aiohttp
@@ -17,6 +18,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+TEST_API_TOKEN = "eyadiuyfasiuasf"
+TEST_WEBHOOK_ID = "Webhook_ID"
+
 zeroconf_data = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.12.34"),
     ip_addresses=[ip_address("192.168.12.34")],
@@ -26,6 +30,33 @@ zeroconf_data = ZeroconfServiceInfo(
     properties={},
     type="mock_type",
 )
+
+
+async def _async_init_zeroconf_flow(hass: HomeAssistant) -> dict[str, Any]:
+    """Initialize a zeroconf flow and return the form result."""
+    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value=lock_result,
+    ):
+        return await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
+
+
+async def _async_init_user_flow(hass: HomeAssistant) -> dict[str, Any]:
+    """Initialize a user flow and return the form result."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+    return result
 
 
 async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
@@ -98,16 +129,10 @@ async def test_create_entry_user(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we can create a lock via manual entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    result = await _async_init_user_flow(hass)
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
-    webhook_id = "Webhook_ID"
+    webhook_id = TEST_WEBHOOK_ID
     all_locks_response = json.loads(
         await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
     )
@@ -133,7 +158,7 @@ async def test_create_entry_user(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -148,7 +173,7 @@ async def test_create_entry_user(
         "bridge_ip": found_lock["bridge_ip"],
         "name": found_lock["name"],
         CONF_WEBHOOK_ID: webhook_id,
-        CONF_API_TOKEN: "eyadiuyfasiuasf",
+        CONF_API_TOKEN: TEST_API_TOKEN,
     }
     mock_lock.getWebhooks.assert_awaited()
 
@@ -157,16 +182,10 @@ async def test_create_entry_user_with_pick_lock(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we can create a lock via manual entry when multiple locks exist."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    result = await _async_init_user_flow(hass)
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
-    webhook_id = "Webhook_ID"
+    webhook_id = TEST_WEBHOOK_ID
     all_locks_response = json.loads(
         await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
     )
@@ -195,7 +214,7 @@ async def test_create_entry_user_with_pick_lock(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -218,7 +237,7 @@ async def test_create_entry_user_with_pick_lock(
         "bridge_ip": second_lock["bridge_ip"],
         "name": second_lock["name"],
         CONF_WEBHOOK_ID: webhook_id,
-        CONF_API_TOKEN: "eyadiuyfasiuasf",
+        CONF_API_TOKEN: TEST_API_TOKEN,
     }
     mock_lock.getWebhooks.assert_awaited()
 
@@ -227,13 +246,7 @@ async def test_cannot_connect(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    result = await _async_init_user_flow(hass)
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
@@ -241,7 +254,7 @@ async def test_cannot_connect(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -253,13 +266,7 @@ async def test_recover_after_cannot_connect(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we can recover from a connection error and create an entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    result = await _async_init_user_flow(hass)
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
@@ -267,7 +274,7 @@ async def test_recover_after_cannot_connect(
     ):
         error_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -275,7 +282,7 @@ async def test_recover_after_cannot_connect(
     assert error_result["errors"] == {"base": "cannot_connect"}
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
-    webhook_id = "Webhook_ID"
+    webhook_id = TEST_WEBHOOK_ID
     all_locks_response = json.loads(
         await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
     )
@@ -301,7 +308,7 @@ async def test_recover_after_cannot_connect(
     ):
         success_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -316,7 +323,7 @@ async def test_recover_after_cannot_connect(
         "bridge_ip": found_lock["bridge_ip"],
         "name": found_lock["name"],
         CONF_WEBHOOK_ID: webhook_id,
-        CONF_API_TOKEN: "eyadiuyfasiuasf",
+        CONF_API_TOKEN: TEST_API_TOKEN,
     }
     mock_lock.getWebhooks.assert_awaited()
 
@@ -325,13 +332,7 @@ async def test_no_locks(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we handle a situation where the account has no locks."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    result = await _async_init_user_flow(hass)
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
@@ -339,7 +340,7 @@ async def test_no_locks(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -351,17 +352,7 @@ async def test_invalid_auth_when_lock_not_found(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we handle a situation where the lock is absent from the cloud API response."""
-    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
-
-    with patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
-        return_value=lock_result,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf_data,
-        )
+    result = await _async_init_zeroconf_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -372,7 +363,7 @@ async def test_invalid_auth_when_lock_not_found(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -384,17 +375,7 @@ async def test_cannot_connect_zeroconf_cloud_api_error(
     hass: HomeAssistant,
 ) -> None:
     """Test we handle a cloud API error during zeroconf validate_input."""
-    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
-
-    with patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
-        return_value=lock_result,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf_data,
-        )
+    result = await _async_init_zeroconf_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -405,7 +386,7 @@ async def test_cannot_connect_zeroconf_cloud_api_error(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
@@ -417,13 +398,7 @@ async def test_cannot_connect_when_lock_not_reachable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we handle a situation where the lock is not reachable."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    result = await _async_init_user_flow(hass)
 
     all_locks_response = json.loads(
         await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
@@ -440,7 +415,7 @@ async def test_cannot_connect_when_lock_not_reachable(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_TOKEN: "eyadiuyfasiuasf"},
+            {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
 
