@@ -302,6 +302,7 @@ class DateTimeExtension(BaseTemplateExtension):
         The age can be in seconds, minutes, hours, days, months and year.
 
         precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
 
         If the value not a datetime object the input will be returned unmodified.
         """
@@ -313,6 +314,7 @@ class DateTimeExtension(BaseTemplateExtension):
         The time until can be in seconds, minutes, hours, days, months and years.
 
         precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
 
         If the value not a datetime object the input will be returned unmodified.
         """
