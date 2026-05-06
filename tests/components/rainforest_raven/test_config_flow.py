@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 
 from aioraven.device import RAVEnConnectionError
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant.components.rainforest_raven.const import DOMAIN
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -55,17 +55,21 @@ def mock_device_timeout(mock_device: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_comports() -> Generator[list[ListPortInfo]]:
+def mock_comports() -> Generator[list[USBDevice]]:
     """Mock serial port list."""
-    port = ListPortInfo(DISCOVERY_INFO.device)
-    port.serial_number = DISCOVERY_INFO.serial_number
-    port.manufacturer = DISCOVERY_INFO.manufacturer
-    port.device = DISCOVERY_INFO.device
-    port.description = DISCOVERY_INFO.description
-    port.pid = int(DISCOVERY_INFO.pid, 0)
-    port.vid = int(DISCOVERY_INFO.vid, 0)
+    port = USBDevice(
+        device=DISCOVERY_INFO.device,
+        vid=f"{int(DISCOVERY_INFO.vid, 16):04X}",
+        pid=f"{int(DISCOVERY_INFO.pid, 16):04X}",
+        serial_number=DISCOVERY_INFO.serial_number,
+        manufacturer=DISCOVERY_INFO.manufacturer,
+        description=DISCOVERY_INFO.description,
+    )
     comports = [port]
-    with patch("serial.tools.list_ports.comports", return_value=comports):
+    with patch(
+        "homeassistant.components.rainforest_raven.config_flow.usb.async_scan_serial_ports",
+        return_value=comports,
+    ):
         yield comports
 
 

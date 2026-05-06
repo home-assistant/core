@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable, Coroutine
+import contextlib
 import logging
 import math
+from typing import Any
 
-from russound import russound
+from aiorussound import RussoundTcpConnectionHandler
+from aiorussound.exceptions import CommandError
+from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -14,8 +20,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -25,6 +37,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
 
+RNET_EXCEPTIONS = (
+    CommandError,
+    ConnectionRefusedError,
+    TimeoutError,
+    asyncio.IncompleteReadError,
+    OSError,
+)
 
 ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
@@ -40,33 +59,45 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     }
 )
 
+# Max volume level on RNET devices
+_MAX_VOLUME = 50
 
-def setup_platform(
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Russound RNET platform."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
-    if host is None or port is None:
-        _LOGGER.error("Invalid config. Expected %s and %s", CONF_HOST, CONF_PORT)
-        return
+    client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
+    try:
+        await client.connect()
+    except RNET_EXCEPTIONS as err:
+        raise PlatformNotReady(
+            f"Could not connect to Russound RNET at {host}:{port}"
+        ) from err
 
-    russ = russound.Russound(host, port)
-    russ.connect()
+    sources = [source[CONF_NAME] for source in config[CONF_SOURCES]]
+    lock = asyncio.Lock()
 
-    sources = [source["name"] for source in config[CONF_SOURCES]]
+    async def _async_disconnect(*_: Any) -> None:
+        """Disconnect the RNET client on HA shutdown."""
+        with contextlib.suppress(*RNET_EXCEPTIONS):
+            await client.disconnect()
 
-    if russ.is_connected():
-        for zone_id, extra in config[CONF_ZONES].items():
-            add_entities(
-                [RussoundRNETDevice(hass, russ, sources, zone_id, extra)], True
-            )
-    else:
-        _LOGGER.error("Not connected to %s:%s", host, port)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
+
+    async_add_entities(
+        [
+            RussoundRNETDevice(client, lock, sources, zone_id, extra)
+            for zone_id, extra in config[CONF_ZONES].items()
+        ],
+        True,
+    )
 
 
 class RussoundRNETDevice(MediaPlayerEntity):
@@ -80,75 +111,123 @@ class RussoundRNETDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, hass, russ, sources, zone_id, extra):
+    def __init__(
+        self,
+        client: RussoundRNETClient,
+        lock: asyncio.Lock,
+        sources: list[str],
+        zone_id: int,
+        extra: dict[str, str],
+    ) -> None:
         """Initialise the Russound RNET device."""
-        self._attr_name = extra["name"]
-        self._russ = russ
+        self._attr_name = extra[CONF_NAME]
+        self._client = client
+        self._lock = lock
         self._attr_source_list = sources
-        # Each controller has a maximum of 6 zones, every increment of 6 zones
-        # maps to an additional controller for easier backward compatibility
-        self._controller_id = str(math.ceil(zone_id / 6))
-        # Each zone resets to 1-6 per controller
+        self._controller_id = math.ceil(zone_id / 6)
         self._zone_id = (zone_id - 1) % 6 + 1
 
-    def update(self) -> None:
+    async def _async_ensure_connected(self) -> None:
+        """Ensure the client is connected, reconnecting if needed."""
+        if not self._client.is_connected:
+            _LOGGER.debug("Reconnecting RNET client")
+            await self._client.connect()
+
+    async def _async_run_with_retry(
+        self, command: Callable[[], Coroutine[Any, Any, Any]]
+    ) -> None:
+        """Run a command with reconnect retry on failure."""
+        async with self._lock:
+            try:
+                await self._async_ensure_connected()
+                await command()
+            except RNET_EXCEPTIONS:
+                with contextlib.suppress(*RNET_EXCEPTIONS):
+                    await self._client.disconnect()
+                try:
+                    await self._async_ensure_connected()
+                    await command()
+                except RNET_EXCEPTIONS:
+                    _LOGGER.error(
+                        "Command failed for zone %s on controller %s after retry",
+                        self._zone_id,
+                        self._controller_id,
+                    )
+
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        # Updated this function to make a single call to get_zone_info, so that
-        # with a single call we can get On/Off, Volume and Source, reducing the
-        # amount of traffic and speeding up the update process.
-        try:
-            ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
-        except BrokenPipeError:
-            _LOGGER.error("Broken Pipe Error, trying to reconnect to Russound RNET")
-            self._russ.connect()
-            ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
+        async with self._lock:
+            try:
+                await self._async_ensure_connected()
+                info = await self._client.get_all_zone_info(
+                    self._controller_id, self._zone_id
+                )
+            except RNET_EXCEPTIONS:
+                with contextlib.suppress(*RNET_EXCEPTIONS):
+                    await self._client.disconnect()
+                try:
+                    await self._async_ensure_connected()
+                    info = await self._client.get_all_zone_info(
+                        self._controller_id, self._zone_id
+                    )
+                except RNET_EXCEPTIONS:
+                    _LOGGER.error(
+                        "Could not update zone %s on controller %s",
+                        self._zone_id,
+                        self._controller_id,
+                    )
+                    self._attr_available = False
+                    return
 
-        _LOGGER.debug("ret= %s", ret)
-        if ret is not None:
-            _LOGGER.debug(
-                "Updating status for RNET zone %s on controller %s",
-                self._zone_id,
-                self._controller_id,
+        self._attr_available = True
+        self._attr_state = MediaPlayerState.ON if info.power else MediaPlayerState.OFF
+        self._attr_volume_level = info.volume / _MAX_VOLUME
+        # info.source is 1-based; source_list is 0-based
+        index = info.source - 1
+        if self.source_list and 0 <= index < len(self.source_list):
+            self._attr_source = self.source_list[index]
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level. Volume has a range (0..1)."""
+        device_volume = max(0, min(_MAX_VOLUME, int(volume * _MAX_VOLUME)))
+        await self._async_run_with_retry(
+            lambda: self._client.set_volume(
+                self._controller_id, self._zone_id, device_volume
             )
-            if ret[0] == 0:
-                self._attr_state = MediaPlayerState.OFF
-            else:
-                self._attr_state = MediaPlayerState.ON
-            self._attr_volume_level = ret[2] * 2 / 100.0
-            # Returns 0 based index for source.
-            index = ret[1]
-            # Possibility exists that user has defined list of all sources.
-            # If a source is set externally that is beyond the defined list then
-            # an exception will be thrown.
-            # In this case return and unknown source (None)
-            if self.source_list and 0 <= index < len(self.source_list):
-                self._attr_source = self.source_list[index]
-        else:
-            _LOGGER.error("Could not update status for zone %s", self._zone_id)
+        )
 
-    def set_volume_level(self, volume: float) -> None:
-        """Set volume level.  Volume has a range (0..1).
-
-        Translate this to a range of (0..100) as expected
-        by _russ.set_volume()
-        """
-        self._russ.set_volume(self._controller_id, self._zone_id, volume * 100)
-
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        self._russ.set_power(self._controller_id, self._zone_id, "1")
+        await self._async_run_with_retry(
+            lambda: self._client.set_zone_power(
+                self._controller_id, self._zone_id, True
+            )
+        )
 
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
-        self._russ.set_power(self._controller_id, self._zone_id, "0")
+        await self._async_run_with_retry(
+            lambda: self._client.set_zone_power(
+                self._controller_id, self._zone_id, False
+            )
+        )
 
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._russ.toggle_mute(self._controller_id, self._zone_id)
 
-    def select_source(self, source: str) -> None:
+        async def _mute_if_needed() -> None:
+            if self.is_volume_muted != mute:
+                await self._client.toggle_mute(self._controller_id, self._zone_id)
+
+        await self._async_run_with_retry(_mute_if_needed)
+
+    async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         if self.source_list and source in self.source_list:
-            index = self.source_list.index(source)
-            # 0 based value for source
-            self._russ.set_source(self._controller_id, self._zone_id, index)
+            # source_list is 0-based; RNET source is 1-based
+            index = self.source_list.index(source) + 1
+            await self._async_run_with_retry(
+                lambda: self._client.select_source(
+                    self._controller_id, self._zone_id, index
+                )
+            )

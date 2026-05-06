@@ -1,7 +1,6 @@
 """Test the air-Q config flow."""
 
 from ipaddress import IPv4Address
-import logging
 from unittest.mock import AsyncMock
 
 from aioairq import InvalidAuth
@@ -41,106 +40,109 @@ DEFAULT_OPTIONS = {
 }
 
 
-async def test_form(
+async def test_user_flow(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     mock_airq: AsyncMock,
 ) -> None:
-    """Test we get the form."""
-    caplog.set_level(logging.DEBUG)
+    """Test successful user config flow from start to entry creation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_USER_DATA,
     )
     await hass.async_block_till_done()
-    assert f"Creating an entry for {TEST_DEVICE_INFO['name']}" in caplog.text
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_DEVICE_INFO["name"]
-    assert result2["data"] == TEST_USER_DATA
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_DEVICE_INFO["name"]
+    assert result["data"] == TEST_USER_DATA
+    assert result["result"].unique_id == TEST_DEVICE_INFO["id"]
 
 
-async def test_form_invalid_auth(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (InvalidAuth, "invalid_auth"),
+        (ClientConnectionError, "cannot_connect"),
+    ],
+)
+async def test_user_flow_errors_recover(
+    hass: HomeAssistant,
+    mock_airq: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test user flow recovers from errors and completes successfully."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_airq.validate.side_effect = InvalidAuth
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TEST_USER_DATA | {CONF_PASSWORD: "wrong_password"}
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_airq.validate.side_effect = ClientConnectionError
-    result2 = await hass.config_entries.flow.async_configure(
+    mock_airq.validate.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_DATA
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    # Recover: correct input on retry
+    mock_airq.validate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_DATA
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_DEVICE_INFO["name"]
+    assert result["data"] == TEST_USER_DATA
 
 
-async def test_duplicate_error(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
+async def test_duplicate_error(
+    hass: HomeAssistant,
+    mock_airq: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test that errors are shown when duplicates are added."""
-    MockConfigEntry(
-        data=TEST_USER_DATA,
-        domain=DOMAIN,
-        unique_id=TEST_DEVICE_INFO["id"],
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_DATA
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
     "user_input", [{}, {CONF_RETURN_AVERAGE: False}, {CONF_CLIP_NEGATIVE: False}]
 )
-async def test_options_flow(hass: HomeAssistant, user_input) -> None:
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict,
+) -> None:
     """Test that the options flow works."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=TEST_USER_DATA, unique_id=TEST_DEVICE_INFO["id"]
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    assert entry.options == {}
+    assert mock_config_entry.options == {}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == entry.options == DEFAULT_OPTIONS | user_input
+    assert result["data"] == mock_config_entry.options == DEFAULT_OPTIONS | user_input
 
 
 async def test_zeroconf_discovery(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
@@ -192,25 +194,25 @@ async def test_zeroconf_discovery_errors(
     assert result["step_id"] == "discovery_confirm"
 
     mock_airq.validate.side_effect = side_effect
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_PASSWORD: "wrong_password"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
     # Recover: correct password on retry
     mock_airq.validate.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {CONF_PASSWORD: "correct_password"},
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "My air-Q"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My air-Q"
+    assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.0.123",
         CONF_PASSWORD: "correct_password",
     }

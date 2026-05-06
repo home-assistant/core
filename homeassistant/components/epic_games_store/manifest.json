@@ -1,7 +1,7 @@
 {
   "domain": "epic_games_store",
   "name": "Epic Games Store",
-  "codeowners": ["@hacf-fr", "@Quentame"],
+  "codeowners": ["@Quentame"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epic_games_store",
   "integration_type": "service",

@@ -3,6 +3,7 @@
     {
       "addresses": ["100.11.11.111"],
       "id": "123456",
+      "nodeId": "n123456",
       "user": "frenck",
       "name": "frencks-iphone.homeassistant.github",
       "hostname": "Frencks-iPhone",
@@ -15,8 +16,10 @@
       "expires": "2022-02-15T09:25:22Z",
       "authorized": true,
       "isExternal": false,
+      "connectedToControl": true,
       "machineKey": "mkey:mock",
       "nodeKey": "nodekey:mock",
+      "tailnetLockKey": "",
       "blocksIncomingConnections": false,
       "enabledRoutes": [],
       "advertisedRoutes": [],
@@ -26,7 +29,6 @@
         "mappingVariesByDestIP": false,
         "latency": {},
         "clientSupports": {
-          "hairPinning": false,
           "ipv6": false,
           "pcp": false,
           "pmp": false,
@@ -38,6 +40,7 @@
     {
       "addresses": ["100.11.11.112"],
       "id": "123457",
+      "nodeId": "n123457",
       "user": "frenck",
       "name": "router.homeassistant.github",
       "hostname": "router",
@@ -50,8 +53,10 @@
       "expires": "2022-02-25T09:49:06Z",
       "authorized": true,
       "isExternal": false,
+      "connectedToControl": true,
       "machineKey": "mkey:mock",
       "nodeKey": "nodekey:mock",
+      "tailnetLockKey": "",
       "blocksIncomingConnections": false,
       "enabledRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
       "advertisedRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
@@ -96,7 +101,6 @@
           }
         },
         "clientSupports": {
-          "hairPinning": true,
           "ipv6": false,
           "pcp": false,
           "pmp": false,
@@ -108,6 +112,7 @@
     {
       "addresses": ["100.11.11.113"],
       "id": "123458",
+      "nodeId": "n123458",
       "user": "frenck",
       "name": "host-no-connectivity.homeassistant.github",
       "hostname": "host-no-connectivity",
@@ -120,8 +125,10 @@
       "expires": "2022-02-25T09:49:06Z",
       "authorized": true,
       "isExternal": false,
+      "connectedToControl": false,
       "machineKey": "mkey:mock",
       "nodeKey": "nodekey:mock",
+      "tailnetLockKey": "",
       "blocksIncomingConnections": false,
       "enabledRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
       "advertisedRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],

@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "Cannot connect — no data received from the device.",
+      "unknown": "Unexpected error"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect — no data received from the device. Verify the IP address and that the EARN-E is powered on.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "An EARN-E P1 meter was found at **{host}**.",
+        "title": "Discovered EARN-E P1 meter"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "The local IP address of your EARN-E P1 meter (e.g. 192.168.1.100)."
+        },
+        "description": "No device was automatically discovered. Enter the IP address of your EARN-E energy monitor manually.",
+        "title": "Connect to EARN-E P1 meter"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "energy_exported_tariff1": {
+        "name": "Energy exported tariff 1"
+      },
+      "energy_exported_tariff2": {
+        "name": "Energy exported tariff 2"
+      },
+      "energy_imported_tariff1": {
+        "name": "Energy imported tariff 1"
+      },
+      "energy_imported_tariff2": {
+        "name": "Energy imported tariff 2"
+      },
+      "gas_consumed": {
+        "name": "Gas consumed"
+      },
+      "power_exported": {
+        "name": "Power exported"
+      },
+      "power_imported": {
+        "name": "Power imported"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      }
+    }
+  }
+}

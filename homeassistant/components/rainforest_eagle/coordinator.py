@@ -23,17 +23,21 @@ from .const import (
 )
 from .data import UPDATE_100_ERRORS
 
+type RainforestEagleConfigEntry = ConfigEntry[EagleDataCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class EagleDataCoordinator(DataUpdateCoordinator):
     """Get the latest data from the Eagle device."""
 
-    config_entry: ConfigEntry
+    config_entry: RainforestEagleConfigEntry
     eagle100_reader: Eagle100Reader | None = None
     eagle200_meter: aioeagle.ElectricMeter | None = None
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: RainforestEagleConfigEntry
+    ) -> None:
         """Initialize the data object."""
         if config_entry.data[CONF_TYPE] == TYPE_EAGLE_100:
             self.model = "EAGLE-100"

@@ -26,11 +26,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.usb import (
-    async_request_scan,
-    force_usb_polling_watcher,  # noqa: F401
-    patch_scanned_serial_ports,
-)
+from tests.components.usb import async_request_scan, patch_scanned_serial_ports
+from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
 
 async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
@@ -265,7 +262,7 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
     fixable_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.scan_serial_ports",
+        "homeassistant.components.homeassistant_sky_connect.async_scan_serial_ports",
         return_value=[
             USBDevice(
                 device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_4f5f3b26d59f8714a78b599690741999-if00-port0",

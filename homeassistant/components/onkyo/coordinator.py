@@ -122,7 +122,7 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
         """Send muting command for a channel."""
         self._desired[channel] = param
         message_data: ChannelMutingDesired = self.data | self._desired
-        message = command.ChannelMuting(**message_data)  # type: ignore[misc]
+        message = command.ChannelMuting(**message_data)
         await self.manager.write(message)
 
     async def _update_callback(self, message: Status) -> None:

@@ -84,7 +84,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             coordinator,
             AIR_CONDITIONER_ENTITY_DESCRIPTION,
             context_override=(
-                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_FAN_SPEED_PERCENTAGE
             ),
         )
         self.update_preset_mode()
@@ -104,7 +104,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update_preset_mode,
-                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_FAN_SPEED_MODE,
             )
         )
 

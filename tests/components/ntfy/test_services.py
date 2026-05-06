@@ -42,6 +42,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import AsyncMock, MockConfigEntry, patch
 
 
+@pytest.mark.freeze_time("2026-01-01T23:59:59+00:00")
 async def test_ntfy_publish(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -134,6 +135,10 @@ async def test_ntfy_publish(
         ),
         None,
     )
+
+    state = hass.states.get("notify.mytopic")
+    assert state
+    assert state.state == "2026-01-01T23:59:59+00:00"
 
 
 @pytest.mark.parametrize(

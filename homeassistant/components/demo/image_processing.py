@@ -45,7 +45,7 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
         """Return minimum confidence for send events."""
         return 80
 
-    def process_image(self, image: bytes) -> None:
+    async def async_process_image(self, image: bytes) -> None:
         """Process image."""
         demo_data = [
             FaceInformation(
@@ -58,4 +58,4 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
             FaceInformation(confidence=62.53, name="Luna"),
         ]
 
-        self.process_faces(demo_data, 4)
+        self.async_process_faces(demo_data, 4)

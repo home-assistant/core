@@ -65,3 +65,8 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
             identifiers={(DOMAIN, self._attr_unique_id)},
             via_device=(DOMAIN, config_entry_id),
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._controller.connected

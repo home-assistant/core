@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any
 
-from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
+from renault_api.kamereon.models import (
+    KamereonVehicleChargeModeData,
+    KamereonVehicleDataAttributes,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
@@ -21,12 +24,13 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RenaultSelectEntityDescription(
+class RenaultSelectEntityDescription[T: KamereonVehicleDataAttributes](
     SelectEntityDescription, RenaultDataEntityDescription
 ):
     """Class describing Renault select entities."""
 
-    data_key: str
+    value_fn: Callable[[RenaultSelectEntity[T]], str | None]
+    update_fn: Callable[[RenaultSelectEntity[T], str], Coroutine[Any, Any, Any]]
 
 
 async def async_setup_entry(
@@ -44,34 +48,30 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RenaultSelectEntity(
-    RenaultDataEntity[KamereonVehicleBatteryStatusData], SelectEntity
+class RenaultSelectEntity[T: KamereonVehicleDataAttributes](
+    RenaultDataEntity[T], SelectEntity
 ):
     """Mixin for sensor specific attributes."""
 
-    entity_description: RenaultSelectEntityDescription
+    entity_description: RenaultSelectEntityDescription[T]
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return cast(str, self.data)
-
-    @property
-    def data(self) -> StateType:
-        """Return the state of this entity."""
-        return self._get_data_attr(self.entity_description.data_key)
+        return self.entity_description.value_fn(self)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.vehicle.set_charge_mode(option)
+        await self.entity_description.update_fn(self, option)
 
 
 SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
-    RenaultSelectEntityDescription(
+    RenaultSelectEntityDescription[KamereonVehicleChargeModeData](
         key="charge_mode",
         coordinator="charge_mode",
-        data_key="chargeMode",
         translation_key="charge_mode",
         options=["always", "always_charging", "schedule_mode", "scheduled"],
+        update_fn=lambda e, option: e.vehicle.set_charge_mode(option),
+        value_fn=lambda e: e.coordinator.data.chargeMode,
     ),
 )

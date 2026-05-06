@@ -6,7 +6,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import person
-from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
+from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
+    ATTR_SOURCE_TYPE,
+    SourceType,
+)
 from homeassistant.components.person import (
     ATTR_DEVICE_TRACKERS,
     ATTR_SOURCE,
@@ -119,6 +123,7 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
         ATTR_EDITABLE: False,
         ATTR_FRIENDLY_NAME: "tracked person",
         ATTR_ID: "1234",
+        ATTR_IN_ZONES: [],
         ATTR_USER_ID: user_id,
     }
 
@@ -216,7 +221,25 @@ async def test_setup_two_trackers(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    hass.states.async_set(DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SourceType.ROUTER})
+    # Router tracker at home with gps_accuracy — the person entity should get
+    # coordinates from the home zone (which has no gps_accuracy),not from the
+    # router tracker's attributes.
+    # Note: This is not a realistic test case, a router tracker would not have
+    # gps_accuracy, but we want to assert that the person entity uses latitude
+    # longitude and accuracy from the home zone, not from the state attributes
+    # of the device tracker.
+    # Router tracker at home — person gets coordinates from the home zone,
+    # not from the router tracker. The router tracker has gps_accuracy=99
+    # and in_zones=["zone.fake"] to verify these are NOT propagated.
+    hass.states.async_set(
+        DEVICE_TRACKER,
+        "home",
+        {
+            ATTR_SOURCE_TYPE: SourceType.ROUTER,
+            ATTR_GPS_ACCURACY: 99,
+            ATTR_IN_ZONES: ["zone.fake"],
+        },
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("person.tracked_person")
@@ -224,7 +247,10 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_ID) == "1234"
     assert state.attributes.get(ATTR_LATITUDE) == 32.87336
     assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
+    # GPS accuracy and in_zones come from the coordinates source (home zone),
+    # not from the state source (router tracker).
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
+    assert state.attributes.get(ATTR_IN_ZONES) == []
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
     assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
@@ -239,6 +265,7 @@ async def test_setup_two_trackers(
             ATTR_LATITUDE: 12.123456,
             ATTR_LONGITUDE: 13.123456,
             ATTR_GPS_ACCURACY: 12,
+            ATTR_IN_ZONES: ["zone.work"],
             ATTR_SOURCE_TYPE: SourceType.GPS,
         },
     )
@@ -254,6 +281,7 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_LATITUDE) == 12.123456
     assert state.attributes.get(ATTR_LONGITUDE) == 13.123456
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
+    assert state.attributes.get(ATTR_IN_ZONES) == ["zone.work"]
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
     assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
@@ -333,6 +361,7 @@ async def test_setup_router_ble_trackers(
             ATTR_LATITUDE: 12.123456,
             ATTR_LONGITUDE: 13.123456,
             ATTR_GPS_ACCURACY: 12,
+            ATTR_IN_ZONES: ["zone.office"],
             ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
         },
     )
@@ -345,6 +374,7 @@ async def test_setup_router_ble_trackers(
     assert state.attributes.get(ATTR_LATITUDE) == 12.123456
     assert state.attributes.get(ATTR_LONGITUDE) == 13.123456
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
+    assert state.attributes.get(ATTR_IN_ZONES) == ["zone.office"]
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
     assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [

@@ -23,6 +23,8 @@ from .const import SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class HydrawiseBinarySensorEntityDescription(BinarySensorEntityDescription):

@@ -19,7 +19,7 @@ from pyfirefly.models import Account, Bill, Budget, Category, Currency
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -79,13 +79,13 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyTimeoutError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},

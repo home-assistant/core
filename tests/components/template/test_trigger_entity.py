@@ -1,12 +1,24 @@
 """Test trigger template entity."""
 
+import asyncio
+from unittest.mock import Mock, patch
+
 import pytest
 
-from homeassistant.components.template import DOMAIN, trigger_entity
+from homeassistant.components.template import DATA_COORDINATORS, DOMAIN, trigger_entity
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_ICON,
+    CONF_NAME,
+    CONF_STATE,
+    EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import template
+from homeassistant.helpers import condition, template
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 
@@ -230,3 +242,131 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
     assert state.state == "opening"
     assert state.attributes["current_position"] == 50
     assert state.attributes["current_tilt_position"] == 49
+
+
+async def test_coordinator_shutdown_unloads_script_and_condition(
+    hass: HomeAssistant,
+) -> None:
+    """Test that coordinator shutdown stops and unloads script and condition."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+
+    mock_script = Mock(spec=Script)
+    mock_cond = Mock(spec=condition.ConditionsChecker)
+    coordinator._script = mock_script
+    coordinator._cond_func = mock_cond
+
+    await coordinator.async_shutdown()
+
+    mock_script.async_unload.assert_called_once()
+    mock_cond.async_unload.assert_called_once()
+
+
+async def test_shutdown_stops_script_and_keeps_triggers_subscribed(
+    hass: HomeAssistant,
+) -> None:
+    """Test that HA shutdown stops coordinator scripts without unsubscribing triggers."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [
+                    {"event": "action_event"},
+                    {"delay": {"seconds": 120}},
+                ],
+                "sensor": {
+                    "name": "test",
+                    "state": "{{ trigger.event.data.value }}",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Verify trigger is active
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event", 0) == 1
+
+    # Fire the trigger to start the action script, then yield without
+    # waiting for the script to finish
+    hass.bus.async_fire("test_event", {"value": "hello"})
+    await asyncio.sleep(0)
+
+    # Script should be running (stuck on delay)
+    coordinators = hass.data[DATA_COORDINATORS]
+    assert len(coordinators) == 1
+    assert coordinators[0]._script.is_running
+    assert not coordinators[0]._script._unloaded
+
+    # Fire shutdown
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Script should be stopped but not unloaded - this is handled by the script helper
+    assert not coordinators[0]._script.is_running
+    assert not coordinators[0]._script._unloaded
+
+    # Triggers are not unsubscribed on shutdown
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event", 0) == 1
+
+
+async def test_reload_stops_script_and_unsubscribes_triggers(
+    hass: HomeAssistant,
+) -> None:
+    """Test that reloading stops coordinator scripts and unsubscribes old triggers."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [
+                    {"event": "action_event"},
+                    {"delay": {"seconds": 120}},
+                ],
+                "sensor": {
+                    "name": "test",
+                    "state": "{{ trigger.event.data.value }}",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Verify trigger is active
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event", 0) == 1
+
+    # Fire the trigger to start the action script
+    hass.bus.async_fire("test_event", {"value": "hello"})
+    await asyncio.sleep(0)
+
+    # Script should be running
+    coordinators = hass.data[DATA_COORDINATORS]
+    assert len(coordinators) == 1
+    coordinator = coordinators[0]
+    assert coordinator._script.is_running
+    assert not coordinator._script._unloaded
+
+    # Reload with empty config
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={"template": []},
+    ):
+        await hass.services.async_call("template", SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    # Script should be stopped and unloaded
+    assert not coordinator._script.is_running
+    assert coordinator._script._unloaded
+
+    # Old trigger should be unsubscribed
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event", 0) == 0

@@ -246,6 +246,9 @@
       "power_freeze": {
         "default": "mdi:snowflake"
       },
+      "purify": {
+        "default": "mdi:air-purifier"
+      },
       "rinse_plus": {
         "default": "mdi:water-plus"
       },

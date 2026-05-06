@@ -1,0 +1,306 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.ecodan_3_way_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ecodan_3_way_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '3-way valve',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '3-way valve',
+    'platform': 'melcloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve_3way_status',
+    'unique_id': 'ABC123456-AA:BB:CC:DD:EE:FF-valve_3way_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_3_way_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ecodan 3-way valve',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ecodan_3_way_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_boiler-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ecodan_boiler',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boiler',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Boiler',
+    'platform': 'melcloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'boiler_status',
+    'unique_id': 'ABC123456-AA:BB:CC:DD:EE:FF-boiler_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_boiler-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Ecodan Boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ecodan_boiler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_booster_heater_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ecodan_booster_heater_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Booster heater 1',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Booster heater 1',
+    'platform': 'melcloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'booster_heater_status',
+    'unique_id': 'ABC123456-AA:BB:CC:DD:EE:FF-booster_heater1_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_booster_heater_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Ecodan Booster heater 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ecodan_booster_heater_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_immersion_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ecodan_immersion_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Immersion heater',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Immersion heater',
+    'platform': 'melcloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'immersion_heater_status',
+    'unique_id': 'ABC123456-AA:BB:CC:DD:EE:FF-immersion_heater_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_immersion_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Ecodan Immersion heater',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ecodan_immersion_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_water_pump_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ecodan_water_pump_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water pump 1',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Water pump 1',
+    'platform': 'melcloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_pump_status',
+    'unique_id': 'ABC123456-AA:BB:CC:DD:EE:FF-water_pump1_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_water_pump_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Ecodan Water pump 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ecodan_water_pump_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_water_pump_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ecodan_water_pump_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water pump 2',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Water pump 2',
+    'platform': 'melcloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_pump_status',
+    'unique_id': 'ABC123456-AA:BB:CC:DD:EE:FF-water_pump2_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.ecodan_water_pump_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Ecodan Water pump 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ecodan_water_pump_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

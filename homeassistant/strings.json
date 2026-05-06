@@ -25,20 +25,20 @@
         "already_in_progress": "Configuration flow is already in progress",
         "cloud_not_connected": "Not connected to Home Assistant Cloud.",
         "no_devices_found": "No devices found on the network",
-        "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
+        "oauth2_authorize_url_timeout": "Timeout while generating an authorization URL.",
         "oauth2_error": "Received invalid token data.",
         "oauth2_failed": "Error while obtaining access token.",
         "oauth2_implementation_unavailable": "No OAuth2 implementations are currently available.",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
         "oauth2_missing_credentials": "The integration requires application credentials.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
-        "oauth2_timeout": "Timeout resolving OAuth token.",
+        "oauth2_timeout": "Timeout while resolving the OAuth token.",
         "oauth2_unauthorized": "OAuth authorization error while obtaining access token.",
         "oauth2_user_rejected_authorize": "Account linking rejected: {error}",
         "reauth_successful": "Re-authentication was successful",
         "reconfigure_successful": "Reconfiguration was successful",
-        "single_instance_allowed": "Already configured. Only a single configuration possible.",
-        "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
+        "single_instance_allowed": "Already configured. Only a single configuration is possible.",
+        "unknown_authorize_url_generation": "An unknown error occurred while generating an authorization URL.",
         "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
       },
       "create_entry": {
@@ -84,7 +84,7 @@
         "invalid_api_key": "Invalid API key",
         "invalid_auth": "Invalid authentication",
         "invalid_host": "Invalid hostname or IP address",
-        "timeout_connect": "Timeout establishing connection",
+        "timeout_connect": "Timeout while establishing a connection",
         "unknown": "Unexpected error"
       },
       "initiate_flow": {

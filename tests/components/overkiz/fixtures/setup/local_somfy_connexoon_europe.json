@@ -1,0 +1,441 @@
+{
+  "gateways": [
+    {
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2021.2.4-17"
+      },
+      "gatewayId": "1234-1234-1234"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "internal://1234-1234-1234/pod/0",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [
+        {
+          "type": 3,
+          "name": "core:CountryCodeState",
+          "value": "NL"
+        },
+        {
+          "type": 1,
+          "name": "internal:LightingLedPodModeState",
+          "value": 1
+        },
+        {
+          "type": 3,
+          "name": "core:NameState",
+          "value": "*"
+        },
+        {
+          "type": 3,
+          "name": "core:ConnectivityState",
+          "value": "online"
+        },
+        {
+          "type": 3,
+          "name": "core:LocalIPv4AddressState",
+          "value": "192.168.150.8"
+        }
+      ],
+      "label": "*",
+      "subsystemId": 0,
+      "attributes": [],
+      "enabled": true,
+      "controllableName": "internal:PodMiniComponent",
+      "definition": {
+        "states": [
+          {
+            "name": "core:ConnectivityState"
+          },
+          {
+            "name": "core:CountryCodeState"
+          },
+          {
+            "name": "core:LocalIPv4AddressState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "internal:LastActionConfigButtonState"
+          },
+          {
+            "name": "internal:LightingLedPodModeState"
+          }
+        ],
+        "widgetName": "Pod",
+        "type": "ACTUATOR",
+        "commands": [
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setCalendar",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setCountryCode",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setLightingLedPodMode",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          }
+        ],
+        "uiClass": "Pod"
+      }
+    },
+    {
+      "deviceURL": "io://1234-1234-1234/5928357",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [
+        {
+          "type": 3,
+          "name": "core:StatusState",
+          "value": "available"
+        },
+        {
+          "type": 3,
+          "name": "core:DiscreteRSSILevelState",
+          "value": "good"
+        },
+        {
+          "type": 1,
+          "name": "core:RSSILevelState",
+          "value": 88
+        },
+        {
+          "type": 1,
+          "name": "core:DeploymentState",
+          "value": 0
+        },
+        {
+          "type": 11,
+          "name": "core:ManufacturerSettingsState",
+          "value": {
+            "currentPosition": 0
+          }
+        },
+        {
+          "type": 3,
+          "name": "core:OpenClosedState",
+          "value": "closed"
+        },
+        {
+          "type": 1,
+          "name": "core:TargetClosureState",
+          "value": 0
+        },
+        {
+          "type": 6,
+          "name": "core:MovingState",
+          "value": false
+        },
+        {
+          "type": 3,
+          "name": "core:NameState",
+          "value": "Terrace Awning"
+        },
+        {
+          "type": 1,
+          "name": "core:Memorized1PositionState",
+          "value": 105
+        }
+      ],
+      "label": "Terrace Awning",
+      "subsystemId": 0,
+      "attributes": [
+        {
+          "type": 3,
+          "name": "core:Manufacturer",
+          "value": "Somfy"
+        },
+        {
+          "type": 3,
+          "name": "core:FirmwareRevision",
+          "value": "5071665X10\u0003"
+        }
+      ],
+      "enabled": true,
+      "controllableName": "io:HorizontalAwningIOComponent",
+      "definition": {
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:DeploymentState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          }
+        ],
+        "widgetName": "PositionableHorizontalAwning",
+        "type": "ACTUATOR",
+        "commands": [
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "deploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setDeployment",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "undeploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          }
+        ],
+        "uiClass": "Awning"
+      }
+    },
+    {
+      "deviceURL": "io://1234-1234-1234/16516299",
+      "available": true,
+      "synced": true,
+      "type": 5,
+      "states": [],
+      "label": "* (*)",
+      "subsystemId": 0,
+      "attributes": [
+        {
+          "type": 3,
+          "name": "core:Manufacturer",
+          "value": "Somfy"
+        }
+      ],
+      "enabled": true,
+      "controllableName": "io:StackComponent",
+      "definition": {
+        "states": [],
+        "widgetName": "IOStack",
+        "type": "PROTOCOL_GATEWAY",
+        "commands": [
+          {
+            "nparams": 1,
+            "commandName": "advancedSomfyDiscover",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "discover1WayController",
+            "paramsSig": "*p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "discoverActuators",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "discoverSensors",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "discoverSomfyUnsetActuators",
+            "nparams": 0
+          },
+          {
+            "commandName": "joinNetwork",
+            "nparams": 0
+          },
+          {
+            "commandName": "resetNetworkSecurity",
+            "nparams": 0
+          },
+          {
+            "commandName": "shareNetwork",
+            "nparams": 0
+          }
+        ],
+        "uiClass": "ProtocolGateway"
+      }
+    }
+  ]
+}

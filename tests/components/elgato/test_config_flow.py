@@ -3,14 +3,15 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
-from elgato import ElgatoConnectionError
+from elgato import ElgatoConnectionError, ElgatoError
 import pytest
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
@@ -254,3 +255,152 @@ async def test_zeroconf_during_onboarding(
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_elgato.info.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_elgato")
+async def test_dhcp_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery of a known device updates its stored host."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="elgato",
+            ip="127.0.0.42",
+            macaddress="aabbccddeeff",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.42"
+
+
+@pytest.mark.usefixtures("mock_elgato")
+async def test_dhcp_discovery_same_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery does nothing when the host is already up to date."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="elgato",
+            ip="127.0.0.1",
+            macaddress="aabbccddeeff",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_elgato")
+async def test_dhcp_discovery_no_match(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery aborts when no matching entry is configured."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="elgato",
+            ip="127.0.0.42",
+            macaddress="001122334455",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_elgato")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an existing Elgato device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.42"
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow recovers from a connection error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_elgato.info.side_effect = ElgatoError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_elgato.info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_different_device(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the device at the new host has a different serial."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_elgato.info.return_value.serial_number = "DIFFERENT_SERIAL"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_device"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"

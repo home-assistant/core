@@ -13,23 +13,23 @@ from subarulink.const import (
 )
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN, ENTRY_CONTROLLER, ENTRY_COORDINATOR, VEHICLE_VIN
+from .const import VEHICLE_VIN
+from .coordinator import SubaruConfigEntry
 
 CONFIG_FIELDS_TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_PIN, CONF_DEVICE_ID]
 DATA_FIELDS_TO_REDACT = [VEHICLE_VIN, VEHICLE_NAME, LATITUDE, LONGITUDE, ODOMETER]
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: SubaruConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
+    coordinator = config_entry.runtime_data.coordinator
 
     return {
         "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),
@@ -42,12 +42,11 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: SubaruConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = entry[ENTRY_COORDINATOR]
-    controller = entry[ENTRY_CONTROLLER]
+    coordinator = config_entry.runtime_data.coordinator
+    controller = config_entry.runtime_data.controller
 
     vin = next(iter(device.identifiers))[1]
 

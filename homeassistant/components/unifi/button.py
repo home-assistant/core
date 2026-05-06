@@ -31,9 +31,11 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
+from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -45,6 +47,8 @@ from .entity import (
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
+
+PARALLEL_UPDATES = 1
 
 
 @callback
@@ -97,21 +101,21 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         control_fn=async_restart_device_control_fn,
         device_info_fn=async_device_device_info_fn,
-        name_fn=lambda _: "Restart",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         unique_id_fn=lambda hub, obj_id: f"device_restart-{obj_id}",
     ),
     UnifiButtonEntityDescription[Ports, Port](
         key="PoE power cycle",
+        translation_key="port_power_cycle",
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_port_power_cycle_available_fn,
         control_fn=async_power_cycle_port_control_fn,
         device_info_fn=async_device_device_info_fn,
-        name_fn=lambda port: f"{port.name} Power Cycle",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
     ),
     UnifiButtonEntityDescription[Wlans, Wlan](
@@ -124,7 +128,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         available_fn=async_wlan_available_fn,
         control_fn=async_regenerate_password_control_fn,
         device_info_fn=async_wlan_device_info_fn,
-        name_fn=lambda wlan: "Regenerate Password",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         unique_id_fn=lambda hub, obj_id: f"regenerate_password-{obj_id}",
     ),
@@ -151,7 +154,13 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.control_fn(self.api, self._obj_id)
+        try:
+            await self.entity_description.control_fn(self.api, self._obj_id)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

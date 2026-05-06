@@ -137,14 +137,20 @@ async def test_entity_availability(
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
-    config = CONFIG
-    failures = [True, True]
-    config[CONF_RECONNECT_INTERVAL] = 60
+    config = {
+        **CONFIG,
+        "rflink": {
+            **CONFIG["rflink"],
+            CONF_RECONNECT_INTERVAL: 60,
+        },
+    }
+    failures = [False, True]
 
     # Create platform and entities
     _, _, _, disconnect_callback = await mock_rflink(
         hass, config, DOMAIN, monkeypatch, failures=failures
     )
+    await hass.async_block_till_done()
 
     # Entities are available by default
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN

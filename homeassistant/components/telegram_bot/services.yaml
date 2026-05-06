@@ -1198,3 +1198,50 @@ download_file:
       example: "my_downloaded_file"
       selector:
         text:
+
+send_message_draft:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    draft_id:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 1
+    message:
+      example: The garage door has been o
+      required: true
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true

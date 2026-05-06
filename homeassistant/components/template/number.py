@@ -11,12 +11,18 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN as NUMBER_DOMAIN,
     ENTITY_ID_FORMAT,
     NumberEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_STATE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -50,6 +56,7 @@ SCRIPT_FIELDS = (CONF_SET_VALUE,)
 
 NUMBER_COMMON_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
@@ -124,6 +131,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE

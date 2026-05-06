@@ -1,0 +1,22 @@
+{
+  "domain": "teleinfo",
+  "name": "Teleinfo",
+  "codeowners": ["@esciara"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/teleinfo",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["pyteleinfo==0.4.0"],
+  "usb": [
+    {
+      "pid": "6015",
+      "vid": "0403"
+    },
+    {
+      "pid": "EA60",
+      "vid": "10C4"
+    }
+  ]
+}

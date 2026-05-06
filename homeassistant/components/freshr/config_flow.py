@@ -30,22 +30,31 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    async def _validate_input(self, username: str, password: str) -> str | None:
+        """Validate credentials, returning an error key or None on success."""
+        client = FreshrClient(session=async_get_clientsession(self.hass))
+        try:
+            await client.login(username, password)
+        except LoginError:
+            return "invalid_auth"
+        except ClientError:
+            return "cannot_connect"
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            return "unknown"
+        return None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            client = FreshrClient(session=async_get_clientsession(self.hass))
-            try:
-                await client.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-            except LoginError:
-                errors["base"] = "invalid_auth"
-            except ClientError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            error = await self._validate_input(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if error:
+                errors["base"] = error
             else:
                 await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
                 self._abort_if_unique_id_configured()
@@ -56,6 +65,34 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            error = await self._validate_input(
+                reconfigure_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if error:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            description_placeholders={
+                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
+            },
+            errors=errors,
         )
 
     async def async_step_reauth(
@@ -72,18 +109,11 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            client = FreshrClient(session=async_get_clientsession(self.hass))
-            try:
-                await client.login(
-                    reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
-            except LoginError:
-                errors["base"] = "invalid_auth"
-            except ClientError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            error = await self._validate_input(
+                reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if error:
+                errors["base"] = error
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,

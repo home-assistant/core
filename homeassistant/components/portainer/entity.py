@@ -9,10 +9,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
+    DockerVolume,
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
     PortainerStackData,
+    PortainerVolumeData,
 )
 
 
@@ -173,3 +175,56 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
     def stack_data(self) -> PortainerStackData:
         """Return the coordinator data for this stack."""
         return self.coordinator.data[self.endpoint_id].stacks[self.device_name]
+
+
+class PortainerVolumeEntity(PortainerCoordinatorEntity):
+    """Base implementation for Portainer volume."""
+
+    def __init__(
+        self,
+        coordinator: PortainerCoordinator,
+        entity_description: EntityDescription,
+        device_info: DockerVolume,
+        via_device: PortainerCoordinatorData,
+    ) -> None:
+        """Initialize a Portainer volume."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._device_info = device_info
+        self.volume_name = device_info.name
+        self.endpoint_id = via_device.endpoint.id
+        self.endpoint_name = via_device.endpoint.name
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_volume_{self.volume_name}",
+                )
+            },
+            manufacturer=DEFAULT_NAME,
+            configuration_url=URL(
+                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/volumes/{self.volume_name}"
+            ),
+            model="Volume",
+            name=self.volume_name,
+            via_device=(
+                DOMAIN,
+                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            ),
+        )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_volume_{self.volume_name}_{entity_description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the volume is available."""
+        return (
+            super().available
+            and self.endpoint_id in self.coordinator.data
+            and self.volume_name in self.coordinator.data[self.endpoint_id].volumes
+        )
+
+    @property
+    def volume_data(self) -> PortainerVolumeData:
+        """Return the coordinator data for this volume."""
+        return self.coordinator.data[self.endpoint_id].volumes[self.volume_name]

@@ -361,6 +361,8 @@ def component_setup(
             ClientCredential("client-id", "client-secret"),
         )
         config_entry.add_to_hass(hass)
-        return await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        return result
 
     return _setup_func

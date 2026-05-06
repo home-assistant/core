@@ -1,0 +1,23 @@
+set_lock_rule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifi_access
+    rule:
+      required: true
+      selector:
+        select:
+          options:
+            - keep_lock
+            - keep_unlock
+            - custom
+            - reset
+            - lock_early
+          translation_key: rule
+    interval:
+      selector:
+        duration:
+          enable_day: false
+          enable_second: false

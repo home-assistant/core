@@ -59,6 +59,7 @@ DEFAULT_PLATE_COUNT = 4
 
 PLATE_COUNT = {
     "KM7575": 6,
+    "KM7576": 6,
     "KM7678": 6,
     "KM7697": 6,
     "KM7699": 5,

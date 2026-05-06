@@ -12,11 +12,11 @@ from airly.exceptions import AirlyError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS
+from .const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN, NO_AIRLY_SENSORS
 
 DESCRIPTION_PLACEHOLDERS = {
     "developer_registration_url": "https://developer.airly.eu/register",
@@ -45,16 +45,16 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 location_point_valid = await check_location(
                     websession,
-                    user_input["api_key"],
-                    user_input["latitude"],
-                    user_input["longitude"],
+                    user_input[CONF_API_KEY],
+                    user_input[CONF_LATITUDE],
+                    user_input[CONF_LONGITUDE],
                 )
                 if not location_point_valid:
                     location_nearest_valid = await check_location(
                         websession,
-                        user_input["api_key"],
-                        user_input["latitude"],
-                        user_input["longitude"],
+                        user_input[CONF_API_KEY],
+                        user_input[CONF_LATITUDE],
+                        user_input[CONF_LONGITUDE],
                         use_nearest=True,
                     )
             except AirlyError as err:
@@ -68,7 +68,7 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="wrong_location")
                     use_nearest = True
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DEFAULT_NAME,
                     data={**user_input, CONF_USE_NEAREST: use_nearest},
                 )
 
@@ -83,9 +83,6 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
                 }
             ),
             errors=errors,

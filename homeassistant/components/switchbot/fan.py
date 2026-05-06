@@ -131,6 +131,7 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
     _device: switchbot.SwitchbotAirPurifier
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
@@ -148,6 +149,11 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
         """Return the current preset mode."""
         return self._device.get_current_mode()
 
+    @property
+    def percentage(self) -> int | None:
+        """Return the speed percentage of the air purifier."""
+        return self._device.get_current_percentage()
+
     @exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the air purifier."""
@@ -158,6 +164,16 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
             self._address,
         )
         self._last_run_success = bool(await self._device.set_preset_mode(preset_mode))
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the air purifier."""
+
+        _LOGGER.debug(
+            "Switchbot air purifier to set percentage %d %s", percentage, self._address
+        )
+        await self._device.set_percentage(percentage)
         self.async_write_ha_state()
 
     @exception_handler

@@ -28,10 +28,13 @@ CALL_RATE_LIMIT_SLEEP = 1
 _LOGGER = logging.getLogger(__name__)
 
 
+type KrakenConfigEntry = ConfigEntry[KrakenData]
+
+
 class KrakenData:
     """Define an object to hold kraken data."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: KrakenConfigEntry) -> None:
         """Initialize."""
         self._hass = hass
         self._config_entry = config_entry

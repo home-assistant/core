@@ -84,7 +84,7 @@ MOCK_DISC_EXISTS = {
 
 async def test_manual_flow_creates_entry(
     hass: HomeAssistant,
-    ap_fixture: dict[str, Any],
+    ap_status_fixture: dict[str, Any],
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -159,7 +159,7 @@ async def test_form_duplicate_entry(
 async def test_form_exception_handling(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    ap_fixture: dict[str, Any],
+    ap_status_fixture: dict[str, Any],
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     exception: Exception,
@@ -186,11 +186,11 @@ async def test_form_exception_handling(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     valid_data = DetectDeviceData(
         fw_major=fw_major,
-        mac=ap_fixture.derived.mac,
-        hostname=ap_fixture.host.hostname,
+        mac=ap_status_fixture.derived.mac,
+        hostname=ap_status_fixture.host.hostname,
     )
 
     with patch(
@@ -210,7 +210,7 @@ async def test_form_exception_handling(
 
 async def test_reauth_flow_scenario(
     hass: HomeAssistant,
-    ap_fixture: AirOSData,
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
@@ -234,11 +234,11 @@ async def test_reauth_flow_scenario(
     assert flow["type"] == FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
-    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     valid_data = DetectDeviceData(
         fw_major=fw_major,
-        mac=ap_fixture.derived.mac,
-        hostname=ap_fixture.host.hostname,
+        mac=ap_status_fixture.derived.mac,
+        hostname=ap_status_fixture.host.hostname,
     )
 
     mock_firmware = AsyncMock(return_value=valid_data)
@@ -283,7 +283,7 @@ async def test_reauth_flow_scenario(
 )
 async def test_reauth_flow_scenarios(
     hass: HomeAssistant,
-    ap_fixture: AirOSData,
+    ap_status_fixture: AirOSData,
     expected_error: str,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
@@ -321,11 +321,11 @@ async def test_reauth_flow_scenarios(
         assert result["step_id"] == REAUTH_STEP
         assert result["errors"] == {"base": expected_error}
 
-    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     valid_data = DetectDeviceData(
         fw_major=fw_major,
-        mac=ap_fixture.derived.mac,
-        hostname=ap_fixture.host.hostname,
+        mac=ap_status_fixture.derived.mac,
+        hostname=ap_status_fixture.host.hostname,
     )
 
     with patch(
@@ -346,7 +346,7 @@ async def test_reauth_flow_scenarios(
 
 async def test_reauth_unique_id_mismatch(
     hass: HomeAssistant,
-    ap_fixture: AirOSData,
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -366,11 +366,11 @@ async def test_reauth_unique_id_mismatch(
             data=mock_config_entry.data,
         )
 
-    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     valid_data = DetectDeviceData(
         fw_major=fw_major,
         mac="FF:23:45:67:89:AB",
-        hostname=ap_fixture.host.hostname,
+        hostname=ap_status_fixture.host.hostname,
     )
 
     with patch(
@@ -501,7 +501,7 @@ async def test_reconfigure_flow_failure(
 
 async def test_reconfigure_unique_id_mismatch(
     hass: HomeAssistant,
-    ap_fixture: AirOSData,
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -516,11 +516,11 @@ async def test_reconfigure_unique_id_mismatch(
     )
     flow_id = result["flow_id"]
 
-    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     mismatched_data = DetectDeviceData(
         fw_major=fw_major,
         mac="FF:23:45:67:89:AB",
-        hostname=ap_fixture.host.hostname,
+        hostname=ap_status_fixture.host.hostname,
     )
 
     user_input = {

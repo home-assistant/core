@@ -47,8 +47,10 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'battery': 4.08,
             'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
+            'power': 12.56,
           }),
           'course': 360,
           'deviceId': 0,
@@ -103,6 +105,8 @@
             'custom_attr_1': 'custom_attr_1_value',
             'friendly_name': 'X-Wing',
             'gps_accuracy': 3.5,
+            'in_zones': list([
+            ]),
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
             'source_type': 'gps',
@@ -153,6 +157,20 @@
       }),
       dict({
         'disabled': False,
+        'entity_id': 'sensor.x_wing_battery_voltage',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'voltage',
+            'friendly_name': 'X-Wing Battery voltage',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'V',
+          }),
+          'state': '4.08',
+        }),
+        'unit_of_measurement': 'V',
+      }),
+      dict({
+        'disabled': False,
         'entity_id': 'sensor.x_wing_geofence',
         'state': dict({
           'attributes': dict({
@@ -175,6 +193,20 @@
           'state': '4568795',
         }),
         'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'sensor.x_wing_supply_voltage',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'voltage',
+            'friendly_name': 'X-Wing Supply voltage',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'V',
+          }),
+          'state': '12.56',
+        }),
+        'unit_of_measurement': 'V',
       }),
     ]),
     'subscription_status': 'disconnected',
@@ -228,8 +260,10 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'battery': 4.08,
             'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
+            'power': 12.56,
           }),
           'course': 360,
           'deviceId': 0,
@@ -290,6 +324,12 @@
       }),
       dict({
         'disabled': True,
+        'entity_id': 'sensor.x_wing_battery_voltage',
+        'state': None,
+        'unit_of_measurement': 'V',
+      }),
+      dict({
+        'disabled': True,
         'entity_id': 'sensor.x_wing_geofence',
         'state': None,
         'unit_of_measurement': None,
@@ -299,6 +339,12 @@
         'entity_id': 'sensor.x_wing_speed',
         'state': None,
         'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_supply_voltage',
+        'state': None,
+        'unit_of_measurement': 'V',
       }),
     ]),
     'subscription_status': 'disconnected',
@@ -352,8 +398,10 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'battery': 4.08,
             'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
+            'power': 12.56,
           }),
           'course': 360,
           'deviceId': 0,
@@ -397,6 +445,8 @@
             'custom_attr_1': 'custom_attr_1_value',
             'friendly_name': 'X-Wing',
             'gps_accuracy': 3.5,
+            'in_zones': list([
+            ]),
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
             'source_type': 'gps',
@@ -427,6 +477,12 @@
       }),
       dict({
         'disabled': True,
+        'entity_id': 'sensor.x_wing_battery_voltage',
+        'state': None,
+        'unit_of_measurement': 'V',
+      }),
+      dict({
+        'disabled': True,
         'entity_id': 'sensor.x_wing_geofence',
         'state': None,
         'unit_of_measurement': None,
@@ -436,6 +492,12 @@
         'entity_id': 'sensor.x_wing_speed',
         'state': None,
         'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_supply_voltage',
+        'state': None,
+        'unit_of_measurement': 'V',
       }),
     ]),
     'subscription_status': 'disconnected',

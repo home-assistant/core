@@ -1,7 +1,7 @@
 """Tests for webhooks."""
 
 from ipaddress import IPv4Network
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from telegram.error import TimedOut
 
@@ -31,6 +31,10 @@ async def test_set_webhooks_failed(
         patch(
             "homeassistant.components.telegram_bot.webhooks.Bot.set_webhook",
         ) as mock_set_webhook,
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.Application.start",
+            AsyncMock(),
+        ) as mock_start,
     ):
         mock_set_webhook.side_effect = [TimedOut("mock timeout"), False]
 
@@ -58,6 +62,8 @@ async def test_set_webhooks_failed(
         assert mock_webhooks_config_entry.state is ConfigEntryState.SETUP_ERROR
         await hass.async_block_till_done()
 
+        assert mock_start.call_count == 0
+
 
 async def test_set_webhooks(
     hass: HomeAssistant,
@@ -68,11 +74,16 @@ async def test_set_webhooks(
 ) -> None:
     """Test set webhooks success."""
     mock_webhooks_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+
+    with patch(
+        "homeassistant.components.telegram_bot.webhooks.Application.start", AsyncMock()
+    ) as mock_start:
+        await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
 
     await hass.async_block_till_done()
 
     assert mock_webhooks_config_entry.state is ConfigEntryState.LOADED
+    mock_start.assert_called_once()
 
 
 async def test_webhooks_update_invalid_json(

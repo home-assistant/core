@@ -11,16 +11,18 @@ from homeassistant.util.dt import get_time_zone
 
 from .const import DOMAIN, LOGGER
 
+type RovaConfigEntry = ConfigEntry[RovaCoordinator]
+
 EUROPE_AMSTERDAM_ZONE_INFO = get_time_zone("Europe/Amsterdam")
 
 
 class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Class to manage fetching Rova data."""
 
-    config_entry: ConfigEntry
+    config_entry: RovaConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: Rova
+        self, hass: HomeAssistant, config_entry: RovaConfigEntry, api: Rova
     ) -> None:
         """Initialize."""
         super().__init__(

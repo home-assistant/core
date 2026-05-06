@@ -252,6 +252,11 @@ class APISpaceApiView(HomeAssistantView):
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
 
+    def __init__(self) -> None:
+        """Initialize SpaceAPI view."""
+        self.requires_auth = False
+        self.cors_allowed = True
+
     @staticmethod
     def get_sensor_data(
         hass: HomeAssistant, spaceapi: dict[str, Any], entity_id: str

@@ -1,62 +1,67 @@
-"""Support for Amcrest IP cameras."""
+"""Services for Amcrest IP cameras."""
 
 from __future__ import annotations
 
-from homeassistant.auth.models import User
-from homeassistant.auth.permissions.const import POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import Unauthorized, UnknownUser
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.service import async_extract_entity_ids
+import voluptuous as vol
 
-from .camera import CAMERA_SERVICES
-from .const import CAMERAS, DATA_AMCREST, DOMAIN
-from .helpers import service_signal
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, service
+
+from .const import ATTR_COLOR_BW, CBW, DOMAIN, MOV
+
+_ATTR_PRESET = "preset"
+_ATTR_PTZ_MOV = "movement"
+_ATTR_PTZ_TT = "travel_time"
+_DEFAULT_TT = 0.2
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Amcrest IP Camera services."""
+    for service_name, func in (
+        ("enable_recording", "async_enable_recording"),
+        ("disable_recording", "async_disable_recording"),
+        ("enable_audio", "async_enable_audio"),
+        ("disable_audio", "async_disable_audio"),
+        ("enable_motion_recording", "async_enable_motion_recording"),
+        ("disable_motion_recording", "async_disable_motion_recording"),
+        ("start_tour", "async_start_tour"),
+        ("stop_tour", "async_stop_tour"),
+    ):
+        service.async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=CAMERA_DOMAIN,
+            schema=None,
+            func=func,
+        )
 
-    def have_permission(user: User | None, entity_id: str) -> bool:
-        return not user or user.permissions.check_entity(entity_id, POLICY_CONTROL)
-
-    async def async_extract_from_service(call: ServiceCall) -> list[str]:
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-        else:
-            user = None
-
-        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
-            # Return all entity_ids user has permission to control.
-            return [
-                entity_id
-                for entity_id in hass.data[DATA_AMCREST][CAMERAS]
-                if have_permission(user, entity_id)
-            ]
-
-        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
-            return []
-
-        call_ids = await async_extract_entity_ids(call)
-        entity_ids = []
-        for entity_id in hass.data[DATA_AMCREST][CAMERAS]:
-            if entity_id not in call_ids:
-                continue
-            if not have_permission(user, entity_id):
-                raise Unauthorized(
-                    context=call.context, entity_id=entity_id, permission=POLICY_CONTROL
-                )
-            entity_ids.append(entity_id)
-        return entity_ids
-
-    async def async_service_handler(call: ServiceCall) -> None:
-        args = [call.data[arg] for arg in CAMERA_SERVICES[call.service][2]]
-        for entity_id in await async_extract_from_service(call):
-            async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
-
-    for service, params in CAMERA_SERVICES.items():
-        hass.services.async_register(DOMAIN, service, async_service_handler, params[0])
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "goto_preset",
+        entity_domain=CAMERA_DOMAIN,
+        schema={vol.Required(_ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1))},
+        func="async_goto_preset",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "set_color_bw",
+        entity_domain=CAMERA_DOMAIN,
+        schema={vol.Required(ATTR_COLOR_BW): vol.In(CBW)},
+        func="async_set_color_bw",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "ptz_control",
+        entity_domain=CAMERA_DOMAIN,
+        schema={
+            vol.Required(_ATTR_PTZ_MOV): vol.In(MOV),
+            vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
+        },
+        func="async_ptz_control",
+    )

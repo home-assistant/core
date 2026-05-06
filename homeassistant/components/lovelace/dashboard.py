@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.frontend import DATA_PANELS
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -286,7 +286,7 @@ class DashboardsCollection(collection.DictStorageCollection):
         if not allow_single_word and "-" not in url_path:
             raise vol.Invalid("Url path needs to contain a hyphen (-)")
 
-        if DATA_PANELS in self.hass.data and url_path in self.hass.data[DATA_PANELS]:
+        if async_panel_exists(self.hass, url_path):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="url_already_exists",

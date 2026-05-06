@@ -1,0 +1,10 @@
+{
+  "services": {
+    "charge": {
+      "service": "mdi:battery-arrow-up"
+    },
+    "discharge": {
+      "service": "mdi:battery-arrow-down"
+    }
+  }
+}

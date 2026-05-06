@@ -210,7 +210,7 @@ def websocket_update_entity(
         )
         return
 
-    changes = {}
+    changes: dict[str, Any] = {}
 
     for key in (
         "area_id",

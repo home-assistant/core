@@ -26,7 +26,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_TENTHS,
     STATE_UNAVAILABLE,
@@ -37,10 +36,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .const import (
     CLIMATE_PRESET_SCHEDULE,
-    DOMAIN,
     SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH,
 )
 from .entity import SwitchBotCloudEntity
@@ -69,11 +67,11 @@ _DEFAULT_SWITCHBOT_FAN_MODE = _SWITCHBOT_FAN_MODES[FanState.FAN_AUTO]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.climates

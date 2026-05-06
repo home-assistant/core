@@ -12,16 +12,14 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
-from .const import DOMAIN
 from .entity import IRobotEntity
-from .models import RoombaData
+from .models import RoombaConfigEntry
 
 SUPPORT_IROBOT = (
     VacuumEntityFeature.PAUSE
@@ -87,11 +85,11 @@ SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoombaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     roomba = domain_data.roomba
     blid = domain_data.blid
 

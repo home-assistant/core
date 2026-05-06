@@ -2,10 +2,21 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
+from matter_server.client.models.node import MatterNode
+from matter_server.common.models import EventType
 import pytest
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .common import (
+    set_node_attribute,
+    setup_integration_with_node_fixture,
+    trigger_subscription_callback,
+)
 
 
 @pytest.mark.usefixtures("matter_node")
@@ -190,3 +201,239 @@ async def test_entity_name_from_device_class(
     state = hass.states.get("sensor.mock_temperature_sensor_temperature")
     assert state is not None
     assert state.name == "Mock Temperature Sensor Temperature"
+
+
+# ---------------------------------------------------------------------------
+# Tests for _get_bridged_reachable(), availability initialisation and
+# BridgedDeviceBasicInformation.Reachable subscription logic.
+#
+# Fixture used for bridge tests: "atios_knx_bridge" (node_id=62,
+# is_bridge=True).  Endpoint 29 carries the BridgedDeviceBasicInformation
+# cluster (57) with the Reachable attribute (attribute_id=17, path "29/57/17")
+# and exposes an electrical-power sensor entity.
+#
+# Entity used as proxy: sensor.electricity_monitor_ac_power
+# ---------------------------------------------------------------------------
+
+_BRIDGE_ENTITY_ID = "sensor.electricity_monitor_ac_power"
+# AttributePath for BridgedDeviceBasicInformation.Reachable on endpoint 29.
+# create_attribute_path(29, 57, 17) == "29/57/17"
+_REACHABLE_ATTR_PATH = "29/57/17"
+
+
+async def test_bridged_entity_unavailable_when_reachable_false_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test Entity.available is False when Reachable attribute is False.
+
+    When BridgedDeviceBasicInformation.Reachable is False the entity must be
+    unavailable from the moment it is created, even though the node itself is
+    online.
+    """
+    await setup_integration_with_node_fixture(
+        hass,
+        "atios_knx_bridge",
+        matter_client,
+        # Override: Reachable = False at fixture load time.
+        {_REACHABLE_ATTR_PATH: False},
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_bridged_entity_becomes_unavailable_on_reachable_false(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test entity becomes unavailable when Reachable attribute changes to False.
+
+    Sequence:
+    1. Setup with Reachable=True  → entity available.
+    2. Set Reachable=False via set_node_attribute.
+    3. Fire ATTRIBUTE_UPDATED event              → entity must become unavailable.
+    """
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "atios_knx_bridge", matter_client
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate the bridge reporting the endpoint as unreachable.
+    set_node_attribute(matter_node, 29, 57, 17, False)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=(matter_node.node_id, _REACHABLE_ATTR_PATH, False),
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_bridged_entity_recovers_when_reachable_true(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test entity becomes available again when Reachable attribute returns to True.
+
+    Sequence:
+    1. Setup with Reachable=False → entity unavailable.
+    2. Set Reachable=True via set_node_attribute.
+    3. Fire ATTRIBUTE_UPDATED event              → entity must become available.
+    """
+    matter_node = await setup_integration_with_node_fixture(
+        hass,
+        "atios_knx_bridge",
+        matter_client,
+        {_REACHABLE_ATTR_PATH: False},
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Simulate the bridge reporting the endpoint as reachable again.
+    set_node_attribute(matter_node, 29, 57, 17, True)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=(matter_node.node_id, _REACHABLE_ATTR_PATH, True),
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_bridged_entity_unavailable_when_node_goes_offline(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test entity becomes unavailable when the bridge node goes offline.
+
+    Even if BridgedDeviceBasicInformation.Reachable is True, the entity must
+    become unavailable when node.available is False, because Entity.available
+    is computed as node.available AND BridgedDeviceBasicInformation.Reachable.
+    """
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "atios_knx_bridge", matter_client
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Take the whole node offline.
+    matter_node.node_data.available = False
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Bring the node back online.
+    matter_node.node_data.available = True
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(_BRIDGE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
+async def test_non_bridged_entity_availability_tracks_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test non-bridged entity availability tracks node.available only.
+
+    For an endpoint without BridgedDeviceBasicInformation.Reachable,
+    Entity.available equals node.available.
+    """
+    entity_id = "light.mock_onoff_light"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Take the node offline.
+    matter_node.node_data.available = False
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Bring the node back online.
+    matter_node.node_data.available = True
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_bridged_entity_subscribes_to_reachable_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that Entity subscribes to BridgedDeviceBasicInformation.Reachable.
+
+    When an endpoint has the BridgedDeviceBasicInformation.Reachable attribute
+    (i.e. has_attribute returns True), the entity must create an
+    ATTRIBUTE_UPDATED subscription for that attribute path so that reachability
+    changes trigger the matter event callback and update Entity.available.
+    """
+    await setup_integration_with_node_fixture(hass, "atios_knx_bridge", matter_client)
+
+    subscribe_calls = matter_client.subscribe_events.call_args_list
+    assert any(
+        call.kwargs.get("attr_path_filter") == _REACHABLE_ATTR_PATH
+        and call.kwargs.get("event_filter") == EventType.ATTRIBUTE_UPDATED
+        for call in subscribe_calls
+    ), (
+        f"Expected a subscribe_events call with attr_path_filter={_REACHABLE_ATTR_PATH!r} "
+        "and event_filter=ATTRIBUTE_UPDATED, but none was found."
+    )
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
+async def test_non_bridged_entity_does_not_subscribe_to_reachable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that Entity does NOT subscribe to Reachable for non-bridge.
+
+    For an endpoint without BridgedDeviceBasicInformation.Reachable, no extra
+    subscription must be created for attribute path "*/57/17".
+    """
+    subscribe_calls = matter_client.subscribe_events.call_args_list
+    # Endpoint 1 of mock_onoff_light has no cluster 57 at all.
+    # No subscription to any "*/57/17" path should exist.
+    assert not any(
+        isinstance(call.kwargs.get("attr_path_filter"), str)
+        and "/57/17" in call.kwargs["attr_path_filter"]
+        for call in subscribe_calls
+    ), (
+        "Unexpected subscribe_events call for BridgedDeviceBasicInformation.Reachable on a non-bridged entity."
+    )

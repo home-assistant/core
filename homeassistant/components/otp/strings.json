@@ -13,6 +13,9 @@
         "data": {
           "code": "Verification code (OTP)"
         },
+        "data_description": {
+          "code": "The six-digit code currently displayed in your authentication app."
+        },
         "description": "Before completing the setup of One-Time Password (OTP), confirm with a verification code. Scan the QR code with your authentication app. If you don't have one, we recommend either {auth_app1} or {auth_app2}.\n\nAfter scanning the code, enter the six-digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**.",
         "title": "Verify One-Time Password (OTP)"
       },
@@ -21,7 +24,13 @@
           "name": "[%key:common::config_flow::data::name%]",
           "new_token": "Generate a new token?",
           "token": "Authenticator token (OTP)"
-        }
+        },
+        "data_description": {
+          "name": "The purpose of this sensor (for example, the name of the service or account for which the One-Time Password is used).",
+          "new_token": "Generate a new secret key. You will be able to scan a QR code to import this token into your preferred authenticator app in the next step.",
+          "token": "An existing secret key for import into Home Assistant."
+        },
+        "description": "Creates a sensor that generates One-Time Passwords (OTP) for two-factor authentication."
       }
     }
   }

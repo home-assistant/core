@@ -1,7 +1,9 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "awning_is_closed": {
@@ -9,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Awning is closed"
@@ -18,6 +23,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Awning is open"
@@ -27,6 +35,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Blind is closed"
@@ -36,6 +47,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Blind is open"
@@ -45,6 +59,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Curtain is closed"
@@ -54,6 +71,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Curtain is open"
@@ -63,6 +83,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Shade is closed"
@@ -72,6 +95,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Shade is open"
@@ -81,6 +107,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Shutter is closed"
@@ -90,6 +119,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::condition_for_name%]"
         }
       },
       "name": "Shutter is open"
@@ -178,21 +210,6 @@
       "name": "Window"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
@@ -254,6 +271,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Awning closed"
@@ -263,6 +283,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Awning opened"
@@ -272,6 +295,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Blind closed"
@@ -281,6 +307,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Blind opened"
@@ -290,6 +319,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Curtain closed"
@@ -299,6 +331,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Curtain opened"
@@ -308,6 +343,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shade closed"
@@ -317,6 +355,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shade opened"
@@ -326,6 +367,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shutter closed"
@@ -335,6 +379,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shutter opened"

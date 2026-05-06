@@ -30,6 +30,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_BASE_URL,
     CONF_SHOW_BACKGROUND,
+    CONF_SHOW_ROOMS,
+    CONF_SHOW_WALLS,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
     DOMAIN,
@@ -87,6 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                     if entry.options.get(DRAWABLES, {}).get(drawable, default_value)
                 ],
                 show_background=entry.options.get(CONF_SHOW_BACKGROUND, False),
+                show_rooms=entry.options.get(CONF_SHOW_ROOMS, True),
+                show_walls=entry.options.get(CONF_SHOW_WALLS, True),
                 map_scale=MAP_SCALE,
             ),
             mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),

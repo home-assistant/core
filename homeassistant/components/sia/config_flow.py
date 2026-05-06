@@ -16,12 +16,7 @@ from pysiaalarm import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 
@@ -36,7 +31,7 @@ from .const import (
     DOMAIN,
     TITLE,
 )
-from .hub import SIAHub
+from .hub import SIAConfigEntry, SIAHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +95,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SIAConfigEntry,
     ) -> SIAOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SIAOptionsFlowHandler(config_entry)
@@ -179,7 +174,9 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
 class SIAOptionsFlowHandler(OptionsFlow):
     """Handle SIA options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    config_entry: SIAConfigEntry
+
+    def __init__(self, config_entry: SIAConfigEntry) -> None:
         """Initialize SIA options flow."""
         self.options = deepcopy(dict(config_entry.options))
         self.hub: SIAHub | None = None
@@ -189,7 +186,7 @@ class SIAOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the SIA options."""
-        self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.hub = self.config_entry.runtime_data
         assert self.hub is not None
         assert self.hub.sia_accounts is not None
         self.accounts_todo = [a.account_id for a in self.hub.sia_accounts]

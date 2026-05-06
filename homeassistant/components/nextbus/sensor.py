@@ -31,6 +31,8 @@ async def async_setup_entry(
     entry_stop = config.data[CONF_STOP]
     coordinator_key = f"{entry_agency}-{entry_stop}"
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(coordinator_key)
 
     async_add_entities(

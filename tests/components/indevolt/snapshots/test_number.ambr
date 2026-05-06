@@ -29,7 +29,7 @@
     'object_id_base': 'Discharge limit',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Discharge limit',
     'platform': 'indevolt',
@@ -44,7 +44,6 @@
 # name: test_number[2][number.cms_sf2000_discharge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'CMS-SF2000 Discharge limit',
       'max': 100,
       'min': 0,

@@ -242,6 +242,8 @@ def async_get_coordinator(hass: HomeAssistant) -> PrivateDevicesCoordinator:
     if existing := hass.data.get(DOMAIN):
         return cast(PrivateDevicesCoordinator, existing)
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     pdm = hass.data[DOMAIN] = PrivateDevicesCoordinator(hass)
 
     return pdm

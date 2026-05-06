@@ -67,7 +67,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -106,7 +106,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Back Door Doorbell',
     }),
@@ -186,7 +186,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -225,7 +225,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Front Door Doorbell',
     }),

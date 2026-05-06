@@ -46,7 +46,12 @@ from .legacy import (
     async_get_provider,
     async_setup_legacy,
 )
-from .models import SpeechMetadata, SpeechResult
+from .models import (
+    DEFAULT_AUDIO_PROCESSING,
+    SpeechAudioProcessing,
+    SpeechMetadata,
+    SpeechResult,
+)
 
 __all__ = [
     "DOMAIN",
@@ -196,6 +201,11 @@ class SpeechToTextEntity(RestoreEntity):
     @abstractmethod
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
+
+    @property
+    def audio_processing(self) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings."""
+        return DEFAULT_AUDIO_PROCESSING
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the provider entity is added to hass."""

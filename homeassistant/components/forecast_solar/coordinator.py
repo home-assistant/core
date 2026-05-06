@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError
+from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -19,8 +19,10 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    DEFAULT_DAMPING,
     DOMAIN,
     LOGGER,
+    SUBENTRY_TYPE_PLANE,
 )
 
 type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
@@ -30,6 +32,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
     """The Forecast.Solar Data Update Coordinator."""
 
     config_entry: ForecastSolarConfigEntry
+    forecast: ForecastSolar
 
     def __init__(self, hass: HomeAssistant, entry: ForecastSolarConfigEntry) -> None:
         """Initialize the Forecast.Solar coordinator."""
@@ -43,17 +46,34 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         ) is not None and inverter_size > 0:
             inverter_size = inverter_size / 1000
 
+        # Build the list of planes from subentries.
+        plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+
+        # The first plane subentry is the main plane
+        main_plane = plane_subentries[0]
+
+        # Additional planes
+        planes: list[Plane] = [
+            Plane(
+                declination=subentry.data[CONF_DECLINATION],
+                azimuth=(subentry.data[CONF_AZIMUTH] - 180),
+                kwp=(subentry.data[CONF_MODULES_POWER] / 1000),
+            )
+            for subentry in plane_subentries[1:]
+        ]
+
         self.forecast = ForecastSolar(
             api_key=api_key,
             session=async_get_clientsession(hass),
             latitude=entry.data[CONF_LATITUDE],
             longitude=entry.data[CONF_LONGITUDE],
-            declination=entry.options[CONF_DECLINATION],
-            azimuth=(entry.options[CONF_AZIMUTH] - 180),
-            kwp=(entry.options[CONF_MODULES_POWER] / 1000),
-            damping_morning=entry.options.get(CONF_DAMPING_MORNING, 0.0),
-            damping_evening=entry.options.get(CONF_DAMPING_EVENING, 0.0),
+            declination=main_plane.data[CONF_DECLINATION],
+            azimuth=(main_plane.data[CONF_AZIMUTH] - 180),
+            kwp=(main_plane.data[CONF_MODULES_POWER] / 1000),
+            damping_morning=entry.options.get(CONF_DAMPING_MORNING, DEFAULT_DAMPING),
+            damping_evening=entry.options.get(CONF_DAMPING_EVENING, DEFAULT_DAMPING),
             inverter=inverter_size,
+            planes=planes,
         )
 
         # Free account have a resolution of 1 hour, using that as the default

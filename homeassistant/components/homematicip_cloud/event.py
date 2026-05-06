@@ -85,6 +85,7 @@ class HomematicipDoorBellEvent(HomematicipGenericEntity, EventEntity):
             post=description.key,
             channel=channel,
             is_multi_channel=False,
+            feature_id="doorbell",
         )
 
         self.entity_description = description

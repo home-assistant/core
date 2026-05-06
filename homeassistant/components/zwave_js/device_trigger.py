@@ -31,7 +31,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .config_validation import VALUE_SCHEMA
+from .config_validation import COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_DATA_TYPE,
@@ -91,7 +91,7 @@ NOTIFICATION_EVENT_CC_MAPPINGS = (
 # Event based trigger schemas
 BASE_EVENT_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
+        vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
     }
 )
 
@@ -162,7 +162,7 @@ NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
 # zwave_js.value_updated based trigger schemas
 BASE_VALUE_UPDATED_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
+        vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(None, vol.Coerce(int), str),
         vol.Optional(ATTR_ENDPOINT, default=0): vol.Any(None, vol.Coerce(int)),
@@ -558,7 +558,7 @@ async def async_get_trigger_capabilities(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
-                            CommandClass(cc.id).value: cc.name
+                            str(CommandClass(cc.id).value): cc.name
                             for cc in sorted(
                                 node.command_classes, key=lambda cc: cc.name
                             )

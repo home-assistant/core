@@ -142,6 +142,13 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            # Home Assistant already accepts URL-based client_ids via
+            # IndieAuth without prior registration, which is compatible with
+            # draft-ietf-oauth-client-id-metadata-document. This flag
+            # advertises that support to encourage clients to use it. The
+            # metadata document is not actually fetched as IndieAuth doesn't
+            # require it.
+            "client_id_metadata_document_supported": True,
             "response_types_supported": ["code"],
             "service_documentation": (
                 "https://developers.home-assistant.io/docs/auth_api"

@@ -11,6 +11,8 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions import filter_entity_ids_by_permission
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.websocket_api import ActiveConnection, messages
@@ -137,6 +139,13 @@ async def ws_get_history_during_period(
         if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
             connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
             return
+
+    entity_ids = filter_entity_ids_by_permission(
+        connection.user, entity_ids, POLICY_READ
+    )
+    if not entity_ids:
+        connection.send_result(msg["id"], {})
+        return
 
     include_start_time_state = msg["include_start_time_state"]
     no_attributes = msg["no_attributes"]
@@ -443,6 +452,13 @@ async def ws_stream(
         if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
             connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
             return
+
+    entity_ids = filter_entity_ids_by_permission(
+        connection.user, entity_ids, POLICY_READ
+    )
+    if not entity_ids:
+        _async_send_empty_response(connection, msg_id, start_time, end_time)
+        return
 
     include_start_time_state = msg["include_start_time_state"]
     significant_changes_only = msg["significant_changes_only"]

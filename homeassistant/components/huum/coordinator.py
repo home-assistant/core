@@ -56,5 +56,6 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
             return await self.huum.status()
         except (Forbidden, NotAuthenticated) as err:
             raise ConfigEntryAuthFailed(
-                "Could not log in to Huum with given credentials"
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
             ) from err

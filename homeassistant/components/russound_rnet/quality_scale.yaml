@@ -9,10 +9,7 @@ rules:
   common-modules: todo
   config-flow-test-coverage: todo
   config-flow: todo
-  dependency-transparency:
-    status: todo
-    comment: |
-      CI pipeline for publishing is not on GH repo.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
@@ -87,7 +84,7 @@ rules:
       This integration is not a hub and only represents a single device.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: |

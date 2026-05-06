@@ -12,13 +12,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,15 +37,13 @@ RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson number platform."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    api = config_entry.runtime_data.api
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities([RensonNumber(RENSON_NUMBER_DESCRIPTION, api, coordinator)])
 

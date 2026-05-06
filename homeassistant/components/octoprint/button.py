@@ -3,26 +3,22 @@
 from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OctoprintConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Octoprint control buttons."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]["coordinator"]
-    client: OctoprintClient = hass.data[DOMAIN][config_entry.entry_id]["client"]
+    coordinator = config_entry.runtime_data
+    client = coordinator.octoprint
     device_id = config_entry.unique_id
     assert device_id is not None
 

@@ -6,7 +6,7 @@ import uuid
 import pytest
 from zwave_me_ws import ZWaveMeData
 
-from homeassistant.components.zwave_me import ZWaveMePlatform
+from homeassistant.components.zwave_me.const import ZWaveMePlatform
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -53,7 +53,7 @@ async def test_remove_stale_devices(
     )
     with (
         patch(
-            "homeassistant.components.zwave_me.ZWaveMe.get_connection",
+            "homeassistant.components.zwave_me.controller.ZWaveMe.get_connection",
             mock_connection,
         ),
         patch(

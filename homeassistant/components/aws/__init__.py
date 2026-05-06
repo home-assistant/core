@@ -1,8 +1,12 @@
 """Support for Amazon Web Services (AWS)."""
 
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from aiobotocore.session import AioSession
 import voluptuous as vol
@@ -30,13 +34,21 @@ from .const import (
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     CONF_VALIDATE,
-    DATA_CONFIG,
-    DATA_HASS_CONFIG,
-    DATA_SESSIONS,
+    DATA_AWS,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class AWSData:
+    """Runtime data for the AWS integration."""
+
+    hass_config: ConfigType
+    config: dict[str, Any]
+    sessions: OrderedDict[str, AioSession]
+
 
 AWS_CREDENTIAL_SCHEMA = vol.Schema(
     {
@@ -88,14 +100,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up AWS component."""
-    hass.data[DATA_HASS_CONFIG] = config
-
     if (conf := config.get(DOMAIN)) is None:
         # create a default conf using default profile
         conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
 
-    hass.data[DATA_CONFIG] = conf
-    hass.data[DATA_SESSIONS] = OrderedDict()
+    hass.data[DATA_AWS] = AWSData(
+        hass_config=config, config=conf, sessions=OrderedDict()
+    )
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -111,8 +122,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     Validate and save sessions per aws credential.
     """
-    config = hass.data[DATA_HASS_CONFIG]
-    conf = hass.data[DATA_CONFIG]
+    data = hass.data[DATA_AWS]
+    conf = data.config
 
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
@@ -143,14 +154,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 validation = False
             else:
-                hass.data[DATA_SESSIONS][name] = result
+                data.sessions[name] = result
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, Platform.NOTIFY, DOMAIN, notify_config, config
+                hass, Platform.NOTIFY, DOMAIN, notify_config, data.hass_config
             )
         )
 

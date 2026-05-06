@@ -155,7 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_COMPONENT] = storage_collection
 
     collection.DictStorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection,
+        DOMAIN,
+        DOMAIN,
+        CREATE_FIELDS,
+        UPDATE_FIELDS,
+        admin_only=True,
     ).async_setup(hass)
 
     websocket_api.async_register_command(hass, handle_integration_list)
@@ -341,6 +346,7 @@ async def handle_integration_list(
         vol.Required("config_entry_id"): str,
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_config_entry(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

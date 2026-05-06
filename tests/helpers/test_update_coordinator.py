@@ -534,7 +534,7 @@ async def test_update_locks(
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    remove_callbacks = crd.async_add_listener(update_callback)
 
     assert crd.update_interval
 
@@ -577,6 +577,10 @@ async def test_update_locks(
 
     # Unblock queued update
     block.set()
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
+    await crd.async_shutdown()
 
 
 async def test_refresh_recover(
@@ -1329,3 +1333,36 @@ async def test_refresh_known_errors_retry_after(
 
     unsub()
     crd._unschedule_refresh()
+
+
+async def test_callbacks_does_not_stop_coordinator(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_refresh for update coordinator."""
+
+    update_1 = Mock()
+    update_2 = Mock()
+
+    crd.async_add_listener(update_1)
+    crd.async_add_listener(update_2)
+    await crd.async_refresh()
+    assert update_1.call_count == 1
+    assert update_2.call_count == 1
+    assert crd.last_update_success is True
+
+    # Trigger exception in callback
+    update_1.side_effect = Exception("Failure in callback")
+    caplog.clear()
+    await crd.async_refresh()
+    assert any(
+        message.startswith("Unexpected error updating listener ")
+        for message in caplog.messages
+    )
+
+    # All callbacks should still have been called
+    assert update_1.call_count == 2
+    assert update_2.call_count == 2
+    assert crd.last_update_success is True
+
+    await crd.async_shutdown()

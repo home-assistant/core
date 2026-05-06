@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from jaraco.abode.exceptions import Exception as AbodeException
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, DOMAIN_DATA, LOGGER
+from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from . import AbodeConfigEntry, AbodeSystem
 
 ATTR_SETTING = "setting"
 ATTR_VALUE = "value"
@@ -25,13 +31,21 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 
+def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:
+    """Return the Abode system for the loaded config entry."""
+    entries: list[AbodeConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError("Abode integration is not loaded")
+    return entries[0].runtime_data
+
+
 def _change_setting(call: ServiceCall) -> None:
     """Change an Abode system setting."""
     setting = call.data[ATTR_SETTING]
     value = call.data[ATTR_VALUE]
 
     try:
-        call.hass.data[DOMAIN_DATA].abode.set_setting(setting, value)
+        _get_abode_system(call.hass).abode.set_setting(setting, value)
     except AbodeException as ex:
         LOGGER.warning(ex)
 
@@ -42,7 +56,7 @@ def _capture_image(call: ServiceCall) -> None:
 
     target_entities = [
         entity_id
-        for entity_id in call.hass.data[DOMAIN_DATA].entity_ids
+        for entity_id in _get_abode_system(call.hass).entity_ids
         if entity_id in entity_ids
     ]
 
@@ -57,7 +71,7 @@ def _trigger_automation(call: ServiceCall) -> None:
 
     target_entities = [
         entity_id
-        for entity_id in call.hass.data[DOMAIN_DATA].entity_ids
+        for entity_id in _get_abode_system(call.hass).entity_ids
         if entity_id in entity_ids
     ]
 

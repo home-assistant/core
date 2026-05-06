@@ -44,7 +44,7 @@ async def test_device_diagnostics(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics."""
+    """Test device diagnostics."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -55,3 +55,30 @@ async def test_device_diagnostics(
         await get_diagnostics_for_device(hass, hass_client, config_entry, device)
         == snapshot
     )
+
+
+@pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_device_diagnostics_invalid_upstream_exception(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device diagnostics with invalid upstream exception."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "VF1ZOE40VIN")})
+    assert device is not None
+
+    data = await get_diagnostics_for_device(hass, hass_client, config_entry, device)
+    assert data["data"] == {
+        "battery": None,
+        "battery_soc": None,
+        "charge_mode": None,
+        "charging_settings": None,
+        "cockpit": None,
+        "hvac_status": None,
+    }

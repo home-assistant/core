@@ -60,6 +60,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -168,7 +169,7 @@ class NumberDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`,  `mA`
+    Unit of measurement: `A`,  `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -224,7 +225,7 @@ class NumberDeviceClass(StrEnum):
     FREQUENCY = "frequency"
     """Frequency.
 
-    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    Unit of measurement: `mHz`, `Hz`, `kHz`, `MHz`, `GHz`
     """
 
     GAS = "gas"
@@ -629,6 +630,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.ENERGY: EnergyConverter,
     NumberDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     NumberDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    NumberDeviceClass.FREQUENCY: FrequencyConverter,
     NumberDeviceClass.GAS: VolumeConverter,
     NumberDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     NumberDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,

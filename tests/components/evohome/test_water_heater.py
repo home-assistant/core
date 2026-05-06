@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -24,8 +23,6 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS_WITH_DHW
-
-DHW_ENTITY_ID = "water_heater.domestic_hot_water"
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
@@ -45,14 +42,17 @@ async def test_setup_platform(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    for x in hass.states.async_all(WATER_HEATER_DOMAIN):
+    water_heater_states = hass.states.async_all(WATER_HEATER_DOMAIN)
+    assert water_heater_states
+
+    for x in water_heater_states:
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
     hass: HomeAssistant,
-    evohome: EvohomeClient,
+    dhw_id: str,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -67,7 +67,7 @@ async def test_set_operation_mode(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_OPERATION_MODE: "auto",
             },
             blocking=True,
@@ -81,7 +81,7 @@ async def test_set_operation_mode(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_OPERATION_MODE: "off",
             },
             blocking=True,
@@ -101,7 +101,7 @@ async def test_set_operation_mode(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_OPERATION_MODE: "on",
             },
             blocking=True,
@@ -119,7 +119,7 @@ async def test_set_operation_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> None:
+async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
     """Test SERVICE_SET_AWAY_MODE of an evohome DHW zone."""
 
     # set_away_mode: off
@@ -128,7 +128,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
             WATER_HEATER_DOMAIN,
             SERVICE_SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_AWAY_MODE: "off",
             },
             blocking=True,
@@ -142,7 +142,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
             WATER_HEATER_DOMAIN,
             SERVICE_SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_AWAY_MODE: "on",
             },
             blocking=True,
@@ -152,7 +152,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
+async def test_turn_off(hass: HomeAssistant, dhw_id: str) -> None:
     """Test SERVICE_TURN_OFF of an evohome DHW zone."""
 
     # turn_off
@@ -161,7 +161,7 @@ async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
             WATER_HEATER_DOMAIN,
             SERVICE_TURN_OFF,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
             },
             blocking=True,
         )
@@ -170,7 +170,7 @@ async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
+async def test_turn_on(hass: HomeAssistant, dhw_id: str) -> None:
     """Test SERVICE_TURN_ON of an evohome DHW zone."""
 
     # turn_on
@@ -179,7 +179,7 @@ async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
             WATER_HEATER_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: DHW_ENTITY_ID,
+                ATTR_ENTITY_ID: dhw_id,
             },
             blocking=True,
         )

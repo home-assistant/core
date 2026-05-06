@@ -715,6 +715,9 @@ class EnergyPowerSensor(SensorEntity):
                 self._attr_native_value = None
                 return
 
+            self._attr_native_unit_of_measurement = source_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT
+            )
             self._attr_native_value = value * -1
 
         elif self._is_combined:
@@ -763,13 +766,11 @@ class EnergyPowerSensor(SensorEntity):
             # Check first sensor
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
-                # For combined mode, always use Watts because we may have different source units; for inverted mode, copy source unit
+                # Combined mode always emits Watts because we convert
+                # heterogeneous source units internally. For inverted mode the
+                # unit is copied from the source state in _update_state.
                 if self._is_combined:
                     self._attr_native_unit_of_measurement = UnitOfPower.WATT
-                else:
-                    self._attr_native_unit_of_measurement = (
-                        source_entry.unit_of_measurement
-                    )
                 # Get source name from registry
                 source_name = source_entry.name or source_entry.original_name
             # Assign power sensor to same device as source sensor(s)

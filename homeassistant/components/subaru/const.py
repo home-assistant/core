@@ -9,11 +9,6 @@ FETCH_INTERVAL = 300
 UPDATE_INTERVAL = 7200
 CONF_UPDATE_ENABLED = "update_enabled"
 
-# entry fields
-ENTRY_CONTROLLER = "controller"
-ENTRY_COORDINATOR = "coordinator"
-ENTRY_VEHICLES = "vehicles"
-
 # update coordinator name
 COORDINATOR_NAME = "subaru_data"
 
@@ -37,12 +32,15 @@ API_GEN_3 = "g3"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
 ]
 
 SERVICE_LOCK = "lock"
+SERVICE_REMOTE_START = "remote_start"
+SERVICE_REMOTE_STOP = "remote_stop"
 SERVICE_UNLOCK = "unlock"
 SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
 

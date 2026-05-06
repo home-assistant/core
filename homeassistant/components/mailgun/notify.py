@@ -44,6 +44,8 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     data = hass.data[DOMAIN]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN),

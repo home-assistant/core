@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
+from evohomeasync2 import exceptions as evo_exc
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -21,6 +22,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.evohome.climate import PRESET_RESET
+from homeassistant.components.evohome.const import DOMAIN, RESET_BREAKS_IN_HA_VERSION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -28,7 +31,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -53,7 +57,10 @@ async def test_setup_platform(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    for x in hass.states.async_all(CLIMATE_DOMAIN):
+    climate_states = hass.states.async_all(CLIMATE_DOMAIN)
+    assert climate_states
+
+    for x in climate_states:
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 
@@ -189,6 +196,32 @@ async def test_ctl_turn_off(
     assert results == snapshot
 
 
+@pytest.mark.parametrize("install", ["default"])
+async def test_ctl_invalid_system_mode(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test translated exception when the requested system mode is invalid."""
+
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=evo_exc.InvalidSystemModeError("Unsupported mode: xxx"),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_system_mode"
+
+
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_ctl_turn_on(
     hass: HomeAssistant,
@@ -218,6 +251,35 @@ async def test_ctl_turn_on(
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     assert results == snapshot
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_ctl_preset_reset_deprecated(
+    hass: HomeAssistant,
+    ctl_id: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecated warning when using the Reset preset on controllers."""
+
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+                ATTR_PRESET_MODE: PRESET_RESET,
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_preset_reset")
+    assert issue is not None
+    assert issue.translation_key == "deprecated_preset_reset"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

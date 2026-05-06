@@ -140,6 +140,8 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
         if device := registry.async_get_device(
             identifiers={(DOMAIN, self.device.entity_id)}
         ):
+            # Uses legacy hass.data[DOMAIN] pattern
+            # pylint: disable-next=hass-use-runtime-data
             self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = device.id
 
     @property

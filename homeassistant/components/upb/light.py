@@ -10,12 +10,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
+from . import UpbConfigEntry
+from .const import UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
 from .entity import UpbAttachedEntity
 
 SERVICE_LIGHT_FADE_START = "light_fade_start"
@@ -25,12 +25,12 @@ SERVICE_LIGHT_BLINK = "light_blink"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UpbConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UPB light based on a config entry."""
 
-    upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
+    upb = config_entry.runtime_data
     unique_id = config_entry.entry_id
     async_add_entities(
         UpbLight(upb.devices[dev], unique_id, upb) for dev in upb.devices

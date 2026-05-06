@@ -11,6 +11,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
@@ -98,7 +99,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             await async_remove_orphaned_entries_service(hub)
 
     for service in SUPPORTED_SERVICES:
-        hass.services.async_register(
+        async_register_admin_service(
+            hass,
             DOMAIN,
             service,
             async_call_deconz_service,

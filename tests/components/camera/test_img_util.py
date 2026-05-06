@@ -1,5 +1,6 @@
 """Test img_util module."""
 
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -19,10 +20,6 @@ EMPTY_16_12_JPEG = b"empty_16_12"
 
 def _clear_turbojpeg_singleton():
     TurboJPEGSingleton.__instance = None
-
-
-def _reset_turbojpeg_singleton():
-    TurboJPEGSingleton.__instance = TurboJPEG()
 
 
 def test_turbojpeg_singleton() -> None:
@@ -82,7 +79,9 @@ def test_scale_jpeg_camera_image() -> None:
     assert jpeg_bytes == EMPTY_16_12_JPEG
 
 
-def test_turbojpeg_load_failure() -> None:
+def test_turbojpeg_load_failure(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Handle libjpegturbo not being installed."""
     _clear_turbojpeg_singleton()
     with patch(
@@ -90,10 +89,24 @@ def test_turbojpeg_load_failure() -> None:
     ):
         TurboJPEGSingleton()
         assert TurboJPEGSingleton.instance() is False
+        assert caplog.record_tuples == [
+            (
+                "homeassistant.components.camera.img_util",
+                logging.ERROR,
+                "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal",
+            )
+        ]
 
+
+def test_turbojpeg_load_success(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Handle libjpegturbo being installed."""
     _clear_turbojpeg_singleton()
     TurboJPEGSingleton()
-    assert TurboJPEGSingleton.instance() is not None
+    # Verify TurboJPEG was loaded successfully
+    assert isinstance(TurboJPEGSingleton.instance(), TurboJPEG)
+    assert caplog.record_tuples == []
 
 
 SCALE_TEST_EXPECTED = [

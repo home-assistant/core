@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
@@ -36,6 +37,7 @@
     "field_xy_color_name": "XY-color",
     "section_advanced_fields_name": "Advanced options",
     "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
@@ -44,6 +46,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
         },
         "threshold": {
           "name": "[%key:component::light::common::condition_threshold_name%]"
@@ -56,6 +61,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
         }
       },
       "name": "Light is off"
@@ -65,6 +73,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
         }
       },
       "name": "Light is on"
@@ -309,12 +320,6 @@
         "yellowgreen": "Yellow green"
       }
     },
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "flash": {
       "options": {
         "long": "Long",
@@ -325,13 +330,6 @@
       "options": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -515,6 +513,9 @@
         "behavior": {
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::light::common::trigger_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::light::common::trigger_threshold_name%]"
         }
@@ -526,6 +527,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::trigger_for_name%]"
         }
       },
       "name": "Light turned off"
@@ -535,6 +539,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::trigger_for_name%]"
         }
       },
       "name": "Light turned on"

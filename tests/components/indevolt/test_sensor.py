@@ -126,7 +126,6 @@ async def test_battery_pack_filtering_fetch_error(
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test battery pack filtering when fetch fails."""
 

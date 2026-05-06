@@ -1,5 +1,6 @@
 """Test Shopping List intents."""
 
+from homeassistant.components.shopping_list.common import _get_shopping_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
@@ -27,8 +28,8 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     completed_items = response.speech_slots.get("completed_items")
     assert len(completed_items) == 2
     assert completed_items[0]["name"] == "beer"
-    assert hass.data["shopping_list"].items[1]["complete"]
-    assert hass.data["shopping_list"].items[2]["complete"]
+    assert _get_shopping_data(hass).items[1]["complete"]
+    assert _get_shopping_data(hass).items[2]["complete"]
 
     # Complete again
     response = await intent.async_handle(
@@ -37,8 +38,8 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert response.speech_slots.get("completed_items") == []
-    assert hass.data["shopping_list"].items[1]["complete"]
-    assert hass.data["shopping_list"].items[2]["complete"]
+    assert _get_shopping_data(hass).items[1]["complete"]
+    assert _get_shopping_data(hass).items[2]["complete"]
 
 
 async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> None:

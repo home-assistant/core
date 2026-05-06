@@ -34,15 +34,13 @@ class SynologyDSMbuttonDescription(ButtonEntityDescription):
 BUTTONS: Final = [
     SynologyDSMbuttonDescription(
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda syno_api: syno_api.async_reboot,
     ),
     SynologyDSMbuttonDescription(
         key="shutdown",
-        name="Shutdown",
-        icon="mdi:power",
+        translation_key="shutdown",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda syno_api: syno_api.async_shutdown,
     ),
@@ -63,6 +61,7 @@ class SynologyDSMButton(ButtonEntity):
     """Defines a Synology DSM button."""
 
     entity_description: SynologyDSMbuttonDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -75,7 +74,6 @@ class SynologyDSMButton(ButtonEntity):
         if TYPE_CHECKING:
             assert api.network is not None
             assert api.information is not None
-        self._attr_name = f"{api.network.hostname} {description.name}"
         self._attr_unique_id = f"{api.information.serial}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, api.information.serial)}

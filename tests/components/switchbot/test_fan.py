@@ -21,10 +21,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
-    AIR_PURIFIER_PM25_SERVICE_INFO,
-    AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
-    AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
-    AIR_PURIFIER_VOC_SERVICE_INFO,
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
     CIRCULATOR_FAN_SERVICE_INFO,
 )
 
@@ -103,10 +103,10 @@ async def test_circulator_fan_controlling(
 @pytest.mark.parametrize(
     ("service_info", "sensor_type"),
     [
-        (AIR_PURIFIER_VOC_SERVICE_INFO, "air_purifier_jp"),
-        (AIR_PURIFIER_TABLE_VOC_SERVICE_INFO, "air_purifier_table_jp"),
-        (AIR_PURIFIER_PM25_SERVICE_INFO, "air_purifier_us"),
-        (AIR_PURIFIER_TABLE_PM25_SERVICE_INFO, "air_purifier_table_us"),
+        (AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp"),
+        (AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp"),
+        (AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us"),
+        (AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us"),
     ],
 )
 @pytest.mark.parametrize(
@@ -116,6 +116,11 @@ async def test_circulator_fan_controlling(
             SERVICE_SET_PRESET_MODE,
             {ATTR_PRESET_MODE: "sleep"},
             "set_preset_mode",
+        ),
+        (
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_PERCENTAGE: 27},
+            "set_percentage",
         ),
         (
             SERVICE_TURN_OFF,
@@ -169,10 +174,10 @@ async def test_air_purifier_controlling(
 @pytest.mark.parametrize(
     ("service_info", "sensor_type"),
     [
-        (AIR_PURIFIER_VOC_SERVICE_INFO, "air_purifier_jp"),
-        (AIR_PURIFIER_TABLE_VOC_SERVICE_INFO, "air_purifier_table_jp"),
-        (AIR_PURIFIER_PM25_SERVICE_INFO, "air_purifier_us"),
-        (AIR_PURIFIER_TABLE_PM25_SERVICE_INFO, "air_purifier_table_us"),
+        (AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp"),
+        (AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp"),
+        (AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us"),
+        (AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us"),
     ],
 )
 @pytest.mark.parametrize(

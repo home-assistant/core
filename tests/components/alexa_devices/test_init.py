@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
+from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -109,7 +109,7 @@ async def test_migrate_entry(
             CONF_PASSWORD: TEST_PASSWORD,
             **(extra_data),
         },
-        unique_id=TEST_USERNAME,
+        unique_id=TEST_USER_ID,
         version=1,
         minor_version=minor_version,
     )

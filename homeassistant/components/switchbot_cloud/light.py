@@ -14,12 +14,11 @@ from switchbot_api import (
 )
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import AFTER_COMMAND_REFRESH, DOMAIN
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from .const import AFTER_COMMAND_REFRESH
 from .entity import SwitchBotCloudEntity
 
 
@@ -35,11 +34,11 @@ def brightness_map_value(value: int) -> int:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.lights

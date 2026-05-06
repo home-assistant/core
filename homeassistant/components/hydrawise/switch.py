@@ -22,6 +22,8 @@ from .const import DEFAULT_WATERING_TIME
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class HydrawiseSwitchEntityDescription(SwitchEntityDescription):

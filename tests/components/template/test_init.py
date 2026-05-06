@@ -625,6 +625,7 @@ async def test_yaml_reload_when_labs_flag_changes(
         },
     )
     assert await async_setup_component(hass, labs.DOMAIN, {})
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.hello") is not None
     assert hass.states.get("sensor.bye") is None
     listeners = hass.bus.async_listeners()

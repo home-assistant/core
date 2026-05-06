@@ -13,6 +13,7 @@ import httpx
 from httpx import URL, Request, Response
 import pytest
 
+from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
 from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
@@ -21,12 +22,18 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
 
 
 @pytest.mark.parametrize(
@@ -43,7 +50,7 @@ from tests.common import MockConfigEntry
                 ),
                 body={"type": "error", "error": {"type": "invalid_request_error"}},
             ),
-            "anthropic integration not ready yet: Your credit balance is too low to access the Claude API",
+            "Your credit balance is too low to access the Claude API",
         ),
     ],
 )
@@ -82,6 +89,25 @@ async def test_init_auth_error(
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_init_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that repair issue is created on deprecated model."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            "chat_model": "claude-opus-4-20250514",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated")
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -187,7 +213,7 @@ async def test_migration_from_v1_to_v2(
     await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == MINOR_VERSION
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -386,7 +412,11 @@ async def test_migration_from_v1_disabled(
     entry = entries[0]
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert (
+        entry.minor_version == 3
+        if merged_config_entry_disabled_by is not None
+        else MINOR_VERSION
+    )
     assert not entry.options
     assert entry.title == "Claude conversation"
     assert len(entry.subentries) == 2
@@ -506,7 +536,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 3
+        assert entry.minor_version == MINOR_VERSION
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -597,7 +627,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == MINOR_VERSION
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
@@ -717,7 +747,7 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == MINOR_VERSION
     assert not entry.options
     assert entry.title == "Claude"
     assert len(entry.subentries) == 2
@@ -794,7 +824,7 @@ async def test_migration_from_v2_1_to_v2_2(
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            3,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -804,7 +834,7 @@ async def test_migration_from_v2_1_to_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            3,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -814,7 +844,7 @@ async def test_migration_from_v2_1_to_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            3,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -824,7 +854,7 @@ async def test_migration_from_v2_1_to_v2_2(
             None,
             None,
             True,
-            3,
+            MINOR_VERSION,
             None,
             None,
             None,
@@ -961,3 +991,69 @@ async def test_migrate_entry_to_v2_3(
     assert mock_config_entry.disabled_by == config_entry_disabled_by_after_migration
     assert conversation_device.disabled_by == device_disabled_by_after_migration
     assert conversation_entity.disabled_by == entity_disabled_by_after_migration
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_to_v2_4(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration to version 2.4."""
+    # Create a v2.3 config entry
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": {
+                    "recommended": True,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-haiku-4-5",
+                },
+                "subentry_id": "mock_id_1",
+                "subentry_type": "conversation",
+                "title": "Claude haiku default",
+                "unique_id": None,
+            },
+            {
+                "data": {
+                    "recommended": False,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-haiku-4-5",
+                    "temperature": 0.5,
+                },
+                "subentry_id": "mock_id_2",
+                "subentry_type": "conversation",
+                "title": "Claude haiku non-default",
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Run migration
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check that minor version was updated
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == MINOR_VERSION
+
+    # Verify data was not changed for the first subentry
+    assert mock_config_entry.subentries["mock_id_1"].data == {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "claude-haiku-4-5",
+    }
+
+    # Verify that temperature was removed from the second subentry
+    assert mock_config_entry.subentries["mock_id_2"].data == {
+        "recommended": False,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "claude-haiku-4-5",
+    }

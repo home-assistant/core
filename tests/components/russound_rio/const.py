@@ -1,20 +1,56 @@
 """Constants for russound_rio tests."""
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.russound_rio import TYPE_TCP
+from homeassistant.components.russound_rio.const import CONF_BAUDRATE, TYPE_SERIAL
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 MODEL = "MCA-C5"
 HARDWARE_MAC = "00:11:22:33:44:55"
 API_VERSION = "1.08.00"
 
-MOCK_CONFIG = {
+MOCK_TCP_STEP_INPUT = {
     CONF_HOST: "192.168.20.75",
     CONF_PORT: 9621,
 }
 
-MOCK_RECONFIGURATION_CONFIG = {
+MOCK_TCP_CONFIG = {
+    CONF_TYPE: TYPE_TCP,
+    CONF_HOST: "192.168.20.75",
+    CONF_PORT: 9621,
+}
+
+MOCK_RECONFIGURATION_TCP_STEP_INPUT = {
     CONF_HOST: "192.168.20.70",
     CONF_PORT: 9622,
+}
+
+MOCK_RECONFIGURATION_TCP_ENTRY_DATA = {
+    CONF_TYPE: TYPE_TCP,
+    CONF_HOST: "192.168.20.70",
+    CONF_PORT: 9622,
+}
+
+MOCK_SERIAL_STEP_INPUT = {
+    CONF_DEVICE: "/dev/ttyUSB0",
+    CONF_BAUDRATE: 115200,
+}
+
+MOCK_SERIAL_CONFIG = {
+    CONF_TYPE: TYPE_SERIAL,
+    CONF_DEVICE: "/dev/ttyUSB0",
+    CONF_BAUDRATE: 115200,
+}
+
+MOCK_RECONFIGURATION_SERIAL_STEP_INPUT = {
+    CONF_DEVICE: "/dev/ttyUSB1",
+    CONF_BAUDRATE: 115200,
+}
+
+MOCK_RECONFIGURATION_SERIAL_ENTRY_DATA = {
+    CONF_TYPE: TYPE_SERIAL,
+    CONF_DEVICE: "/dev/ttyUSB1",
+    CONF_BAUDRATE: 115200,
 }
 
 NAME_ZONE_1 = "backyard"

@@ -69,6 +69,20 @@
       }
     }
   },
+  "exceptions": {
+    "keyboard_error": {
+      "message": "An error occurred while sending text to the Apple TV"
+    },
+    "keyboard_not_available": {
+      "message": "Keyboard input is not supported by this device"
+    },
+    "keyboard_not_focused": {
+      "message": "No text input field is currently focused on the Apple TV"
+    },
+    "not_connected": {
+      "message": "Apple TV is not connected"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -77,6 +91,46 @@
         },
         "description": "Configure general device settings"
       }
+    }
+  },
+  "services": {
+    "append_keyboard_text": {
+      "description": "Appends text to the currently focused text input field on an Apple TV.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::description%]",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::name%]"
+        },
+        "text": {
+          "description": "The text to append.",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::text::name%]"
+        }
+      },
+      "name": "Append keyboard text"
+    },
+    "clear_keyboard_text": {
+      "description": "Clears the text in the currently focused text input field on an Apple TV.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::description%]",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::name%]"
+        }
+      },
+      "name": "Clear keyboard text"
+    },
+    "set_keyboard_text": {
+      "description": "Sets the text in the currently focused text input field on an Apple TV.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Apple TV to send text to.",
+          "name": "Apple TV"
+        },
+        "text": {
+          "description": "The text to set.",
+          "name": "Text"
+        }
+      },
+      "name": "Set keyboard text"
     }
   }
 }

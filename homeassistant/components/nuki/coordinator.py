@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -25,16 +26,28 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 
+type NukiConfigEntry = ConfigEntry[NukiEntryData]
+
+
+@dataclass(slots=True)
+class NukiEntryData:
+    """Class to hold Nuki data."""
+
+    coordinator: NukiCoordinator
+    bridge: NukiBridge
+    locks: list[NukiLock]
+    openers: list[NukiOpener]
+
 
 class NukiCoordinator(DataUpdateCoordinator[None]):
     """Data Update Coordinator for the Nuki integration."""
 
-    config_entry: ConfigEntry
+    config_entry: NukiConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NukiConfigEntry,
         bridge: NukiBridge,
         locks: list[NukiLock],
         openers: list[NukiOpener],

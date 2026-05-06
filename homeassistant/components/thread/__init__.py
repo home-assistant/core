@@ -36,6 +36,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     async_setup_ws_api(hass)
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN] = {}
     return True
 

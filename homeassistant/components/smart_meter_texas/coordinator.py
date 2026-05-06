@@ -52,15 +52,18 @@ class SmartMeterTexasData:
         return self.meters
 
 
-class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
+type SmartMeterTexasConfigEntry = ConfigEntry[SmartMeterTexasCoordinator]
+
+
+class SmartMeterTexasCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Smart Meter Texas data."""
 
-    config_entry: ConfigEntry
+    config_entry: SmartMeterTexasConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SmartMeterTexasConfigEntry,
         smart_meter_texas_data: SmartMeterTexasData,
     ) -> None:
         """Initialize the coordinator."""
@@ -74,10 +77,9 @@ class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
                 hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=True
             ),
         )
-        self._smart_meter_texas_data = smart_meter_texas_data
+        self.smart_meter_texas_data = smart_meter_texas_data
 
-    async def _async_update_data(self) -> SmartMeterTexasData:
+    async def _async_update_data(self) -> None:
         """Fetch latest data."""
         _LOGGER.debug("Fetching latest data")
-        await self._smart_meter_texas_data.read_meters()
-        return self._smart_meter_texas_data
+        await self.smart_meter_texas_data.read_meters()

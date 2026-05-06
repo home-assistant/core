@@ -9,32 +9,24 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DATA_COORDINATOR,
-    DATA_SMART_METER,
-    DOMAIN,
-    ELECTRIC_METER,
-    ESIID,
-    METER_NUMBER,
-)
-from .coordinator import SmartMeterTexasCoordinator
+from .const import ELECTRIC_METER, ESIID, METER_NUMBER
+from .coordinator import SmartMeterTexasConfigEntry, SmartMeterTexasCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SmartMeterTexasConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smart Meter Texas sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    meters = hass.data[DOMAIN][config_entry.entry_id][DATA_SMART_METER].meters
+    coordinator = config_entry.runtime_data
+    meters = coordinator.smart_meter_texas_data.meters
 
     async_add_entities(
         [SmartMeterTexasSensor(meter, coordinator) for meter in meters], False

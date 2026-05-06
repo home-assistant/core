@@ -49,7 +49,7 @@
       'latest_firmware': None,
       'mesh_role': 'master',
       'model': 'FRITZ!Box 7530 AX',
-      'unique_id': '1C:ED:XX:XX:34:11',
+      'unique_id': '1CED6FXX:XX1',
       'update_available': False,
       'wan_link_properties': dict({
         'NewLayer1DownstreamMaxBitRate': 318557000,

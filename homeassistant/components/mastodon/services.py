@@ -4,6 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 from math import isfinite
+from pathlib import Path
 from typing import Any
 
 from mastodon import Mastodon
@@ -11,11 +12,14 @@ from mastodon.Mastodon import (
     Account,
     MastodonAPIError,
     MastodonNotFoundError,
+    MastodonUnauthorizedError,
     MediaAttachment,
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.components import camera, image
+from homeassistant.components.media_source import async_resolve_media
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -25,20 +29,35 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.selector import MediaSelector
 
 from .const import (
     ATTR_ACCOUNT_NAME,
+    ATTR_ATTRIBUTION_DOMAINS,
+    ATTR_AVATAR,
+    ATTR_AVATAR_MIME_TYPE,
+    ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DISCOVERABLE,
+    ATTR_DISPLAY_NAME,
     ATTR_DURATION,
+    ATTR_FIELDS,
+    ATTR_HEADER,
+    ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
+    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
+    ATTR_NOTE,
+    ATTR_QUOTE_APPROVAL_POLICY,
     ATTR_STATUS,
+    ATTR_VALUE,
     ATTR_VISIBILITY,
     DOMAIN,
+    LOGGER,
 )
 from .coordinator import MastodonConfigEntry
 from .utils import get_media_type
@@ -53,6 +72,14 @@ class StatusVisibility(StrEnum):
     UNLISTED = "unlisted"
     PRIVATE = "private"
     DIRECT = "direct"
+
+
+class QuoteApprovalPolicy(StrEnum):
+    """QuoteApprovalPolicy model."""
+
+    PUBLIC = "public"
+    FOLLOWERS = "followers"
+    NOBODY = "nobody"
 
 
 SERVICE_GET_ACCOUNT = "get_account"
@@ -89,12 +116,33 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
+        vol.Optional(ATTR_QUOTE_APPROVAL_POLICY): vol.In(
+            [x.lower() for x in QuoteApprovalPolicy]
+        ),
         vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
         vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_LANGUAGE): str,
         vol.Optional(ATTR_MEDIA): str,
         vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
+    }
+)
+
+SERVICE_UPDATE_PROFILE = "update_profile"
+SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Optional(ATTR_DISPLAY_NAME): str,
+        vol.Optional(ATTR_NOTE): str,
+        vol.Optional(ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
+        vol.Optional(ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
+        vol.Optional(ATTR_LOCKED): bool,
+        vol.Optional(ATTR_BOT): bool,
+        vol.Optional(ATTR_DISCOVERABLE): bool,
+        vol.Optional(ATTR_FIELDS): vol.All(
+            cv.ensure_list, vol.Length(max=4), [dict[str, str]]
+        ),
+        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [str]),
     }
 )
 
@@ -123,6 +171,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_PROFILE,
+        _async_update_profile,
+        schema=SERVICE_UPDATE_PROFILE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -244,6 +299,11 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
         if ATTR_VISIBILITY in call.data
         else None
     )
+    quote_approval_policy: str | None = (
+        QuoteApprovalPolicy(call.data[ATTR_QUOTE_APPROVAL_POLICY])
+        if ATTR_QUOTE_APPROVAL_POLICY in call.data
+        else None
+    )
     idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
@@ -264,6 +324,7 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             client=client,
             status=status,
             visibility=visibility,
+            quote_approval_policy=quote_approval_policy,
             idempotency_key=idempotency_key,
             spoiler_text=spoiler_text,
             language=language,
@@ -319,3 +380,71 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
         ) from err
+
+
+async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
+    """Update profile information."""
+    params = dict(call.data.copy())
+
+    entry: MastodonConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, params.pop(ATTR_CONFIG_ENTRY_ID)
+    )
+    client = entry.runtime_data.client
+
+    if avatar := params.pop(ATTR_AVATAR, None):
+        params[ATTR_AVATAR], params[ATTR_AVATAR_MIME_TYPE] = await _resolve_media(
+            call.hass, avatar
+        )
+    if header := params.pop(ATTR_HEADER, None):
+        params[ATTR_HEADER], params[ATTR_HEADER_MIME_TYPE] = await _resolve_media(
+            call.hass, header
+        )
+    if fields := params.get(ATTR_FIELDS):
+        params[ATTR_FIELDS] = [
+            (field[ATTR_NAME].strip(), field[ATTR_VALUE].strip())
+            for field in fields
+            if field[ATTR_NAME].strip()
+        ]
+    try:
+        return await call.hass.async_add_executor_job(
+            lambda: client.account_update_credentials(**params)
+        )
+    except MastodonUnauthorizedError as error:
+        entry.async_start_reauth(call.hass)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
+    except MastodonAPIError as err:
+        LOGGER.debug("Full exception:", exc_info=err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_update_profile",
+        ) from err
+
+
+async def _resolve_media(
+    hass: HomeAssistant, media_source: dict[str, str]
+) -> tuple[bytes | Path, str | None]:
+    """Resolve media from a media source."""
+    media_content_id: str = media_source["media_content_id"]
+    if media_content_id.startswith("media-source://camera/"):
+        entity_id = media_content_id.removeprefix("media-source://camera/")
+        snapshot = await camera.async_get_image(hass, entity_id)
+        return snapshot.content, snapshot.content_type
+
+    if media_content_id.startswith("media-source://image/"):
+        entity_id = media_content_id.removeprefix("media-source://image/")
+        img = await image.async_get_image(hass, entity_id)
+        return img.content, img.content_type
+
+    media = await async_resolve_media(hass, media_source["media_content_id"], None)
+
+    if media.path is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="media_source_not_supported",
+            translation_placeholders={"media_content_id": media_content_id},
+        )
+
+    return media.path, media.mime_type

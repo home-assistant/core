@@ -41,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -95,6 +97,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -149,6 +153,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -203,6 +209,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,

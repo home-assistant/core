@@ -6,23 +6,22 @@ from time import monotonic
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN
-from .coordinator import VerisureDataUpdateCoordinator
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VerisureConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         VerisureSmartplug(coordinator, serial_number)
         for serial_number in coordinator.data["smart_plugs"]

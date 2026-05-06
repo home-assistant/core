@@ -1,0 +1,63 @@
+{
+  "domain": "unifi_discovery",
+  "name": "UniFi Discovery",
+  "codeowners": ["@RaHehl"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "B4FBE4*"
+    },
+    {
+      "macaddress": "802AA8*"
+    },
+    {
+      "macaddress": "F09FC2*"
+    },
+    {
+      "macaddress": "68D79A*"
+    },
+    {
+      "macaddress": "18E829*"
+    },
+    {
+      "macaddress": "245A4C*"
+    },
+    {
+      "macaddress": "784558*"
+    },
+    {
+      "macaddress": "E063DA*"
+    },
+    {
+      "macaddress": "265A4C*"
+    },
+    {
+      "macaddress": "74ACB9*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/unifi_discovery",
+  "integration_type": "system",
+  "iot_class": "local_polling",
+  "loggers": ["unifi_discovery"],
+  "quality_scale": "internal",
+  "requirements": ["unifi-discovery==1.4.0"],
+  "single_config_entry": true,
+  "ssdp": [
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine Pro"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine SE"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine Pro Max"
+    }
+  ]
+}

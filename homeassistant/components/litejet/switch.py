@@ -5,12 +5,12 @@ from typing import Any
 from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import LiteJetConfigEntry
 from .const import DOMAIN
 
 ATTR_NUMBER = "number"
@@ -18,12 +18,12 @@ ATTR_NUMBER = "number"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LiteJetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
-    system: LiteJet = hass.data[DOMAIN]
+    system = config_entry.runtime_data
 
     entities = []
     for i in system.button_switches():

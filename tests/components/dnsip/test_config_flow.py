@@ -1,4 +1,4 @@
-"""Test the dnsip config flow."""
+"""Test the DNS IP config flow."""
 
 from __future__ import annotations
 

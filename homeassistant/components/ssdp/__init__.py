@@ -10,7 +10,7 @@ from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo as _SsdpServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_ssdp, bind_hass
+from homeassistant.loader import async_get_ssdp
 from homeassistant.util.logging import catch_log_exception
 
 from . import websocket_api
@@ -45,7 +45,6 @@ def _format_err(name: str, *args: Any) -> str:
     return f"Exception in SSDP callback {name}: {args}"
 
 
-@bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
     callback: Callable[
@@ -68,7 +67,6 @@ async def async_register_callback(
     return await scanner.async_register_callback(job, match_dict)
 
 
-@bind_hass
 async def async_get_discovery_info_by_udn_st(
     hass: HomeAssistant, udn: str, st: str
 ) -> _SsdpServiceInfo | None:
@@ -77,7 +75,6 @@ async def async_get_discovery_info_by_udn_st(
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
 
 
-@bind_hass
 async def async_get_discovery_info_by_st(
     hass: HomeAssistant, st: str
 ) -> list[_SsdpServiceInfo]:
@@ -86,7 +83,6 @@ async def async_get_discovery_info_by_st(
     return await scanner.async_get_discovery_info_by_st(st)
 
 
-@bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
 ) -> list[_SsdpServiceInfo]:

@@ -83,6 +83,10 @@
         "name": {
           "description": "Name for PIN code. Must be case insensitively unique to the lock.",
           "name": "PIN name"
+        },
+        "notify_on_use": {
+          "description": "Whether the native Schlage notification should be sent when this PIN is used.",
+          "name": "Notify when PIN is used"
         }
       },
       "name": "Add PIN code"

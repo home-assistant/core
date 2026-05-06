@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 from python_open_router import OpenRouterError
 
-from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
+from homeassistant.components.open_router.const import (
+    CONF_PROMPT,
+    CONF_WEB_SEARCH,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -35,7 +39,31 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test account"
     assert result["data"] == {CONF_API_KEY: "bla"}
+
+
+async def test_second_account(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a second account with a different API key can be added."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "different_key"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test account"
+    assert result["data"] == {CONF_API_KEY: "different_key"}
 
 
 @pytest.mark.parametrize(
@@ -131,6 +159,7 @@ async def test_create_conversation_agent(
             CONF_MODEL: "openai/gpt-3.5-turbo",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: ["assist"],
+            CONF_WEB_SEARCH: False,
         },
     )
 
@@ -139,6 +168,7 @@ async def test_create_conversation_agent(
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
         CONF_LLM_HASS_API: ["assist"],
+        CONF_WEB_SEARCH: False,
     }
 
 
@@ -170,6 +200,7 @@ async def test_create_conversation_agent_no_control(
             CONF_MODEL: "openai/gpt-3.5-turbo",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: [],
+            CONF_WEB_SEARCH: False,
         },
     )
 
@@ -177,6 +208,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
+        CONF_WEB_SEARCH: False,
     }
 
 
@@ -263,11 +295,18 @@ async def test_reconfigure_conversation_agent(
             CONF_MODEL: "openai/gpt-4",
             CONF_PROMPT: "updated prompt",
             CONF_LLM_HASS_API: ["assist"],
+            CONF_WEB_SEARCH: True,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_MODEL] == "openai/gpt-4"
+    assert subentry.data[CONF_PROMPT] == "updated prompt"
+    assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
+    assert subentry.data[CONF_WEB_SEARCH] is True
 
 
 async def test_reconfigure_ai_task(
@@ -365,6 +404,83 @@ async def test_reconfigure_ai_task_abort(
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    ("web_search", "expected_web_search"),
+    [(True, True), (False, False)],
+    indirect=["web_search"],
+)
+async def test_create_conversation_agent_web_search(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    web_search: bool,
+    expected_web_search: bool,
+) -> None:
+    """Test creating a conversation agent with web search enabled/disabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Verify web_search field is present in schema with correct default
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_WEB_SEARCH)
+    assert key.default() is False
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "openai/gpt-3.5-turbo",
+            CONF_PROMPT: "you are an assistant",
+            CONF_LLM_HASS_API: ["assist"],
+            CONF_WEB_SEARCH: expected_web_search,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_WEB_SEARCH] is expected_web_search
+
+
+@pytest.mark.parametrize(
+    ("current_web_search", "expected_default"),
+    [(True, True), (False, False)],
+)
+async def test_reconfigure_conversation_subentry_web_search_default(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    current_web_search: bool,
+    expected_default: bool,
+) -> None:
+    """Test web_search field default reflects existing value when reconfiguring."""
+    await setup_integration(hass, mock_config_entry)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_WEB_SEARCH: current_web_search},
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_WEB_SEARCH)
+    assert key.default() is expected_default
 
 
 @pytest.mark.parametrize(

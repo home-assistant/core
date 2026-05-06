@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,7 +15,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -24,6 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
@@ -426,3 +428,51 @@ async def test_light_rgb_vs_onoff_modes(
     assert onoff_light.attributes.get("color_mode") == "onoff"
     assert onoff_light.attributes.get("brightness") is None
     assert onoff_light.attributes.get("rgb_color") is None
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED]])
+async def test_light_turn_on_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when turn on API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.device_with_led_led"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED]])
+async def test_light_turn_off_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when turn off API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.device_with_led_led"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"

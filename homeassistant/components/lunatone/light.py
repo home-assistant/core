@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from lunatone_rest_api_client import DALIBroadcast
@@ -10,6 +9,9 @@ from lunatone_rest_api_client.models import LineStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -28,7 +30,6 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
-STATUS_UPDATE_DELAY = 0.04
 
 
 async def async_setup_entry(
@@ -41,17 +42,20 @@ async def async_setup_entry(
     coordinator_devices = config_entry.runtime_data.coordinator_devices
     dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
 
+    assert config_entry.unique_id is not None
+
     entities: list[LightEntity] = [
         LunatoneLineBroadcastLight(
-            coordinator_info, coordinator_devices, dali_line_broadcast
+            coordinator_info,
+            coordinator_devices,
+            dali_line_broadcast,
+            config_entry.unique_id,
         )
         for dali_line_broadcast in dali_line_broadcasts
     ]
     entities.extend(
         [
-            LunatoneLight(
-                coordinator_devices, device_id, coordinator_info.data.device.serial
-            )
+            LunatoneLight(coordinator_devices, device_id, config_entry.unique_id)
             for device_id in coordinator_devices.data
         ]
     )
@@ -71,19 +75,21 @@ class LunatoneLight(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
+    _attr_min_color_temp_kelvin = 1000
+    _attr_max_color_temp_kelvin = 10000
 
     def __init__(
         self,
         coordinator: LunatoneDevicesDataUpdateCoordinator,
         device_id: int,
-        interface_serial_number: int,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone light."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._interface_serial_number = interface_serial_number
-        self._device = self.coordinator.data[self._device_id]
-        self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
+        self._config_entry_unique_id = config_entry_unique_id
+        self._device = self.coordinator.data[device_id]
+        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -94,7 +100,7 @@ class LunatoneLight(
             name=self._device.name,
             via_device=(
                 DOMAIN,
-                f"{self._interface_serial_number}-line{self._device.data.line}",
+                f"{self._config_entry_unique_id}-line{self._device.data.line}",
             ),
         )
 
@@ -120,7 +126,13 @@ class LunatoneLight(
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device is not None and self._device.brightness is not None:
+        if self._device.rgbw_color is not None:
+            return ColorMode.RGBW
+        if self._device.rgb_color is not None:
+            return ColorMode.RGB
+        if self._device.color_temperature is not None:
+            return ColorMode.COLOR_TEMP
+        if self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
@@ -128,6 +140,32 @@ class LunatoneLight(
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         return {self.color_mode}
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temp of this light in kelvin."""
+        return self._device.color_temperature
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color of this light."""
+        rgb_color = self._device.rgb_color
+        return rgb_color and (
+            round(rgb_color[0] * 255),
+            round(rgb_color[1] * 255),
+            round(rgb_color[2] * 255),
+        )
+
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the RGBW color of this light."""
+        rgbw_color = self._device.rgbw_color
+        return rgbw_color and (
+            round(rgbw_color[0] * 255),
+            round(rgbw_color[1] * 255),
+            round(rgbw_color[2] * 255),
+            round(rgbw_color[3] * 255),
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -138,16 +176,26 @@ class LunatoneLight(
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if brightness_supported(self.supported_color_modes):
-            await self._device.fade_to_brightness(
-                brightness_to_value(
-                    self.BRIGHTNESS_SCALE,
-                    kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                await self._device.fade_to_color_temperature(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
                 )
-            )
+            if ATTR_RGB_COLOR in kwargs:
+                await self._device.fade_to_rgbw_color(
+                    tuple(color / 255 for color in kwargs[ATTR_RGB_COLOR])
+                )
+            if ATTR_RGBW_COLOR in kwargs:
+                rgbw_color = tuple(color / 255 for color in kwargs[ATTR_RGBW_COLOR])
+                await self._device.fade_to_rgbw_color(rgbw_color[:-1], rgbw_color[-1])
+            if ATTR_BRIGHTNESS in kwargs or not self.is_on:
+                await self._device.fade_to_brightness(
+                    brightness_to_value(
+                        self.BRIGHTNESS_SCALE,
+                        kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+                    )
+                )
         else:
             await self._device.switch_on()
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -158,8 +206,6 @@ class LunatoneLight(
             await self._device.fade_to_brightness(0)
         else:
             await self._device.switch_off()
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
 
@@ -179,6 +225,7 @@ class LunatoneLineBroadcastLight(
         coordinator_info: LunatoneInfoDataUpdateCoordinator,
         coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
         broadcast: DALIBroadcast,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone line broadcast light."""
         super().__init__(coordinator_info)
@@ -187,7 +234,7 @@ class LunatoneLineBroadcastLight(
 
         line = broadcast.line
 
-        self._attr_unique_id = f"{coordinator_info.data.device.serial}-line{line}"
+        self._attr_unique_id = f"{config_entry_unique_id}-line{line}"
 
         line_device = self.coordinator.data.lines[str(line)].device
         extra_info: dict = {}
@@ -202,7 +249,7 @@ class LunatoneLineBroadcastLight(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"DALI Line {line}",
-            via_device=(DOMAIN, str(coordinator_info.data.device.serial)),
+            via_device=(DOMAIN, config_entry_unique_id),
             **extra_info,
         )
 
@@ -217,13 +264,9 @@ class LunatoneLineBroadcastLight(
         await self._broadcast.fade_to_brightness(
             brightness_to_value(self.BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255))
         )
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self._coordinator_devices.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
         await self._broadcast.fade_to_brightness(0)
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self._coordinator_devices.async_refresh()

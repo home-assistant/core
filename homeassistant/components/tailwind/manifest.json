@@ -11,7 +11,7 @@
   "documentation": "https://www.home-assistant.io/integrations/tailwind",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["gotailwind==0.3.0"],
+  "requirements": ["gotailwind==0.4.0"],
   "zeroconf": [
     {
       "properties": {

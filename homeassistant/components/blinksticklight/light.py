@@ -1,4 +1,4 @@
-"""Support for Blinkstick lights."""
+"""Support for BlinkStick lights."""
 
 # mypy: ignore-errors
 from __future__ import annotations
@@ -40,7 +40,7 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up Blinkstick device specified by serial number."""
+    """Set up BlinkStick device specified by serial number."""
 
     name = config[CONF_NAME]
     serial = config[CONF_SERIAL]

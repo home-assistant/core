@@ -9,12 +9,10 @@ from renson_endura_delta.field_enum import CURRENT_LEVEL_FIELD, DataType
 from renson_endura_delta.renson import Level, RensonVentilation
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RensonCoordinator
-from .const import DOMAIN
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,14 +65,12 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Call the Renson integration to setup."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    api = config_entry.runtime_data.api
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities([RensonBreezeSwitch(api, coordinator)])

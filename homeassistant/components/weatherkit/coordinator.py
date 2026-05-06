@@ -25,18 +25,20 @@ STALE_DATA_THRESHOLD = timedelta(hours=1)
 
 HOURLY_FORECAST_DURATION = timedelta(days=7)
 
+type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
+
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: WeatherKitConfigEntry
     supported_data_sets: list[DataSetType] | None = None
     last_updated_at: datetime | None = None
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WeatherKitConfigEntry,
         client: WeatherKitApiClient,
     ) -> None:
         """Initialize."""

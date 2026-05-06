@@ -41,11 +41,13 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration connects to a cloud service; no local network discovery is possible.
-  discovery: todo
+  discovery:
+    status: exempt
+    comment: No local network discovery of devices is possible (no zeroconf, mdns or other discovery mechanisms).
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -53,18 +55,18 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios exist; authentication failures are handled via the reauthentication flow.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

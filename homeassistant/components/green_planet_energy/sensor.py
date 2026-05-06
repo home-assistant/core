@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -34,6 +34,40 @@ class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Green Planet Energy sensor entity."""
 
     value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | datetime | None]
+
+
+def _get_lowest_price_day_time(
+    api: GreenPlanetEnergyAPI, data: dict[str, Any]
+) -> datetime | None:
+    """Return timestamp of the lowest-priced day hour (06:00–18:00)."""
+    now = dt_util.now()
+    now_h = now.hour
+    hour = api.get_lowest_price_day_with_hour(data, now_h)[1]
+    if hour is None:
+        return None
+    # After 18:00 the day period is over; use tomorrow's date
+    base = dt_util.start_of_local_day(now + timedelta(days=1) if now_h >= 18 else now)
+    return base.replace(hour=hour)
+
+
+def _get_lowest_price_night_time(
+    api: GreenPlanetEnergyAPI, data: dict[str, Any]
+) -> datetime | None:
+    """Return timestamp of the lowest-priced night hour (18:00-06:00)."""
+    now = dt_util.now()
+    now_h = now.hour
+    hour = api.get_lowest_price_night_with_hour(data)[1]
+    if hour is None:
+        return None
+
+    if now_h < 6:
+        base = dt_util.start_of_local_day(
+            now - timedelta(days=1) if hour >= 18 else now
+        )
+    else:
+        base = dt_util.start_of_local_day(now + timedelta(days=1) if hour < 6 else now)
+
+    return base.replace(hour=hour)
 
 
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
@@ -67,7 +101,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_placeholders={"time_range": "(06:00-18:00)"},
         value_fn=lambda api, data: (
             price / 100
-            if (price := api.get_lowest_price_day(data)) is not None
+            if (price := api.get_lowest_price_day(data, dt_util.now().hour)) is not None
             else None
         ),
     ),
@@ -76,11 +110,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="lowest_price_day_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(06:00-18:00)"},
-        value_fn=lambda api, data: (
-            dt_util.start_of_local_day().replace(hour=hour)
-            if (hour := api.get_lowest_price_day_with_hour(data)[1]) is not None
-            else None
-        ),
+        value_fn=_get_lowest_price_day_time,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
@@ -99,11 +129,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="lowest_price_night_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(18:00-06:00)"},
-        value_fn=lambda api, data: (
-            dt_util.start_of_local_day().replace(hour=hour)
-            if (hour := api.get_lowest_price_night_with_hour(data)[1]) is not None
-            else None
-        ),
+        value_fn=_get_lowest_price_night_time,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_current_price",

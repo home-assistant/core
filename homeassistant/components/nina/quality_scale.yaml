@@ -62,23 +62,17 @@ rules:
   docs-supported-devices:
     status: exempt
     comment: |
-      This integration does not use devices.
-  docs-supported-functions: todo
+      This integration exposes Home Assistant devices only for logical grouping and does not integrate specific physical devices that need to be documented as supported hardware.
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: todo
-  entity-device-class:
-    status: todo
-    comment: |
-      Extract attributes into own entities.
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
-  icon-translations:
-    status: exempt
-    comment: |
-      This integration does not custom icons.
+  icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

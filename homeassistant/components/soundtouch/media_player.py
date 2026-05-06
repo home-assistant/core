@@ -19,7 +19,6 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
@@ -29,6 +28,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SoundTouchConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,16 +46,16 @@ ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SoundTouchConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bose SoundTouch media player based on a config entry."""
-    device = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     media_player = SoundTouchMediaPlayer(device)
 
     async_add_entities([media_player], True)
 
-    hass.data[DOMAIN][entry.entry_id].media_player = media_player
+    entry.runtime_data.media_player = media_player
 
 
 class SoundTouchMediaPlayer(MediaPlayerEntity):
@@ -388,14 +388,16 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def _get_instance_by_ip(self, ip_address):
         """Search and return a SoundTouchDevice instance by it's IP address."""
-        for data in self.hass.data[DOMAIN].values():
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = entry.runtime_data
             if data.device.config.device_ip == ip_address:
                 return data.media_player
         return None
 
     def _get_instance_by_id(self, instance_id):
         """Search and return a SoundTouchDevice instance by it's ID (aka MAC address)."""
-        for data in self.hass.data[DOMAIN].values():
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = entry.runtime_data
             if data.device.config.device_id == instance_id:
                 return data.media_player
         return None

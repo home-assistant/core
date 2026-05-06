@@ -8,7 +8,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_SPEED,
-    DATA_COORDINATOR,
     DEFAULT_SPEED_LIMIT,
     DOMAIN,
     SERVICE_PAUSE,
@@ -30,7 +29,7 @@ def _get_coordinator(call: ServiceCall) -> NZBGetDataUpdateCoordinator:
             translation_domain=DOMAIN,
             translation_key="invalid_config_entry",
         )
-    return call.hass.data[DOMAIN][entries[0].entry_id][DATA_COORDINATOR]
+    return entries[0].runtime_data
 
 
 def pause(call: ServiceCall) -> None:

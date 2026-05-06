@@ -19,11 +19,11 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import OpenhomeConfigEntry
 from .const import DOMAIN
 
 SUPPORT_OPENHOME = (
@@ -37,14 +37,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenhomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Openhome config entry."""
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device = config_entry.runtime_data
 
     entity = OpenhomeDevice(device)
 

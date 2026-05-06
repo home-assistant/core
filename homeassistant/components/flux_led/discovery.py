@@ -153,8 +153,7 @@ def async_update_entry_from_discovery(
 @callback
 def async_get_discovery(hass: HomeAssistant, host: str) -> FluxLEDDiscovery | None:
     """Check if a device was already discovered via a broadcast discovery."""
-    discoveries: list[FluxLEDDiscovery] = hass.data[DOMAIN][FLUX_LED_DISCOVERY]
-    for discovery in discoveries:
+    for discovery in hass.data[FLUX_LED_DISCOVERY]:
         if discovery[ATTR_IPADDR] == host:
             return discovery
     return None
@@ -163,10 +162,10 @@ def async_get_discovery(hass: HomeAssistant, host: str) -> FluxLEDDiscovery | No
 @callback
 def async_clear_discovery_cache(hass: HomeAssistant, host: str) -> None:
     """Clear the host from the discovery cache."""
-    domain_data = hass.data[DOMAIN]
-    discoveries: list[FluxLEDDiscovery] = domain_data[FLUX_LED_DISCOVERY]
-    domain_data[FLUX_LED_DISCOVERY] = [
-        discovery for discovery in discoveries if discovery[ATTR_IPADDR] != host
+    hass.data[FLUX_LED_DISCOVERY] = [
+        discovery
+        for discovery in hass.data[FLUX_LED_DISCOVERY]
+        if discovery[ATTR_IPADDR] != host
     ]
 
 

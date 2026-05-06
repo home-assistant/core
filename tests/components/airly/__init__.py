@@ -29,7 +29,6 @@ async def init_integration(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 

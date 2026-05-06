@@ -1,4 +1,5 @@
 """The Smappee integration."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from pysmappee import Smappee, helper, mqtt
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
@@ -94,11 +96,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmappeeConfigEntry) -> b
             )
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
+        try:
+            implementation = (
+                await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                    hass, entry
+                )
             )
-        )
+        except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_implementation_unavailable",
+            ) from err
 
         smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)
 

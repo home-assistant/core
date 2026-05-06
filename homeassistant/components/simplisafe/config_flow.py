@@ -14,16 +14,12 @@ from simplipy.util.auth import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
+from . import SimpliSafeConfigEntry
 from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
@@ -68,7 +64,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SimpliSafeConfigEntry,
     ) -> SimpliSafeOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler()

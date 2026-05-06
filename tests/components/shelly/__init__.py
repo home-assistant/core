@@ -67,7 +67,7 @@ async def init_integration(
 
     if not skip_setup:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return entry
 

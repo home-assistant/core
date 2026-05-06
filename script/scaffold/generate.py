@@ -75,6 +75,8 @@ def _custom_tasks(template, info: Info) -> None:
 
         if info.requirement:
             changes["requirements"] = [info.requirement]
+        if info.integration_type:
+            changes["integration_type"] = info.integration_type
 
         info.update_manifest(**changes)
 

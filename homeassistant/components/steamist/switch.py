@@ -25,6 +25,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     coordinator: SteamistDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]

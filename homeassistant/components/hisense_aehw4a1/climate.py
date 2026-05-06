@@ -1,4 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 

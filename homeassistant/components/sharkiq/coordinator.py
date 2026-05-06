@@ -20,16 +20,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
+type SharkIqConfigEntry = ConfigEntry[SharkIqUpdateCoordinator]
+
 
 class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
     """Define a wrapper class to update Shark IQ data."""
 
-    config_entry: ConfigEntry
+    config_entry: SharkIqConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SharkIqConfigEntry,
         ayla_api: AylaApi,
         shark_vacs: list[SharkIqVacuum],
     ) -> None:

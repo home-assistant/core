@@ -16,7 +16,16 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -25,16 +34,14 @@ from tests.common import (
 )
 from tests.conftest import WebSocketGenerator
 
-TEST_OBJECT_ID = "template_event"
-TEST_ENTITY_ID = f"event.{TEST_OBJECT_ID}"
-TEST_SENSOR = "sensor.event"
-TEST_STATE_TRIGGER = {
-    "trigger": {"trigger": "state", "entity_id": TEST_SENSOR},
-    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
-    "action": [
-        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
-    ],
-}
+TEST_STATE_ENTITY_ID = "sensor.test_state"
+TEST_EVENT = TemplatePlatformSetup(
+    event.DOMAIN,
+    None,
+    "template_event",
+    make_test_trigger(TEST_STATE_ENTITY_ID),
+)
+
 TEST_EVENT_TYPES_TEMPLATE = "{{ ['single', 'double', 'hold'] }}"
 TEST_EVENT_TYPE_TEMPLATE = "{{ 'single' }}"
 
@@ -42,75 +49,8 @@ TEST_EVENT_CONFIG = {
     "event_types": TEST_EVENT_TYPES_TEMPLATE,
     "event_type": TEST_EVENT_TYPE_TEMPLATE,
 }
-TEST_UNIQUE_ID_CONFIG = {
-    **TEST_EVENT_CONFIG,
-    "unique_id": "not-so-unique-anymore",
-}
 TEST_FROZEN_INPUT = "2024-07-09 00:00:00+00:00"
 TEST_FROZEN_STATE = "2024-07-09T00:00:00.000+00:00"
-
-
-async def async_setup_modern_format(
-    hass: HomeAssistant,
-    count: int,
-    event_config: dict[str, Any],
-    extra_config: dict[str, Any] | None,
-) -> None:
-    """Do setup of event integration via new format."""
-    extra = extra_config or {}
-    config = {**event_config, **extra}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {"template": {"event": config}},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant,
-    count: int,
-    event_config: dict[str, Any],
-    extra_config: dict[str, Any] | None,
-) -> None:
-    """Do setup of event integration via trigger format."""
-    extra = extra_config or {}
-    config = {
-        "template": {
-            **TEST_STATE_TRIGGER,
-            "event": {**event_config, **extra},
-        }
-    }
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_event_config(
-    hass: HomeAssistant,
-    count: int,
-    style: ConfigurationStyle,
-    event_config: dict[str, Any],
-    extra_config: dict[str, Any] | None,
-) -> None:
-    """Do setup of event integration."""
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(hass, count, event_config, extra_config)
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(hass, count, event_config, extra_config)
 
 
 @pytest.fixture
@@ -118,16 +58,10 @@ async def setup_base_event(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
-    event_config: dict[str, Any],
+    config: dict[str, Any],
 ) -> None:
     """Do setup of event integration."""
-    await async_setup_event_config(
-        hass,
-        count,
-        style,
-        event_config,
-        None,
-    )
+    await setup_entity(hass, TEST_EVENT, style, count, config)
 
 
 @pytest.fixture
@@ -140,16 +74,16 @@ async def setup_event(
     extra_config: dict[str, Any] | None,
 ) -> None:
     """Do setup of event integration."""
-    await async_setup_event_config(
+    await setup_entity(
         hass,
-        count,
+        TEST_EVENT,
         style,
+        count,
         {
-            "name": TEST_OBJECT_ID,
             "event_type": event_type_template,
             "event_types": event_types_template,
         },
-        extra_config,
+        extra_config=extra_config,
     )
 
 
@@ -164,16 +98,19 @@ async def setup_single_attribute_state_event(
     attribute_template: str,
 ) -> None:
     """Do setup of event integration testing a single attribute."""
-    extra = {attribute: attribute_template} if attribute and attribute_template else {}
-    config = {
-        "name": TEST_OBJECT_ID,
-        "event_type": event_type_template,
-        "event_types": event_types_template,
-    }
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(hass, count, config, extra)
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(hass, count, config, extra)
+    await setup_entity(
+        hass,
+        TEST_EVENT,
+        style,
+        count,
+        {
+            "event_type": event_type_template,
+            "event_types": event_types_template,
+        },
+        extra_config={attribute: attribute_template}
+        if attribute and attribute_template
+        else {},
+    )
 
 
 async def test_legacy_platform_config(hass: HomeAssistant) -> None:
@@ -182,7 +119,7 @@ async def test_legacy_platform_config(hass: HomeAssistant) -> None:
         assert await async_setup_component(
             hass,
             event.DOMAIN,
-            {"event": {"platform": "template", "events": {TEST_OBJECT_ID: {}}}},
+            {"event": {"platform": "template", "events": {TEST_EVENT.object_id: {}}}},
         )
 
     await hass.async_block_till_done()
@@ -198,8 +135,9 @@ async def test_setup_config_entry(
 ) -> None:
     """Test the config flow."""
 
-    hass.states.async_set(
-        TEST_SENSOR,
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
         "single",
         {},
     )
@@ -208,9 +146,8 @@ async def test_setup_config_entry(
         data={},
         domain=template.DOMAIN,
         options={
-            "name": TEST_OBJECT_ID,
-            "event_type": TEST_EVENT_TYPE_TEMPLATE,
-            "event_types": TEST_EVENT_TYPES_TEMPLATE,
+            "name": TEST_EVENT.object_id,
+            **TEST_EVENT_CONFIG,
             "template_type": event.DOMAIN,
         },
         title="My template",
@@ -220,7 +157,7 @@ async def test_setup_config_entry(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state is not None
     assert state == snapshot
 
@@ -284,13 +221,13 @@ async def test_event_type_syntax_error(
     expected_state: str,
 ) -> None:
     """Test template event_type with render error."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
     ("count", "event_type_template", "event_types_template", "extra_config"),
-    [(1, "{{ states('sensor.event') }}", TEST_EVENT_TYPES_TEMPLATE, None)],
+    [(1, "{{ states('sensor.test_state') }}", TEST_EVENT_TYPES_TEMPLATE, None)],
 )
 @pytest.mark.parametrize(
     "style",
@@ -311,16 +248,15 @@ async def test_event_type_template(
     expected: str,
 ) -> None:
     """Test template event_type."""
-    hass.states.async_set(TEST_SENSOR, event)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, event)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.attributes["event_type"] == expected
 
 
 @pytest.mark.parametrize(
     ("count", "event_type_template", "event_types_template", "extra_config"),
-    [(1, "{{ states('sensor.event') }}", TEST_EVENT_TYPES_TEMPLATE, None)],
+    [(1, "{{ states('sensor.test_state') }}", TEST_EVENT_TYPES_TEMPLATE, None)],
 )
 @pytest.mark.parametrize(
     "style",
@@ -332,24 +268,21 @@ async def test_event_type_template_updates(
     hass: HomeAssistant,
 ) -> None:
     """Test template event_type updates."""
-    hass.states.async_set(TEST_SENSOR, "single")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "single")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == TEST_FROZEN_STATE
     assert state.attributes["event_type"] == "single"
 
-    hass.states.async_set(TEST_SENSOR, "double")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == TEST_FROZEN_STATE
     assert state.attributes["event_type"] == "double"
 
-    hass.states.async_set(TEST_SENSOR, "hold")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "hold")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == TEST_FROZEN_STATE
     assert state.attributes["event_type"] == "hold"
 
@@ -376,14 +309,14 @@ async def test_event_type_invalid(
     hass: HomeAssistant,
 ) -> None:
     """Test template event_type."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == STATE_UNKNOWN
     assert state.attributes["event_type"] is None
 
 
 @pytest.mark.parametrize(
     ("count", "event_type_template", "event_types_template"),
-    [(1, "{{ states('sensor.event') }}", TEST_EVENT_TYPES_TEMPLATE)],
+    [(1, "{{ states('sensor.test_state') }}", TEST_EVENT_TYPES_TEMPLATE)],
 )
 @pytest.mark.parametrize(
     "style",
@@ -394,13 +327,13 @@ async def test_event_type_invalid(
     [
         (
             "picture",
-            "{% if is_state('sensor.event', 'double') %}something{% endif %}",
+            "{% if is_state('sensor.test_state', 'double') %}something{% endif %}",
             ATTR_ENTITY_PICTURE,
             "something",
         ),
         (
             "icon",
-            "{% if is_state('sensor.event', 'double') %}mdi:something{% endif %}",
+            "{% if is_state('sensor.test_state', 'double') %}mdi:something{% endif %}",
             ATTR_ICON,
             "mdi:something",
         ),
@@ -411,16 +344,14 @@ async def test_entity_picture_and_icon_templates(
     hass: HomeAssistant, key: str, expected: str
 ) -> None:
     """Test picture and icon template."""
-    state = hass.states.async_set(TEST_SENSOR, "single")
-    await hass.async_block_till_done()
+    state = await async_trigger(hass, TEST_STATE_ENTITY_ID, "single")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.attributes.get(key) in ("", None)
 
-    state = hass.states.async_set(TEST_SENSOR, "double")
-    await hass.async_block_till_done()
+    state = await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
 
     assert state.attributes[key] == expected
 
@@ -455,10 +386,9 @@ async def test_entity_picture_and_icon_templates(
 @pytest.mark.usefixtures("setup_event")
 async def test_event_types_template(hass: HomeAssistant, expected: str) -> None:
     """Test template event_types."""
-    hass.states.async_set(TEST_SENSOR, "anything")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.attributes["event_types"] == expected
 
 
@@ -467,8 +397,8 @@ async def test_event_types_template(hass: HomeAssistant, expected: str) -> None:
     [
         (
             1,
-            "{{ states('sensor.event') }}",
-            "{{ state_attr('sensor.event', 'options') or ['unknown'] }}",
+            "{{ states('sensor.test_state') }}",
+            "{{ state_attr('sensor.test_state', 'options') or ['unknown'] }}",
             None,
         )
     ],
@@ -481,20 +411,22 @@ async def test_event_types_template(hass: HomeAssistant, expected: str) -> None:
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)
 async def test_event_types_template_updates(hass: HomeAssistant) -> None:
     """Test template event_type update with entity."""
-    hass.states.async_set(
-        TEST_SENSOR, "single", {"options": ["single", "double", "hold"]}
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "single", {"options": ["single", "double", "hold"]}
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == TEST_FROZEN_STATE
     assert state.attributes["event_type"] == "single"
     assert state.attributes["event_types"] == ["single", "double", "hold"]
 
-    hass.states.async_set(TEST_SENSOR, "double", {"options": ["double", "hold"]})
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "double", {"options": ["double", "hold"]}
+    )
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == TEST_FROZEN_STATE
     assert state.attributes["event_type"] == "double"
     assert state.attributes["event_types"] == ["double", "hold"]
@@ -511,10 +443,10 @@ async def test_event_types_template_updates(hass: HomeAssistant) -> None:
     [
         (
             1,
-            "{{ states('sensor.event') }}",
+            "{{ states('sensor.test_state') }}",
             TEST_EVENT_TYPES_TEMPLATE,
             "availability",
-            "{{ states('sensor.event') in ['single', 'double', 'hold'] }}",
+            "{{ states('sensor.test_state') in ['single', 'double', 'hold'] }}",
         )
     ],
 )
@@ -525,17 +457,15 @@ async def test_event_types_template_updates(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_single_attribute_state_event")
 async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
-    hass.states.async_set(TEST_SENSOR, "single")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "single")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state != STATE_UNAVAILABLE
     assert state.attributes["event_type"] == "single"
 
-    hass.states.async_set(TEST_SENSOR, "triple")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "triple")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == STATE_UNAVAILABLE
     assert "event_type" not in state.attributes
 
@@ -548,7 +478,7 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "event": {
-                    "name": TEST_OBJECT_ID,
+                    "name": TEST_EVENT.object_id,
                     "event_type": "{{ trigger.event.data.action }}",
                     "event_types": TEST_EVENT_TYPES_TEMPLATE,
                     "picture": "{{ '/local/dogs.png' }}",
@@ -576,7 +506,7 @@ async def test_trigger_entity_restore_state(
         "plus_one": 55,
     }
     fake_state = State(
-        TEST_ENTITY_ID,
+        TEST_EVENT.entity_id,
         "2021-01-01T23:59:59.123+00:00",
         restored_attributes,
     )
@@ -597,7 +527,7 @@ async def test_trigger_entity_restore_state(
         await hass.async_block_till_done()
 
     test_state = "2021-01-01T23:59:59.123+00:00"
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == test_state
     for attr, value in restored_attributes.items():
         assert state.attributes[attr] == value
@@ -606,7 +536,7 @@ async def test_trigger_entity_restore_state(
     hass.bus.async_fire("test_event", {"action": "double", "beer": 2})
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state != test_state
     assert state.attributes["icon"] == "mdi:pirate"
     assert state.attributes["entity_picture"] == "/local/dogs.png"
@@ -623,8 +553,8 @@ async def test_trigger_entity_restore_state(
         {
             "template": {
                 "event": {
-                    "name": TEST_OBJECT_ID,
-                    "event_type": "{{ states('sensor.event') }}",
+                    "name": TEST_EVENT.object_id,
+                    "event_type": "{{ states('sensor.test_state') }}",
                     "event_types": TEST_EVENT_TYPES_TEMPLATE,
                 },
             },
@@ -639,7 +569,7 @@ async def test_event_entity_restore_state(
 ) -> None:
     """Test restoring trigger event entities."""
     fake_state = State(
-        TEST_ENTITY_ID,
+        TEST_EVENT.entity_id,
         "2021-01-01T23:59:59.123+00:00",
         {},
     )
@@ -659,13 +589,12 @@ async def test_event_entity_restore_state(
         await hass.async_block_till_done()
 
     test_state = "2021-01-01T23:59:59.123+00:00"
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state == test_state
 
-    hass.states.async_set(TEST_SENSOR, "double")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_EVENT.entity_id)
     assert state.state != test_state
     assert state.attributes["event_type"] == "double"
 
@@ -699,109 +628,35 @@ async def test_invalid_availability_template_keeps_component_available(
     caplog_setup_text,
 ) -> None:
     """Test that an invalid availability keeps the device available."""
-    hass.states.async_set(TEST_SENSOR, "anything")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
-    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_EVENT.entity_id).state != STATE_UNAVAILABLE
 
     error = "UndefinedError: 'x' is undefined"
     assert error in caplog_setup_text or error in caplog.text
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("events", "style"),
-    [
-        (
-            [
-                {
-                    "name": "test_template_event_01",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_event_02",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-            ],
-            ConfigurationStyle.MODERN,
-        ),
-        (
-            [
-                {
-                    "name": "test_template_event_01",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_event_02",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-            ],
-            ConfigurationStyle.TRIGGER,
-        ),
-    ],
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_unique_id(
-    hass: HomeAssistant, count: int, events: list[dict], style: ConfigurationStyle
-) -> None:
+async def test_unique_id(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test unique_id option only creates one event per id."""
-    config = {"event": events}
-    if style == ConfigurationStyle.TRIGGER:
-        config = {**config, **TEST_STATE_TRIGGER}
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {"template": config},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("event")) == 1
+    await setup_and_test_unique_id(hass, TEST_EVENT, style, TEST_EVENT_CONFIG)
 
 
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_nested_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test unique_id option creates one event per nested id."""
-
-    with assert_setup_component(1, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {
-                "template": {
-                    "unique_id": "x",
-                    "event": [
-                        {
-                            "name": "test_a",
-                            **TEST_EVENT_CONFIG,
-                            "unique_id": "a",
-                        },
-                        {
-                            "name": "test_b",
-                            **TEST_EVENT_CONFIG,
-                            "unique_id": "b",
-                        },
-                    ],
-                }
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("event")) == 2
-
-    entry = entity_registry.async_get("event.test_a")
-    assert entry
-    assert entry.unique_id == "x-a"
-
-    entry = entity_registry.async_get("event.test_b")
-    assert entry
-    assert entry.unique_id == "x-b"
+    """Test a template unique_id propagates to event unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_EVENT, style, entity_registry, TEST_EVENT_CONFIG
+    )
 
 
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)

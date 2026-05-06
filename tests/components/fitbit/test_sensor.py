@@ -740,7 +740,6 @@ async def test_device_battery_level_update_failed(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test API failure for a battery level sensor for devices."""
-    aioclient_mock.clear_requests()
     aioclient_mock.get(
         DEVICES_API_URL,
         json=[DEVICE_RESPONSE_CHARGE_2],
@@ -790,8 +789,6 @@ async def test_device_battery_level_reauth_required(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test API failure requires reauth."""
-
-    aioclient_mock.clear_requests()
     aioclient_mock.get(
         DEVICES_API_URL,
         json=[DEVICE_RESPONSE_CHARGE_2],

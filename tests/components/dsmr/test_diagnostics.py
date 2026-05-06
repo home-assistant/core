@@ -10,6 +10,7 @@ from dsmr_parser.obis_references import (
     GAS_METER_READING,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -19,6 +20,9 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.xfail(
+    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
+)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

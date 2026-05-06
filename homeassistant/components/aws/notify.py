@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
+from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_AWS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,10 +76,12 @@ async def async_get_service(
     if CONF_CONTEXT in aws_config:
         del aws_config[CONF_CONTEXT]
 
+    sessions = hass.data[DATA_AWS].sessions
+
     if not aws_config:
         # no platform config, use the first aws component credential instead
-        if hass.data[DATA_SESSIONS]:
-            session = next(iter(hass.data[DATA_SESSIONS].values()))
+        if sessions:
+            session = next(iter(sessions.values()))
         else:
             _LOGGER.error("Missing aws credential for %s", config[CONF_NAME])
             return None
@@ -87,7 +89,7 @@ async def async_get_service(
     if session is None:
         credential_name = aws_config.get(CONF_CREDENTIAL_NAME)
         if credential_name is not None:
-            session = hass.data[DATA_SESSIONS].get(credential_name)
+            session = sessions.get(credential_name)
             if session is None:
                 _LOGGER.warning("No available aws session for %s", credential_name)
             del aws_config[CONF_CREDENTIAL_NAME]

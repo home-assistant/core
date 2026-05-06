@@ -16,16 +16,18 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type WolflinkConfigEntry = ConfigEntry[WolfLinkCoordinator]
+
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
     """Class to manage fetching Wolf SmartSet data."""
 
-    config_entry: ConfigEntry
+    config_entry: WolflinkConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WolflinkConfigEntry,
         wolf_client: WolfClient,
         parameters: list[Parameter],
         gateway_id: int,
@@ -40,30 +42,30 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
             update_interval=timedelta(seconds=60),
         )
         self._wolf_client = wolf_client
-        self._parameters = parameters
+        self.parameters = parameters
         self._gateway_id = gateway_id
-        self._device_id = device_id
+        self.device_id = device_id
         self._refetch_parameters = False
 
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
         """Update all stored entities for Wolf SmartSet."""
         try:
             if not await self._wolf_client.fetch_system_state_list(
-                self._device_id, self._gateway_id
+                self.device_id, self._gateway_id
             ):
                 self._refetch_parameters = True
                 raise UpdateFailed(
                     "Could not fetch values from server because device is offline."
                 )
             if self._refetch_parameters:
-                self._parameters = await fetch_parameters(
-                    self._wolf_client, self._gateway_id, self._device_id
+                self.parameters = await fetch_parameters(
+                    self._wolf_client, self._gateway_id, self.device_id
                 )
                 self._refetch_parameters = False
             values = {
                 v.value_id: v.value
                 for v in await self._wolf_client.fetch_value(
-                    self._gateway_id, self._device_id, self._parameters
+                    self._gateway_id, self.device_id, self.parameters
                 )
             }
             return {
@@ -71,7 +73,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
                     parameter.value_id,
                     values[parameter.value_id],
                 )
-                for parameter in self._parameters
+                for parameter in self.parameters
                 if parameter.value_id in values
             }
         except RequestError as exception:

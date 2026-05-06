@@ -192,10 +192,17 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
         )
 
     def _handle_hub_update(self) -> None:
-        """Handle updates from hub coordinator."""
+        """Handle updates from hub coordinator.
+
+        Update data and notify listeners without rescheduling the refresh
+        interval, so an in-flight fast-polling cycle is not interrupted.
+        """
         if self.hub_coordinator.data and self.device_id in self.hub_coordinator.data:
-            device = self.hub_coordinator.data[self.device_id]
-            self.async_set_updated_data(WattsVisionDeviceData(device=device))
+            self.data = WattsVisionDeviceData(
+                device=self.hub_coordinator.data[self.device_id]
+            )
+            self.last_update_success = True
+            self.async_update_listeners()
 
     async def _async_update_data(self) -> WattsVisionDeviceData:
         """Refresh specific device."""

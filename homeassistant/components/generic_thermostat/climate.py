@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 import math
+import time
 from typing import Any
 
 import voluptuous as vol
@@ -51,6 +52,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -478,6 +480,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
 
+        self.async_set_context(event.context)
         self._async_update_temp(new_state)
         await self._async_control_heating()
         self.async_write_ha_state()
@@ -531,9 +534,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
     async def _async_control_heating(
-        self, time: datetime | None = None, force: bool = False
+        self, _time: datetime | None = None, force: bool = False
     ) -> None:
         """Check if we need to turn heating on or off."""
+        called_by_timer = _time is not None
+
         async with self._temp_lock:
             if not self._active and None not in (
                 self._cur_temp,
@@ -552,7 +557,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active or self._hvac_mode == HVACMode.OFF:
                 return
 
-            if force and time is not None and self.max_cycle_duration:
+            if force and called_by_timer and self.max_cycle_duration:
                 # We were invoked due to `max_cycle_duration`, so turn off
                 _LOGGER.debug(
                     "Turning off heater %s due to max cycle time of %s",
@@ -587,7 +592,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                             now - self._last_toggled_time + self.min_cycle_duration,
                             self._async_timer_control_heating,
                         )
-                elif time is not None:
+                elif called_by_timer:
                     # This is a keep-alive call, so ensure it's on
                     _LOGGER.debug(
                         "Keep-alive - Turning on heater %s",
@@ -609,7 +614,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         now - self._last_toggled_time + self.cycle_cooldown,
                         self._async_timer_control_heating,
                     )
-            elif time is not None:
+            elif called_by_timer:
                 # This is a keep-alive call, so ensure it's off
                 _LOGGER.debug(
                     "Keep-alive - Turning off heater %s", self.heater_entity_id
@@ -624,13 +629,25 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
+    def _get_current_context(self) -> Context | None:
+        """Return the current context if it is still recent, or None."""
+        if (
+            self._context_set is not None
+            and time.time() - self._context_set > CONTEXT_RECENT_TIME_SECONDS
+        ):
+            self._context = None
+            self._context_set = None
+        return self._context
+
     async def _async_heater_turn_on(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
-        # Create a new context for this service call so we can identify
-        # the resulting state change event as originating from us
-        new_context = Context(parent_id=self._context.id if self._context else None)
-        self.async_set_context(new_context)
+        # Create a child context for the switch service call so we can
+        # identify the resulting state change event as originating from us.
+        # Don't set it as our own context — the climate entity's state changes
+        # should remain attributed to the parent context (e.g., set_hvac_mode).
+        current_context = self._get_current_context()
+        new_context = Context(parent_id=current_context.id if current_context else None)
         self._last_context_id = new_context.id
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=new_context
@@ -654,10 +671,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_heater_turn_off(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
-        # Create a new context for this service call so we can identify
-        # the resulting state change event as originating from us
-        new_context = Context(parent_id=self._context.id if self._context else None)
-        self.async_set_context(new_context)
+        # Create a child context for the switch service call so we can
+        # identify the resulting state change event as originating from us.
+        # Don't set it as our own context — the climate entity's state changes
+        # should remain attributed to the parent context (e.g., set_hvac_mode).
+        current_context = self._get_current_context()
+        new_context = Context(parent_id=current_context.id if current_context else None)
         self._last_context_id = new_context.id
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=new_context

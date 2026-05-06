@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from weatherflow4py.models.rest.observation import ObservationStationREST
 
-from homeassistant.components.weatherflow_cloud import DOMAIN
+from homeassistant.components.weatherflow_cloud.const import DOMAIN
 from homeassistant.components.weatherflow_cloud.coordinator import (
     WeatherFlowObservationCoordinator,
     WeatherFlowWindCoordinator,

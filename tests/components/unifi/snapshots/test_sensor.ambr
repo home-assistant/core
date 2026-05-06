@@ -219,7 +219,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_uptime',
     'unique_id': 'device_uptime-20:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -262,7 +262,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'AC Power Budget',
+    'object_id_base': 'AC power budget',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -270,12 +270,12 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'AC Power Budget',
+    'original_name': 'AC power budget',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'smartpower_ac_power_budget',
     'unique_id': 'ac_power_budget-01:02:03:04:05:ff',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -284,7 +284,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Dummy USP-PDU-Pro AC Power Budget',
+      'friendly_name': 'Dummy USP-PDU-Pro AC power budget',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -320,7 +320,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'AC Power Consumption',
+    'object_id_base': 'AC power consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -328,12 +328,12 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'AC Power Consumption',
+    'original_name': 'AC power consumption',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'smartpower_ac_power_consumption',
     'unique_id': 'ac_power_conumption-01:02:03:04:05:ff',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -342,7 +342,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Dummy USP-PDU-Pro AC Power Consumption',
+      'friendly_name': 'Dummy USP-PDU-Pro AC power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -539,7 +539,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Outlet 2 Outlet Power',
+    'object_id_base': 'Outlet 2 outlet power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -547,12 +547,12 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Outlet 2 Outlet Power',
+    'original_name': 'Outlet 2 outlet power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'outlet_power',
     'unique_id': 'outlet_power-01:02:03:04:05:ff_2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -561,7 +561,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Dummy USP-PDU-Pro Outlet 2 Outlet Power',
+      'friendly_name': 'Dummy USP-PDU-Pro Outlet 2 outlet power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -685,7 +685,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_uptime',
     'unique_id': 'device_uptime-01:02:03:04:05:ff',
     'unit_of_measurement': None,
   })
@@ -794,7 +794,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wan_latency',
     'unique_id': 'cloudflare_wan2_latency-10:00:00:00:01:01',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
@@ -852,7 +852,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wan_latency',
     'unique_id': 'cloudflare_wan_latency-10:00:00:00:01:01',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
@@ -910,7 +910,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wan_latency',
     'unique_id': 'google_wan2_latency-10:00:00:00:01:01',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
@@ -968,7 +968,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wan_latency',
     'unique_id': 'google_wan_latency-10:00:00:00:01:01',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
@@ -1026,7 +1026,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wan_latency',
     'unique_id': 'microsoft_wan2_latency-10:00:00:00:01:01',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
@@ -1084,7 +1084,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wan_latency',
     'unique_id': 'microsoft_wan_latency-10:00:00:00:01:01',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
@@ -1129,7 +1129,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 1 PoE Power',
+    'object_id_base': 'Port 1 PoE power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1137,12 +1137,12 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Port 1 PoE Power',
+    'original_name': 'Port 1 PoE power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'port_poe_power',
     'unique_id': 'poe_power-10:00:00:00:01:01_1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1151,7 +1151,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'mock-name Port 1 PoE Power',
+      'friendly_name': 'mock-name Port 1 PoE power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -1309,7 +1309,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 2 PoE Power',
+    'object_id_base': 'Port 2 PoE power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1317,12 +1317,12 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Port 2 PoE Power',
+    'original_name': 'Port 2 PoE power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'port_poe_power',
     'unique_id': 'poe_power-10:00:00:00:01:01_2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1331,7 +1331,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'mock-name Port 2 PoE Power',
+      'friendly_name': 'mock-name Port 2 PoE power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -1611,7 +1611,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 4 PoE Power',
+    'object_id_base': 'Port 4 PoE power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1619,12 +1619,12 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Port 4 PoE Power',
+    'original_name': 'Port 4 PoE power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'port_poe_power',
     'unique_id': 'poe_power-10:00:00:00:01:01_4',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1633,7 +1633,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'mock-name Port 4 PoE Power',
+      'friendly_name': 'mock-name Port 4 PoE power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -1879,7 +1879,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_uptime',
     'unique_id': 'device_uptime-10:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -1898,7 +1898,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-entry]
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1_clients-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1914,7 +1914,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ssid_1',
+    'entity_id': 'sensor.ssid_1_clients',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1922,12 +1922,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Clients',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1937,14 +1937,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-state]
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1_clients-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SSID 1',
+      'friendly_name': 'SSID 1 Clients',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ssid_1',
+    'entity_id': 'sensor.ssid_1_clients',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2157,7 +2157,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'client_uptime',
     'unique_id': 'uptime-00:00:00:00:00:01',
     'unit_of_measurement': None,
   })
@@ -2324,7 +2324,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'client_uptime',
     'unique_id': 'uptime-00:00:00:00:00:02',
     'unit_of_measurement': None,
   })

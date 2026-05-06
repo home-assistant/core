@@ -1,4 +1,5 @@
 """Utilities for the LinkPlay component."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from aiohttp import ClientSession
 from linkplay.utils import async_create_unverified_client_session

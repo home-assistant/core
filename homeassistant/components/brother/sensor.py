@@ -293,9 +293,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="uptime",
-        translation_key="last_restart",
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.uptime,
     ),

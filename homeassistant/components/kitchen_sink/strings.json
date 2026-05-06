@@ -72,7 +72,7 @@
     "cold_tea": {
       "fix_flow": {
         "abort": {
-          "not_tea_time": "Can not re-heat the tea at this time"
+          "not_tea_time": "Cannot reheat the tea at this time"
         },
         "step": {}
       },

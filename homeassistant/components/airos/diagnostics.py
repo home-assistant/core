@@ -29,5 +29,15 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT_HA),
-        "data": async_redact_data(entry.runtime_data.data.to_dict(), TO_REDACT_AIROS),
+        "data": {
+            "status_data": async_redact_data(
+                entry.runtime_data.status.data.to_dict(), TO_REDACT_AIROS
+            ),
+            "firmware_data": async_redact_data(
+                entry.runtime_data.firmware.data
+                if entry.runtime_data.firmware is not None
+                else {},
+                TO_REDACT_AIROS,
+            ),
+        },
     }

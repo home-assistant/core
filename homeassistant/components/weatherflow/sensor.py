@@ -22,7 +22,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
@@ -46,6 +45,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import WeatherFlowConfigEntry
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
@@ -295,7 +295,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeatherFlowConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors using config entry."""

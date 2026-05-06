@@ -21,6 +21,8 @@ from homeassistant.helpers.typing import ConfigType
 from .api import PushBulletNotificationProvider
 from .const import DATA_HASS_CONFIG, DOMAIN
 
+type PushbulletConfigEntry = ConfigEntry[PushBulletNotificationProvider]
+
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -> bool:
     """Set up pushbullet from a config entry."""
 
     try:
@@ -49,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     pb_provider = PushBulletNotificationProvider(hass, pushbullet)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pb_provider
+    entry.runtime_data = pb_provider
 
     def start_listener(event: Event) -> None:
         """Start the listener thread."""
@@ -72,11 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN].pop(
-            entry.entry_id
-        )
-        await hass.async_add_executor_job(pb_provider.close)
+        await hass.async_add_executor_job(entry.runtime_data.close)
     return unload_ok

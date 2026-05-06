@@ -115,11 +115,17 @@
       }
     },
     "switch": {
+      "freeze": {
+        "name": "Freeze"
+      },
       "nightlight": {
         "name": "Nightlight"
       },
       "reverse": {
         "name": "Reverse"
+      },
+      "segment_freeze": {
+        "name": "Segment {segment} freeze"
       },
       "segment_reverse": {
         "name": "Segment {segment} reverse"

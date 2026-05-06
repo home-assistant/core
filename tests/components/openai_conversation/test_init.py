@@ -19,6 +19,8 @@ from syrupy.filters import props
 
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
+    CONF_REASONING_SUMMARY,
+    CONF_STORE_RESPONSES,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
@@ -308,6 +310,7 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize("store_responses", [False, True])
 @pytest.mark.parametrize(
     ("service_data", "expected_args", "number_of_files"),
     [
@@ -404,18 +407,31 @@ async def test_generate_content_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    store_responses: bool,
     service_data,
     expected_args,
     number_of_files,
 ) -> None:
     """Test generate content service."""
+    conversation_subentry = next(
+        sub
+        for sub in mock_config_entry.subentries.values()
+        if sub.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        conversation_subentry,
+        data={**conversation_subentry.data, CONF_STORE_RESPONSES: store_responses},
+    )
+    await hass.async_block_till_done()
+
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["model"] = "gpt-4o-mini"
     expected_args["max_output_tokens"] = 3000
     expected_args["top_p"] = 1.0
     expected_args["temperature"] = 1.0
     expected_args["user"] = None
-    expected_args["store"] = False
+    expected_args["store"] = store_responses
     expected_args["input"][0]["type"] = "message"
     expected_args["input"][0]["role"] = "user"
 
@@ -665,7 +681,7 @@ async def test_migration_from_v1(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 6
+    assert mock_config_entry.minor_version == 7
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -810,7 +826,7 @@ async def test_migration_from_v1_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 6
+        assert entry.minor_version == 7
         assert not entry.options
         assert len(entry.subentries) == 4
 
@@ -915,7 +931,7 @@ async def test_migration_from_v1_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert (
         len(entry.subentries) == 5
@@ -1127,7 +1143,7 @@ async def test_migration_from_v1_disabled(
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
     assert entry.minor_version == (
-        4 if merged_config_entry_disabled_by is not None else 6
+        4 if merged_config_entry_disabled_by is not None else 7
     )
     assert not entry.options
     assert entry.title == "OpenAI Conversation"
@@ -1300,7 +1316,7 @@ async def test_migration_from_v2_1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 5  # 2 conversation + 1 AI task + 1 STT + 1 TTS
@@ -1393,15 +1409,18 @@ async def test_devices(
     )
     assert len(devices) == 4  # One for conversation, AI task, STT, and TTS
 
-    # Use the first device for snapshot comparison
-    device = devices[0]
-    assert device == snapshot(exclude=props("identifiers"))
-    # Verify the device has identifiers matching one of the subentries
-    expected_identifiers = [
-        {(DOMAIN, subentry.subentry_id)}
+    # Find the conversation subentry device specifically, since device ordering
+    # from concurrent platform setup is non-deterministic.
+    conversation_subentry = next(
+        subentry
         for subentry in mock_config_entry.subentries.values()
-    ]
-    assert device.identifiers in expected_identifiers
+        if subentry.subentry_type == "conversation"
+    )
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, conversation_subentry.subentry_id)}
+    )
+    assert device is not None
+    assert device == snapshot(exclude=props("identifiers"))
 
 
 async def test_migration_from_v2_2(
@@ -1448,7 +1467,7 @@ async def test_migration_from_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 4
@@ -1493,7 +1512,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            6,
+            7,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -1503,7 +1522,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            6,
+            7,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -1513,7 +1532,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            6,
+            7,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -1523,7 +1542,7 @@ async def test_migration_from_v2_2(
             None,
             None,
             True,
-            6,
+            7,
             None,
             None,
             None,
@@ -1715,7 +1734,7 @@ async def test_migration_from_v2_4(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 4
@@ -1818,7 +1837,7 @@ async def test_migration_from_v2_5(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 4
@@ -1863,3 +1882,124 @@ async def test_migration_from_v2_5(
     stt_subentry = stt_subentries[0]
     assert stt_subentry.data == {}
     assert stt_subentry.title == "OpenAI STT"
+
+
+async def test_migration_from_v2_6(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from version 2.6.
+
+    Ensures reasoning_summary "short" is renamed to "concise" for gpt-5 models,
+    and that "concise" (whether from "short" or already stored) is reset to "auto"
+    for o* models where it is unsupported. Other values and unrelated subentries
+    are unchanged.
+    """
+    conversation_options_short_o = {
+        "chat_model": "o4-mini",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    conversation_options_auto = {
+        "chat_model": "gpt-5-mini",
+        CONF_REASONING_SUMMARY: "auto",
+    }
+    ai_task_options_short_o = {
+        "chat_model": "o3",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    tts_options = {
+        "chat_model": "gpt-4o-mini-tts",
+    }
+    conversation_options_short_gpt5 = {
+        "chat_model": "gpt-5",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    conversation_options_concise_o = {
+        "chat_model": "o3",
+        CONF_REASONING_SUMMARY: "concise",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "1234"},
+        entry_id="mock_entry_id",
+        version=2,
+        minor_version=6,
+        subentries_data=[
+            ConfigSubentryData(
+                data=conversation_options_short_o,
+                subentry_id="mock_id_1",
+                subentry_type="conversation",
+                title="ChatGPT short o",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_auto,
+                subentry_id="mock_id_2",
+                subentry_type="conversation",
+                title="ChatGPT auto",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=ai_task_options_short_o,
+                subentry_id="mock_id_3",
+                subentry_type="ai_task_data",
+                title="OpenAI AI Task",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=tts_options,
+                subentry_id="mock_id_4",
+                subentry_type="tts",
+                title="OpenAI TTS",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_short_gpt5,
+                subentry_id="mock_id_5",
+                subentry_type="conversation",
+                title="ChatGPT short gpt5",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_concise_o,
+                subentry_id="mock_id_6",
+                subentry_type="conversation",
+                title="ChatGPT concise o",
+                unique_id=None,
+            ),
+        ],
+        title="ChatGPT",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 7
+
+    subentries_by_id = entry.subentries
+
+    # "short" on an o* model: short→concise→auto (concise unsupported on o*)
+    assert subentries_by_id["mock_id_1"].data[CONF_REASONING_SUMMARY] == "auto"
+
+    # "auto" on a gpt-5 model: unchanged
+    assert subentries_by_id["mock_id_2"].data[CONF_REASONING_SUMMARY] == "auto"
+
+    # "short" on an o* ai_task_data subentry: short→concise→auto
+    assert subentries_by_id["mock_id_3"].data[CONF_REASONING_SUMMARY] == "auto"
+
+    # TTS subentry is unaffected
+    assert subentries_by_id["mock_id_4"].data == tts_options
+
+    # "short" on a gpt-5 model: short→concise (concise is valid for gpt-5)
+    assert subentries_by_id["mock_id_5"].data[CONF_REASONING_SUMMARY] == "concise"
+
+    # "concise" already stored on an o* model: concise→auto
+    assert subentries_by_id["mock_id_6"].data[CONF_REASONING_SUMMARY] == "auto"

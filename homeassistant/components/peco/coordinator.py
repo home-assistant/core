@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for the PECO Outage Counter integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -28,12 +30,23 @@ class PECOCoordinatorData:
     alerts: AlertResults
 
 
+@dataclass
+class PecoRuntimeData:
+    """Runtime data for the PECO integration."""
+
+    outage_coordinator: PecoOutageCoordinator
+    meter_coordinator: PecoSmartMeterCoordinator | None = None
+
+
+type PecoConfigEntry = ConfigEntry[PecoRuntimeData]
+
+
 class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
     """Coordinator for PECO outage data."""
 
-    config_entry: ConfigEntry
+    config_entry: PecoConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: PecoConfigEntry) -> None:
         """Initialize the outage coordinator."""
         super().__init__(
             hass,
@@ -65,10 +78,10 @@ class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
 class PecoSmartMeterCoordinator(DataUpdateCoordinator[bool]):
     """Coordinator for PECO smart meter data."""
 
-    config_entry: ConfigEntry
+    config_entry: PecoConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, phone_number: str
+        self, hass: HomeAssistant, entry: PecoConfigEntry, phone_number: str
     ) -> None:
         """Initialize the smart meter coordinator."""
         super().__init__(

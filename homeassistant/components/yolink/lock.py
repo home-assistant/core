@@ -8,22 +8,20 @@ from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_LOCK, ATTR_DEVICE_LOCK_V2
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink lock from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     entities = [
         YoLinkLockEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
@@ -40,7 +38,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
     ) -> None:
         """Init YoLink Lock."""

@@ -12,24 +12,23 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NukiEntryData
-from .const import ATTR_ENABLE, ATTR_UNLATCH, DOMAIN, ERROR_STATES
+from .const import ATTR_ENABLE, ATTR_UNLATCH, ERROR_STATES
+from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 from .helpers import CannotConnect
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NukiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nuki lock platform."""
-    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
     coordinator = entry_data.coordinator
 
     entities: list[NukiDeviceEntity] = [

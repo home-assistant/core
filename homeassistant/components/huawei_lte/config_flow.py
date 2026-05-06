@@ -21,12 +21,7 @@ from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
@@ -47,6 +42,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from . import HuaweiLteConfigEntry
 from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
@@ -76,7 +72,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HuaweiLteConfigEntry,
     ) -> HuaweiLteOptionsFlow:
         """Get options flow."""
         return HuaweiLteOptionsFlow()

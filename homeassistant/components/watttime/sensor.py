@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -25,7 +24,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_BALANCING_AUTHORITY, CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN
-from .coordinator import WattTimeCoordinator
+from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 
 ATTR_BALANCING_AUTHORITY = "balancing_authority"
 
@@ -51,11 +50,11 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WattTimeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WattTime sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             RealtimeEmissionsSensor(coordinator, entry, description)
@@ -73,7 +72,7 @@ class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEnti
     def __init__(
         self,
         coordinator: WattTimeCoordinator,
-        entry: ConfigEntry,
+        entry: WattTimeConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

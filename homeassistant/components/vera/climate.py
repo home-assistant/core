@@ -14,12 +14,11 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
 from .entity import VeraEntity
 
 FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
@@ -29,11 +28,11 @@ SUPPORT_HVAC = [HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL, HVACMode.OFF]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VeraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
     async_add_entities(
         [
             VeraThermostat(device, controller_data)

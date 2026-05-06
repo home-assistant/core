@@ -13,11 +13,12 @@ from hassil.util import (
 )
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -103,6 +104,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def handle_ask_question(call: ServiceCall) -> dict[str, Any]:
         """Handle a Show View service call."""
         satellite_entity_id: str = call.data[ATTR_ENTITY_ID]
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                )
+            if not user.permissions.check_entity(satellite_entity_id, POLICY_CONTROL):
+                raise Unauthorized(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                    perm_category=CAT_ENTITIES,
+                )
+
         satellite_entity: AssistSatelliteEntity | None = component.get_entity(
             satellite_entity_id
         )

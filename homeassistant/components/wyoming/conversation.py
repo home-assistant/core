@@ -10,7 +10,6 @@ from wyoming.info import HandleProgram, IntentProgram
 from wyoming.intent import Intent, NotRecognized
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
@@ -20,18 +19,18 @@ from homeassistant.util import ulid as ulid_util
 from .const import DOMAIN
 from .data import WyomingService
 from .error import WyomingError
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming conversation."""
-    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item = config_entry.runtime_data
     async_add_entities(
         [
             WyomingConversationEntity(config_entry, item.service),
@@ -48,7 +47,7 @@ class WyomingConversationEntity(
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""

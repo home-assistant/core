@@ -544,3 +544,73 @@ def test_remap_with_mirror(hass: HomeAssistant) -> None:
     assert MathExtension.remap(12, 0, 10, 100, 0, edges="mirror") == 20.0
     # Test without remapping
     assert MathExtension.remap(-0.1, 0, 1, 0, 1, edges="mirror") == pytest.approx(0.1)
+
+
+def test_rounding_value(hass: HomeAssistant) -> None:
+    """Test rounding value."""
+    hass.states.async_set("sensor.temperature", 12.78)
+
+    assert render(hass, "{{ states.sensor.temperature.state | round(1) }}") == 12.8
+
+    assert (
+        render(hass, "{{ states.sensor.temperature.state | multiply(10) | round }}")
+        == 128
+    )
+
+    assert (
+        render(hass, '{{ states.sensor.temperature.state | round(1, "floor") }}')
+        == 12.7
+    )
+
+    assert (
+        render(hass, '{{ states.sensor.temperature.state | round(1, "ceil") }}') == 12.8
+    )
+
+    assert (
+        render(hass, '{{ states.sensor.temperature.state | round(1, "half") }}') == 13.0
+    )
+
+
+def test_rounding_value_on_error(hass: HomeAssistant) -> None:
+    """Test rounding value handling of error."""
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ None | round }}")
+
+    with pytest.raises(TemplateError):
+        render(hass, '{{ "no_number" | round }}')
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
+
+
+def test_multiply(hass: HomeAssistant) -> None:
+    """Test multiply."""
+    tests = {10: 100}
+
+    for inp, out in tests.items():
+        assert render(hass, f"{{{{ {inp} | multiply(10) | round }}}}") == out
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ abcd | multiply(10) }}")
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
+
+
+def test_add(hass: HomeAssistant) -> None:
+    """Test add."""
+    tests = {10: 42}
+
+    for inp, out in tests.items():
+        assert render(hass, f"{{{{ {inp} | add(32) | round }}}}") == out
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ abcd | add(10) }}")
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1

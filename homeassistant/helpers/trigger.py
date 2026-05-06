@@ -7,12 +7,14 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import timedelta
 import functools
 import inspect
 import logging
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Final,
     Literal,
     Protocol,
@@ -31,6 +33,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_EVENT_DATA,
+    CONF_FOR,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -74,6 +77,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .event import async_track_same_state
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -331,15 +335,17 @@ BEHAVIOR_ANY: Final = "any"
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
 ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): {
+        vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
@@ -349,7 +355,13 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+    # When True, indirect target expansion (via device/area/floor) skips
+    # entities with an entity_category.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -365,6 +377,7 @@ class EntityTriggerBase(Trigger):
         if TYPE_CHECKING:
             assert config.target is not None
         self._options = config.options or {}
+        self._duration: timedelta | None = self._options.get(CONF_FOR)
         self._target = config.target
 
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -386,24 +399,36 @@ class EntityTriggerBase(Trigger):
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
 
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all entity states match."""
-        return all(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-        )
+    def _should_include(self, state: State) -> bool:
+        """Check if an entity should participate in all/count checks.
 
-    def check_one_match(self, entity_ids: set[str]) -> bool:
-        """Check that only one entity state matches."""
-        return (
-            sum(
-                self.is_valid_state(state)
-                for entity_id in entity_ids
-                if (state := self._hass.states.get(entity_id)) is not None
-            )
-            == 1
-        )
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the trigger relies on (e.g. a missing volume_level attribute).
+        """
+        return state.state not in self._excluded_states
+
+    def count_matches(self, entity_ids: set[str]) -> tuple[int, int]:
+        """Return (matches, included) for the entity set.
+
+        `matches` is the number of entities that pass `_should_include` AND
+        `is_valid_state`. `included` is the number that pass
+        `_should_include` (i.e. are visible to the all/count check at all).
+        Callers can use the pair to distinguish vacuous truth
+        (`included == 0`) from a genuine all-match
+        (`matches == included > 0`).
+        """
+        matches = 0
+        included = 0
+        for entity_id in entity_ids:
+            state = self._hass.states.get(entity_id)
+            if state is None or not self._should_include(state):
+                continue
+            included += 1
+            if self.is_valid_state(state):
+                matches += 1
+        return matches, included
 
     @override
     async def async_attach_runner(
@@ -411,7 +436,8 @@ class EntityTriggerBase(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
-        behavior = self._options.get(ATTR_BEHAVIOR)
+        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_ANY)
+        unsub_track_same: dict[str, Callable[[], None]] = {}
 
         @callback
         def state_change_listener(
@@ -422,6 +448,36 @@ class EntityTriggerBase(Trigger):
             entity_id = event.data["entity_id"]
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
+
+            def state_still_valid(
+                _: str, from_state: State | None, to_state: State | None
+            ) -> bool:
+                """Check if the state is still valid during the duration wait.
+
+                Called by async_track_same_state on each state change to
+                determine whether to cancel the timer.
+                For behavior any, checks the individual entity's state.
+                For behavior first/last, checks the combined state.
+                """
+                if behavior == BEHAVIOR_LAST:
+                    matches, included = self.count_matches(
+                        target_state_change_data.targeted_entity_ids
+                    )
+                    # Require at least one included entity to avoid keeping
+                    # the timer alive when every targeted entity has been
+                    # filtered out since it started — a vacuous all-match
+                    # (`included == 0`) would otherwise let the action fire
+                    # after `for:` even though no entity still matches.
+                    return included > 0 and matches == included
+                if behavior == BEHAVIOR_FIRST:
+                    matches, _included = self.count_matches(
+                        target_state_change_data.targeted_entity_ids
+                    )
+                    return matches >= 1
+                # Behavior any: check the individual entity's state
+                if not to_state:
+                    return False
+                return self.is_valid_state(to_state)
 
             if not from_state or not to_state:
                 return
@@ -435,29 +491,75 @@ class EntityTriggerBase(Trigger):
                 return
 
             if behavior == BEHAVIOR_LAST:
-                if not self.check_all_match(
+                matches, included = self.count_matches(
                     target_state_change_data.targeted_entity_ids
-                ):
+                )
+                if matches != included:
                     return
             elif behavior == BEHAVIOR_FIRST:
-                if not self.check_one_match(
+                # Note: It's enough to test for exactly 1 match here because if there
+                # were previously 2 matches the transition would not be valid and we
+                # would have returned already.
+                matches, _ = self.count_matches(
                     target_state_change_data.targeted_entity_ids
-                ):
+                )
+                if matches != 1:
                     return
 
-            run_action(
-                {
-                    ATTR_ENTITY_ID: entity_id,
-                    "from_state": from_state,
-                    "to_state": to_state,
-                },
-                f"state of {entity_id}",
-                event.context,
+            @callback
+            def call_action() -> None:
+                """Call action with right context."""
+                # After a `for` delay, keep the original triggering event payload.
+                # `async_track_same_state` only verifies the state remained valid
+                # for the configured duration before firing the action.
+                run_action(
+                    {
+                        ATTR_ENTITY_ID: entity_id,
+                        "from_state": from_state,
+                        "to_state": to_state,
+                        "for": self._duration,
+                    },
+                    f"state of {entity_id}",
+                    event.context,
+                )
+
+            if not self._duration:
+                # Call action immediately if duration is not specified or 0
+                call_action()
+                return
+
+            subscription_key = entity_id if behavior == BEHAVIOR_ANY else behavior
+            if subscription_key in unsub_track_same:
+                unsub_track_same.pop(subscription_key)()
+            unsub_track_same[subscription_key] = async_track_same_state(
+                self._hass,
+                self._duration,
+                call_action,
+                state_still_valid,
+                entity_ids=(
+                    entity_id
+                    if behavior == BEHAVIOR_ANY
+                    else target_state_change_data.targeted_entity_ids
+                ),
             )
 
-        return async_track_target_selector_state_change_event(
-            self._hass, self._target, state_change_listener, self.entity_filter
+        unsub = async_track_target_selector_state_change_event(
+            self._hass,
+            self._target,
+            state_change_listener,
+            self.entity_filter,
+            primary_entities_only=self._primary_entities_only,
         )
+
+        @callback
+        def async_remove() -> None:
+            """Remove state listeners async."""
+            unsub()
+            for async_remove in unsub_track_same.values():
+                async_remove()
+            unsub_track_same.clear()
+
+        return async_remove
 
 
 class EntityTargetStateTriggerBase(EntityTriggerBase):
@@ -819,6 +921,8 @@ def _normalize_domain_specs(
 def make_entity_target_state_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     to_states: str | set[str],
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a trigger for entity state changes to specific state(s).
 
@@ -837,6 +941,7 @@ def make_entity_target_state_trigger(
 
         _domain_specs = specs
         _to_states = to_states_set
+        _primary_entities_only = primary_entities_only
 
     return CustomTrigger
 
@@ -888,6 +993,8 @@ def make_entity_origin_state_trigger(
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
@@ -896,6 +1003,7 @@ def make_entity_numerical_state_changed_trigger(
 
         _domain_specs = domain_specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomTrigger
 
@@ -903,6 +1011,8 @@ def make_entity_numerical_state_changed_trigger(
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
@@ -911,6 +1021,7 @@ def make_entity_numerical_state_crossed_threshold_trigger(
 
         _domain_specs = domain_specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomTrigger
 

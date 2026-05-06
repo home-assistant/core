@@ -117,7 +117,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any, Any]] = {
         key=LAST_RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         value_func=_last_restart,
     ),
 }

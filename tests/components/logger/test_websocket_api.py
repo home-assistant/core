@@ -364,3 +364,51 @@ async def test_module_log_level_override(
     assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.NOTSET
     }
+
+
+async def test_integration_log_level_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test setting integration log level requires admin."""
+    assert await async_setup_component(hass, "logger", {})
+
+    websocket_client = await hass_ws_client(hass, hass_read_only_access_token)
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logger/integration_log_level",
+            "integration": "websocket_api",
+            "level": "DEBUG",
+            "persistence": "none",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
+async def test_module_log_level_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test setting module log level requires admin."""
+    assert await async_setup_component(hass, "logger", {})
+
+    websocket_client = await hass_ws_client(hass, hass_read_only_access_token)
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logger/log_level",
+            "module": "homeassistant.components.websocket_api",
+            "level": "DEBUG",
+            "persistence": "none",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"

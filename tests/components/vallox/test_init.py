@@ -3,17 +3,13 @@
 import pytest
 from vallox_websocket_api import Profile
 
-from homeassistant.components.vallox import (
+from homeassistant.components.vallox.const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE
+from homeassistant.components.vallox.services import (
     ATTR_DURATION,
     ATTR_PROFILE,
     ATTR_PROFILE_FAN_SPEED,
-    I18N_KEY_TO_VALLOX_PROFILE,
-    SERVICE_SET_PROFILE,
-    SERVICE_SET_PROFILE_FAN_SPEED_AWAY,
-    SERVICE_SET_PROFILE_FAN_SPEED_BOOST,
-    SERVICE_SET_PROFILE_FAN_SPEED_HOME,
+    ValloxService,
 )
-from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import patch_set_fan_speed, patch_set_profile
@@ -24,9 +20,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("service", "profile"),
     [
-        (SERVICE_SET_PROFILE_FAN_SPEED_HOME, Profile.HOME),
-        (SERVICE_SET_PROFILE_FAN_SPEED_AWAY, Profile.AWAY),
-        (SERVICE_SET_PROFILE_FAN_SPEED_BOOST, Profile.BOOST),
+        (ValloxService.SET_PROFILE_FAN_SPEED_HOME, Profile.HOME),
+        (ValloxService.SET_PROFILE_FAN_SPEED_AWAY, Profile.AWAY),
+        (ValloxService.SET_PROFILE_FAN_SPEED_BOOST, Profile.BOOST),
     ],
 )
 async def test_create_service(
@@ -83,7 +79,7 @@ async def test_set_profile_service(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_PROFILE,
+            ValloxService.SET_PROFILE,
             service_data=service_data,
         )
 

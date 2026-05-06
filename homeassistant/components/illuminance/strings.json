@@ -1,8 +1,10 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
     "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
@@ -11,6 +13,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::illuminance::common::condition_for_name%]"
         }
       },
       "name": "Light is detected"
@@ -20,6 +25,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::illuminance::common::condition_for_name%]"
         }
       },
       "name": "Light is not detected"
@@ -30,26 +38,14 @@
         "behavior": {
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::illuminance::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::illuminance::common::condition_threshold_name%]"
         }
       },
       "name": "Illuminance"
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "title": "Illuminance",
@@ -68,6 +64,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::illuminance::common::trigger_for_name%]"
         }
       },
       "name": "Light cleared"
@@ -77,6 +76,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::illuminance::common::trigger_for_name%]"
         },
         "threshold": {
           "name": "[%key:component::illuminance::common::trigger_threshold_name%]"
@@ -89,6 +91,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::illuminance::common::trigger_for_name%]"
         }
       },
       "name": "Light detected"

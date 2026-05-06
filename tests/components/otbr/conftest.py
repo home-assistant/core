@@ -1,10 +1,13 @@
 """Test fixtures for the Open Thread Border Router integration."""
 
 from collections.abc import Generator
+from http import HTTPStatus
+import re
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from python_otbr_api import KeyFormat
 
 from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
@@ -19,6 +22,7 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="enable_compute_pskc")
@@ -42,6 +46,27 @@ def compute_pskc_fixture(enable_compute_pskc: bool) -> Any:
 def dataset_fixture() -> Any:
     """Return the discovery info from the supervisor."""
     return DATASET_CH16
+
+
+@pytest.fixture(name="key_format")
+def key_format_fixture() -> KeyFormat:
+    """Override to control the OTBR JSON key format probe outcome."""
+    return KeyFormat.PASCAL_CASE
+
+
+@pytest.fixture(autouse=True)
+def mock_api_actions(
+    aioclient_mock: AiohttpClientMocker, key_format: KeyFormat
+) -> None:
+    """Mock the /api/actions probe used by python_otbr_api to detect key format.
+
+    The probe was added in python_otbr_api 2.10.0: it returns 200 for OTBRs
+    that speak camelCase and 404 for older PascalCase OTBRs.
+    """
+    status = (
+        HTTPStatus.OK if key_format == KeyFormat.CAMEL_CASE else HTTPStatus.NOT_FOUND
+    )
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=status)
 
 
 @pytest.fixture(name="get_active_dataset_tlvs")

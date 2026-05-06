@@ -192,7 +192,7 @@ ID_TYPE = BigInteger().with_variant(sqlite.INTEGER, "sqlite")
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
 UINT_32_TYPE = BigInteger().with_variant(
-    mysql.INTEGER(unsigned=True),  # type: ignore[no-untyped-call]
+    mysql.INTEGER(unsigned=True),
     "mysql",
     "mariadb",
 )
@@ -206,12 +206,12 @@ JSONB_VARIANT_CAST = Text().with_variant(
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
-    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")
     .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
 )
 DOUBLE_TYPE = (
     Float()
-    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )

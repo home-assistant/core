@@ -1,6 +1,9 @@
 """The soundtouch component."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from libsoundtouch import soundtouch_device
 from libsoundtouch.device import SoundTouchDevice
@@ -21,6 +24,11 @@ from .const import (
     SERVICE_PLAY_EVERYWHERE,
     SERVICE_REMOVE_ZONE_SLAVE,
 )
+
+if TYPE_CHECKING:
+    from .media_player import SoundTouchMediaPlayer
+
+type SoundTouchConfigEntry = ConfigEntry[SoundTouchData]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,12 +58,12 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class SoundTouchData:
-    """SoundTouch data stored in the Home Assistant data object."""
+    """SoundTouch data stored in the config entry runtime data."""
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Initialize the SoundTouch data object for a device."""
         self.device = device
-        self.media_player = None
+        self.media_player: SoundTouchMediaPlayer | None = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -65,20 +73,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle the applying of a service."""
         master_id = service.data.get("master")
         slaves_ids = service.data.get("slaves")
+        all_media_players = [
+            entry.runtime_data.media_player
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+            if entry.runtime_data.media_player is not None
+        ]
         slaves = []
         if slaves_ids:
             slaves = [
-                data.media_player
-                for data in hass.data[DOMAIN].values()
-                if data.media_player.entity_id in slaves_ids
+                media_player
+                for media_player in all_media_players
+                if media_player.entity_id in slaves_ids
             ]
 
         master = next(
             iter(
                 [
-                    data.media_player
-                    for data in hass.data[DOMAIN].values()
-                    if data.media_player.entity_id == master_id
+                    media_player
+                    for media_player in all_media_players
+                    if media_player.entity_id == master_id
                 ]
             ),
             None,
@@ -90,9 +103,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if service.service == SERVICE_PLAY_EVERYWHERE:
             slaves = [
-                data.media_player
-                for data in hass.data[DOMAIN].values()
-                if data.media_player.entity_id != master_id
+                media_player
+                for media_player in all_media_players
+                if media_player.entity_id != master_id
             ]
             await hass.async_add_executor_job(master.create_zone, slaves)
         elif service.service == SERVICE_CREATE_ZONE:
@@ -130,7 +143,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SoundTouchConfigEntry) -> bool:
     """Set up Bose SoundTouch from a config entry."""
     try:
         device = await hass.async_add_executor_job(
@@ -141,14 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unable to connect to SoundTouch device at {entry.data[CONF_HOST]}"
         ) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SoundTouchData(device)
+    entry.runtime_data = SoundTouchData(device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SoundTouchConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN][entry.entry_id]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

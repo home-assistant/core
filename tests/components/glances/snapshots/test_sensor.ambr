@@ -916,6 +916,64 @@
     'state': '426.5',
   })
 # ---
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_media_disk_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '/media disk size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': '/media disk size',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_size',
+    'unique_id': 'test-/media-disk_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 /media disk size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_media_disk_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '476.2',
+  })
+# ---
 # name: test_sensor_states[sensor.0_0_0_0_media_disk_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1779,6 +1837,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '426.5',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '/ssl disk size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': '/ssl disk size',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_size',
+    'unique_id': 'test-/ssl-disk_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 /ssl disk size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '476.2',
   })
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_ssl_disk_usage-entry]

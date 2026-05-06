@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import HomematicipGenericEntity
-from .hap import HomematicIPConfigEntry
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import handle_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +52,10 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
     """Representation of the HomematicIP DoorLockDrive."""
 
     _attr_supported_features = LockEntityFeature.OPEN
+
+    def __init__(self, hap: HomematicipHAP, device: DoorLockDrive) -> None:
+        """Initialize the door lock drive."""
+        super().__init__(hap, device, feature_id="lock")
 
     @property
     def is_locked(self) -> bool | None:

@@ -20,6 +20,8 @@ from .const import (
     LOGGER,
 )
 
+type SeventeenTrackConfigEntry = ConfigEntry[SeventeenTrackCoordinator]
+
 
 @dataclass
 class SeventeenTrackData:
@@ -32,12 +34,12 @@ class SeventeenTrackData:
 class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
     """Class to manage fetching 17Track data."""
 
-    config_entry: ConfigEntry
+    config_entry: SeventeenTrackConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SeventeenTrackConfigEntry,
         client: SeventeenTrackClient,
     ) -> None:
         """Initialize."""

@@ -124,6 +124,19 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         yield api
 
 
+MOCK_ULTIMA = Info(
+    MAC="AA:BB:CC:DD:EE:FF",
+    model="SLZB-Ultima3",
+)
+
+
+@pytest.fixture
+def mock_ultima_client(mock_smlight_client: MagicMock) -> MagicMock:
+    """Configure api client to return an Ultima device."""
+    mock_smlight_client.get_info.side_effect = lambda *arg, **kwargs: MOCK_ULTIMA
+    return mock_smlight_client
+
+
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

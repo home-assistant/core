@@ -9,12 +9,7 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -31,6 +26,7 @@ from .const import (
     CONF_WEATHER_AREAS,
     DOMAIN,
 )
+from .data_handler import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +41,7 @@ class NetatmoFlowHandler(
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NetatmoConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return NetatmoOptionsFlowHandler(config_entry)
@@ -99,7 +95,7 @@ class NetatmoFlowHandler(
 class NetatmoOptionsFlowHandler(OptionsFlow):
     """Handle Netatmo options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: NetatmoConfigEntry) -> None:
         """Initialize Netatmo options flow."""
         self.options = dict(config_entry.options)
         self.options.setdefault(CONF_WEATHER_AREAS, {})

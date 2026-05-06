@@ -78,6 +78,7 @@ class AuthPhase:
             self._send_message,
             self._request[KEY_HASS_USER],
             refresh_token=None,
+            remote=self._request.remote,
         )
         await self._send_bytes_text(AUTH_OK_MESSAGE)
         self._logger.debug("Auth OK (unix socket)")
@@ -111,6 +112,7 @@ class AuthPhase:
                 self._send_message,
                 refresh_token.user,
                 refresh_token,
+                remote=self._request.remote,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(

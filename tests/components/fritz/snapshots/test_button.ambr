@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cleanup',
-    'unique_id': '1C:ED:6F:12:34:11-cleanup',
+    'unique_id': '1CED6F123411-cleanup',
     'unit_of_measurement': None,
   })
 # ---
@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'firmware_update',
-    'unique_id': '1C:ED:6F:12:34:11-firmware_update',
+    'unique_id': '1CED6F123411-firmware_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -133,7 +133,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reconnect',
-    'unique_id': '1C:ED:6F:12:34:11-reconnect',
+    'unique_id': '1CED6F123411-reconnect',
     'unit_of_measurement': None,
   })
 # ---
@@ -184,7 +184,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-reboot',
+    'unique_id': '1CED6F123411-reboot',
     'unit_of_measurement': None,
   })
 # ---

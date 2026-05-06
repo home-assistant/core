@@ -113,14 +113,14 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             ) from ex
         return self._lock.access_codes
 
-    async def add_code(self, name: str, code: str) -> None:
+    async def add_code(self, name: str, code: str, notify_on_use: bool = True) -> None:
         """Add a lock code."""
 
         codes = await self._async_fetch_access_codes()
         self._validate_code_name(codes, name)
         self._validate_code_value(codes, code)
 
-        access_code = AccessCode(name=name, code=code)
+        access_code = AccessCode(name=name, code=code, notify_on_use=notify_on_use)
         try:
             await self.hass.async_add_executor_job(
                 self._lock.add_access_code, access_code

@@ -4,7 +4,6 @@ import logging
 
 from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -19,9 +18,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
     DOMAIN,
-    ENTRY_CONTROLLER,
-    ENTRY_COORDINATOR,
-    ENTRY_VEHICLES,
     FETCH_INTERVAL,
     MANUFACTURER,
     PLATFORMS,
@@ -37,12 +33,16 @@ from .const import (
     VEHICLE_NAME,
     VEHICLE_VIN,
 )
-from .coordinator import SubaruDataUpdateCoordinator
+from .coordinator import (
+    SubaruConfigEntry,
+    SubaruDataUpdateCoordinator,
+    SubaruRuntimeData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bool:
     """Set up Subaru from a config entry."""
     config = entry.data
     websession = aiohttp_client.async_create_clientsession(hass)
@@ -77,24 +77,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        ENTRY_CONTROLLER: controller,
-        ENTRY_COORDINATOR: coordinator,
-        ENTRY_VEHICLES: vehicle_info,
-    }
+    entry.runtime_data = SubaruRuntimeData(
+        controller=controller,
+        coordinator=coordinator,
+        vehicles=vehicle_info,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def get_vehicle_info(controller, vin):

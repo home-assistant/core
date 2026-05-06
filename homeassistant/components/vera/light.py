@@ -13,23 +13,22 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
 from .entity import VeraEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VeraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
     async_add_entities(
         [
             VeraLight(device, controller_data)

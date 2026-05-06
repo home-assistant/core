@@ -1,5 +1,6 @@
 """Device tracker for Mobile app."""
 
+from collections.abc import Callable
 from typing import Any
 
 from homeassistant.components.device_tracker import (
@@ -53,11 +54,11 @@ async def async_setup_entry(
 class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(self, entry, data=None):
+    def __init__(self, entry: ConfigEntry) -> None:
         """Set up Mobile app entity."""
         self._entry = entry
-        self._data = data
-        self._dispatch_unsub = None
+        self._data: dict[str, Any] = {}
+        self._dispatch_unsub: Callable[[], None] | None = None
 
     @property
     def unique_id(self) -> str:
@@ -132,12 +133,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             self.update_data,
         )
 
-        # Don't restore if we got set up with data.
-        if self._data is not None:
-            return
-
         if (state := await self.async_get_last_state()) is None:
-            self._data = {}
             return
 
         attr = state.attributes
@@ -158,7 +154,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             self._dispatch_unsub = None
 
     @callback
-    def update_data(self, data):
+    def update_data(self, data: dict[str, Any]) -> None:
         """Mark the device as seen."""
         self._data = data
         self.async_write_ha_state()

@@ -9,12 +9,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_monitor_callbacks, setup_integration
+from . import get_monitor_callbacks, setup_integration, trigger_connection_status_update
 
 from tests.common import (
     MockConfigEntry,
@@ -150,3 +156,24 @@ async def test_binary_sensor_last_reported(
 
     assert first_reported != hass.states.get("binary_sensor.zone").last_reported
     assert len(events) == 2  # last_reported shall not fire state_changed
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    entity_id = "binary_sensor.zone"
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await trigger_connection_status_update(hass, mock_satel, False)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await trigger_connection_status_update(hass, mock_satel, True)
+
+    assert hass.states.get(entity_id).state == STATE_OFF

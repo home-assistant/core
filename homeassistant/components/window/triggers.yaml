@@ -3,12 +3,13 @@
     required: true
     default: any
     selector:
-      select:
-        translation_key: trigger_behavior
-        options:
-          - first
-          - last
-          - any
+      automation_behavior:
+        mode: trigger
+  for:
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
 
 closed:
   fields: *trigger_common_fields
