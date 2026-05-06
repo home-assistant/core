@@ -36,9 +36,7 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
 
 def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
     """Get device info."""
-    manufacturer = "Tuya"
     model = device.product_name
-    model_id = device.product_id
 
     if initial:
         # Note: the model is overridden via entity.device_info property
@@ -48,8 +46,8 @@ def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceI
 
     return DeviceInfo(
         identifiers={(DOMAIN, device.id)},
-        manufacturer=manufacturer,
+        manufacturer="Tuya",
         name=device.name,
         model=model,
-        model_id=model_id,
+        model_id=device.product_id,
     )
