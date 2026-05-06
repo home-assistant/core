@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEVICE, DOMAIN, NABU_CASA_FIRMWARE_RELEASES_URL
+from .const import DEVICE, DOMAIN, NABU_CASA_FIRMWARE_RELEASES_URL, SERIAL_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,3 +95,36 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: HomeAssistantConnectZBT2ConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version == 1:
+        if config_entry.minor_version == 1:
+            # Replace the synthetic unique ID with the USB serial number
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=config_entry.data[SERIAL_NUMBER],
+                version=1,
+                minor_version=2,
+            )
+
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
+        return True
+
+    # This means the user has downgraded from a future version
+    return False

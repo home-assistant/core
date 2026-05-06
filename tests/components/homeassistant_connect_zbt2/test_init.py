@@ -18,6 +18,40 @@ from tests.components.usb import async_request_scan, patch_scanned_serial_ports
 from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
 
+async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
+    """Test migrating config entries from v1.1 to v1.2 to use the serial number as unique ID."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="303A:4001_80B54EEFAE18_Nabu Casa_ZBT-2",
+        data={
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_80B54EEFAE18-if01-port0",
+            "vid": "303A",
+            "pid": "4001",
+            "serial_number": "80B54EEFAE18",
+            "manufacturer": "Nabu Casa",
+            "product": "ZBT-2",
+            "firmware": "ezsp",
+            "firmware_version": "7.4.4.0",
+        },
+        version=1,
+        minor_version=1,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.unique_id == "80B54EEFAE18"
+
+
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
     """Test setup failing when the USB port is missing."""
 
