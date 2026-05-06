@@ -394,7 +394,7 @@ async def ws_query_telegrams(
         end_time=msg.get("end_time"),
         delta_before_ms=msg.get("delta_before_ms", 0),
         delta_after_ms=msg.get("delta_after_ms", 0),
-        limit=msg.get("limit", 25_000),
+        limit=msg.get("limit", 250_000),
         offset=msg.get("offset", 0),
         order_descending=msg.get("order_descending", True),
     )
