@@ -246,22 +246,28 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
 
 async def test_realtime_exception(hass: HomeAssistant) -> None:
-    """Test we handle realtime API error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    """Test we retry setup when realtime update fails during coordinator refresh."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        unique_id="test-email",
     )
+    entry.add_to_hass(hass)
 
-    with patch(
-        "sense_energy.ASyncSenseable.update_realtime",
-        side_effect=SenseAPIException,
+    with (
+        patch(
+            "sense_energy.ASyncSenseable.authenticate",
+            new=AsyncMock(return_value=True),
+        ),
+        patch(
+            "sense_energy.ASyncSenseable.update_realtime",
+            side_effect=SenseAPIException,
+        ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"timeout": "6", "email": "test-email", "password": "test-password"},
-        )
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 async def test_reauth_no_form(hass: HomeAssistant, mock_sense) -> None:
