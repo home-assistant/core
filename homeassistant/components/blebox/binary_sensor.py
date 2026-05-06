@@ -1,5 +1,7 @@
 """BleBox binary sensor entities."""
 
+from datetime import timedelta
+
 from blebox_uniapi.binary_sensor import BinarySensor as BinarySensorFeature
 
 from homeassistant.components.binary_sensor import (
@@ -13,10 +15,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
 
+SCAN_INTERVAL = timedelta(seconds=5)
+
 BINARY_SENSOR_TYPES = (
     BinarySensorEntityDescription(
         key="moisture",
         device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    BinarySensorEntityDescription(
+        key="open",
+        device_class=BinarySensorDeviceClass.WINDOW,
     ),
 )
 

@@ -22,5 +22,18 @@
         "title": "Set up your BleBox device"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "open_status": {
+        "state": {
+          "ajar": "Ajar",
+          "closed": "Closed",
+          "closed_but_unlocked": "Closed but unlocked",
+          "open": "Open",
+          "unclosed_or_unlocked": "Unclosed or unlocked"
+        }
+      }
+    }
   }
 }

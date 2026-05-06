@@ -1,5 +1,7 @@
 """BleBox sensor entities."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import blebox_uniapi.sensor
@@ -26,94 +28,111 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import BleBoxConfigEntry
+from .const import OPEN_STATUS
 from .entity import BleBoxEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-SENSOR_TYPES = (
-    SensorEntityDescription(
+@dataclass(kw_only=True, frozen=True)
+class BleBoxSensorEntityDescription(SensorEntityDescription):
+    """Describes a BleBox sensor entity."""
+
+    value_fn: Callable[[StateType], StateType] = lambda v: v
+
+
+SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
+    BleBoxSensorEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="pm2_5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="powerConsumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         icon="mdi:lightning-bolt",
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="wind",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="forwardActiveEnergy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="reverseActiveEnergy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="reactivePower",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="activePower",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="apparentPower",
         device_class=SensorDeviceClass.APPARENT_POWER,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
     ),
-    SensorEntityDescription(
+    BleBoxSensorEntityDescription(
         key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    BleBoxSensorEntityDescription(
+        key="openStatus",
+        translation_key="open_status",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:window-open",
+        options=list(OPEN_STATUS.values()),
+        value_fn=lambda v: OPEN_STATUS.get(int(v)) if v is not None else None,
     ),
 )
 
@@ -136,19 +155,21 @@ async def async_setup_entry(
 class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEntity):
     """Representation of a BleBox sensor feature."""
 
+    entity_description: BleBoxSensorEntityDescription
+
     def __init__(
         self,
         feature: blebox_uniapi.sensor.BaseSensor,
-        description: SensorEntityDescription,
+        description: BleBoxSensorEntityDescription,
     ) -> None:
         """Initialize a BleBox sensor feature."""
         super().__init__(feature)
         self.entity_description = description
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state."""
-        return self._feature.native_value
+        return self.entity_description.value_fn(self._feature.native_value)
 
     @property
     def last_reset(self) -> datetime | None:
