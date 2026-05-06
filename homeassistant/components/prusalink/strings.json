@@ -54,8 +54,14 @@
       "heatbed_temperature": {
         "name": "Heatbed temperature"
       },
+      "location": {
+        "name": "Location"
+      },
       "material": {
         "name": "Material"
+      },
+      "min_extrusion_temp": {
+        "name": "Minimum extrusion temperature"
       },
       "nozzle_diameter": {
         "name": "Nozzle diameter"
@@ -93,12 +99,6 @@
       },
       "progress": {
         "name": "Progress"
-      },
-      "location": {
-        "name": "Location"
-      },
-      "min_extrusion_temp": {
-        "name": "Minimum extrusion temperature"
       },
       "x_position": {
         "name": "X"

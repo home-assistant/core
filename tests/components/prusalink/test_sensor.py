@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    STATE_UNAVAILABLE,
     Platform,
     UnitOfLength,
     UnitOfTemperature,
@@ -320,23 +319,19 @@ async def test_axis_x_y_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_axis_x_y_unavailable_when_absent(
+async def test_axis_x_y_not_created_when_absent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: None,
     mock_get_status_idle: dict[str, Any],
 ) -> None:
-    """X and Y sensors are unavailable when axis fields are absent from the response."""
+    """X and Y sensors are not created when axis fields are absent from the response."""
     del mock_get_status_idle["printer"]["axis_x"]
     del mock_get_status_idle["printer"]["axis_y"]
     assert await async_setup_component(hass, "prusalink", {})
 
-    state = hass.states.get("sensor.mock_title_x")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-    state = hass.states.get("sensor.mock_title_y")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.mock_title_x") is None
+    assert hass.states.get("sensor.mock_title_y") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -359,20 +354,16 @@ async def test_location_and_min_extrusion_temp_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_location_and_min_extrusion_temp_unavailable_when_absent(
+async def test_location_and_min_extrusion_temp_not_created_when_absent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: None,
     mock_info_api: dict[str, Any],
 ) -> None:
-    """Location and min extrusion temp are unavailable when info fields are absent."""
+    """Location and min extrusion temp sensors are not created when info fields are absent."""
     del mock_info_api["location"]
     del mock_info_api["min_extrusion_temp"]
     assert await async_setup_component(hass, "prusalink", {})
 
-    state = hass.states.get("sensor.mock_title_location")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-    state = hass.states.get("sensor.mock_title_minimum_extrusion_temperature")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.mock_title_location") is None
+    assert hass.states.get("sensor.mock_title_minimum_extrusion_temperature") is None

@@ -46,6 +46,7 @@ class PrusaLinkSensorEntityDescription(
     """Describes PrusaLink sensor entity."""
 
     available_fn: Callable[[T], bool] = lambda _: True
+    supported_fn: Callable[[T], bool] = lambda _: True
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -110,7 +111,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["printer"]["axis_x"]),
-            available_fn=lambda data: data["printer"].get("axis_x") is not None,
+            supported_fn=lambda data: data["printer"].get("axis_x") is not None,
             entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterStatus](
@@ -120,7 +121,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["printer"]["axis_y"]),
-            available_fn=lambda data: data["printer"].get("axis_y") is not None,
+            supported_fn=lambda data: data["printer"].get("axis_y") is not None,
             entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterStatus](
@@ -218,7 +219,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="info.location",
             translation_key="location",
             value_fn=lambda data: cast(str, data["location"]),
-            available_fn=lambda data: data.get("location") is not None,
+            supported_fn=lambda data: data.get("location") is not None,
             entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
@@ -228,7 +229,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(int, data["min_extrusion_temp"]),
-            available_fn=lambda data: data.get("min_extrusion_temp") is not None,
+            supported_fn=lambda data: data.get("min_extrusion_temp") is not None,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -250,6 +251,7 @@ async def async_setup_entry(
         entities.extend(
             PrusaLinkSensorEntity(coordinator, sensor_description)
             for sensor_description in sensors
+            if sensor_description.supported_fn(coordinator.data)
         )
 
     async_add_entities(entities)
