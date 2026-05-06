@@ -22,7 +22,7 @@
   },
   "exceptions": {
     "command_failed": {
-      "message": "Failed to send command to Fluss+ device: {error}"
+      "message": "Failed to send command to Fluss+ device"
     }
   }
 }

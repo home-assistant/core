@@ -31,19 +31,12 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID_1 = "cover.device_1"
-ENTITY_ID_2 = "cover.device_2"
 DEVICE_ID_1 = "2a303030sdj1"
 DEVICE_ID_2 = "ape93k9302j2"
 
 
-def _status_side_effect(
-    statuses: dict[str, dict[str, Any]],
-):
-    """Return a side_effect that yields per-device status payloads.
-
-    Devices not present in ``statuses`` get a default online payload with no
-    ``openCloseStatus`` key so they continue to register as buttons.
-    """
+def _status_side_effect(statuses: dict[str, dict[str, Any]]):
+    """Return a side_effect that yields per-device status payloads."""
 
     async def _get_status(device_id: str) -> dict[str, Any]:
         return {
@@ -91,7 +84,7 @@ async def test_cover_state(
     status_value: str,
     expected_state: str,
 ) -> None:
-    """The API contract is exactly "Open" or "Closed" — verify both map correctly."""
+    """The API returns either "Open" or "Closed" — verify both map correctly."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": status_value}}
     )
@@ -100,6 +93,22 @@ async def test_cover_state(
     state = hass.states.get(ENTITY_ID_1)
     assert state is not None
     assert state.state == expected_state
+
+
+async def test_cover_unavailable_when_offline(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Covers become unavailable when the device reports no internet."""
+
+    async def _status(device_id: str) -> dict[str, Any]:
+        return {"status": {"internetConnected": False, "openCloseStatus": "Closed"}}
+
+    mock_api_client.async_get_device_status.side_effect = _status
+    await _setup_cover_only(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -149,7 +158,7 @@ async def test_cover_press_schedules_delayed_status_refresh(
     post_status: str,
     expected_state: str,
 ) -> None:
-    """A press defers a single-device status fetch by 10s, not a full refresh."""
+    """A press defers a single-device status fetch by 10s."""
     initial_status = "Open" if post_status == "Closed" else "Closed"
     initial_state = STATE_OPEN if initial_status == "Open" else STATE_CLOSED
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
@@ -231,53 +240,26 @@ async def test_mixed_device_dispatch(
     assert entity_registry.async_get("cover.device_2") is None
 
 
-async def test_cover_promotes_button_when_capability_appears(
+async def test_orphan_button_removed_on_setup(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """A device that initially fails its status fetch registers as a button.
-
-    On a later refresh that exposes ``openCloseStatus``, the button entity is
-    removed from the registry and a cover entity replaces it.
-    """
-    mock_api_client.async_get_device_status.side_effect = FlussApiClientError("flaky")
-    await setup_integration(hass, mock_config_entry)
-
-    assert entity_registry.async_get("button.device_1") is not None
-    assert entity_registry.async_get("cover.device_1") is None
+    """A pre-existing button registry entry is removed if its device is now a cover."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "button", DOMAIN, DEVICE_ID_1, config_entry=mock_config_entry
+    )
+    assert (
+        entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is not None
+    )
 
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is None
     assert entity_registry.async_get("cover.device_1") is not None
-    assert entity_registry.async_get("button.device_1") is None
-
-
-async def test_cover_state_preserved_on_transient_status_error(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A failed per-device status call must not drop is_closed to None."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
-    )
-    await _setup_cover_only(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.data[DEVICE_ID_1].is_closed is True
-
-    mock_api_client.async_get_device_status.side_effect = FlussApiClientError("flaky")
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    device = coordinator.data[DEVICE_ID_1]
-    assert device.is_closed is True
-    assert device.has_position_sensor is True
-    assert device.internet_connected is False
-    assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE

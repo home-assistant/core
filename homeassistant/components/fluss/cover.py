@@ -1,5 +1,6 @@
 """Cover platform for Fluss+ devices with a position sensor."""
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -7,12 +8,13 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN
+from .const import COMMAND_REFRESH_DELAY, DOMAIN
 from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
 
@@ -27,43 +29,47 @@ async def async_setup_entry(
     """Set up Fluss covers for devices that report a position sensor."""
     coordinator = entry.runtime_data
     entity_registry = er.async_get(hass)
-    known: set[str] = set()
 
-    @callback
-    def _add_covers() -> None:
-        new_entities: list[FlussCover] = []
-        for device_id, device in coordinator.data.items():
-            if device_id in known or not device.has_position_sensor:
-                continue
-            # Once a device gains the position sensor it must surface as a
-            # cover, never a button. Remove any prior button registry entry
-            # left over from an earlier install or from a refresh that
-            # registered the device before its capability was known.
-            button_entity_id = entity_registry.async_get_entity_id(
-                "button", DOMAIN, device_id
-            )
-            if button_entity_id is not None:
-                entity_registry.async_remove(button_entity_id)
-            known.add(device_id)
-            new_entities.append(FlussCover(coordinator, device))
-        if new_entities:
-            async_add_entities(new_entities)
+    cover_devices = [
+        (device_id, device)
+        for device_id, device in coordinator.data.items()
+        if "openCloseStatus" in device
+    ]
 
-    _add_covers()
-    entry.async_on_unload(coordinator.async_add_listener(_add_covers))
+    # Drop any prior button registry entry for a device that's now a cover.
+    for device_id, _ in cover_devices:
+        if button_entity_id := entity_registry.async_get_entity_id(
+            "button", DOMAIN, device_id
+        ):
+            entity_registry.async_remove(button_entity_id)
+
+    async_add_entities(
+        FlussCover(coordinator, device_id, device)
+        for device_id, device in cover_devices
+    )
 
 
 class FlussCover(FlussEntity, CoverEntity):
-    """Representation of a Fluss+ cover (garage door / gate)."""
+    """Representation of a Fluss+ cover."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_name = None
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     @property
+    def available(self) -> bool:
+        """Return True only when the device is online."""
+        return super().available and self.device["internetConnected"]
+
+    @property
     def is_closed(self) -> bool | None:
         """Return whether the cover is closed."""
-        return self.device.is_closed
+        status = self.device.get("openCloseStatus")
+        if status == "Closed":
+            return True
+        if status == "Open":
+            return False
+        return None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -71,11 +77,9 @@ class FlussCover(FlussEntity, CoverEntity):
             await self.coordinator.api.async_open_device(self.device_id)
         except FlussApiClientError as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
+                translation_domain=DOMAIN, translation_key="command_failed"
             ) from err
-        self.coordinator.async_schedule_device_refresh(self.device_id)
+        self._schedule_status_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -83,8 +87,26 @@ class FlussCover(FlussEntity, CoverEntity):
             await self.coordinator.api.async_close_device(self.device_id)
         except FlussApiClientError as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
+                translation_domain=DOMAIN, translation_key="command_failed"
             ) from err
-        self.coordinator.async_schedule_device_refresh(self.device_id)
+        self._schedule_status_refresh()
+
+    def _schedule_status_refresh(self) -> None:
+        """Refetch this device's status after it has had time to move."""
+
+        async def _refresh(_now: datetime) -> None:
+            try:
+                response = await self.coordinator.api.async_get_device_status(
+                    self.device_id
+                )
+            except FlussApiClientError:
+                return
+            new_data = dict(self.coordinator.data)
+            new_data[self.device_id] = {
+                **new_data[self.device_id],
+                **response["status"],
+            }
+            self.coordinator.async_set_updated_data(new_data)
+
+        cancel = async_call_later(self.hass, COMMAND_REFRESH_DELAY, _refresh)
+        self.async_on_remove(cancel)

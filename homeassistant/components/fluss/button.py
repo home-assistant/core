@@ -1,14 +1,12 @@
 """Support for Fluss Devices."""
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
-
-PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -16,29 +14,26 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Fluss buttons for devices without a position sensor."""
+    """Set up the Fluss Devices, filtering out any invalid payloads."""
     coordinator = entry.runtime_data
-    known: set[str] = set()
+    devices = coordinator.data
 
-    @callback
-    def _add_buttons() -> None:
-        new_entities: list[FlussButton] = []
-        for device_id, device in coordinator.data.items():
-            if device_id in known or device.has_position_sensor:
-                continue
-            known.add(device_id)
-            new_entities.append(FlussButton(coordinator, device))
-        if new_entities:
-            async_add_entities(new_entities)
-
-    _add_buttons()
-    entry.async_on_unload(coordinator.async_add_listener(_add_buttons))
+    async_add_entities(
+        FlussButton(coordinator, device_id, device)
+        for device_id, device in devices.items()
+        if "openCloseStatus" not in device
+    )
 
 
 class FlussButton(FlussEntity, ButtonEntity):
     """Representation of a Fluss button device."""
 
     _attr_name = None
+
+    @property
+    def available(self) -> bool:
+        """Return True only when the device is online."""
+        return super().available and self.device["internetConnected"]
 
     async def async_press(self) -> None:
         """Handle the button press."""
