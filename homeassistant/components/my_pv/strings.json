@@ -1,50 +1,71 @@
 {
+  "common": {
+    "password_description": "The password of your my-PV device. When no custom password is set you have to use the **devicekey** which can be found under the ⓘ info menu of your my-PV device. For the HEA•THOR IoT you can find the **devicekey** on the device label.",
+    "token": "my-PV Cloud API Access Token",
+    "token_description": "To generate a my-PV Cloud API Access Token go to your [my-PV Cloud]({cloud_url}) and navigate to ⚙️ > **Device Setup**. Enable **Advanced Settings**, navigate to **API** and **Generate API Access Token**. Use this when setting up the my-PV integration."
+  },
   "config": {
     "abort": {
-      "already_configured": "Device is already configured",
-      "reauth_successful": "Re-configuration was successful"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_cloud_api_token": "Invalid cloud API token",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_cloud_api_token": "Invalid my-PV Cloud API Access Token",
       "invalid_password": "Invalid password",
       "invalid_serial_number": "Invalid serial number",
-      "unknown": "Unexpected error"
+      "invalid_serial_number_or_cloud_api_token": "Invalid serial number or my-PV Cloud API Access Token",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "discovery_confirm": {
         "data": {
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Password"
+          "password": "[%key:component::my_pv::common::password_description%]"
         },
-        "description": "Do you want to set up {name}?"
+        "description": "Do you want to set up {name}?",
+        "title": "{name}"
       },
       "local_auth": {
         "data": {
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Password"
+          "password": "[%key:component::my_pv::common::password_description%]"
         },
-        "description": "Password description goes here. Provide instructions with where to find the default password.",
-        "title": "my-PV Local Device"
+        "title": "{name} password"
       },
-      "reauth_confirm_cloud": {
-        "description": "The my-PV integration needs to re-authenticate",
-        "title": "Authentication expired for my-PV Cloud"
+      "reauth_cloud": {
+        "data": {
+          "token": "[%key:component::my_pv::common::token%]"
+        },
+        "data_description": {
+          "token": "[%key:component::my_pv::common::token_description%]"
+        },
+        "description": "The my-PV integration needs to re-authenticate with your my-PV Cloud.",
+        "title": "Authentication expired for {name}"
+      },
+      "reauth_local": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::my_pv::common::password_description%]"
+        },
+        "description": "The my-PV integration needs to re-authenticate with your my-PV device.",
+        "title": "Authentication expired for {name}"
       },
       "setup_cloud": {
         "data": {
           "serial_number": "Serial number",
-          "token": "Cloud API token"
+          "token": "[%key:component::my_pv::common::token%]"
         },
         "data_description": {
-          "serial_number": "Serial number",
-          "token": "Cloud API token"
+          "serial_number": "You can find the serial number on the device label.",
+          "token": "[%key:component::my_pv::common::token_description%]"
         },
-        "description": "setup_cloud description goes here. Provide instructions with where to find the serial number and how to obtain a Cloud API token.",
         "title": "my-PV Cloud Device"
       },
       "setup_local": {
@@ -57,11 +78,12 @@
         "title": "my-PV Local Device"
       },
       "user": {
+        "description": "If your my-PV device is connected to your local network the **Local** method is the preferred method to connect.",
         "menu_options": {
-          "setup_cloud": "Cloud Device",
-          "setup_local": "Local Device"
+          "setup_cloud": "Cloud",
+          "setup_local": "Local"
         },
-        "title": "my-PV Connection Method"
+        "title": "Select connection method"
       }
     }
   },
@@ -74,23 +96,6 @@
     "binary_sensor": {
       "blockactive": {
         "name": "Block Status"
-      }
-    },
-    "button": {
-      "check_fwupd": {
-        "name": "Check Firmware Update"
-      },
-      "firmware_download": {
-        "name": "Download Firmware"
-      },
-      "p9s_fw": {
-        "name": "Firmware Update"
-      },
-      "ps_fw": {
-        "name": "Power Section Firmware Update"
-      },
-      "reboot_device": {
-        "name": "Reboot"
       }
     },
     "number": {

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from my_pv import MyPVCloudDevice, MyPVLocalDevice
+from my_pv import CLOUD_FRONTEND, MyPVCloudDevice, MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
 import voluptuous as vol
 
@@ -312,11 +312,13 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._reauth_entry:
             step_id = "reauth_cloud"
             data_schema = self.CLOUD_REAUTH_SCHEMA
+        description_placeholders = {"cloud_url": CLOUD_FRONTEND}
 
         if user_input is None:
             return self.async_show_form(
                 step_id=step_id,
                 data_schema=data_schema,
+                description_placeholders=description_placeholders,
             )
 
         errors: dict[str, str] = {}
@@ -357,6 +359,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=step_id,
                 data_schema=data_schema,
                 errors=errors,
+                description_placeholders=description_placeholders,
             )
 
         # If reauthenticating only the existing configuration needs to be updated with the
