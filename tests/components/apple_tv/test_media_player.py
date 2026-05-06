@@ -248,3 +248,28 @@ async def test_play_media_no_streaming_capability_raises(
         )
     mock_atv_no_streaming.stream.stream_file.assert_not_called()
     mock_atv_no_streaming.stream.play_url.assert_not_called()
+
+
+async def test_browse_media_uses_media_source_when_idle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_atv: AsyncMock,
+) -> None:
+    """async_browse_media calls media_source when device is idle (_playing is None).
+
+    Before the fix, _is_feature_available returned False for an idle device, causing
+    async_browse_media to fall back to the app list instead of the media browser.
+    """
+    entity = hass.data[MP_DOMAIN].get_entity(_ENTITY_ID)
+    assert entity is not None
+
+    browse_result = MagicMock(children=None)
+    with patch(
+        "homeassistant.components.apple_tv.media_player.media_source.async_browse_media",
+        new_callable=AsyncMock,
+        return_value=browse_result,
+    ) as mock_browse:
+        result = await entity.async_browse_media()
+
+    mock_browse.assert_called_once()
+    assert result is browse_result

@@ -363,6 +363,8 @@ class AppleTvMediaPlayer(
             media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
+        # TTS and other MUSIC-typed URLs lack a file extension that is_streamable
+        # can probe via miniaudio, so MUSIC type unconditionally selects RAOP.
         use_stream_file = self._stream_file_supported and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         )
@@ -386,7 +388,7 @@ class AppleTvMediaPlayer(
             exceptions.PlaybackError,
             exceptions.ProtocolError,
         ) as ex:
-            raise HomeAssistantError("Failed to stream media") from ex
+            raise HomeAssistantError(f"Failed to stream media: {ex}") from ex
 
     @property
     def media_image_hash(self) -> str | None:
