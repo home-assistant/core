@@ -50,10 +50,6 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            if CONF_MAX_CONSECUTIVE_FAILURES in user_input:
-                user_input[CONF_MAX_CONSECUTIVE_FAILURES] = int(
-                    user_input[CONF_MAX_CONSECUTIVE_FAILURES]
-                )
             return self.async_create_entry(data=self.config_entry.options | user_input)
 
         return self.async_show_form(
@@ -70,7 +66,10 @@ class OptionsFlowHandler(OptionsFlow):
                             CONF_MAX_CONSECUTIVE_FAILURES,
                             DEFAULT_MAX_CONSECUTIVE_FAILURES,
                         ),
-                    ): NumberSelector(NumberSelectorConfig(min=5, max=30, step=1)),
+                    ): vol.All(
+                        NumberSelector(NumberSelectorConfig(min=5, max=30, step=1)),
+                        vol.Coerce(int),
+                    ),
                 }
             ),
         )
