@@ -46,7 +46,6 @@ rules:
     comment: |
       No authentication is performed.
   test-coverage: todo
-
   # Gold
   devices: done
   diagnostics: todo

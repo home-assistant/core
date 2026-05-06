@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
 
+
 async def test_turn_on_off(hass: HomeAssistant, mock_bleak_client: MagicMock) -> None:
     """Turning a switch on then off writes 1 then 0 to the device."""
     with patch("homeassistant.components.svs_subwoofer.PLATFORMS", [Platform.SWITCH]):

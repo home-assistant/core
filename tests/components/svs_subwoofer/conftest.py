@@ -5,9 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto-enable the bluetooth integration in every test."""
+
 
 @pytest.fixture
 def mock_bleak_client() -> Generator[MagicMock]:

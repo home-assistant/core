@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
 
+
 async def test_lpf_slope_options(
     hass: HomeAssistant, mock_bleak_client: MagicMock
 ) -> None:
@@ -22,6 +23,7 @@ async def test_lpf_slope_options(
     state = hass.states.get(entity_id(hass, "select", SVS_ADDRESS, "lpf_slope"))
     assert state is not None
     assert state.attributes["options"] == ["6 dB", "12 dB", "18 dB", "24 dB"]
+
 
 async def test_select_lpf_slope(
     hass: HomeAssistant, mock_bleak_client: MagicMock
@@ -40,6 +42,7 @@ async def test_select_lpf_slope(
     )
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
     assert hass.states.get(eid).state == "24 dB"
+
 
 async def test_select_preset_loads_preset(
     hass: HomeAssistant, mock_bleak_client: MagicMock

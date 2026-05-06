@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
 
+
 async def test_connected_sensor(
     hass: HomeAssistant, mock_bleak_client: MagicMock
 ) -> None:
@@ -19,6 +20,7 @@ async def test_connected_sensor(
     state = hass.states.get(entity_id(hass, "binary_sensor", SVS_ADDRESS, "connected"))
     assert state is not None
     assert state.state == "on"
+
 
 async def test_disconnect_flips_sensor(
     hass: HomeAssistant, mock_bleak_client: MagicMock

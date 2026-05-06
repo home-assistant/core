@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
 
+
 async def test_volume_set(hass: HomeAssistant, mock_bleak_client: MagicMock) -> None:
     """Setting the volume slider writes through to the coordinator."""
     with patch("homeassistant.components.svs_subwoofer.PLATFORMS", [Platform.NUMBER]):
@@ -33,6 +34,7 @@ async def test_volume_set(hass: HomeAssistant, mock_bleak_client: MagicMock) -> 
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
     state = hass.states.get(eid)
     assert state.state in ("-25.0", "-25")
+
 
 async def test_peq_q_factor_step(
     hass: HomeAssistant, mock_bleak_client: MagicMock

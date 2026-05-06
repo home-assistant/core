@@ -1,13 +1,13 @@
 {
   "services": {
-    "sync_from": {
-      "service": "mdi:content-copy"
+    "load_preset": {
+      "service": "mdi:playlist-music"
     },
     "set_volume": {
       "service": "mdi:volume-high"
     },
-    "load_preset": {
-      "service": "mdi:playlist-music"
+    "sync_from": {
+      "service": "mdi:content-copy"
     }
   }
 }

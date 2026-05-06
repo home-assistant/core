@@ -11,6 +11,7 @@ from . import SVS_ADDRESS, SVS_NAME
 
 from tests.common import MockConfigEntry
 
+
 async def test_setup_and_unload(
     hass: HomeAssistant, mock_bleak_client: MagicMock
 ) -> None:
@@ -35,6 +36,7 @@ async def test_setup_and_unload(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
 
 async def test_setup_device_not_found(hass: HomeAssistant) -> None:
     """If the BLE device is not in range, setup goes into retry."""

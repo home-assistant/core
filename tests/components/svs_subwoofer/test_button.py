@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from . import SVS_ADDRESS, async_init_integration, entity_id
 
+
 async def test_save_preset_button(
     hass: HomeAssistant, mock_bleak_client: MagicMock
 ) -> None:
@@ -24,6 +25,7 @@ async def test_save_preset_button(
         blocking=True,
     )
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
+
 
 async def test_reconnect_button(
     hass: HomeAssistant, mock_bleak_client: MagicMock
