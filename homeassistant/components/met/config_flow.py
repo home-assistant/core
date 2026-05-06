@@ -159,8 +159,9 @@ class MetOptionsFlowHandler(OptionsFlowWithReload):
         """Configure options for Met."""
 
         if user_input is not None:
-            data = _location_data(user_input)
-            # Update config entry with data from user input
+            data = {**self.config_entry.data, **_location_data(user_input)}
+            # Update config entry with data from user input while preserving
+            # existing fields such as legacy stored names.
             self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             return self.async_create_entry(title="", data=data)
 
