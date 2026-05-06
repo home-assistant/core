@@ -65,7 +65,8 @@
             "comfort": "mdi:sofa",
             "eco": "mdi:leaf",
             "home": "mdi:home",
-            "sleep": "mdi:bed"
+            "sleep": "mdi:bed",
+            "wind_free": "mdi:weather-dust"
           }
         },
         "swing_horizontal_mode": {
