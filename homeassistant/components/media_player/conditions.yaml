@@ -15,8 +15,10 @@
       selector:
         duration:
 
+is_muted: *condition_common
 is_off: *condition_common
 is_on: *condition_common
 is_not_playing: *condition_common
 is_paused: *condition_common
 is_playing: *condition_common
+is_unmuted: *condition_common
