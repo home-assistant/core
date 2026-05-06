@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -55,6 +55,19 @@ class FlussCover(FlussEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_name = None
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _cancel_refresh: CALLBACK_TYPE | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Register cleanup of any pending delayed refresh on removal."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self._cancel_pending_refresh)
+
+    @callback
+    def _cancel_pending_refresh(self) -> None:
+        """Cancel an in-flight delayed status refresh, if any."""
+        if self._cancel_refresh is not None:
+            self._cancel_refresh()
+            self._cancel_refresh = None
 
     @property
     def available(self) -> bool:
@@ -93,13 +106,17 @@ class FlussCover(FlussEntity, CoverEntity):
 
     def _schedule_status_refresh(self) -> None:
         """Refetch this device's status after it has had time to move."""
+        self._cancel_pending_refresh()
 
         async def _refresh(_now: datetime) -> None:
+            self._cancel_refresh = None
             try:
                 response = await self.coordinator.api.async_get_device_status(
                     self.device_id
                 )
             except FlussApiClientError:
+                return
+            if self.device_id not in self.coordinator.data:
                 return
             new_data = dict(self.coordinator.data)
             new_data[self.device_id] = {
@@ -108,5 +125,6 @@ class FlussCover(FlussEntity, CoverEntity):
             }
             self.coordinator.async_set_updated_data(new_data)
 
-        cancel = async_call_later(self.hass, COMMAND_REFRESH_DELAY, _refresh)
-        self.async_on_remove(cancel)
+        self._cancel_refresh = async_call_later(
+            self.hass, COMMAND_REFRESH_DELAY, _refresh
+        )

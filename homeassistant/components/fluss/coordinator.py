@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Fluss+ integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -40,11 +38,15 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         )
 
     async def _async_get_status(self, device_id: str) -> dict[str, Any]:
-        """Return per-device status; defaults to offline on API error."""
+        """Return per-device status; preserve last-known fields on API error."""
         try:
             response = await self.api.async_get_device_status(device_id)
         except FlussApiClientError:
-            return {"internetConnected": False}
+            previous = (self.data or {}).get(device_id, {})
+            result: dict[str, Any] = {"internetConnected": False}
+            if "openCloseStatus" in previous:
+                result["openCloseStatus"] = previous["openCloseStatus"]
+            return result
         return response["status"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
