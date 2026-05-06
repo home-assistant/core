@@ -75,7 +75,7 @@ class FlussCover(FlussEntity, CoverEntity):
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_schedule_device_refresh(self.device_id)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -87,4 +87,4 @@ class FlussCover(FlussEntity, CoverEntity):
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_schedule_device_refresh(self.device_id)

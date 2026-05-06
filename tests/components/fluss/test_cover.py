@@ -1,5 +1,6 @@
 """Tests for the Fluss+ cover platform."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -23,10 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID_1 = "cover.device_1"
 ENTITY_ID_2 = "cover.device_2"
@@ -114,12 +116,11 @@ async def test_cover_commands(
     service: str,
     method: str,
 ) -> None:
-    """Open and close call the matching API method and trigger a refresh."""
+    """Open and close hit the matching API method."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
     await _setup_cover_only(hass, mock_config_entry)
-    mock_api_client.async_get_device_status.reset_mock()
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -130,7 +131,53 @@ async def test_cover_commands(
     await hass.async_block_till_done()
 
     getattr(mock_api_client, method).assert_called_once_with(DEVICE_ID_1)
-    assert mock_api_client.async_get_device_status.call_count >= 1
+
+
+@pytest.mark.parametrize(
+    ("service", "method", "post_status", "expected_state"),
+    [
+        (SERVICE_OPEN_COVER, "async_open_device", "Open", STATE_OPEN),
+        (SERVICE_CLOSE_COVER, "async_close_device", "Closed", STATE_CLOSED),
+    ],
+)
+async def test_cover_press_schedules_delayed_status_refresh(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    method: str,
+    post_status: str,
+    expected_state: str,
+) -> None:
+    """A press defers a single-device status fetch by 10s, not a full refresh."""
+    initial_status = "Open" if post_status == "Closed" else "Closed"
+    initial_state = STATE_OPEN if initial_status == "Open" else STATE_CLOSED
+    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
+        {DEVICE_ID_1: {"openCloseStatus": initial_status}}
+    )
+    await _setup_cover_only(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID_1).state == initial_state
+
+    mock_api_client.async_get_device_status.reset_mock()
+    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
+        {DEVICE_ID_1: {"openCloseStatus": post_status}}
+    )
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID_1},
+        blocking=True,
+    )
+
+    assert mock_api_client.async_get_device_status.call_count == 0
+    assert hass.states.get(ENTITY_ID_1).state == initial_state
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    mock_api_client.async_get_device_status.assert_called_once_with(DEVICE_ID_1)
+    assert hass.states.get(ENTITY_ID_1).state == expected_state
 
 
 @pytest.mark.parametrize(

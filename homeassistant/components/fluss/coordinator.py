@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from fluss_api import (
@@ -13,13 +14,14 @@ from fluss_api import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-from .const import LOGGER, UPDATE_INTERVAL
+from .const import COMMAND_REFRESH_DELAY, LOGGER, UPDATE_INTERVAL
 
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
@@ -37,6 +39,8 @@ class FlussDevice:
 
 class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
     """Manages fetching Fluss device data on a schedule."""
+
+    config_entry: FlussConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, config_entry: FlussConfigEntry, api_key: str
@@ -108,3 +112,39 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
                 is_closed=is_closed,
             )
         return result
+
+    @callback
+    def async_schedule_device_refresh(self, device_id: str) -> None:
+        """Refresh one device's status after the cover has had time to move."""
+
+        async def _refresh(_now: datetime) -> None:
+            await self._async_refresh_device(device_id)
+
+        cancel = async_call_later(self.hass, COMMAND_REFRESH_DELAY, _refresh)
+        self.config_entry.async_on_unload(cancel)
+
+    async def _async_refresh_device(self, device_id: str) -> None:
+        """Refresh status for one device and merge it into coordinator data."""
+        if (previous := self.data.get(device_id)) is None:
+            return
+        status = await self._async_get_status(device_id)
+        if status is None:
+            return
+
+        has_sensor = previous.has_position_sensor
+        if "openCloseStatus" in status:
+            self._cover_capable.add(device_id)
+            has_sensor = True
+            is_closed = status["openCloseStatus"] == "Closed"
+        else:
+            is_closed = previous.is_closed
+
+        new_data = dict(self.data)
+        new_data[device_id] = FlussDevice(
+            device_id=device_id,
+            device_name=previous.device_name,
+            internet_connected=status.get("internetConnected", False),
+            has_position_sensor=has_sensor,
+            is_closed=is_closed,
+        )
+        self.async_set_updated_data(new_data)
