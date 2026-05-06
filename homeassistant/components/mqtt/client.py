@@ -699,8 +699,6 @@ class MQTT:
     ) -> None:
         """Publish a MQTT message."""
         if message_expiry_interval is not None:
-            import paho.mqtt.client as mqtt  # noqa: PLC0415
-
             if (protocol := self.conf.get(CONF_PROTOCOL, PROTOCOL_311)) != PROTOCOL_5:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
