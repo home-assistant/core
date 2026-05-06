@@ -6,7 +6,7 @@ import logging
 from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_time_interval
@@ -30,29 +30,6 @@ _STATIC_UNIQUE_ID_MIGRATIONS: tuple[tuple[Platform, str, str], ...] = (
 )
 
 
-@callback
-def _rewrite_unique_id(
-    entity_registry: er.EntityRegistry,
-    platform: Platform,
-    old_uid: str,
-    new_uid: str,
-) -> None:
-    """Rewrite a single entity unique_id, swallowing collisions."""
-    entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, old_uid)
-    if entity_id is None:
-        return
-    try:
-        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
-    except ValueError:
-        _LOGGER.warning(
-            "Unable to migrate unique_id from %s to %s: target already exists",
-            old_uid,
-            new_uid,
-        )
-        return
-    _LOGGER.debug("Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid)
-
-
 async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
     """Migrate old config entries."""
     if entry.version < 2:
@@ -71,17 +48,34 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
         mac: str = freebox_config["mac"]
         entity_registry = er.async_get(hass)
 
-        for platform, old_suffix, new_key in _STATIC_UNIQUE_ID_MIGRATIONS:
-            _rewrite_unique_id(
-                entity_registry, platform, f"{mac} {old_suffix}", f"{mac} {new_key}"
-            )
-
-        for sensor in freebox_config.get("sensors", []):
-            _rewrite_unique_id(
-                entity_registry,
+        migrations: list[tuple[Platform, str, str]] = [
+            (platform, f"{mac} {old_suffix}", f"{mac} {new_key}")
+            for platform, old_suffix, new_key in _STATIC_UNIQUE_ID_MIGRATIONS
+        ]
+        migrations.extend(
+            (
                 Platform.SENSOR,
                 f"{mac} Freebox {sensor['name']}",
                 f"{mac} {sensor['id']}",
+            )
+            for sensor in freebox_config.get("sensors", [])
+        )
+
+        for platform, old_uid, new_uid in migrations:
+            entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, old_uid)
+            if entity_id is None:
+                continue
+            try:
+                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+            except ValueError:
+                _LOGGER.warning(
+                    "Unable to migrate unique_id from %s to %s: target already exists",
+                    old_uid,
+                    new_uid,
+                )
+                continue
+            _LOGGER.debug(
+                "Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid
             )
 
         hass.config_entries.async_update_entry(entry, version=2)
