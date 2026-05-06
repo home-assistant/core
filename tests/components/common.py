@@ -741,12 +741,15 @@ def parametrize_trigger_states(
     # trigger should still fire when the entity under test alone transitions
     # other -> target.
     # Sequence per (target, other, excluded):
-    #   entity_id: other        -> target (1)
-    #   others:    other        -> excluded
-    # i.e. step 0 sets all entities to `other`; step 1 transitions the
-    # entity under test to `target` while the others go to `excluded` (via
-    # `others_state`). The all/count check filters the others out, so a
-    # single matching entity is enough to fire `behavior=last`.
+    #   step 0: all entities at `other`.
+    #   step 1: entity_id stays at `other`, peers transition to `excluded`.
+    #           This positions peers in their filtered state *before* the
+    #           entity under test transitions, so all three behaviors
+    #           (any/first/last) evaluate the firing transition with peers
+    #           already filtered. count = 0.
+    #   step 2: entity_id transitions to `target`, peers stay at `excluded`.
+    #           The all/count check filters the peers out, so a single
+    #           matching entity is enough to fire. count = 1.
     tests.append(
         (
             trigger,
@@ -755,6 +758,9 @@ def parametrize_trigger_states(
                 itertools.chain.from_iterable(
                     (
                         state_with_attributes(other_state, 0),
+                        state_with_attributes(
+                            other_state, 0, others_state=excluded_state
+                        ),
                         state_with_attributes(
                             target_state, 1, others_state=excluded_state
                         ),
