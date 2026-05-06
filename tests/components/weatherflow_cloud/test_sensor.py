@@ -1,5 +1,7 @@
 """Tests for the WeatherFlow Cloud sensor platform."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
