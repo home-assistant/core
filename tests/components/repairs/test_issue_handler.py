@@ -26,7 +26,7 @@ async def test_async_init(
     """Test async_create_flow using legacy issue_id.
 
     legacy:
-        data = {"issue_id" = "test_issue"}
+        data = {"issue_id": "test_issue"}
     updated:
         context = RepairsFlowContext(issue_id = "test_issue")
     """

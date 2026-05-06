@@ -121,7 +121,7 @@ class RepairsFlow(
             config_flow: ConfigFlowResult = self.hass.config_entries.flow.async_get(
                 flow_id
             )
-            entry_id = config_flow["context"]["entry_id"]
+            entry_id = config_flow["context"].get("entry_id")
         elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
             subentry_flow: SubentryFlowResult = (
                 self.hass.config_entries.subentries.async_get(flow_id)
@@ -137,10 +137,9 @@ class RepairsFlow(
                 repair_flow["handler"], repair_flow["context"]["issue_id"]
             ):
                 result["result"] = issue
-                result["next_flow"] = next_flow
         if entry_id is not None:
             result["result"] = self.hass.config_entries.async_get_known_entry(entry_id)
-            result["next_flow"] = next_flow
+        result["next_flow"] = next_flow
 
 
 class ConfirmRepairFlow(RepairsFlow):
