@@ -58,7 +58,6 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
 
 def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
     """Get device info."""
-    quirk = TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)
     manufacturer: str | None = "Tuya / Whitelabel"
     model: str | None = device.product_name
     model_id: str | None = device.product_id
@@ -72,6 +71,7 @@ def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceI
     if (
         quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)
     ) and quirk.manufacturer:
+        # If the manufacturer is not set, we cannot trust the model/model_id
         manufacturer = quirk.manufacturer
         model = quirk.model
         model_id = quirk.model_id
