@@ -1,7 +1,5 @@
 """Cover platform for Easywave receivers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

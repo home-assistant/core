@@ -7,8 +7,6 @@ triggers (event/ has no device_trigger.py), and pairs cleanly with the
 integration's own device triggers in device_trigger.py.
 """
 
-from __future__ import annotations
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

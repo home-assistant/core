@@ -1,7 +1,5 @@
 """Tests for the Easywave config flow — device learning sub-flows."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

@@ -8,8 +8,6 @@ binary_sensor/device_trigger.py, removing the need for custom state_* trigger
 types in the integration's device_trigger.py.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, Self
 

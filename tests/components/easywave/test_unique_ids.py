@@ -1,7 +1,5 @@
 """Tests to ensure all Easywave entities have valid unique IDs."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homeassistant.components.easywave.const import (

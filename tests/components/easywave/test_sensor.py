@@ -1,7 +1,5 @@
 """Tests for the sensor platform of the Easywave Core integration."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest

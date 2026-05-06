@@ -1,7 +1,5 @@
 """Tests for constants in the Easywave Core integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.easywave.const import (
     ALLOWED_COUNTRIES_868MHZ,
     DOMAIN,

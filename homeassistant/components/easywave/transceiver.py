@@ -1,7 +1,5 @@
 """Transceiver abstraction for Easywave Core."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import contextlib

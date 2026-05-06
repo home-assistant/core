@@ -1,7 +1,5 @@
 """Tests for the Easywave transmitter state-sensor entities."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 

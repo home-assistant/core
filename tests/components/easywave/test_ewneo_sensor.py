@@ -1,7 +1,5 @@
 """Tests for EWneo temperature and humidity sensor entities."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest

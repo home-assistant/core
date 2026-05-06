@@ -1,7 +1,5 @@
 """Tests for the Easywave RX11Transceiver."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import time

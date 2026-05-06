@@ -1,7 +1,5 @@
 """Tests for the config flow of the Easywave Core integration."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 import pytest
