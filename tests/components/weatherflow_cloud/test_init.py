@@ -1,6 +1,8 @@
 """Tests for weatherflow_cloud __init__ setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
+
+from websockets.exceptions import ConnectionClosedError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -51,14 +53,10 @@ async def test_setup_failure_cleans_up_websocket(
 ) -> None:
     """Test partial setup failure stops listeners and closes the websocket."""
     mock_config_entry.add_to_hass(hass)
+    mock_websocket_api.send_message.side_effect = ConnectionClosedError(None, None)
 
-    with patch.object(
-        hass.config_entries,
-        "async_forward_entry_setups",
-        side_effect=RuntimeError("setup failed"),
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is not ConfigEntryState.LOADED
     mock_websocket_api.stop_all_listeners.assert_awaited_once()
