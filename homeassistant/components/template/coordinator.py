@@ -69,7 +69,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             self._unsub_trigger()
             self._unsub_trigger = None
         if self._script is not None:
-            await self._script.async_stop()
             await self._script.async_unload()
         if self._cond_func is not None:
             self._cond_func.async_unload()
