@@ -70,31 +70,7 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str:
     """Helper function to get opening category from Netatmo API raw data."""
 
     # From pyatmo v9.4.0, category is available as an attribute on the device object,
-    # so we check it first to avoid iterating through raw data for every update
-    category: str | None = getattr(netatmo_device.device, "doortag_category", None)
-    if category is not None:
-        return category
-
-    # Iterate through each home in the raw data.
-    # Candidate for removal after requirements bump pyatmo v9.4.0+ as we should have
-    # category available directly on the device object by then this will be dead code
-    for home in netatmo_device.data_handler.account.raw_data["homes"]:
-        # Check if the modules list exists for the current home.
-        if "modules" in home:
-            # Iterate through each module to find a matching ID.
-            for module in home["modules"]:
-                if module["id"] == netatmo_device.device.entity_id:
-                    # We found the matching device. Get its category.
-                    if module.get("category") is not None:
-                        return cast(str, module["category"])
-                    raise ValueError(
-                        f"Device {netatmo_device.device.entity_id} found, "
-                        "but 'category' is missing in raw data."
-                    )
-
-    raise ValueError(
-        f"Device {netatmo_device.device.entity_id} not found in Netatmo raw data."
-    )
+    return getattr(netatmo_device.device, "doortag_category", DOORTAG_CATEGORY_OTHER)
 
 
 OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
