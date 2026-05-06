@@ -2,7 +2,6 @@
 
 from typing import Final
 
-from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
@@ -39,8 +38,6 @@ RESERVED_KEYS = [
     "upd_state",
     "ww1target",
 ]
-
-BUTTON_DEVICE_CLASSES: Final = {"reboot_device": ButtonDeviceClass.RESTART}
 
 NUMBER_DEVICE_CLASSES: Final = {
     "ww_boost_h": NumberDeviceClass.TEMPERATURE,
@@ -79,7 +76,6 @@ SENSOR_STATE_CLASSES: Final = {
 ENTITY_CATEGORIES: Final = {
     "cur_eth_mode": EntityCategory.DIAGNOSTIC,
     "freq": EntityCategory.DIAGNOSTIC,
-    "reboot_device": EntityCategory.DIAGNOSTIC,
     "uptime": EntityCategory.DIAGNOSTIC,
     "volt_l2": EntityCategory.DIAGNOSTIC,
     "volt_l3": EntityCategory.DIAGNOSTIC,

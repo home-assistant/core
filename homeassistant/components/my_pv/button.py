@@ -3,16 +3,29 @@
 
 import logging
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyPVCoordinator
-from .const import BUTTON_DEVICE_CLASSES, ENTITY_CATEGORIES, RESERVED_KEYS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+BUTTON_DESCRIPTIONS = {
+    "reboot_device": ButtonEntityDescription(
+        key="reboot_device",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+}
 
 
 async def async_setup_entry(
@@ -31,17 +44,7 @@ async def async_setup_entry(
                 "any",
                 "fixed",
             ]
-            and command not in RESERVED_KEYS
-        ):
-            device_class = BUTTON_DEVICE_CLASSES.get(command)
-            entity_category = ENTITY_CATEGORIES.get(command)
-
-            entity_description = ButtonEntityDescription(
-                key=command,
-                device_class=device_class,
-                translation_key=command,
-                entity_category=entity_category,
-            )
+        ) and (entity_description := BUTTON_DESCRIPTIONS.get(command)):
             entities.append(
                 MyPVCommandButton(
                     coordinator,

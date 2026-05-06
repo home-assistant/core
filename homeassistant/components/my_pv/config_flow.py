@@ -56,12 +56,16 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     CLOUD_SCHEMA: Final = vol.Schema(
         {
             vol.Required(CONF_SERIAL_NUMBER): TextSelector(),
-            vol.Required(CONF_TOKEN): TextSelector(),
+            vol.Required(CONF_TOKEN): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
         }
     )
     CLOUD_REAUTH_SCHEMA: Final = vol.Schema(
         {
-            vol.Required(CONF_TOKEN): TextSelector(),
+            vol.Required(CONF_TOKEN): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
         }
     )
 
@@ -119,7 +123,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_PASSWORD] = "invalid_password"
             password_needed = True
             password_valid = False
-        await device.disconnect()
+        finally:
+            await device.disconnect()
 
         await self.async_set_unique_id(device.serial_number)
         # Update host ip address when device is already configured and abort.
@@ -353,9 +358,10 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
-                await device.disconnect()
             except MyPVAuthenticationError:
                 errors[CONF_BASE] = "invalid_serial_number_or_cloud_api_token"
+            finally:
+                await device.disconnect()
 
         if errors:
             # Combine user input with schema.
@@ -398,7 +404,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if entry_data[CONF_TYPE] == CONF_TYPE_LOCAL:
-            _LOGGER.debug("Reauthentication needed for my-PV Cloud")
+            _LOGGER.debug("Reauthentication needed for my-PV local device")
             return await self.async_step_reauth_local()
 
         if entry_data[CONF_TYPE] == CONF_TYPE_CLOUD:

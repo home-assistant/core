@@ -346,7 +346,7 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
             "AC ELWA 2",
         ),
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], [])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "my-PV AC ELWA 2"
