@@ -255,7 +255,6 @@ async def test_realtime_exception(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.sense.ASyncSenseable") as mock_sense:
-        mock_sense.return_value.authenticate = AsyncMock(return_value=True)
         mock_sense.return_value.get_monitor_data = AsyncMock(return_value={})
         mock_sense.return_value.fetch_devices = AsyncMock(return_value=[])
         mock_sense.return_value.update_realtime = AsyncMock(
