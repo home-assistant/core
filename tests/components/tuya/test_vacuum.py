@@ -1,7 +1,5 @@
 """Test Tuya vacuum platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -28,7 +26,13 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VACUUM])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.VACUUM]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

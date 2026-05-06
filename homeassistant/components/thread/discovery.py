@@ -1,7 +1,5 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 import logging
@@ -36,6 +34,7 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "Nanoleaf": "nanoleaf",
     "OpenThread": "openthread",
     "Samsung": "samsung",
+    "SmartThings": "smartthings",
 }
 THREAD_TYPE = "_meshcop._udp.local."
 CLASS_IN = 1

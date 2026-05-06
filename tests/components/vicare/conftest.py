@@ -1,7 +1,5 @@
 """Fixtures for ViCare integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch
@@ -45,6 +43,23 @@ class MockPyViCare:
                     "Online",
                 )
             )
+        # Simulate a device with an unsupported deviceType that PyViCare's
+        # `devices` filter would drop but should still appear in `all_devices`
+        # (used by diagnostics).
+        self.all_devices = [
+            *self.devices,
+            PyViCareDeviceConfig(
+                MockViCareService(
+                    "installation_unsupported",
+                    "gateway_unsupported",
+                    "device_unsupported",
+                    Fixture(set(), "vicare/dummy-device-no-serial.json"),
+                ),
+                "deviceId_unsupported",
+                "unsupported_model",
+                "Online",
+            ),
+        ]
 
 
 class MockViCareService:
@@ -76,6 +91,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="ViCare",
         entry_id="1234",
         data=ENTRY_CONFIG,
+        minor_version=2,
     )
 
 

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[device_sa5-update][update.spyfly_s_lametric_sky_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[number.home_assistant_test_max_screentime_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 360,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -58,8 +59,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -172,8 +175,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_filter_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -222,8 +226,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -276,8 +281,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -330,8 +336,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -384,8 +391,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -438,8 +446,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -492,8 +501,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -546,8 +556,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

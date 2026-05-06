@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[amax_3000-None][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_sensor[amax_3000-None][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_sensor[amax_3000-None][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,8 +152,9 @@
 # ---
 # name: test_sensor[amax_3000-None][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -198,8 +202,9 @@
 # ---
 # name: test_sensor[b5512-None][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -247,8 +252,9 @@
 # ---
 # name: test_sensor[b5512-None][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -297,8 +303,9 @@
 # ---
 # name: test_sensor[b5512-None][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -346,8 +353,9 @@
 # ---
 # name: test_sensor[b5512-None][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -395,8 +403,9 @@
 # ---
 # name: test_sensor[solution_3000-None][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -444,8 +453,9 @@
 # ---
 # name: test_sensor[solution_3000-None][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -494,8 +504,9 @@
 # ---
 # name: test_sensor[solution_3000-None][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -543,8 +554,9 @@
 # ---
 # name: test_sensor[solution_3000-None][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

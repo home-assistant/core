@@ -1,17 +1,15 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from __future__ import annotations
-
 from pynobo import nobo
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import NoboHubConfigEntry
 from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_SERIAL,
@@ -21,17 +19,20 @@ from .const import (
     NOBO_MANUFACTURER,
     OVERRIDE_TYPE_NOW,
 )
+from .entity import NoboBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NoboHubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
 
     # Setup connection with hub
-    hub: nobo = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     override_type = (
         nobo.API.OVERRIDE_TYPE_NOW
@@ -46,13 +47,11 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class NoboGlobalSelector(SelectEntity):
+class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     """Global override selector for Nobø Ecohub."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "global_override"
     _attr_device_class = "nobo_hub__override"
-    _attr_should_poll = False
     _modes = {
         nobo.API.OVERRIDE_MODE_NORMAL: "none",
         nobo.API.OVERRIDE_MODE_AWAY: "away",
@@ -64,7 +63,7 @@ class NoboGlobalSelector(SelectEntity):
 
     def __init__(self, hub: nobo, override_type) -> None:
         """Initialize the global override selector."""
-        self._nobo = hub
+        super().__init__(hub)
         self._attr_unique_id = hub.hub_serial
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
@@ -76,14 +75,6 @@ class NoboGlobalSelector(SelectEntity):
             sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
             hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback from hub."""
-        self._nobo.register_callback(self._after_update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Deregister callback from hub."""
-        self._nobo.deregister_callback(self._after_update)
 
     async def async_select_option(self, option: str) -> None:
         """Set override."""
@@ -101,31 +92,25 @@ class NoboGlobalSelector(SelectEntity):
 
     @callback
     def _read_state(self) -> None:
+        """Read the current state from the hub. These are only local calls."""
         for override in self._nobo.overrides.values():
             if override["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
                 self._attr_current_option = self._modes[override["mode"]]
                 break
 
-    @callback
-    def _after_update(self, hub) -> None:
-        self._read_state()
-        self.async_write_ha_state()
 
-
-class NoboProfileSelector(SelectEntity):
+class NoboProfileSelector(NoboBaseEntity, SelectEntity):
     """Week profile selector for Nobø zones."""
 
     _attr_translation_key = "week_profile"
-    _attr_has_entity_name = True
-    _attr_should_poll = False
     _profiles: dict[int, str] = {}
     _attr_options: list[str] = []
     _attr_current_option: str | None = None
 
     def __init__(self, zone_id: str, hub: nobo) -> None:
         """Initialize the week profile selector."""
+        super().__init__(hub)
         self._id = zone_id
-        self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
@@ -133,14 +118,6 @@ class NoboProfileSelector(SelectEntity):
             via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
             suggested_area=hub.zones[zone_id][ATTR_NAME],
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback from hub."""
-        self._nobo.register_callback(self._after_update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Deregister callback from hub."""
-        self._nobo.deregister_callback(self._after_update)
 
     async def async_select_option(self, option: str) -> None:
         """Set week profile."""
@@ -158,6 +135,12 @@ class NoboProfileSelector(SelectEntity):
 
     @callback
     def _read_state(self) -> None:
+        """Read the current state from the hub. These are only local calls."""
+        if self._id not in self._nobo.zones:
+            # Zone removed via the Nobø app; mark unavailable.
+            self._attr_available = False
+            return
+        self._attr_available = True
         self._profiles = {
             profile["week_profile_id"]: profile["name"].replace("\xa0", " ")
             for profile in self._nobo.week_profiles.values()
@@ -166,8 +149,3 @@ class NoboProfileSelector(SelectEntity):
         self._attr_current_option = self._profiles[
             self._nobo.zones[self._id]["week_profile_id"]
         ]
-
-    @callback
-    def _after_update(self, hub) -> None:
-        self._read_state()
-        self.async_write_ha_state()

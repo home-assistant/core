@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[no_data][select.probe_1_grill_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -87,8 +88,9 @@
 # ---
 # name: test_setup[no_data][select.probe_1_taste-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -153,8 +155,9 @@
 # ---
 # name: test_setup[no_data][select.probe_2_grill_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -239,8 +242,9 @@
 # ---
 # name: test_setup[no_data][select.probe_2_taste-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -305,8 +309,9 @@
 # ---
 # name: test_setup[probes_with_different_data][select.probe_1_grill_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -391,8 +396,9 @@
 # ---
 # name: test_setup[probes_with_different_data][select.probe_1_taste-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -457,8 +463,9 @@
 # ---
 # name: test_setup[probes_with_different_data][select.probe_2_grill_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -543,8 +550,9 @@
 # ---
 # name: test_setup[probes_with_different_data][select.probe_2_taste-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -609,8 +617,9 @@
 # ---
 # name: test_setup[probes_with_unknown_data][select.probe_1_grill_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -695,8 +704,9 @@
 # ---
 # name: test_setup[probes_with_unknown_data][select.probe_1_taste-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -761,8 +771,9 @@
 # ---
 # name: test_setup[probes_with_unknown_data][select.probe_2_grill_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -847,8 +858,9 @@
 # ---
 # name: test_setup[probes_with_unknown_data][select.probe_2_taste-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

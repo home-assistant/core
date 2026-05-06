@@ -1,7 +1,5 @@
 """Provide common test tools."""
 
-from __future__ import annotations
-
 from functools import cache
 import json
 from typing import Any
@@ -22,6 +20,7 @@ FIXTURES = [
     "air_quality_sensor",
     "aqara_door_window_p2",
     "aqara_motion_p2",
+    "aqara_multi_state_p100",
     "aqara_presence_fp300",
     "aqara_sensor_w100",
     "aqara_thermostat_w500",
@@ -70,6 +69,7 @@ FIXTURES = [
     "mock_microwave_oven",
     "mock_mounted_dimmable_load_control_fixture",
     "mock_occupancy_sensor",
+    "mock_occupancy_sensor_pir",
     "mock_on_off_plugin_unit",
     "mock_onoff_light",
     "mock_onoff_light_alt_name",
@@ -96,8 +96,10 @@ FIXTURES = [
     "secuyou_smart_lock",
     "silabs_dishwasher",
     "silabs_evse_charging",
+    "silabs_fan",
     "silabs_laundrywasher",
     "silabs_light_switch",
+    "silabs_range_hood",
     "silabs_refrigerator",
     "silabs_water_heater",
     "switchbot_k11_plus",
