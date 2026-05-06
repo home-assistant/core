@@ -179,6 +179,7 @@ async def test_humidity_sensor_condition_behavior_all(
         "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_climate_condition_behavior_any(
@@ -215,6 +216,7 @@ async def test_humidity_climate_condition_behavior_any(
         "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_climate_condition_behavior_all(
@@ -251,6 +253,7 @@ async def test_humidity_climate_condition_behavior_all(
         "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_humidifier_condition_behavior_any(
@@ -287,6 +290,7 @@ async def test_humidity_humidifier_condition_behavior_any(
         "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_humidifier_condition_behavior_all(
@@ -323,6 +327,7 @@ async def test_humidity_humidifier_condition_behavior_all(
         "humidity.is_value",
         "sunny",
         ATTR_WEATHER_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_weather_condition_behavior_any(
@@ -359,6 +364,7 @@ async def test_humidity_weather_condition_behavior_any(
         "humidity.is_value",
         "sunny",
         ATTR_WEATHER_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_weather_condition_behavior_all(
