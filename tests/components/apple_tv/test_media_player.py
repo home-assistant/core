@@ -3,14 +3,20 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyatv.const import DeviceModel, FeatureName, FeatureState, Protocol
-from pyatv.exceptions import ConnectionLostError, NotSupportedError, ProtocolError
+from pyatv.exceptions import (
+    BlockedStateError,
+    ConnectionLostError,
+    NotSupportedError,
+    PlaybackError,
+    ProtocolError,
+)
 import pytest
 
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaType
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotSupported
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 
 from .common import create_conf, mrp_service
 
@@ -20,18 +26,13 @@ _ENTITY_ID = "media_player.living_room"
 _URL = "http://192.168.1.100:8123/api/tts_proxy/abc.mp3"
 
 
-def _feature_info(state: FeatureState) -> MagicMock:
-    info = MagicMock()
-    info.state = state
-    return info
-
-
 def _make_mock_atv(
     stream_file_state: FeatureState,
     play_url_state: FeatureState,
-) -> MagicMock:
-    atv = MagicMock()
+) -> AsyncMock:
+    atv = AsyncMock()
     atv.close = MagicMock()
+    atv.features = MagicMock()
     atv.stream.stream_file = AsyncMock()
     atv.stream.play_url = AsyncMock()
     atv.push_updater = MagicMock()
@@ -41,8 +42,8 @@ def _make_mock_atv(
     atv.device_info.mac = "AA:BB:CC:DD:EE:FF"
     atv.features.in_state.return_value = False
     atv.features.all_features.return_value = {
-        FeatureName.StreamFile: _feature_info(stream_file_state),
-        FeatureName.PlayUrl: _feature_info(play_url_state),
+        FeatureName.StreamFile: MagicMock(state=stream_file_state),
+        FeatureName.PlayUrl: MagicMock(state=play_url_state),
     }
     return atv
 
@@ -50,7 +51,7 @@ def _make_mock_atv(
 async def _setup_config_entry(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
-    atv: MagicMock,
+    atv: AsyncMock,
 ) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -75,19 +76,19 @@ async def _setup_config_entry(
 
 
 @pytest.fixture
-def mock_atv() -> MagicMock:
+def mock_atv() -> AsyncMock:
     """Apple TV mock with StreamFile and PlayUrl both available."""
     return _make_mock_atv(FeatureState.Available, FeatureState.Available)
 
 
 @pytest.fixture
-def mock_atv_play_url_only() -> MagicMock:
+def mock_atv_play_url_only() -> AsyncMock:
     """Apple TV mock with only PlayUrl available."""
     return _make_mock_atv(FeatureState.Unsupported, FeatureState.Available)
 
 
 @pytest.fixture
-def mock_atv_no_streaming() -> MagicMock:
+def mock_atv_no_streaming() -> AsyncMock:
     """Apple TV mock with no streaming capability."""
     return _make_mock_atv(FeatureState.Unsupported, FeatureState.Unsupported)
 
@@ -96,7 +97,7 @@ def mock_atv_no_streaming() -> MagicMock:
 async def mock_config_entry(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> MockConfigEntry:
     """Config entry backed by a mock ATV with full streaming support."""
     return await _setup_config_entry(hass, mock_async_zeroconf, mock_atv)
@@ -106,7 +107,7 @@ async def mock_config_entry(
 async def mock_config_entry_play_url_only(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
-    mock_atv_play_url_only: MagicMock,
+    mock_atv_play_url_only: AsyncMock,
 ) -> MockConfigEntry:
     """Config entry backed by a mock ATV that supports only PlayUrl."""
     return await _setup_config_entry(hass, mock_async_zeroconf, mock_atv_play_url_only)
@@ -116,7 +117,7 @@ async def mock_config_entry_play_url_only(
 async def mock_config_entry_no_streaming(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
-    mock_atv_no_streaming: MagicMock,
+    mock_atv_no_streaming: AsyncMock,
 ) -> MockConfigEntry:
     """Config entry backed by a mock ATV with no streaming capability."""
     return await _setup_config_entry(hass, mock_async_zeroconf, mock_atv_no_streaming)
@@ -125,7 +126,7 @@ async def mock_config_entry_no_streaming(
 async def test_play_media_streams_when_idle(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """stream_file is used even when _playing is None (device idle)."""
     await hass.services.async_call(
@@ -142,58 +143,12 @@ async def test_play_media_streams_when_idle(
     mock_atv.stream.stream_file.assert_called_once_with(_URL)
 
 
-@pytest.mark.parametrize(
-    ("exc_class", "expected_log"),
-    [
-        (NotSupportedError, "Streaming not supported"),
-        (ConnectionLostError, "Failed to stream media"),
-        (ProtocolError, "Failed to stream media"),
-    ],
-)
-async def test_play_media_stream_file_exception_is_caught(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
-    exc_class: type[Exception],
-    expected_log: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Exceptions raised by stream_file are caught and logged."""
-    mock_atv.stream.stream_file.side_effect = exc_class("error")
-
-    await hass.services.async_call(
-        MP_DOMAIN,
-        "play_media",
-        {
-            ATTR_ENTITY_ID: _ENTITY_ID,
-            "media_content_id": _URL,
-            "media_content_type": MediaType.MUSIC,
-        },
-        blocking=True,
-    )
-
-    assert expected_log in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("exc_class", "expected_log"),
-    [
-        (NotSupportedError, "Streaming not supported"),
-        (ConnectionLostError, "Failed to stream media"),
-        (ProtocolError, "Failed to stream media"),
-    ],
-)
-async def test_play_media_play_url_exception_is_caught(
+async def test_play_media_play_url_when_idle(
     hass: HomeAssistant,
     mock_config_entry_play_url_only: MockConfigEntry,
-    mock_atv_play_url_only: MagicMock,
-    exc_class: type[Exception],
-    expected_log: str,
-    caplog: pytest.LogCaptureFixture,
+    mock_atv_play_url_only: AsyncMock,
 ) -> None:
-    """Exceptions raised by play_url are caught and logged."""
-    mock_atv_play_url_only.stream.play_url.side_effect = exc_class("error")
-
+    """play_url is used even when _playing is None (device idle, no StreamFile support)."""
     await hass.services.async_call(
         MP_DOMAIN,
         "play_media",
@@ -205,13 +160,79 @@ async def test_play_media_play_url_exception_is_caught(
         blocking=True,
     )
 
-    assert expected_log in caplog.text
+    mock_atv_play_url_only.stream.play_url.assert_called_once_with(
+        "http://192.168.1.100:8123/video.mp4"
+    )
+
+
+@pytest.mark.parametrize(
+    "exc_class",
+    [
+        BlockedStateError,
+        ConnectionLostError,
+        NotSupportedError,
+        PlaybackError,
+        ProtocolError,
+    ],
+)
+async def test_play_media_stream_file_exception_raises_ha_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_atv: AsyncMock,
+    exc_class: type[Exception],
+) -> None:
+    """Exceptions raised by stream_file are re-raised as HomeAssistantError."""
+    mock_atv.stream.stream_file.side_effect = exc_class("error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            "play_media",
+            {
+                ATTR_ENTITY_ID: _ENTITY_ID,
+                "media_content_id": _URL,
+                "media_content_type": MediaType.MUSIC,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "exc_class",
+    [
+        BlockedStateError,
+        ConnectionLostError,
+        NotSupportedError,
+        PlaybackError,
+        ProtocolError,
+    ],
+)
+async def test_play_media_play_url_exception_raises_ha_error(
+    hass: HomeAssistant,
+    mock_config_entry_play_url_only: MockConfigEntry,
+    mock_atv_play_url_only: AsyncMock,
+    exc_class: type[Exception],
+) -> None:
+    """Exceptions raised by play_url are re-raised as HomeAssistantError."""
+    mock_atv_play_url_only.stream.play_url.side_effect = exc_class("error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            "play_media",
+            {
+                ATTR_ENTITY_ID: _ENTITY_ID,
+                "media_content_id": "http://192.168.1.100:8123/video.mp4",
+                "media_content_type": MediaType.VIDEO,
+            },
+            blocking=True,
+        )
 
 
 async def test_play_media_no_streaming_capability_raises(
     hass: HomeAssistant,
     mock_config_entry_no_streaming: MockConfigEntry,
-    mock_atv_no_streaming: MagicMock,
+    mock_atv_no_streaming: AsyncMock,
 ) -> None:
     """Service call is rejected when device has no streaming capability."""
     with pytest.raises(ServiceNotSupported):

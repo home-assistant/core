@@ -37,6 +37,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -362,23 +363,28 @@ class AppleTvMediaPlayer(
             media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
+        if not self._stream_file_supported and not self._play_url_supported:
+            _LOGGER.error("Media streaming is not possible with current configuration")
+            return
+
         try:
             if self._stream_file_supported and (
                 media_type == MediaType.MUSIC or await is_streamable(media_id)
             ):
                 _LOGGER.debug("Streaming %s via RAOP", media_id)
                 await self.atv.stream.stream_file(media_id)
-            elif self._play_url_supported:
+            else:
                 _LOGGER.debug("Playing %s via AirPlay", media_id)
                 await self.atv.stream.play_url(media_id)
-            else:
-                _LOGGER.error(
-                    "Media streaming is not possible with current configuration"
-                )
-        except exceptions.NotSupportedError:
-            _LOGGER.error("Streaming not supported for %s", media_id)
-        except (exceptions.ConnectionLostError, exceptions.ProtocolError) as ex:
-            _LOGGER.error("Failed to stream media: %s", ex)
+        except exceptions.NotSupportedError as ex:
+            raise HomeAssistantError(f"Streaming not supported for {media_id}") from ex
+        except (
+            exceptions.BlockedStateError,
+            exceptions.ConnectionLostError,
+            exceptions.PlaybackError,
+            exceptions.ProtocolError,
+        ) as ex:
+            raise HomeAssistantError(f"Failed to stream media: {ex}") from ex
 
     @property
     def media_image_hash(self) -> str | None:
@@ -485,8 +491,7 @@ class AppleTvMediaPlayer(
         if media_content_id == "apps" or (
             # If we can't stream files or URLs, we can't browse media.
             # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
-            not self._is_feature_available(FeatureName.PlayUrl)
-            and not self._is_feature_available(FeatureName.StreamFile)
+            not self._play_url_supported and not self._stream_file_supported
         ):
             return build_app_list(self._app_list)
 
