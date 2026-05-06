@@ -13,9 +13,8 @@ MODE_MAP = {
     SmartMode.DYNAMIC: "dynamic",
     SmartMode.SELF_USE: "self_use",
     SmartMode.PERFORMANCE: "fast_discharge",
-    SmartMode.CHARGED: "charged",
-    SmartMode.DEFAULT: "idle",
-    SmartMode.FEED: "fast_charge",
+    SmartMode.CHARGED: "fast_charge",
+    SmartMode.FEED: "connected_solar_panels",
 }
 
 HA_TO_MODE = {v: k for k, v in MODE_MAP.items()}
