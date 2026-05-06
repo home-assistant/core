@@ -651,7 +651,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'none',
+        'manual',
+        'schedule',
+        'external',
+        'setup',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -688,7 +694,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Mock Title Activation reason',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'none',
+        'manual',
+        'schedule',
+        'external',
+        'setup',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_activation_reason',

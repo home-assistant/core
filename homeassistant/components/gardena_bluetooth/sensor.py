@@ -73,7 +73,6 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Valve.activation_reason.unique_id,
         translation_key="activation_reason",
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
