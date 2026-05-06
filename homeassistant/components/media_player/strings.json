@@ -6,6 +6,18 @@
     "trigger_for_name": "For at least"
   },
   "conditions": {
+    "is_muted": {
+      "description": "Tests if one or more media players are muted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is muted"
+    },
     "is_not_playing": {
       "description": "Tests if one or more media players are not playing.",
       "fields": {
@@ -65,6 +77,18 @@
         }
       },
       "name": "Media player is playing"
+    },
+    "is_unmuted": {
+      "description": "Tests if one or more media players are not muted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is not muted"
     }
   },
   "device_automation": {
