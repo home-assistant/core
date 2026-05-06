@@ -143,6 +143,12 @@
     },
     "unmuted": {
       "trigger": "mdi:volume-high"
+    },
+    "volume_changed": {
+      "trigger": "mdi:volume-medium"
+    },
+    "volume_crossed_threshold": {
+      "trigger": "mdi:volume-medium"
     }
   }
 }

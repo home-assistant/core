@@ -3,7 +3,8 @@
     "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
-    "trigger_for_name": "For at least"
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold"
   },
   "conditions": {
     "is_not_playing": {
@@ -520,6 +521,30 @@
         }
       },
       "name": "Media player unmuted"
+    },
+    "volume_changed": {
+      "description": "Triggers after the volume of one or more media players changes.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::media_player::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Media player volume changed"
+    },
+    "volume_crossed_threshold": {
+      "description": "Triggers after the volume of one or more media players crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::media_player::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Media player volume crossed threshold"
     }
   }
 }
