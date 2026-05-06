@@ -1054,7 +1054,7 @@ gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
-gardena-bluetooth==2.4.0
+gardena-bluetooth==2.8.1
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.14
