@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ptdevices.coordinator import UPDATE_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,7 +51,7 @@ async def test_battery_status_sensor_states(
 
     # Make sure the battery status is "normal"
     assert (state := hass.states.get("binary_sensor.home_battery_status"))
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
     # Set the new battery status to low
     data: PTDevicesResponse = mock_ptdevices_level
@@ -64,4 +64,4 @@ async def test_battery_status_sensor_states(
 
     # Make sure the battery status is on (low)
     assert (state := hass.states.get("binary_sensor.home_battery_status"))
-    assert state.state == "on"
+    assert state.state == STATE_ON
