@@ -14,7 +14,17 @@ from zwave_js_server.const.command_class.access_control import (
 )
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.const import (
+    DOMAIN,
+    SERVICE_DELETE_ALL_CREDENTIALS,
+    SERVICE_DELETE_ALL_USERS,
+    SERVICE_DELETE_CREDENTIAL,
+    SERVICE_DELETE_USER,
+    SERVICE_GET_CREDENTIAL_CAPABILITIES,
+    SERVICE_GET_USERS,
+    SERVICE_SET_CREDENTIAL,
+    SERVICE_SET_USER,
+)
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -41,8 +51,16 @@ def _mock_access_control(node: Node) -> MagicMock:
     pin_cap.min_credential_length = 4
     pin_cap.max_credential_length = 10
 
+    password_cap = MagicMock()
+    password_cap.number_of_credential_slots = 10
+    password_cap.min_credential_length = 4
+    password_cap.max_credential_length = 10
+
     cred_caps = MagicMock()
-    cred_caps.supported_credential_types = {UserCredentialType.PIN_CODE: pin_cap}
+    cred_caps.supported_credential_types = {
+        UserCredentialType.PIN_CODE: pin_cap,
+        UserCredentialType.PASSWORD: password_cap,
+    }
     cred_caps.supports_admin_code = False
     cred_caps.supports_admin_code_deactivation = False
     api.get_credential_capabilities_cached = AsyncMock(return_value=cred_caps)
@@ -60,8 +78,7 @@ def _mock_access_control(node: Node) -> MagicMock:
     api.set_credential = AsyncMock(return_value=SetCredentialResult.OK)
     api.delete_credential = AsyncMock(return_value=SetCredentialResult.OK)
 
-    # cached_property: override via instance __dict__
-    node.endpoints[0].__dict__["access_control"] = api
+    node.endpoints[0].access_control = api
     return api
 
 
@@ -106,7 +123,7 @@ async def test_set_user_auto_find(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "set_user",
+        SERVICE_SET_USER,
         {
             ATTR_ENTITY_ID: entity_id,
             "user_name": "Alice",
@@ -139,7 +156,7 @@ async def test_set_user_explicit_index(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "set_user",
+        SERVICE_SET_USER,
         {
             ATTR_ENTITY_ID: entity_id,
             "user_id": 5,
@@ -177,7 +194,7 @@ async def test_set_user_no_slots(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_user",
+            SERVICE_SET_USER,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -202,7 +219,7 @@ async def test_delete_user(
 
     await hass.services.async_call(
         DOMAIN,
-        "delete_user",
+        SERVICE_DELETE_USER,
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -228,7 +245,7 @@ async def test_delete_all_users(
 
     await hass.services.async_call(
         DOMAIN,
-        "delete_all_users",
+        SERVICE_DELETE_ALL_USERS,
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -256,7 +273,7 @@ async def test_get_credential_capabilities(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "get_credential_capabilities",
+        SERVICE_GET_CREDENTIAL_CAPABILITIES,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
@@ -282,7 +299,7 @@ async def test_get_credential_capabilities_not_supported(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "get_credential_capabilities",
+            SERVICE_GET_CREDENTIAL_CAPABILITIES,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -318,7 +335,7 @@ async def test_get_users(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "get_users",
+        SERVICE_GET_USERS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
@@ -347,7 +364,7 @@ async def test_set_credential_auto_slot(
     )
     result = await hass.services.async_call(
         DOMAIN,
-        "set_credential",
+        SERVICE_SET_CREDENTIAL,
         {
             ATTR_ENTITY_ID: entity_id,
             "user_id": 2,
@@ -380,7 +397,7 @@ async def test_set_credential_explicit_slot(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "set_credential",
+        SERVICE_SET_CREDENTIAL,
         {
             ATTR_ENTITY_ID: entity_id,
             "credential_type": "pin_code",
@@ -419,7 +436,7 @@ async def test_set_credential_multi_target(
     )
     result = await hass.services.async_call(
         DOMAIN,
-        "set_credential",
+        SERVICE_SET_CREDENTIAL,
         {
             ATTR_ENTITY_ID: [entity_1, entity_2],
             "user_id": 1,
@@ -454,7 +471,7 @@ async def test_set_credential_rejection_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -486,7 +503,7 @@ async def test_set_user_rejection_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_user",
+            SERVICE_SET_USER,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -513,7 +530,7 @@ async def test_set_credential_requires_user_id(
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -543,7 +560,7 @@ async def test_set_credential_type_not_supported(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -585,7 +602,7 @@ async def test_set_credential_no_available_slots(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -613,7 +630,7 @@ async def test_set_credential_pin_not_digits(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -626,6 +643,44 @@ async def test_set_credential_pin_not_digits(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_set_credential_password_allows_non_digits(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Password credentials must not be subject to the PIN-only digit check."""
+    api = _mock_access_control(lock_schlage_be469)
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CREDENTIAL,
+        {
+            ATTR_ENTITY_ID: _lock_entity_id(
+                entity_registry, device_registry, client, lock_schlage_be469
+            ),
+            "user_id": 1,
+            "credential_type": "password",
+            "credential_data": "s3cret!",
+            "credential_slot": 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    api.set_credential.assert_called_once()
+    call_args = api.set_credential.call_args
+    assert call_args[0][1] == UserCredentialType.PASSWORD
+    assert call_args[0][3] == "s3cret!"
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+    assert result[entity_id]["user_id"] == 1
+    assert result[entity_id]["credential_slot"] == 1
 
 
 @pytest.mark.parametrize("credential_data", ["12", "12345678901"])
@@ -644,7 +699,7 @@ async def test_set_credential_length_validation(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -678,7 +733,7 @@ async def test_set_credential_slot_out_of_range(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -708,7 +763,7 @@ async def test_delete_credential(
 
     await hass.services.async_call(
         DOMAIN,
-        "delete_credential",
+        SERVICE_DELETE_CREDENTIAL,
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -744,7 +799,7 @@ async def test_delete_all_credentials(
 
     await hass.services.async_call(
         DOMAIN,
-        "delete_all_credentials",
+        SERVICE_DELETE_ALL_CREDENTIALS,
         {
             ATTR_ENTITY_ID: _lock_entity_id(
                 entity_registry, device_registry, client, lock_schlage_be469
@@ -785,7 +840,7 @@ async def test_set_credential_id_range_validation(
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            "set_credential",
+            SERVICE_SET_CREDENTIAL,
             payload,
             blocking=True,
             return_response=True,
@@ -806,7 +861,7 @@ async def test_delete_user_rejects_oversize_user_id(
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            "delete_user",
+            SERVICE_DELETE_USER,
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -832,7 +887,7 @@ async def test_mutation_supports_multi_target(
 
     await hass.services.async_call(
         DOMAIN,
-        "delete_user",
+        SERVICE_DELETE_USER,
         {
             ATTR_ENTITY_ID: [
                 _lock_entity_id(
@@ -889,7 +944,7 @@ async def test_get_users_supports_multi_target(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "get_users",
+        SERVICE_GET_USERS,
         {ATTR_ENTITY_ID: [entity_1, entity_2]},
         blocking=True,
         return_response=True,

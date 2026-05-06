@@ -6,6 +6,7 @@ auto-find logic, and validation.
 
 from __future__ import annotations
 
+import asyncio
 from typing import TypedDict
 
 from zwave_js_server.const.command_class.access_control import (
@@ -478,8 +479,11 @@ async def async_delete_all_credentials(node: Node, user_id: int) -> None:
         )
 
     credentials = await node.access_control.get_credentials_cached(user_id)
-    for cred in credentials:
-        status = await node.access_control.delete_credential(
-            user_id, cred.type, cred.slot
+    statuses = await asyncio.gather(
+        *(
+            node.access_control.delete_credential(user_id, cred.type, cred.slot)
+            for cred in credentials
         )
+    )
+    for status in statuses:
         _raise_on_set_credential_error(status)
