@@ -44,7 +44,7 @@ def add_entities(account: IcloudAccount, async_add_entities, tracked):
     new_tracked = []
 
     for dev_id, device in account.devices.items():
-        if dev_id in tracked or device.location is None:
+        if dev_id in tracked:
             continue
 
         new_tracked.append(IcloudTrackerEntity(account, device))
