@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
 import pytest
 
+from homeassistant.components.aquarite import (
+    AquariteData,
+    _periodic_health_check,
+    _refresh_all_subscriptions,
+    _token_refresh_loop,
+)
 from homeassistant.components.aquarite.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -221,3 +228,117 @@ async def test_unload_entry(hass: HomeAssistant, mock_entry: MockConfigEntry) ->
     assert mock_entry.state is ConfigEntryState.NOT_LOADED
     for coord in coords.values():
         coord.async_shutdown.assert_awaited_once()
+
+
+# ── Background helpers ─────────────────────────────────────────
+
+
+def _make_data(coordinators: dict[str, MagicMock] | None = None) -> AquariteData:
+    """Build an AquariteData with a configured auth mock."""
+    auth = MagicMock()
+    auth.is_token_expiring = MagicMock(return_value=False)
+    auth.calculate_sleep_duration = MagicMock(return_value=3600)
+    auth.get_client = AsyncMock(return_value=(AsyncMock(), False))
+    api = AsyncMock()
+    data = AquariteData(auth=auth, api=api)
+    if coordinators:
+        data.coordinators.update(coordinators)
+    return data
+
+
+async def test_refresh_all_subscriptions_calls_each() -> None:
+    """Every coordinator's `refresh_subscription` is awaited."""
+    coord_a = MagicMock(refresh_subscription=AsyncMock())
+    coord_b = MagicMock(refresh_subscription=AsyncMock())
+    data = _make_data({"a": coord_a, "b": coord_b})
+
+    await _refresh_all_subscriptions(data, "ctx")
+
+    coord_a.refresh_subscription.assert_awaited_once()
+    coord_b.refresh_subscription.assert_awaited_once()
+
+
+async def test_refresh_all_subscriptions_logs_per_pool_failure(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failing coordinator does not stop the others; the failure is logged."""
+    coord_a = MagicMock(
+        refresh_subscription=AsyncMock(side_effect=RuntimeError("nope"))
+    )
+    coord_b = MagicMock(refresh_subscription=AsyncMock())
+    data = _make_data({"a": coord_a, "b": coord_b})
+
+    await _refresh_all_subscriptions(data, "ctx")
+
+    coord_a.refresh_subscription.assert_awaited_once()
+    coord_b.refresh_subscription.assert_awaited_once()
+    assert "Error refreshing subscription ctx" in caplog.text
+
+
+async def test_token_refresh_loop_refreshes_on_expiry(hass: HomeAssistant) -> None:
+    """Token refresh loop re-subscribes pools when the token was renewed."""
+    coord = MagicMock(refresh_subscription=AsyncMock())
+    data = _make_data({"a": coord})
+    data.auth.is_token_expiring.return_value = True
+    data.auth.get_client = AsyncMock(return_value=(AsyncMock(), True))
+
+    # Break out of the loop after one iteration via the trailing sleep.
+    async def fake_sleep(_delay: float) -> None:
+        raise asyncio.CancelledError
+
+    with (
+        patch("homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await _token_refresh_loop(hass, data)
+
+    data.auth.get_client.assert_awaited_once()
+    coord.refresh_subscription.assert_awaited_once()
+
+
+async def test_token_refresh_loop_logs_and_retries(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A failure in the body falls into the retry/backoff branch."""
+    data = _make_data()
+    data.auth.is_token_expiring.return_value = True
+    data.auth.get_client = AsyncMock(side_effect=RuntimeError("boom"))
+
+    async def fake_sleep(_delay: float) -> None:
+        raise asyncio.CancelledError
+
+    with (
+        patch("homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await _token_refresh_loop(hass, data)
+
+    assert "Error maintaining token" in caplog.text
+
+
+async def test_periodic_health_check_resubscribes_on_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Health check resubscribes pools when `get_client` fails."""
+    coord = MagicMock(refresh_subscription=AsyncMock())
+    data = _make_data({"a": coord})
+    data.auth.get_client = AsyncMock(side_effect=RuntimeError("offline"))
+
+    sleep_calls: list[float] = []
+
+    async def fake_sleep(delay: float) -> None:
+        # First sleep: let it through so the body runs once.
+        # Second sleep: raise to break out of the while loop.
+        sleep_calls.append(delay)
+        if len(sleep_calls) >= 2:
+            raise asyncio.CancelledError
+
+    with (
+        patch("homeassistant.components.aquarite.asyncio.sleep", side_effect=fake_sleep),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await _periodic_health_check(hass, data)
+
+    data.auth.get_client.assert_awaited_once()
+    coord.refresh_subscription.assert_awaited_once()
+    assert "Health check failed" in caplog.text
