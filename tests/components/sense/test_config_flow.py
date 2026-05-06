@@ -273,8 +273,8 @@ async def test_timeout_exception(hass: HomeAssistant) -> None:
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
-async def test_realtime_exception(hass: HomeAssistant) -> None:
-    """Test we retry setup when websocket realtime update fails during initial async_setup_entry."""
+async def test_api_realtime_exception(hass: HomeAssistant) -> None:
+    """Test we retry setup when realtime update fails with an API exception during initial async_setup_entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
