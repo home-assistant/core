@@ -9,27 +9,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from .const import DOMAIN, DPCode
 
 
-def get_dpcode(
-    device: CustomerDevice, dpcodes: str | tuple[str, ...] | None
-) -> str | None:
-    """Get the first matching DPCode from the device or return None."""
-    if dpcodes is None:
-        return None
-
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    for dpcode in dpcodes:
-        if (
-            dpcode in device.function
-            or dpcode in device.status
-            or dpcode in device.status_range
-        ):
-            return dpcode
-
-    return None
-
-
 class ActionDPCodeNotFoundError(ServiceValidationError):
     """Custom exception for action DP code not found errors."""
 
@@ -58,7 +37,7 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
 
 def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
     """Get device info."""
-    manufacturer: str | None = "Tuya / Whitelabel"
+    manufacturer = "Tuya / Whitelabel"
     model: str | None = device.product_name
     model_id: str | None = device.product_id
 
