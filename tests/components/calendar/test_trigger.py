@@ -56,8 +56,33 @@ from tests.common import (
     async_mock_service,
     mock_device_registry,
 )
+from tests.components.common import assert_trigger_options_supported
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("calendar.event_started", {}, False, False),
+        ("calendar.event_ended", {}, False, False),
+    ],
+)
+async def test_calendar_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that calendar triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @dataclass
