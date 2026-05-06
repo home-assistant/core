@@ -1,7 +1,5 @@
 """Handle the frontend for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from functools import lru_cache, partial
 import logging
@@ -407,6 +405,12 @@ def async_remove_panel(
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
+@callback
+def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
+    """Return if a panel is registered for the given frontend URL path."""
+    return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
     """Register extra js or module url to load.
 
@@ -595,6 +599,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "home",
         sidebar_icon="mdi:home",
         sidebar_title="home",
+        show_in_sidebar=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "maintenance",
+        sidebar_icon="mdi:wrench",
+        sidebar_title="maintenance",
         show_in_sidebar=False,
     )
 

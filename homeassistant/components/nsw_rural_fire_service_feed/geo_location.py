@@ -1,7 +1,5 @@
 """Support for NSW Rural Fire Service Feeds."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging

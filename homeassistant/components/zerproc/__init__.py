@@ -1,4 +1,5 @@
 """Zerproc lights integration."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

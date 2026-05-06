@@ -164,12 +164,14 @@ async def test_water_heater_state_trigger_behavior_any(
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -270,6 +272,7 @@ async def test_water_heater_state_trigger_behavior_first(
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -370,6 +373,7 @@ async def test_water_heater_state_trigger_behavior_last(
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )

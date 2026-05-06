@@ -1,7 +1,5 @@
 """Configuration for Sonos tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
@@ -19,6 +17,7 @@ from soco.data_structures import (
     SearchResult,
 )
 from soco.events_base import Event as SonosEvent
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -309,6 +308,14 @@ class SoCoMockFactory:
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
+        mock_soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+            side_effect=SoCoUPnPException("Not supported", 714, "")
+        )
+        mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
+        mock_soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+            side_effect=SoCoUPnPException("Not supported", 714, "")
+        )
+        mock_soco.deviceProperties.SetAutoplayLinkedZones = Mock()
         mock_soco.zone_group_state = Mock()
         mock_soco.zone_group_state.processed_count = 10
         mock_soco.zone_group_state.total_requests = 12

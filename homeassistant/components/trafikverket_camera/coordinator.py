@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Trafikverket Camera integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO

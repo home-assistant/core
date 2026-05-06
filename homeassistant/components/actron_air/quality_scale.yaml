@@ -60,7 +60,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.
@@ -69,4 +69,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

@@ -1,7 +1,5 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
