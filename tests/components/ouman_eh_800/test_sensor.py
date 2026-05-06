@@ -7,9 +7,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import SCENARIOS
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.parametrize("mock_ouman_client", SCENARIOS.keys(), indirect=True)
 @pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
@@ -18,5 +21,5 @@ async def test_entities(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the sensor entities."""
+    """Test the sensor entities for each registry-set scenario."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
