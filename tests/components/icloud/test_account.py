@@ -252,6 +252,40 @@ def test_icloud_device_keeps_location_when_timestamp_missing(
     assert device.location is not None
 
 
+def test_icloud_device_accepts_zero_coordinates(hass: HomeAssistant) -> None:
+    """Test that latitude=0.0 and longitude=0.0 are accepted as valid coordinates.
+
+    The old truthiness check treated 0.0 as falsy and would silently drop valid
+    fixes at the equator/prime-meridian intersection. The is not None guard fixes
+    this; this test prevents regressions.
+    """
+    mock_account = MagicMock()
+    mock_account.hass = hass
+    mock_account.signal_device_new = "icloud-test-device-new"
+    mock_account.fetch_interval = _FETCH_INTERVAL_MIN
+    mock_account.owner_fullname = "Test User"
+    mock_account.family_members_fullname = {}
+
+    ts_ms = int((utcnow() - timedelta(seconds=60)).timestamp() * 1000)
+    status = {
+        **DEVICE,
+        "location": {
+            "latitude": 0.0,
+            "longitude": 0.0,
+            "horizontalAccuracy": 10.0,
+            "timeStamp": ts_ms,
+            "isOld": False,
+        },
+    }
+    device = IcloudDevice(mock_account, MagicMock(), dict(DEVICE))
+    with patch("homeassistant.components.icloud.account.dispatcher_send"):
+        device.update(status)
+
+    assert device.location is not None
+    assert device.location["latitude"] == 0.0
+    assert device.location["longitude"] == 0.0
+
+
 def test_icloud_device_no_location_data_does_not_set_location(
     hass: HomeAssistant,
 ) -> None:

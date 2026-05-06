@@ -437,9 +437,10 @@ class IcloudDevice:
                 _is_old = location.get(DEVICE_LOCATION_IS_OLD, False)
                 _stale_threshold = self._account.fetch_interval * 60 * 1.5
                 _LOGGER.debug(
-                    "Location updated for %s (fix acquired: %s, isOld: %s)",
+                    "Location updated for %s (fix acquired: %s, age: %s, isOld: %s)",
                     self._name,
                     _loc_acquired_at_iso,
+                    f"{int(_age_seconds)}s" if _age_seconds is not None else "unknown",
                     _is_old,
                 )
                 if (
