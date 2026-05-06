@@ -187,5 +187,5 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     @property
     def volume_states(self) -> dict[str, AmazonVolumeState]:
-        "Volumes of devices."
+        """Volumes of devices."""
         return self._volume_states
