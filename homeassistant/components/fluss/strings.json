@@ -21,11 +21,8 @@
     }
   },
   "exceptions": {
-    "open_failed": {
-      "message": "Failed to open device: {error}"
-    },
-    "close_failed": {
-      "message": "Failed to close device: {error}"
+    "command_failed": {
+      "message": "Failed to send command to Fluss+ device: {error}"
     }
   }
 }

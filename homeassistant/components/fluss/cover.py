@@ -1,7 +1,5 @@
 """Cover platform for Fluss+ devices with a position sensor."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -9,15 +7,16 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import FlussApiClientError, FlussConfigEntry
-from .entity import FlussEntity, has_open_close_sensor
+from .entity import FlussEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -25,13 +24,33 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up cover entities for devices reporting an open/close sensor."""
+    """Set up Fluss covers for devices that report a position sensor."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        FlussCover(coordinator, device)
-        for device in coordinator.data.values()
-        if has_open_close_sensor(device)
-    )
+    entity_registry = er.async_get(hass)
+    known: set[str] = set()
+
+    @callback
+    def _add_covers() -> None:
+        new_entities: list[FlussCover] = []
+        for device_id, device in coordinator.data.items():
+            if device_id in known or not device.has_position_sensor:
+                continue
+            # Once a device gains the position sensor it must surface as a
+            # cover, never a button. Remove any prior button registry entry
+            # left over from an earlier install or from a refresh that
+            # registered the device before its capability was known.
+            button_entity_id = entity_registry.async_get_entity_id(
+                "button", DOMAIN, device_id
+            )
+            if button_entity_id is not None:
+                entity_registry.async_remove(button_entity_id)
+            known.add(device_id)
+            new_entities.append(FlussCover(coordinator, device))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _add_covers()
+    entry.async_on_unload(coordinator.async_add_listener(_add_covers))
 
 
 class FlussCover(FlussEntity, CoverEntity):
@@ -44,37 +63,38 @@ class FlussCover(FlussEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return whether the cover is closed."""
-        status = self.device.open_close_status
-        if isinstance(status, bool):
-            return not status
-        if isinstance(status, str):
-            normalized = status.lower()
-            if normalized == "closed":
-                return True
-            if normalized == "open":
-                return False
-        return None
+        return self.device.is_closed
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        self._attr_is_opening = True
+        self.async_write_ha_state()
         try:
             await self.coordinator.api.async_open_device(self.device_id)
         except FlussApiClientError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="open_failed",
+                translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        finally:
+            self._attr_is_opening = False
+            self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        self._attr_is_closing = True
+        self.async_write_ha_state()
         try:
             await self.coordinator.api.async_close_device(self.device_id)
         except FlussApiClientError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="close_failed",
+                translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        finally:
+            self._attr_is_closing = False
+            self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
