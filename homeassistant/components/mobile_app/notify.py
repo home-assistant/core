@@ -23,9 +23,13 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -48,6 +52,7 @@ from .const import (
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
 from .push_notification import PushChannel
@@ -112,6 +117,21 @@ class MobileAppNotifyEntity(NotifyEntity):
                 translation_key="device_not_connected_for_local_push_notifications",
                 translation_placeholders={"device_name": self._config_entry.title},
             )
+
+    @callback
+    def _async_handle_notification(self, webhook_id: str) -> None:
+        """Handle notifications triggered externally."""
+        if webhook_id == self._config_entry.data[ATTR_WEBHOOK_ID]:
+            self._async_record_notification()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callback."""
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RECORD_NOTIFICATION, self._async_handle_notification
+            )
+        )
 
 
 def push_registrations(hass: HomeAssistant) -> dict[str, str]:
@@ -197,6 +217,7 @@ class MobileAppNotificationService(BaseNotificationService):
                     data,
                     partial(self._async_send_remote_message_target, entry),
                 )
+                async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
                 continue
 
             # Test if local push only.
@@ -205,6 +226,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 continue
 
             await self._async_send_remote_message_target(entry, data)
+            async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
 
         if failed_targets:
             raise HomeAssistantError(

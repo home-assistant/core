@@ -167,10 +167,16 @@ async def notify_only() -> AsyncGenerator[None]:
         yield
 
 
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_notify_works(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
     """Test notify works."""
+
+    state = hass.states.get("notify.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
     assert hass.services.has_service("notify", "mobile_app_test") is True
     await hass.services.async_call(
         "notify",
@@ -196,6 +202,11 @@ async def test_notify_works(
     assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"
     assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
+
+    await hass.async_block_till_done()
+    state = hass.states.get("notify.test")
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
 
 
 async def test_notify_ws_works(
@@ -413,6 +424,7 @@ async def test_notify_ws_not_confirming(
     assert len(aioclient_mock.mock_calls) == 3
 
 
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_local_push_only(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -443,6 +455,10 @@ async def test_local_push_only(
     assert sub_result["success"]
     sub_id = sub_result["id"]
 
+    state = hass.states.get("notify.websocket_push_name")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
     await hass.services.async_call(
         "notify",
         "mobile_app_websocket_push_name",
@@ -454,6 +470,10 @@ async def test_local_push_only(
     assert msg["id"] == sub_id
     assert msg["type"] == "event"
     assert msg["event"] == {"message": "Hello world 1"}
+
+    state = hass.states.get("notify.websocket_push_name")
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
 
 
 @pytest.mark.parametrize(
@@ -815,7 +835,6 @@ async def test_send_message_exceptions(
 
 
 @pytest.mark.usefixtures("setup_websocket_channel_only_push")
-@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
     """Test sending message via notify.send_message action through local push with exceptions."""
     with pytest.raises(HomeAssistantError) as err:
