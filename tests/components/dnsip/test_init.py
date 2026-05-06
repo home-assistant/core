@@ -300,10 +300,12 @@ async def test_setup_forward_failure(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    dns_mock_ipv4 = RetrieveDNS()
+    dns_mock_ipv6 = RetrieveDNS()
     with (
         patch(
             "homeassistant.components.dnsip.aiodns.DNSResolver",
-            return_value=RetrieveDNS(),
+            side_effect=[dns_mock_ipv4, dns_mock_ipv6],
         ),
         patch.object(
             hass.config_entries,
@@ -315,3 +317,5 @@ async def test_setup_forward_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert dns_mock_ipv4._closed
+    assert dns_mock_ipv6._closed
