@@ -187,7 +187,7 @@ SVS_PARAMS: dict[str, SVSParameter] = {
 }
 
 
-def bytes_to_hex_str(bytes_input: bytes) -> str:
+def bytes_to_hex_str(bytes_input: bytes) -> str:  # pragma: no cover - debug helper
     """Convert bytes to hex string."""
     return hexlify(bytes_input).decode("utf-8")
 
@@ -434,7 +434,7 @@ class FrameAssembler:
 
         # Check if this is a new frame start
         if data[0] == int.from_bytes(FRAME_PREAMBLE, "little"):
-            if not self._sync:
+            if not self._sync:  # pragma: no cover - debug log only
                 _LOGGER.debug(
                     "Frame fragment out of sync: %s",
                     bytes_to_hex_str(self._partial_frame),

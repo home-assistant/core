@@ -10,6 +10,7 @@ from homeassistant.components.svs_subwoofer.const import (
     SERVICE_SET_VOLUME,
     SERVICE_SYNC_FROM,
 )
+from homeassistant.components.svs_subwoofer.helpers import get_coordinator_for_device
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -37,6 +38,23 @@ async def test_set_volume(hass: HomeAssistant, mock_bleak_client: MagicMock) -> 
         blocking=True,
     )
     assert mock_bleak_client.write_gatt_char.await_count == pre + 1
+
+
+async def test_helpers_get_coordinator_unknown_device(
+    hass: HomeAssistant, mock_bleak_client: MagicMock
+) -> None:
+    """get_coordinator_for_device returns None for unknown / non-SVS devices."""
+    await async_init_integration(hass)
+
+    # Unknown device id
+    assert get_coordinator_for_device(hass, "does-not-exist") is None
+
+    # Existing device with non-SVS identifier
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=hass.config_entries.async_loaded_entries(DOMAIN)[0].entry_id,
+        identifiers={("not_our_domain", "abc")},
+    )
+    assert get_coordinator_for_device(hass, device.id) is None
 
 
 async def test_set_volume_unknown_device(
@@ -70,6 +88,23 @@ async def test_load_preset_string(
     )
     # Preset load frame + 4 follow-up MEMREAD frames
     assert mock_bleak_client.write_gatt_char.await_count >= pre + 5
+
+
+async def test_load_preset_default_string(
+    hass: HomeAssistant, mock_bleak_client: MagicMock
+) -> None:
+    """The 'Default' string preset arg loads preset 4 (factory default)."""
+    await async_init_integration(hass)
+    device_id = await _device_id_for(hass, SVS_ADDRESS)
+
+    pre = mock_bleak_client.write_gatt_char.await_count
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LOAD_PRESET,
+        {"device_ids": [device_id], "preset": "Default"},
+        blocking=True,
+    )
+    assert mock_bleak_client.write_gatt_char.await_count >= pre + 1
 
 
 async def test_sync_from_unknown_source(

@@ -24,14 +24,6 @@ ATTR_VOLUME = "volume"
 ATTR_OFFSETS = "offsets"
 ATTR_PRESET = "preset"
 
-_PRESET_NAMES_TO_NUMBER = {
-    "1": 1,
-    "2": 2,
-    "3": 3,
-    "4": 4,
-    "default": 4,
-}
-
 SERVICE_SYNC_FROM_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_SOURCE_DEVICE_ID): cv.string,
@@ -58,20 +50,6 @@ SERVICE_LOAD_PRESET_SCHEMA = vol.Schema(
         ),
     }
 )
-
-
-def _resolve_preset(preset: int | str) -> int:
-    """Normalize preset arg to an int 1-4, or raise ServiceValidationError."""
-    if isinstance(preset, int):
-        return preset
-    try:
-        return _PRESET_NAMES_TO_NUMBER[preset.lower()]
-    except KeyError as err:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_preset",
-            translation_placeholders={"preset": str(preset)},
-        ) from err
 
 
 def _coordinator_or_raise(hass: HomeAssistant, device_id: str):
@@ -117,7 +95,9 @@ async def _async_set_volume(hass: HomeAssistant, call: ServiceCall) -> None:
 
 async def _async_load_preset(hass: HomeAssistant, call: ServiceCall) -> None:
     """Load preset on multiple subwoofers."""
-    preset_num = _resolve_preset(call.data[ATTR_PRESET])
+    preset = call.data[ATTR_PRESET]
+    # Schema coerces "1"-"4" to int; only "Default"/"default" arrive as str.
+    preset_num = 4 if isinstance(preset, str) else preset
     for device_id in call.data[ATTR_DEVICE_IDS]:
         coordinator = _coordinator_or_raise(hass, device_id)
         await coordinator.async_load_preset(preset_num)

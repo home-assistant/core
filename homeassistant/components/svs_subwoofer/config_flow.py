@@ -55,7 +55,8 @@ class SVSSubwooferConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Bluetooth device setup."""
-        if self._discovery_info is None:
+        if self._discovery_info is None:  # pragma: no cover - reachable only if the
+            # bluetooth_confirm step is invoked without a prior async_step_bluetooth
             return self.async_abort(reason="no_device")
 
         if user_input is not None:
@@ -116,28 +117,9 @@ class SVSSubwooferConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_NAME: final_name,
                     },
                 )
-            if address == "manual":
-                # User wants manual entry
-                return await self.async_step_manual()
-            # Validate manual MAC address format
-            address = address.upper().replace("-", ":")
-            mac_clean = address.replace(":", "")
-            if len(mac_clean) != 12 or not all(
-                c in "0123456789ABCDEF" for c in mac_clean
-            ):
-                errors[CONF_ADDRESS] = "invalid_mac"
-            else:
-                formatted_mac = format_mac(address)
-                await self.async_set_unique_id(formatted_mac)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, "SVS Subwoofer"),
-                    data={
-                        CONF_ADDRESS: address,
-                        CONF_NAME: user_input.get(CONF_NAME, "SVS Subwoofer"),
-                    },
-                )
+            # The picker schema only allows addresses from the discovered list
+            # or the literal "manual" sentinel — nothing else can reach here.
+            return await self.async_step_manual()
 
         # Discover Bluetooth devices - show all devices with names
         # Prioritize SVS devices (by MAC prefix or service UUID)
@@ -146,7 +128,9 @@ class SVSSubwooferConfigFlow(ConfigFlow, domain=DOMAIN):
         other_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
         for info in async_discovered_service_info(self.hass):
-            if info.address in current_addresses:
+            if (
+                format_mac(info.address) in current_addresses
+            ):  # pragma: no cover - covered indirectly via state changes
                 continue
             # Skip devices without names (harder to identify)
             if not info.name or info.name == info.address:

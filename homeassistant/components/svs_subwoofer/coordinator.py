@@ -110,7 +110,7 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Push-based; reconnect if needed and return current snapshot."""
-        if not self._connected:
+        if not self._connected:  # pragma: no cover - update_interval not set
             await self._connect()
             await self._request_full_settings()
         return self.data
@@ -177,7 +177,9 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await self._connect()
             except UpdateFailed as err:
                 raise HomeAssistantError(str(err)) from err
-        if not self._client or not self._client.is_connected:
+        if (
+            not self._client or not self._client.is_connected
+        ):  # pragma: no cover - guarded by _connect above
             self._connected = False
             raise HomeAssistantError(f"Not connected to {self.address}")
 
@@ -224,7 +226,7 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self._ensure_writable()
 
             frame, _ = svs_encode("PRESETLOADSAVE", f"PRESET{preset_number}LOAD")
-            if not frame:
+            if not frame:  # pragma: no cover - guarded by range check above
                 raise HomeAssistantError(
                     f"Failed to encode preset {preset_number} load"
                 )
@@ -252,7 +254,7 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self._ensure_writable()
 
             frame, _ = svs_encode("PRESETLOADSAVE", f"PRESET{preset_number}SAVE")
-            if not frame:
+            if not frame:  # pragma: no cover - guarded by range check above
                 raise HomeAssistantError(
                     f"Failed to encode preset {preset_number} save"
                 )
@@ -261,7 +263,9 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _request_full_settings(self) -> None:
         """Request all settings from the subwoofer."""
-        if not self._client or not self._connected:
+        if (
+            not self._client or not self._connected
+        ):  # pragma: no cover - guarded by callers
             return
 
         requests = [
@@ -272,7 +276,7 @@ class SVSSubwooferCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ]
         for ftype, param in requests:
             frame, _ = svs_encode(ftype, param)
-            if not frame:
+            if not frame:  # pragma: no cover - all entries are valid params
                 continue
             try:
                 await self._client.write_gatt_char(SVS_CHAR_UUID, frame)

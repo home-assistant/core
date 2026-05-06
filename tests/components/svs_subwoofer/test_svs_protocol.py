@@ -152,6 +152,118 @@ class TestSvsDecode:
         assert result["VALIDATED_VALUES"].get("PHASE") == 90
 
 
+class TestEncodeMore:
+    """Additional encoding paths."""
+
+    def test_encode_invalid_value_type(self) -> None:
+        """Passing a list/None as VOLUME data is rejected."""
+        frame, _ = svs_encode("MEMWRITE", "VOLUME", [1, 2, 3])
+        assert frame == b""
+
+    def test_encode_reset_frame(self) -> None:
+        """RESET frame builds successfully."""
+        frame, _ = svs_encode("RESET", "VOLUME")
+        assert frame.startswith(FRAME_PREAMBLE)
+        assert frame[1:3] == b"\xf3\x1f"
+
+    def test_encode_sub_info_request(self) -> None:
+        """SUB_INFO1 request frame builds successfully."""
+        frame, _ = svs_encode("SUB_INFO1", "VOLUME")
+        assert frame.startswith(FRAME_PREAMBLE)
+        assert frame[1:3] == b"\xf4\x1f"
+
+
+class TestDecodeMore:
+    """Additional decode paths covering protocol-specific branches."""
+
+    def test_decode_string_param(self) -> None:
+        """READ_RESP for a PRESETxNAME returns the decoded string."""
+        # PRESET1NAME id=8 offset=0x0 n_bytes=8
+        body = (
+            b"\x00\x00\x00\x00"
+            + (8).to_bytes(4, "little")
+            + (0x0).to_bytes(2, "little")
+            + (8).to_bytes(2, "little")
+            + b"MOVIE\x00\x00\x00"
+        )
+        head = (
+            FRAME_PREAMBLE
+            + b"\xf2\x00"
+            + (1 + 2 + 2 + len(body) + 2).to_bytes(2, "little")
+            + body
+        )
+        frame = head + crc_hqx(head, 0).to_bytes(2, "little")
+
+        result = svs_decode(frame)
+        assert result["VALIDATED_VALUES"]["PRESET1NAME"] == "MOVIE"
+
+    def test_decode_discrete_invalid_dropped(self) -> None:
+        """A discrete value not in the allowed list is dropped."""
+        # LOW_PASS_FILTER_SLOPE id=4 offset=0xC, allowed: 6/12/18/24
+        encoded_value = (int(10 * 7)).to_bytes(2, "little")  # 7 not allowed
+        frame = _read_resp_frame(param_id=4, mem_start=0xC, payload_data=encoded_value)
+        result = svs_decode(frame)
+        assert "LOW_PASS_FILTER_SLOPE" not in result["VALIDATED_VALUES"]
+
+    def test_decode_float_value_preserves_decimal(self) -> None:
+        """A non-integer numeric value (Q-factor) is returned as float."""
+        # PEQ1_QFACTOR id=4 offset=0x14, range 0.2..10.0
+        encoded_value = (int(10 * 1.5)).to_bytes(2, "little")  # 1.5
+        frame = _read_resp_frame(param_id=4, mem_start=0x14, payload_data=encoded_value)
+        result = svs_decode(frame)
+        assert result["VALIDATED_VALUES"]["PEQ1_QFACTOR"] == 1.5
+
+    def test_decode_short_payload_returns_early(self) -> None:
+        """A truncated MEM payload yields no validated values."""
+        body = b"\x00\x00\x00\x00" + b"\x04\x00"  # only 2 bytes after padding
+        head = (
+            FRAME_PREAMBLE
+            + b"\xf2\x00"
+            + (1 + 2 + 2 + len(body) + 2).to_bytes(2, "little")
+            + body
+        )
+        frame = head + crc_hqx(head, 0).to_bytes(2, "little")
+        result = svs_decode(frame)
+        assert result["VALIDATED_VALUES"] == {}
+
+    def test_decode_out_of_range_value_dropped(self) -> None:
+        """A numeric value outside declared continuous limits is rejected."""
+        encoded_value = (5000).to_bytes(2, "little")
+        frame = _read_resp_frame(param_id=4, mem_start=0x2C, payload_data=encoded_value)
+        result = svs_decode(frame)
+        assert "VOLUME" not in result["VALIDATED_VALUES"]
+
+    def test_decode_sub_info2_resp(self) -> None:
+        """SUB_INFO2_RESP exposes SW_VERSION."""
+        version = b"1.2.3"
+        body = b"\x00\x00\x00\x00" + bytes([len(version)]) + version
+        head = (
+            FRAME_PREAMBLE
+            + b"\xfd\x00"
+            + (1 + 2 + 2 + len(body) + 2).to_bytes(2, "little")
+            + body
+        )
+        frame = head + crc_hqx(head, 0).to_bytes(2, "little")
+
+        result = svs_decode(frame)
+        assert result["VALIDATED_VALUES"].get("SW_VERSION") == "1.2.3"
+
+    def test_decode_sub_info3_resp(self) -> None:
+        """SUB_INFO3_RESP exposes HW_VERSION."""
+        version = b"REV.A"
+        body = b"\x00\x00\x00\x00" + bytes([len(version)]) + version
+        head = (
+            FRAME_PREAMBLE
+            + b"\xff\x00"
+            + (1 + 2 + 2 + len(body) + 2).to_bytes(2, "little")
+            + body
+        )
+        frame = head + crc_hqx(head, 0).to_bytes(2, "little")
+
+        result = svs_decode(frame)
+        assert result["VALIDATED_VALUES"].get("HW_VERSION") == "REV.A"
+
+
 class TestFrameAssembler:
     """Reassembly tests for FrameAssembler."""
 
@@ -214,6 +326,11 @@ class TestFrameAssembler:
         second = asm.add_data(frame)
         assert second is not None
         assert second["FRAME_RECOGNIZED"] is True
+
+    def test_empty_data_returns_none(self) -> None:
+        """Empty data is a no-op."""
+        asm = FrameAssembler()
+        assert asm.add_data(b"") is None
 
     def test_continuation_without_preamble_appended(self) -> None:
         """Continuation chunks without preamble append to the partial buffer."""

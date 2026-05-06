@@ -61,3 +61,23 @@ async def test_select_preset_loads_preset(
     )
     # Preset load (1 frame) + full settings refresh (4 frames)
     assert mock_bleak_client.write_gatt_char.await_count >= pre + 5
+
+
+async def test_select_preset_with_custom_names(
+    hass: HomeAssistant, mock_bleak_client: MagicMock
+) -> None:
+    """Custom preset names from coordinator data appear as select options."""
+    with patch("homeassistant.components.svs_subwoofer.PLATFORMS", [Platform.SELECT]):
+        entry = await async_init_integration(hass)
+
+    coordinator = entry.runtime_data
+    coordinator.data["PRESET1NAME"] = "Movies"
+    coordinator.data["PRESET2NAME"] = "Music"
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    eid = entity_id(hass, "select", SVS_ADDRESS, "preset")
+    state = hass.states.get(eid)
+    options = state.attributes["options"]
+    assert "Movies" in options
+    assert "Music" in options

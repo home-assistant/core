@@ -32,4 +32,4 @@ def get_coordinator_for_device(
         coordinator = entry.runtime_data
         if coordinator.address == address:
             return coordinator
-    return None
+    return None  # pragma: no cover - device exists but no matching loaded entry

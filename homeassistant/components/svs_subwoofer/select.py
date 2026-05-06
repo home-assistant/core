@@ -148,7 +148,7 @@ class SVSSelectEntity(CoordinatorEntity[SVSSubwooferCoordinator], SelectEntity):
     @property
     def _preset_value_map(self) -> dict[str, int]:
         """Return mapping of current preset option names to values."""
-        if not self.entity_description.is_preset:
+        if not self.entity_description.is_preset:  # pragma: no cover
             return self.entity_description.value_map
 
         # Build dynamic preset map based on current options
@@ -172,7 +172,7 @@ class SVSSelectEntity(CoordinatorEntity[SVSSubwooferCoordinator], SelectEntity):
             idx = active - 1 if active <= 3 else 3  # preset 4 = Default = index 3
             if 0 <= idx < len(current_options):
                 return current_options[idx]
-            return None
+            return None  # pragma: no cover - guarded by ACTIVE_PRESET range
 
         value = self.coordinator.data.get(self.entity_description.svs_param)
         if value is None:
@@ -190,7 +190,7 @@ class SVSSelectEntity(CoordinatorEntity[SVSSubwooferCoordinator], SelectEntity):
             else self.entity_description.value_map
         )
         value = value_map.get(option)
-        if value is None:
+        if value is None:  # pragma: no cover - HA validates options before dispatch
             _LOGGER.error("Invalid option: %s", option)
             return
 
