@@ -41,6 +41,7 @@ def _validate_areas(areas: list[str]) -> list[str]:
     """Validate the areas."""
 
     for area in areas:
+        cv.string(area)
         if area.upper() not in AREAS:
             raise vol.Invalid(f"Area {area} is not valid")
 
