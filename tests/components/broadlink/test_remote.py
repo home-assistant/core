@@ -124,10 +124,15 @@ async def test_remote_availability(
 
     mock_setup.api.check_sensors.side_effect = error
 
-    for _ in range(ticks_to_unavailable):
+    for _ in range(ticks_to_unavailable - 1):
         freezer.tick(BroadlinkRMUpdateManager.SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
+        assert hass.states.get(remote.entity_id).state == STATE_ON
+
+    freezer.tick(BroadlinkRMUpdateManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get(remote.entity_id).state == STATE_UNAVAILABLE
 
