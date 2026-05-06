@@ -1,7 +1,5 @@
 """Plugin for checking preferred coding of μ is used."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from astroid import nodes
