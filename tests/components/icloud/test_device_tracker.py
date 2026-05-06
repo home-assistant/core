@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.icloud.device_tracker import IcloudTrackerEntity, add_entities
+from homeassistant.components.icloud.device_tracker import (
+    IcloudTrackerEntity,
+    add_entities,
+)
 
 
 def _make_tracker(location: dict | None) -> IcloudTrackerEntity:
