@@ -100,8 +100,6 @@ async def test_service_call(
     )
 
     assert response == snapshot
-    price_value = response["SE3"][0]["price"]
-    assert response["SE3"][0]["price"] == price_value
 
 
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
@@ -123,8 +121,6 @@ async def test_service_call_use_defaults(
     )
 
     assert "SE3" in response
-    price_value = response["SE3"][0]["price"]
-    assert response["SE3"][0]["price"] == price_value
 
 
 @pytest.mark.parametrize(
