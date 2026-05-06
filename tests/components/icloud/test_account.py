@@ -250,3 +250,66 @@ def test_icloud_device_keeps_location_when_timestamp_missing(
     """
     device = _make_device(hass, age_seconds=None, is_old=True)
     assert device.location is not None
+
+
+def test_icloud_device_no_location_data_does_not_set_location(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a status with no location dict leaves the device location as None."""
+    mock_account = MagicMock()
+    mock_account.hass = hass
+    mock_account.signal_device_new = "icloud-test-device-new"
+    mock_account.fetch_interval = _FETCH_INTERVAL_MIN
+    mock_account.owner_fullname = "Test User"
+    mock_account.family_members_fullname = {}
+
+    status = {**DEVICE, "location": None}
+    device = IcloudDevice(mock_account, MagicMock(), dict(DEVICE))
+    with patch("homeassistant.components.icloud.account.dispatcher_send"):
+        device.update(status)
+
+    assert device.location is None
+
+
+def test_icloud_device_stale_transition_logs_warning(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the stale-location warning fires when transitioning from a valid fix.
+
+    The warning should only log on the transition (valid → stale), not on every
+    subsequent poll while the stale fix persists.
+    """
+    mock_account = MagicMock()
+    mock_account.hass = hass
+    mock_account.signal_device_new = "icloud-test-device-new"
+    mock_account.fetch_interval = _FETCH_INTERVAL_MIN
+    mock_account.owner_fullname = "Test User"
+    mock_account.family_members_fullname = {}
+
+    def _make_status(age_seconds: float, is_old: bool) -> dict:
+        ts_ms = int((utcnow() - timedelta(seconds=age_seconds)).timestamp() * 1000)
+        return {
+            **DEVICE,
+            "location": {
+                "latitude": 60.1699,
+                "longitude": 24.9384,
+                "horizontalAccuracy": 10.0,
+                "timeStamp": ts_ms,
+                "isOld": is_old,
+            },
+        }
+
+    device = IcloudDevice(mock_account, MagicMock(), dict(DEVICE))
+
+    with patch("homeassistant.components.icloud.account.dispatcher_send"):
+        # First update: fresh fix → location is set
+        device.update(_make_status(age_seconds=60, is_old=False))
+    assert device.location is not None
+
+    # Second update: stale fix → warning fires, location cleared
+    with patch("homeassistant.components.icloud.account.dispatcher_send"):
+        with patch("homeassistant.components.icloud.account._LOGGER") as mock_logger:
+            device.update(_make_status(age_seconds=3600, is_old=True))
+
+    assert device.location is None
+    mock_logger.warning.assert_called_once()
