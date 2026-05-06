@@ -5,16 +5,15 @@
 # Copilot code review instructions
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
-- Do not add comments about code style, formatting or linting issues.
+- Do not comment on code style, formatting or linting issues.
 
 # GitHub Copilot & Claude Code Instructions
 
 This repository contains the core of Home Assistant, a Python 3 based home automation application.
 
-## Code Review Guidelines
+## Git Commit Guidelines
 
-**Git commit practices during review:**
-- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
+- **Do NOT amend, squash, or rebase commits that have already been pushed to the PR branch after the PR is opened** - Reviewers need to follow the commit history, as well as see what changed since their last review
 
 ## Development Commands
 
@@ -22,7 +21,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Python Syntax Notes
 
-- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses.
+- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses. Never flag this as an issue since Home Assistant officially supports Python 3.14.
 
 ## Testing
 
@@ -33,7 +32,5 @@ Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) ov
 
 Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
 
-
-# Skills
-
-- Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
+When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
+When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.

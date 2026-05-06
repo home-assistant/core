@@ -18,25 +18,24 @@ from wyoming.tts import (
 )
 
 from homeassistant.components import tts
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEAKER, DOMAIN
+from .const import ATTR_SPEAKER
 from .data import WyomingService
 from .error import WyomingError
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech-to-text."""
-    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item = config_entry.runtime_data
     async_add_entities(
         [
             WyomingTtsProvider(config_entry, item.service),
@@ -52,7 +51,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""

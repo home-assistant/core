@@ -9,12 +9,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
-from .coordinator import SkybellDataUpdateCoordinator
+from .coordinator import SkybellConfigEntry, SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
@@ -32,14 +30,14 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SkybellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell binary sensor."""
     async_add_entities(
         SkybellBinarySensor(coordinator, sensor)
         for sensor in BINARY_SENSOR_TYPES
-        for coordinator in hass.data[DOMAIN][entry.entry_id]
+        for coordinator in entry.runtime_data
     )
 
 

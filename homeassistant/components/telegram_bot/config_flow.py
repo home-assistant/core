@@ -369,7 +369,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.source == SOURCE_RECONFIGURE:
             user_input.update(self._step_user_data)
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_reconfigure_entry(),
                 title=self._bot_name,
                 data_updates=user_input,
@@ -534,7 +534,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input[CONF_PLATFORM] != PLATFORM_WEBHOOKS:
             await self._shutdown_bot()
 
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_reconfigure_entry(), title=bot_name, data_updates=user_input
             )
 
@@ -579,7 +579,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=description_placeholders,
             )
 
-        return self.async_update_reload_and_abort(
+        return self.async_update_and_abort(
             self._get_reauth_entry(), title=bot_name, data_updates=updated_data
         )
 

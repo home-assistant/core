@@ -6,7 +6,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -356,6 +356,18 @@ async def test_air_quality_sensor(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm10")
+    assert state
+    assert state.state == "50.0"
+
+    # Radon
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
+    assert state
+    assert state.state == "60.0"
+
+    set_node_attribute(matter_node, 1, 1071, 0, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
     assert state
     assert state.state == "50.0"
 
@@ -839,3 +851,37 @@ async def test_aqara_thermostat_w500_entity_exists_and_unknown(
     state = hass.states.get("sensor.floor_heating_thermostat_active_current")
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])
+async def test_bridged_device_reachable_updates_availability(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test bridged endpoint availability follows Reachable updates."""
+    entity_ids = (
+        "sensor.electricity_monitor_ac_energy",
+        "sensor.electricity_monitor_ac_power",
+    )
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 29, 57, 17, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 29, 57, 17, True)
+    await trigger_subscription_callback(hass, matter_client)
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE

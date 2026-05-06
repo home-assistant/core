@@ -147,6 +147,14 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     ProxmoxVMButtonEntityDescription(
+        key="resume",
+        translation_key="resume",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.resume.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ProxmoxVMButtonEntityDescription(
         key="reset",
         translation_key="reset",
         press_action=lambda coordinator, node, vmid: (

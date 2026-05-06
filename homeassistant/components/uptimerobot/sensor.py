@@ -61,9 +61,12 @@ class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     """Representation of a UptimeRobot sensor."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the status of the monitor."""
+        if not self._monitor.status:
+            return None
+
         status = self._monitor.status.lower()
         # The API returns "paused"
         # but the entity state will be "pause" to avoid a breaking change
-        return {"paused": "pause"}.get(status, status)  # type: ignore[no-any-return]
+        return {"paused": "pause"}.get(status, status)

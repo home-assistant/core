@@ -14,13 +14,12 @@ from homeassistant.components.fan import (
     FanEntityDescription,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 FanControlFeature = clusters.FanControl.Bitmaps.Feature
@@ -45,11 +44,11 @@ PRESET_SLEEP_WIND = "sleep_wind"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter fan from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.FAN, async_add_entities)
 
 
@@ -254,8 +253,10 @@ class MatterFan(MatterEntity, FanEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = FanEntityFeature(0)
+        # Reset to default so a featuremap change from MultiSpeed -> non-MultiSpeed
+        # does not leave a stale speed_count / percentage_step.
+        self._attr_speed_count = 100
         if feature_map & FanControlFeature.kMultiSpeed:
-            self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._attr_speed_count = int(
                 self.get_matter_attribute_value(clusters.FanControl.Attributes.SpeedMax)
             )
@@ -305,8 +306,12 @@ class MatterFan(MatterEntity, FanEntity):
         if feature_map & FanControlFeature.kAirflowDirection:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
 
+        # PercentSetting is always a mandatory attribute of the FanControl cluster,
+        # so percentage-based speed control is always available.
         self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
         )
 
 

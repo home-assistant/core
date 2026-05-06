@@ -24,8 +24,10 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
     async_get_flow_preview_state,
     async_trigger,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -51,24 +53,9 @@ TEST_SWITCH = TemplatePlatformSetup(
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_SENSOR),
 )
 
-SWITCH_TURN_ON = {
-    "service": "test.automation",
-    "data_template": {
-        "action": "turn_on",
-        "caller": "{{ this.entity_id }}",
-    },
-}
-SWITCH_TURN_OFF = {
-    "service": "test.automation",
-    "data_template": {
-        "action": "turn_off",
-        "caller": "{{ this.entity_id }}",
-    },
-}
-SWITCH_ACTIONS = {
-    "turn_on": SWITCH_TURN_ON,
-    "turn_off": SWITCH_TURN_OFF,
-}
+TURN_ON_ACTION = make_test_action("turn_on")
+TURN_OFF_ACTION = make_test_action("turn_off")
+SWITCH_ACTIONS = {**TURN_ON_ACTION, **TURN_OFF_ACTION}
 
 
 @pytest.fixture
@@ -329,9 +316,7 @@ async def test_trigger_attributes_with_optimistic_state(
     assert state.state == STATE_ON
     assert state.attributes.get(attr) is None
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_on")
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -344,9 +329,7 @@ async def test_trigger_attributes_with_optimistic_state(
     assert state.state == STATE_OFF
     assert state.attributes.get(attr) is None
 
-    assert len(calls) == 2
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 2, "turn_off")
 
     await async_trigger(hass, TEST_SENSOR, expected)
 
@@ -365,9 +348,7 @@ async def test_trigger_attributes_with_optimistic_state(
     assert state.state == STATE_ON
     assert state.attributes.get(attr) == expected
 
-    assert len(calls) == 3
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 3, "turn_on")
 
 
 @pytest.mark.parametrize(
@@ -513,12 +494,12 @@ async def test_no_switches_does_not_create(
     "config",
     [
         {
-            "not_on": SWITCH_TURN_ON,
-            "turn_off": SWITCH_TURN_OFF,
+            "not_on": [],
+            **TURN_OFF_ACTION,
         },
         {
-            "turn_on": SWITCH_TURN_ON,
-            "not_off": SWITCH_TURN_OFF,
+            **TURN_ON_ACTION,
+            "not_off": [],
         },
     ],
 )
@@ -553,9 +534,7 @@ async def test_on_action(
         blocking=True,
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_on")
 
 
 @pytest.mark.parametrize("count", [1])
@@ -584,9 +563,7 @@ async def test_on_action_optimistic(
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state.state == STATE_ON
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_on")
 
 
 @pytest.mark.parametrize(
@@ -611,9 +588,7 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
         blocking=True,
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_off")
 
 
 @pytest.mark.parametrize("count", [1])
@@ -642,9 +617,7 @@ async def test_off_action_optimistic(
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state.state == STATE_OFF
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_off")
 
 
 @pytest.mark.parametrize(

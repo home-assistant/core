@@ -1286,6 +1286,8 @@ CAPABILITY_TO_SENSORS: dict[
 UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+    "Celsius": UnitOfTemperature.CELSIUS,
+    "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
