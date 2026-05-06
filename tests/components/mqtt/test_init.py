@@ -450,6 +450,38 @@ async def test_publish_function_with_bad_encoding_conditions(
     )
 
 
+async def test_publish_action_with_message_retention_interval(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the service call with args that can be misinterpreted.
+
+    Empty payload message and ascii formatted qos and retain flags.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: "bla",
+            mqtt.ATTR_QOS: 2,
+            mqtt.ATTR_RETAIN: False,
+            mqtt.ATTR_MESSAGE_EXPIRY_INTERVAL: {
+                "days": 1,
+                "hours": 0,
+                "minutes": 0,
+                "seconds": 10,
+            },
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == "bla"
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
+    assert mqtt_mock.async_publish.call_args[1]["message_expiry_interval"] == 86410
+
+
 def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.

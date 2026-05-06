@@ -247,7 +247,7 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
         vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_int,
+        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
     },
     required=True,
 )
@@ -351,8 +351,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
-        message_expiry_interval: int | None = call.data.get(
-            ATTR_MESSAGE_EXPIRY_INTERVAL
+        message_expiry_interval: int | None = (
+            int(call.data[ATTR_MESSAGE_EXPIRY_INTERVAL].total_seconds())
+            if ATTR_MESSAGE_EXPIRY_INTERVAL in call.data
+            else None
         )
 
         if evaluate_payload:

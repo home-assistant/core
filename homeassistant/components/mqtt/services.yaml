@@ -32,11 +32,8 @@ publish:
 
     message_expiry_interval:
       selector:
-        number:
-          min: 0
-          step: 1
-          unit_of_measurement: "seconds"
-
+        duration:
+          enable_day: true
 dump:
   fields:
     topic:
