@@ -4309,6 +4309,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "mitsubishi_comfort": {
+      "name": "Mitsubishi Comfort",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "mjpeg": {
       "name": "MJPEG IP Camera",
       "integration_type": "hub",
@@ -5507,6 +5513,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "ptdevices": {
+      "name": "PTDevices",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "pterodactyl": {
       "name": "Pterodactyl",
       "integration_type": "service",
@@ -6139,6 +6151,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "sensereo": {
+      "name": "Sensereo",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "sensibo": {
       "name": "Sensibo",
@@ -8234,6 +8252,12 @@
       "name": "Zooz",
       "iot_standards": [
         "zwave"
+      ]
+    },
+    "zunzunbee": {
+      "name": "Zunzunbee",
+      "iot_standards": [
+        "zigbee"
       ]
     },
     "zwave_js": {
