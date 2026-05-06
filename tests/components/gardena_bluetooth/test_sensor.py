@@ -14,7 +14,7 @@ from gardena_bluetooth.const import (
     Spray,
     Valve,
 )
-from gardena_bluetooth.parse import ErrorData
+from gardena_bluetooth.parse import ActivationReason, ErrorData, SkipReason
 from habluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -80,6 +80,9 @@ async def test_setup(
             {
                 Battery.battery_level.uuid: Battery.battery_level.encode(100),
                 Valve.remaining_open_time.uuid: Valve.remaining_open_time.encode(10),
+                Valve.activation_reason.uuid: Valve.activation_reason.encode(
+                    ActivationReason.SCHEDULE
+                ),
             },
             id="timer",
         ),
@@ -100,6 +103,12 @@ async def test_setup(
                 ),
                 AquaContourWatering.remaining_watering_time.uuid: AquaContourWatering.remaining_watering_time.encode(
                     100
+                ),
+                AquaContourWatering.activation_reason.uuid: AquaContourWatering.activation_reason.encode(
+                    ActivationReason.SCHEDULE
+                ),
+                AquaContourWatering.skipped_reason.uuid: AquaContourWatering.skipped_reason.encode(
+                    SkipReason.RAIN_SENSOR
                 ),
             },
             id="aqua_contour",

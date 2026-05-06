@@ -31,6 +31,72 @@
     'state': '45',
   })
 # ---
+# name: test_sensors[aqua_contour][sensor.mock_title_activation_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'manual',
+        'schedule',
+        'external',
+        'setup',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_activation_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activation reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Activation reason',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activation_reason',
+    'unique_id': '00000000-0000-0000-0000-000000000003-aqua_contour_activation_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqua_contour][sensor.mock_title_activation_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Activation reason',
+      'options': list([
+        'none',
+        'manual',
+        'schedule',
+        'external',
+        'setup',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_activation_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'schedule',
+  })
+# ---
 # name: test_sensors[aqua_contour][sensor.mock_title_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -433,6 +499,100 @@
     'state': '111',
   })
 # ---
+# name: test_sensors[aqua_contour][sensor.mock_title_skipped_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rain_pause',
+        'humidity_sensor',
+        'rain_sensor',
+        'watering_already_active',
+        'battery_empty',
+        'other_schedule_with_same_start_time',
+        'contour_not_active',
+        'contour_not_enabled_for_position',
+        'contour_data_invalid',
+        'position_changed',
+        'charging_cable_plugged',
+        'manual_mode',
+        'no_water',
+        'valve_motor_error',
+        'sprinkler_motor_error',
+        'rotation_sensor_error',
+        'operational_mode_changed',
+        'irrigation_control_changed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_skipped_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Skipped reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Skipped reason',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skipped_reason',
+    'unique_id': '00000000-0000-0000-0000-000000000003-aqua_contour_skipped_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqua_contour][sensor.mock_title_skipped_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Skipped reason',
+      'options': list([
+        'none',
+        'rain_pause',
+        'humidity_sensor',
+        'rain_sensor',
+        'watering_already_active',
+        'battery_empty',
+        'other_schedule_with_same_start_time',
+        'contour_not_active',
+        'contour_not_enabled_for_position',
+        'contour_data_invalid',
+        'position_changed',
+        'charging_cable_plugged',
+        'manual_mode',
+        'no_water',
+        'valve_motor_error',
+        'sprinkler_motor_error',
+        'rotation_sensor_error',
+        'operational_mode_changed',
+        'irrigation_control_changed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_skipped_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rain_sensor',
+  })
+# ---
 # name: test_sensors[aqua_contour][sensor.mock_title_watering_finished-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -482,6 +642,126 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-01-01T01:01:40+00:00',
+  })
+# ---
+# name: test_sensors[timer][sensor.mock_title_activation_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_activation_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activation reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Activation reason',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activation_reason',
+    'unique_id': '00000000-0000-0000-0000-000000000001-98bd0f15-0b0e-421a-84e5-ddbf75dc6de4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[timer][sensor.mock_title_activation_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Activation reason',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_activation_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'schedule',
+  })
+# ---
+# name: test_sensors[timer][sensor.mock_title_activation_reason_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'manual',
+        'schedule',
+        'external',
+        'setup',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_activation_reason_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activation reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Activation reason',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activation_reason',
+    'unique_id': '00000000-0000-0000-0000-000000000001-valve_activation_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[timer][sensor.mock_title_activation_reason_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Activation reason',
+      'options': list([
+        'none',
+        'manual',
+        'schedule',
+        'external',
+        'setup',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_activation_reason_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'schedule',
   })
 # ---
 # name: test_sensors[timer][sensor.mock_title_battery-entry]
