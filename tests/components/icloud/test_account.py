@@ -341,9 +341,11 @@ def test_icloud_device_stale_transition_logs_warning(
     assert device.location is not None
 
     # Second update: stale fix → warning fires, location cleared
-    with patch("homeassistant.components.icloud.account.dispatcher_send"):
-        with patch("homeassistant.components.icloud.account._LOGGER") as mock_logger:
-            device.update(_make_status(age_seconds=3600, is_old=True))
+    with (
+        patch("homeassistant.components.icloud.account.dispatcher_send"),
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        device.update(_make_status(age_seconds=3600, is_old=True))
 
     assert device.location is None
     mock_logger.warning.assert_called_once()
