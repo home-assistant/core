@@ -34,12 +34,15 @@ TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-@callback
 @contextmanager
 def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
 
-    File is removed at the end of the context.
+    File is removed at the end of the context. Should be ran on the executor thread pool.
+    Create a wrapper function and call that wrapper function using
+    hass.async_add_executor_job. Running this function directly by scheduling an executor
+    job will result in loop blocking teardown code not being ran on the executor but
+    rather in the loop.
     """
     if DOMAIN not in hass.data:
         raise ValueError("File does not exist")
@@ -53,8 +56,7 @@ def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
         yield file_upload_data.file_path(file_id)
     finally:
         file_upload_data.files.pop(file_id)
-        # Make this non-blocking by default
-        hass.add_job(shutil.rmtree, file_upload_data.file_dir(file_id))
+        shutil.rmtree(file_upload_data.file_dir(file_id))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

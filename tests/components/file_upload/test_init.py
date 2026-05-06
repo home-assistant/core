@@ -50,9 +50,6 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
         assert file_path.parent == uploaded_file_dir
         assert file_path.read_bytes() == TEST_IMAGE.read_bytes()
 
-    # Block until the file_dir is removed
-    await hass.async_block_till_done()
-
     assert not uploaded_file_dir.exists()
 
 
