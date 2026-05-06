@@ -32,6 +32,11 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     _locks: list[dict[str, Any]]
     _api_token: str | None = None
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._locks = []
+
     async def validate_input(
         self, hass: HomeAssistant, data: dict[str, Any]
     ) -> dict[str, Any]:
