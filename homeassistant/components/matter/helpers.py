@@ -105,7 +105,7 @@ def get_node_from_device_entry(
     if device_id_full is None:
         return None
 
-    device_id = device_id_full.lstrip(device_id_type_prefix)
+    device_id = device_id_full.removeprefix(device_id_type_prefix)
     matter_client = matter.matter_client
     server_info = matter_client.server_info
 
@@ -154,7 +154,7 @@ def get_endpoint_from_device_entry(
     if server_info is None:
         raise RuntimeError("Matter server information is not available")
 
-    return next(
+    matched = next(
         (
             endpoint
             for node in matter_client.get_nodes()
@@ -163,3 +163,8 @@ def get_endpoint_from_device_entry(
         ),
         None,
     )
+    if matched is None:
+        return None
+    if compose_parent := matched.node.get_compose_parent(matched.endpoint_id):
+        return compose_parent
+    return matched

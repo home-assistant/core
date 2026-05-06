@@ -216,7 +216,7 @@ async def _async_write_node_label(
             ),
             value=_truncate_node_label(label),
         )
-    except MatterError as err:
+    except (NotConnected, MatterError) as err:
         LOGGER.debug(
             "Failed to sync NodeLabel for node %s endpoint %s: %s",
             endpoint.node.node_id,
