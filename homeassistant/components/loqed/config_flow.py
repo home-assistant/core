@@ -32,11 +32,6 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     _locks: list[dict[str, Any]]
     _api_token: str | None = None
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        super().__init__()
-        self._locks = []
-
     async def validate_input(
         self, hass: HomeAssistant, data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -49,32 +44,25 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             lock_data = {"data": self._locks}
         else:
             # 1. Checking loqed-connection
+            cloud_api_client = cloud_loqed.CloudAPIClient(
+                session,
+                data[CONF_API_TOKEN],
+            )
+            cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
+
             try:
-                cloud_api_client = cloud_loqed.CloudAPIClient(
-                    session,
-                    data[CONF_API_TOKEN],
-                )
-                cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
                 lock_data = await cloud_client.async_get_locks()
             except aiohttp.ClientError as err:
                 _LOGGER.error("HTTP Connection error to loqed API")
                 raise CannotConnect from err
 
         try:
-            if self._host:
-                # Zeroconf discovery - match by bridge IP
-                selected_lock = next(
-                    lock
-                    for lock in lock_data["data"]
-                    if lock["bridge_ip"] == self._host
-                )
-            else:
-                # Manual configuration - use selected lock from picker
-                selected_lock = next(
-                    lock
-                    for lock in lock_data["data"]
-                    if lock["id"] == data.get("lock_id")
-                )
+            match_key, match_value = (
+                ("bridge_ip", self._host) if self._host else ("id", data.get("lock_id"))
+            )
+            selected_lock = next(
+                lock for lock in lock_data["data"] if lock[match_key] == match_value
+            )
 
             apiclient = loqed.APIClient(session, f"http://{selected_lock['bridge_ip']}")
             api = loqed.LoqedAPI(apiclient)
@@ -160,10 +148,8 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not self._locks:
                     errors["base"] = "no_locks"
                 elif len(self._locks) == 1:
-                    # Only one lock, auto-select it
                     user_input["lock_id"] = self._locks[0]["id"]
                 else:
-                    # Multiple locks, show picker
                     return await self.async_step_pick_lock()
 
         if errors:
@@ -176,7 +162,6 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # Proceed with validation
         try:
             info = await self.validate_input(self.hass, user_input)
         except CannotConnect:
