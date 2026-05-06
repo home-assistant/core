@@ -2,8 +2,6 @@
 
 import asyncio
 
-import httpx
-
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
@@ -42,16 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     await coordinator.sync_media_state()
 
-    alexa_httpx_client = httpx_client.create_async_httpx_client(
+    alexa_httpx_client = httpx_client.get_async_client(
         hass,
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
-        timeout=httpx.Timeout(None),
     )
     http2_task = await coordinator.api.start_http2_processing(alexa_httpx_client)
 
     def _on_http2_task_done(task: asyncio.Task) -> None:
         if not task.cancelled() and task.exception():
-            _LOGGER.exception("HTTP2 task failed", exc_info=task.exception())
+            _LOGGER.exception("HTTP2 task failed")
 
     http2_task.add_done_callback(_on_http2_task_done)
 
