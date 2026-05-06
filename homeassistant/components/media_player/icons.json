@@ -20,6 +20,9 @@
     },
     "is_unmuted": {
       "condition": "mdi:volume-high"
+    },
+    "is_volume": {
+      "condition": "mdi:volume-medium"
     }
   },
   "entity_component": {

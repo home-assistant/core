@@ -2151,6 +2151,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
+    attribute_value_scale: float = 1.0,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=any.
 
@@ -2196,9 +2197,18 @@ def parametrize_numerical_attribute_condition_above_below_any(
             than treated as just-missing. Set this for conditions whose
             `_should_include` skips entities lacking the tracked
             attribute.
+        attribute_value_scale: Multiplier applied to the helper's fixed
+            attribute values before they are written to the state. Use
+            this when the condition stores its tracked value on a
+            different scale than the threshold — e.g. `media_player`
+            volume is stored as 0.0–1.0 but the threshold is in percent,
+            so pass `attribute_value_scale=0.01`; light brightness is
+            stored as 0–255 but the threshold is in percent, so pass
+            `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
+    s = attribute_value_scale
     extra_excluded_states = (
         [(state, {attribute: None} | unit_attributes)] if attribute_required else None
     )
@@ -2214,14 +2224,14 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 10} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 10 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2236,14 +2246,14 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 90} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 90 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2262,15 +2272,15 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2288,6 +2298,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
+    attribute_value_scale: float = 1.0,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=all.
 
@@ -2331,9 +2342,18 @@ def parametrize_numerical_attribute_condition_above_below_all(
             than treated as just-missing. Set this for conditions whose
             `_should_include` skips entities lacking the tracked
             attribute.
+        attribute_value_scale: Multiplier applied to the helper's fixed
+            attribute values before they are written to the state. Use
+            this when the condition stores its tracked value on a
+            different scale than the threshold — e.g. `media_player`
+            volume is stored as 0.0–1.0 but the threshold is in percent,
+            so pass `attribute_value_scale=0.01`; light brightness is
+            stored as 0–255 but the threshold is in percent, so pass
+            `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
+    s = attribute_value_scale
     extra_excluded_states = (
         [(state, {attribute: None} | unit_attributes)] if attribute_required else None
     )
@@ -2349,14 +2369,14 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 10} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 10 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2371,14 +2391,14 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 90} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 90 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2397,15 +2417,15 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
