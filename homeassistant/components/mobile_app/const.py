@@ -82,6 +82,7 @@ ATTR_SENSOR_UOM = "unit_of_measurement"
 
 SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
+SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
 
