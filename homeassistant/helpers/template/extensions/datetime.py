@@ -122,6 +122,8 @@ class DateTimeExtension(BaseTemplateExtension):
                     self.timedelta_string,
                     as_global=True,
                     as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
                 ),
                 TemplateFunction(
                     "today_at",

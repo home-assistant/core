@@ -331,8 +331,7 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
     The age can be in second, minute, hour, day, month and year.
 
-    precision is the number of units to return, with the last unit rounded.
-    precision=0 returns all units (no early rounding)
+    depth number of units will be returned, with the last unit rounded
 
     The date must be in the past or a ValueException will be raised.
     """
@@ -351,8 +350,7 @@ def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
 
     The age can be in second, minute, hour, day, month and year.
 
-    precision is the number of units to return, with the last unit rounded.
-    precision=0 returns all units (no early rounding)
+    depth number of units will be returned, with the last unit rounded
 
     The date must be in the future or a ValueException will be raised.
     """
