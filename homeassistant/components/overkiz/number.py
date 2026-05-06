@@ -142,7 +142,7 @@ def _overkiz_value_fn_away_mode_duration(device: Device) -> float | None:
         return 99.0
     try:
         return float(str(duration.value))
-    except (ValueError, TypeError):
+    except ValueError:
         return None
 
 
