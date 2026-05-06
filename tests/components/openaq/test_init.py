@@ -11,7 +11,14 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import API_KEY, make_latest, make_location, make_response, make_sensor
+from .conftest import (
+    API_KEY,
+    LOCATION_ID,
+    make_latest,
+    make_location,
+    make_response,
+    make_sensor,
+)
 
 from tests.common import MockConfigEntry
 
@@ -113,6 +120,29 @@ async def test_setup_fetches_location_data_concurrently(
     release.set()
 
     await asyncio.wait_for(setup_task, timeout=1)
+
+
+async def test_refresh_uses_cached_location_metadata(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test refresh polls latest measurements without refetching metadata."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    mock_openaq_client.locations.get.reset_mock()
+    mock_openaq_client.locations.latest.reset_mock()
+    mock_openaq_client.locations.sensors.reset_mock()
+    mock_openaq_client.locations.latest.return_value = make_response(
+        [make_latest(2, 21.2)]
+    )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_openaq_client.locations.get.assert_not_called()
+    mock_openaq_client.locations.sensors.assert_not_called()
+    mock_openaq_client.locations.latest.assert_awaited_once_with(LOCATION_ID)
 
 
 async def test_unload_closes_client(
