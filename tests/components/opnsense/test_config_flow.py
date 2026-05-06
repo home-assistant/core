@@ -32,6 +32,10 @@ from . import CONFIG_DATA, CONFIG_DATA_IMPORT
 
 from tests.common import MockConfigEntry
 
+# Constants for test values
+TEST_UNIQUE_ID = "unique_id_123"
+TEST_URL = "http://router.lan/api"
+
 
 async def test_interfaces_step_with_tracker_interfaces(
     hass: HomeAssistant, mock_opnsense_client: AsyncMock
@@ -52,12 +56,7 @@ async def test_interfaces_step_with_tracker_interfaces(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            "url": "http://router.lan/api",
-            "api_key": "key",
-            "api_secret": "secret",
-            "verify_ssl": True,
-        },
+        user_input={**CONFIG_DATA, "verify_ssl": True},
     )
     # Now submit interfaces step with tracker_interfaces
     result = await hass.config_entries.flow.async_configure(
@@ -80,7 +79,7 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "http://router.lan/api"
+    assert result.get("title") == CONFIG_DATA_IMPORT["url"]
 
 
 async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
@@ -108,7 +107,7 @@ async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> Non
         user_input={"tracker_interfaces": []},
     )
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "http://router.lan/api"
+    assert result.get("title") == CONFIG_DATA["url"]
     assert result.get("data") == CONFIG_DATA
     assert "result" in result
     config_entry: ConfigEntry | None = result.get("result")
@@ -118,46 +117,54 @@ async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> Non
     assert subentries == ()
 
 
+@pytest.mark.parametrize(
+    ("source", "flow_data", "expected_type", "expected_reason"),
+    [
+        (
+            SOURCE_USER,
+            CONFIG_DATA,
+            data_entry_flow.FlowResultType.ABORT,
+            "already_configured",
+        ),
+        (
+            SOURCE_IMPORT,
+            CONFIG_DATA,
+            data_entry_flow.FlowResultType.ABORT,
+            "already_configured",
+        ),
+    ],
+)
 async def test_abort_if_already_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+    flow_data: dict,
+    expected_type: data_entry_flow.FlowResultType,
+    expected_reason: str,
 ) -> None:
-    """Test we abort if component is already setup."""
-
-    # Pretend we already set up a config entry.
+    """Test abort if component is already setup for both user and import sources."""
     hass.config.components.add(DOMAIN)
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=CONFIG_DATA,
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
-
-
-async def test_abort_import_if_already_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test we abort if component is already setup."""
-
-    # Pretend we already set up a config entry.
-    hass.config.components.add(DOMAIN)
-    mock_config_entry.add_to_hass(hass)
+    flow_kwargs = {"context": {"source": source}}
+    if source == SOURCE_IMPORT:
+        flow_kwargs["data"] = flow_data
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=CONFIG_DATA,
+        **flow_kwargs,
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+
+    if source == SOURCE_USER:
+        # For user, first step is form, then abort on configure
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "user"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=flow_data,
+        )
+    assert result.get("type") == expected_type
+    assert result.get("reason") == expected_reason
 
 
 @pytest.mark.parametrize(
