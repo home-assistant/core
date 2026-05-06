@@ -286,7 +286,7 @@ async def test_realtime_exception(hass: HomeAssistant) -> None:
         mock_sense.return_value.get_monitor_data = AsyncMock(return_value={})
         mock_sense.return_value.fetch_devices = AsyncMock(return_value=[])
         mock_sense.return_value.update_realtime = AsyncMock(
-            side_effect=SenseWebsocketException
+            side_effect=SenseAPIException
         )
         mock_sense.return_value.sense_access_token = MOCK_CONFIG["access_token"]
         mock_sense.return_value.sense_user_id = MOCK_CONFIG["user_id"]
@@ -313,7 +313,7 @@ async def test_ws_realtime_exception(hass: HomeAssistant) -> None:
         mock_sense.return_value.get_monitor_data = AsyncMock(return_value={})
         mock_sense.return_value.fetch_devices = AsyncMock(return_value=[])
         mock_sense.return_value.update_realtime = AsyncMock(
-            side_effect=SenseAPIException
+            side_effect=SenseWebsocketException
         )
         mock_sense.return_value.sense_access_token = MOCK_CONFIG["access_token"]
         mock_sense.return_value.sense_user_id = MOCK_CONFIG["user_id"]
