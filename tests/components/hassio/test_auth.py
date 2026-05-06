@@ -179,7 +179,7 @@ async def test_password_fails_no_auth(hassio_noauth_client: TestClient) -> None:
         (
             "",
             True,
-            lambda user, key: user if key is KEY_HASS_USER else None,
+            lambda user, key: user if key == KEY_HASS_USER else None,
             DefaultContext(),
         ),
         # Defensive: a TCP transport with no peername at all should be
@@ -187,7 +187,7 @@ async def test_password_fails_no_auth(hassio_noauth_client: TestClient) -> None:
         (
             None,
             False,
-            lambda user, key: user if key is KEY_HASS_USER else None,
+            lambda user, key: user if key == KEY_HASS_USER else None,
             pytest.raises(HTTPUnauthorized),
         ),
     ],
