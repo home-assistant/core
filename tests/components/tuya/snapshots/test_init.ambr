@@ -19,7 +19,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿ (unsupported)',
     'model_id': 'ay30hrndaogxclh0',
     'name': 'LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿',
@@ -50,7 +50,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart multi-channel weather station',
     'model_id': 'xpxdr5q6vc8aztq0',
     'name': 'Weather station',
@@ -81,7 +81,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'TV (unsupported)',
     'model_id': '47pew0',
     'name': 'TV',
@@ -112,7 +112,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Interruptor Zigbee',
     'model_id': 'hmabvy81',
     'name': 'Interruptor',
@@ -143,7 +143,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SORIA (unsupported)',
     'model_id': '5l1ht8jygsyr1wn1',
     'name': 'Panneaux solaires 2',
@@ -174,7 +174,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug-EU',
     'model_id': 'cuhokdii7ojyw8k2',
     'name': 'Buitenverlichting',
@@ -205,7 +205,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Arete® Two 12L Dehumidifier/Air Purifier',
     'model_id': 'zibqa9dutqyaxym2',
     'name': 'Dehumidifier',
@@ -236,7 +236,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Multifunction alarm',
     'model_id': 'gyitctrjj1kefxp2',
     'name': 'Multifunction alarm',
@@ -267,7 +267,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain switch',
     'model_id': 'nhyj64w2',
     'name': 'Tapparelle studio',
@@ -298,7 +298,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '5GHz plug',
     'model_id': '6fa7odsufen374x2',
     'name': 'Office',
@@ -329,7 +329,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug+',
     'model_id': 'vxqn72kwtosoy4d3',
     'name': 'Garage Socket',
@@ -360,7 +360,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'T&H Sensor',
     'model_id': 'xflodz7oja0pndk3',
     'name': 'Sensor T & H Server Home',
@@ -391,7 +391,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Meter',
     'model_id': 'v5jlnn5hwyffkhp3',
     'name': 'Production',
@@ -422,7 +422,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Contact Sensor',
     'model_id': 'qxu3flpqjsc1kqu3',
     'name': 'Garage Contact Sensor',
@@ -453,7 +453,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'smart meter with CT-2',
     'model_id': 'tf6qp8t3hl9h7m94',
     'name': 'Consommation',
@@ -484,7 +484,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'YINMIK Water Quality Tester',
     'model_id': 'u5xgcpcngk3pfxb4',
     'name': 'YINMIK Water Quality Tester',
@@ -515,7 +515,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Bulb',
     'model_id': 'AqHUMdcbYzIq1Of4',
     'name': 'Landing',
@@ -546,7 +546,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'VIVIDSTORM SCREEN',
     'model_id': '669wsr2w4cvinbh4',
     'name': 'VIVIDSTORM SCREEN',
@@ -577,7 +577,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'atmosphere',
     'model_id': 'dbou1ap4',
     'name': 'Lumy Garage',
@@ -608,7 +608,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WIFI 插座',
     'model_id': 'sb6bwb1n8ma2c5q4',
     'name': 'Socket4',
@@ -639,7 +639,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Konyks Priska USB',
     'model_id': 'yku9wsimasckdt15',
     'name': 'Framboisier',
@@ -670,7 +670,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ET-44W',
     'model_id': 'gc1bxoq2hafxpa35',
     'name': 'Полотенцосушитель',
@@ -701,7 +701,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Camera ',
     'model_id': 'nzauwyj3mcnjnf35',
     'name': 'Garage Camera',
@@ -732,7 +732,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Automatic Cat Litter Box',
     'model_id': '5t7esmqqh92ssbe5',
     'name': 'Slimme kattenbak',
@@ -763,7 +763,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Plug Base 6210HA',
     'model_id': 'jnbbxsb84gvvyfg5',
     'name': 'Bathroom Fan',
@@ -794,7 +794,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Gateway (unsupported)',
     'model_id': 'v7owd9tzcaninc36',
     'name': 'Gateway2',
@@ -825,7 +825,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Temperature Humidity Sensor',
     'model_id': 'xr3htd96',
     'name': 'Humy toilettes RDC',
@@ -856,7 +856,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart IR (unsupported)',
     'model_id': 'rqhxdyusjrwxyff6',
     'name': 'Smart IR',
@@ -887,7 +887,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED SMART',
     'model_id': 'nlxvjzy1hoeiqsg6',
     'name': 'hall 💡 ',
@@ -918,7 +918,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'S1-TY-BLE-PRO (unsupported)',
     'model_id': 'xqeob8h6',
     'name': 'S1-TY-BLE-PRO 2',
@@ -949,7 +949,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'A60 GOLD',
     'model_id': 'd4g0fbsoaal841o6',
     'name': 'WC D1',
@@ -980,7 +980,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Metering_3PN_ZB',
     'model_id': 'dikb3dp6',
     'name': 'Medidor de Energia',
@@ -1011,7 +1011,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'BR 7-in-1 WLAN Wetterstation Anthrazit',
     'model_id': 'fsea1lat3vuktbt6',
     'name': 'BR 7-in-1 WLAN Wetterstation Anthrazit',
@@ -1042,7 +1042,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ceiling fan/Light v2',
     'model_id': '9ecs16c53uqskxw6',
     'name': 'ceiling fan/Light v2',
@@ -1073,7 +1073,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Water Timer',
     'model_id': 'rzklytdei8i8vo37',
     'name': 'balkonbewässerung',
@@ -1104,7 +1104,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'RGB Smart Plug',
     'model_id': 'hpc8ddyfv85haxa7',
     'name': 'Garage',
@@ -1135,7 +1135,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED Strip RGB+W',
     'model_id': 'iayz2jmtlipjnxj7',
     'name': 'LED Porch 2',
@@ -1166,7 +1166,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Door Sensor',
     'model_id': '8yhypbo7',
     'name': 'Boîte aux lettres - arrière',
@@ -1197,7 +1197,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain switch',
     'model_id': 'y7j64p60glp8qpx7',
     'name': 'Fenster Küche',
@@ -1228,7 +1228,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug +',
     'model_id': 'pu8uhxhwcp3tgoz7',
     'name': 'Socket3',
@@ -1259,7 +1259,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED SMART',
     'model_id': 'ilddqqih3tucdk68',
     'name': 'Ieskas',
@@ -1290,7 +1290,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Ceiling Light RGBTW',
     'model_id': 'zav1pa32pyxray78',
     'name': 'Gengske 💡 ',
@@ -1321,7 +1321,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SGS01',
     'model_id': 'gvygg3m8',
     'name': 'humid pelargonia',
@@ -1352,7 +1352,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Arida Stavern ',
     'model_id': 'eguoms25tkxtf5u8',
     'name': 'Arida Stavern ',
@@ -1383,7 +1383,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'atmosphere',
     'model_id': 'riwp3k79',
     'name': 'LED KEUKEN 2',
@@ -1414,7 +1414,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Mini Smart Plug',
     'model_id': 'qxJSyTLEtX5WrzA9',
     'name': 'LivR',
@@ -1445,7 +1445,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ITC-308-WIFI Thermostat',
     'model_id': 'B0eP8qYAdpUo4yR9',
     'name': 'ITC-308-WIFI Thermostat',
@@ -1476,7 +1476,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Contact Sensor',
     'model_id': 'oxslv1c9',
     'name': 'Window downstairs',
@@ -1507,7 +1507,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'XOCA-DAC212XC V2-S1',
     'model_id': '4ggkyflayu1h1ho9',
     'name': 'XOCA-DAC212XC V2-S1',
@@ -1538,7 +1538,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'IFS-STD002',
     'model_id': 'krlcihrpzpc8olw9',
     'name': 'IFS-STD002',
@@ -1569,7 +1569,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Door Sensor',
     'model_id': 'oSQljE9YDqwCwTUA',
     'name': 'Kippenluik',
@@ -1600,7 +1600,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Dimmer switch',
     'model_id': 'bSXSSFArVKtc4DyC',
     'name': 'bedroom',
@@ -1631,7 +1631,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Socket',
     'model_id': 'n8iVBAPLFKAAAszH',
     'name': 'Steckdose 2',
@@ -1662,7 +1662,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain switch (unsupported)',
     'model_id': 'TtXKwTMwiPpURWLJ',
     'name': 'Dining-Blinds',
@@ -1693,7 +1693,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Mini Smart Socket',
     'model_id': 'hA2GsgMfTQFTz9JL',
     'name': 'Spot 4',
@@ -1724,7 +1724,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Rewireable Plug 6930HA',
     'model_id': 'HBRBzv1UVBVfF6SL',
     'name': 'Rewireable Plug 6930HA',
@@ -1755,7 +1755,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'thermostat',
     'model_id': 'IAYz2WK1th0cMLmL',
     'name': 'El termostato de la cocina',
@@ -1786,7 +1786,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug',
     'model_id': 'CHLZe9HQ6QIXujVN',
     'name': 'schuur',
@@ -1817,7 +1817,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SWITCH1',
     'model_id': '4nqs33emdwJxpQ8O',
     'name': 'office lights',
@@ -1848,7 +1848,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Dimmer Switch',
     'model_id': 'h4aX2JkHZNByQ4AV',
     'name': 'Entry Stairs',
@@ -1879,7 +1879,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Mini Smart Plug',
     'model_id': 'AiHXxAyyn7eAkLQY',
     'name': 'Solar Heater Pump',
@@ -1910,7 +1910,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket-16A',
     'model_id': 'fbvia0apnlnattcy',
     'name': 'AK1',
@@ -1941,7 +1941,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Temperature and humidity sensor',
     'model_id': 'vtA4pDd6PLUZzXgZ',
     'name': 'Humy bain',
@@ -1972,7 +1972,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Din Rail Switch with metering',
     'model_id': 'jdj6ccklup7btq3a',
     'name': 'Eau Chaude',
@@ -2003,7 +2003,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Valve',
     'model_id': 'gbm9ata1zrzaez4a',
     'name': 'QT-Switch',
@@ -2034,7 +2034,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Lampada Wi-Fi+bluetooth',
     'model_id': 'oj4fqh3fo3obgu6a',
     'name': 'L├ímpara Ati',
@@ -2065,7 +2065,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 'z3rpyvznfcch99aa',
     'name': 'PIXI Smart Drinking Fountain',
@@ -2096,7 +2096,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SWS 16600 WiFi SH',
     'model_id': 'xbwbniyt6bgws9ia',
     'name': 'SWS 16600 WiFi SH',
@@ -2127,7 +2127,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'VIVIDSTORM SCREEN',
     'model_id': 'lfkr93x0ukp5gaia',
     'name': 'Projector Screen',
@@ -2158,7 +2158,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug',
     'model_id': 'iqhidxhhmgxk5eja',
     'name': 'Powerplug 5',
@@ -2189,7 +2189,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ST64 Clear',
     'model_id': 'fuupmcr2mb1odkja',
     'name': 'Slaapkamer',
@@ -2220,7 +2220,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Pro Breeze 20L Compressor Dehumidifier',
     'model_id': 'u0wirz487erb0eka',
     'name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
@@ -2251,7 +2251,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'T & H Sensor (unsupported)',
     'model_id': 'x3o8epevyeo3z3oa',
     'name': 'Interior Bedroom Sensor',
@@ -2282,7 +2282,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Lamp',
     'model_id': 'idnfq7xbx8qewyoa',
     'name': 'AB1',
@@ -2313,7 +2313,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'T & H Sensor with external probe',
     'model_id': 'is2indt9nlth6esa',
     'name': 'Frysen',
@@ -2344,7 +2344,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '1-433',
     'model_id': '1aegphq4yfd50e6b',
     'name': 'jardin Fraises',
@@ -2375,7 +2375,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Door Sensor',
     'model_id': '7jIGJAymiH8OsFFb',
     'name': 'Door Garage ',
@@ -2406,7 +2406,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Light Strip-RGBCW ',
     'model_id': 'vqwcnabamzrc2kab',
     'name': 'Strip 2',
@@ -2437,7 +2437,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Breaker ',
     'model_id': 'r9kg2g1uhhyicycb',
     'name': 'P1 Energia Elettrica',
@@ -2468,7 +2468,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain switch (unsupported)',
     'model_id': 'uoa3mayicscacseb',
     'name': 'Living room left',
@@ -2499,7 +2499,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'BlissRadia ',
     'model_id': 'ssimhf6r8kgwepfb',
     'name': 'BlissRadia ',
@@ -2530,7 +2530,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'A60 Clear',
     'model_id': 'amx1bgdrfab6jngb',
     'name': 'Lumy Hall',
@@ -2561,7 +2561,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '接HA双向计量插座',
     'model_id': 'vrbpx6h7fsi5mujb',
     'name': '接HA双向计量插座',
@@ -2592,7 +2592,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Water Timer',
     'model_id': 'nxquc5lb',
     'name': 'Smart Water Timer',
@@ -2623,7 +2623,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'KLARTA HUMEA',
     'model_id': 'r492ifwk6f2ssptb',
     'name': 'KLARTA HUMEA',
@@ -2654,7 +2654,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Double Digital Meter (unsupported)',
     'model_id': '79a7z01v3n35kytb',
     'name': 'Double Digital Meter',
@@ -2685,7 +2685,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC Smart Ceiling Light',
     'model_id': 'j1bgp31cffutizub',
     'name': 'Ceiling Portal',
@@ -2716,7 +2716,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket ',
     'model_id': 'anwgf2xugjxpkfxb',
     'name': 'Security Light',
@@ -2747,7 +2747,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Tower bladeless fan  (unsupported)',
     'model_id': 'ibytpo6fpnugft1c',
     'name': 'Ventilador Cama',
@@ -2778,7 +2778,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'White Noise Machine',
     'model_id': 'tkqgkrutewrmbn9c',
     'name': 'White Noise Machine',
@@ -2809,7 +2809,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'QNECT WI-FI PIR SENSOR (unsupported)',
     'model_id': 'j5jgnjvdaczeb6dc',
     'name': 'QNECT WI-FI PIR SENSOR',
@@ -2840,7 +2840,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '接HA水阀',
     'model_id': 'ed7frwissyqrejic',
     'name': '接HA水阀',
@@ -2871,7 +2871,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Aubess Smart\xa0Socket 20A/EM',
     'model_id': '2iepauebcvo74ujc',
     'name': 'Aubess Cooker',
@@ -2902,7 +2902,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Rain sensor',
     'model_id': 'tgvtvdoc',
     'name': 'Tournesol',
@@ -2933,7 +2933,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Solar flood light  App panel',
     'model_id': 'pyakuuoc',
     'name': 'Solar zijpad',
@@ -2964,7 +2964,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart plug',
     'model_id': 'qm0iq4nqnrlzh4qc',
     'name': 'Elivco Kitchen Socket',
@@ -2995,7 +2995,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'PTH-9CW(QC)',
     'model_id': 'yakol79dibtswovc',
     'name': 'PTH-9CW 32',
@@ -3026,7 +3026,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Gas sensor',
     'model_id': '4iqe2hsfyd86kwwc',
     'name': 'Gas sensor',
@@ -3057,7 +3057,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Breaker',
     'model_id': 'emb5khohohihmbxc',
     'name': 'Server Fan',
@@ -3088,7 +3088,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket',
     'model_id': 'mQUhiTg9kwydBFBd',
     'name': 'Waschmaschine',
@@ -3119,7 +3119,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SP22-10A',
     'model_id': '0fHWRe8ULjtmnBNd',
     'name': 'Weihnachten3',
@@ -3150,7 +3150,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Switch',
     'model_id': 'uenof8jd',
     'name': 'Smart Switch',
@@ -3181,7 +3181,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'AM43拉绳电机-Zigbee',
     'model_id': 'zah67ekd',
     'name': 'Kitchen Blinds',
@@ -3212,7 +3212,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Thermostat Tervix Pro Line ZigBee color',
     'model_id': '6kijc7nd',
     'name': 'Кабінет',
@@ -3243,7 +3243,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'YFA-05C',
     'model_id': 'vdadlnmsorlhw4td',
     'name': 'Sove',
@@ -3274,7 +3274,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ISV-100W2.0 (unsupported)',
     'model_id': 'jlapoy5liocmtdvd',
     'name': 'ISV-100W2.0',
@@ -3305,7 +3305,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'DOLCECLIMA 10 HP WIFI (unsupported)',
     'model_id': 'jevroj5aguwdbs2e',
     'name': 'DOLCECLIMA 10 HP WIFI',
@@ -3336,7 +3336,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Air Conditioning (unsupported)',
     'model_id': 'qzktzhehinzsz2je',
     'name': 'Air',
@@ -3367,7 +3367,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Inline Switch 6000HA',
     'model_id': 'raceucn29wk2yawe',
     'name': 'Bathroom Mirror',
@@ -3398,7 +3398,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Contact Sensor (unsupported)',
     'model_id': 'p6sqiuesvhmhvv4f',
     'name': 'Entrance Door',
@@ -3429,7 +3429,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Sunbeam Bedding',
     'model_id': 'pjvxl1wsyqxivsaf',
     'name': 'Sunbeam Bedding',
@@ -3460,7 +3460,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Tank A Level',
     'model_id': 'h8lvyoahr6s6aybf',
     'name': 'Rainwater Tank Level',
@@ -3491,7 +3491,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SmartTRV',
     'model_id': 'cpmgn2cf',
     'name': 'Bathroom radiator',
@@ -3522,7 +3522,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Geti Solar PV Water Heater',
     'model_id': 'd7woucobqi8ncacf',
     'name': 'Geti Solar PV Water Heater',
@@ -3553,7 +3553,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '一路带计量磁保持通断器',
     'model_id': '0tnvg2xaisqdadcf',
     'name': '一路带计量磁保持通断器',
@@ -3584,7 +3584,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Security Camera',
     'model_id': 'sdd5f5f2dl5wydjf',
     'name': 'C9',
@@ -3615,7 +3615,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart IR+RF Remote Control (unsupported)',
     'model_id': 'x0lyfgjuguuh1vof',
     'name': 'Smart IR+RF Remote Control',
@@ -3646,7 +3646,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi smart online 8 in 1 tester',
     'model_id': 'layxxij0sdbrfmrf',
     'name': 'WiFi smart online 8 in 1 tester',
@@ -3677,7 +3677,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Blinds',
     'model_id': 'ebt12ypvexnixvtf',
     'name': 'Kitchen Blinds',
@@ -3708,7 +3708,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Wireless Switch',
     'model_id': 'l8yaz4um5b3pwyvf',
     'name': 'Bathroom Smart Switch',
@@ -3739,7 +3739,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart plug',
     'model_id': 'w0qqde0g',
     'name': 'Lave linge',
@@ -3770,7 +3770,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Blinds Controller',
     'model_id': '3r8gc33pnqsxfe1g',
     'name': 'Lounge Dark Blind',
@@ -3801,7 +3801,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'T platform model-USB ',
     'model_id': 'ibmmirhhq62mmf1g',
     'name': 'Master Bedroom AC',
@@ -3832,7 +3832,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Dehumidifier ',
     'model_id': 'b9oyi2yofflroq1g',
     'name': 'Living room dehumidifier',
@@ -3863,7 +3863,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ZC-YED-一键无线开关',
     'model_id': 'ja5osu5g',
     'name': 'Bouton tempo extérieur',
@@ -3894,7 +3894,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Power Strip',
     'model_id': 'tsbguim4trl6fa7g',
     'name': 'Keller',
@@ -3925,7 +3925,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart IR  (unsupported)',
     'model_id': 'kzwdw5bpxlbs9h9g',
     'name': 'IR Minero',
@@ -3956,7 +3956,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'CBE Pro',
     'model_id': 'pb0tc75khaik8qbg',
     'name': 'CBE Pro 2',
@@ -3987,7 +3987,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Valve Controller',
     'model_id': 'd4vpmigg',
     'name': 'Garden Valve Yard',
@@ -4018,7 +4018,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'T & H Sensor',
     'model_id': 'lf36y5nwb8jkxwgg',
     'name': 'Greenhouse',
@@ -4049,7 +4049,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'smart plug',
     'model_id': 'fencxse0bnut96ig',
     'name': 'Spa',
@@ -4080,7 +4080,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'D825A',
     'model_id': 'biflejkeshx1sqig',
     'name': 'D825A I',
@@ -4111,7 +4111,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Lighting',
     'model_id': 'oe0cpnjg',
     'name': 'Front right Lighting trap',
@@ -4142,7 +4142,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'POWERASIA',
     'model_id': '8ugheslg',
     'name': 'POWERASIA R2',
@@ -4173,7 +4173,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '1Gang Zigbee Switch',
     'model_id': '5ftkaulg',
     'name': 'bathroom light',
@@ -4204,7 +4204,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ZX-5442',
     'model_id': 'tfbhw0mg',
     'name': 'Salon',
@@ -4235,7 +4235,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug',
     'model_id': 'PGEkBctAbtzKOZng',
     'name': 'Din',
@@ -4266,7 +4266,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Mr. Pure',
     'model_id': '5ls2jw49hpczwqng',
     'name': 'Mr. Pure',
@@ -4297,7 +4297,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Garden Spike(FR)',
     'model_id': 'trjopo1vdlt9q1tg',
     'name': 'Terras',
@@ -4328,7 +4328,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain Switch',
     'model_id': 'n3xgr5pdmpinictg',
     'name': 'Estore Sala',
@@ -4359,7 +4359,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Door Detector',
     'model_id': 'hx5ztlztij4yxxvg',
     'name': 'Steel cage door',
@@ -4390,7 +4390,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'SP111',
     'model_id': '37mnhia3pojleqfh',
     'name': 'Sapphire ',
@@ -4421,7 +4421,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Motion Sensor',
     'model_id': '3amxzozho9xp4mkh',
     'name': 'rat trap hedge',
@@ -4452,7 +4452,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '【通用接入】1路插座',
     'model_id': 'y4jnobxh',
     'name': 'AuVeLiCo',
@@ -4483,7 +4483,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Sous Vide',
     'model_id': 'qavcakohisj5adyh',
     'name': 'Sous Vide',
@@ -4514,7 +4514,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': ' (unsupported)',
     'model_id': 'qhxmvae667uap4zh',
     'name': 'DryFix',
@@ -4545,7 +4545,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart DoorBell （WiFi）',
     'model_id': '6bmk1remyscwyx6i',
     'name': 'Mirilla puerta',
@@ -4576,7 +4576,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Temperature Sensor',
     'model_id': 'iq4ygaai',
     'name': 'Bassin',
@@ -4607,7 +4607,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart IR (unsupported)',
     'model_id': 'om518smspsaltzdi',
     'name': 'Smart IR Theater',
@@ -4638,7 +4638,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Emma Dehumidifier - eeese air care',
     'model_id': 'ka2wfrdoogpvgzfi',
     'name': 'Dehumidifer',
@@ -4669,7 +4669,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Wi-Fi Pet Feeder',
     'model_id': 'lxfvx41gqdotrkgi',
     'name': 'Cat Feeder',
@@ -4700,7 +4700,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC smart GU10',
     'model_id': 'nbumqpv8vz61enji',
     'name': 'b2',
@@ -4731,7 +4731,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Ceiling Fan With Light',
     'model_id': 'g0ewlb1vmwqljzji',
     'name': 'Ceiling Fan With Light',
@@ -4762,7 +4762,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart roller blinds',
     'model_id': 'g1cp07dsqnbdbbki',
     'name': 'Persiana do Quarto',
@@ -4793,7 +4793,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'AIR_DETECTOR ',
     'model_id': 'yrr3eiyiacm31ski',
     'name': 'AQI',
@@ -4824,7 +4824,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'the Smart Dry Plus™ Connect Dehumidifier  (unsupported)',
     'model_id': 'vmxuxszzjwp5smli',
     'name': 'Dehumidifier ',
@@ -4855,7 +4855,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 'kgaob37tz2muf3mi',
     'name': 'Parker Ceiling Fan 1',
@@ -4886,7 +4886,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Mesh-Gateway',
     'model_id': '2gowdgni',
     'name': 'Mesh-Gateway',
@@ -4917,7 +4917,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Cleverio PF100',
     'model_id': 'wfkzyy0evslzsmoi',
     'name': 'Cleverio PF100',
@@ -4948,7 +4948,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Smart Gas Boiler Thermostat ',
     'model_id': 'fi6dne5tu4t1nm6j',
     'name': 'WiFi Smart Gas Boiler Thermostat ',
@@ -4979,7 +4979,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'RGBstriplight',
     'model_id': 'c3nsqogqovapdpfj',
     'name': 'Arbeitszimmer led',
@@ -5010,7 +5010,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Smoke Alarm',
     'model_id': 'gf9dejhmzffgdyfj',
     'name': ' Smoke detector upstairs ',
@@ -5041,7 +5041,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Osprey Smart Plug',
     'model_id': 'jti3ce2hzvsposgj',
     'name': 'Dehumidifier ',
@@ -5072,7 +5072,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Bluetooth Temperature Humidity Sensor',
     'model_id': 'iv7hudlj',
     'name': 'Basement temperature',
@@ -5103,7 +5103,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart',
     'model_id': 'y5obtqhuztqsf2mj',
     'name': 'Term - Prizemi',
@@ -5134,7 +5134,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain switch',
     'model_id': 'wltqkykhni0papzj',
     'name': 'Roller shutter Living Room',
@@ -5165,7 +5165,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ZigBee Gateway (unsupported)',
     'model_id': 'b25mh8sxawsgndck',
     'name': 'ZigBee Gateway',
@@ -5196,7 +5196,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart plug',
     'model_id': 'nx8rv6jpe1tsnffk',
     'name': 'Spot 1',
@@ -5227,7 +5227,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Siren Sensor',
     'model_id': 'ulv4nnue7gqp0rjk',
     'name': 'Siren veranda ',
@@ -5258,7 +5258,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC-G125-Gold ',
     'model_id': 'xokdfs6kh5ednakk',
     'name': 'ERKER 1-Gold ',
@@ -5289,7 +5289,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Temperature Humidity Sensor',
     'model_id': 'vlzqwckk',
     'name': 'Temperature Humidity Sensor abelhas pasillo',
@@ -5320,7 +5320,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'PIR',
     'model_id': 'o1l76njefmksbgkk',
     'name': 'PIR',
@@ -5351,7 +5351,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Light Bulb',
     'model_id': '8szt7whdvwpmxglk',
     'name': 'Porch light E',
@@ -5382,7 +5382,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart IR (unsupported)',
     'model_id': 'npbbca46yiug8ysk',
     'name': 'Bedroom IR',
@@ -5413,7 +5413,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '水泵 (unsupported)',
     'model_id': 'l6ax0u6jwbz82atk',
     'name': 'Pond',
@@ -5444,7 +5444,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Konyks Pluviose Easy EU',
     'model_id': 'nkb0fmtlfyqosnvk',
     'name': 'Bassin',
@@ -5475,7 +5475,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Valve Controller',
     'model_id': '1fcnd8xk',
     'name': 'Valve Controller 2',
@@ -5506,7 +5506,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Human presence sensor',
     'model_id': '2aaelwxk',
     'name': 'Human presence Office',
@@ -5537,7 +5537,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '6 Switch Smart RetroFit Module',
     'model_id': 'nockvv2k39vbrxxk',
     'name': 'Seating side 6-ch Smart Switch ',
@@ -5568,7 +5568,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart plug',
     'model_id': 'hj0a5c7ckzzexu8l',
     'name': 'droger',
@@ -5599,7 +5599,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Tower Fan CA-407G Smart',
     'model_id': 'j9fa8ahzac8uvlfl',
     'name': 'Tower Fan CA-407G Smart',
@@ -5630,7 +5630,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Double Digital Meter (unsupported)',
     'model_id': 'dhto3y4uachr1wll',
     'name': 'Meter',
@@ -5661,7 +5661,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WIFI Dual Meter',
     'model_id': 'z95s7p3z54xbsjnl',
     'name': 'WIFI Dual Meter',
@@ -5692,7 +5692,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Indoor camera ',
     'model_id': 'drezasavompxpcgm',
     'name': 'CAM GARAGE',
@@ -5723,7 +5723,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 'setmxeqgs63xwopm',
     'name': 'Gateway',
@@ -5754,7 +5754,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '移动空调 YPK--（双模+蓝牙）低功耗',
     'model_id': '5wnlzekkstwcdsvm',
     'name': 'Air Conditioner',
@@ -5785,7 +5785,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'E20',
     'model_id': 'i6hyjg3af7doaswm',
     'name': 'Hoover',
@@ -5816,7 +5816,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'BW-SHP6',
     'model_id': 'EYfNTuTPZln9e4cn',
     'name': 'ZAS-01',
@@ -5847,7 +5847,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Mini Smart Plug',
     'model_id': '0g1fmqh6d5io7lcn',
     'name': 'Apollo light',
@@ -5878,7 +5878,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'G95-Filament',
     'model_id': 'tmsloaroqavbucgn',
     'name': 'Pokerlamp 1',
@@ -5909,7 +5909,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'PJ2101A 1P WiFi Smart Meter ',
     'model_id': 'ze8faryrxr0glqnn',
     'name': 'Meter',
@@ -5940,7 +5940,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'curtain robot',
     'model_id': 'cpbo62rn',
     'name': 'blinds',
@@ -5971,7 +5971,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Colorful PIR Night Light',
     'model_id': 'lgekqfxdabipm3tn',
     'name': 'Colorful PIR Night Light',
@@ -6002,7 +6002,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED SMART',
     'model_id': 'zakhnlpdiu0ycdxn',
     'name': 'Stoel',
@@ -6033,7 +6033,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Poopy Nano 2',
     'model_id': 'mzuro9jgjs7uiryn',
     'name': 'Poopy Nano 2',
@@ -6064,7 +6064,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 'ehzbfjrau5lbph4o',
     'name': 'Dolní vchod - západ',
@@ -6095,7 +6095,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Zigbee Gateway (unsupported)',
     'model_id': 'plp0gnfcacdeqk5o',
     'name': 'Zigbee Gateway',
@@ -6126,7 +6126,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smoke Alarm',
     'model_id': 'cjlutkuuvxnie17o',
     'name': 'Rauchmelder Alexsandro ',
@@ -6157,7 +6157,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Metering_3PN_WiFi',
     'model_id': 'kxdr6su0c55p7bbo',
     'name': 'Metering_3PN_WiFi_stable',
@@ -6188,7 +6188,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Luminance sensor',
     'model_id': '9kbbfeho',
     'name': 'Luminosité',
@@ -6219,7 +6219,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Outdoor siren',
     'model_id': 'im2eqqhj72suwwko',
     'name': 'Siren',
@@ -6250,7 +6250,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Heat Pump',
     'model_id': 'db81ge24jctwx8lo',
     'name': 'Hot Water Heat Pump',
@@ -6281,7 +6281,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Knob Thermostat',
     'model_id': 't94pit6zjbask9qo',
     'name': 'Floor Thermostat Kitchen',
@@ -6312,7 +6312,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Soil moisture sensor',
     'model_id': 'wqashyqo',
     'name': 'Soil moisture sensor #1',
@@ -6343,7 +6343,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'X5',
     'model_id': 'nwxr8qcu4seltoro',
     'name': 'X5 Zigbee Gateway',
@@ -6374,7 +6374,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 's4uzibibgzdxzowo',
     'name': 'ION1000PRO',
@@ -6405,7 +6405,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'JRBULB',
     'model_id': 'p06rbu0a9jp37ixo',
     'name': 'Jardim Casa',
@@ -6436,7 +6436,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'TV Sync Backlights (unsupported)',
     'model_id': 'gaobbrxqiblcng2p',
     'name': 'TV Sync Backlights',
@@ -6467,7 +6467,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'PC321-W-TY(Bi-Directional) (unsupported)',
     'model_id': 'gqmmtjclqb7reg5p',
     'name': 'Wi-Fi Meter(Bi-Directional)',
@@ -6498,7 +6498,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smoke Alarm',
     'model_id': 'rccxox8p',
     'name': 'Smoke Alarm',
@@ -6529,7 +6529,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Radiator Thermostat Controller',
     'model_id': '9xfjixap',
     'name': 'Empore',
@@ -6560,7 +6560,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug ',
     'model_id': 't0a4hwsf8anfsadp',
     'name': 'wallwasher front',
@@ -6591,7 +6591,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Bulb',
     'model_id': 'k3okx0w3bsgmindp',
     'name': 'Portal Casa Carro Jalimy',
@@ -6622,7 +6622,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Garden Spike(EU)',
     'model_id': 't2afic7i3v1bwhfp',
     'name': 'Bubbelbad',
@@ -6653,7 +6653,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '40" Bladeless Tower Fan',
     'model_id': 'yrzylxax1qspdgpp',
     'name': 'Bree',
@@ -6684,7 +6684,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug+',
     'model_id': 'gbtxrqfy9xcsakyp',
     'name': '3DPrinter',
@@ -6715,7 +6715,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Plug',
     'model_id': 'wrz6vzch8htux2zp',
     'name': 'Elivco TV',
@@ -6746,7 +6746,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Pet Water Fountain',
     'model_id': 'akln8rb04cav403q',
     'name': 'Water Fountain',
@@ -6777,7 +6777,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Garage door ',
     'model_id': '1yyqfw4djv9eii3q',
     'name': 'Garage door ',
@@ -6808,7 +6808,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '6294HA',
     'model_id': 'z6pht25s3p0gs26q',
     'name': '6294HA',
@@ -6839,7 +6839,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '30L Dehumidifier with Max Extraction',
     'model_id': 'ipmyy4nigpqcnd8q',
     'name': 'Pro Breeze 30L Compressor Dehumidifier',
@@ -6870,7 +6870,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Genio Nebula & Blue Star Projector (unsupported)',
     'model_id': '3djw12ln4xtvv8eq',
     'name': 'Genio Nebula & Blue Star Projector',
@@ -6901,7 +6901,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Bulb RGBCW',
     'model_id': 'qoqolwtqzfuhgghq',
     'name': 'Smart Bulb RGBCW',
@@ -6932,7 +6932,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Breaker',
     'model_id': 'cnpkf4xdmd9v49iq',
     'name': '断路器HA',
@@ -6963,7 +6963,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Wi-Fi solar grid micro inverter （GT）',
     'model_id': '6b3pbbuqbfabhfiq',
     'name': 'Wi-Fi solar grid micro inverter （GT）',
@@ -6994,7 +6994,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Security Camera ',
     'model_id': 'csr2fqitalj5o0tq',
     'name': 'Intercom',
@@ -7025,7 +7025,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'GU10 Smart Bulb',
     'model_id': 'xdvitmhhmgefaeuq',
     'name': 'druckerhell',
@@ -7056,7 +7056,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WATER SENSOR',
     'model_id': 'rzeSU2h9uoklxEwq',
     'name': 'Inondation',
@@ -7087,7 +7087,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'AC charging control box',
     'model_id': '7bvgooyjhiua1yyq',
     'name': 'AC charging control box',
@@ -7118,7 +7118,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Light Bulb',
     'model_id': 'mki13ie507rlry4r',
     'name': 'Garage light',
@@ -7149,7 +7149,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Ceiling Lamp',
     'model_id': 'ufq2xwuzd4nb0qdr',
     'name': 'Sjiethoes',
@@ -7180,7 +7180,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart White Noise Machine',
     'model_id': '45idzfufidgee7ir',
     'name': 'Smart White Noise Machine',
@@ -7211,7 +7211,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'C30',
     'model_id': 'pkhw2vbphv4csrir',
     'name': 'C30',
@@ -7242,7 +7242,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Odor Eliminator-Pro',
     'model_id': 'agwu93lr',
     'name': 'Smart Odor Eliminator-Pro',
@@ -7273,7 +7273,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Zigbee Smart Gateway (unsupported)',
     'model_id': 'lieerjyy6l4ykjor',
     'name': 'Zigbee Gateway',
@@ -7304,7 +7304,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Remote controller',
     'model_id': 'bngwdjsr',
     'name': 'Télécommande lumières ZigBee',
@@ -7335,7 +7335,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Signal repeater',
     'model_id': 'piuensvr',
     'name': 'Signal repeater',
@@ -7366,7 +7366,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket ',
     'model_id': 'tkn2s79mzedk6pwr',
     'name': 'Weihnachtsmann ',
@@ -7397,7 +7397,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'MT15/MT29',
     'model_id': '9f8pjxsmaqnk2tzr',
     'name': 'MT15/MT29',
@@ -7428,7 +7428,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Motion sensor',
     'model_id': 'fcdjzz3s',
     'name': 'Motion sensor lidl zigbee',
@@ -7459,7 +7459,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'smart thermostats',
     'model_id': 'gogb05wrtredz3bs',
     'name': 'smart thermostats',
@@ -7490,7 +7490,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Multi-mode Gateway',
     'model_id': 'haclbl0qkqlf2qds',
     'name': 'Home Gateway',
@@ -7521,7 +7521,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Curtain switch',
     'model_id': 'xqvhthwkbmp3aghs',
     'name': 'Pergola',
@@ -7552,7 +7552,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': '0gyaslysqfp4gfis',
     'name': 'Study 1',
@@ -7583,7 +7583,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC Smart Connect GU10 RGB+CCT',
     'model_id': 'ekwolitfjhxn55js',
     'name': 'ab6',
@@ -7614,7 +7614,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'smart motor',
     'model_id': 'qtemqjy7axczkkls',
     'name': 'Dining 1',
@@ -7645,7 +7645,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Tank A Level',
     'model_id': 'wtzwyhkev3b4ubns',
     'name': 'House Water Level',
@@ -7676,7 +7676,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Radiator Thermostat',
     'model_id': 'p3dbf6qs',
     'name': 'Anbau',
@@ -7707,7 +7707,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart multi-channel weather station ',
     'model_id': 's5l7qidyapl1rbrs',
     'name': 'Ventus test',
@@ -7738,7 +7738,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Gateway (unsupported)',
     'model_id': 'tmwhss6ntjfc7prs',
     'name': 'Gateway',
@@ -7769,7 +7769,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC PTZ Camera',
     'model_id': 'rudejjigkywujjvs',
     'name': 'Bürocam',
@@ -7800,7 +7800,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 'ipabufmlmodje1ws',
     'name': 'Värmelampa',
@@ -7831,7 +7831,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WIFI smart CO alarm',
     'model_id': 'hcdy5zrq3ikzthws',
     'name': 'Smogo',
@@ -7862,7 +7862,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '10A Metering Socket',
     'model_id': 'guitoc9iylae4axs',
     'name': 'HA Socket Delta Test',
@@ -7893,7 +7893,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Air Conditioner (unsupported)',
     'model_id': '47peys',
     'name': 'Ar',
@@ -7924,7 +7924,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smoke Alarm ',
     'model_id': 'arywmw6h6vesoz5t',
     'name': 'Rauchmelder Drucker',
@@ -7955,7 +7955,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'TION Breezer Bio X (unsupported)',
     'model_id': '9mqdhwklpvnnvb7t',
     'name': 'Бризер Зал',
@@ -7986,7 +7986,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Five way ceiling lamp',
     'model_id': 'shx9mmadyyeaq88t',
     'name': 'Plafond bureau ',
@@ -8017,7 +8017,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Dual channel metering',
     'model_id': '2jxesipczks0kdct',
     'name': 'HVAC Meter',
@@ -8048,7 +8048,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Blinds Drive-BLE',
     'model_id': 'qqdxfdht',
     'name': 'bedroom blinds',
@@ -8079,7 +8079,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED SMART',
     'model_id': 'lmnt3uyltk1xffrt',
     'name': 'DirectietKamer',
@@ -8110,7 +8110,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Valve Controller',
     'model_id': 'o6dagifntoafakst',
     'name': 'Sprinkler Cesare',
@@ -8141,7 +8141,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WIFI Smoke alarm',
     'model_id': 'kscbebaf3s1eogvt',
     'name': 'WIFI Smoke alarm',
@@ -8172,7 +8172,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Indoor cam Pan/Tilt ',
     'model_id': 'rjKXWRohlvOTyLBu',
     'name': 'CAM PORCH',
@@ -8203,7 +8203,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Siren (unsupported)',
     'model_id': 'DYgId0sz6zWlmmYu',
     'name': 'Siren',
@@ -8234,7 +8234,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket',
     'model_id': 'IGzCi97RpN2Lf9cu',
     'name': 'N4-Auto',
@@ -8265,7 +8265,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Soil sensor',
     'model_id': 'myd45weu',
     'name': 'Patates',
@@ -8296,7 +8296,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Temperature & Humidity Sensor',
     'model_id': 'yqiqbaldtr0i7mru',
     'name': 'WiFi Temperature & Humidity Sensor',
@@ -8327,7 +8327,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket',
     'model_id': 'wifvoilfrqeo6hvu',
     'name': 'Licht drucker',
@@ -8358,7 +8358,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug',
     'model_id': '4mbgrfotyNzMxDAv',
     'name': 'Air Purifier ',
@@ -8389,7 +8389,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '温湿度传感器wifi',
     'model_id': 'g2y6z3p3ja2qhyav',
     'name': 'NP DownStairs North',
@@ -8420,7 +8420,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Breaker',
     'model_id': 'z3jngbyubvwgfrcv',
     'name': 'Edesanya Energy',
@@ -8451,7 +8451,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Temperature and humidity sensor',
     'model_id': 'qrztc3ev',
     'name': 'Temperature and humidity sensor',
@@ -8482,7 +8482,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED Strip Lights',
     'model_id': 'hp6orhaqm6as3jnv',
     'name': 'Master bedroom TV lights',
@@ -8513,7 +8513,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'geniodesk',
     'model_id': 'ftbc8rp8ipksdfpv',
     'name': 'mesa',
@@ -8544,7 +8544,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '1-433',
     'model_id': '9htyiowaf5rtdhrv',
     'name': 'Framboisiers',
@@ -8575,7 +8575,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Ineox SP2',
     'model_id': '39sy2g68gsjwo2xv',
     'name': 'Ineox SP2',
@@ -8606,7 +8606,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Zigbee Repeater (unsupported)',
     'model_id': 'nkkl7uzv',
     'name': 'Zigby répéteur ',
@@ -8637,7 +8637,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'A60 Clear',
     'model_id': '8y0aquaa8v6tho8w',
     'name': 'dressoir spot',
@@ -8668,7 +8668,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'WiFi Breaker',
     'model_id': '1ctrc5jx88mtdh9w',
     'name': 'Puerta Casa ',
@@ -8699,7 +8699,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Socket',
     'model_id': '9ivirni8wemum6cw',
     'name': 'Garáž čerpadlo',
@@ -8730,7 +8730,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'InverFlow (unsupported)',
     'model_id': 'ircs2n82vgrozoew',
     'name': 'InverFlow',
@@ -8761,7 +8761,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC Party String Light RGBIC+CCT ',
     'model_id': 'l3bpgg8ibsagon4x',
     'name': 'LSC Party String Light RGBIC+CCT ',
@@ -8792,7 +8792,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'T7-Air conditioner thermostat（ZIGBEE)',
     'model_id': 'aqoouq7x',
     'name': 'Clima cucina',
@@ -8823,7 +8823,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Wi-Fi Curtian Switch',
     'model_id': 'rD7uqAAgQOpSA2Rx',
     'name': 'Kit-Blinds',
@@ -8854,7 +8854,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '4-433',
     'model_id': 'cq1p0nt0a4rixnex',
     'name': '4-433',
@@ -8885,7 +8885,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Switch Module',
     'model_id': 'gdknjvdpiwoq6smx',
     'name': 'Jardim frontal ',
@@ -8916,7 +8916,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Shop Light',
     'model_id': 'yfqmcabsid3gkd1y',
     'name': 'Shop Light 5',
@@ -8947,7 +8947,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Soria',
     'model_id': '0kllybtbzftaee7y',
     'name': 'Soria',
@@ -8978,7 +8978,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'PZ003',
     'model_id': 'ExGgQmjt0SHMdlDZ',
     'name': 'Casa1',
@@ -9009,7 +9009,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LSC Floodlight',
     'model_id': 'zputiamzanuk6yky',
     'name': 'Floodlight',
@@ -9040,7 +9040,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '',
     'model_id': 'fsxtzzhujkrak2oy',
     'name': 'Kalado Air Purifier',
@@ -9071,7 +9071,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'ZEDAR K1200',
     'model_id': '3ddulzljdjjwkhoy',
     'name': 'Kattenbak',
@@ -9102,7 +9102,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Contact Sensor',
     'model_id': '6ywsnauy',
     'name': 'Fenêtre cuisine',
@@ -9133,7 +9133,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Cooking Thermometer',
     'model_id': '3rzngbyy',
     'name': 'Grillhőmérő',
@@ -9164,7 +9164,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'LED SMART',
     'model_id': 'baf9tt9lb8t5uc7z',
     'name': 'Pokerlamp 2',
@@ -9195,7 +9195,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Candle RGB-CCT',
     'model_id': 'djnozmdyqyriow8z',
     'name': 'Fakkel 8',
@@ -9226,7 +9226,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart plug',
     'model_id': 'gjnozsaz',
     'name': 'Raspy4 - Home Assistant',
@@ -9257,7 +9257,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'RGBC Smart Bulb',
     'model_id': 'tgewj70aowigv8fz',
     'name': 'Stairs',
@@ -9288,7 +9288,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'air purifier',
     'model_id': 'CAjWAxBUZt7QZHfz',
     'name': 'HL400',
@@ -9319,7 +9319,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Intelligent temperature controller',
     'model_id': 'ccpwojhalfxryigz',
     'name': 'Boiler Temperature Controller',
@@ -9350,7 +9350,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Aubess Smart\xa0Socket EM',
     'model_id': 'ik9sbig3mthx9hjz',
     'name': 'Aubess Washing Machine',
@@ -9381,7 +9381,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart PIR sensor',
     'model_id': 'wqz93nrdomectyoz',
     'name': 'PIR outside stairs',
@@ -9412,7 +9412,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'V20',
     'model_id': 'lr33znaodtyarrrz',
     'name': 'V20',
@@ -9443,7 +9443,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Wi-Fi hub',
     'model_id': 'yncyws7tu1q4cpsz',
     'name': 'Wi-Fi hub',
@@ -9474,7 +9474,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Smart Plug',
     'model_id': 'dntgh2ngvshfxpsz',
     'name': 'fakkel veranda ',
@@ -9505,7 +9505,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'TV (unsupported)',
     'model_id': 'lplun31mo1xaonwz',
     'name': 'TV',
@@ -9536,7 +9536,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': '4-TH',
     'model_id': 'gc4b1mdw7kebtuyz',
     'name': 'pid_relay_2',
@@ -9567,7 +9567,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Tuya / Whitelabel',
     'model': 'Air Conditioner',
     'model_id': 'wxqdp6ecfkd78zzz',
     'name': 'Mini-Split',
