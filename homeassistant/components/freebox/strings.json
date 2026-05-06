@@ -37,9 +37,6 @@
     "button": {
       "mark_calls_as_read": {
         "name": "Mark calls as read"
-      },
-      "reboot": {
-        "name": "Reboot"
       }
     },
     "sensor": {

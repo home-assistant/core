@@ -25,7 +25,6 @@ class FreeboxButtonEntityDescription(ButtonEntityDescription):
 BUTTON_DESCRIPTIONS: tuple[FreeboxButtonEntityDescription, ...] = (
     FreeboxButtonEntityDescription(
         key="reboot",
-        translation_key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         async_press=lambda router: router.reboot(),
