@@ -31,6 +31,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
@@ -42,7 +43,6 @@ ELECTROLUX_TO_HA_TEMPERATURE_UNIT = {
     "CELSIUS": UnitOfTemperature.CELSIUS,
     "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
 }
-UNKNOWN = "unknown"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -216,15 +216,12 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
                 in description.known_values
             ]
 
-            snake_case_options.append(UNKNOWN)
             if len(snake_case_options) > 1:
                 self._attr_options = snake_case_options
 
         self.entity_description = description
 
     def _update_attr_state(self) -> bool:
-        state_changed = False
-
         new_value = self._get_value()
         if isinstance(new_value, str):
             new_value = _convert_to_snake_case(new_value)
@@ -237,9 +234,9 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
 
         if self._attr_native_value != new_value:
             self._attr_native_value = new_value
-            state_changed = True
+            return True
 
-        return state_changed
+        return False
 
     def _get_value(self) -> StateType:
         return self.entity_description.value_fn(self._appliance_data)
@@ -256,12 +253,17 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
     ) -> None:
         """Initialize the sensor."""
         self._appliance = cast(OVAppliance | CRAppliance, appliance_data)
-        self._attr_native_unit_of_measurement = self._get_temperature_unit()
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         super().__init__(appliance_data, coordinator, description)
 
     def _get_value(self) -> StateType:
-        return self.entity_description.value_fn(
-            self._appliance_data, temp_unit=self._attr_native_unit_of_measurement
+        temp_unit = self._get_temperature_unit()
+        temp_value: float = cast(
+            float,
+            self.entity_description.value_fn(self._appliance_data, temp_unit=temp_unit),
+        )
+        return TemperatureConverter.convert(
+            temp_value, temp_unit, UnitOfTemperature.CELSIUS
         )
 
     def _get_temperature_unit(self) -> UnitOfTemperature:
@@ -287,16 +289,18 @@ def _convert_char_to_snake_case(char: str):
     return char
 
 
-def _map_to_known_value(known_values: set[str], entity_name: str, value: str) -> str:
-    """Return provided value if it is known, otherwise log warn message and return 'unknown'."""
+def _map_to_known_value(
+    known_values: set[str], entity_name: str, value: str
+) -> str | None:
+    """Return provided value if it is known, otherwise log warn message and return None."""
     if value not in known_values:
         _LOGGER.warning(
             "An unknown value %s was reported for an sensor of the Electrolux integration. "
-            "Please open a PR for the integration, and include the following information: "
+            "Please report it for the integration, and include the following information: "
             'entity name="%s", reported value="%s"',
             value,
             entity_name,
             value,
         )
-        return UNKNOWN
+        return None
     return value

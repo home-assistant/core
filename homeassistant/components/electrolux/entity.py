@@ -46,7 +46,6 @@ class ElectroluxBaseEntity[T: ApplianceData](
         self._attr_unique_id = f"{appliance_id}_{unique_id_suffix}"
         self._appliance_id = appliance_id
         self._appliance_capabilities = appliance_data.details.capabilities
-        self._reported_appliance_state = appliance_data.state.properties.get("reported")
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, appliance_id)},

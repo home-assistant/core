@@ -6,7 +6,10 @@ from asyncio import Task
 from dataclasses import dataclass
 import logging
 
-from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
+from electrolux_group_developer_sdk.client.appliance_client import (
+    ApplianceClient,
+    apply_sse_update,
+)
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
@@ -85,47 +88,9 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         if not current_state:
             return
 
-        updated_state = self._apply_sse_update(
+        updated_state = apply_sse_update(
             current_state,
             event,
         )
 
         self.async_set_updated_data(updated_state)
-
-    def _apply_sse_update(self, state: ApplianceState, event: dict) -> ApplianceState:
-        """Apply an SSE property update into the appliance state dict and returns the updated state."""
-        # Copy state into a dict
-        state_dict = state.model_dump()
-
-        prop = event.get("property")
-        value = event.get("value")
-
-        if prop is None:
-            _LOGGER.warning("Received SSE event without 'property': %s", event)
-            return state
-
-        if value is None:
-            _LOGGER.warning("Received SSE event without 'value': %s", event)
-            return state
-
-        # Special case: top-level connectionState
-        if prop == "connectionState":
-            state_dict["connectionState"] = value
-        else:
-            if prop == "connectivityState":
-                state_dict["connectionState"] = value
-
-            # Normal property update
-            reported = state_dict.setdefault("properties", {}).setdefault(
-                "reported", {}
-            )
-            path = prop.split("/")  # e.g. ["userSelections", "analogSpinSpeed"]
-
-            target = reported
-            for key in path[:-1]:
-                target = target.setdefault(key, {})
-
-            target[path[-1]] = value
-
-        # Rebuild a new ApplianceState model from updated dict
-        return ApplianceState.model_validate(state_dict)
