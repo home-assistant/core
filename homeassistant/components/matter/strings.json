@@ -624,7 +624,7 @@
         "name": "Voltage"
       },
       "wifi_rssi": {
-        "name": "Wi-Fi signal strength"
+        "name": "Wi-Fi RSSI"
       },
       "window_covering_target_position": {
         "name": "Target opening position"
