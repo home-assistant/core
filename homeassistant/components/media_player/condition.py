@@ -1,12 +1,14 @@
 """Provides conditions for media players."""
 
 from datetime import datetime
+from typing import Any
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     EntityConditionBase,
+    EntityNumericalConditionBase,
     make_entity_state_condition,
 )
 
@@ -65,6 +67,30 @@ class MediaPlayerIsUnmutedCondition(_MediaPlayerMutedConditionBase):
     _target_muted = False
 
 
+class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
+    """Condition for media player volume level with 0.0-1.0 to percentage conversion."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL)}
+    _valid_unit = "%"
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the volume value converted from 0.0-1.0 to percentage (0-100)."""
+        raw = super()._get_tracked_value(entity_state)
+        if raw is None:
+            return None
+        try:
+            return float(raw) * 100.0
+        except TypeError, ValueError:
+            return None
+
+    def _should_include(self, state: State) -> bool:
+        """Skip media players that do not expose a volume_level attribute."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+        )
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "is_muted": MediaPlayerIsMutedCondition,
     "is_not_playing": make_entity_state_condition(
@@ -91,6 +117,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_paused": make_entity_state_condition(DOMAIN, MediaPlayerState.PAUSED),
     "is_playing": make_entity_state_condition(DOMAIN, MediaPlayerState.PLAYING),
     "is_unmuted": MediaPlayerIsUnmutedCondition,
+    "is_volume": MediaPlayerIsVolumeCondition,
 }
 
 
