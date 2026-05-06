@@ -90,6 +90,10 @@ class BroadlinkUpdateManager(ABC, Generic[_ApiT]):
                     self.device.api.model,
                     self.device.api.host[0],
                 )
+                # The coordinator skips listener notification when both the
+                # current and previous refresh failed, so notify explicitly to
+                # ensure entities flip to unavailable on this transition.
+                self.coordinator.async_update_listeners()
             raise UpdateFailed(err) from err
 
         if self.available is False:
