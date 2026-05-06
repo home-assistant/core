@@ -25,7 +25,7 @@ class IndevoltSelectEntityDescription(SelectEntityDescription):
     write_key: str
     value_to_option: dict[IndevoltEnergyMode, str]
     unavailable_values: list[IndevoltEnergyMode] = field(default_factory=list)
-    generation: list[int] = field(default_factory=lambda: [1, 2])
+    generation: tuple[int, ...] = (1, 2)
 
 
 SELECTS: Final = (
