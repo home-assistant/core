@@ -3099,7 +3099,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 report_usage(
                     "has an update listener and should use it for scheduling a reload",
                     core_behavior=ReportBehavior.LOG,
-                    breaks_in_ha_version="2026.11.0",
+                    breaks_in_ha_version="2026.12.0",
                     integration_domain=self.handler,
                 )
         elif (
@@ -3505,7 +3505,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 report_usage(
                     "has an update listener and should use it for scheduling a reload",
                     core_behavior=ReportBehavior.LOG,
-                    breaks_in_ha_version="2026.11.0",
+                    breaks_in_ha_version="2026.12.0",
                     integration_domain=self.handler,
                 )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)

@@ -7071,7 +7071,7 @@ async def test_update_entry_and_reload_with_listener_logs(
 
     message = (
         "Detected that integration 'comp' has an update listener and should use it"
-        " for scheduling a reload. This will stop working in Home Assistant 2026.11.0"
+        " for scheduling a reload. This will stop working in Home Assistant 2026.12.0"
     )
 
     with (
