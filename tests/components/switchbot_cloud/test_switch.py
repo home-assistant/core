@@ -3,7 +3,12 @@
 from unittest.mock import patch
 
 import pytest
-from switchbot_api import Device, SwitchBotConnectionError, SwitchBotDeviceOfflineError
+from switchbot_api import Device
+from switchbot_api.exceptions import (
+    SwitchBotConnectionError,
+    SwitchBotDeviceOfflineError,
+    SwitchBotError,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
@@ -226,6 +231,7 @@ async def test_switch_relay_2pm_coordination_is_none(
     [
         (SwitchBotDeviceOfflineError("offline"), "device_offline"),
         (SwitchBotConnectionError("conn"), "connection_error"),
+        (SwitchBotError("boom"), "command_failed"),
     ],
 )
 async def test_switch_api_error_is_translated(

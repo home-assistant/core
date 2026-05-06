@@ -92,6 +92,9 @@
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "SwitchBot Cloud command failed: {error}"
+    },
     "connection_error": {
       "message": "Error communicating with SwitchBot Cloud: {error}"
     },

@@ -2,13 +2,11 @@
 
 from typing import Any
 
-from switchbot_api import (
-    Commands,
-    Device,
-    Remote,
-    SwitchBotAPI,
+from switchbot_api import Commands, Device, Remote, SwitchBotAPI
+from switchbot_api.exceptions import (
     SwitchBotConnectionError,
     SwitchBotDeviceOfflineError,
+    SwitchBotError,
 )
 
 from homeassistant.core import callback
@@ -77,6 +75,12 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except SwitchBotError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
 
