@@ -31,7 +31,8 @@ class FlussDevice:
     device_id: str
     device_name: str | None
     internet_connected: bool
-    open_close_status: str | bool | None = None
+    has_position_sensor: bool
+    is_closed: bool | None
 
 
 class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
@@ -42,6 +43,11 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
     ) -> None:
         """Initialize the coordinator."""
         self.api = FlussApiClient(api_key, session=async_get_clientsession(hass))
+        # Capability is sticky across refreshes: once a device has reported an
+        # openCloseStatus we treat it as cover-capable for the lifetime of the
+        # integration so a transient status-fetch failure can't downgrade a
+        # cover back to a button.
+        self._cover_capable: set[str] = set()
         super().__init__(
             hass,
             LOGGER,
@@ -50,12 +56,12 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_get_status(self, device_id: str) -> dict[str, Any]:
-        """Return per-device status; defaults to offline on API error."""
+    async def _async_get_status(self, device_id: str) -> dict[str, Any] | None:
+        """Return per-device status, or ``None`` when the API call fails."""
         try:
             response = await self.api.async_get_device_status(device_id)
         except FlussApiClientError:
-            return {"internetConnected": False}
+            return None
         return response["status"]
 
     async def _async_update_data(self) -> dict[str, FlussDevice]:
@@ -75,12 +81,30 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
         statuses = await asyncio.gather(
             *(self._async_get_status(d["deviceId"]) for d in device_list)
         )
-        return {
-            device["deviceId"]: FlussDevice(
-                device_id=device["deviceId"],
+
+        result: dict[str, FlussDevice] = {}
+        for device, status in zip(device_list, statuses, strict=True):
+            device_id = device["deviceId"]
+            previous = self.data.get(device_id) if self.data else None
+
+            if status is None:
+                # Per-device fetch failed: preserve last-known state so the
+                # cover doesn't flap to unknown on a transient API hiccup.
+                internet_connected = False
+                is_closed = previous.is_closed if previous else None
+            else:
+                internet_connected = status.get("internetConnected", False)
+                if "openCloseStatus" in status:
+                    self._cover_capable.add(device_id)
+                    is_closed = status["openCloseStatus"] == "Close"
+                else:
+                    is_closed = None
+
+            result[device_id] = FlussDevice(
+                device_id=device_id,
                 device_name=device.get("deviceName"),
-                internet_connected=status.get("internetConnected", False),
-                open_close_status=status.get("openCloseStatus"),
+                internet_connected=internet_connected,
+                has_position_sensor=device_id in self._cover_capable,
+                is_closed=is_closed,
             )
-            for device, status in zip(device_list, statuses, strict=False)
-        }
+        return result
