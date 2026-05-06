@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
@@ -14,6 +15,7 @@ from homeassistant.components.tuya.const import (
     DOMAIN,
 )
 from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -139,6 +141,95 @@ async def test_device_registry(
                 include_disabled_entities=True,
             )
         )
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "platforms", "manufacturer", "model", "model_id", "quirks"),
+    [
+        # Ensure model is suffixed with "(unsupported)" when no entities are generated
+        (
+            "mal_gyitctrjj1kefxp2",
+            [],
+            "Tuya",
+            "Multifunction alarm (unsupported)",
+            "gyitctrjj1kefxp2",
+            {},
+        ),
+        # Ensure model is not suffixed with "(unsupported)" when entities are generated
+        (
+            "mal_gyitctrjj1kefxp2",
+            [Platform.ALARM_CONTROL_PANEL],
+            "Tuya",
+            "Multifunction alarm",
+            "gyitctrjj1kefxp2",
+            {},
+        ),
+        # With a quirk, model is not suffixed with "(unsupported)" when no entities are generated
+        (
+            "mal_gyitctrjj1kefxp2",
+            [],
+            "My manufacturer",
+            "Amazing model",
+            "AMA-ZING1",
+            {
+                "gyitctrjj1kefxp2": MagicMock(
+                    manufacturer="My manufacturer",
+                    model="Amazing model",
+                    model_id="AMA-ZING1",
+                )
+            },
+        ),
+        #  With a quirk, manufacturer, model and model_id come from the quirk (even if null)
+        (
+            "mal_gyitctrjj1kefxp2",
+            [],
+            None,
+            None,
+            None,
+            {
+                "gyitctrjj1kefxp2": MagicMock(
+                    manufacturer=None,
+                    model=None,
+                    model_id=None,
+                )
+            },
+        ),
+    ],
+)
+async def test_device_registry_with_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    platforms: list[str],
+    manufacturer: str,
+    model: str,
+    model_id: str,
+    quirks: dict[str, MagicMock],
+) -> None:
+    """Validate device information with and without quirks."""
+
+    with (
+        patch.dict(TUYA_QUIRKS_REGISTRY._quirks, quirks, clear=True),
+        patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
+        patch("homeassistant.components.tuya.PLATFORMS", platforms),
+    ):
+        await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+        if quirks:
+            assert TUYA_QUIRKS_REGISTRY._quirks == quirks
+            assert TUYA_QUIRKS_REGISTRY.get_quirk_for_device(mock_device)
+
+    device_registry_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_registry_entries) == 1
+    device_registry_entry = device_registry_entries[0]
+
+    assert device_registry_entry.manufacturer == manufacturer
+    assert device_registry_entry.model == model
+    assert device_registry_entry.model_id == model_id
+    assert device_registry_entry.name == "Multifunction alarm"
 
 
 @patch.object(
