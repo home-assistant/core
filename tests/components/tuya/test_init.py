@@ -146,7 +146,8 @@ async def test_device_registry(
 @pytest.mark.parametrize(
     ("mock_device_code", "platforms", "manufacturer", "model", "model_id", "quirks"),
     [
-        # Ensure model is suffixed with "(unsupported)" when no entities are generated
+        # Ensure model is suffixed with "(unsupported)" when no entities
+        # are generated
         (
             "mal_gyitctrjj1kefxp2",
             [],
@@ -155,7 +156,8 @@ async def test_device_registry(
             "gyitctrjj1kefxp2",
             {},
         ),
-        # Ensure model is not suffixed with "(unsupported)" when entities are generated
+        # Ensure model is not suffixed with "(unsupported)" when entities
+        # are generated
         (
             "mal_gyitctrjj1kefxp2",
             [Platform.ALARM_CONTROL_PANEL],
@@ -164,7 +166,9 @@ async def test_device_registry(
             "gyitctrjj1kefxp2",
             {},
         ),
-        # With a quirk, model is not suffixed with "(unsupported)" when no entities are generated
+        # With a quirk that has manufacturer, model and model_id are
+        # taken from quirk (and not suffixed with "(unsupported)" even if
+        # no entities are generated)
         (
             "mal_gyitctrjj1kefxp2",
             [],
@@ -179,7 +183,24 @@ async def test_device_registry(
                 )
             },
         ),
-        #  With a quirk, manufacturer, model and model_id come from the quirk (even if null)
+        # With a quirk that has manufacturer, model and model_id are
+        # taken from quirk (even if None)
+        (
+            "mal_gyitctrjj1kefxp2",
+            [],
+            "My manufacturer",
+            None,
+            None,
+            {
+                "gyitctrjj1kefxp2": MagicMock(
+                    manufacturer="My manufacturer",
+                    model=None,
+                    model_id=None,
+                )
+            },
+        ),
+        # With a quirk that has null manufacturer, model and model_id
+        # are ignored
         (
             "mal_gyitctrjj1kefxp2",
             [],
@@ -202,7 +223,7 @@ async def test_device_registry_with_quirk(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     device_registry: dr.DeviceRegistry,
-    platforms: list[str],
+    platforms: list[Platform],
     manufacturer: str,
     model: str | None,
     model_id: str | None,
