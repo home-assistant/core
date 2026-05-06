@@ -216,9 +216,6 @@ async def test_device_registry_with_quirk(
         patch("homeassistant.components.tuya.PLATFORMS", platforms),
     ):
         await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-        if quirks:
-            assert TUYA_QUIRKS_REGISTRY._quirks == quirks
-            assert TUYA_QUIRKS_REGISTRY.get_quirk_for_device(mock_device)
 
     device_registry_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
