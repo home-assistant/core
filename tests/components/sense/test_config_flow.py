@@ -245,6 +245,25 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
+async def test_realtime_exception(hass: HomeAssistant) -> None:
+    """Test we handle realtime API error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "sense_energy.ASyncSenseable.update_realtime",
+        side_effect=SenseAPIException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"timeout": "6", "email": "test-email", "password": "test-password"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_reauth_no_form(hass: HomeAssistant, mock_sense) -> None:
     """Test reauth where no form needed."""
 
