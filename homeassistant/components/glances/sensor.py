@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    Platform,
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
@@ -22,9 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CPU_ICON, DOMAIN
-from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
-
-DYNAMIC_TYPES = {"fs", "diskio", "sensors", "raid", "gpu", "network"}
+from .coordinator import DYNAMIC_TYPES, GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -303,47 +302,65 @@ def _cleanup_orphan_entities(
 
     Runs once at setup so entities registered before the dynamic-removal
     behavior was added (or while Home Assistant was offline) get cleaned up
-    instead of lingering as STATE_UNAVAILABLE.
+    instead of lingering as STATE_UNAVAILABLE. Entries owned by a sensor
+    type whose parent dict is missing/empty in the current refresh are left
+    alone (transient API gap). User-disabled or hidden entries are also
+    preserved so manual preferences are not silently dropped.
     """
-    if not coordinator.data:
+    dynamic_devices = coordinator.dynamic_devices
+    if not dynamic_devices or not coordinator.data:
         return
 
-    # Map description.key -> set of dynamic sensor_types that use it. Used to
-    # locate which top-level data dict a registry entry belonged to, given
-    # only its unique_id suffix.
+    # Map description.key -> set of dynamic sensor_types that use it.
     key_to_types: dict[str, set[str]] = {}
     for (sensor_type, _param), description in SENSOR_TYPES.items():
         if sensor_type in DYNAMIC_TYPES:
             key_to_types.setdefault(description.key, set()).add(sensor_type)
+
+    # A description key is eligible for diff/removal only when every type
+    # that owns it has a non-empty parent in the current refresh. Otherwise
+    # we cannot safely tell "device removed" from "transient API gap".
+    diffable_keys = {
+        key for key, types in key_to_types.items() if types <= dynamic_devices.keys()
+    }
+
+    expected_unique_ids = _expected_dynamic_unique_ids(config_entry, coordinator)
 
     entry_id = config_entry.entry_id
     prefix = f"{entry_id}-"
     ent_reg = er.async_get(hass)
 
     for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
-        if entry.domain != "sensor" or not entry.unique_id.startswith(prefix):
+        if entry.domain != Platform.SENSOR or not entry.unique_id.startswith(prefix):
+            continue
+        if entry.unique_id in expected_unique_ids:
+            continue
+        if entry.disabled_by is not None or entry.hidden_by is not None:
             continue
         rest = entry.unique_id.removeprefix(prefix)
         # Static singleton entities have an empty sensor_label, producing a
-        # "--key" suffix; skip them so we don't remove them during a
-        # transient API gap.
+        # "--key" suffix; skip them.
         if rest.startswith("-"):
             continue
-        for desc_key, types in key_to_types.items():
-            if not rest.endswith(f"-{desc_key}"):
-                continue
-            label = rest[: -(len(desc_key) + 1)]
-            present_parents = [
-                coordinator.data[t] for t in types if t in coordinator.data
-            ]
-            # Only remove when at least one candidate parent dict is present
-            # and the label is missing from every present parent — mirrors the
-            # guard in GlancesSensor._handle_coordinator_update.
-            if present_parents and all(
-                label not in parent for parent in present_parents
-            ):
-                ent_reg.async_remove(entry.entity_id)
-            break
+        if not any(rest.endswith(f"-{key}") for key in diffable_keys):
+            continue
+        ent_reg.async_remove(entry.entity_id)
+
+
+def _expected_dynamic_unique_ids(
+    config_entry: GlancesConfigEntry,
+    coordinator: GlancesDataUpdateCoordinator,
+) -> set[str]:
+    """Build the set of unique_ids dynamic sensors should currently have."""
+    expected: set[str] = set()
+    entry_id = config_entry.entry_id
+    for sensor_type in coordinator.dynamic_devices:
+        parent = coordinator.data[sensor_type]
+        for label, params in parent.items():
+            for (t, param), description in SENSOR_TYPES.items():
+                if t == sensor_type and param in params:
+                    expected.add(f"{entry_id}-{label}-{description.key}")
+    return expected
 
 
 async def async_setup_entry(
@@ -357,42 +374,59 @@ async def async_setup_entry(
     _cleanup_orphan_entities(hass, config_entry, coordinator)
     entry_id = config_entry.entry_id
 
+    tracked: dict[str, set[str]] = {}
+    static_added: set[tuple[str, str]] = set()
+
     @callback
     def _add_new_entities() -> None:
-        # Use the entity registry as source of truth for "already added" so
-        # that an entity which got auto-removed (because its device
-        # disappeared) is recreated when the device reappears under the same
-        # name on a later coordinator update.
         ent_reg = er.async_get(hass)
-        known_unique_ids: set[str] = {
-            entry.unique_id
-            for entry in er.async_entries_for_config_entry(ent_reg, entry_id)
-        }
         new_entities: list[GlancesSensor] = []
-        for sensor_type, sensors in coordinator.data.items():
-            if sensor_type in DYNAMIC_TYPES:
-                for sensor_label, params in sensors.items():
-                    for param in params:
-                        if (
-                            description := SENSOR_TYPES.get((sensor_type, param))
-                        ) is None:
-                            continue
-                        unique_id = f"{entry_id}-{sensor_label}-{description.key}"
-                        if unique_id in known_unique_ids:
-                            continue
-                        known_unique_ids.add(unique_id)
+
+        for sensor_type, current in coordinator.dynamic_devices.items():
+            parent = coordinator.data[sensor_type]
+            previous = tracked.get(sensor_type, set())
+            for label in current - previous:
+                params = parent[label]
+                for (t, param), description in SENSOR_TYPES.items():
+                    if t == sensor_type and param in params:
                         new_entities.append(
-                            GlancesSensor(coordinator, description, sensor_label)
+                            GlancesSensor(coordinator, description, label)
                         )
-            else:
+            for label in previous - current:
+                for (t, _param), description in SENSOR_TYPES.items():
+                    if t != sensor_type:
+                        continue
+                    unique_id = f"{entry_id}-{label}-{description.key}"
+                    entity_id = ent_reg.async_get_entity_id(
+                        Platform.SENSOR, DOMAIN, unique_id
+                    )
+                    if entity_id is None:
+                        continue
+                    reg_entry = ent_reg.async_get(entity_id)
+                    # Preserve user-disabled / user-hidden entries so manual
+                    # preferences survive a device disappearance.
+                    if (
+                        reg_entry is None
+                        or reg_entry.disabled_by is not None
+                        or reg_entry.hidden_by is not None
+                    ):
+                        continue
+                    ent_reg.async_remove(entity_id)
+            tracked[sensor_type] = set(current)
+
+        if coordinator.data:
+            for sensor_type, sensors in coordinator.data.items():
+                if sensor_type in DYNAMIC_TYPES:
+                    continue
                 for sensor in sensors:
-                    if (description := SENSOR_TYPES.get((sensor_type, sensor))) is None:
+                    if (sensor_type, sensor) in static_added:
                         continue
-                    unique_id = f"{entry_id}--{description.key}"
-                    if unique_id in known_unique_ids:
+                    static_desc = SENSOR_TYPES.get((sensor_type, sensor))
+                    if static_desc is None:
                         continue
-                    known_unique_ids.add(unique_id)
-                    new_entities.append(GlancesSensor(coordinator, description))
+                    static_added.add((sensor_type, sensor))
+                    new_entities.append(GlancesSensor(coordinator, static_desc))
+
         if new_entities:
             async_add_entities(new_entities)
 
@@ -437,14 +471,6 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.entity_description.type in DYNAMIC_TYPES:
-            parent = self.coordinator.data.get(self.entity_description.type)
-            # Only auto-remove when the parent type is present but the label is
-            # missing — a missing parent type is treated as a transient API
-            # gap and leaves the entity unavailable instead.
-            if parent is not None and self._sensor_label not in parent:
-                er.async_get(self.hass).async_remove(self.entity_id)
-                return
         self._update_native_value()
         super()._handle_coordinator_update()
 
