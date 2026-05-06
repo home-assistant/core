@@ -1,7 +1,5 @@
 """Coordinator for handling data fetching and updates."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging

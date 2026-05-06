@@ -3,7 +3,8 @@
     "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
-    "trigger_for_name": "For at least"
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold"
   },
   "conditions": {
     "is_not_playing": {
@@ -11,6 +12,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is not playing"
@@ -32,6 +36,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
         }
       },
       "name": "Media player is on"
@@ -225,12 +232,6 @@
     }
   },
   "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "enqueue": {
       "options": {
         "add": "Add to queue",
@@ -244,13 +245,6 @@
         "all": "Repeat all",
         "off": "[%key:common::state::off%]",
         "one": "Repeat one"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -444,6 +438,18 @@
   },
   "title": "Media player",
   "triggers": {
+    "muted": {
+      "description": "Triggers after one or more media players are muted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player muted"
+    },
     "paused_playing": {
       "description": "Triggers after one or more media players pause playing.",
       "fields": {
@@ -503,6 +509,42 @@
         }
       },
       "name": "Media player turned on"
+    },
+    "unmuted": {
+      "description": "Triggers after one or more media players are unmuted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player unmuted"
+    },
+    "volume_changed": {
+      "description": "Triggers after the volume of one or more media players changes.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::media_player::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Media player volume changed"
+    },
+    "volume_crossed_threshold": {
+      "description": "Triggers after the volume of one or more media players crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::media_player::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Media player volume crossed threshold"
     }
   }
 }

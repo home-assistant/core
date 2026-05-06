@@ -1,7 +1,5 @@
 """Data update coordinator for the Autoskope integration."""
 
-from __future__ import annotations
-
 import logging
 
 from autoskope_client.api import AutoskopeApi

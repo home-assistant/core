@@ -3,28 +3,11 @@
   "name": "UniFi Network",
   "codeowners": ["@Kane610"],
   "config_flow": true,
+  "dependencies": ["unifi_discovery"],
   "documentation": "https://www.home-assistant.io/integrations/unifi",
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiounifi"],
   "quality_scale": "silver",
-  "requirements": ["aiounifi==90"],
-  "ssdp": [
-    {
-      "manufacturer": "Ubiquiti Networks",
-      "modelDescription": "UniFi Dream Machine"
-    },
-    {
-      "manufacturer": "Ubiquiti Networks",
-      "modelDescription": "UniFi Dream Machine Pro"
-    },
-    {
-      "manufacturer": "Ubiquiti Networks",
-      "modelDescription": "UniFi Dream Machine SE"
-    },
-    {
-      "manufacturer": "Ubiquiti Networks",
-      "modelDescription": "UniFi Dream Machine Pro Max"
-    }
-  ]
+  "requirements": ["aiounifi==90"]
 }

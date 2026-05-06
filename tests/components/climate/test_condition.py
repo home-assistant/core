@@ -65,10 +65,10 @@ async def test_climate_conditions_gated_by_labs_flag(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("climate.is_off", {}, True, True),
-        ("climate.is_on", {}, True, False),
-        ("climate.is_cooling", {}, True, False),
-        ("climate.is_drying", {}, True, False),
-        ("climate.is_heating", {}, True, False),
+        ("climate.is_on", {}, True, True),
+        ("climate.is_cooling", {}, True, True),
+        ("climate.is_drying", {}, True, True),
+        ("climate.is_heating", {}, True, True),
     ],
 )
 async def test_climate_condition_options_validation(
@@ -332,6 +332,7 @@ async def test_climate_attribute_condition_behavior_all(
             "climate.target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_any(
             "climate.target_temperature",
@@ -376,6 +377,7 @@ async def test_climate_numerical_condition_behavior_any(
             "climate.target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_all(
             "climate.target_temperature",

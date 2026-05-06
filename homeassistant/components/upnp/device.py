@@ -1,7 +1,5 @@
 """Home Assistant representation of an UPnP/IGD."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from functools import partial
 from ipaddress import ip_address

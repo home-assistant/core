@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -166,3 +164,8 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         """Return the current day data."""
         current_day = dt_util.now().date()
         return self.data.entries[current_day]
+
+    def get_data_tomorrow(self) -> DeliveryPeriodData | None:
+        """Return tomorrow's day data if available."""
+        tomorrow = dt_util.now().date() + timedelta(days=1)
+        return self.data.entries.get(tomorrow)

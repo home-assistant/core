@@ -16,139 +16,25 @@ from tests.components.common import (
     assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
 )
+
+# Brightness is stored as a uint8 (0-255) but the trigger threshold is in
+# percent (0-100). The generic numerical-attribute helpers feed values in
+# the threshold's percent space and scale them by `attribute_value_scale`
+# to land on the entity's storage values; for brightness that's
+# 255/100 = 2.55 (so 0/50/60/100 -> 0/127.5/153/255).
+_BRIGHTNESS_VALUE_SCALE = 255 / 100
 
 
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple light entities associated with different targets."""
     return await target_entities(hass, "light")
-
-
-def parametrize_brightness_changed_trigger_states(
-    trigger: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for brightness changed triggers.
-
-    Note: The brightness in the trigger configuration is in percentage (0-100) scale,
-    the underlying attribute in the state is in uint8 (0-255) scale.
-    """
-    return [
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "any"}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[(state, {attribute: None})],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 255}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-    ]
-
-
-def parametrize_brightness_crossed_threshold_trigger_states(
-    trigger: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for brightness crossed threshold triggers.
-
-    Note: The brightness in the trigger configuration is in percentage (0-100) scale,
-    the underlying attribute in the state is in uint8 (0-255) scale.
-    """
-    return [
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                "threshold": {
-                    "type": "between",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 90},
-                }
-            },
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 153}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-                (state, {attribute: 255}),
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                "threshold": {
-                    "type": "outside",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 90},
-                }
-            },
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 128}),
-                (state, {attribute: 153}),
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 255}),
-            ],
-        ),
-    ]
 
 
 @pytest.mark.parametrize(
@@ -243,11 +129,17 @@ async def test_light_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_brightness_changed_trigger_states(
-            "light.brightness_changed", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "light.brightness_changed",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
-        *parametrize_brightness_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )
@@ -325,8 +217,11 @@ async def test_light_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_brightness_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )
@@ -404,8 +299,11 @@ async def test_light_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_brightness_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )

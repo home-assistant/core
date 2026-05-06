@@ -1,7 +1,5 @@
 """Todo platform for the Bring! integration."""
 
-from __future__ import annotations
-
 from itertools import chain
 from typing import TYPE_CHECKING
 import uuid

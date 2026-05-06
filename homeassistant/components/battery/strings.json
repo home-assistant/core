@@ -26,6 +26,9 @@
         "behavior": {
           "name": "[%key:component::battery::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::battery::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::battery::common::condition_threshold_name%]"
         }
@@ -67,21 +70,6 @@
         }
       },
       "name": "Battery is not low"
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "title": "Battery",

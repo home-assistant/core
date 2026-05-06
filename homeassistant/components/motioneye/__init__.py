@@ -1,7 +1,5 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from http import HTTPStatus

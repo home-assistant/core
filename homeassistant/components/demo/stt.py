@@ -1,7 +1,5 @@
 """Support for the demo for speech-to-text service."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 
 from homeassistant.components.stt import (

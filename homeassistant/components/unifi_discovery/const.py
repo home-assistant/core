@@ -8,6 +8,7 @@ DOMAIN = "unifi_discovery"
 # This must be static (not a runtime registry) because consumers may not be loaded
 # when initial discovery runs — the same pattern DHCP/SSDP use with manifest matchers.
 CONSUMER_MAPPING: dict[UnifiService, str] = {
-    UnifiService.Protect: "unifiprotect",
     UnifiService.Access: "unifi_access",
+    UnifiService.Network: "unifi",
+    UnifiService.Protect: "unifiprotect",
 }

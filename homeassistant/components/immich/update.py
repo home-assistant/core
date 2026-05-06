@@ -1,7 +1,5 @@
 """Update platform for the Immich integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

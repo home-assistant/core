@@ -1,7 +1,5 @@
 """Data update coordinator for caldav."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
