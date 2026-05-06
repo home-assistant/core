@@ -60,6 +60,13 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    def _should_include(self, state: State) -> bool:
+        """Skip water heater entities that do not expose a target temperature."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_TEMPERATURE) is not None
+        )
+
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
         # Water heater entities convert temperatures to the system unit via show_temp
