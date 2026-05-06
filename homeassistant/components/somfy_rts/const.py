@@ -1,0 +1,10 @@
+"""Constants for the Somfy RTS integration."""
+
+from typing import Final
+
+DOMAIN: Final = "somfy_rts"
+
+CONF_ADDRESS: Final = "address"
+CONF_TRANSMITTER: Final = "transmitter"
+
+STORAGE_VERSION: Final = 1

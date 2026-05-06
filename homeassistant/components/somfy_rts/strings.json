@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "No radio frequency transmitter supports 433.42 MHz OOK transmissions. Please add a compatible transmitter first.",
+      "no_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first."
+    },
+    "error": {
+      "invalid_address": "Address must be a hexadecimal value between 000001 and FFFFFF."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "address": "Remote address",
+          "transmitter": "Radio frequency transmitter"
+        },
+        "data_description": {
+          "address": "The 24-bit hexadecimal address of the Somfy RTS remote (e.g. 1A2B3C).",
+          "transmitter": "The radio frequency transmitter used to send Somfy RTS commands."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "prog": {
+        "name": "PROG"
+      }
+    }
+  }
+}

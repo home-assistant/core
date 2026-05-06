@@ -1,0 +1,12 @@
+{
+  "domain": "somfy_rts",
+  "name": "Somfy RTS",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["radio_frequency"],
+  "documentation": "https://www.home-assistant.io/integrations/somfy_rts",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze",
+  "requirements": ["rf-protocols==2.2.0"]
+}
