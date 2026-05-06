@@ -1,7 +1,5 @@
 """Plugin to enforce type hints on specific functions."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
 import re
