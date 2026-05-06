@@ -204,8 +204,8 @@ class HomematicipHAP:
             await asyncio.sleep(30)
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
-    def _websocket_diagnostic_context(self) -> str:
-        """Return a single-line summary of websocket diagnostics for logs."""
+    def websocket_diagnostics(self) -> dict[str, Any]:
+        """Return websocket diagnostics dict (None values omitted)."""
         diagnostics = {
             "last_disconnect_reason": self.home.websocket_last_disconnect_reason(),
             "reconnect_attempts": self.home.websocket_reconnect_attempt_count(),
@@ -214,12 +214,14 @@ class HomematicipHAP:
             ),
             "message_count": self.home.websocket_message_count(),
         }
-        rendered = ", ".join(
-            f"{key}={value!r}"
-            for key, value in diagnostics.items()
-            if value is not None
-        )
-        return rendered or "no diagnostics available"
+        return {k: v for k, v in diagnostics.items() if v is not None}
+
+    def _websocket_diagnostic_context(self) -> str:
+        """Return a single-line summary of websocket diagnostics for logs."""
+        diagnostics = self.websocket_diagnostics()
+        if not diagnostics:
+            return "no diagnostics available"
+        return ", ".join(f"{k}={v!r}" for k, v in diagnostics.items())
 
     @callback
     def _start_get_state_task(self) -> None:
@@ -301,6 +303,10 @@ class HomematicipHAP:
             except asyncio.CancelledError:
                 raise
             except Exception:
+                # Catch-all is intentional: this is the recovery loop after
+                # reconnect, and we must keep retrying rather than die on an
+                # unforeseen error. core#160048 had a NoneType error that
+                # would have been swallowed silently by a narrow catch.
                 _LOGGER.exception(
                     "Unexpected error updating state after HomematicIP "
                     "reconnect, retrying in %s seconds (%s)",
