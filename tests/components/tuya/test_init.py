@@ -204,8 +204,8 @@ async def test_device_registry_with_quirk(
     device_registry: dr.DeviceRegistry,
     platforms: list[str],
     manufacturer: str,
-    model: str,
-    model_id: str,
+    model: str | None,
+    model_id: str | None,
     quirks: dict[str, MagicMock],
 ) -> None:
     """Validate device information with and without quirks."""
