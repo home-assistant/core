@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 from .entity import PTDevicesEntity
@@ -29,7 +30,7 @@ class PTDevicesBinarySensors(StrEnum):
 class PTDevicesBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description for PTDevices binary sensor entities."""
 
-    is_on_fn: Callable[[dict[str, str | int | float | None]], bool]
+    is_on_fn: Callable[[dict[str, StateType]], bool]
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] = (
