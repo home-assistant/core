@@ -72,7 +72,7 @@ async def test_step_setup_local(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_local"
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with (
         patch(
@@ -120,7 +120,7 @@ async def test_step_local_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_local"
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with (
         patch(
@@ -137,6 +137,7 @@ async def test_step_local_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_auth"
+    assert not result["errors"]
 
     with (
         patch(
@@ -185,7 +186,7 @@ async def test_step_setup_cloud(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_cloud"
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with (
         patch(
@@ -211,6 +212,105 @@ async def test_step_setup_cloud(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
+async def test_step_setup_cloud_invalid_serial_number(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert "setup_cloud" in result["menu_options"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "setup_cloud"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERIAL_NUMBER: "invalid_serial",
+            CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+    assert result["errors"]["serial_number"] == "invalid_serial_number"
+
+
+async def test_step_setup_cloud_invalid_token(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert "setup_cloud" in result["menu_options"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "setup_cloud"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERIAL_NUMBER: "1601500000000000",
+            CONF_TOKEN: "invalid_token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+    assert result["errors"]["token"] == "invalid_cloud_api_token"
+
+
+async def test_step_setup_cloud_wrong_serial_or_token(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert "setup_cloud" in result["menu_options"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "setup_cloud"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVCloudDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_NUMBER: "1601500000000001",
+                CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_cloud"
+    assert result["errors"]["base"] == "invalid_serial_number_or_cloud_api_token"
+
+
 async def test_step_dhcp(hass: HomeAssistant) -> None:
     """Test for DHCP discovery that does not requires a password."""
 
@@ -230,6 +330,7 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
 
     with (
         patch(
@@ -274,7 +375,8 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "local_auth"
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
 
     with (
         patch(
@@ -302,6 +404,42 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "test-password",
     }
     assert result["result"].unique_id == "1601500000000000"
+
+
+async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
+    """Test for DHCP discovery that requires a password."""
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_DHCP,
+            },
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"]["password"] == "invalid_password"
 
 
 async def test_step_zeroconf(hass: HomeAssistant) -> None:
@@ -322,7 +460,8 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "local_auth"
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
 
     with (
         patch(
@@ -352,7 +491,43 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
-async def test_step_local_reauth(
+async def test_step_zeroconf_wrong_password(hass: HomeAssistant) -> None:
+    """Test for Zeroconf discovery that requires a password."""
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_ZEROCONF,
+            },
+            data=ZEROCONF_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"]["password"] == "invalid_password"
+
+
+async def test_step_reauth_local(
     hass: HomeAssistant,
     mock_local_config_entry: MockConfigEntry,
 ) -> None:
@@ -375,7 +550,8 @@ async def test_step_local_reauth(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "local_auth"
+    assert result["step_id"] == "reauth_local"
+    assert not result["errors"]
 
     with (
         patch(
@@ -399,7 +575,51 @@ async def test_step_local_reauth(
     assert updated_entry.data[CONF_PASSWORD] == "new-password"
 
 
-async def test_step_cloud_reauth(
+async def test_step_reauth_local_wrong_password(
+    hass: HomeAssistant,
+    mock_local_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth of local devices."""
+    mock_local_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_local_config_entry.entry_id,
+            },
+            data=mock_local_config_entry.data,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_local"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "wrong-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_local"
+    assert result["errors"]["password"] == "invalid_password"
+
+
+async def test_step_reauth_cloud(
     hass: HomeAssistant,
     mock_cloud_config_entry: MockConfigEntry,
 ) -> None:
@@ -422,7 +642,8 @@ async def test_step_cloud_reauth(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "setup_cloud"
+    assert result["step_id"] == "reauth_cloud"
+    assert not result["errors"]
 
     with (
         patch(
