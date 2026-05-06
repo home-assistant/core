@@ -27,6 +27,7 @@ async def test_create_entry(
     """Test we can create a config entry."""
     hass.config.external_url = "http://example.com"
     await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "webhook", {})
 
     with patch("secrets.token_hex", return_value=WEBHOOK_ID):
         result = await hass.config_entries.flow.async_init(
@@ -60,5 +61,5 @@ async def test_create_entry(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(result["data"][CONF_WEBHOOK_ID]) == 8
+    assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
     assert len(mock_setup_entry.mock_calls) == 1

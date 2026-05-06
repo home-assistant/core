@@ -1,7 +1,5 @@
 """The mapping of a CCL Entity."""
 
-from __future__ import annotations
-
 from aioccl import CCLSensor
 
 from homeassistant.helpers.device_registry import DeviceInfo

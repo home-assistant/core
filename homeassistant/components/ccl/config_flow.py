@@ -1,7 +1,5 @@
 """Config flow for CCL Electronics."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -14,6 +12,7 @@ from yarl import URL
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from . import devices, register_webhook
@@ -106,6 +105,12 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 webhook.async_unregister(self.hass, self.data[CONF_WEBHOOK_ID])
                 devices.pop(self.data[CONF_WEBHOOK_ID], None)
                 return self.async_abort(reason="connect_timeout")
+            except AbortFlow:
+                _LOGGER.debug("Device already configured during config flow")
+                self.task_one = None
+                webhook.async_unregister(self.hass, self.data[CONF_WEBHOOK_ID])
+                devices.pop(self.data[CONF_WEBHOOK_ID], None)
+                return self.async_abort(reason="already_configured")
 
         if uncompleted_task:
             return self.async_show_progress(

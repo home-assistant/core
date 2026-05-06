@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 import dataclasses
 
 from aioccl import CCLSensor, CCLSensorTypes
