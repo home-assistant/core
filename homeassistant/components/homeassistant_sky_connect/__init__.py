@@ -194,6 +194,15 @@ async def async_migrate_entry(
                     minor_version=4,
                 )
 
+        if config_entry.minor_version == 4:
+            # Replace the synthetic unique ID with the USB serial number
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=config_entry.data[SERIAL_NUMBER],
+                version=1,
+                minor_version=5,
+            )
+
         _LOGGER.debug(
             "Migration to version %s.%s successful",
             config_entry.version,

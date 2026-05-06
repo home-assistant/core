@@ -62,7 +62,8 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.version == 1
-    assert config_entry.minor_version == 4
+    assert config_entry.minor_version == 5
+    assert config_entry.unique_id == "3c0ed67c628beb11b1cd64a0f320645d"
     assert config_entry.data == {
         "description": "SkyConnect v1.0",
         "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
@@ -282,12 +283,19 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
 
     updated_entry = hass.config_entries.async_get_entry(fixable_entry.entry_id)
     assert updated_entry is not None
+    assert updated_entry.minor_version == 5
+    assert updated_entry.unique_id == "4f5f3b26d59f8714a78b599690741999"
     assert updated_entry.data[VID] == "10C4"
     assert updated_entry.data[PID] == "EA60"
     assert updated_entry.data[SERIAL_NUMBER] == "4f5f3b26d59f8714a78b599690741999"
     assert updated_entry.data[MANUFACTURER] == "Nabu Casa"
     assert updated_entry.data[PRODUCT] == "SkyConnect v1.0"
     assert updated_entry.data[DESCRIPTION] == "SkyConnect v1.0"
+
+    migrated_new_entry = hass.config_entries.async_get_entry(new_entry.entry_id)
+    assert migrated_new_entry is not None
+    assert migrated_new_entry.minor_version == 5
+    assert migrated_new_entry.unique_id == "9e2adbd75b8beb119fe564a0f320645d"
 
     untouched_bad_entry = hass.config_entries.async_get_entry(bad_entry.entry_id)
     assert untouched_bad_entry.minor_version == 3
