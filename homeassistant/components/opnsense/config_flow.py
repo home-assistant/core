@@ -137,7 +137,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (name := ifinfo.get("name"))
             ]
             self.available_interfaces = list(known_interfaces)
-            self._unique_id = client.get_device_unique_id()
+            self._unique_id = await client.get_device_unique_id()
         except OPNsenseInvalidAuth:
             errors["base"] = "invalid_auth"
         except OPNsensePrivilegeMissing:
@@ -271,7 +271,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
 
-        unique_id = client.get_device_unique_id()
+        unique_id = await client.get_device_unique_id()
         if unique_id:
             await self.async_set_unique_id(unique_id)
 
@@ -309,6 +309,14 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"import_failed_{reason}",
-            translation_placeholders={"url": url, "integration_title": "OPNsense"},
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "OPNsense",
+            },
         )
-        return self.async_abort(reason=reason, description_placeholders={"url": url})
+        return self.async_abort(
+            reason=reason,
+            description_placeholders={
+                "integration_title": "OPNsense",
+            },
+        )
