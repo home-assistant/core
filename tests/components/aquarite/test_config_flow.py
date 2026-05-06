@@ -118,6 +118,56 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_cannot_connect_during_pool_fetch(hass: HomeAssistant) -> None:
+    """Test connectivity error while fetching pools surfaces as cannot_connect."""
+    with (
+        patch(PATCH_AUTH) as mock_auth_cls,
+        patch(PATCH_CLIENT) as mock_client_cls,
+    ):
+        mock_auth = AsyncMock()
+        mock_auth.user_id = MOCK_USER_ID
+        mock_auth_cls.return_value = mock_auth
+        mock_client = AsyncMock()
+        mock_client.get_pools = AsyncMock(side_effect=AquariteError("network down"))
+        mock_client_cls.return_value = mock_client
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_unknown_exception_during_pool_fetch(hass: HomeAssistant) -> None:
+    """Test unexpected error while fetching pools surfaces as unknown."""
+    with (
+        patch(PATCH_AUTH) as mock_auth_cls,
+        patch(PATCH_CLIENT) as mock_client_cls,
+    ):
+        mock_auth = AsyncMock()
+        mock_auth.user_id = MOCK_USER_ID
+        mock_auth_cls.return_value = mock_auth
+        mock_client = AsyncMock()
+        mock_client.get_pools = AsyncMock(side_effect=RuntimeError("boom"))
+        mock_client_cls.return_value = mock_client
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_unknown_exception(hass: HomeAssistant) -> None:
     """Test unknown error during auth is handled."""
     with patch(PATCH_AUTH) as mock_auth_cls:
