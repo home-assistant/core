@@ -1,11 +1,14 @@
 """Test OpenAQ data coordinator helpers."""
 
 from types import MappingProxyType, SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import httpx
 
 from homeassistant.components.openaq.coordinator import (
+    HomeAssistantOpenAQTransport,
     OpenAQMeasurement,
+    async_create_openaq_client,
     create_openaq_client,
     get_openaq_value,
     normalize_latest_measurements,
@@ -14,8 +17,38 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
+from homeassistant.core import HomeAssistant
 
 from .conftest import make_latest, make_sensor
+
+
+async def test_transport_sends_request_with_shared_httpx_client() -> None:
+    """Test the transport sends requests with the shared httpx client."""
+    response = httpx.Response(
+        200,
+        json={"results": []},
+        request=httpx.Request("GET", "https://api.openaq.org/v3/locations"),
+    )
+    httpx_client = AsyncMock(spec=httpx.AsyncClient)
+    httpx_client.request.return_value = response
+
+    transport = HomeAssistantOpenAQTransport(httpx_client)
+
+    assert (
+        await transport.send_request(
+            "GET",
+            "https://api.openaq.org/v3/locations",
+            params={"limit": 1},
+            headers={"X-API-Key": "api-key"},
+        )
+        is response
+    )
+    httpx_client.request.assert_awaited_once_with(
+        method="GET",
+        url="https://api.openaq.org/v3/locations",
+        params={"limit": 1},
+        headers={"X-API-Key": "api-key"},
+    )
 
 
 async def test_create_openaq_client_keeps_shared_httpx_client_open() -> None:
@@ -27,6 +60,25 @@ async def test_create_openaq_client_keeps_shared_httpx_client_open() -> None:
         assert client.transport.client is httpx_client
         await client.close()
         assert not httpx_client.is_closed
+    finally:
+        await httpx_client.aclose()
+
+
+async def test_async_create_openaq_client_uses_shared_httpx_client(
+    hass: HomeAssistant,
+) -> None:
+    """Test creating an OpenAQ client from Home Assistant."""
+    httpx_client = httpx.AsyncClient()
+
+    try:
+        with patch(
+            "homeassistant.components.openaq.coordinator.get_async_client",
+            return_value=httpx_client,
+        ):
+            client = await async_create_openaq_client(hass, "api-key")
+
+        assert client.transport.client is httpx_client
+        await client.close()
     finally:
         await httpx_client.aclose()
 
@@ -45,6 +97,7 @@ def test_normalize_latest_measurements_ignores_invalid_data() -> None:
         [
             make_latest("1", 8.5),
             make_latest("unknown", 12.1),
+            make_latest(999, 44.1),
             make_latest(2, True),
             make_latest(3, 33.2),
         ],
