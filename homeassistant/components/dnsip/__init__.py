@@ -2,13 +2,14 @@
 
 import asyncio
 from dataclasses import dataclass
+import logging
 
 import aiodns
 from aiodns.error import DNSError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -21,6 +22,8 @@ from .const import (
     DEFAULT_PORT,
     PLATFORMS,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
