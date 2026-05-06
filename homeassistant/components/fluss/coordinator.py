@@ -96,7 +96,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, FlussDevice]]):
                 internet_connected = status.get("internetConnected", False)
                 if "openCloseStatus" in status:
                     self._cover_capable.add(device_id)
-                    is_closed = status["openCloseStatus"] == "Close"
+                    is_closed = status["openCloseStatus"] == "Closed"
                 else:
                     is_closed = None
 

@@ -69,7 +69,7 @@ async def test_covers(
     """Test cover entity registration."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {
-            DEVICE_ID_1: {"openCloseStatus": "Close"},
+            DEVICE_ID_1: {"openCloseStatus": "Closed"},
             DEVICE_ID_2: {"openCloseStatus": "Open"},
         }
     )
@@ -79,7 +79,7 @@ async def test_covers(
 
 @pytest.mark.parametrize(
     ("status_value", "expected_state"),
-    [("Close", STATE_CLOSED), ("Open", STATE_OPEN)],
+    [("Closed", STATE_CLOSED), ("Open", STATE_OPEN)],
 )
 async def test_cover_state(
     hass: HomeAssistant,
@@ -88,7 +88,7 @@ async def test_cover_state(
     status_value: str,
     expected_state: str,
 ) -> None:
-    """The API contract is exactly "Open" or "Close" — verify both map correctly."""
+    """The API contract is exactly "Open" or "Closed" — verify both map correctly."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": status_value}}
     )
@@ -115,7 +115,7 @@ async def test_cover_commands(
 ) -> None:
     """Open and close call the matching API method and trigger a refresh."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Close"}}
+        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
     await _setup_cover_only(hass, mock_config_entry)
     mock_api_client.async_get_device_status.reset_mock()
@@ -148,7 +148,7 @@ async def test_cover_command_error(
 ) -> None:
     """Library errors are translated to HomeAssistantError."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Close"}}
+        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
     await _setup_cover_only(hass, mock_config_entry)
 
@@ -171,7 +171,7 @@ async def test_mixed_device_dispatch(
 ) -> None:
     """A device with openCloseStatus is a cover; a device without is a button."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Close"}}
+        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
     await setup_integration(hass, mock_config_entry)
 
@@ -199,7 +199,7 @@ async def test_cover_promotes_button_when_capability_appears(
     assert entity_registry.async_get("cover.device_1") is None
 
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Close"}}
+        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
@@ -216,7 +216,7 @@ async def test_cover_state_preserved_on_transient_status_error(
 ) -> None:
     """A failed per-device status call must not drop is_closed to None."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Close"}}
+        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
     await _setup_cover_only(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
