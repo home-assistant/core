@@ -363,28 +363,30 @@ class AppleTvMediaPlayer(
             media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
-        if not self._stream_file_supported and not self._play_url_supported:
+        use_stream_file = self._stream_file_supported and (
+            media_type == MediaType.MUSIC or await is_streamable(media_id)
+        )
+
+        if not use_stream_file and not self._play_url_supported:
             _LOGGER.error("Media streaming is not possible with current configuration")
             return
 
         try:
-            if self._stream_file_supported and (
-                media_type == MediaType.MUSIC or await is_streamable(media_id)
-            ):
+            if use_stream_file:
                 _LOGGER.debug("Streaming %s via RAOP", media_id)
                 await self.atv.stream.stream_file(media_id)
             else:
                 _LOGGER.debug("Playing %s via AirPlay", media_id)
                 await self.atv.stream.play_url(media_id)
         except exceptions.NotSupportedError as ex:
-            raise HomeAssistantError(f"Streaming not supported for {media_id}") from ex
+            raise HomeAssistantError("Streaming not supported") from ex
         except (
             exceptions.BlockedStateError,
             exceptions.ConnectionLostError,
             exceptions.PlaybackError,
             exceptions.ProtocolError,
         ) as ex:
-            raise HomeAssistantError(f"Failed to stream media: {ex}") from ex
+            raise HomeAssistantError("Failed to stream media") from ex
 
     @property
     def media_image_hash(self) -> str | None:
