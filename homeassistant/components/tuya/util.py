@@ -1,33 +1,10 @@
 """Utility methods for the Tuya integration."""
 
-from __future__ import annotations
-
 from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
 
 from .const import DOMAIN, DPCode
-
-
-def get_dpcode(
-    device: CustomerDevice, dpcodes: str | tuple[str, ...] | None
-) -> str | None:
-    """Get the first matching DPCode from the device or return None."""
-    if dpcodes is None:
-        return None
-
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    for dpcode in dpcodes:
-        if (
-            dpcode in device.function
-            or dpcode in device.status
-            or dpcode in device.status_range
-        ):
-            return dpcode
-
-    return None
 
 
 class ActionDPCodeNotFoundError(ServiceValidationError):

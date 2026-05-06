@@ -1,7 +1,5 @@
 """Representation of an RGB light."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from zwave_me_ws import ZWaveMeData
@@ -14,19 +12,18 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the rgb platform."""
@@ -34,14 +31,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         """Add a new device."""
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        rgb = ZWaveMeRGB(controller, new_device)
-
-        async_add_entities(
-            [
-                rgb,
-            ]
-        )
+        async_add_entities([ZWaveMeRGB(config_entry.runtime_data, new_device)])
 
     async_dispatcher_connect(
         hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device

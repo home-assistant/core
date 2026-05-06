@@ -218,22 +218,30 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_changed",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -342,13 +350,17 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -457,13 +469,17 @@ async def test_climate_state_trigger_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",

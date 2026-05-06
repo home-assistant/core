@@ -695,7 +695,7 @@ async def test_invalid_model(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-haiku-20240307",
+                    CONF_CHAT_MODEL: "claude-haiku-4-5",
                     CONF_PROMPT_CACHING: "automatic",
                 },
                 {},
@@ -704,8 +704,13 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "automatic",
-                CONF_CHAT_MODEL: "claude-3-haiku-20240307",
+                CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Test switching from custom to recommended options

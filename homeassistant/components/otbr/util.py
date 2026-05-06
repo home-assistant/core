@@ -1,7 +1,5 @@
 """Utility functions for the Open Thread Border Router integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps

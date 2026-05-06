@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
@@ -174,6 +172,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "dsp-w215",
     },
     {
+        "domain": "duco",
+        "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -267,6 +269,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fumis",
+        "macaddress": "0016D0*",
+    },
+    {
         "domain": "fyta",
         "hostname": "fyta*",
     },
@@ -324,6 +330,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*",
+    },
+    {
+        "domain": "iaqualink",
+        "hostname": "iaqualink-*",
     },
     {
         "domain": "incomfort",

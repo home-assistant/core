@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 from typing import Any
