@@ -36,10 +36,10 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
 
-    File is removed at the end of the context. Should be ran on the executor thread pool.
+    File is removed at the end of the context. Should be run on the executor thread pool.
     Create a wrapper function and call that wrapper function using
     hass.async_add_executor_job. Running this function directly by scheduling an executor
-    job will result in loop blocking teardown code not being ran on the executor but
+    job will result in loop blocking teardown code not running on the executor but
     rather in the loop.
     """
     if DOMAIN not in hass.data:
