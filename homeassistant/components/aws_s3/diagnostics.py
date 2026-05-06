@@ -1,7 +1,5 @@
 """Diagnostics support for AWS S3."""
 
-from __future__ import annotations
-
 import dataclasses
 from typing import Any
 

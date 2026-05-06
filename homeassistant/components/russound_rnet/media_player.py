@@ -1,7 +1,5 @@
 """Support for interfacing with Russound via RNET Protocol."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib

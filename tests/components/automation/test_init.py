@@ -45,7 +45,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -4100,3 +4100,54 @@ async def test_remove_automation_unloads_condition_and_script(
 
     condition_unload.assert_called_once()
     script_unload.assert_called_once()
+
+
+async def test_automation_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that an automation still works after its entity_id is changed."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation"
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.custom_id"
+    )
+    assert entry.entity_id == "automation.custom_id"
+
+    hass.states.async_set("binary_sensor.test", "on")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "binary_sensor.test",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    # Automation should work with the custom entity_id
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Change entity_id while loaded
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.custom_id_2"
+    )
+    assert entry.entity_id == "automation.custom_id_2"
+    await hass.async_block_till_done()
+
+    # Automation should still work after entity_id change
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2

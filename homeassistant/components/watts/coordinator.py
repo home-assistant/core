@@ -1,7 +1,5 @@
 """Data coordinator for Watts Vision integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging

@@ -1,7 +1,5 @@
 """Helpers for HomeKit data stored in HA storage."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

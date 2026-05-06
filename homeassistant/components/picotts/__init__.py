@@ -1,7 +1,5 @@
 """The Pico TTS integration."""
 
-from __future__ import annotations
-
 import shutil
 
 from homeassistant.config_entries import ConfigEntry

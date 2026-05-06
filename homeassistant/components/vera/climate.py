@@ -1,7 +1,5 @@
 """Support for Vera thermostats."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pyvera as veraApi

@@ -12,12 +12,28 @@ from homeassistant.components.prusalink.config_flow import ConfigFlow
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("mock_api")
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device info is populated with serial number and firmware version."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.serial_number == "serial-1337"
+    assert device.sw_version == "6.1.2+11023"
 
 
 async def test_unloading(

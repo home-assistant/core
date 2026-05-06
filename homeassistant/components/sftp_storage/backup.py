@@ -1,7 +1,5 @@
 """Backup platform for the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from typing import Any
 

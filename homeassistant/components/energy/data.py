@@ -1,7 +1,5 @@
 """Energy data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable

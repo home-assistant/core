@@ -1,7 +1,5 @@
 """The tests for the wake on lan button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory

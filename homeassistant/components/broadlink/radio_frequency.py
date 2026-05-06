@@ -1,7 +1,5 @@
 """Radio Frequency platform for Broadlink."""
 
-from __future__ import annotations
-
 import logging
 
 from broadlink.exceptions import BroadlinkException

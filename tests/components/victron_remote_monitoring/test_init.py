@@ -1,7 +1,5 @@
 """Tests for Victron Remote Monitoring integration setup and auth handling."""
 
-from __future__ import annotations
-
 import pytest
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 

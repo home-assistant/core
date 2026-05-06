@@ -1,7 +1,5 @@
 """Support for Huawei LTE routers."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
 
-from __future__ import annotations
-
 from mill import Heater, MillDevice
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity

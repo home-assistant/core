@@ -100,11 +100,11 @@ def create_event_messages(
             "event.front_chime",
             {
                 "device_class": "doorbell",
-                "event_types": ["doorbell_chime"],
+                "event_types": ["ring"],
                 "friendly_name": "Front Chime",
             },
             EventType.DOORBELL_CHIME,
-            "doorbell_chime",
+            "ring",
         ),
         (
             [TraitType.CAMERA_MOTION, TraitType.CAMERA_PERSON, TraitType.CAMERA_SOUND],
@@ -205,7 +205,7 @@ async def test_ignore_unrelated_event(
     assert state.attributes == {
         "device_class": "doorbell",
         "event_type": None,
-        "event_types": ["doorbell_chime"],
+        "event_types": ["ring"],
         "friendly_name": "Front Chime",
     }
 
@@ -249,9 +249,9 @@ async def test_event_threads(
     assert state.state == "2024-08-24T12:00:02.000+00:00"
     assert state.attributes == {
         "device_class": "doorbell",
-        "event_types": ["doorbell_chime"],
+        "event_types": ["ring"],
         "friendly_name": "Front Chime",
-        "event_type": "doorbell_chime",
+        "event_type": "ring",
         "nest_event_id": ENCODED_EVENT_ID,
     }
 
@@ -280,9 +280,9 @@ async def test_event_threads(
     )  # A second event is not received
     assert state.attributes == {
         "device_class": "doorbell",
-        "event_types": ["doorbell_chime"],
+        "event_types": ["ring"],
         "friendly_name": "Front Chime",
-        "event_type": "doorbell_chime",
+        "event_type": "ring",
         "nest_event_id": ENCODED_EVENT_ID,
     }
 
@@ -309,8 +309,8 @@ async def test_event_threads(
     assert state.state == "2024-08-24T12:00:06.000+00:00"  # Third event is received
     assert state.attributes == {
         "device_class": "doorbell",
-        "event_types": ["doorbell_chime"],
+        "event_types": ["ring"],
         "friendly_name": "Front Chime",
-        "event_type": "doorbell_chime",
+        "event_type": "ring",
         "nest_event_id": ENCODED_EVENT_ID2,
     }
