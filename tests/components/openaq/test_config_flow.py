@@ -23,6 +23,7 @@ from openaq import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.openaq.config_flow import OpenAQLocationFlowData
 from homeassistant.components.openaq.const import (
     CONF_LIMIT,
     CONF_LOCATION_ID,
@@ -265,6 +266,38 @@ async def test_location_subentry_map_flow_sorts_by_sensor_count_before_distance(
     ]
 
 
+async def test_location_subentry_map_flow_labels_unknown_distance(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test map search labels locations with invalid distances."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response(
+        [make_location(location_id=9999, distance=True)]
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
+            CONF_RADIUS: 5000,
+            CONF_LIMIT: 10,
+        },
+    )
+
+    assert _get_select_options(result) == [
+        SelectOptionDict(
+            value="9999",
+            label="Del Norte, Albuquerque - 1 sensor: PM2.5 - unknown distance",
+        )
+    ]
+
+
 async def test_location_subentry_map_flow_limits_to_top_five_locations(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
@@ -463,6 +496,41 @@ async def test_location_subentry_invalid_map_location_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "map"
     assert result["errors"] == {"base": "no_locations_found"}
+
+
+async def test_location_subentry_invalid_map_sensors(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test map search ignores locations without sensor lists."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response(
+        [SimpleNamespace(id=9999, name="Bad", locality="Albuquerque", sensors=None)]
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
+            CONF_RADIUS: 5000,
+            CONF_LIMIT: 10,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "map"
+    assert result["errors"] == {"base": "no_locations_found"}
+
+
+def test_location_select_label_without_supported_parameters() -> None:
+    """Test location select label with no supported parameters."""
+    location = OpenAQLocationFlowData(location_id=9999, title="Del Norte")
+
+    assert location.select_label == "Del Norte"
 
 
 @pytest.mark.parametrize(
