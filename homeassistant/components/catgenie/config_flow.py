@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from catgenie import CatGenieAuth
@@ -48,12 +47,12 @@ class CatGenieConfigFlow(ConfigFlow, domain=DOMAIN):
             self._country_code = user_input[CONF_COUNTRY_CODE]
             self._phone = user_input[CONF_PHONE]
 
+            auth = CatGenieAuth()
             try:
-                async with CatGenieAuth() as auth:
-                    await auth.request_login_code(
-                        country_code=self._country_code,
-                        phone=self._phone,
-                    )
+                await auth.request_login_code(
+                    country_code=self._country_code,
+                    phone=self._phone,
+                )
             except CatGenieAuthenticationError:
                 errors["base"] = "cannot_connect"
             except CatGenieException:
@@ -75,13 +74,13 @@ class CatGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            auth = CatGenieAuth()
             try:
-                async with CatGenieAuth() as auth:
-                    credentials = await auth.login(
-                        country_code=self._country_code,
-                        phone=self._phone,
-                        code=user_input[CONF_CODE],
-                    )
+                credentials = await auth.login(
+                    country_code=self._country_code,
+                    phone=self._phone,
+                    code=user_input[CONF_CODE],
+                )
             except CatGenieAuthenticationError:
                 errors["base"] = "invalid_auth"
             except CatGenieException:
@@ -98,76 +97,6 @@ class CatGenieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=CONF_CODE,
-            data_schema=STEP_CODE_DATA_SCHEMA,
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-authentication when the token is rejected."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-auth: collect phone number and request a new SMS code."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self._country_code = user_input[CONF_COUNTRY_CODE]
-            self._phone = user_input[CONF_PHONE]
-
-            try:
-                async with CatGenieAuth() as auth:
-                    await auth.request_login_code(
-                        country_code=self._country_code,
-                        phone=self._phone,
-                    )
-            except CatGenieAuthenticationError:
-                errors["base"] = "cannot_connect"
-            except CatGenieException:
-                LOGGER.exception("Unexpected exception requesting login code")
-                errors["base"] = "unknown"
-            else:
-                return await self.async_step_reauth_code()
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=STEP_PHONE_DATA_SCHEMA,
-            errors=errors,
-        )
-
-    async def async_step_reauth_code(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-auth: enter the new SMS code."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                async with CatGenieAuth() as auth:
-                    credentials = await auth.login(
-                        country_code=self._country_code,
-                        phone=self._phone,
-                        code=user_input[CONF_CODE],
-                    )
-            except CatGenieAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except CatGenieException:
-                LOGGER.exception("Unexpected exception during re-auth login")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(credentials.user_id)
-                self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
-                reauth_entry = self._get_reauth_entry()
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data={CONF_TOKEN: credentials.refresh_token},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_code",
             data_schema=STEP_CODE_DATA_SCHEMA,
             errors=errors,
         )

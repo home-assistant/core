@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.catgenie.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_CREDENTIALS = Credentials(
     access_token="test-access-token",
@@ -26,47 +26,7 @@ MOCK_ENTRY_DATA = {
     CONF_TOKEN: "test-refresh-token",
 }
 
-MOCK_DEVICE_DATA = {
-    "manufacturerId": "DEVICE001",
-    "name": "CatGenie Litter Box",
-    "macAddress": "AA:BB:CC:DD:EE:FF",
-    "hwRevision": "1.0",
-    "fwVersion": "2.5.1",
-    "type": 0,
-    "pumpTypeEnum": "",
-    "status": 2,
-    "reportedStatus": "connected",
-    "connectionMode": "wifi",
-    "lastClean": "2024-01-15T10:30:00Z",
-    "remainingSaniSolution": 75,
-    "serviceLevel": "",
-    "countryCode": 61,
-    "lowHeater": False,
-    "fanShutter": False,
-    "dome": False,
-    "configuration": {
-        "childLock": 0,
-        "autoLock": 0,
-        "volumeLevel": 7,
-        "mode": 0,
-        "catSense": 16,
-        "timezone": "+10:00",
-        "catDelay": 600,
-        "pumpPctT": 100,
-        "extraDry": False,
-        "schedule": [],
-        "activation": {
-            "date": "2023-06-01T00:00:00Z",
-            "state": 1,
-            "count": 150,
-        },
-    },
-    "operationStatus": {
-        "state": 1,
-        "progress": 42,
-    },
-    "activeErrors": [],
-}
+MOCK_DEVICE_DATA = load_json_object_fixture("device.json", DOMAIN)
 
 
 @pytest.fixture
@@ -92,10 +52,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_catgenie_auth() -> Generator[MagicMock]:
     """Mock CatGenieAuth."""
-    with patch(
-        "homeassistant.components.catgenie.config_flow.CatGenieAuth",
-        autospec=True,
-    ) as mock_auth_cls:
+    with (
+        patch(
+            "homeassistant.components.catgenie.CatGenieAuth",
+            autospec=True,
+        ) as mock_auth_cls,
+        patch(
+            "homeassistant.components.catgenie.config_flow.CatGenieAuth",
+            new=mock_auth_cls,
+        ),
+    ):
         mock_auth = mock_auth_cls.return_value
         mock_auth.__aenter__ = AsyncMock(return_value=mock_auth)
         mock_auth.__aexit__ = AsyncMock(return_value=None)
@@ -122,18 +88,3 @@ def mock_catgenie_client() -> Generator[MagicMock]:
             return_value=[Device.model_validate(MOCK_DEVICE_DATA)]
         )
         yield mock_client
-
-
-@pytest.fixture
-def mock_catgenie_auth_init() -> Generator[MagicMock]:
-    """Mock CatGenieAuth for __init__.py."""
-    with patch(
-        "homeassistant.components.catgenie.CatGenieAuth",
-        autospec=True,
-    ) as mock_auth_cls:
-        mock_auth = mock_auth_cls.return_value
-        mock_auth.__aenter__ = AsyncMock(return_value=mock_auth)
-        mock_auth.__aexit__ = AsyncMock(return_value=None)
-        mock_auth.refresh = AsyncMock(return_value=MOCK_CREDENTIALS)
-        mock_auth.credentials = MOCK_CREDENTIALS
-        yield mock_auth

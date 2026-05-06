@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -24,7 +23,8 @@ SCAN_INTERVAL = timedelta(seconds=60)
 class CatGenieRuntimeData:
     """Runtime data for CatGenie."""
 
-    stack: AsyncExitStack
+    auth: CatGenieAuth
+    client: CatGenieClient
     coordinator: CatGenieCoordinator
 
 

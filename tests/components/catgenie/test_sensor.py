@@ -1,29 +1,33 @@
 """Test the CatGenie sensor platform."""
 
 from copy import deepcopy
+from typing import Any, cast
 from unittest.mock import MagicMock
 
 from catgenie import Device
+from freezegun.api import FrozenDateTimeFactory
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.catgenie.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE_DATA, MOCK_ENTRY_DATA
+from .conftest import MOCK_DEVICE_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensors_created(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that sensor entities are created for each device."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -31,38 +35,27 @@ async def test_sensors_created(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    # Check key sensors exist
-    state = hass.states.get("sensor.catgenie_litter_box_sani_solution_remaining")
-    assert state is not None
-    assert state.state == "75"
-
-    state = hass.states.get("sensor.catgenie_litter_box_status")
-    assert state is not None
-    assert state.state == "cleaning"
-
-    state = hass.states.get("sensor.catgenie_litter_box_clean_progress")
-    assert state is not None
-    assert state.state == "42"
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_clean_progress_unavailable_when_idle(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that clean_progress sensor is unavailable when not cleaning."""
     idle_device_data = deepcopy(MOCK_DEVICE_DATA)
-    idle_device_data["operationStatus"]["state"] = 0
-    idle_device_data["operationStatus"]["progress"] = 0
+    operation_status = cast(dict[str, Any], idle_device_data["operationStatus"])
+    operation_status["state"] = 0
+    operation_status["progress"] = 0
     mock_catgenie_client.get_devices.return_value = [
         Device.model_validate(idle_device_data)
     ]
 
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -70,26 +63,20 @@ async def test_clean_progress_unavailable_when_idle(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("sensor.catgenie_litter_box_clean_progress")
-    assert state is not None
-    assert state.state == "unavailable"
-
-    state = hass.states.get("sensor.catgenie_litter_box_status")
-    assert state is not None
-    assert state.state == "idle"
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_sensor_device_removed(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test sensor returns None when device disappears from coordinator data."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    """Test sensors become unavailable when device disappears from coordinator data."""
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -100,17 +87,8 @@ async def test_sensor_device_removed(
     # Device disappears from the API response
     mock_catgenie_client.get_devices.return_value = []
 
-    coordinator = entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Entity is marked unavailable because available returns False
-    state = hass.states.get("sensor.catgenie_litter_box_sani_solution_remaining")
-    assert state is not None
-    assert state.state == "unavailable"
-
-    # Verify native_value returns None directly when device_data is gone
-    entity_id = "sensor.catgenie_litter_box_sani_solution_remaining"
-    entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
-    assert entity is not None
-    assert entity.native_value is None
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

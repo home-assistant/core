@@ -2,30 +2,27 @@
 
 from unittest.mock import MagicMock
 
-from catgenie import Credentials, Device
+from catgenie import Credentials
 from catgenie.exceptions import CatGenieAPIError, CatGenieAuthenticationError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.catgenie.const import DOMAIN
+from homeassistant.components.catgenie.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_DEVICE_DATA, MOCK_ENTRY_DATA
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test successful setup of a config entry."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -36,19 +33,14 @@ async def test_setup_entry(
 
 async def test_setup_entry_auth_error(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test setup fails with auth error."""
-    mock_catgenie_auth_init.refresh.side_effect = CatGenieAuthenticationError(
-        "bad refresh"
-    )
+    mock_catgenie_auth.refresh.side_effect = CatGenieAuthenticationError("bad refresh")
 
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -59,17 +51,14 @@ async def test_setup_entry_auth_error(
 
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test setup retries on connection error."""
-    mock_catgenie_auth_init.refresh.side_effect = ConnectionError("timeout")
+    mock_catgenie_auth.refresh.side_effect = ConnectionError("timeout")
 
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -80,15 +69,12 @@ async def test_setup_entry_connection_error(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test successful unload of a config entry."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -104,17 +90,14 @@ async def test_unload_entry(
 
 async def test_setup_entry_device_fetch_error(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test setup retries when device fetch fails."""
     mock_catgenie_client.get_devices.side_effect = RuntimeError("API unavailable")
 
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -125,15 +108,13 @@ async def test_setup_entry_device_fetch_error(
 
 async def test_coordinator_auth_error_triggers_refresh(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test coordinator retries with token refresh on auth error."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -141,31 +122,32 @@ async def test_coordinator_auth_error_triggers_refresh(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    # Simulate auth error on next update, then success after refresh
-    devices = [Device.model_validate(MOCK_DEVICE_DATA)]
+    # Simulate auth error on next scheduled update, then success after refresh
     mock_catgenie_client.get_devices.side_effect = [
         CatGenieAuthenticationError("expired"),
-        devices,
+        mock_catgenie_client.get_devices.return_value,
     ]
 
-    coordinator = entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
-    mock_catgenie_auth_init.refresh.assert_called()
+    mock_catgenie_auth.refresh.assert_called()
+
+    state = hass.states.get("sensor.catgenie_litter_box_status")
+    assert state is not None
+    assert state.state == "cleaning"
 
 
 async def test_coordinator_auth_error_refresh_fails(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test coordinator raises ConfigEntryAuthFailed when refresh also fails."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -177,27 +159,26 @@ async def test_coordinator_auth_error_refresh_fails(
     mock_catgenie_client.get_devices.side_effect = CatGenieAuthenticationError(
         "expired"
     )
-    mock_catgenie_auth_init.refresh.side_effect = CatGenieAuthenticationError(
-        "bad token"
-    )
+    mock_catgenie_auth.refresh.side_effect = CatGenieAuthenticationError("bad token")
 
-    coordinator = entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0].get("step_id") == "reauth_confirm"
 
 
 async def test_coordinator_communication_error(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test coordinator raises UpdateFailed on communication error."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -207,15 +188,19 @@ async def test_coordinator_communication_error(
 
     mock_catgenie_client.get_devices.side_effect = RuntimeError("network error")
 
-    coordinator = entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert not coordinator.last_update_success
+    state = hass.states.get("sensor.catgenie_litter_box_status")
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_setup_entry_token_rotation(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test that a rotated refresh token is persisted to the config entry."""
@@ -227,13 +212,9 @@ async def test_setup_entry_token_rotation(
         user_id="test-user-id",
         tenant_id="test-tenant-id",
     )
-    mock_catgenie_auth_init.refresh.return_value = rotated_credentials
+    mock_catgenie_auth.refresh.return_value = rotated_credentials
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -245,15 +226,13 @@ async def test_setup_entry_token_rotation(
 
 async def test_coordinator_api_error(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test coordinator raises UpdateFailed on CatGenieAPIError."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -263,23 +242,24 @@ async def test_coordinator_api_error(
 
     mock_catgenie_client.get_devices.side_effect = CatGenieAPIError("server error")
 
-    coordinator = entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert not coordinator.last_update_success
+    state = hass.states.get("sensor.catgenie_litter_box_status")
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_coordinator_empty_device_list(
     hass: HomeAssistant,
-    mock_catgenie_auth_init: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_catgenie_auth: MagicMock,
     mock_catgenie_client: MagicMock,
 ) -> None:
     """Test coordinator handles empty device list gracefully."""
-    entry = MockConfigEntry(
-        domain="catgenie",
-        data=MOCK_ENTRY_DATA,
-        unique_id="test-user-id",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -290,8 +270,10 @@ async def test_coordinator_empty_device_list(
     # Return empty device list
     mock_catgenie_client.get_devices.return_value = []
 
-    coordinator = entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
-    assert coordinator.data == {}
+    state = hass.states.get("sensor.catgenie_litter_box_status")
+    assert state is not None
+    assert state.state == "unavailable"

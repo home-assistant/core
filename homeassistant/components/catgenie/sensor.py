@@ -35,15 +35,8 @@ SENSOR_DESCRIPTIONS: tuple[CatGenieSensorDescription, ...] = (
     CatGenieSensorDescription(
         key="sani_solution",
         translation_key="sani_solution",
-        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="cycles",
         value_fn=lambda device: device.remaining_sani_solution,
-    ),
-    CatGenieSensorDescription(
-        key="status",
-        translation_key="status",
-        device_class=SensorDeviceClass.ENUM,
-        options=["idle", "cleaning"],
-        value_fn=lambda device: "cleaning" if device.is_cleaning else "idle",
     ),
     CatGenieSensorDescription(
         key="clean_progress",
@@ -56,6 +49,7 @@ SENSOR_DESCRIPTIONS: tuple[CatGenieSensorDescription, ...] = (
     CatGenieSensorDescription(
         key="total_cycles",
         translation_key="total_cycles",
+        native_unit_of_measurement="cycles",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -104,6 +98,4 @@ class CatGenieSensorEntity(CatGenieEntity, SensorEntity):
     @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state of the sensor."""
-        if (device := self.device_data) is None:
-            return None
-        return self.entity_description.value_fn(device)
+        return self.entity_description.value_fn(self.device_data)

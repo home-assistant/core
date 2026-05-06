@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import AsyncExitStack
-
 from catgenie import CatGenieAuth, CatGenieClient, Credentials
 from catgenie.exceptions import CatGenieAuthenticationError, CatGenieException
 
@@ -19,23 +17,21 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: CatGenieConfigEntry) -> bool:
     """Set up CatGenie from a config entry."""
     credentials = Credentials(refresh_token=entry.data[CONF_TOKEN])
-    stack = AsyncExitStack()
 
     auth = CatGenieAuth()
-    await stack.enter_async_context(auth)
     auth.credentials = credentials
 
     # Obtain a fresh access token using the stored refresh token
     try:
         credentials = await auth.refresh()
     except CatGenieAuthenticationError as err:
-        await stack.aclose()
+        await auth.async_close()
         raise ConfigEntryAuthFailed(
             translation_domain="catgenie",
             translation_key="authentication_failed",
         ) from err
     except (CatGenieException, ConnectionError) as err:
-        await stack.aclose()
+        await auth.async_close()
         raise ConfigEntryNotReady(
             translation_domain="catgenie",
             translation_key="communication_error",
@@ -49,7 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CatGenieConfigEntry) -> 
         )
 
     client = CatGenieClient(credentials)
-    await stack.enter_async_context(client)
     client.set_auth(auth)
 
     coordinator = CatGenieCoordinator(hass, entry, client, auth)
@@ -57,11 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: CatGenieConfigEntry) -> 
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception:
-        await stack.aclose()
+        await client.async_close()
+        await auth.async_close()
         raise
 
     entry.runtime_data = CatGenieRuntimeData(
-        stack=stack,
+        auth=auth,
+        client=client,
         coordinator=coordinator,
     )
 
@@ -74,5 +71,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: CatGenieConfigEntry) ->
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await entry.runtime_data.stack.aclose()
+        await entry.runtime_data.auth.async_close()
+        await entry.runtime_data.client.async_close()
     return unload_ok

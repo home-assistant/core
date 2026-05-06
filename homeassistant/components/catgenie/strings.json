@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_account_mismatch": "The authenticated account does not match the account that needs re-authentication.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,26 +17,6 @@
           "code": "The 6-digit code sent to your phone via SMS."
         },
         "description": "Enter the SMS verification code sent to your phone."
-      },
-      "reauth_code": {
-        "data": {
-          "code": "Verification code"
-        },
-        "data_description": {
-          "code": "The 6-digit code sent to your phone via SMS."
-        },
-        "description": "Enter the SMS verification code sent to your phone."
-      },
-      "reauth_confirm": {
-        "data": {
-          "country_code": "Country code",
-          "phone": "Phone number"
-        },
-        "data_description": {
-          "country_code": "Your country calling code (e.g. 61 for Australia).",
-          "phone": "Your phone number without country code."
-        },
-        "description": "Your CatGenie session has expired. Enter your phone number to receive a new SMS code."
       },
       "user": {
         "data": {
@@ -62,17 +40,12 @@
         "name": "Last clean"
       },
       "sani_solution": {
-        "name": "Sani-solution remaining"
-      },
-      "status": {
-        "name": "Status",
-        "state": {
-          "cleaning": "Cleaning",
-          "idle": "Idle"
-        }
+        "name": "Sani-solution remaining",
+        "unit_of_measurement": "cycles"
       },
       "total_cycles": {
-        "name": "Total cycles"
+        "name": "Total cycles",
+        "unit_of_measurement": "cycles"
       }
     }
   },

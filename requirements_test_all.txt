@@ -654,7 +654,7 @@ cached-ipaddress==1.0.1
 caldav==2.1.0
 
 # homeassistant.components.catgenie
-catgenie==0.1.3
+catgenie==0.1.6
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0

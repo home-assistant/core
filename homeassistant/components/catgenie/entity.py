@@ -52,17 +52,17 @@ class CatGenieEntity(CoordinatorEntity[CatGenieCoordinator]):
         )
 
     @property
-    def device_data(self) -> Device | None:
+    def device_data(self) -> Device:
         """Return the device data for this entity."""
-        return self.coordinator.data.get(self._device_id)
+        return self.coordinator.data[self._device_id]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if (device := self.device_data) is None:
+        if self._device_id not in self.coordinator.data:
             return False
         return (
             super().available
-            and device.is_online
-            and self.entity_description.available_fn(device)
+            and self.device_data.is_online
+            and self.entity_description.available_fn(self.device_data)
         )
