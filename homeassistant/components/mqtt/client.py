@@ -49,7 +49,6 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
 
-from .async_client import AsyncMQTTClient
 from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
@@ -88,6 +87,9 @@ from .models import (
     ReceiveMessage,
 )
 from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
+
+if TYPE_CHECKING:
+    from .async_client import AsyncMQTTClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -319,6 +321,8 @@ class MqttClientSetup:
         The setup of the MQTT client should be run in an executor job,
         because it accesses files, so it does IO.
         """
+        from .async_client import AsyncMQTTClient  # noqa: PLC0415
+
         config = self._config
         clean_session: bool | None = None
         # If no protocol setting is set in the config entry data
