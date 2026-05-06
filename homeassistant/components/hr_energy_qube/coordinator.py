@@ -26,6 +26,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
+        self.switches: dict[str, bool | None] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -45,5 +46,12 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
 
         if data is None:
             raise UpdateFailed("No data received from Qube heat pump")
+
+        try:
+            self.switches = await self.client.read_all_switches()
+        except ConnectionError, TimeoutError, OSError:
+            _LOGGER.warning(
+                "Failed to read switch states from Qube heat pump", exc_info=True
+            )
 
         return data
