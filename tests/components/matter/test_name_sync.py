@@ -88,6 +88,30 @@ async def test_rename_truncates_long_label_to_32_bytes(
     assert sent == "a" * 32
 
 
+async def test_rename_truncates_multibyte_utf8_label_on_char_boundary(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Truncation never splits a multibyte UTF-8 character."""
+    await setup_integration_with_node_fixture(hass, "device_diagnostics", matter_client)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_update_entry(entry, options={CONF_SYNC_NAMES: True})
+    await hass.async_block_till_done()
+    matter_client.write_attribute.reset_mock()
+
+    # "é" is 2 bytes in UTF-8; 16 × "é" = 32 bytes (fits exactly).
+    # Adding one more "é" would require 34 bytes, so it should be dropped.
+    multibyte_name = "é" * 17
+    device = _matter_devices_for_entry(hass, entry.entry_id)[0]
+    dr.async_get(hass).async_update_device(device.id, name_by_user=multibyte_name)
+    await hass.async_block_till_done()
+
+    assert matter_client.write_attribute.call_count == 1
+    sent = matter_client.write_attribute.call_args.kwargs["value"]
+    assert sent == "é" * 16
+    assert len(sent.encode("utf-8")) <= 32
+
+
 async def test_rename_syncs_bridged_endpoint_node_label(
     hass: HomeAssistant,
     matter_client: MagicMock,
