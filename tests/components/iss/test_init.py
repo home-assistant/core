@@ -2,11 +2,13 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
 from homeassistant.components.iss.const import (
     CONF_MAX_CONSECUTIVE_FAILURES,
     DEFAULT_MAX_CONSECUTIVE_FAILURES,
+    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
@@ -164,6 +166,36 @@ async def test_coordinator_failure_counter_resets_on_success(
 
     # Should still be successful due to cached data
     assert coordinator.last_update_success is True
+
+
+@pytest.mark.parametrize("max_failures", [DEFAULT_MAX_CONSECUTIVE_FAILURES, 3, 10])
+async def test_coordinator_custom_failure_threshold(
+    hass: HomeAssistant, mock_pyiss: MagicMock, max_failures: int
+) -> None:
+    """Test coordinator respects a custom max_consecutive_failures option."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={CONF_MAX_CONSECUTIVE_FAILURES: max_failures},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
+
+    for _ in range(max_failures - 1):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
 async def test_coordinator_initial_failure_no_cached_data(

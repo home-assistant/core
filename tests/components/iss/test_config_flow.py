@@ -82,7 +82,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
 
 async def test_options_defaults(hass: HomeAssistant) -> None:
-    """Test options flow uses defaults when not specified."""
+    """Test options flow stores default value when not changed."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -98,12 +98,17 @@ async def test_options_defaults(hass: HomeAssistant) -> None:
 
         configured = await hass.config_entries.options.async_configure(
             optionflow["flow_id"],
-            user_input={},
+            user_input={
+                CONF_SHOW_ON_MAP: False,
+                CONF_MAX_CONSECUTIVE_FAILURES: DEFAULT_MAX_CONSECUTIVE_FAILURES,
+            },
         )
 
         assert configured.get("type") is FlowResultType.CREATE_ENTRY
-        # Only explicitly set values are in options, defaults are used in code
-        assert CONF_SHOW_ON_MAP in config_entry.options or not config_entry.options
+        assert config_entry.options == {
+            CONF_SHOW_ON_MAP: False,
+            CONF_MAX_CONSECUTIVE_FAILURES: DEFAULT_MAX_CONSECUTIVE_FAILURES,
+        }
 
 
 async def test_create_entry_with_defaults(hass: HomeAssistant) -> None:
