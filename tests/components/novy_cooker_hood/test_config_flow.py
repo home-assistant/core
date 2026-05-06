@@ -146,14 +146,12 @@ async def test_recover_after_transmit_failure(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "test_failed"
 
-    # Pick Retry → back to the user step.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "retry"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Re-submit with the transmitter now working → entry created.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID, CONF_CODE: "1"},
@@ -329,6 +327,27 @@ async def test_no_transmitters(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_transmitters"
+
+
+async def test_recover_after_no_transmitters(
+    hass: HomeAssistant,
+    mock_get_codes: MagicMock,
+) -> None:
+    """User can re-init the flow after the radio_frequency integration loads."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_transmitters"
+
+    assert await async_setup_component(hass, RF_DOMAIN, {})
+    await hass.async_block_till_done()
+    transmitter = MockRadioFrequencyEntity("test_rf_transmitter")
+    await hass.data[DATA_COMPONENT].async_add_entities([transmitter])
+
+    result = await _start_user_flow(hass, code="1")
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "test_light"
 
 
 async def test_no_compatible_transmitters(hass: HomeAssistant) -> None:
