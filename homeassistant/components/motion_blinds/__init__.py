@@ -1,4 +1,6 @@
 """The motion_blinds component."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# ruff: noqa: W7482
 
 import asyncio
 import logging
