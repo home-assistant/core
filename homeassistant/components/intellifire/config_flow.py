@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -287,36 +288,32 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if (
-                coordinator := getattr(self.config_entry, "runtime_data", None)
-            ) is None:
-                return self.async_abort(reason="not_loaded")
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                fireplace = self.config_entry.runtime_data.fireplace
 
-            fireplace = coordinator.fireplace
+                # Refresh connectivity status before validating
+                await fireplace.async_validate_connectivity()
 
-            # Refresh connectivity status before validating
-            await fireplace.async_validate_connectivity()
-
-            if (
-                user_input[CONF_READ_MODE] == API_MODE_LOCAL
-                and not fireplace.local_connectivity
-            ):
-                errors[CONF_READ_MODE] = "local_unavailable"
-            if (
-                user_input[CONF_READ_MODE] == API_MODE_CLOUD
-                and not fireplace.cloud_connectivity
-            ):
-                errors[CONF_READ_MODE] = "cloud_unavailable"
-            if (
-                user_input[CONF_CONTROL_MODE] == API_MODE_LOCAL
-                and not fireplace.local_connectivity
-            ):
-                errors[CONF_CONTROL_MODE] = "local_unavailable"
-            if (
-                user_input[CONF_CONTROL_MODE] == API_MODE_CLOUD
-                and not fireplace.cloud_connectivity
-            ):
-                errors[CONF_CONTROL_MODE] = "cloud_unavailable"
+                if (
+                    user_input[CONF_READ_MODE] == API_MODE_LOCAL
+                    and not fireplace.local_connectivity
+                ):
+                    errors[CONF_READ_MODE] = "local_unavailable"
+                if (
+                    user_input[CONF_READ_MODE] == API_MODE_CLOUD
+                    and not fireplace.cloud_connectivity
+                ):
+                    errors[CONF_READ_MODE] = "cloud_unavailable"
+                if (
+                    user_input[CONF_CONTROL_MODE] == API_MODE_LOCAL
+                    and not fireplace.local_connectivity
+                ):
+                    errors[CONF_CONTROL_MODE] = "local_unavailable"
+                if (
+                    user_input[CONF_CONTROL_MODE] == API_MODE_CLOUD
+                    and not fireplace.cloud_connectivity
+                ):
+                    errors[CONF_CONTROL_MODE] = "cloud_unavailable"
 
             if not errors:
                 return self.async_create_entry(title="", data=user_input)

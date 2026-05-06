@@ -272,11 +272,11 @@ async def test_options_flow(
     }
 
 
-async def test_options_flow_not_loaded_on_submit(
+async def test_options_flow_allows_submit_when_not_loaded(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
 ) -> None:
-    """Test options flow aborts when runtime data is missing on submit."""
+    """Test options flow allows submit when runtime data is missing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         version=mock_config_entry_current.version,
@@ -297,8 +297,11 @@ async def test_options_flow_not_loaded_on_submit(
         {CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_LOCAL},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_loaded"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_READ_MODE: API_MODE_CLOUD,
+        CONF_CONTROL_MODE: API_MODE_LOCAL,
+    }
 
 
 async def test_options_flow_local_read_unavailable(
