@@ -128,8 +128,8 @@ def publish(
     hass: HomeAssistant,
     topic: str,
     payload: PublishPayloadType,
-    qos: int | None = 0,
-    retain: bool | None = False,
+    qos: int = 0,
+    retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
@@ -140,8 +140,8 @@ async def async_publish(
     hass: HomeAssistant,
     topic: str,
     payload: PublishPayloadType,
-    qos: int | None = 0,
-    retain: bool | None = False,
+    qos: int = 0,
+    retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
@@ -181,9 +181,7 @@ async def async_publish(
                 )
                 return
 
-    await mqtt_data.client.async_publish(
-        topic, outgoing_payload, qos or 0, retain or False
-    )
+    await mqtt_data.client.async_publish(topic, outgoing_payload, qos, retain)
 
 
 @callback
