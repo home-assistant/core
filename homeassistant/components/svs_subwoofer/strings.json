@@ -1,0 +1,201 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Add SVS Subwoofer",
+        "description": "Select your subwoofer from the list. Devices marked [SVS] are detected SVS subwoofers. Leave the name blank to use the device's advertised name.",
+        "data": {
+          "address": "Device",
+          "name": "Custom name (optional)"
+        },
+        "data_description": {
+          "address": "The SVS subwoofer to set up.",
+          "name": "Friendly name for this subwoofer in Home Assistant. Leave blank to use the device's advertised Bluetooth name."
+        }
+      },
+      "manual": {
+        "title": "Manual setup",
+        "description": "Enter the Bluetooth MAC address of your SVS subwoofer. Format: {mac_format}",
+        "data": {
+          "address": "MAC address",
+          "name": "Device name"
+        },
+        "data_description": {
+          "address": "Bluetooth MAC address of the subwoofer (e.g., 08:EB:ED:11:22:33).",
+          "name": "Friendly name for this subwoofer in Home Assistant."
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Confirm SVS Subwoofer",
+        "description": "Do you want to set up {name} ({address})?",
+        "data": {
+          "name": "Device name"
+        },
+        "data_description": {
+          "name": "Friendly name for this subwoofer in Home Assistant."
+        }
+      }
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format",
+      "cannot_connect": "Failed to connect to device"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_device": "No device information available"
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "SVS subwoofer device {device_id} not found or not loaded."
+    },
+    "invalid_preset": {
+      "message": "Invalid preset value: {preset}. Use 1, 2, 3, 4, or \"default\"."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected"
+      }
+    },
+    "button": {
+      "reconnect": {
+        "name": "Reconnect"
+      },
+      "save_preset_1": {
+        "name": "Save to preset 1"
+      },
+      "save_preset_2": {
+        "name": "Save to preset 2"
+      },
+      "save_preset_3": {
+        "name": "Save to preset 3"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      },
+      "phase": {
+        "name": "Phase"
+      },
+      "lpf_frequency": {
+        "name": "Low pass filter frequency"
+      },
+      "peq1_frequency": {
+        "name": "PEQ1 frequency"
+      },
+      "peq1_boost": {
+        "name": "PEQ1 boost"
+      },
+      "peq1_q_factor": {
+        "name": "PEQ1 Q-factor"
+      },
+      "peq2_frequency": {
+        "name": "PEQ2 frequency"
+      },
+      "peq2_boost": {
+        "name": "PEQ2 boost"
+      },
+      "peq2_q_factor": {
+        "name": "PEQ2 Q-factor"
+      },
+      "peq3_frequency": {
+        "name": "PEQ3 frequency"
+      },
+      "peq3_boost": {
+        "name": "PEQ3 boost"
+      },
+      "peq3_q_factor": {
+        "name": "PEQ3 Q-factor"
+      }
+    },
+    "select": {
+      "lpf_slope": {
+        "name": "Low pass filter slope"
+      },
+      "room_gain_frequency": {
+        "name": "Room gain frequency"
+      },
+      "room_gain_slope": {
+        "name": "Room gain slope"
+      },
+      "standby_mode": {
+        "name": "Standby mode"
+      },
+      "preset": {
+        "name": "Preset"
+      }
+    },
+    "switch": {
+      "lpf_enable": {
+        "name": "Low pass filter"
+      },
+      "peq1_enable": {
+        "name": "PEQ1"
+      },
+      "peq2_enable": {
+        "name": "PEQ2"
+      },
+      "peq3_enable": {
+        "name": "PEQ3"
+      },
+      "room_gain_enable": {
+        "name": "Room gain compensation"
+      },
+      "polarity": {
+        "name": "Polarity (inverted)"
+      }
+    }
+  },
+  "services": {
+    "sync_from": {
+      "name": "Sync settings from",
+      "description": "Copies all settings from one SVS subwoofer to one or more other subwoofers.",
+      "fields": {
+        "source_device_id": {
+          "name": "Source device",
+          "description": "The subwoofer to copy settings from."
+        },
+        "target_device_ids": {
+          "name": "Target devices",
+          "description": "The subwoofer(s) to copy settings to."
+        }
+      }
+    },
+    "set_volume": {
+      "name": "Set volume",
+      "description": "Sets volume on multiple SVS subwoofers simultaneously, with optional per-device offsets.",
+      "fields": {
+        "device_ids": {
+          "name": "Devices",
+          "description": "The subwoofer(s) to adjust."
+        },
+        "volume": {
+          "name": "Volume",
+          "description": "The volume level in dB (-60 to 0)."
+        },
+        "offsets": {
+          "name": "Per-device offsets",
+          "description": "Optional volume offsets per device (device_id to dB offset mapping). Useful for room correction."
+        }
+      }
+    },
+    "load_preset": {
+      "name": "Load preset",
+      "description": "Loads the same preset on multiple SVS subwoofers simultaneously.",
+      "fields": {
+        "device_ids": {
+          "name": "Devices",
+          "description": "The subwoofer(s) to update."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "The preset to load (1, 2, 3, or default)."
+        }
+      }
+    }
+  }
+}

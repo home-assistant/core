@@ -1,0 +1,19 @@
+{
+  "domain": "svs_subwoofer",
+  "name": "SVS Subwoofer",
+  "bluetooth": [
+    {
+      "service_uuid": "1fee6acf-a826-4e37-9635-4d8a01642c5d",
+      "connectable": true
+    }
+  ],
+  "codeowners": ["@dangerouslaser"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/svs_subwoofer",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["bleak", "bleak_retry_connector"],
+  "quality_scale": "bronze",
+  "requirements": ["bleak==2.1.1", "bleak-retry-connector==4.6.0"]
+}

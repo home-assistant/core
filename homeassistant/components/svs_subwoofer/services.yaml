@@ -1,0 +1,54 @@
+sync_from:
+  fields:
+    source_device_id:
+      required: true
+      selector:
+        device:
+          integration: svs_subwoofer
+    target_device_ids:
+      required: true
+      selector:
+        device:
+          integration: svs_subwoofer
+          multiple: true
+
+set_volume:
+  fields:
+    device_ids:
+      required: true
+      selector:
+        device:
+          integration: svs_subwoofer
+          multiple: true
+    volume:
+      required: true
+      selector:
+        number:
+          min: -60
+          max: 0
+          step: 1
+          unit_of_measurement: dB
+          mode: slider
+    offsets:
+      required: false
+      example: '{"device_id_here": -3}'
+      selector:
+        object:
+
+load_preset:
+  fields:
+    device_ids:
+      required: true
+      selector:
+        device:
+          integration: svs_subwoofer
+          multiple: true
+    preset:
+      required: true
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+            - "3"
+            - "default"

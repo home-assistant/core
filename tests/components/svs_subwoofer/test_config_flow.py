@@ -1,0 +1,142 @@
+"""Tests for the SVS Subwoofer config flow."""
+
+from __future__ import annotations
+
+from homeassistant.components.svs_subwoofer.const import DOMAIN
+from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from tests.common import MockConfigEntry
+
+from . import (
+    SVS_ADDRESS,
+    SVS_NAME,
+    SVS_SERVICE_INFO,
+    patch_async_discovered_service_info,
+    patch_async_setup_entry,
+)
+
+
+async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
+    """A discovered SVS device walks through bluetooth_confirm to entry creation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=SVS_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_NAME: "Right Sub"}
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Right Sub"
+    assert result["data"] == {CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: "Right Sub"}
+
+
+async def test_bluetooth_already_configured(hass: HomeAssistant) -> None:
+    """A second discovery for the same device aborts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SVS_ADDRESS.lower(),
+        data={CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: SVS_NAME},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=SVS_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_picks_discovered(hass: HomeAssistant) -> None:
+    """User flow: user picks an SVS device from the discovered list."""
+    with patch_async_discovered_service_info([SVS_SERVICE_INFO]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: ""},
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ADDRESS] == SVS_ADDRESS
+
+
+async def test_user_manual_entry(hass: HomeAssistant) -> None:
+    """User flow with no discoveries falls through to manual MAC entry."""
+    with patch_async_discovered_service_info([]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: "Manual Sub"},
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Manual Sub"
+
+
+async def test_user_manual_invalid_mac(hass: HomeAssistant) -> None:
+    """Invalid MAC formats surface an error on the manual step."""
+    with patch_async_discovered_service_info([]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ADDRESS: "not-a-mac", CONF_NAME: "x"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_ADDRESS: "invalid_mac"}
+
+
+async def test_user_already_configured(hass: HomeAssistant) -> None:
+    """Adding an already-configured device via the user flow aborts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SVS_ADDRESS.lower(),
+        data={CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: SVS_NAME},
+    ).add_to_hass(hass)
+
+    with patch_async_discovered_service_info([SVS_SERVICE_INFO]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    # All discovered devices are already configured, so we drop into manual
+    # entry; entering the same MAC must abort.
+    assert result["step_id"] in ("user", "manual")
+    if result["step_id"] == "user":
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: ""},
+        )
+    else:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ADDRESS: SVS_ADDRESS, CONF_NAME: SVS_NAME},
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

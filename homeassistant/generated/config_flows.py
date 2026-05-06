@@ -714,6 +714,7 @@ FLOWS = {
         "sunricher_dali",
         "sunweg",
         "surepetcare",
+        "svs_subwoofer",
         "swiss_public_transport",
         "switchbee",
         "switchbot",
