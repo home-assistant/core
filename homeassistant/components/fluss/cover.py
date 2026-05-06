@@ -57,8 +57,8 @@ class FlussCover(FlussEntity, CoverEntity):
     """Representation of a Fluss+ cover (garage door / gate)."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
-    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_name = None
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     @property
     def is_closed(self) -> bool | None:

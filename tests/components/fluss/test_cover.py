@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
 )
+from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -146,7 +147,7 @@ async def test_cover_command_error(
     service: str,
     method: str,
 ) -> None:
-    """Library errors are translated to HomeAssistantError."""
+    """Library errors are translated to HomeAssistantError with a translation key."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
@@ -154,13 +155,15 @@ async def test_cover_command_error(
 
     getattr(mock_api_client, method).side_effect = FlussApiClientError("boom")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             service,
             {ATTR_ENTITY_ID: ENTITY_ID_1},
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "command_failed"
 
 
 async def test_mixed_device_dispatch(
