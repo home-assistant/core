@@ -58,23 +58,23 @@ async def async_setup_entry(
     if entry.data[CONF_IPV4]:
         entities.append(
             WanIpSensor(
+                entry,
                 name,
                 hostname,
                 entry.options[CONF_RESOLVER],
                 False,
                 entry.options[CONF_PORT],
-                entry.runtime_data.resolver_ipv4,
             )
         )
     if entry.data[CONF_IPV6]:
         entities.append(
             WanIpSensor(
+                entry,
                 name,
                 hostname,
                 entry.options[CONF_RESOLVER_IPV6],
                 True,
                 entry.options[CONF_PORT_IPV6],
-                entry.runtime_data.resolver_ipv6,
             )
         )
 
@@ -90,20 +90,26 @@ class WanIpSensor(SensorEntity):
 
     def __init__(
         self,
+        entry: DnsIPConfigEntry,
         name: str,
         hostname: str,
         nameserver: str,
         ipv6: bool,
         port: int,
-        resolver: aiodns.DNSResolver,
     ) -> None:
         """Initialize the DNS IP sensor."""
+        self.entry = entry
+        self.ipv6 = ipv6
         self._attr_name = "IPv6" if ipv6 else None
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.port = port
         self.nameserver = nameserver
-        self.resolver = resolver
+        self.resolver = (
+            entry.runtime_data.resolver_ipv6
+            if ipv6
+            else entry.runtime_data.resolver_ipv4
+        )
         self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
@@ -123,6 +129,11 @@ class WanIpSensor(SensorEntity):
         self.resolver = aiodns.DNSResolver(
             nameservers=[self.nameserver], tcp_port=self.port, udp_port=self.port
         )
+
+        if self.ipv6:
+            self.entry.runtime_data.resolver_ipv6 = self.resolver
+        else:
+            self.entry.runtime_data.resolver_ipv4 = self.resolver
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
