@@ -10,6 +10,7 @@ from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from paho.mqtt.client import MQTTMessage
 import pytest
 import voluptuous as vol
 
@@ -699,11 +700,6 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     """Test receiving a non utf8 encoded topic."""
     await mqtt_mock_entry()
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
-
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
     from homeassistant.components.mqtt.models import MqttData  # noqa: PLC0415
 
@@ -1910,7 +1906,7 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    with patch("homeassistant.components.mqtt.async_client.AsyncMQTTClient"):
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
         await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
         await hass.async_block_till_done()
 
