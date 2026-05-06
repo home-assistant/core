@@ -1,11 +1,14 @@
 """Support for Overkiz (virtual) numbers."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.models import Device
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -37,6 +40,7 @@ class OverkizNumberDescription(NumberEntityDescription):
     set_native_value: (
         Callable[[float, Callable[..., Awaitable[None]]], Awaitable[None]] | None
     ) = None
+    overkiz_value_fn: Callable[[Device], float | None] | None = None
 
 
 async def _async_set_native_value_boost_mode_duration(
@@ -69,6 +73,79 @@ async def _async_set_native_value_boost_mode_duration(
         OPERATING_MODE_DELAY
     )  # wait 3 seconds to have the new duration in
     await execute_command(OverkizCommand.REFRESH_BOOST_MODE_DURATION)
+
+
+async def _async_set_native_value_away_mode_duration(
+    value: float, execute_command: Callable[..., Awaitable[None]]
+) -> None:
+    """Update the away mode duration value.
+
+    Scale: 0-1 = cancel absence, 2-98 = timed absence in days, 99 = indefinite ('always').
+    """
+
+    if value >= 99:
+        # Indefinite absence: cancel first to clear any stored duration,
+        # then activate without a duration → device reports 'always'
+        await execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+        )
+        await asyncio.sleep(BOOST_MODE_DURATION_DELAY)
+        await execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.ON,
+            },
+        )
+    elif value >= 2:
+        await execute_command(OverkizCommand.SET_AWAY_MODE_DURATION, int(value))
+        await asyncio.sleep(BOOST_MODE_DURATION_DELAY)
+        await execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.ON,
+            },
+        )
+    else:
+        # 0 or 1: cancel absence
+        await execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+        )
+
+    await asyncio.sleep(OPERATING_MODE_DELAY)
+    await execute_command(OverkizCommand.REFRESH_AWAY_MODE_DURATION)
+
+
+def _overkiz_value_fn_away_mode_duration(device: Device) -> float | None:
+    """Return the away mode duration as a float.
+
+    Returns 0 if absence is off (based on core:OperatingModeState, which reflects
+    physical cancels on the device even when io:AwayModeDurationState has not changed),
+    99 for indefinite absence ('always'), or the numeric day count otherwise.
+    """
+    op_mode = device.states.get(OverkizState.CORE_OPERATING_MODE)
+    if op_mode and isinstance(op_mode.value, dict):
+        if op_mode.value.get(OverkizCommandParam.ABSENCE) == OverkizCommandParam.OFF:
+            return 0.0
+
+    duration = device.states.get(OverkizState.IO_AWAY_MODE_DURATION)
+    if duration is None:
+        return None
+    if duration.value == OverkizCommandParam.ALWAYS:
+        return 99.0
+    try:
+        return float(duration.value)
+    except (ValueError, TypeError):
+        return None
 
 
 NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
@@ -173,14 +250,18 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
     ),
-    # DomesticHotWaterProduction - away mode in days (0 - 6)
+    # DomesticHotWaterProduction - away mode in days
+    # 0 = cancel absence, 2-98 = timed absence (days), 99 = indefinite absence ('always')
+    # Value 1 is not supported by the device and is treated as cancel.
     OverkizNumberDescription(
         key=OverkizState.IO_AWAY_MODE_DURATION,
         name="Away mode duration",
         icon="mdi:water-boiler-off",
         command=OverkizCommand.SET_AWAY_MODE_DURATION,
         native_min_value=0,
-        native_max_value=6,
+        native_max_value=99,
+        set_native_value=_async_set_native_value_away_mode_duration,
+        overkiz_value_fn=_overkiz_value_fn_away_mode_duration,
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
@@ -250,6 +331,9 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
+        if self.entity_description.overkiz_value_fn:
+            return self.entity_description.overkiz_value_fn(self.device)
+
         if state := self.device.states.get(self.entity_description.key):
             if self.entity_description.inverted:
                 return self.native_max_value - cast(float, state.value)
