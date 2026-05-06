@@ -12,14 +12,9 @@
   "quality_scale": "platinum",
   "requirements": [
     "xknx==3.15.0",
-<<<<<<< migrate-to-knx-telegram-store
-    "xknxproject==3.8.2",
+    "xknxproject==3.9.0",
     "knx-frontend==2026.4.30.60856",
     "knx-telegram-store==0.1.2"
-=======
-    "xknxproject==3.9.0",
-    "knx-frontend==2026.4.30.60856"
->>>>>>> dev
   ],
   "single_config_entry": true
 }
