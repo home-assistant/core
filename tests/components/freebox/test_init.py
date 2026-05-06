@@ -1,24 +1,29 @@
 """Tests for the Freebox init."""
 
+from copy import deepcopy
 from unittest.mock import ANY, Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
+from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_HOST, MOCK_PORT
+from .common import setup_platform
+from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "68:A3:78:00:00:00"
 
@@ -159,3 +164,71 @@ async def test_unique_id_migration(
     assert (
         entity_registry.async_get_entity_id(platform, DOMAIN, new_unique_id) is not None
     )
+
+
+async def test_unique_id_migration_collision(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    router: Mock,
+) -> None:
+    """Test migration logs a warning when target unique_id already exists."""
+    old_unique_id = f"{MOCK_MAC} Freebox download speed"
+    new_unique_id = f"{MOCK_MAC} rate_down"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, old_unique_id, config_entry=entry
+    )
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, new_unique_id, config_entry=entry
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Both entities still exist; migration did not crash.
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, new_unique_id)
+        is not None
+    )
+
+
+async def test_home_device_label_sync(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    router: Mock,
+) -> None:
+    """Test home device label changes propagate to the device registry."""
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+
+    pir_node_id = 26  # Détecteur from fixture
+    device = device_registry.async_get_device(identifiers={(DOMAIN, pir_node_id)})
+    assert device is not None
+    assert device.name == "Détecteur"
+
+    # API now returns a different label for the PIR.
+    updated_nodes = deepcopy(DATA_HOME_GET_NODES)
+    for node in updated_nodes:
+        if node["id"] == pir_node_id:
+            node["label"] = "Détecteur cuisine"
+            break
+    router().home.get_home_nodes.return_value = updated_nodes
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, pir_node_id)})
+    assert device is not None
+    assert device.name == "Détecteur cuisine"

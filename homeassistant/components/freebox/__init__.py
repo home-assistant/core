@@ -40,10 +40,18 @@ def _migrate_unique_ids(hass: HomeAssistant, router: FreeboxRouter) -> None:
         old_uid = f"{mac} {old_suffix}"
         new_uid = f"{mac} {new_key}"
         if entity_id := entity_registry.async_get_entity_id(platform, DOMAIN, old_uid):
+            try:
+                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+            except ValueError:
+                _LOGGER.warning(
+                    "Unable to migrate unique_id from %s to %s: target already exists",
+                    old_uid,
+                    new_uid,
+                )
+                continue
             _LOGGER.debug(
-                "Migrating %s unique_id from %s to %s", entity_id, old_uid, new_uid
+                "Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid
             )
-            entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
     for sensor_id, sensor_name in router.sensors_temperature_names.items():
         old_uid = f"{mac} Freebox {sensor_name}"
@@ -51,10 +59,18 @@ def _migrate_unique_ids(hass: HomeAssistant, router: FreeboxRouter) -> None:
         if entity_id := entity_registry.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_uid
         ):
+            try:
+                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+            except ValueError:
+                _LOGGER.warning(
+                    "Unable to migrate unique_id from %s to %s: target already exists",
+                    old_uid,
+                    new_uid,
+                )
+                continue
             _LOGGER.debug(
-                "Migrating %s unique_id from %s to %s", entity_id, old_uid, new_uid
+                "Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid
             )
-            entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
