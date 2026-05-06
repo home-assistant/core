@@ -450,8 +450,19 @@ async def test_publish_function_with_bad_encoding_conditions(
     )
 
 
+@pytest.mark.parametrize(
+    ("interval_data", "interval"),
+    [
+        ({"days": 1, "hours": 0, "minutes": 0, "seconds": 10}, 86410),
+        ({"days": 1, "seconds": 10}, 86410),
+        ({"seconds": 86410}, 86410),
+    ],
+)
 async def test_publish_action_with_message_retention_interval(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    interval_data: dict[str, float],
+    interval: int,
 ) -> None:
     """Test the service call with args that can be misinterpreted.
 
@@ -466,12 +477,7 @@ async def test_publish_action_with_message_retention_interval(
             mqtt.ATTR_PAYLOAD: "bla",
             mqtt.ATTR_QOS: 2,
             mqtt.ATTR_RETAIN: False,
-            mqtt.ATTR_MESSAGE_EXPIRY_INTERVAL: {
-                "days": 1,
-                "hours": 0,
-                "minutes": 0,
-                "seconds": 10,
-            },
+            mqtt.ATTR_MESSAGE_EXPIRY_INTERVAL: interval_data,
         },
         blocking=True,
     )
@@ -479,7 +485,7 @@ async def test_publish_action_with_message_retention_interval(
     assert mqtt_mock.async_publish.call_args[0][1] == "bla"
     assert mqtt_mock.async_publish.call_args[0][2] == 2
     assert not mqtt_mock.async_publish.call_args[0][3]
-    assert mqtt_mock.async_publish.call_args[1]["message_expiry_interval"] == 86410
+    assert mqtt_mock.async_publish.call_args[1]["message_expiry_interval"] == interval
 
 
 def test_validate_topic() -> None:
