@@ -684,7 +684,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
     def _record_async_render(self, *args, **kwargs):
         """Catch async_render."""
         async_render_calls.append(self.template)
-        return "75"
+        return 75
 
     later = dt_util.utcnow()
 
@@ -692,7 +692,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
         hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.solar_angle").state == "75.0"
+    assert hass.states.get("sensor.solar_angle").state == "75"
     assert hass.states.get("sensor.sunrise").state == "75"
 
     assert len(async_render_calls) == 2
@@ -1362,93 +1362,6 @@ async def test_trigger_attribute_order(
     )
 
 
-async def test_trigger_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
-    """Test trigger entity device class parsing works."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "sensor": [
-                        {
-                            "name": "Date entity",
-                            "state": "{{ now().date() }}",
-                            "device_class": "date",
-                        },
-                        {
-                            "name": "Timestamp entity",
-                            "state": "{{ now() }}",
-                            "device_class": "timestamp",
-                        },
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    # State of timestamp sensors are always in UTC
-    now = dt_util.utcnow()
-
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == now.date().isoformat()
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == now.isoformat(timespec="seconds")
-
-
-async def test_trigger_entity_device_class_errors_works(hass: HomeAssistant) -> None:
-    """Test trigger entity device class errors works."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "sensor": [
-                        {
-                            "name": "Date entity",
-                            "state": "invalid",
-                            "device_class": "date",
-                        },
-                        {
-                            "name": "Timestamp entity",
-                            "state": "invalid",
-                            "device_class": "timestamp",
-                        },
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    now = dt_util.now()
-
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == STATE_UNKNOWN
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == STATE_UNKNOWN
-
-
 async def test_entity_last_reset_total_increasing(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1524,7 +1437,7 @@ async def test_last_reset(hass: HomeAssistant, expected: str) -> None:
 
     state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
-    assert state.state == "0.0"
+    assert state.state == "0"
     assert state.attributes["state_class"] == "total"
     assert state.attributes["last_reset"] == expected
 
@@ -1553,53 +1466,67 @@ async def test_invalid_last_reset(
 
     state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
-    assert state.state == "0.0"
+    assert state.state == "0"
     assert state.attributes.get("last_reset") is None
 
     err = "Received invalid sensor last_reset: not a datetime for entity"
     assert err in caplog_setup_text or err in caplog.text
 
 
-async def test_entity_device_class_errors_works(hass: HomeAssistant) -> None:
-    """Test entity device class errors works."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "sensor": [
-                        {
-                            "name": "Date entity",
-                            "state": "invalid",
-                            "device_class": "date",
-                        },
-                        {
-                            "name": "Timestamp entity",
-                            "state": "invalid",
-                            "device_class": "timestamp",
-                        },
-                    ],
-                },
-            ],
-        },
-    )
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"device_class": "timestamp"},
+        {"device_class": "uptime"},
+    ],
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("invalid", STATE_UNKNOWN),
+        ("{{ now() }}", "2026-05-04T00:00:00+00:00"),
+        ("{{ now().isoformat() }}", "2026-05-04T00:00:00+00:00"),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+@pytest.mark.freeze_time("2026-05-04 00:00:00+00:00")
+async def test_sensor_datetime_device_classes(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Test sensor datetime device classes."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
 
-    await hass.async_block_till_done()
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
-    now = dt_util.now()
 
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
+@pytest.mark.parametrize(("count", "config"), [(1, {"device_class": "date"})])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("invalid", STATE_UNKNOWN),
+        ("{{ utcnow().date() }}", "2026-05-04"),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+@pytest.mark.freeze_time("2026-05-04 00:00:00+00:00")
+async def test_sensor_date_device_class(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Test sensor date device class."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
 
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == STATE_UNKNOWN
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == STATE_UNKNOWN
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -1993,3 +1920,47 @@ async def test_numeric_sensor_recovers_from_exception(hass: HomeAssistant) -> No
     ):
         await async_trigger(hass, TEST_STATE_SENSOR, set_state)
         assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "device_class": "temperature",
+                "state_class": "measurement",
+                "unit_of_measurement": "°C",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("{{ '1.0' }}", "1.0"),
+        ("{{ '1' }}", "1"),
+        ("{{ 1.0 }}", "1.0"),
+        ("{{ 1 }}", "1"),
+        ("{{ '0.0' }}", "0.0"),
+        ("{{ '0' }}", "0"),
+        ("{{ 0.0 }}", "0.0"),
+        ("{{ 0 }}", "0"),
+        ("{{ '10021452' }}", "10021452"),
+        ("{{ 10021452 }}", "10021452"),
+        ("{{ '1002.1452' }}", "1002.1452"),
+        ("{{ 1002.1452 }}", "1002.1452"),
+        ("{{ True }}", STATE_UNKNOWN),
+        ("{{ False }}", STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+async def test_numeric_sensor_int_float(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Test sensor properly stores int or float for state."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
+    assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state

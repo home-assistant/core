@@ -147,6 +147,9 @@
     "setup_failed": {
       "message": "Could not connect to the Mealie instance."
     },
+    "shopping_list_not_found": {
+      "message": "Shopping list with name or ID `{shopping_list}` not found."
+    },
     "update_failed_mealplan": {
       "message": "Could not fetch mealplan data."
     },
@@ -226,6 +229,10 @@
         }
       },
       "name": "Get recipes"
+    },
+    "get_shopping_list_items": {
+      "description": "Gets items from a shopping list in Mealie",
+      "name": "Get shopping list items"
     },
     "import_recipe": {
       "description": "Imports a recipe from an URL",

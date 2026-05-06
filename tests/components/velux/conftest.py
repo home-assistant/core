@@ -4,7 +4,16 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx import Blind, Light, OnOffLight, OnOffSwitch, Scene, Window
+from pyvlx import (
+    Blind,
+    DualRollerShutter,
+    ExteriorHeating,
+    Light,
+    OnOffLight,
+    OnOffSwitch,
+    Scene,
+    Window,
+)
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
@@ -61,12 +70,34 @@ def mock_window() -> AsyncMock:
     window.name = "Test Window"
     window.rain_sensor = True
     window.serial_number = "123456789"
-    window.get_limitation.return_value = MagicMock(min_value=0)
+    window.get_limitation_min.return_value = MagicMock(position_percent=0)
+    window.device_updated_cbs = []
     window.is_opening = False
     window.is_closing = False
-    window.position = MagicMock(position_percent=30, closed=False)
+    window.position = MagicMock(position_percent=30, closed=False, known=True)
+    window.wink = AsyncMock()
     window.pyvlx = MagicMock()
     return window
+
+
+# a dual roller shutter
+@pytest.fixture
+def mock_dual_roller_shutter() -> AsyncMock:
+    """Create a mock Velux dual roller shutter."""
+    cover = AsyncMock(spec=DualRollerShutter, autospec=True)
+    cover.name = "Test Dual Roller Shutter"
+    cover.serial_number = "987654321"
+    cover.is_opening = False
+    cover.is_closing = False
+    cover.position_upper_curtain = MagicMock(
+        position_percent=30, closed=False, known=True
+    )
+    cover.position_lower_curtain = MagicMock(
+        position_percent=30, closed=False, known=True
+    )
+    cover.position = MagicMock(position_percent=30, closed=False, known=True)
+    cover.pyvlx = MagicMock()
+    return cover
 
 
 # a blind
@@ -77,11 +108,11 @@ def mock_blind() -> AsyncMock:
     blind.name = "Test Blind"
     blind.serial_number = "4711"
     # Standard cover position (used by current_cover_position)
-    blind.position = MagicMock(position_percent=40, closed=False)
+    blind.position = MagicMock(position_percent=40, closed=False, known=True)
     blind.is_opening = False
     blind.is_closing = False
     # Orientation/tilt-related attributes and methods
-    blind.orientation = MagicMock(position_percent=25)
+    blind.orientation = MagicMock(position_percent=25, known=True)
     blind.open_orientation = AsyncMock()
     blind.close_orientation = AsyncMock()
     blind.stop_orientation = AsyncMock()
@@ -114,6 +145,18 @@ def mock_onoff_light() -> AsyncMock:
     return light
 
 
+# an exterior heating device
+@pytest.fixture
+def mock_exterior_heating() -> AsyncMock:
+    """Create a mock Velux exterior heating device."""
+    exterior_heating = AsyncMock(spec=ExteriorHeating, autospec=True)
+    exterior_heating.name = "Test Exterior Heating"
+    exterior_heating.serial_number = "1984"
+    exterior_heating.intensity = MagicMock(intensity_percent=33)
+    exterior_heating.pyvlx = MagicMock()
+    return exterior_heating
+
+
 # an on/off switch
 @pytest.fixture
 def mock_onoff_switch() -> AsyncMock:
@@ -136,7 +179,13 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.serial_number = f"serial_{request.param.__name__}"
     cover.is_opening = False
     cover.is_closing = False
-    cover.position = MagicMock(position_percent=30, closed=False)
+    cover.position = MagicMock(position_percent=30, closed=False, known=True)
+    cover.position_upper_curtain = MagicMock(
+        position_percent=30, closed=False, known=True
+    )
+    cover.position_lower_curtain = MagicMock(
+        position_percent=30, closed=False, known=True
+    )
     cover.pyvlx = MagicMock()
     return cover
 
@@ -149,6 +198,8 @@ def mock_pyvlx(
     mock_onoff_switch: AsyncMock,
     mock_window: AsyncMock,
     mock_blind: AsyncMock,
+    mock_exterior_heating: AsyncMock,
+    mock_dual_roller_shutter: AsyncMock,
     request: pytest.FixtureRequest,
 ) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX in both component and config_flow.
@@ -164,12 +215,13 @@ def mock_pyvlx(
         pyvlx.nodes = [request.getfixturevalue(request.param)]
     else:
         pyvlx.nodes = [
+            mock_dual_roller_shutter,
             mock_light,
             mock_onoff_light,
             mock_onoff_switch,
             mock_blind,
             mock_window,
-            mock_cover_type,
+            mock_exterior_heating,
         ]
 
     pyvlx.scenes = [mock_scene]

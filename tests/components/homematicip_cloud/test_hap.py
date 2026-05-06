@@ -4,7 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
 from homematicip.connection.connection_context import ConnectionContext
-from homematicip.exceptions.connection_exceptions import HmipConnectionError
+from homematicip.exceptions.connection_exceptions import (
+    HmipAuthenticationError,
+    HmipConnectionError,
+)
 import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
@@ -363,3 +366,30 @@ async def test_async_connect(
     simple_mock_home.set_on_disconnected_handler.assert_called_once()
     simple_mock_home.set_on_reconnect_handler.assert_called_once()
     simple_mock_home.enable_events.assert_called_once()
+
+
+async def test_try_get_state_auth_error_triggers_reauth(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test _try_get_state stops retrying on auth error and triggers reauth."""
+    hass.config.components.add(DOMAIN)
+    hmip_config_entry.add_to_hass(hass)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+
+    hap.home = MagicMock(spec=AsyncHome)
+    hap.home.websocket_is_connected = Mock(return_value=True)
+
+    hap.get_state = AsyncMock(side_effect=HmipAuthenticationError)
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    await hap._try_get_state()
+    await hass.async_block_till_done()
+
+    # Should have called get_state only once (no retries)
+    assert hap.get_state.call_count == 1
+    # Should have triggered a reauth flow
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

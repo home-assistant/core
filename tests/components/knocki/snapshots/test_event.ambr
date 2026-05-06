@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[event.knc1_w_00000214_aaaa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

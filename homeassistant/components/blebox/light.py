@@ -1,7 +1,5 @@
 """BleBox light entities implementation."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -74,7 +72,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return self._feature.is_on
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the name."""
         return self._feature.brightness
 

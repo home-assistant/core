@@ -33,5 +33,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_api": {
+      "description": "Your version of Libre Hardware Monitor is deprecated and may not provide stable sensor data. To fix this issue:\n\n1. Download version 0.9.5 or later from {lhm_releases_url}\n2. Close Libre Hardware Monitor on your computer\n3. Install or extract the new version and start Libre Hardware Monitor again (you might have to re-enable the remote web server)\n4. Home Assistant will detect the new version and this issue will clear automatically",
+      "title": "Deprecated Libre Hardware Monitor version"
+    }
   }
 }

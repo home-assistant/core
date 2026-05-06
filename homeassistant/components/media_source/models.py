@@ -1,7 +1,5 @@
 """Media Source models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -83,7 +81,7 @@ class MediaSourceItem:
                         identifier=None,
                         media_class=MediaClass.APP,
                         media_content_type=MediaType.APP,
-                        thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
+                        thumbnail=f"/api/brands/integration/{source.domain}/logo.png",
                         title=source.name,
                         can_play=False,
                         can_expand=True,

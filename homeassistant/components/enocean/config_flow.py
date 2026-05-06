@@ -1,26 +1,51 @@
 """Config flows for the EnOcean integration."""
 
+import glob
 from typing import Any
 
+from enocean_async import Gateway
 import voluptuous as vol
 
+from homeassistant.components import usb
+from homeassistant.components.usb import (
+    human_readable_device_name,
+    usb_unique_id_from_service_info,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from . import dongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
 
 MANUAL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): cv.string,
     }
 )
+
+
+def _detect_usb_dongle() -> list[str]:
+    """Return a list of candidate paths for USB EnOcean dongles.
+
+    This method is currently a bit simplistic, it may need to be
+    improved to support more configurations and OS.
+    """
+    globs_to_test = [
+        "/dev/tty*FTOA2PV*",
+        "/dev/serial/by-id/*EnOcean*",
+        "/dev/tty.usbserial-*",
+    ]
+    found_paths = []
+    for current_glob in globs_to_test:
+        found_paths.extend(glob.glob(current_glob))
+
+    return found_paths
 
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -31,8 +56,48 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
-        self.dongle_path = None
-        self.discovery_info = None
+        self.data: dict[str, Any] = {}
+
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
+        """Handle usb discovery."""
+        unique_id = usb_unique_id_from_service_info(discovery_info)
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: discovery_info.device}
+        )
+
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
+        self.data[CONF_DEVICE] = discovery_info.device
+        self.context["title_placeholders"] = {
+            CONF_NAME: human_readable_device_name(
+                discovery_info.device,
+                discovery_info.serial_number,
+                discovery_info.manufacturer,
+                discovery_info.description,
+                discovery_info.vid,
+                discovery_info.pid,
+            )
+        }
+        return await self.async_step_usb_confirm()
+
+    async def async_step_usb_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle USB Discovery confirmation."""
+        if user_input is not None:
+            return await self.async_step_manual({CONF_DEVICE: self.data[CONF_DEVICE]})
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="usb_confirm",
+            description_placeholders={
+                ATTR_MANUFACTURER: MANUFACTURER,
+                CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
+            },
+        )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
@@ -61,7 +126,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual()
             return await self.async_step_manual(user_input)
 
-        devices = await self.hass.async_add_executor_job(dongle.detect)
+        devices = await self.hass.async_add_executor_job(_detect_usb_dongle)
         if len(devices) == 0:
             return await self.async_step_manual()
         devices.append(self.MANUAL_PATH_VALUE)
@@ -100,8 +165,18 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def validate_enocean_conf(self, user_input) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
-        return await self.hass.async_add_executor_job(dongle.validate_path, dongle_path)
+        try:
+            # Starting the gateway will raise an exception if it can't connect
+            gateway = Gateway(port=dongle_path)
+            await gateway.start()
+        except ConnectionError as exception:
+            LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
+            return False
+        finally:
+            gateway.stop()
+
+        return True
 
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
-        return self.async_create_entry(title="EnOcean", data=user_input)
+        return self.async_create_entry(title=MANUFACTURER, data=user_input)

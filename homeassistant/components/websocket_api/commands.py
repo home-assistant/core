@@ -1,7 +1,5 @@
 """Commands part of Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import lru_cache, partial
 import json
@@ -332,6 +330,7 @@ async def handle_call_service(
         connection.logger.error(
             "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
         )
+        connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -864,6 +863,7 @@ def handle_entity_source(
         vol.Required("type"): "extract_from_target",
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=False): bool,
+        vol.Optional("primary_entities_only", default=True): bool,
     }
 )
 def handle_extract_from_target(
@@ -873,7 +873,10 @@ def handle_extract_from_target(
 
     target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, target_selection, expand_group=msg["expand_group"]
+        hass,
+        target_selection,
+        expand_group=msg["expand_group"],
+        primary_entities_only=msg["primary_entities_only"],
     )
 
     extracted_dict = {
@@ -1023,10 +1026,13 @@ async def handle_test_condition(
     # Do static + dynamic validation of the condition
     config = await async_validate_condition_config(hass, msg["condition"])
     # Test the condition
-    check_condition = await async_condition_from_config(hass, config)
-    connection.send_result(
-        msg["id"], {"result": check_condition(hass, msg.get("variables"))}
-    )
+    condition = await async_condition_from_config(hass, config)
+    try:
+        connection.send_result(
+            msg["id"], {"result": condition.async_check(variables=msg.get("variables"))}
+        )
+    finally:
+        condition.async_unload()
 
 
 @decorators.websocket_command(
@@ -1068,6 +1074,8 @@ async def handle_execute_script(
             translation_placeholders=err.translation_placeholders,
         )
         return
+    finally:
+        await script_obj.async_unload()
     connection.send_result(
         msg["id"],
         {

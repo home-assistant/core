@@ -1,5 +1,10 @@
 {
   "entity": {
+    "number": {
+      "room_correction_intensity": {
+        "default": "mdi:home-sound-out"
+      }
+    },
     "select": {
       "audio_output": {
         "default": "mdi:audio-input-stereo-minijack"
@@ -23,6 +28,12 @@
     "switch": {
       "early_update": {
         "default": "mdi:update"
+      },
+      "equalizer": {
+        "default": "mdi:equalizer",
+        "state": {
+          "off": "mdi:equalizer-outline"
+        }
       },
       "pre_amp": {
         "default": "mdi:volume-high",

@@ -1,6 +1,4 @@
-"""The Hyperion component."""
-
-from __future__ import annotations
+"""The Hyperion integration."""
 
 import asyncio
 from collections.abc import Callable

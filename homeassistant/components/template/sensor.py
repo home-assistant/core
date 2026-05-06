@@ -1,7 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
@@ -193,7 +191,7 @@ def validate_datetime(
     """Converts the template result into a datetime or date."""
 
     def convert(result: Any) -> datetime | date | None:
-        if resolve_as == SensorDeviceClass.TIMESTAMP:
+        if resolve_as in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             if isinstance(result, datetime):
                 return result
 
@@ -229,6 +227,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     """Representation of a template sensor features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -240,7 +239,6 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         self._attr_last_reset = None
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_native_value",
             self._validate_state,
         )
@@ -257,11 +255,15 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     ) -> StateType | date | datetime | Decimal | None:
         """Validate the state."""
         if self._numeric_state_expected:
+            if not isinstance(result, bool) and isinstance(result, (int, float)):
+                return result
+
             return template_validators.number(self, CONF_STATE)(result)
 
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             return result
 

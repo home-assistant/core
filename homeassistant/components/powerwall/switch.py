@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .coordinator import PowerwallConfigEntry, PowerwallRuntimeData
 from .entity import PowerWallEntity
-from .models import PowerwallConfigEntry, PowerwallRuntimeData
 
 OFF_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_ISLAND,

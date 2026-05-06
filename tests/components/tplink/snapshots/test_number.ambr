@@ -36,8 +36,9 @@
 # ---
 # name: test_states[number.my_device_clean_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65536,
@@ -94,8 +95,9 @@
 # ---
 # name: test_states[number.my_device_pan_degrees-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65536,
@@ -152,8 +154,9 @@
 # ---
 # name: test_states[number.my_device_power_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65536,
@@ -210,8 +213,9 @@
 # ---
 # name: test_states[number.my_device_smooth_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,
@@ -268,8 +272,9 @@
 # ---
 # name: test_states[number.my_device_smooth_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,
@@ -326,8 +331,9 @@
 # ---
 # name: test_states[number.my_device_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -385,8 +391,9 @@
 # ---
 # name: test_states[number.my_device_tilt_degrees-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65536,
@@ -443,8 +450,9 @@
 # ---
 # name: test_states[number.my_device_turn_off_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,

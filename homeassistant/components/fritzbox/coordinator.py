@@ -1,7 +1,5 @@
 """Data update coordinator for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -63,6 +61,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             host=self.config_entry.data[CONF_HOST],
             user=self.config_entry.data[CONF_USERNAME],
             password=self.config_entry.data[CONF_PASSWORD],
+            timeout=20,
         )
 
         try:

@@ -1,7 +1,5 @@
 """The Meteo.lt integration."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_PLACE_CODE, PLATFORMS

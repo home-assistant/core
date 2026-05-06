@@ -1,7 +1,5 @@
 """Provide functionality for TTS."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass, field
@@ -527,6 +525,8 @@ class ResultStream:
 
         This method will leverage a disk cache to speed up generation.
         """
+        if self._result_cache.done():
+            return
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -543,6 +543,8 @@ class ResultStream:
 
         This method can result in faster first byte when generating long responses.
         """
+        if self._result_cache.done():
+            return
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,

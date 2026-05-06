@@ -1,7 +1,5 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -73,12 +71,12 @@ class SisyphusLight(LightEntity):
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the table is on."""
         return not self._table.is_sleeping
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the current brightness of the table's ring light."""
         return self._table.brightness * 255
 

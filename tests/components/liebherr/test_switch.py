@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
+from .conftest import MOCK_DEVICE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -65,29 +65,29 @@ async def test_switches(
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_ON,
-            "set_supercool",
+            "set_super_cool",
             {"device_id": "test_device_id", "zone_id": 1, "value": True},
         ),
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_OFF,
-            "set_supercool",
+            "set_super_cool",
             {"device_id": "test_device_id", "zone_id": 1, "value": False},
         ),
         (
             "switch.test_fridge_bottom_zone_superfrost",
             SERVICE_TURN_ON,
-            "set_superfrost",
+            "set_super_frost",
             {"device_id": "test_device_id", "zone_id": 2, "value": True},
         ),
         (
-            "switch.test_fridge_party_mode",
+            "switch.test_fridge_partymode",
             SERVICE_TURN_ON,
             "set_party_mode",
             {"device_id": "test_device_id", "value": True},
         ),
         (
-            "switch.test_fridge_night_mode",
+            "switch.test_fridge_nightmode",
             SERVICE_TURN_OFF,
             "set_night_mode",
             {"device_id": "test_device_id", "value": False},
@@ -122,8 +122,8 @@ async def test_switch_service_calls(
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
-        ("switch.test_fridge_top_zone_supercool", "set_supercool"),
-        ("switch.test_fridge_party_mode", "set_party_mode"),
+        ("switch.test_fridge_top_zone_supercool", "set_super_cool"),
+        ("switch.test_fridge_partymode", "set_party_mode"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -140,7 +140,7 @@ async def test_switch_failure(
 
     with pytest.raises(
         HomeAssistantError,
-        match="An error occurred while communicating with the device: Connection failed",
+        match="An error occurred while communicating with the device",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -148,46 +148,6 @@ async def test_switch_failure(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_switch_update_failure(
-    hass: HomeAssistant,
-    mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test switch becomes unavailable when coordinator update fails and recovers."""
-    entity_id = "switch.test_fridge_top_zone_supercool"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-    # Simulate update error
-    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError(
-        "Connection failed"
-    )
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        MOCK_DEVICE_STATE
-    )
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")

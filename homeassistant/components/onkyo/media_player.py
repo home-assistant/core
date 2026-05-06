@@ -1,7 +1,5 @@
 """Media player platform."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
@@ -100,7 +98,7 @@ async def async_setup_entry(
     entry: OnkyoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up MediaPlayer for config entry."""
+    """Set up media player platform for config entry."""
     data = entry.runtime_data
 
     manager = data.manager

@@ -30,7 +30,6 @@ class TellstickDevice(Entity):
     def __init__(self, tellcore_device, signal_repetitions):
         """Init the Tellstick device."""
         self._signal_repetitions = signal_repetitions
-        self._state = None
         self._requested_state = None
         self._requested_data = None
         self._repeats_left = 0
@@ -47,11 +46,6 @@ class TellstickDevice(Entity):
                 self.hass, SIGNAL_TELLCORE_CALLBACK, self.update_from_callback
             )
         )
-
-    @property
-    def is_on(self):
-        """Return true if the device is on."""
-        return self._state
 
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""

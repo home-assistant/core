@@ -1,7 +1,5 @@
 """Support for HomeMatic sensors."""
 
-from __future__ import annotations
-
 from copy import copy
 import logging
 
@@ -344,4 +342,4 @@ class HMSensor(HMDevice, SensorEntity):
         if self._state:
             self._data.update({self._state: None})
         else:
-            _LOGGER.critical("Unable to initialize sensor: %s", self._name)
+            _LOGGER.critical("Unable to initialize sensor: %s", self.name)
