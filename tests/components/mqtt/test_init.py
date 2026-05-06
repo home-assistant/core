@@ -1906,7 +1906,7 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    with patch("homeassistant.components.mqtt.async_client.AsyncMQTTClient"):
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
         await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
         await hass.async_block_till_done()
 
