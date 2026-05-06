@@ -1,7 +1,5 @@
 """The repairs websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
 from typing import Any, override

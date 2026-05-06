@@ -1,7 +1,5 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 import functools
 
 from zha.application.platforms.alarm_control_panel.const import (

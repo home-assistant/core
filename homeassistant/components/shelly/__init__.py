@@ -1,7 +1,5 @@
 """The Shelly integration."""
 
-from __future__ import annotations
-
 from functools import partial
 from typing import Final
 
@@ -84,6 +82,7 @@ PLATFORMS: Final = [
     Platform.COVER,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

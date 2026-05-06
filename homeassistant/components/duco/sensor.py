@@ -1,9 +1,8 @@
 """Sensor platform for the Duco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 
 from duco.models import Node, NodeType, VentilationState
@@ -19,10 +18,12 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -37,7 +38,7 @@ PARALLEL_UPDATES = 0
 class DucoSensorEntityDescription(SensorEntityDescription):
     """Duco sensor entity description."""
 
-    value_fn: Callable[[Node], int | float | str | None]
+    value_fn: Callable[[Node], datetime | int | float | str | None]
     node_types: tuple[NodeType, ...]
 
 
@@ -57,6 +58,49 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         value_fn=lambda node: (
             node.ventilation.state.lower() if node.ventilation else None
         ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda node: node.sensor.temp if node.sensor else None,
+        node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
+    ),
+    DucoSensorEntityDescription(
+        key="target_flow_level",
+        translation_key="target_flow_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda node: (
+            node.ventilation.flow_lvl_tgt if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="time_state_end",
+        translation_key="time_state_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda node: (
+            dt_util.utc_from_timestamp(node.ventilation.time_state_end).replace(
+                second=0, microsecond=0
+            )
+            if node.ventilation and node.ventilation.time_state_end != 0
+            else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="box_temperature",
+        translation_key="box_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda node: node.sensor.temp if node.sensor else None,
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
@@ -123,6 +167,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
+        """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
@@ -146,14 +191,19 @@ async def async_setup_entry(
         for node in coordinator.data.nodes.values():
             if node.node_id in known_nodes:
                 continue
-            known_nodes.add(node.node_id)
             if node.general.node_type == NodeType.UNKNOWN:
-                _LOGGER.warning(
-                    "Duco node %s (%s) has an unsupported device type and will be ignored",
+                # Do not add the node to known_nodes so that it is re-evaluated
+                # on every coordinator update. This allows entities to be
+                # created automatically once a firmware update or library
+                # update adds support for the device type.
+                _LOGGER.debug(
+                    "Duco node %s (%s) has an unsupported device type and will be "
+                    "retried on subsequent coordinator updates",
                     node.node_id,
                     node.general.name,
                 )
                 continue
+            known_nodes.add(node.node_id)
             new_entities.extend(
                 DucoSensorEntity(coordinator, node, description)
                 for description in SENSOR_DESCRIPTIONS
@@ -190,7 +240,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | float | str | None:
+    def native_value(self) -> datetime | int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
 

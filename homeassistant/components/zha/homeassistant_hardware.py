@@ -1,7 +1,5 @@
 """Home Assistant Hardware firmware utilities."""
 
-from __future__ import annotations
-
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,

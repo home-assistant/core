@@ -1,7 +1,5 @@
 """Home Assistant SkyConnect firmware update entity."""
 
-from __future__ import annotations
-
 import logging
 
 from universal_silabs_flasher.flasher import Zbt1Flasher

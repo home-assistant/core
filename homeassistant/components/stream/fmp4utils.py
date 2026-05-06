@@ -1,7 +1,5 @@
 """Utilities to help convert mp4s to fmp4s."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import TYPE_CHECKING
 

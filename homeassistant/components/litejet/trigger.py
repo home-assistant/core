@@ -1,7 +1,5 @@
 """Trigger an automation when a LiteJet switch is released."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 from typing import cast

@@ -1,7 +1,5 @@
 """Coordinator for the Pure Energie integration."""
 
-from __future__ import annotations
-
 from typing import NamedTuple
 
 from gridnet import Device, GridNet, SmartBridge

@@ -1,7 +1,5 @@
 """Sensor for PG LAB Electronics."""
 
-from __future__ import annotations
-
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
 

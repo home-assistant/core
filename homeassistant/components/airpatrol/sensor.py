@@ -1,7 +1,5 @@
 """Sensors for AirPatrol integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
