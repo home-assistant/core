@@ -350,7 +350,7 @@ async def test_location_and_min_extrusion_temp_sensors(
     assert state.state == "170"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
-    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert ATTR_STATE_CLASS not in state.attributes
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

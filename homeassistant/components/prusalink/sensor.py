@@ -227,7 +227,6 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="min_extrusion_temp",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(int, data["min_extrusion_temp"]),
             supported_fn=lambda data: data.get("min_extrusion_temp") is not None,
             entity_registry_enabled_default=False,
