@@ -148,7 +148,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         except OPNsenseConnectionError, OPNsenseTimeoutError:
             errors["base"] = "cannot_connect"
         except OPNsenseUnknownFirmware:
-            errors["base"] = "invalid_version"
+            errors["base"] = "unknown_version"
         except OPNsenseBelowMinFirmware:
             errors["base"] = "invalid_version"
         except Exception:
@@ -169,7 +169,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._show_interfaces_form(user_input, None)
 
         # Compose entry data from credentials and selected interfaces
-        step_user_input = getattr(self, "_step_user_input", None)
+        step_user_input = self._step_user_input
         if not isinstance(step_user_input, dict) or CONF_URL not in step_user_input:
             return await self.async_step_user()
 

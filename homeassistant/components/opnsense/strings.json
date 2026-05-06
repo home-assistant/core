@@ -10,7 +10,8 @@
       "invalid_version": "Unsupported OPNsense firmware version",
       "privilege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
       "ssl_error": "SSL certificate verification failed",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_version": "The OPNsense firmware version is unknown. Please ensure you are running a supported version of OPNsense and the user has the correct permissions."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -20,7 +21,8 @@
       "invalid_version": "Unsupported OPNsense firmware version",
       "privilege_missing": "[%key:component::opnsense::config::abort::privilege_missing%]",
       "ssl_error": "SSL certificate verification failed",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_version": "The OPNsense firmware version is unknown. Please ensure you are running a supported version of OPNsense and the user has the correct permissions."
     },
     "step": {
       "interfaces": {
