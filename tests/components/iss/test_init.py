@@ -168,7 +168,7 @@ async def test_coordinator_failure_counter_resets_on_success(
     assert coordinator.last_update_success is True
 
 
-@pytest.mark.parametrize("max_failures", [DEFAULT_MAX_CONSECUTIVE_FAILURES, 3, 10])
+@pytest.mark.parametrize("max_failures", [DEFAULT_MAX_CONSECUTIVE_FAILURES, 5, 10])
 async def test_coordinator_custom_failure_threshold(
     hass: HomeAssistant, mock_pyiss: MagicMock, max_failures: int
 ) -> None:
