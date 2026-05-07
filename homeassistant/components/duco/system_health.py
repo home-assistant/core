@@ -31,6 +31,8 @@ async def _async_get_write_requests_remaining(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
+    # Only loaded entries have runtime_data; system health can be queried while
+    # other entries are still setting up or unloading.
     config_entries: list[DucoConfigEntry] = hass.config_entries.async_loaded_entries(
         DOMAIN
     )
