@@ -917,6 +917,11 @@
         "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
     "switch": {
       "anion": {
         "name": "Anion"
@@ -1030,7 +1035,7 @@
         "name": "Reverse"
       },
       "siren": {
-        "name": "Siren"
+        "name": "Siren light"
       },
       "sleep": {
         "name": "Sleep"
