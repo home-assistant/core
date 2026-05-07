@@ -35,20 +35,6 @@ DEVICE_ID_1 = "2a303030sdj1"
 DEVICE_ID_2 = "ape93k9302j2"
 
 
-def _status_side_effect(statuses: dict[str, dict[str, Any]]):
-    """Return a side_effect that yields per-device status payloads."""
-
-    async def _get_status(device_id: str) -> dict[str, Any]:
-        return {
-            "status": {
-                "internetConnected": True,
-                **statuses.get(device_id, {}),
-            }
-        }
-
-    return _get_status
-
-
 async def _setup_cover_only(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Set up the integration with only the cover platform forwarded."""
     with patch("homeassistant.components.fluss.PLATFORMS", [Platform.COVER]):
@@ -63,12 +49,16 @@ async def test_covers(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test cover entity registration."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {
-            DEVICE_ID_1: {"openCloseStatus": "Closed"},
-            DEVICE_ID_2: {"openCloseStatus": "Open"},
+
+    async def _status(device_id: str) -> dict[str, Any]:
+        return {
+            "status": {
+                "internetConnected": True,
+                "openCloseStatus": "Closed" if device_id == DEVICE_ID_1 else "Open",
+            }
         }
-    )
+
+    mock_api_client.async_get_device_status.side_effect = _status
     await _setup_cover_only(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -85,9 +75,9 @@ async def test_cover_state(
     expected_state: str,
 ) -> None:
     """The API returns either "Open" or "Closed" — verify both map correctly."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": status_value}}
-    )
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": True, "openCloseStatus": status_value}
+    }
     await _setup_cover_only(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID_1)
@@ -101,11 +91,9 @@ async def test_cover_unavailable_when_offline(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Covers become unavailable when the device reports no internet."""
-
-    async def _status(device_id: str) -> dict[str, Any]:
-        return {"status": {"internetConnected": False, "openCloseStatus": "Closed"}}
-
-    mock_api_client.async_get_device_status.side_effect = _status
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": False, "openCloseStatus": "Closed"}
+    }
     await _setup_cover_only(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
@@ -118,9 +106,9 @@ async def test_cover_state_preserved_on_transient_status_error(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Last-known status is preserved when a per-device status fetch fails."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
-    )
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": True, "openCloseStatus": "Closed"}
+    }
     await _setup_cover_only(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
 
@@ -150,9 +138,9 @@ async def test_cover_commands(
     method: str,
 ) -> None:
     """Open and close hit the matching API method."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
-    )
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": True, "openCloseStatus": "Closed"}
+    }
     await _setup_cover_only(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -185,16 +173,16 @@ async def test_cover_press_triggers_debounced_refresh(
     """A press requests a coordinator refresh, debounced by the cooldown."""
     initial_status = "Open" if post_status == "Closed" else "Closed"
     initial_state = STATE_OPEN if initial_status == "Open" else STATE_CLOSED
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": initial_status}}
-    )
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": True, "openCloseStatus": initial_status}
+    }
     await _setup_cover_only(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_1).state == initial_state
 
     pre_press_call_count = mock_api_client.async_get_device_status.call_count
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": post_status}}
-    )
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": True, "openCloseStatus": post_status}
+    }
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -229,9 +217,9 @@ async def test_cover_command_error(
     method: str,
 ) -> None:
     """Library errors are translated to HomeAssistantError with a translation key."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
-    )
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": True, "openCloseStatus": "Closed"}
+    }
     await _setup_cover_only(hass, mock_config_entry)
 
     getattr(mock_api_client, method).side_effect = FlussApiClientError("boom")
@@ -254,9 +242,13 @@ async def test_mixed_device_dispatch(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """A device with openCloseStatus is a cover; a device without is a button."""
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
-    )
+
+    async def _status(device_id: str) -> dict[str, Any]:
+        if device_id == DEVICE_ID_1:
+            return {"status": {"internetConnected": True, "openCloseStatus": "Closed"}}
+        return {"status": {"internetConnected": True}}
+
+    mock_api_client.async_get_device_status.side_effect = _status
     await setup_integration(hass, mock_config_entry)
 
     assert entity_registry.async_get("cover.device_1") is not None
@@ -280,9 +272,12 @@ async def test_orphan_button_removed_on_setup(
         entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is not None
     )
 
-    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
-        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
-    )
+    async def _status(device_id: str) -> dict[str, Any]:
+        if device_id == DEVICE_ID_1:
+            return {"status": {"internetConnected": True, "openCloseStatus": "Closed"}}
+        return {"status": {"internetConnected": True}}
+
+    mock_api_client.async_get_device_status.side_effect = _status
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
