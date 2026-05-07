@@ -620,7 +620,9 @@ class AssistAPI(API):
 
         if exposed_domains:
             tools.append(GetLiveContextTool())
-            tools.append(GetCurrentLocationTool())
+
+            if llm_context.device_id:
+                tools.append(GetCurrentLocationTool())
 
         return tools
 
@@ -1358,15 +1360,29 @@ class GetCurrentLocationTool(Tool):
     ) -> JsonObjectType:
         """Get the area and floor of the requesting device."""
         if not llm_context.device_id:
-            return {"success": False, "error": "No area set for this device"}
+            return {
+                "success": False,
+                "error": "This request is not associated with a device",
+            }
 
         device = dr.async_get(hass).async_get(llm_context.device_id)
-        if device is None or device.area_id is None:
-            return {"success": False, "error": "No area set for this device"}
+        if device is None:
+            return {
+                "success": False,
+                "error": "The requesting device was not found",
+            }
+        if device.area_id is None:
+            return {
+                "success": False,
+                "error": "The requesting device is not assigned to an area",
+            }
 
         area = ar.async_get(hass).async_get_area(device.area_id)
         if area is None:
-            return {"success": False, "error": "No area set for this device"}
+            return {
+                "success": False,
+                "error": "The area assigned to the requesting device was not found",
+            }
 
         result: dict[str, Any] = {"area": area.name}
         if area.floor_id and (
