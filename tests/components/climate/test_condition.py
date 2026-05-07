@@ -60,6 +60,15 @@ async def test_climate_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+_TEMPERATURE_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
@@ -69,6 +78,9 @@ async def test_climate_conditions_gated_by_labs_flag(
         ("climate.is_cooling", {}, True, True),
         ("climate.is_drying", {}, True, True),
         ("climate.is_heating", {}, True, True),
+        ("climate.is_hvac_mode", {"hvac_mode": [HVACMode.HEAT]}, True, True),
+        ("climate.target_humidity", _HUMIDITY_THRESHOLD, True, True),
+        ("climate.target_temperature", _TEMPERATURE_THRESHOLD, True, True),
     ],
 )
 async def test_climate_condition_options_validation(
