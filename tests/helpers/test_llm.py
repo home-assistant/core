@@ -183,11 +183,7 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == [
-        "GetDateTime",
-        "GetLiveContext",
-        "GetCurrentLocation",
-    ]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
@@ -197,14 +193,13 @@ async def test_assist_api(
         "test_intent",
         "GetDateTime",
         "GetLiveContext",
-        "GetCurrentLocation",
     ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 4
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -1885,14 +1880,9 @@ async def test_get_current_location_tool(
         device_id=None,
     )
 
-    # No device_id
+    # Tool is only added when device_id is set
     api = await llm.async_get_api(hass, "assist", llm_context)
-    tool = next((tool for tool in api.tools if tool.name == "GetCurrentLocation"), None)
-    assert tool is not None
-    result = await tool.async_call(
-        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
-    )
-    assert result == {"success": False, "error": "No area set for this device"}
+    assert not any(tool.name == "GetCurrentLocation" for tool in api.tools)
 
     # Device with no area
     entry = MockConfigEntry(title=None)
@@ -1902,12 +1892,39 @@ async def test_get_current_location_tool(
         connections={("test", "abc")},
     )
     llm_context.device_id = device.id
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetCurrentLocation"), None)
+    assert tool is not None
     result = await tool.async_call(
         hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
     )
-    assert result == {"success": False, "error": "No area set for this device"}
+    assert result == {
+        "success": False,
+        "error": "The requesting device is not assigned to an area",
+    }
+
+    # Unknown device_id
+    llm_context.device_id = "does-not-exist"
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {
+        "success": False,
+        "error": "The requesting device was not found",
+    }
+
+    # No device_id at all (call directly since the tool isn't registered)
+    llm_context.device_id = None
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {
+        "success": False,
+        "error": "This request is not associated with a device",
+    }
 
     # Device in an area without a floor
+    llm_context.device_id = device.id
     area = area_registry.async_create("Kitchen")
     device_registry.async_update_device(device.id, area_id=area.id)
     result = await tool.async_call(
@@ -1915,7 +1932,18 @@ async def test_get_current_location_tool(
     )
     assert result == {"success": True, "result": {"area": "Kitchen"}}
 
+    # Area looked up but missing from registry
+    device_registry.async_update_device(device.id, area_id="does-not-exist")
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {
+        "success": False,
+        "error": "The area assigned to the requesting device was not found",
+    }
+
     # Device in an area with a floor
+    device_registry.async_update_device(device.id, area_id=area.id)
     floor = floor_registry.async_create("Ground")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     result = await tool.async_call(
