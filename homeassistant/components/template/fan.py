@@ -18,14 +18,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_NAME,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -44,7 +37,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
@@ -54,13 +46,8 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FANS = "fans"
 CONF_SPEED_COUNT = "speed_count"
 CONF_PRESET_MODES = "preset_modes"
-CONF_PERCENTAGE_TEMPLATE = "percentage_template"
-CONF_PRESET_MODE_TEMPLATE = "preset_mode_template"
-CONF_OSCILLATING_TEMPLATE = "oscillating_template"
-CONF_DIRECTION_TEMPLATE = "direction_template"
 CONF_ON_ACTION = "turn_on"
 CONF_OFF_ACTION = "turn_off"
 CONF_SET_PERCENTAGE_ACTION = "set_percentage"
@@ -74,14 +61,6 @@ CONF_DIRECTION = "direction"
 CONF_OSCILLATING = "oscillating"
 CONF_PERCENTAGE = "percentage"
 CONF_PRESET_MODE = "preset_mode"
-
-LEGACY_FIELDS = {
-    CONF_DIRECTION_TEMPLATE: CONF_DIRECTION,
-    CONF_OSCILLATING_TEMPLATE: CONF_OSCILLATING,
-    CONF_PERCENTAGE_TEMPLATE: CONF_PERCENTAGE,
-    CONF_PRESET_MODE_TEMPLATE: CONF_PRESET_MODE,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 DEFAULT_NAME = "Template Fan"
 
@@ -116,34 +95,6 @@ FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).ex
     make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
 )
 
-FAN_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
-            vol.Optional(CONF_PERCENTAGE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PRESET_MODE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        }
-    ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_LEGACY_YAML_SCHEMA)}
-)
-
 FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
@@ -164,8 +115,6 @@ async def async_setup_platform(
         TriggerFanEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_FANS,
         script_options=SCRIPT_FIELDS,
     )
 
