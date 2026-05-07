@@ -15,6 +15,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
 )
 from homeassistant.helpers.llm import (
@@ -281,14 +282,90 @@ class GetLiveContextTool(Tool):
         }
 
 
+class GetCurrentLocationTool(Tool):
+    """Tool for getting the area (and floor) of the requesting device."""
+
+    name = "GetCurrentLocation"
+    description = (
+        "Returns the user's current area, and floor when set. "
+        "Call this to resolve the area when a request names a generic "
+        "device without specifying one."
+    )
+
+    @override
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the area and floor of the requesting device."""
+        if not llm_context.device_id:
+            return {
+                "success": False,
+                "error": "This request is not associated with a device",
+            }
+
+        device = dr.async_get(hass).async_get(llm_context.device_id)
+        if device is None:
+            return {
+                "success": False,
+                "error": "The requesting device was not found",
+            }
+        if device.area_id is None:
+            return {
+                "success": False,
+                "error": "The requesting device is not assigned to an area",
+            }
+
+        area = ar.async_get(hass).async_get_area(device.area_id)
+        if area is None:
+            return {
+                "success": False,
+                "error": "The area assigned to the requesting device was not found",
+            }
+
+        result: dict[str, Any] = {"area": area.name}
+        if area.floor_id and (
+            floor := fr.async_get(hass).async_get_floor(area.floor_id)
+        ):
+            result["floor"] = floor.name
+
+        return {"success": True, "result": result}
+
+
+GENERIC_DEVICE_WITH_AREA_PROMPT = (
+    "When a request names a generic device without an area, "
+    "treat it as the user's current area and call "
+    "`GetCurrentLocation` to resolve it before targeting."
+)
+GENERIC_DEVICE_WITHOUT_AREA_PROMPT = (
+    "When a request names a generic device without an area, "
+    "ask the user to specify which area they mean before targeting."
+)
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return the GetLiveContext tool.
+    """Return the homeassistant integration's LLM tools.
 
-    The tool is always offered; it reports when nothing is exposed at call time.
+    GetLiveContext is always offered and reports when nothing is exposed at
+    call time. GetCurrentLocation is offered only when the request carries a
+    device_id, and the prompt directs the model to resolve the current area
+    through it rather than embedding a per-device area in the system prompt,
+    which keeps the prompt cacheable across speakers.
     """
     if api_id != LLM_API_ASSIST:
         return None
-    return LLMTools(tools=[GetLiveContextTool()])
+
+    tools: list[Tool] = [GetLiveContextTool()]
+
+    if llm_context.device_id:
+        tools.append(GetCurrentLocationTool())
+        prompt = GENERIC_DEVICE_WITH_AREA_PROMPT
+    else:
+        prompt = GENERIC_DEVICE_WITHOUT_AREA_PROMPT
+
+    return LLMTools(tools=tools, prompt=prompt)
