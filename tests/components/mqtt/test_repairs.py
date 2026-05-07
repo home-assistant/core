@@ -1,18 +1,19 @@
 """Test repairs for MQTT."""
 
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Generator
 from copy import deepcopy
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import CONF_PORT, CONF_PROTOCOL, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import parse_yaml
 
 from .common import MOCK_NOTIFY_SUBENTRY_DATA_MULTI, async_fire_mqtt_message
@@ -25,6 +26,13 @@ from tests.components.repairs import (
 )
 from tests.conftest import ClientSessionGenerator
 from tests.typing import MqttMockHAClientGenerator
+
+
+@pytest.fixture
+def mock_try_connection() -> Generator[MagicMock]:
+    """Mock the try connection method."""
+    with patch("homeassistant.components.mqtt.repairs.try_connection") as mock_try:
+        yield mock_try
 
 
 async def help_setup_yaml(hass: HomeAssistant, config: dict[str, str]) -> None:
@@ -177,3 +185,183 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
     assert device.config_entries_subentries[config_entry.entry_id] == {None}
     assert device is not None
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "current_protocol"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+                CONF_PORT: 1883,
+            },
+            "3.1",
+        ),
+    ],
+    ids=[
+        "entry_without_protocol_without_port",
+        "entry_without_protocol_with_port",
+        "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
+    ],
+)
+async def test_mqtt_protocol_successful_migration_to_v5(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass_client: ClientSessionGenerator,
+    mqtt_config_entry_data: dict[str, Any],
+    current_protocol: str,
+    mock_try_connection: MagicMock,
+) -> None:
+    """Test the MQTT protocol migration repair flow is successful."""
+    assert await async_setup_component(hass, "repairs", {})
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await mqtt_mock_entry()
+    assert len(events) == 1
+    assert events[0].data["issue_id"] == "protocol_5_migration"
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(mqtt.DOMAIN, "protocol_5_migration")
+    assert issue is not None
+    assert issue.translation_key == "protocol_5_migration"
+    assert issue.translation_placeholders == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+    }
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+
+    data = await start_repair_fix_flow(client, mqtt.DOMAIN, "protocol_5_migration")
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+    }
+    assert data["step_id"] == "confirm"
+
+    mock_try_connection.side_effect = lambda x: True
+    data = await process_repair_fix_flow(client, flow_id)
+    assert data["type"] == "create_entry"
+    expected_entry_data: dict[str, Any] = mqtt_config_entry_data | {CONF_PROTOCOL: "5"}
+    mock_try_connection.assert_called_once_with(expected_entry_data | {CONF_PORT: 1883})
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert entry.data == expected_entry_data
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "current_protocol"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+                CONF_PORT: 1883,
+            },
+            "3.1",
+        ),
+    ],
+    ids=[
+        "entry_without_protocol_without_port",
+        "entry_without_protocol_with_port",
+        "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
+    ],
+)
+async def test_mqtt_protocol_failed_migration_to_v5(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass_client: ClientSessionGenerator,
+    current_protocol: str,
+    mock_try_connection: MagicMock,
+) -> None:
+    """Test the MQTT protocol migration repair flow fails."""
+    assert await async_setup_component(hass, "repairs", {})
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await mqtt_mock_entry()
+    assert len(events) == 1
+    assert events[0].data["issue_id"] == "protocol_5_migration"
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(mqtt.DOMAIN, "protocol_5_migration")
+    assert issue is not None
+    assert issue.translation_key == "protocol_5_migration"
+    assert issue.translation_placeholders == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+    }
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+
+    data = await start_repair_fix_flow(client, mqtt.DOMAIN, "protocol_5_migration")
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+    }
+    assert data["step_id"] == "confirm"
+
+    mock_try_connection.side_effect = lambda x: False
+    data = await process_repair_fix_flow(client, flow_id)
+    assert data["type"] == "abort"
+    assert data["reason"] == "mqtt_broker_migration_to_v5_failed"
+    assert data["description_placeholders"] == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+        "url_mqtt_broker_configuration": "https://www.home-assistant.io/integrations/mqtt/#broker-configuration",
+    }
+
+    await hass.async_block_till_done(wait_background_tasks=True)
