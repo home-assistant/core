@@ -1,8 +1,5 @@
 """Provide info to system health."""
 
-from __future__ import annotations
-
-import asyncio
 from typing import Any
 
 from duco.exceptions import DucoConnectionError
@@ -27,12 +24,7 @@ async def _async_get_write_requests_remaining(
 ) -> int | dict[str, str]:
     """Get the remaining write-request quota for system health."""
     try:
-        async with asyncio.timeout(5):
-            return (
-                await config_entry.runtime_data.client.async_get_write_req_remaining()
-            )
-    except TimeoutError:
-        return {"type": "failed", "error": "timeout"}
+        return await config_entry.runtime_data.client.async_get_write_req_remaining()
     except DucoConnectionError:
         return {"type": "failed", "error": "unreachable"}
 

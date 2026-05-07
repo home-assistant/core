@@ -1,7 +1,5 @@
 """Tests for Duco system health."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 from duco.exceptions import DucoConnectionError
@@ -44,25 +42,6 @@ async def test_system_health_single_entry_quota_error(
     assert await info["write_requests_remaining"] == {
         "type": "failed",
         "error": "unreachable",
-    }
-
-
-async def test_system_health_single_entry_quota_timeout(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test system health reports timeout for a slow quota request."""
-    mock_duco_client.async_get_write_req_remaining.side_effect = TimeoutError
-
-    assert await async_setup_component(hass, "system_health", {})
-    await hass.async_block_till_done()
-
-    info = await get_system_health_info(hass, DOMAIN)
-
-    assert await info["write_requests_remaining"] == {
-        "type": "failed",
-        "error": "timeout",
     }
 
 
