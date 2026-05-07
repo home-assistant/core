@@ -304,7 +304,9 @@ class ConditionChecker(abc.ABC):
 
         `hass` parameter is for backwards compatibility only and is always ignored.
         """
-        return self.async_check(variables=variables)
+        raise RuntimeError(
+            "ConditionsChecker should not be called directly, use async_check instead"
+        )
 
     def __del__(self) -> None:
         """Clean up when the checker is deleted."""
@@ -1803,7 +1805,9 @@ class ConditionsChecker:
 
     def __call__(self, variables: TemplateVarsType = None) -> bool:
         """Check all conditions."""
-        return self.async_check(variables=variables)
+        raise RuntimeError(
+            "ConditionsChecker should not be called directly, use async_check instead"
+        )
 
     def __del__(self) -> None:
         """Clean up when the checker is deleted."""
