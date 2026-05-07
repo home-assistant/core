@@ -1,7 +1,5 @@
 """Provides the Toon DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import logging
 import secrets
 
@@ -24,14 +22,16 @@ from .const import CONF_CLOUDHOOK_URL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type ToonConfigEntry = ConfigEntry[ToonDataUpdateCoordinator]
+
 
 class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
     """Class to manage fetching Toon data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: ToonConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, session: OAuth2Session
+        self, hass: HomeAssistant, entry: ToonConfigEntry, session: OAuth2Session
     ) -> None:
         """Initialize global Toon data updater."""
         self.session = session

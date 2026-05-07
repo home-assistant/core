@@ -1,7 +1,5 @@
 """Support for BTHome sensors."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units

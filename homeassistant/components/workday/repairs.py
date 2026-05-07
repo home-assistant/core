@@ -1,7 +1,5 @@
 """Repairs platform for the Workday integration."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from holidays import list_supported_countries

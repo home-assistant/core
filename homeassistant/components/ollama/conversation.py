@@ -1,7 +1,5 @@
 """The conversation platform for the Ollama integration."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 from homeassistant.components import conversation

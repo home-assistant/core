@@ -1,7 +1,5 @@
 """API for Google Nest Device Access bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import cast

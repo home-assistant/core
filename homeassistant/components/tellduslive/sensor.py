@@ -1,7 +1,5 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -127,6 +125,8 @@ async def async_setup_entry(
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSensor(client, device_id)])
 

@@ -3,8 +3,6 @@
 Used by UI to setup a wiffi integration.
 """
 
-from __future__ import annotations
-
 import errno
 from typing import Any
 
@@ -12,7 +10,6 @@ import voluptuous as vol
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -20,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import callback
 
+from . import WiffiConfigEntry
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 
@@ -31,7 +29,7 @@ class WiffiFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: WiffiConfigEntry,
     ) -> OptionsFlowHandler:
         """Create Wiffi server setup option flow."""
         return OptionsFlowHandler()

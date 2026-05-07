@@ -1,7 +1,5 @@
 """Base entity for the Duco integration."""
 
-from __future__ import annotations
-
 from duco.models import Node
 
 from homeassistant.const import ATTR_VIA_DEVICE
@@ -44,9 +42,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._node_id in self.coordinator.data
+        return super().available and self._node_id in self.coordinator.data.nodes
 
     @property
     def _node(self) -> Node:
         """Return the current node data from the coordinator."""
-        return self.coordinator.data[self._node_id]
+        return self.coordinator.data.nodes[self._node_id]

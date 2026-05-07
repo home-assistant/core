@@ -1,7 +1,5 @@
 """The Risco integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError

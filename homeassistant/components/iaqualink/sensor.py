@@ -1,7 +1,5 @@
 """Support for Aqualink temperature sensors."""
 
-from __future__ import annotations
-
 from iaqualink.device import AqualinkSensor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -38,7 +36,6 @@ class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
     ) -> None:
         """Initialize AquaLink sensor."""
         super().__init__(coordinator, dev)
-        self._attr_name = dev.label
         if not dev.name.endswith("_temp"):
             return
         self._attr_device_class = SensorDeviceClass.TEMPERATURE

@@ -1,7 +1,5 @@
 """Support for the Forecast.Solar sensor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -26,6 +24,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import ForecastSolarConfigEntry
 from .const import DOMAIN
 from .coordinator import ForecastSolarDataUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
