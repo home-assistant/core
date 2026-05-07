@@ -4720,6 +4720,18 @@
           'type': None,
         }),
       }),
+      dict({
+        'data': list([
+        ]),
+        'device': dict({
+          'id': 'deviceId_unsupported',
+          'modelId': 'unsupported_model',
+          'roles': list([
+          ]),
+          'status': 'Online',
+          'type': None,
+        }),
+      }),
     ]),
     'entry': dict({
       'data': dict({

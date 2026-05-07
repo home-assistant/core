@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_BUTTON
 from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +56,7 @@ class NetatmoCoverPreferredPositionButton(NetatmoModuleEntity, ButtonEntity):
                 },
             ]
         )
-        self._attr_unique_id = (
-            f"{self.device.entity_id}-{self.device_type}-preferred_position"
-        )
+        self._attr_unique_id = f"{self.device.entity_id}-{device_type_to_str(self.device_type)}-preferred_position"
 
     @callback
     def async_update_callback(self) -> None:
