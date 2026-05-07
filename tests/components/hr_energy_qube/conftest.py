@@ -115,6 +115,21 @@ def mock_qube_client() -> Generator[MagicMock]:
         state.surplus_pv = False
 
         client.get_all_data = AsyncMock(return_value=state)
+
+        # Switches
+        client.read_all_switches = AsyncMock(
+            return_value={
+                "bms_summerwinter": False,
+                "tapw_timeprogram_bms_forced": False,
+                "antilegionella_frcstart_ant": False,
+                "en_plantsetp_compens": True,
+                "bms_sgready_a": False,
+                "bms_sgready_b": False,
+                "modbus_demand": False,
+            }
+        )
+        client.write_switch = AsyncMock(return_value=True)
+
         yield client
 
 
