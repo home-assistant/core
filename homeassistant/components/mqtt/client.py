@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import certifi
+import paho.mqtt.client as mqtt
+from paho.mqtt.matcher import MQTTMatcher
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -47,6 +49,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
 
+from .async_client import AsyncMQTTClient
 from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
@@ -63,7 +66,6 @@ from .const import (
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
-    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
@@ -74,6 +76,7 @@ from .const import (
     MQTT_PROCESSED_SUBSCRIPTIONS,
     PROTOCOL_5,
     PROTOCOL_31,
+    PROTOCOL_311,
     TRANSPORT_WEBSOCKETS,
 )
 from .models import (
@@ -85,13 +88,6 @@ from .models import (
     ReceiveMessage,
 )
 from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
-
-if TYPE_CHECKING:
-    # Only import for paho-mqtt type checking here, imports are done locally
-    # because integrations should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt
-
-    from .async_client import AsyncMQTTClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -323,15 +319,12 @@ class MqttClientSetup:
         The setup of the MQTT client should be run in an executor job,
         because it accesses files, so it does IO.
         """
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        from paho.mqtt import client as mqtt  # noqa: PLC0415
-
-        from .async_client import AsyncMQTTClient  # noqa: PLC0415
-
         config = self._config
         clean_session: bool | None = None
-        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
+        # If no protocol setting is set in the config entry data
+        # we assume the config was migrated from YAML, and the
+        # protocol version is defaulting to legacy version 3.1.1.
+        if (protocol := config.get(CONF_PROTOCOL, PROTOCOL_311)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
             clean_session = True
         elif protocol == PROTOCOL_5:
@@ -420,7 +413,10 @@ class MQTT:
         self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
-        self.is_mqttv5 = conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_5
+        # If no protocol setting is set in the config entry data
+        # we assume the config was migrated from YAML, and the
+        # protocol version is defaulting to legacy version 3.1.1.
+        self.is_mqttv5 = conf.get(CONF_PROTOCOL, PROTOCOL_311) == PROTOCOL_5
 
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set
@@ -555,7 +551,6 @@ class MQTT:
         """Start the misc periodic."""
         assert self._misc_timer is None, "Misc periodic already started"
         _LOGGER.debug("%s: Starting client misc loop", self.config_entry.title)
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         # Inner function to avoid having to check late import
         # each time the function is called.
@@ -699,7 +694,6 @@ class MQTT:
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         result: int | None = None
         self._available_future = client_available
@@ -757,7 +751,6 @@ class MQTT:
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         while True:
             if not self.connected:
@@ -1259,9 +1252,6 @@ class MQTT:
     @callback
     def _async_handle_callback_exception(self, status: mqtt.MQTTErrorCode) -> None:
         """Handle a callback exception."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         _LOGGER.warning(
             "Error returned from MQTT server: %s",
@@ -1306,8 +1296,6 @@ class MQTT:
     ) -> None:
         """Wait for ACK from broker or raise on error."""
         if result_code != 0:
-            import paho.mqtt.client as mqtt  # noqa: PLC0415
-
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="mqtt_broker_error",
@@ -1354,8 +1342,6 @@ class MQTT:
 
 
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
-    from paho.mqtt.matcher import MQTTMatcher  # noqa: PLC0415
-
     matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
     matcher[subscription] = True
 
