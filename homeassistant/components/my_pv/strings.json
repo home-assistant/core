@@ -1,5 +1,6 @@
 {
   "common": {
+    "config_type_not_supported": "Configuration type {config_type} is not supported",
     "password_description": "The password of your my-PV device. When no custom password is set you have to use the **devicekey** which can be found under the ⓘ info menu of your my-PV device. For the HEA•THOR IoT you can find the **devicekey** on the device label.",
     "token": "my-PV Cloud API Access Token",
     "token_description": "To generate a my-PV Cloud API Access Token go to your [my-PV Cloud]({cloud_url}) and navigate to ⚙️ > **Device Setup**. Enable **Advanced Settings**, navigate to **API** and **Generate API Access Token**. Use this when setting up the my-PV integration."
@@ -7,6 +8,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "config_type_not_supported": "[%key:component::my_pv::common::config_type_not_supported%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -93,11 +96,11 @@
     }
   },
   "exceptions": {
-    "config_type_not_supported": {
-      "message": "Configuration type {config_type} is not supported"
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "could_not_connect": {
-      "message": "Could not connect to {uri}"
+    "config_type_not_supported": {
+      "message": "[%key:component::my_pv::common::config_type_not_supported%]"
     },
     "device_unavailable": {
       "message": "Device on {uri} is unavailable"
