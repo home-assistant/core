@@ -31,26 +31,17 @@ async def _async_get_write_requests_remaining(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    # Only loaded entries have runtime_data; system health can be queried while
-    # other entries are still setting up or unloading.
     config_entries: list[DucoConfigEntry] = hass.config_entries.async_loaded_entries(
         DOMAIN
     )
 
-    # The remaining write-request quota belongs to a specific Duco box. Expose
-    # it only when exactly one loaded config entry exists so the value is not
-    # ambiguous when multiple devices are configured.
+    # The remaining write-request quota belongs to one specific Duco box.
     if len(config_entries) != 1:
         return {}
 
     config_entry = config_entries[0]
 
-    # Exposed via system_health rather than as a diagnostic entity because it
-    # reflects the state of how the integration communicates with the device
-    # (API quota), not a device-internal subsystem state.
-    # Wrap the live quota fetch here because system health only bounds the
-    # initial info callback. Returned coroutines are awaited later without a
-    # per-field timeout.
+    # This reflects the integration's API quota rather than device state.
     return {
         "write_requests_remaining": _async_get_write_requests_remaining(config_entry)
     }
