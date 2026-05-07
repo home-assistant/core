@@ -181,6 +181,18 @@ async def async_publish(
                 )
                 return
 
+    # Passing None for qos or retain args was deprecated.
+    # Custom integrations should update there code.
+    # Check for fallback to `None` values can be removed with HA Core 2027.6
+    if qos is None or retain is None:
+        _LOGGER.warning(  # type: ignore[unreachable]
+            "Using None values for qos or retain on the MQTT aysnc_publish API is "
+            "deprecated. The qos should be of type `int`, and `retain` of type `bool`. "
+            "This will stop working with HA Core 2027.6"
+        )
+        qos = qos or 0
+        retain = retain or False
+
     await mqtt_data.client.async_publish(topic, outgoing_payload, qos, retain)
 
 
