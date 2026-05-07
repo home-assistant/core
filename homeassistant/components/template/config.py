@@ -73,11 +73,7 @@ from . import (
     weather as weather_platform,
 )
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import (
-    async_get_blueprints,
-    create_legacy_template_issue,
-    rewrite_legacy_to_modern_configs,
-)
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,9 +179,6 @@ CONFIG_SECTION_SCHEMA = vol.All(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-                sensor_platform.SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
@@ -373,37 +366,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue
-
-        legacy_warn_printed = False
-
-        for old_key, new_key, legacy_fields in (
-            (
-                CONF_SENSORS,
-                SENSOR_DOMAIN,
-                sensor_platform.LEGACY_FIELDS,
-            ),
-        ):
-            if old_key not in template_config:
-                continue
-
-            if not legacy_warn_printed:
-                legacy_warn_printed = True
-                _LOGGER.warning(
-                    "The entity definition format under template: differs from the"
-                    " platform "
-                    "configuration format. See "
-                    "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
-                )
-
-            definitions = (
-                list(template_config[new_key]) if new_key in template_config else []
-            )
-            for definition in rewrite_legacy_to_modern_configs(
-                hass, new_key, template_config[old_key], legacy_fields
-            ):
-                create_legacy_template_issue(hass, definition, new_key)
-                definitions.append(definition)
-            template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)
 
