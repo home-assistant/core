@@ -159,7 +159,7 @@ class MyPVCoordinator(DataUpdateCoordinator):
         if not self._device.connected and not await self._device.connect():
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="could_not_connect",
+                translation_key="cannot_connect",
                 translation_placeholders={"uri": self._device.uri},
             )
 
