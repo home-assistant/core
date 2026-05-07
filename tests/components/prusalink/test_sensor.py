@@ -303,14 +303,14 @@ async def test_axis_x_y_sensors(
     """Test X and Y axis position sensors."""
     assert await async_setup_component(hass, "prusalink", {})
 
-    state = hass.states.get("sensor.mock_title_x")
+    state = hass.states.get("sensor.mock_title_x_position")
     assert state is not None
     assert state.state == "7.9"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    state = hass.states.get("sensor.mock_title_y")
+    state = hass.states.get("sensor.mock_title_y_position")
     assert state is not None
     assert state.state == "8.4"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
@@ -330,8 +330,8 @@ async def test_axis_x_y_not_created_when_absent(
     del mock_get_status_idle["printer"]["axis_y"]
     assert await async_setup_component(hass, "prusalink", {})
 
-    assert hass.states.get("sensor.mock_title_x") is None
-    assert hass.states.get("sensor.mock_title_y") is None
+    assert hass.states.get("sensor.mock_title_x_position") is None
+    assert hass.states.get("sensor.mock_title_y_position") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

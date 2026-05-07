@@ -101,10 +101,10 @@
         "name": "Progress"
       },
       "x_position": {
-        "name": "X"
+        "name": "X-Position"
       },
       "y_position": {
-        "name": "Y"
+        "name": "Y-Position"
       },
       "z_height": {
         "name": "Z-Height"
