@@ -106,6 +106,5 @@ async def config_entry_updated(
     hass: HomeAssistant, config_entry: CastConfigEntry
 ) -> None:
     """Handle config entry being updated."""
-    browser = config_entry.runtime_data.browser
-    assert browser is not None
-    browser.host_browser.update_hosts(config_entry.data.get(CONF_KNOWN_HOSTS))
+    if browser := config_entry.runtime_data.browser:
+        browser.host_browser.update_hosts(config_entry.data.get(CONF_KNOWN_HOSTS))
