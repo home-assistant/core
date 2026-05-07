@@ -53,13 +53,6 @@ CLOUD_SCHEMA: Final = vol.Schema(
         ),
     }
 )
-CLOUD_REAUTH_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(CONF_TOKEN): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
-    }
-)
 
 
 class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
