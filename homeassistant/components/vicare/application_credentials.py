@@ -1,7 +1,5 @@
 """Application credentials platform for Viessmann ViCare."""
 
-from __future__ import annotations
-
 from PyViCare.PyViCareAbstractOAuthManager import (
     AUTHORIZE_URL,
     SCOPE_IOT,

@@ -1,7 +1,5 @@
 """API for Viessmann ViCare bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from asyncio import run_coroutine_threadsafe
 import logging
 from typing import Any
@@ -19,7 +17,9 @@ _DEFAULT_TIMEOUT = 31
 class _TimeoutSession(requests.Session):
     """requests.Session that applies a default timeout when callers omit one."""
 
-    def request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
+    def request(  # type: ignore[override]
+        self, method: str, url: str, **kwargs: Any
+    ) -> requests.Response:
         """Forward to Session.request with a default timeout."""
         kwargs.setdefault("timeout", _DEFAULT_TIMEOUT)
         return super().request(method, url, **kwargs)
@@ -41,7 +41,7 @@ class ConfigEntryAuth(AbstractViCareOAuthManager):
         # retry, so no lock.
         session = _TimeoutSession()
         session.headers["Authorization"] = self._bearer_header()
-        super().__init__(session)  # type: ignore[arg-type]
+        super().__init__(session)
 
     def renewToken(self) -> None:
         """Refresh OAuth2 token via HA and update the bearer header."""
