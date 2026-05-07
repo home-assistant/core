@@ -75,67 +75,6 @@ class SwitchbotCloudDeviceConfig:
 
 
 DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
-    "Smart Radiator Thermostat": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.CLIMATE, Platform.SENSOR]
-    ),
-    "Relay Switch 1PM": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SWITCH, Platform.SENSOR]
-    ),
-    "Relay Switch 1": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SWITCH]
-    ),
-    "Relay Switch 2PM": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SWITCH, Platform.SENSOR]
-    ),
-    "K10+": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
-    "K10+ Pro": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
-    "Robot Vacuum Cleaner S1": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.VACUUM]
-    ),
-    "Robot Vacuum Cleaner S1 Plus": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.VACUUM]
-    ),
-    "K20+ Pro": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
-    "Robot Vacuum Cleaner K10+ Pro Combo": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.VACUUM]
-    ),
-    "Robot Vacuum Cleaner S10": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.VACUUM]
-    ),
-    "Robot Vacuum Cleaner S20": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.VACUUM]
-    ),
-    "S20": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
-    "Robot Vacuum Cleaner K11 Plus": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.VACUUM]
-    ),
-    "Smart Lock": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Smart Lock Lite": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Smart Lock Pro": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Smart Lock Ultra": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Smart Lock Vision": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Smart Lock Vision Pro": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Lock Vision": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Lock Vision Pro": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
     "Motion Sensor": SwitchbotCloudDeviceConfig(
         True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
     ),
@@ -148,62 +87,8 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Hub 3": SwitchbotCloudDeviceConfig(
         True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
     ),
-    "Water Detector": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
-    ),
-    "Battery Circulator Fan": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.FAN, Platform.SENSOR]
-    ),
-    "Standing Fan": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.FAN, Platform.SENSOR]
-    ),
-    "Circulator Fan": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.FAN]),
-    "Curtain": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Curtain3": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Roller Shade": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Blind Tilt": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
-    ),
-    "Strip Light": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
-    "Strip Light 3": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
-    "Floor Lamp": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
-    "Color Bulb": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
-    "RGBICWW Floor Lamp": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LIGHT]
-    ),
-    "RGBICWW Strip Light": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LIGHT]
-    ),
-    "Ceiling Light": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
-    "Ceiling Light Pro": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LIGHT]
-    ),
-    "RGBIC Neon Rope Light": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LIGHT]
-    ),
-    "RGBIC Neon Wire Rope Light": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LIGHT]
-    ),
-    "Candle Warmer Lamp": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.LIGHT]
-    ),
-    "Humidifier2": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.HUMIDIFIER]
-    ),
-    "Humidifier": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.HUMIDIFIER, Platform.SENSOR]
-    ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
         False, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
-    ),
-    "AI Art Frame": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.BUTTON, Platform.SENSOR, Platform.IMAGE]
     ),
     "WeatherStation": SwitchbotCloudDeviceConfig(
         False, entity_config=[Platform.SENSOR]
@@ -214,17 +99,4 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Hub 2": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
     "MeterPro": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
-    "Plug": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SWITCH]),
-    "Plug Mini (US)": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SENSOR, Platform.SWITCH]
-    ),
-    "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SENSOR, Platform.SWITCH]
-    ),
-    "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SENSOR, Platform.SWITCH]
-    ),
-    "Garage Door Opener": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.COVER, Platform.BINARY_SENSOR]
-    ),
 }
