@@ -684,7 +684,7 @@ async def test_execute_workaround_switch_turn_on_off(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     action: str,
-    expected_argument: list[str],
+    expected_argument: list[str | dict[str, list[str]]],
     expected_state: str,
 ) -> None:
     """Test execute workaround switch uses reversed API arguments and updates state optimistically."""
