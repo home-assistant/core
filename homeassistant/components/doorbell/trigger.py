@@ -17,10 +17,8 @@ class DoorbellRangTrigger(StatelessEntityTriggerBase):
     _domain_specs = {EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.DOORBELL)}
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the entity is available and the event type is ring."""
-        return super().is_valid_state(state) and (
-            state.attributes.get(ATTR_EVENT_TYPE) == DoorbellEventType.RING
-        )
+        """Check if the event type is ring."""
+        return state.attributes.get(ATTR_EVENT_TYPE) == DoorbellEventType.RING
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
