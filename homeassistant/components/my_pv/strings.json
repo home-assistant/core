@@ -104,6 +104,9 @@
     },
     "device_unavailable": {
       "message": "Device on {uri} is unavailable"
+    },
+    "unknown_error": {
+      "message": "Unknown error."
     }
   }
 }

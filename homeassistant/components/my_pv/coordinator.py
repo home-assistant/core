@@ -9,7 +9,7 @@ from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -146,9 +146,26 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
 
     async def set_setup_value(self, key: str, value: bool | float | str) -> bool:
         """Set setup value for the given key."""
-        result = await self._device.set_setup_value(key, value)
-        self.async_update_listeners()
-        return result
+        if not self._device.connected and not await self._device.connect():
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"uri": self._device.uri},
+            )
+
+        try:
+            result = await self._device.set_setup_value(key, value)
+            self.async_update_listeners()
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
+        else:
+            return result
 
     def get_data_value(self, key: str) -> bool | float | int | str | None:
         """Get the data value for the given key."""
@@ -156,6 +173,69 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
 
     async def send_command(self, key, value: bool | float | str | None = None):
         """Send command."""
-        result = await self._device.send_command(key, value)
-        self.async_update_listeners()
-        return result
+        if not self._device.connected and not await self._device.connect():
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"uri": self._device.uri},
+            )
+
+        try:
+            result = await self._device.send_command(key, value)
+            self.async_update_listeners()
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
+        else:
+            return result
+
+    async def turn_on(self):
+        """Turn on the device."""
+        if not self._device.connected and not await self._device.connect():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"uri": self._device.uri},
+            )
+
+        try:
+            result = await self._device.turn_on()
+            self.async_update_listeners()
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
+        else:
+            return result
+
+    async def turn_off(self):
+        """Turn off the device."""
+        if not self._device.connected and not await self._device.connect():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"uri": self._device.uri},
+            )
+
+        try:
+            result = await self._device.turn_off()
+            self.async_update_listeners()
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
+        else:
+            return result

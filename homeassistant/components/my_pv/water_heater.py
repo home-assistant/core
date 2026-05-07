@@ -15,10 +15,12 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyPVCoordinator
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +81,6 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_available = False
     _attr_supported_features = (
         WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -147,17 +148,15 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
-        if not self.coordinator.connected:
-            self._attr_available = False
-        elif temperature is not None and await self.coordinator.set_setup_value(
+        if temperature is not None and await self.coordinator.set_setup_value(
             TARGET_TEMPERATURE_KEY, float(temperature)
         ):
-            self._attr_available = True
             self._attr_target_temperature = temperature
+            self.async_write_ha_state()
         else:
-            _LOGGER.error("Failed to set %s", self.name)
-
-        self.async_write_ha_state()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unknown_error"
+            )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
@@ -170,26 +169,22 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         """Turn the water heater on."""
         _LOGGER.debug("Turning on %s", self.name)
 
-        if not self.coordinator.connected:
-            self._attr_available = False
-        elif await self.coordinator.device.turn_on():
-            self._attr_available = True
+        if await self.coordinator.turn_on():
             self._attr_current_operation = STATE_ELECTRIC
+            self.async_write_ha_state()
         else:
-            _LOGGER.error("Failed to turn on %s", self.name)
-
-        self.async_write_ha_state()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unknown_error"
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         _LOGGER.debug("Turning off %s", self.name)
 
-        if not self.coordinator.connected:
-            self._attr_available = False
-        elif await self.coordinator.device.turn_off():
-            self._attr_available = True
+        if await self.coordinator.turn_off():
             self._attr_current_operation = STATE_OFF
+            self.async_write_ha_state()
         else:
-            _LOGGER.error("Failed to turn off %s", self.name)
-
-        self.async_write_ha_state()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unknown_error"
+            )
