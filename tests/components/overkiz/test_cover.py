@@ -89,6 +89,11 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
 )
+DYNAMIC_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730050",
+    "cover.garage_door",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -96,6 +101,8 @@ SNAPSHOT_FIXTURES = [
     PERGOLA,
     RTS,
     SHUTTER,
+    GARAGE,
+    DYNAMIC_GARAGE_DOOR,
     TILTED_WINDOW,
     DYNAMIC_EXTERIOR_VENETIAN_BLIND,
     POSITIONABLE_ROLLER_SHUTTER_UNO,
@@ -134,23 +141,29 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
         (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
     ],
     ids=[
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-dynamic-garage-door",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-dynamic-garage-door",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-dynamic-garage-door",
     ],
 )
 async def test_cover_service_actions(
@@ -918,3 +931,45 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_command.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("open_closed_value", "expected_state"),
+    [
+        (OverkizCommandParam.CLOSED.value, CoverState.CLOSED),
+        (OverkizCommandParam.OPEN.value, CoverState.OPEN),
+    ],
+    ids=["closed", "open"],
+)
+async def test_dynamic_garage_door_state_updates(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    open_closed_value: str,
+    expected_state: CoverState,
+) -> None:
+    """Test DynamicGarageDoor state updates via core:OpenClosedState events."""
+    await setup_overkiz_integration(fixture=DYNAMIC_GARAGE_DOOR.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=DYNAMIC_GARAGE_DOOR.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_OPEN_CLOSED.value,
+                        "type": 3,
+                        "value": open_closed_value,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(DYNAMIC_GARAGE_DOOR.entity_id)
+    assert state.state == expected_state
