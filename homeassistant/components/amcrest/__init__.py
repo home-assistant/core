@@ -583,7 +583,7 @@ class AmcrestDevice:
 
     api: AmcrestChecker
     authentication: aiohttp.BasicAuth | None
-    ffmpeg_arguments: list[str]
+    ffmpeg_arguments: str
     stream_source: str
     resolution: int
     control_light: bool
