@@ -634,6 +634,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_1 = "brightness_min_1"
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
+    BODY_RESISTANCE = "body_r"
     C_F = "c_f"  # Temperature unit switching
     CAT_WEIGHT = "cat_weight"
     CH2O_STATE = "ch2o_state"
@@ -697,6 +698,8 @@ class DPCode(StrEnum):
     DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
     DEW_POINT_TEMP = "dew_point_temp"
+    DATA_IDENTIFICATION = "data_identification"
+    DATA_REPORT = "data_report"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORBELL_PIC = "doorbell_pic"
@@ -738,6 +741,7 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HEART_RATE = "heart_rate"
     HEAT_INDEX = "heat_index"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
@@ -824,6 +828,7 @@ class DPCode(StrEnum):
     PV_POWER_TOTAL = "pv_power_total"
     RAIN_24H = "rain_24h"  # Total daily rainfall in mm
     RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
+    REALTIME_DATA = "realtime_data"
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -944,6 +949,7 @@ class DPCode(StrEnum):
     TOTAL_POWER = "total_power"
     TOTAL_TIME = "total_time"
     TVOC = "tvoc"
+    UNIT_SWITCH = "unit_switch"
     UP_DOWN = "up_down"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
@@ -977,6 +983,7 @@ class DPCode(StrEnum):
     WIND_DIRECT = "wind_direct"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
+    WEIGHT = "weight"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
     WORK_STATE_E = "work_state_e"

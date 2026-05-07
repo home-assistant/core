@@ -617,6 +617,9 @@
       "battery_state": {
         "name": "Battery state"
       },
+      "body_resistance": {
+        "name": "Body resistance"
+      },
       "carbon_dioxide": {
         "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
       },
@@ -684,6 +687,9 @@
       },
       "gas": {
         "name": "Gas"
+      },
+      "heart_rate": {
+        "name": "Heart rate"
       },
       "heat_index_temperature": {
         "name": "Heat index"
@@ -810,6 +816,9 @@
       "pv_channel_power": {
         "name": "PV channel {index} power"
       },
+      "realtime_weight": {
+        "name": "Realtime weight"
+      },
       "remaining_time": {
         "name": "Remaining time"
       },
@@ -909,6 +918,9 @@
       },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "weight": {
+        "name": "Weight"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
