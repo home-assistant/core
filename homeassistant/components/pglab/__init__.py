@@ -1,7 +1,5 @@
 """PG LAB Electronics integration."""
 
-from __future__ import annotations
-
 from pypglab.mqtt import (
     Client as PyPGLabMqttClient,
     Sub_State as PyPGLabSubState,

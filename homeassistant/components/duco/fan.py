@@ -1,7 +1,5 @@
 """Fan platform for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 
 from duco.exceptions import DucoError, DucoRateLimitError
@@ -35,7 +33,7 @@ PRESET_AUTO = "auto"
 # again always round-trips to the same Duco state.
 _SPEED_LEVEL_PERCENTAGES: list[int] = [
     (i + 1) * 100 // len(ORDERED_NAMED_FAN_SPEEDS)
-    for i in range(len(ORDERED_NAMED_FAN_SPEEDS))
+    for i, _ in enumerate(ORDERED_NAMED_FAN_SPEEDS)
 ]
 
 # Maps every active Duco state (including timed MAN variants) to its

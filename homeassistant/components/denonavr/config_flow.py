@@ -1,7 +1,5 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from urllib.parse import urlparse

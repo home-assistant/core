@@ -27,11 +27,12 @@ from .const import (
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
-    GATEWAYS_KEY,
     KEY_SETUP_LOCK,
     KEY_UNSUB_STOP,
     LISTENER_KEY,
 )
+
+type XiaomiAqaraConfigEntry = ConfigEntry[XiaomiGateway]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,11 +139,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     setup_lock = hass.data[DOMAIN].setdefault(KEY_SETUP_LOCK, asyncio.Lock())
-    hass.data[DOMAIN].setdefault(GATEWAYS_KEY, {})
 
     # Connect to Xiaomi Aqara Gateway
     xiaomi_gateway = await hass.async_add_executor_job(
@@ -155,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PORT],
         entry.data[CONF_PROTOCOL],
     )
-    hass.data[DOMAIN][GATEWAYS_KEY][entry.entry_id] = xiaomi_gateway
+    entry.runtime_data = xiaomi_gateway
 
     async with setup_lock:
         if LISTENER_KEY not in hass.data[DOMAIN]:
@@ -204,7 +204,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: XiaomiAqaraConfigEntry
+) -> bool:
     """Unload a config entry."""
     if config_entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS
@@ -214,14 +216,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, platforms
     )
-    if unload_ok:
-        hass.data[DOMAIN][GATEWAYS_KEY].pop(config_entry.entry_id)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # No gateways left, stop Xiaomi socket
         unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
         unsub_stop()
-        hass.data[DOMAIN].pop(GATEWAYS_KEY)
         _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
         multicast = hass.data[DOMAIN].pop(LISTENER_KEY)
         multicast.stop_listen()
@@ -229,25 +228,27 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-def _add_gateway_to_schema(hass, schema):
+def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schema:
     """Extend a voluptuous schema with a gateway validator."""
 
-    def gateway(sid):
+    def gateway(sid: str) -> XiaomiGateway:
         """Convert sid to a gateway."""
         sid = str(sid).replace(":", "").lower()
 
-        for gateway in hass.data[DOMAIN][GATEWAYS_KEY].values():
-            if gateway.sid == sid:
-                return gateway
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            entry_gateway = entry.runtime_data
+            if entry_gateway.sid == sid:
+                return entry_gateway
 
         raise vol.Invalid(f"Unknown gateway sid {sid}")
 
     kwargs = {}
-    if (xiaomi_data := hass.data.get(DOMAIN)) is not None:
-        gateways = list(xiaomi_data[GATEWAYS_KEY].values())
+    gateways = [
+        entry.runtime_data for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+    ]
 
-        # If the user has only 1 gateway, make it the default for services.
-        if len(gateways) == 1:
-            kwargs["default"] = gateways[0].sid
+    # If the user has only 1 gateway, make it the default for services.
+    if len(gateways) == 1:
+        kwargs["default"] = gateways[0].sid
 
     return schema.extend({vol.Required(ATTR_GW_MAC, **kwargs): gateway})

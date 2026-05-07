@@ -1,7 +1,5 @@
 """Commands part of Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import lru_cache, partial
 import json
@@ -1076,6 +1074,8 @@ async def handle_execute_script(
             translation_placeholders=err.translation_placeholders,
         )
         return
+    finally:
+        await script_obj.async_unload()
     connection.send_result(
         msg["id"],
         {
