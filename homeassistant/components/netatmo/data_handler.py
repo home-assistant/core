@@ -1,8 +1,6 @@
 """The Netatmo data handler."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta

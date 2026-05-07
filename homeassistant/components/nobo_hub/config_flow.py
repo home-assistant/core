@@ -1,7 +1,5 @@
 """Config flow for Nobø Ecohub integration."""
 
-from __future__ import annotations
-
 import socket
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +18,6 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import NoboHubConfigEntry
 from .const import (
-    CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
@@ -36,7 +33,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nobø Ecohub."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -85,7 +82,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             serial_suffix = user_input["serial_suffix"]
             serial = f"{serial_prefix}{serial_suffix}"
             try:
-                return await self._create_configuration(serial, self._hub, True)
+                return await self._create_configuration(serial, self._hub)
             except NoboHubConnectError as error:
                 errors["base"] = error.msg
 
@@ -114,7 +111,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             serial = user_input[CONF_SERIAL]
             ip_address = user_input[CONF_IP_ADDRESS]
             try:
-                return await self._create_configuration(serial, ip_address, False)
+                return await self._create_configuration(serial, ip_address)
             except NoboHubConnectError as error:
                 errors["base"] = error.msg
 
@@ -133,7 +130,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _create_configuration(
-        self, serial: str, ip_address: str, auto_discovered: bool
+        self, serial: str, ip_address: str
     ) -> ConfigFlowResult:
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
@@ -143,7 +140,6 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_SERIAL: serial,
                 CONF_IP_ADDRESS: ip_address,
-                CONF_AUTO_DISCOVERED: auto_discovered,
             },
         )
 
@@ -155,11 +151,18 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         except OSError as err:
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
-        if not await hub.async_connect_hub(ip_address, serial):
-            raise NoboHubConnectError("cannot_connect")
-        name = hub.hub_info["name"]
-        await hub.close()
-        return name
+        # pynobo distinguishes the two failure modes: TCP-level errors
+        # (wrong IP, hub offline, port closed) raise OSError, while a
+        # successful TCP connection followed by a handshake REJECT
+        # (serial mismatch) returns False.
+        try:
+            if not await hub.async_connect_hub(ip_address, serial):
+                raise NoboHubConnectError("cannot_connect")
+            return hub.hub_info["name"]
+        except OSError as err:
+            raise NoboHubConnectError("cannot_connect_ip") from err
+        finally:
+            await hub.close()
 
     @staticmethod
     def _format_hub(ip, serial_prefix):

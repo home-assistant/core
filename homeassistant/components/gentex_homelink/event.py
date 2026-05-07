@@ -1,7 +1,5 @@
 """Platform for Event integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
