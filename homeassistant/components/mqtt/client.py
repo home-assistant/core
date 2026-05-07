@@ -721,9 +721,7 @@ class MQTT:
                     },
                 )
             properties.MessageExpiryInterval = message_expiry_interval
-        msg_info = self._mqttc.publish(
-            topic, payload, qos, retain, properties if self.is_mqttv5 else None
-        )
+        msg_info = self._mqttc.publish(topic, payload, qos, retain, properties)
         _LOGGER.debug(
             "Transmitting%s message on %s: '%s', mid: %s, qos: %s, message_expiry_interval: %s",
             " retained" if retain else "",
