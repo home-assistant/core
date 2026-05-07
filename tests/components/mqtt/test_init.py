@@ -142,6 +142,7 @@ async def test_command_template_variables(
         '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select", "this_object_state": "milk"}',
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")

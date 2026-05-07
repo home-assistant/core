@@ -179,18 +179,13 @@ async def async_publish(
                 )
                 return
 
-    # We only pass kwargs if they are set
-    # to not break CI tests that are asserting calls
-    if message_expiry_interval is not None:
-        await mqtt_data.client.async_publish(
-            topic,
-            outgoing_payload,
-            qos,
-            retain,
-            message_expiry_interval=message_expiry_interval,
-        )
-        return
-    await mqtt_data.client.async_publish(topic, outgoing_payload, qos, retain)
+    await mqtt_data.client.async_publish(
+        topic,
+        outgoing_payload,
+        qos,
+        retain,
+        message_expiry_interval=message_expiry_interval,
+    )
 
 
 @callback

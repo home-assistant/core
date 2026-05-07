@@ -296,7 +296,11 @@ async def test_cleanup_device_tracker(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_tracker/bla/config", None, 0, True
+        "homeassistant/device_tracker/bla/config",
+        None,
+        0,
+        True,
+        message_expiry_interval=None,
     )
 
 
