@@ -1879,9 +1879,7 @@ async def test_get_current_location_tool(
 
     # No device_id
     api = await llm.async_get_api(hass, "assist", llm_context)
-    tool = next(
-        (tool for tool in api.tools if tool.name == "GetCurrentLocation"), None
-    )
+    tool = next((tool for tool in api.tools if tool.name == "GetCurrentLocation"), None)
     assert tool is not None
     result = await tool.async_call(
         hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
