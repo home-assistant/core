@@ -2398,7 +2398,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.20.0
+pyoverkiz==1.20.3
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
