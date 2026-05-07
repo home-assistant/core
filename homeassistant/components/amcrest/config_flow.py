@@ -19,20 +19,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from . import AmcrestChecker
+from . import (
+    AmcrestChecker,
+    CONF_CONTROL_LIGHT,
+    CONF_FFMPEG_ARGUMENTS,
+    CONF_RESOLUTION,
+    CONF_STREAM_SOURCE,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_RESOLUTION,
+)
 from .camera import STREAM_SOURCE_LIST
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_RESOLUTION = "resolution"
-CONF_STREAM_SOURCE = "stream_source"
-CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
-CONF_CONTROL_LIGHT = "control_light"
-DEFAULT_NAME = "Amcrest Camera"
-DEFAULT_PORT = 80
-DEFAULT_RESOLUTION = "high"
-DEFAULT_ARGUMENTS = "-pred 1"
 
 
 async def _validate_connection(
