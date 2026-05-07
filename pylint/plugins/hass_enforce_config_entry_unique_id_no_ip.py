@@ -9,8 +9,6 @@ IP/hostname-based unique IDs were the #1 unique ID review pattern, found in
 16.2% of new-integration PRs across 1,100+ analyzed PRs.
 """
 
-from __future__ import annotations
-
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
