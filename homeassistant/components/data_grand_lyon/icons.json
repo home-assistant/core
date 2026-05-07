@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "next_departure_1_direction": {
+        "default": "mdi:directions"
+      },
+      "next_departure_2_direction": {
+        "default": "mdi:directions"
+      },
+      "next_departure_3_direction": {
+        "default": "mdi:directions"
+      }
+    }
+  }
+}
