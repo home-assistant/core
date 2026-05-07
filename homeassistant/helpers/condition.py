@@ -318,11 +318,17 @@ class ConditionChecker(abc.ABC):
     async def async_setup(self) -> None:
         """Set up the condition checker.
 
+        Users of conditions do not need to call this method directly. It is called
+        automatically by async_from_config and async_conditions_from_config.
+
         Intended to be overridden in derived classes that need to do setup.
         """
 
     def async_unload(self) -> None:
         """Clean up any resources held by the checker.
+
+        Users of conditions must call this method when they are done with the
+        checker to ensure resources are released.
 
         Intended to be overridden in derived classes that need to do unloading.
         """
