@@ -15,8 +15,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN, MEDIA_SOURCE_ID_TO_HA_KEY
+from .const import MAIN
 from .entity import SmartThingsEntity
+
+MEDIA_SOURCE_ID_TO_HA_KEY: dict[str, str] = {
+    "AM": "am",
+    "BT": "bluetooth",
+    "CD": "cd",
+    "D.IN": "digital_input",
+    "HDMI": "hdmi",
+    "HDMI1": "hdmi1",
+    "HDMI2": "hdmi2",
+    "HDMI3": "hdmi3",
+    "HDMI4": "hdmi4",
+    "HDMI5": "hdmi5",
+    "HDMI6": "hdmi6",
+    "USB": "usb",
+    "WIFI": "wifi",
+    "digitalTv": "digital_tv",
+    "dtv": "digital_tv",
+    "melon": "melon",
+    "youtube": "youtube",
+}
 
 MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
