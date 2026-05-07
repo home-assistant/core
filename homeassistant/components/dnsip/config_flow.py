@@ -5,7 +5,6 @@ import contextlib
 from typing import Any, Literal
 
 import aiodns
-from aiodns.error import DNSError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -64,11 +63,13 @@ async def async_validate_hostname(
     ) -> bool:
         """Return if able to resolve hostname."""
         result: bool = False
-        with contextlib.suppress(DNSError):
+        with contextlib.suppress(Exception):
+            # Handle leaking through other (pycares) exceptions than DNSError
             _resolver = aiodns.DNSResolver(
                 nameservers=[resolver], udp_port=port, tcp_port=port
             )
-            result = bool(await _resolver.query(hostname, qtype))
+            dns_result = await _resolver.query(hostname, qtype)
+            result = bool(dns_result)
 
         return result
 
