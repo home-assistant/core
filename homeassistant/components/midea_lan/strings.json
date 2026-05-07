@@ -86,6 +86,12 @@
         "data_description": {
           "action": "Choose how you want to add your Midea appliance"
         },
+        "menu_options": {
+          "cache": "Remove login cache",
+          "discovery": "Discover automatically",
+          "list": "List all appliances only",
+          "manually": "Configure manually"
+        },
         "title": "Set up Midea LAN"
       }
     }
@@ -113,6 +119,13 @@
           "customize": "Customize"
         },
         "title": "Options"
+      }
+    }
+  },
+  "selector": {
+    "server": {
+      "options": {
+        "skip_login_option": "Skip login and use preset cloud credentials"
       }
     }
   }

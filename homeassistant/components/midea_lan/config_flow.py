@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.storage import Store
 
 from .const import (
@@ -48,12 +49,7 @@ from .const import (
 )
 from .device_catalog import MIDEA_DEVICE_NAMES
 
-ADD_WAY = {
-    "discovery": "Discover automatically",
-    "manually": "Configure manually",
-    "list": "List all appliances only",
-    "cache": "Remove login cache",
-}
+ADD_WAY = ["discovery", "manually", "list", "cache"]
 
 # Select default cloud without relying on unstable list indexing.
 DEFAULT_CLOUD: str = (
@@ -62,10 +58,7 @@ DEFAULT_CLOUD: str = (
     else next(iter(SUPPORTED_CLOUDS), "")
 )
 
-STORAGE_KEY_PREFIX = f"{DOMAIN}.device"
-
-INVALID_SERVER_ID = -1
-SKIP_LOGIN_LABEL = "Skip login (input any user/password)"
+SKIP_LOGIN_OPTION = "skip_login_option"
 
 
 class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -106,7 +99,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_device_store(self, device_id: str) -> Store[dict[str, Any]]:
         """Return storage helper for a specific device."""
-        return Store(self.hass, 1, f"{STORAGE_KEY_PREFIX}.{device_id}")
+        return Store(self.hass, 1, f"{DOMAIN}.device.{device_id}")
 
     async def _save_device_config(self, data: dict[str, Any]) -> None:
         """Save device config to HA storage."""
@@ -169,26 +162,20 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         """
         # user select a device discovery mode
-        if user_input is not None:
-            # default is auto discovery mode
+        if user_input is not None and "action" in user_input:
             if user_input["action"] == "discovery":
                 return await self.async_step_discovery()
-            # manual input device detail
             if user_input["action"] == "manually":
                 self.found_device = {}
                 return await self.async_step_manually()
-            # remove cached login data and input new one
             if user_input["action"] == "cache":
                 return await self.async_step_cache()
-            # only list all devices
             return await self.async_step_list()
-        # user not input, show device discovery select form in UI
-        return self.async_show_form(
+
+        return self.async_show_menu(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required("action", default="discovery"): vol.In(ADD_WAY)},
-            ),
-            errors={"base": error} if error else None,
+            menu_options=ADD_WAY,
+            description_placeholders={"error": error} if error else None,
         )
 
     async def async_step_cache(
@@ -237,26 +224,20 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         # get cloud servers configs
         cloud_servers = await MideaCloud.get_cloud_servers()
-        default_server_key = next(
-            key for key, value in cloud_servers.items() if value == DEFAULT_CLOUD
+        cloud_server_options = list(cloud_servers.values())
+        default_server = next(
+            (server for server in cloud_server_options if server == DEFAULT_CLOUD),
+            cloud_server_options[0],
         )
-        # add skip login option to web UI with a dedicated sentinel key
-        cloud_servers[INVALID_SERVER_ID] = SKIP_LOGIN_LABEL
+        cloud_server_options.append(SKIP_LOGIN_OPTION)
         # user input data exist
         if user_input is not None:
             if not self.hass.data.get(DOMAIN):
                 self.hass.data[DOMAIN] = {}
             # check skip login option
-            if user_input[CONF_SERVER] == INVALID_SERVER_ID:
+            if user_input[CONF_SERVER] == SKIP_LOGIN_OPTION:
                 # use preset account and DEFAULT_CLOUD cloud
-                _LOGGER.debug("Skip login matched, cloud_servers: %s", cloud_servers)
-                # get DEFAULT_CLOUD key from dict
-                key = next(
-                    key
-                    for key, value in cloud_servers.items()
-                    if value == DEFAULT_CLOUD
-                )
-                cloud_server = cloud_servers[key]
+                cloud_server = DEFAULT_CLOUD
                 account = self.preset_account
                 password = self.preset_password
                 # set a login_mode flag
@@ -264,13 +245,13 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             # use input data
             else:
                 _LOGGER.debug("User input login matched")
-                cloud_server = cloud_servers[user_input[CONF_SERVER]]
+                cloud_server = user_input[CONF_SERVER]
                 account = user_input[CONF_ACCOUNT]
                 password = user_input[CONF_PASSWORD]
                 # set a login_mode flag
                 self.hass.data[DOMAIN]["login_mode"] = "input"
 
-            # cloud login MUST pass with user input or perset account
+            # cloud login MUST pass with user input or preset account
             if await self._check_cloud_login(
                 cloud_name=cloud_server,
                 account=account,
@@ -301,8 +282,13 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(
                         CONF_SERVER,
-                        default=default_server_key,
-                    ): vol.In(cloud_servers),
+                        default=default_server,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=cloud_server_options,
+                            translation_key="server",
+                        )
+                    ),
                 },
             ),
             errors={"base": error} if error else None,
@@ -406,7 +392,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         True if cloud login succeeded
 
         """
-        # set default args with perset account
+        # set default args with preset account
         if cloud_name is None or account is None or password is None:
             cloud_name = self.preset_cloud_name
             account = self.preset_account
@@ -441,7 +427,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         appliance_id: int,
         default_key: bool = True,
     ) -> dict[str, Any]:
-        """Use perset DEFAULT_CLOUD account to get v3 device token and key.
+        """Use preset DEFAULT_CLOUD account to get v3 device token and key.
 
         Returns:
         -------
@@ -511,6 +497,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # input device exist
         if user_input is not None:
             device_id = user_input[CONF_DEVICE]
+            if device_id not in self.devices:
+                return await self.async_step_auto(error="no_devices")
             device = self.devices[device_id]
             # set device args with protocol decode data
             # then get subtype from cloud, get v3 device token/key from cloud
