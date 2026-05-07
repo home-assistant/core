@@ -2,6 +2,7 @@
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +15,6 @@ from tfa_me_ha_local.client import (
     TFAmeTimeoutError,
 )
 
-from homeassistant.components.hassio import datetime
 from homeassistant.components.tfa_me.coordinator import TFAmeUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

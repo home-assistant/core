@@ -1,5 +1,6 @@
 """TFA.me station integration: coordinator.py."""
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -12,7 +13,6 @@ from tfa_me_ha_local.client import (
     TFAmeTimeoutError,
 )
 
-from homeassistant.components.sensor import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -25,7 +25,8 @@ from .const import (
     LOCAL_POLL_INTERVAL,
     VALID_JSON_MEASUREMENT_KEYS,
 )
-from .data import TFAmeCoordinatorData, resolve_tfa_host
+from .data import TFAmeCoordinatorData
+from .helper import resolve_tfa_host
 
 _LOGGER = logging.getLogger(__name__)
 

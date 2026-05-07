@@ -3,6 +3,13 @@
 import logging
 from typing import Any
 
+from tfa_me_ha_local.client import (
+    TFAmeConnectionError,
+    TFAmeException,
+    TFAmeHTTPError,
+    TFAmeJSONError,
+    TFAmeTimeoutError,
+)
 from tfa_me_ha_local.validators import TFAmeValidator
 import voluptuous as vol
 
@@ -10,7 +17,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN
-from .data import TFAmeException, TFAmeUniqueID
+from .data import TFAmeUniqueID
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -25,6 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for TFA.me stations."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -77,9 +87,20 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     identifier = await data_helper.get_identifier()
 
+                except TFAmeTimeoutError:
+                    errors["base"] = "timeout_connect"
+
+                except TFAmeConnectionError:
+                    errors["base"] = "cannot_connect"
+
+                except TFAmeHTTPError:
+                    errors["base"] = "invalid_response"
+
+                except TFAmeJSONError:
+                    errors["base"] = "invalid_response"
+
                 except TFAmeException:
-                    # Device responded or connection was attempted but failed
-                    errors["base"] = "host_empty"
+                    errors["base"] = "unknown"
 
                 except Exception:
                     # Any unexpected exception should be logged and shown generically

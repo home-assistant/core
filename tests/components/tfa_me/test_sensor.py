@@ -16,7 +16,11 @@ from homeassistant.components.tfa_me.const import (
     DOMAIN,
     MEASUREMENT_TO_TRANSLATION_KEY,
 )
-from homeassistant.components.tfa_me.sensor import TFAmeSensorEntity, async_setup_entry
+from homeassistant.components.tfa_me.sensor import (
+    TFA_ME_ENTITY_DESCRIPTIONS,
+    TFAmeSensorEntity,
+    async_setup_entry,
+)
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -28,39 +32,61 @@ from tests.common import MockConfigEntry, SnapshotAssertion
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_creates_entities(
-    hass: HomeAssistant, tfa_me_mock_coordinator
+    hass: HomeAssistant,
+    tfa_me_mock_coordinator,
 ) -> None:
-    """Test that async_setup_entry creates TFAmeSensorEntity instances for all coordinator data."""
+    """Test that async_setup_entry creates TFAmeSensorEntity instances."""
 
-    # Arrange: Fake config entry
+    assert "temperature" in TFA_ME_ENTITY_DESCRIPTIONS
+
     entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="test-entry-id")
     entry.add_to_hass(hass)
 
-    # Fake coordinator with two sensors
+    tfa_me_mock_coordinator.sensor_entity_list = []
+
     tfa_me_mock_coordinator.data.entities = {
-        "uid_1": {"sensor_id": "a204e4df6"},
-        "uid_2": {"sensor_id": "a4481290f"},
+        "sensor.017654321_a01234588_temperature": {
+            "value": "23.5",
+            "unit": "°C",
+            "ts": "123456789",
+        },
+        "sensor.017654321_a01234589_temperature": {
+            "value": "13.5",
+            "unit": "°C",
+            "ts": "123456789",
+        },
+        "invalid": {},
     }
 
-    # Put coordinator into hass.data as the setup function expects
-    entry.runtime_data = tfa_me_mock_coordinator  # hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tfa_me_mock_coordinator
-
-    # Mock async_add_entities
+    entry.runtime_data = tfa_me_mock_coordinator
     async_add_entities = MagicMock()
-
-    # Act
     await async_setup_entry(hass, entry, async_add_entities)
 
-    # Assert: async_add_entities was called once with a list of entities and update_before_add=True
     async_add_entities.assert_called_once()
-    entities_arg, update_before_add = async_add_entities.call_args[0]
+    entities_arg = async_add_entities.call_args[0][0]
+    update_before_add = async_add_entities.call_args[0][1]
 
     assert update_before_add is True
     assert len(entities_arg) == 2
+    assert all(isinstance(entity, TFAmeSensorEntity) for entity in entities_arg)
 
-    # Check entity instances and that sensor_entity_list was updated
-    assert all(isinstance(e, TFAmeSensorEntity) for e in entities_arg)
-    assert sorted(tfa_me_mock_coordinator.sensor_entity_list) == ["uid_1", "uid_2"]
+    assert sorted(tfa_me_mock_coordinator.sensor_entity_list) == sorted(
+        [
+            "sensor.017654321_a01234588_temperature",
+            "sensor.017654321_a01234589_temperature",
+        ]
+    )
+
+
+def test_get_entity_description_invalid_measurement_raises() -> None:
+    """Test unsupported measurement raises ValueError."""
+
+    entity = TFAmeSensorEntity.__new__(TFAmeSensorEntity)
+    with pytest.raises(
+        ValueError,
+        match="Unsupported TFA.me measurement",
+    ):
+        entity._get_entity_description("invalid_measurement")
 
 
 def _stable_state_dict(d: dict) -> dict:
@@ -108,14 +134,13 @@ async def test_tfa_me_sensor_entities_snapshot(
 
         state = hass.states.get(entity_id)
         states[entity_id] = _stable_state_dict(state.as_dict())
-        # states[entity_id] = hass.states.get(entity_id).as_dict()
 
     # 4) Snapshot comparison
     assert states == snapshot
 
 
 async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
-    """Test temperature/himidity entities to get 100% code coverage of sensor.py."""
+    """Test temperature/humidity entities to get 100% code coverage of sensor.py."""
     entity = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a01234567",
@@ -123,7 +148,7 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     )
 
     # Test: unique_id, name, measurement_name, native_value (float), unit
-    assert entity.unique_id == "sensor.017654321_a01234567_temperature"
+    assert entity.unique_id == "017654321_a01234567_temperature"
     assert entity.translation_key == "temperature"
     assert entity.measurement_name == "temperature"
     assert float(entity.native_value) == 23.5
@@ -138,20 +163,70 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     assert float(entity6.native_value) == 1000.1
 
     # Test: Unit None
-    tfa_me_mock_coordinator.data.entities[entity.entity_id]["unit"] = None
+    tfa_me_mock_coordinator.data.entities[entity.uid]["unit"] = None
     assert entity.native_unit_of_measurement is None
     # Test: Remove unit
-    del tfa_me_mock_coordinator.data.entities[entity.entity_id]["unit"]
-    assert entity.native_unit_of_measurement == ""
+    del tfa_me_mock_coordinator.data.entities[entity.uid]["unit"]
+    assert entity.native_unit_of_measurement is None
 
     # Station barometric pressure without "measurement"
-    entity7 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="057654322",
-        unique_id="sensor.017654321_a057654322_barometric_pressure",
-    )
-    attrs = entity7.extra_state_attributes
-    assert attrs == {}
+    with pytest.raises(ValueError, match="entity_error"):
+        TFAmeSensorEntity(
+            coordinator=tfa_me_mock_coordinator,
+            sensor_id="057654322",
+            unique_id="sensor.017654321_a057654322_barometric_pressure",
+        )
+
+    # Station with unknown "measurement" "invalid"
+    with pytest.raises(
+        ValueError,
+        match="entity_error",
+    ):
+        TFAmeSensorEntity(
+            coordinator=tfa_me_mock_coordinator,
+            sensor_id="057654322",
+            unique_id="sensor.017654321_a057654322_invalid",
+        )
+
+    # Station with no "measurement"
+    with pytest.raises(
+        ValueError,
+        match="entity_error",
+    ):
+        TFAmeSensorEntity(
+            coordinator=tfa_me_mock_coordinator,
+            sensor_id="057654322",
+            unique_id="sensor.017654321_a057654322",
+        )
+
+
+def test_format_string_tfa_type_unknown_returns_question_mark(
+    tfa_me_mock_coordinator,
+) -> None:
+    """Test unknown TFA type returns fallback."""
+    entity = TFAmeSensorEntity.__new__(TFAmeSensorEntity)
+    assert entity.format_string_tfa_type("ZZ1234567") == "?"
+
+    entity.uid = "invalid"
+    assert entity.measurement_name is None
+
+
+def test_extra_state_attributes_invalid_timestamp_returns_empty_dict(
+    tfa_me_mock_coordinator,
+) -> None:
+    """Test invalid timestamp returns empty attributes."""
+    uid = "sensor.017654321_a01234588_temperature"
+    tfa_me_mock_coordinator.data.entities = {
+        uid: {
+            "value": "23.5",
+            "unit": "°C",
+            "ts": "invalid",
+        }
+    }
+    entity = TFAmeSensorEntity.__new__(TFAmeSensorEntity)
+    entity.uid = uid
+    entity.coordinator = tfa_me_mock_coordinator
+    assert entity.extra_state_attributes == {}
 
 
 async def test_rain_sensor_entities(tfa_me_mock_coordinator) -> None:
@@ -301,7 +376,9 @@ async def test_async_update_triggers_refresh_err() -> None:
     """Test async_update()."""
     # Arrange
     mock_coordinator = AsyncMock()
-    entity = TFAmeSensorEntity(mock_coordinator, "abc", "sensor.abc_temp")
+    entity = TFAmeSensorEntity(
+        mock_coordinator, "a012345678", "sensor.012345678_a01234567_temperature"
+    )
 
     # Action
     await entity.async_update()
@@ -384,20 +461,15 @@ def test_handle_coordinator_update(
 
 
 @pytest.mark.asyncio
-async def test_measurement_name_keyerror(
-    hass: HomeAssistant, tfa_me_mock_coordinator
-) -> None:
-    """Test measurement_name returns None when KeyError occurs."""
+async def test_unique_id_keyerror(hass: HomeAssistant, tfa_me_mock_coordinator) -> None:
+    """Test TFAmeSensorEntity returns throws ValueError occurs."""
 
-    ent = TFAmeSensorEntity(
-        tfa_me_mock_coordinator,
-        sensor_id="a0f169ad1",
-        unique_id=None,  # uid, set invalid ID
-    )
-    ent.hass = hass
-
-    # property access triggers KeyError in code → must return None
-    assert ent.measurement_name is None
+    with pytest.raises(ValueError, match="entity_error"):
+        TFAmeSensorEntity(
+            tfa_me_mock_coordinator,
+            sensor_id="a0f169ad1",
+            unique_id="abc",
+        )
 
 
 @pytest.mark.parametrize(
@@ -418,7 +490,7 @@ def test_get_translation_key(
     ent = TFAmeSensorEntity(
         tfa_me_mock_coordinator,
         sensor_id="a0f169ad1",
-        unique_id="sensor.017654321_a0f169ad1_test",
+        unique_id="sensor.017654321_a01234567_temperature",
     )
 
     result = ent._get_translation_key(measurement)
