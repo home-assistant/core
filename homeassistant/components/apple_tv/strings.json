@@ -86,7 +86,7 @@
       "message": "Failed to stream media to the Apple TV"
     },
     "streaming_not_supported": {
-      "message": "Streaming is not supported by this device"
+      "message": "Streaming the requested media is not supported"
     }
   },
   "options": {

@@ -123,13 +123,10 @@ class AppleTvMediaPlayer(
         self._playing: Playing | None = None
         self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
-        self._stream_file_supported: bool = False
-        self._play_url_supported: bool = False
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
         """Handle when connection is made to device."""
-        # NB: Do not use _is_feature_available here as it only works when playing
         if atv.features.in_state(FeatureState.Available, FeatureName.PushUpdates):
             atv.push_updater.listener = self
             atv.push_updater.start()
@@ -145,13 +142,6 @@ class AppleTvMediaPlayer(
             feature_info = all_features.get(feature_name)
             if feature_info and feature_info.state != FeatureState.Unsupported:
                 self._attr_supported_features |= support_flag
-
-        def _supported(feature: FeatureName) -> bool:
-            info = all_features.get(feature)
-            return info is not None and info.state != FeatureState.Unsupported
-
-        self._stream_file_supported = _supported(FeatureName.StreamFile)
-        self._play_url_supported = _supported(FeatureName.PlayUrl)
 
         # No need to schedule state update here as that will happen when the first
         # metadata update arrives (sometime very soon after this callback returns)
@@ -189,8 +179,6 @@ class AppleTvMediaPlayer(
     def async_device_disconnected(self) -> None:
         """Handle when connection was lost to device."""
         self._attr_supported_features = SUPPORT_APPLE_TV
-        self._stream_file_supported = False
-        self._play_url_supported = False
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -363,7 +351,7 @@ class AppleTvMediaPlayer(
 
         # TTS and other MUSIC-typed URLs lack a file extension that is_streamable
         # can probe via miniaudio, so MUSIC type unconditionally selects RAOP.
-        use_stream_file = self._stream_file_supported and (
+        use_stream_file = self._is_feature_available(FeatureName.StreamFile) and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         )
 
@@ -482,7 +470,7 @@ class AppleTvMediaPlayer(
 
     def _is_feature_available(self, feature: FeatureName) -> bool:
         """Return if a feature is available."""
-        if self.atv and self._playing:
+        if self.atv:
             return self.atv.features.in_state(FeatureState.Available, feature)
         return False
 
@@ -495,7 +483,8 @@ class AppleTvMediaPlayer(
         if media_content_id == "apps" or (
             # If we can't stream files or URLs, we can't browse media.
             # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
-            not self._play_url_supported and not self._stream_file_supported
+            not self._is_feature_available(FeatureName.PlayUrl)
+            and not self._is_feature_available(FeatureName.StreamFile)
         ):
             return build_app_list(self._app_list)
 

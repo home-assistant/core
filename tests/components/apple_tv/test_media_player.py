@@ -48,11 +48,16 @@ def _make_mock_atv(
     atv.device_info.raw_model = "AppleTV6,2"
     atv.device_info.version = "15.0"
     atv.device_info.mac = "AA:BB:CC:DD:EE:FF"
-    atv.features.in_state.return_value = False
-    atv.features.all_features.return_value = {
-        FeatureName.StreamFile: MagicMock(state=stream_file_state),
-        FeatureName.PlayUrl: MagicMock(state=play_url_state),
+    feature_states = {
+        FeatureName.StreamFile: stream_file_state,
+        FeatureName.PlayUrl: play_url_state,
     }
+    atv.features.all_features.return_value = {
+        feature: MagicMock(state=state) for feature, state in feature_states.items()
+    }
+    atv.features.in_state.side_effect = lambda state, feature: (
+        feature_states.get(feature) == state
+    )
     return atv
 
 
@@ -127,7 +132,7 @@ async def test_play_media_when_idle(
     media_id: str,
     called_method: str,
 ) -> None:
-    """Streaming path is selected from cached capability flags, not _playing.
+    """Streaming path is selected from device feature state, not _playing.
 
     Before the fix, _is_feature_available returned False for an idle device
     (_playing is None), so play_media silently failed.
