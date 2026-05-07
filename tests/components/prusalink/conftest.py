@@ -48,6 +48,7 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "serial": "serial-1337",
         "hostname": "PrusaXL",
         "min_extrusion_temp": 170,
+        "location": "Workshop",
     }
     with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
         yield resp

@@ -38,9 +38,16 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        trigger
-        for _, opened, closed in DEVICE_CLASS_TRIGGERS
-        for trigger in (opened, closed)
+        "cover.awning_closed",
+        "cover.awning_opened",
+        "cover.blind_closed",
+        "cover.blind_opened",
+        "cover.curtain_closed",
+        "cover.curtain_opened",
+        "cover.shade_closed",
+        "cover.shade_opened",
+        "cover.shutter_closed",
+        "cover.shutter_opened",
     ],
 )
 async def test_cover_triggers_gated_by_labs_flag(
