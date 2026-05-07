@@ -2,6 +2,7 @@
   "domain": "apprise",
   "name": "Apprise",
   "codeowners": ["@caronc"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apprise",
   "iot_class": "cloud_push",
   "loggers": ["apprise"],
