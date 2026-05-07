@@ -313,96 +313,41 @@ async def make_new_device_data(
     coordinators_by_id: dict[str, SwitchBotCoordinator],
 ) -> None:
     """Make device data."""
-    if device.device_type in DEVICE_SUPPORT_MAP:
-        default_config = DEVICE_SUPPORT_MAP[device.device_type]
+    if device.device_type not in DEVICE_SUPPORT_MAP:
+        return
 
-        default_webhook_status = default_config.webhook
-        coordinator = await coordinator_for_device(
-            hass,
-            entry,
-            api,
-            device,
-            coordinators_by_id,
-            manageable_by_webhook=default_webhook_status,
-        )
+    default_config = DEVICE_SUPPORT_MAP[device.device_type]
+    coordinator = await coordinator_for_device(
+        hass,
+        entry,
+        api,
+        device,
+        coordinators_by_id,
+        manageable_by_webhook=default_config.webhook,
+    )
 
-        default_entity_map = default_config.entity_config
-        for item in default_entity_map:
-            match item:
-                case Platform.BINARY_SENSOR:
-                    devices_data.binary_sensors.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.binary_sensors
-                    ] else None
-                case Platform.BUTTON:
-                    devices_data.buttons.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.buttons
-                    ] else None
-                case Platform.CLIMATE:
-                    devices_data.climates.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.climates
-                    ] else None
-                case Platform.COVER:
-                    devices_data.covers.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.covers
-                    ] else None
-                case Platform.FAN:
-                    devices_data.fans.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.fans
-                    ] else None
-                case Platform.HUMIDIFIER:
-                    devices_data.humidifiers.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.humidifiers
-                    ] else None
+    _PLATFORM_LIST_MAP: dict[Platform, list] = {
+        Platform.BINARY_SENSOR: devices_data.binary_sensors,
+        Platform.BUTTON: devices_data.buttons,
+        Platform.CLIMATE: devices_data.climates,
+        Platform.COVER: devices_data.covers,
+        Platform.FAN: devices_data.fans,
+        Platform.HUMIDIFIER: devices_data.humidifiers,
+        Platform.IMAGE: devices_data.images,
+        Platform.LIGHT: devices_data.lights,
+        Platform.LOCK: devices_data.locks,
+        Platform.SENSOR: devices_data.sensors,
+        Platform.SWITCH: devices_data.switches,
+        Platform.VACUUM: devices_data.vacuums,
+    }
 
-                case Platform.IMAGE:
-                    devices_data.images.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.images
-                    ] else None
-                case Platform.LIGHT:
-                    devices_data.lights.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.lights
-                    ] else None
-                case Platform.LOCK:
-                    devices_data.locks.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.locks
-                    ] else None
-
-                case Platform.SENSOR:
-                    devices_data.sensors.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.sensors
-                    ] else None
-                case Platform.SWITCH:
-                    devices_data.switches.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.switches
-                    ] else None
-                case Platform.VACUUM:
-                    devices_data.vacuums.append(
-                        (device, coordinator)
-                    ) if device.device_id not in [
-                        i[0].device_id for i in devices_data.vacuums
-                    ] else None
+    for platform in default_config.entity_config:
+        target_list = _PLATFORM_LIST_MAP.get(platform)
+        if target_list is None:
+            continue
+        existing_ids = {item[0].device_id for item in target_list}
+        if device.device_id not in existing_ids:
+            target_list.append((device, coordinator))
 
 
 async def async_setup_entry(
