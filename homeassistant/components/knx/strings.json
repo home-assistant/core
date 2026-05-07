@@ -1251,8 +1251,8 @@
     },
     "telegram_backend": {
       "options": {
-        "postgres": "PostgreSQL",
-        "sqlite": "SQLite"
+        "postgres": "PostgreSQL (External)",
+        "sqlite": "Internal storage (Default)"
       }
     }
   },

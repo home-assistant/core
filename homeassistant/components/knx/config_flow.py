@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from typing import Any, Final, Literal
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import quote, urlparse, urlunparse
 
 import voluptuous as vol
 from xknx import XKNX
@@ -1139,9 +1139,11 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         database = params.get("database", "knx_telegrams")
         tls = params.get("tls", False)
 
-        netloc = f"{user}:{password}@{host}:{port}"
+        quoted_user = quote(user)
+        quoted_password = quote(password)
+        netloc = f"{quoted_user}:{quoted_password}@{host}:{port}"
         if mask_password and password:
-            netloc = f"{user}:********@{host}:{port}"
+            netloc = f"{quoted_user}:********@{host}:{port}"
 
         query = "sslmode=require" if tls else ""
         return urlunparse(("postgresql", netloc, f"/{database}", "", query, ""))

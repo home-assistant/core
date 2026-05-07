@@ -8,7 +8,7 @@ import os
 import re
 from typing import Any, TypedDict
 
-from knx_telegram_store import StoredTelegram, TelegramStore
+from knx_telegram_store import StoredTelegram, TelegramQuery, TelegramStore
 from knx_telegram_store.backends.postgres import PostgresStore
 from knx_telegram_store.backends.sqlite import SqliteStore
 from xknx import XKNX
@@ -157,6 +157,18 @@ class Telegrams:
 
         # Migrate legacy JSON storage if it exists
         await self.migrate_telegrams()
+
+        # Hydrate last_ga_telegrams from store
+        try:
+            query = TelegramQuery(limit=1000, order_descending=False)
+            result = await self.store.query(query)
+            for m in result.telegrams:
+                t_dict = self.model_to_dict(m)
+                if t_dict["payload"] is not None:
+                    self.last_ga_telegrams[t_dict["destination"]] = t_dict
+            _LOGGER.debug("Hydrated %d telegrams from store", len(result.telegrams))
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Error hydrating last_ga_telegrams: %s", err)
 
     def _create_repair_issue(self, backend: str, info: str, error: str) -> None:
         """Create a repair issue for storage initialization failure."""
@@ -345,7 +357,7 @@ class Telegrams:
             value=m.value,
             dpt_main=m.dpt_main,
             dpt_sub=m.dpt_sub,
-            dpt_name=None,  # Not stored, could be resolved if needed
+            dpt_name=self._resolve_dpt_name(m.dpt_main, m.dpt_sub),
             unit=m.unit,
             source_name=m.source_name,
             destination_name=m.destination_name,
@@ -364,6 +376,17 @@ class Telegrams:
         if backend == TELEGRAM_BACKEND_SQLITE:
             return TELEGRAM_DB_PATH_DEFAULT
         return "Memory"
+
+    def _resolve_dpt_name(self, main: int | None, sub: int | None) -> str | None:
+        """Resolve DPT name from main and sub numbers."""
+        if main is None or sub is None:
+            return None
+        try:
+            if transcoder := DPTBase.parse_transcoder(f"{main}.{sub:03}"):
+                return transcoder.value_type
+        except Exception:  # noqa: BLE001
+            pass
+        return None
 
 
 def _serializable_decoded_data(
