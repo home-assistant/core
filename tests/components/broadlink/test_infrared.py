@@ -4,7 +4,7 @@ from unittest.mock import call
 
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data
-from infrared_protocols import NECCommand
+from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN

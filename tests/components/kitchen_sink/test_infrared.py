@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-import infrared_protocols
+from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components.infrared import async_send_command
@@ -45,9 +45,7 @@ async def test_send_command(
     assert now is not None
     freezer.move_to(now)
 
-    command = infrared_protocols.NECCommand(
-        address=0x04, command=0x08, modulation=38000
-    )
+    command = NECCommand(address=0x04, command=0x08, modulation=38000)
     await async_send_command(hass, ENTITY_IR_TRANSMITTER, command)
 
     state = hass.states.get(ENTITY_IR_TRANSMITTER)

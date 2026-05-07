@@ -1,6 +1,6 @@
 """Demo platform that offers a fake infrared entity."""
 
-import infrared_protocols
+from infrared_protocols.commands import Command as InfraredCommand
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.infrared import InfraredEntity
@@ -51,7 +51,7 @@ class DemoInfrared(InfraredEntity):
         )
         self._attr_name = entity_name
 
-    async def async_send_command(self, command: infrared_protocols.Command) -> None:
+    async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
         persistent_notification.async_create(
             self.hass, str(command.get_raw_timings()), title="Infrared Command"

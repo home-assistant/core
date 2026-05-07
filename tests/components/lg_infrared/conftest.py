@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols import Command as InfraredCommand
+from infrared_protocols.commands import Command as InfraredCommand
 import pytest
 
 from homeassistant.components.infrared import (
