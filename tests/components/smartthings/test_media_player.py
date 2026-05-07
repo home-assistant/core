@@ -341,7 +341,7 @@ async def test_select_source(
         Capability.MEDIA_INPUT_SOURCE,
         Command.SET_INPUT_SOURCE,
         MAIN,
-        "digital",
+        argument="digital",
     )
 
 
