@@ -258,7 +258,7 @@ def _determine_device_info_type(
     return device_info_type
 
 
-class _DeviceInfoFields(TypedDict):
+class _ValidatedDeviceInfoFields(TypedDict):
     """Device info fields validated on create and update."""
 
     configuration_url: str | URL | None | UndefinedType
@@ -276,7 +276,12 @@ _cached_parse_url = lru_cache(maxsize=512)(URL)
 
 def _validate_str(name: str, value: Any) -> str | None | UndefinedType:
     """Validate that a device registry string field has correct type."""
-    if value is UNDEFINED or value is None or isinstance(value, str):
+    if (
+        value is UNDEFINED
+        or value is None
+        or type(value) is str  # fast path for exact str
+        or isinstance(value, str)
+    ):
         return value
     report_usage(
         f"passes a non-string value of type {type(value).__name__} "
@@ -288,8 +293,8 @@ def _validate_str(name: str, value: Any) -> str | None | UndefinedType:
 
 
 def _validate_device_info_fields(
-    **fields: Unpack[_DeviceInfoFields],
-) -> _DeviceInfoFields:
+    **fields: Unpack[_ValidatedDeviceInfoFields],
+) -> _ValidatedDeviceInfoFields:
     """Validate device-info field values."""
     configuration_url = fields["configuration_url"]
     url: URL | None = None
